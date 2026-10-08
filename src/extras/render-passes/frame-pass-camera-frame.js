@@ -5,21 +5,21 @@ import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { FramePassColorGrab } from '../../scene/graphics/frame-pass-color-grab.js';
 import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { FramePassDof } from './frame-pass-dof.js';
 import { FramePassVolumetricFog } from './frame-pass-volumetric-fog.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
-import { RenderPassSsao } from './render-pass-ssao.js';
-import { FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
+import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF } from './constants.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { Color } from '../../core/math/color.js';
 
 /**
  * @import { CameraFrame } from './camera-frame.js'
- * @import { CameraFrameEffect, CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from './camera-frame-effect.js'
+ * @import { CameraFrameEffect, CameraFrameEffectContext, CameraFrameEffectDepth, CameraFrameEffectPasses, CameraFrameEffectResources } from './camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
@@ -55,10 +55,11 @@ class CameraFrameOptions {
     // CameraFrame#updateOptions. A change rebuilds the passes.
     effectPasses = '';
 
-    // SSAO
-    ssaoType = SSAOTYPE_NONE;
+    // Whether an active effect requires the scene depth, and whether it requires it rendered by the
+    // prepass, as it is needed before the scene renders - see CameraFrame#updateOptions
+    depthRequired = false;
 
-    ssaoBlurEnabled = true;
+    prepassDepthRequired = false;
 
     prepassEnabled = false;
 
@@ -96,8 +97,6 @@ class FramePassCameraFrame extends FramePass {
     scenePass;
 
     composePass;
-
-    ssaoPass;
 
     taaPass;
 
@@ -283,7 +282,6 @@ class FramePassCameraFrame extends FramePass {
         this.scenePassTransparent = null;
         this.colorGrabPass = null;
         this.composePass = null;
-        this.ssaoPass = null;
         this.taaPass = null;
         this.afterPass = null;
         this.scenePassHalf = null;
@@ -294,10 +292,10 @@ class FramePassCameraFrame extends FramePass {
     sanitizeOptions(options) {
         options = Object.assign(new CameraFrameOptions(), options);
 
-        // depth consumed by the passes running after the scene pass. SSAO belongs here when the compose
-        // pass is what applies it, as it is then free to run after the scene - see collectPasses.
+        // depth consumed by the passes running after the scene pass, those of the effects requiring
+        // the scene depth included
         const postProcessDepth = options.taaEnabled || options.dofEnabled ||
-            options.volumetricFogEnabled || options.ssaoType === SSAOTYPE_COMBINE;
+            options.volumetricFogEnabled || options.depthRequired;
 
         const inSceneDepth = this.needsInSceneDepth(options);
         const splatDepth = this.app.scene.getGsplatParams()?.sceneDepthWrite ?? false;
@@ -362,16 +360,17 @@ class FramePassCameraFrame extends FramePass {
 
     /**
      * Whether the depth is consumed no later than the scene pass - by the materials when the user asks
-     * for the scene depth map, and by SSAO applied during shading, whose texture the lit shaders sample
-     * and which therefore has to be generated before the scene renders. Only the prepass supplies that,
-     * as the scene textures do not exist until the scene pass has finished.
+     * for the scene depth map, and by the effects requiring the depth of the prepass, such as SSAO
+     * applied during shading, whose texture the lit shaders sample and which therefore has to be
+     * generated before the scene renders. Only the prepass supplies that, as the scene textures do not
+     * exist until the scene pass has finished.
      *
      * @param {CameraFrameOptions} options - The options.
      * @returns {boolean} True if the depth is needed no later than the scene pass.
      * @private
      */
     needsInSceneDepth(options) {
-        return options.prepassEnabled || options.ssaoType === SSAOTYPE_LIGHTING;
+        return options.prepassEnabled || options.prepassDepthRequired;
     }
 
     /**
@@ -492,8 +491,8 @@ class FramePassCameraFrame extends FramePass {
             arr1.length !== arr2.length ||
             !arr1.every((value, index) => value === arr2[index]));
 
-        return options.ssaoType !== currentOptions.ssaoType ||
-            options.ssaoBlurEnabled !== currentOptions.ssaoBlurEnabled ||
+        return options.depthRequired !== currentOptions.depthRequired ||
+            options.prepassDepthRequired !== currentOptions.prepassDepthRequired ||
             options.taaEnabled !== currentOptions.taaEnabled ||
             options.samples !== currentOptions.samples ||
             options.stencil !== currentOptions.stencil ||
@@ -573,8 +572,9 @@ class FramePassCameraFrame extends FramePass {
         // the effects and DOF can need the half resolution scene texture
         this._sceneHalfEnabled = this.effectsRequire(FRAMERESOURCE_SCENECOLORHALF) || options.dofEnabled;
 
-        // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
-        cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
+        // whether the lit shaders apply SSAO as the scene renders - an effect generating it for them
+        // turns this on as it creates its passes
+        cameraComponent.shaderParams.ssaoEnabled = false;
 
         // The scene textures are rendered by the scene pass into the color attachments after the scene
         // color, each enabled one taking the next. This is the only place their layout is decided -
@@ -678,20 +678,16 @@ class FramePassCameraFrame extends FramePass {
 
     collectPasses() {
 
-        // SSAO applied during shading has to be generated before the scene pass, as the lit shaders
-        // sample its texture as they render. Applied by the compose pass instead, it is free to run
-        // after the scene, where the depth it needs can come from the scene textures - which include
-        // the gaussian splats and require no prepass.
-        const ssaoBeforeScene = this.options.ssaoType === SSAOTYPE_LIGHTING;
-
-        // use these prepared render passes in the order they should be executed
+        // use these prepared render passes in the order they should be executed, with the passes of
+        // the effects at the stages they run at
+        const stagePasses = this._stagePasses;
         return [
             this.prePass,
-            ssaoBeforeScene ? this.ssaoPass : null,
+            ...stagePasses.preScene,
             this.scenePass, this.colorGrabPass, this.scenePassTransparent,
-            ssaoBeforeScene ? null : this.ssaoPass,
+            ...stagePasses.postScene,
             this.volumetricFogPass, this.taaPass, this.scenePassHalf,
-            ...this._stagePasses.postTemporal,
+            ...stagePasses.postTemporal,
             this.dofPass, this.composePass, this.afterPass
         ];
     }
@@ -700,9 +696,6 @@ class FramePassCameraFrame extends FramePass {
 
         // pre-pass
         this.setupScenePrepass(options);
-
-        // ssao
-        this.setupSsaoPass(options);
 
         // scene including color grab pass
         const scenePassesInfo = this.setupScenePass(options);
@@ -862,14 +855,6 @@ class FramePassCameraFrame extends FramePass {
         return ret;
     }
 
-    setupSsaoPass(options) {
-        const { ssaoBlurEnabled, ssaoType } = options;
-        const { device, cameraComponent } = this;
-        if (ssaoType !== SSAOTYPE_NONE) {
-            this.ssaoPass = new RenderPassSsao(device, this.sceneTexture, cameraComponent, ssaoBlurEnabled);
-        }
-    }
-
     setupSceneHalfPass(options, sourceTexture) {
 
         if (this._sceneHalfEnabled) {
@@ -910,6 +895,23 @@ class FramePassCameraFrame extends FramePass {
     }
 
     /**
+     * The scene depth as handed to the effects: the texture it is rendered to, by the scene pass or
+     * by the prepass, and the defines describing how it is stored, which the shaders reading it need.
+     * The encoding is decided when the passes are built, so this stays valid for their life.
+     *
+     * @returns {CameraFrameEffectDepth} The depth.
+     * @private
+     */
+    createEffectDepth() {
+        const texture = this.sceneDepthTexture ?? this.prePass?.linearDepthTexture;
+        Debug.assert(texture, 'CameraFrame: an effect requires the scene depth, but nothing renders it.');
+
+        const defines = new Map();
+        const key = ShaderUtils.addScreenDepthChunkDefines(this.cameraComponent.shaderParams, defines);
+        return { texture, defines, key };
+    }
+
+    /**
      * Has the effects owning passes create them, handing each the frame resources it requires
      * and an empty array for each stage of the frame, and collects the passes per stage, in the
      * order of the effects. Runs once the resources exist, as passes can depend on them as they
@@ -918,6 +920,11 @@ class FramePassCameraFrame extends FramePass {
      * @private
      */
     setupEffectPasses() {
+
+        // the scene depth, one object shared by the effects requiring it
+        let depth = null;
+
+        const stagePasses = this._stagePasses;
         const effects = this._passEffects;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
@@ -925,18 +932,23 @@ class FramePassCameraFrame extends FramePass {
             /** @type {CameraFrameEffectResources} */
             const resources = {};
             for (const name of effect.requires) {
-                Debug.assert(name === FRAMERESOURCE_SCENECOLORHALF, `CameraFrame: effect '${effect.id}' requires the frame resource '${name}', which is not supported yet.`);
-                resources[name] = this.sceneTextureHalf;
+                if (name === FRAMERESOURCE_DEPTH || name === FRAMERESOURCE_PREPASSDEPTH) {
+                    depth ??= this.createEffectDepth();
+                    resources[name] = depth;
+                } else {
+                    Debug.assert(name === FRAMERESOURCE_SCENECOLORHALF, `CameraFrame: effect '${effect.id}' requires the frame resource '${name}', which is not supported yet.`);
+                    resources[name] = this.sceneTextureHalf;
+                }
             }
 
             /** @type {CameraFrameEffectPasses} */
             const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
             effect.createPasses(resources, passes);
 
-            for (const stage of ['preScene', 'postOpaque', 'postScene']) {
-                Debug.assert(passes[stage].length === 0, `CameraFrame: effect '${effect.id}' runs passes at the ${stage} stage, which is not supported yet.`);
-            }
-            this._stagePasses.postTemporal.push(...passes.postTemporal);
+            Debug.assert(passes.postOpaque.length === 0, `CameraFrame: effect '${effect.id}' runs passes at the postOpaque stage, which is not supported yet.`);
+            stagePasses.preScene.push(...passes.preScene);
+            stagePasses.postScene.push(...passes.postScene);
+            stagePasses.postTemporal.push(...passes.postTemporal);
         }
     }
 
@@ -987,9 +999,6 @@ class FramePassCameraFrame extends FramePass {
         const cameraComponent = this.cameraComponent;
         const targetRenderTarget = cameraComponent.renderTarget;
         this.composePass.init(targetRenderTarget);
-
-        // ssao texture as needed
-        this.composePass.ssaoTexture = options.ssaoType === SSAOTYPE_COMBINE ? this.ssaoPass.ssaoTexture : null;
     }
 
     setupAfterPass(options, scenePassesInfo) {

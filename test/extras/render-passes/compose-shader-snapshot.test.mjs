@@ -7,13 +7,18 @@ import { expect } from 'chai';
 
 import { MapUtils } from '../../../src/core/map-utils.js';
 import { Preprocessor } from '../../../src/core/preprocessor.js';
-import { FRAMERESOURCE_SCENECOLORHALF } from '../../../src/extras/render-passes/constants.js';
+import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
+import {
+    COMPOSESLOT_HDR, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE,
+    SSAOTYPE_LIGHTING
+} from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
 import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
 import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
 import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
+import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
 import {
@@ -105,16 +110,18 @@ describe('RenderPassCompose shader snapshot', function () {
 
         // the built-in effects a CameraFrame registers, in the order it registers them. The
         // combinations drive their state; only getShaderVariant is exercised, so the camera frame
-        // behind the effects is a stub supplying the scene format the sharpening reads
+        // behind the effects is a stub supplying the scene format the sharpening reads, and the
+        // camera the occlusion is generated for
         pass.cas = new CasEffect(device);
         pass.fringing = new FringingEffect(device);
+        pass.ssao = new SsaoEffect(device);
         pass.bloom = new BloomEffect(device);
         pass.colorEnhance = new ColorEnhanceEffect(device);
         pass.grading = new GradingEffect(device);
         pass.colorLut = new ColorLutEffect(device);
         pass.vignette = new VignetteEffect(device);
-        const effects = [pass.cas, pass.fringing, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
-        const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F };
+        const effects = [pass.cas, pass.fringing, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F, cameraComponent };
         effects.forEach((effect) => {
             effect.cameraFrame = cameraFrame;
         });
@@ -133,12 +140,41 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.passEffects.push(pass.bloom);
     };
 
+    // the occlusion likewise, created over a stand-in scene depth
+    const enableSsao = (pass, type) => {
+        pass.ssao.type = type;
+        const depth = { texture: textures.ssao, defines: new Map(), key: '' };
+        const resources = { [FRAMERESOURCE_DEPTH]: depth, [FRAMERESOURCE_PREPASSDEPTH]: depth };
+        pass.ssao.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.passEffects.push(pass.ssao);
+    };
+
+    // a composed effect reading the scene depth, with the depth stored the way the scene pass stores
+    // it - an average of the reciprocals - or the way the prepass does, outright. Its chunk can also
+    // include the depth chunk itself, which the composition includes for it too.
+    const addDepthEffect = (pass, { prepass = false, includeChunk = false } = {}) => {
+        const include = includeChunk ? '#include "screenDepthPS"\n' : '';
+        const effect = new CameraFrameEffect(device, 'depthTint', {
+            slot: COMPOSESLOT_HDR,
+            glsl: `${include}vec3 applyDepthTint(vec3 color, vec2 uv) { return color * fract(getLinearScreenDepth(uv)); }`,
+            wgsl: `${include}fn applyDepthTint(color: vec3f, uv: vec2f) -> vec3f { return color * fract(getLinearScreenDepth(uv)); }`,
+            requires: [prepass ? FRAMERESOURCE_PREPASSDEPTH : FRAMERESOURCE_DEPTH]
+        });
+        pass.builtInEffects.push(effect);
+
+        const { shaderParams } = pass.cameraComponent;
+        shaderParams.sceneDepthMapLinear = true;
+        shaderParams.sceneDepthMapPacked = false;
+        shaderParams.sceneDepthMapReciprocal = !prepass;
+        pass.sceneDepthAvailable = true;
+    };
+
     const enableAll = (pass) => {
         enableBloom(pass);
+        enableSsao(pass, SSAOTYPE_COMBINE);
         pass.cocTexture = textures.coc;
         pass.blurTexture = textures.blur;
         pass.blurTextureUpscale = true;
-        pass.ssaoTexture = textures.ssao;
         pass.grading.enabled = true;
         pass.colorEnhance.enabled = true;
         pass.colorLut.texture = textures.lut;
@@ -174,7 +210,15 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'bloom', set: pass => enableBloom(pass) },
         { name: 'dof', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur }) },
         { name: 'dof-upscale', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur, blurTextureUpscale: true }) },
-        { name: 'ssao', set: (pass, t) => ({ ssaoTexture: t.ssao }) },
+        { name: 'ssao', set: pass => enableSsao(pass, SSAOTYPE_COMBINE) },
+        { name: 'ssao-lighting', set: pass => enableSsao(pass, SSAOTYPE_LIGHTING) },
+        {
+            name: 'ssao-lighting-debug',
+            set: (pass) => {
+                enableSsao(pass, SSAOTYPE_LIGHTING);
+                return { debug: 'ssao' };
+            }
+        },
         { name: 'grading', set: pass => (pass.grading.enabled = true) },
         { name: 'color-enhance', set: pass => (pass.colorEnhance.enabled = true) },
         { name: 'color-lut', set: (pass, t) => (pass.colorLut.texture = t.lut) },
@@ -196,6 +240,9 @@ describe('RenderPassCompose shader snapshot', function () {
                 pass.cas.cameraFrame.hdrFormat = PIXELFORMAT_RGBA8;
             }
         },
+        { name: 'depth-effect-scene', set: pass => addDepthEffect(pass) },
+        { name: 'depth-effect-prepass', set: pass => addDepthEffect(pass, { prepass: true }) },
+        { name: 'depth-effect-double-include', set: pass => addDepthEffect(pass, { includeChunk: true }) },
         { name: 'all', all: true },
         { name: 'all-gamma-none', all: true, set: () => ({ _gammaCorrection: GAMMA_NONE }) },
         ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL].map(toneMapping => ({
@@ -256,6 +303,26 @@ describe('RenderPassCompose shader snapshot', function () {
 
     const normalise = source => source.replace(/\s+/g, ' ').trim();
     const digest = source => createHash('sha1').update(normalise(source)).digest('hex');
+
+    // the depth an effect reads is decoded the way the producer stored it, whichever that is, and the
+    // depth chunk is declared once however many times it is included
+    for (const shaderLanguage of [SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL]) {
+        it(`decodes the scene depth for an effect requiring it as its producer stores it, ${shaderLanguage}`, function () {
+            const glsl = shaderLanguage === SHADERLANGUAGE_GLSL;
+            const reciprocal = glsl ? 'recip > 0.0 ? 1.0 / recip' : 'select(uniform.camera_params.y, 1.0 / recip';
+            const sampler = glsl ? 'uniform highp sampler2D uSceneDepthMap;' : 'var uSceneDepthMap:';
+            const count = (source, text) => source.split(text).length - 1;
+
+            for (const [options, isReciprocal] of [[{}, true], [{ prepass: true }, false], [{ includeChunk: true }, true]]) {
+                const pass = createPass();
+                apply(pass, { name: 'depth', set: p => addDepthEffect(p, options) });
+                const source = preprocess(pass, shaderLanguage);
+                expect(source.includes(reciprocal), JSON.stringify(options)).to.equal(isReciprocal);
+                expect(count(source, sampler), JSON.stringify(options)).to.equal(1);
+                expect(source).to.include('applyDepthTint(result, uv)');
+            }
+        });
+    }
 
     const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, 'utf8')) : {};
     const actual = {};

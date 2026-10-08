@@ -29,13 +29,29 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  */
 
 /**
+ * The scene depth handed to {@link CameraFrameEffect#createPasses}, for an effect requiring
+ * FRAMERESOURCE_DEPTH or FRAMERESOURCE_PREPASSDEPTH. How the depth is stored depends on what
+ * renders it, so shaders read it with the `getLinearScreenDepth` function of the `screenDepthPS`
+ * chunk, given the defines describing the storage, rather than sampling the texture.
+ *
+ * @typedef {object} CameraFrameEffectDepth
+ * @property {Texture} texture - The texture the depth is rendered to, the size of the scene - for
+ * sizing render targets.
+ * @property {Map<string, string>} defines - The defines a shader reading the depth with
+ * `getLinearScreenDepth` needs. Shared by the effects, so copy them rather than change them.
+ * @property {string} key - A key identifying those defines, to add to the unique name of such a
+ * shader, so that differently stored depths do not share a compiled shader.
+ * @ignore
+ */
+
+/**
  * The frame resources handed to {@link CameraFrameEffect#createPasses}: those the effect lists in
  * {@link CameraFrameEffect#requires}, under the values of the FRAMERESOURCE_* constants. Each
  * stays the same object for the life of the passes, and the textures are resized with the scene.
  *
  * @typedef {object} CameraFrameEffectResources
- * @property {Texture} [depth] - The scene depth, see FRAMERESOURCE_DEPTH.
- * @property {Texture} [prepassDepth] - The scene depth rendered by a prepass, see
+ * @property {CameraFrameEffectDepth} [depth] - The scene depth, see FRAMERESOURCE_DEPTH.
+ * @property {CameraFrameEffectDepth} [prepassDepth] - The scene depth rendered by a prepass, see
  * FRAMERESOURCE_PREPASSDEPTH.
  * @property {Texture} [sceneColorHalf] - The half resolution scene color, see
  * FRAMERESOURCE_SCENECOLORHALF.
@@ -91,7 +107,8 @@ let uid = 0;
  * Every chunk can read what the composition provides: the scene color, `sceneTexture`, and
  * `sceneTextureSize` - the width, height, 1 / width and 1 / height of the scene texture. Use the
  * size for anything which depends on the resolution, such as texel offsets, pixel sizes or the
- * aspect ratio, as it is always current for the camera being drawn.
+ * aspect ratio, as it is always current for the camera being drawn. An effect requiring the scene
+ * depth, see {@link CameraFrameEffect#requires}, can also read it with `getLinearScreenDepth(uv)`.
  *
  * Like the rest of the camera frame, an effect is configured when {@link CameraFrame#update} is
  * called: changes to its parameters, and adding or removing it, take effect at the next update,

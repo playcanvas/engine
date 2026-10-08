@@ -3,13 +3,14 @@ import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { SSAOTYPE_NONE } from './constants.js';
+import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH } from './constants.js';
 import { BloomEffect } from './effects/bloom-effect.js';
 import { CasEffect } from './effects/cas-effect.js';
 import { ColorEnhanceEffect } from './effects/color-enhance-effect.js';
 import { ColorLutEffect } from './effects/color-lut-effect.js';
 import { FringingEffect } from './effects/fringing-effect.js';
 import { GradingEffect } from './effects/grading-effect.js';
+import { SsaoEffect } from './effects/ssao-effect.js';
 import { VignetteEffect } from './effects/vignette-effect.js';
 import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
 
@@ -27,7 +28,7 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  *
  * @type {string[]}
  */
-const builtinDebugViews = ['scene', 'ssao', 'dofcoc', 'dofblur', 'depth', 'depthmissing'];
+const builtinDebugViews = ['scene', 'dofcoc', 'dofblur', 'depth', 'depthmissing'];
 
 /**
  * @typedef {Object} Rendering
@@ -67,30 +68,6 @@ const builtinDebugViews = ['scene', 'ssao', 'dofcoc', 'dofblur', 'depth', 'depth
  * the sharpness of the rendered image. Often used to counteract the blurriness of the TAA effect,
  * but also blurriness caused by rendering to a lower resolution render target by using
  * rendering.renderTargetScale property. Defaults to 0.
- */
-
-/**
- * @typedef {Object} Ssao
- * Properties related to the Screen Space Ambient Occlusion (SSAO) effect, a postprocessing technique
- * that approximates ambient occlusion by calculating how exposed each point in the screen space is
- * to ambient light, enhancing depth perception and adding subtle shadowing in crevices and between
- * objects.
- * @property {string} type - The type of the SSAO determines how it is applied in the rendering
- * process. Defaults to {@link SSAOTYPE_NONE}. Can be:
- *
- * - {@link SSAOTYPE_NONE}
- * - {@link SSAOTYPE_LIGHTING}
- * - {@link SSAOTYPE_COMBINE}
- *
- * @property {boolean} blurEnabled - Whether the SSAO effect is blurred. Defaults to true.
- * @property {boolean} randomize - Whether the SSAO sampling is randomized. Useful when used instead
- * of blur effect together with TAA. Defaults to false.
- * @property {number} intensity - The intensity of the SSAO effect, 0-1 range. Defaults to 0.5.
- * @property {number} radius - The radius of the SSAO effect, 0-100 range. Defaults to 30.
- * @property {number} samples - The number of samples of the SSAO effect, 1-64 range. Defaults to 12.
- * @property {number} power - The power of the SSAO effect, 0.1-10 range. Defaults to 6.
- * @property {number} minAngle - The minimum angle of the SSAO effect, 1-90 range. Defaults to 10.
- * @property {number} scale - The scale of the SSAO effect, 0.5-1 range. Defaults to 1.
  */
 
 /**
@@ -221,21 +198,12 @@ class CameraFrame {
     };
 
     /**
-     * SSAO settings.
+     * The screen space ambient occlusion effect, registered with this camera frame. Its parameters
+     * are assigned directly.
      *
-     * @type {Ssao}
+     * @type {SsaoEffect}
      */
-    ssao = {
-        type: SSAOTYPE_NONE,
-        blurEnabled: true,
-        randomize: false,
-        intensity: 0.5,
-        radius: 30,
-        samples: 12,
-        power: 6,
-        minAngle: 10,
-        scale: 1
-    };
+    ssao;
 
     /**
      * The bloom effect, registered with this camera frame. Its parameters are assigned directly.
@@ -417,12 +385,13 @@ class CameraFrame {
         const device = app.graphicsDevice;
         this._cas = new CasEffect(device);
         this.fringing = new FringingEffect(device);
+        this.ssao = new SsaoEffect(device);
         this.bloom = new BloomEffect(device);
         this.colorEnhance = new ColorEnhanceEffect(device);
         this.grading = new GradingEffect(device);
         this.colorLUT = new ColorLutEffect(device);
         this.vignette = new VignetteEffect(device);
-        this._builtInEffects = [this._cas, this.fringing, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
+        this._builtInEffects = [this._cas, this.fringing, this.ssao, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
 
         // rendering.sharpness is the sharpening effect's parameter, forwarded to it so that the
@@ -669,14 +638,12 @@ class CameraFrame {
 
     updateOptions() {
 
-        const { options, rendering, taa, ssao } = this;
+        const { options, rendering, taa } = this;
         options.stencil = rendering.stencil;
         options.samples = rendering.samples;
         options.sceneColorMap = rendering.sceneColorMap;
         options.prepassEnabled = rendering.sceneDepthMap;
         options.taaEnabled = taa.enabled;
-        options.ssaoType = ssao.type;
-        options.ssaoBlurEnabled = ssao.blurEnabled;
         options.formats = rendering.renderFormats.slice();
         options.dofEnabled = this.dof.enabled;
         options.dofNearBlur = this.dof.nearBlur;
@@ -690,16 +657,26 @@ class CameraFrame {
         // the active registered effects owning passes, the resources they require and what else
         // their passes depend on - the frame passes are rebuilt when this changes. The effects are
         // identified by instance, so that replacing one with a new instance of the same id builds
-        // the passes of the new one.
+        // the passes of the new one. The scene depth is rendered for any active effect requiring
+        // it, those without passes included.
         let effectPasses = '';
+        let depthRequired = false;
+        let prepassDepthRequired = false;
         const { effects } = this;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
-            if (effect._ownsPasses && effect.active) {
-                effectPasses += `${effect._uid}:${effect.requires}:${effect.buildKey()};`;
+            if (effect.active) {
+                const { requires } = effect;
+                depthRequired ||= requires.includes(FRAMERESOURCE_DEPTH);
+                prepassDepthRequired ||= requires.includes(FRAMERESOURCE_PREPASSDEPTH);
+                if (effect._ownsPasses) {
+                    effectPasses += `${effect._uid}:${requires}:${effect.buildKey()};`;
+                }
             }
         }
         options.effectPasses = effectPasses;
+        options.depthRequired = depthRequired;
+        options.prepassDepthRequired = prepassDepthRequired;
     }
 
     /**
@@ -761,14 +738,14 @@ class CameraFrame {
         if (!this._enabled) return;
 
         const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, taa, ssao } = this;
+        const { options, renderPassCamera, rendering, taa } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
         renderPassCamera.update(options);
 
         // update parameters of individual render passes
-        const { composePass, ssaoPass, dofPass, volumetricFogPass } = renderPassCamera;
+        const { composePass, dofPass, volumetricFogPass } = renderPassCamera;
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
@@ -802,16 +779,6 @@ class CameraFrame {
             volumetricFogPass.scale = math.clamp(volumetricFog.scale, 0.25, 1);
         }
 
-        if (options.ssaoType !== SSAOTYPE_NONE) {
-            ssaoPass.intensity = ssao.intensity;
-            ssaoPass.power = ssao.power;
-            ssaoPass.radius = ssao.radius;
-            ssaoPass.sampleCount = ssao.samples;
-            ssaoPass.minAngle = ssao.minAngle;
-            ssaoPass.scale = ssao.scale;
-            ssaoPass.randomize = ssao.randomize;
-        }
-
         // enable camera jitter if taa is enabled
         cameraComponent.jitter = taa.enabled ? taa.jitter : 0;
 
@@ -820,7 +787,6 @@ class CameraFrame {
 
         // debug rendering
         composePass.debug = this.debug;
-        if (composePass.debug === 'ssao' && options.ssaoType === SSAOTYPE_NONE) composePass.debug = null;
 
         // a debug view owned by an effect is only available while that effect takes part
         const debugOwner = this.effects.find(effect => effect.debugViews.includes(composePass.debug));

@@ -4,12 +4,17 @@ import { restore, spy, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
-import { FRAMERESOURCE_SCENECOLORHALF } from '../../../src/extras/render-passes/constants.js';
+import {
+    FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING,
+    SSAOTYPE_NONE
+} from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
+import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
+import { ShaderUtils } from '../../../src/scene/shader-lib/shader-utils.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -377,11 +382,11 @@ describe('FramePassCameraFrame', function () {
         it('asserts on passes at a stage which is not supported yet', function () {
             const assert = stub(Debug, 'assert');
             const effect = new PassEffect(app.graphicsDevice);
-            effect.stage = 'postScene';
+            effect.stage = 'postOpaque';
             cameraFrame.addEffect(effect);
             cameraFrame.update();
             const failed = assert.getCalls().filter(call => !call.args[0]).map(call => call.args[1]);
-            expect(failed.some(message => message.includes('postScene stage'))).to.equal(true);
+            expect(failed.some(message => message.includes('postOpaque stage'))).to.equal(true);
             expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(effect.pass);
             assert.restore();
             effect.destroy();
@@ -533,6 +538,170 @@ describe('FramePassCameraFrame', function () {
             cameraFrame.update();
             cameraFrame.renderPassCamera.frameUpdate();
             expect(errorOnce.callCount).to.equal(1);
+        });
+    });
+
+    describe('scene depth', function () {
+
+        // nothing else needing the depth
+        beforeEach(function () {
+            cameraFrame.taa.enabled = false;
+            cameraFrame.bloom.intensity = 0;
+            cameraFrame.dof.enabled = false;
+        });
+
+        const rendersDepth = () => {
+            const { options } = cameraFrame.renderPassCamera;
+            return options.prepassEnabled || options.sceneTextureDepth;
+        };
+
+        it('renders the depth for an active effect requiring it, one without passes included', function () {
+            cameraFrame.update();
+            expect(rendersDepth()).to.equal(false);
+
+            const effect = new CameraFrameEffect(app.graphicsDevice, 'depthReader', { requires: [FRAMERESOURCE_DEPTH] });
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+            expect(rendersDepth()).to.equal(true);
+
+            effect.enabled = false;
+            cameraFrame.update();
+            expect(rendersDepth()).to.equal(false);
+            cameraFrame.removeEffect(effect);
+        });
+
+        it('renders the depth with the prepass for an effect requiring it before the scene', function () {
+            const effect = new CameraFrameEffect(app.graphicsDevice, 'early', { requires: [FRAMERESOURCE_PREPASSDEPTH] });
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+            const { options } = cameraFrame.renderPassCamera;
+            expect(options.prepassEnabled).to.equal(true);
+            expect(options.sceneTextureDepth).to.equal(false);
+            cameraFrame.removeEffect(effect);
+        });
+
+        it('hands the effects the scene depth, with the defines and key of the shaders reading it', function () {
+            const first = new PassEffect(app.graphicsDevice, 'first', [FRAMERESOURCE_DEPTH]);
+            const second = new PassEffect(app.graphicsDevice, 'second', [FRAMERESOURCE_DEPTH]);
+            first.stage = second.stage = 'postScene';
+            cameraFrame.addEffect(first);
+            cameraFrame.addEffect(second);
+            cameraFrame.update();
+
+            const framePass = cameraFrame.renderPassCamera;
+            const { depth } = first.resourcesGiven;
+            expect(depth.texture).to.equal(framePass.sceneDepthTexture ?? framePass.prePass.linearDepthTexture);
+
+            const defines = new Map();
+            const key = ShaderUtils.addScreenDepthChunkDefines(cameraFrame.cameraComponent.shaderParams, defines);
+            expect([...depth.defines]).to.deep.equal([...defines]);
+            expect(depth.key).to.equal(key);
+            expect(second.resourcesGiven.depth).to.equal(depth);
+
+            first.destroy();
+            second.destroy();
+            cameraFrame.update();
+        });
+    });
+
+    describe('ssao', function () {
+
+        const ssaoPass = () => cameraFrame.renderPassCamera.beforePasses.find(pass => pass instanceof RenderPassSsao);
+
+        it('generates the occlusion after the scene, from the scene depth, in the combine mode', function () {
+            cameraFrame.ssao.type = SSAOTYPE_COMBINE;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            const pass = ssaoPass();
+
+            expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(pass));
+            expect(passes.indexOf(pass)).to.be.below(passes.indexOf(framePass.taaPass));
+            expect(pass.sourceTexture).to.equal(framePass.sceneDepthTexture ?? framePass.prePass.linearDepthTexture);
+            expect(cameraFrame.cameraComponent.shaderParams.ssaoEnabled).to.equal(false);
+            expect(cameraFrame._activeEffects).to.include(cameraFrame.ssao);
+        });
+
+        it('generates the occlusion before the scene, from the prepass, in the lighting mode', function () {
+            cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            const pass = ssaoPass();
+
+            expect(passes.indexOf(framePass.prePass)).to.be.below(passes.indexOf(pass));
+            expect(passes.indexOf(pass)).to.be.below(passes.indexOf(framePass.scenePass));
+            expect(pass.sourceTexture).to.equal(framePass.prePass.linearDepthTexture);
+            expect(framePass.options.sceneTextureDepth).to.equal(false);
+            expect(cameraFrame.cameraComponent.shaderParams.ssaoEnabled).to.equal(true);
+        });
+
+        it('sizes the occlusion on the first frame after the passes are built, in the lighting mode', function () {
+            cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+
+            // one frame of updates in the order the frame graph runs them, up to the scene pass - the
+            // occlusion is sized from the prepass depth, which the prepass resizes before it
+            framePass.frameUpdate();
+            for (const pass of framePass.beforePasses) {
+                pass.frameUpdate();
+                if (pass === framePass.scenePass) break;
+            }
+
+            const { width, height } = framePass.prePass.renderTarget;
+            expect(width).to.be.above(4);
+            expect(ssaoPass().renderTarget.width).to.equal(width);
+            expect(ssaoPass().renderTarget.height).to.equal(height);
+        });
+
+        it('switches between the modes on update, the lit shaders applying it in the lighting mode only', function () {
+            const { shaderParams } = cameraFrame.cameraComponent;
+            cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
+            cameraFrame.update();
+            const lighting = ssaoPass();
+            const destroy = spy(lighting, 'destroy');
+
+            cameraFrame.ssao.type = SSAOTYPE_COMBINE;
+            cameraFrame.update();
+            expect(destroy.callCount).to.equal(1);
+            expect(ssaoPass()).to.not.equal(lighting);
+            expect(shaderParams.ssaoEnabled).to.equal(false);
+
+            cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
+            cameraFrame.update();
+            expect(shaderParams.ssaoEnabled).to.equal(true);
+
+            cameraFrame.ssao.type = SSAOTYPE_NONE;
+            cameraFrame.update();
+            expect(ssaoPass()).to.equal(undefined);
+            expect(shaderParams.ssaoEnabled).to.equal(false);
+            expect(cameraFrame._activeEffects).to.not.include(cameraFrame.ssao);
+        });
+
+        it('stops the lit shaders applying it once it is removed', function () {
+            cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
+            cameraFrame.update();
+
+            const { ssao } = cameraFrame;
+            cameraFrame.removeEffect(ssao);
+            cameraFrame.update();
+            expect(ssaoPass()).to.equal(undefined);
+            expect(cameraFrame.cameraComponent.shaderParams.ssaoEnabled).to.equal(false);
+            ssao.destroyPasses();
+        });
+
+        it('keeps its debug view in both modes', function () {
+            cameraFrame.debug = 'ssao';
+            for (const type of [SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING]) {
+                cameraFrame.ssao.type = type;
+                cameraFrame.update();
+                expect(cameraFrame.renderPassCamera.composePass.debug).to.equal('ssao');
+            }
+
+            cameraFrame.ssao.type = SSAOTYPE_NONE;
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.composePass.debug).to.equal(null);
         });
     });
 });

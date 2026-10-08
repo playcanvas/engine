@@ -5,7 +5,8 @@ import { Debug } from '../../../src/core/debug.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import {
-    COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_SCENE, FRAMERESOURCE_SCENECOLORHALF
+    COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_SCENE, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH,
+    FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
 } from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
@@ -13,9 +14,11 @@ import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/co
 import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
 import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
+import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
+import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -144,6 +147,7 @@ describe('CameraFrameEffect', function () {
             const builtIns = [
                 [CasEffect, 'cas', COMPOSESLOT_SCENE],
                 [FringingEffect, 'fringing', COMPOSESLOT_SCENE],
+                [SsaoEffect, 'ssao', COMPOSESLOT_HDR],
                 [BloomEffect, 'bloom', COMPOSESLOT_HDR],
                 [ColorEnhanceEffect, 'colorEnhance', COMPOSESLOT_HDR],
                 [GradingEffect, 'grading', COMPOSESLOT_HDR],
@@ -178,6 +182,8 @@ describe('CameraFrameEffect', function () {
             expect(new VignetteEffect(device).entryPoint).to.equal('applyVignette');
             expect(new GradingEffect(device).chunkName).to.equal('composeGradingPS');
             expect(new GradingEffect(device).defineName).to.equal('GRADING');
+            expect(new SsaoEffect(device).chunkName).to.equal('composeSsaoPS');
+            expect(new SsaoEffect(device).defineName).to.equal('SSAO');
             expect(new BloomEffect(device).chunkName).to.equal('composeBloomPS');
             expect(new BloomEffect(device).defineName).to.equal('BLOOM');
             expect(new CasEffect(device).chunkName).to.equal('composeCasPS');
@@ -189,7 +195,7 @@ describe('CameraFrameEffect', function () {
         });
 
         it('names an entry function each built-in chunk declares', function () {
-            for (const EffectClass of [CasEffect, FringingEffect, BloomEffect, ColorEnhanceEffect, GradingEffect, ColorLutEffect, VignetteEffect]) {
+            for (const EffectClass of [CasEffect, FringingEffect, SsaoEffect, BloomEffect, ColorEnhanceEffect, GradingEffect, ColorLutEffect, VignetteEffect]) {
                 const effect = new EffectClass(device);
                 expect(effect.glsl, effect.id).to.include(` ${effect.entryPoint}(`);
                 expect(effect.wgsl, effect.id).to.include(`fn ${effect.entryPoint}(`);
@@ -409,6 +415,119 @@ describe('CameraFrameEffect', function () {
             bloom.blurLevel = 5;
             bloom.update();
             expect(pass.blurLevel).to.equal(5);
+        });
+    });
+
+    describe('ssao', function () {
+
+        // an SSAO effect on a camera frame stand-in supplying the camera
+        const createSsao = (type = SSAOTYPE_COMBINE) => {
+            const ssao = new SsaoEffect(device);
+            ssao.type = type;
+            ssao.cameraFrame = /** @type {any} */ ({ cameraComponent: { shaderParams: new CameraShaderParams() } });
+            return ssao;
+        };
+
+        // the scene depth the camera frame would provide for it, under both names
+        const createResources = () => {
+            const texture = new Texture(device, { name: 'depth', width: 64, height: 32, format: PIXELFORMAT_RGBA16F });
+            const depth = { texture, defines: new Map(), key: '' };
+            return { [FRAMERESOURCE_DEPTH]: depth, [FRAMERESOURCE_PREPASSDEPTH]: depth };
+        };
+
+        const createPasses = (ssao, resources = createResources()) => {
+            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            ssao.createPasses(resources, passes);
+            return passes;
+        };
+
+        it('is active unless its type is none', function () {
+            const ssao = createSsao(SSAOTYPE_NONE);
+            expect(ssao.active).to.equal(false);
+            ssao.type = SSAOTYPE_LIGHTING;
+            expect(ssao.active).to.equal(true);
+            ssao.type = SSAOTYPE_COMBINE;
+            expect(ssao.active).to.equal(true);
+            ssao.enabled = false;
+            expect(ssao.active).to.equal(false);
+        });
+
+        it('requires the depth of the prepass in the lighting mode, and any scene depth otherwise', function () {
+            const ssao = createSsao(SSAOTYPE_COMBINE);
+            expect(ssao.requires).to.deep.equal([FRAMERESOURCE_DEPTH]);
+            ssao.type = SSAOTYPE_LIGHTING;
+            expect(ssao.requires).to.deep.equal([FRAMERESOURCE_PREPASSDEPTH]);
+            expect(ssao.debugViews).to.deep.equal(['ssao']);
+        });
+
+        it('rebuilds its passes when the blur is switched', function () {
+            const ssao = createSsao();
+            const key = ssao.buildKey();
+            ssao.blurEnabled = false;
+            expect(ssao.buildKey()).to.not.equal(key);
+        });
+
+        it('generates the occlusion after the scene in the combine mode', function () {
+            const ssao = createSsao(SSAOTYPE_COMBINE);
+            const resources = createResources();
+            const passes = createPasses(ssao, resources);
+            expect(passes.postScene).to.have.lengthOf(1);
+            expect(passes.preScene).to.have.lengthOf(0);
+            const [pass] = passes.postScene;
+            expect(pass).to.be.an.instanceOf(RenderPassSsao);
+            expect(pass.sourceTexture).to.equal(resources.depth.texture);
+            expect(ssao.cameraFrame.cameraComponent.shaderParams.ssaoEnabled).to.equal(false);
+
+            ssao.update();
+            expect(ssao._defines.has('SSAO_LIGHTING')).to.equal(false);
+        });
+
+        it('generates the occlusion before the scene for the lit materials in the lighting mode', function () {
+            const ssao = createSsao(SSAOTYPE_LIGHTING);
+            const resources = createResources();
+            const passes = createPasses(ssao, resources);
+            expect(passes.preScene).to.have.lengthOf(1);
+            expect(passes.postScene).to.have.lengthOf(0);
+            expect(passes.preScene[0].sourceTexture).to.equal(resources.prepassDepth.texture);
+            expect(ssao.cameraFrame.cameraComponent.shaderParams.ssaoEnabled).to.equal(true);
+
+            // the composition then only displays it in the debug view
+            ssao.update();
+            expect(ssao._defines.get('SSAO_LIGHTING')).to.equal(true);
+        });
+
+        it('applies its parameters to its pass and the composition when updated', function () {
+            const ssao = createSsao();
+            const [pass] = createPasses(ssao).postScene;
+            Object.assign(ssao, { intensity: 0.7, power: 3, radius: 4, samples: 20, minAngle: 15, scale: 0.5, randomize: true });
+            ssao.update();
+            expect(pass.intensity).to.equal(0.7);
+            expect(pass.power).to.equal(3);
+            expect(pass.radius).to.equal(4);
+            expect(pass.sampleCount).to.equal(20);
+            expect(pass.minAngle).to.equal(15);
+            expect(pass.scale).to.equal(0.5);
+            expect(pass.randomize).to.equal(true);
+
+            ssao._bindUniforms();
+            expect(device.scope.resolve('ssaoTexture').value).to.equal(pass.ssaoTexture);
+        });
+
+        it('renders what its passes were built for until they are rebuilt', function () {
+            const ssao = createSsao(SSAOTYPE_COMBINE);
+            createPasses(ssao);
+            ssao.type = SSAOTYPE_LIGHTING;
+            ssao.update();
+            expect(ssao._defines.has('SSAO_LIGHTING')).to.equal(false);
+        });
+
+        it('destroys its pass once', function () {
+            const ssao = createSsao();
+            const [pass] = createPasses(ssao).postScene;
+            const destroy = spy(pass, 'destroy');
+            ssao.destroyPasses();
+            ssao.destroyPasses();
+            expect(destroy.callCount).to.equal(1);
         });
     });
 

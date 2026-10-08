@@ -8,7 +8,7 @@ import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
 import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
-import { composeSlots } from './constants.js';
+import { composeSlots, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH } from './constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js';
@@ -37,8 +37,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
     blurTexture = null;
 
     blurTextureUpscale = false;
-
-    _ssaoTexture = null;
 
     _toneMapping = TONEMAP_LINEAR;
 
@@ -77,6 +75,15 @@ class RenderPassCompose extends RenderPassShaderQuad {
     _effectVersions = [];
 
     /**
+     * Whether an effect taking part in the composition requires the scene depth, which its chunk
+     * then reads with the functions of the depth chunk the composition includes.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _effectsRequireDepth = false;
+
+    /**
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
      * @param {CameraComponent} cameraComponent - The camera this composes the frame of. Only the depth
      * debug mode needs it, for the depth encoding the camera renders and its clip range.
@@ -93,7 +100,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
         this.cocTextureId = scope.resolve('cocTexture');
-        this.ssaoTextureId = scope.resolve('ssaoTexture');
         this.blurTextureId = scope.resolve('blurTexture');
         this.sceneTextureSizeId = scope.resolve('sceneTextureSize');
         this.sceneTextureSizeValue = new Float32Array(4);
@@ -111,14 +117,26 @@ class RenderPassCompose extends RenderPassShaderQuad {
      * @type {CameraFrameEffect[]}
      */
     set effects(value) {
+
+        // whether a composed effect requires the scene depth, which can depend on its parameters
+        let requireDepth = false;
+        for (let i = 0; i < value.length; i++) {
+            const effect = value[i];
+            if (effect.slot) {
+                const { requires } = effect;
+                requireDepth ||= requires.includes(FRAMERESOURCE_DEPTH) || requires.includes(FRAMERESOURCE_PREPASSDEPTH);
+            }
+        }
+
         const effects = this._effects;
         const versions = this._effectVersions;
-        let changed = effects.length !== value.length;
+        let changed = effects.length !== value.length || requireDepth !== this._effectsRequireDepth;
         for (let i = 0; !changed && i < value.length; i++) {
             changed = effects[i] !== value[i] || versions[i] !== value[i]._definesVersion;
         }
 
         if (changed) {
+            this._effectsRequireDepth = requireDepth;
             effects.length = 0;
             versions.length = 0;
             for (let i = 0; i < value.length; i++) {
@@ -295,17 +313,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._cocTexture;
     }
 
-    set ssaoTexture(value) {
-        if (this._ssaoTexture !== value) {
-            this._ssaoTexture = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get ssaoTexture() {
-        return this._ssaoTexture;
-    }
-
     set taaEnabled(value) {
         if (this._taaEnabled !== value) {
             this._taaEnabled = value;
@@ -403,18 +410,19 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const startHash = hashCode(customChunks.get('composeMainStartPS') ?? '');
         const endHash = hashCode(customChunks.get('composeMainEndPS') ?? '');
 
-        // the depth debug mode samples the scene depth, whose encoding varies with what produced it
+        // the scene depth is read by the depth debug mode and by the effects requiring it, in the
+        // encoding of what produced it. Requiring the depth makes the camera frame produce it.
         const debugMode = this._debugMode;
+        const sceneDepth = debugMode === 'depth' || this._effectsRequireDepth;
         const depthDefines = new Map();
-        const depthKey = debugMode === 'depth' ?
-            ShaderUtils.addScreenDepthChunkDefines(this.cameraComponent.shaderParams, depthDefines) : '';
+        const depthKey = sceneDepth ?
+            `-depth${ShaderUtils.addScreenDepthChunkDefines(this.cameraComponent.shaderParams, depthDefines)}` : '';
 
         const key =
             `${this.toneMapping}` +
             `-${gammaCorrectionName}` +
             `-${this.cocTexture ? 'dof' : 'nodof'}` +
             `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
-            `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
             `-${this.taaEnabled ? 'taa' : 'notaa'}` +
             `-${debugMode ?? ''}${depthKey}` +
             `-decl${declHash}-start${startHash}-end${endHash}`;
@@ -424,9 +432,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
         defines.set('GAMMA', gammaCorrectionName);
         if (this.cocTexture) defines.set('DOF', true);
         if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
-        if (this.ssaoTexture) defines.set('SSAO', true);
         if (this.taaEnabled) defines.set('TAA', true);
         if (debugMode) defines.set('DEBUG_COMPOSE', debugMode);
+        if (sceneDepth) defines.set('COMPOSE_SCENE_DEPTH', true);
         depthDefines.forEach((value, name) => defines.set(name, value));
 
         // the effects: the active ids stay readable in the shader name, while their defines and
@@ -453,8 +461,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
     execute() {
 
         // the clip range the depth debug mode maps to its ramp, and what the depth chunk linearizes
-        // with. Only set for that mode, so the rest of the composition leaves the camera state alone.
-        if (this._debugMode === 'depth') {
+        // with. Only set when the depth is read, so the rest of the composition leaves the camera
+        // state alone.
+        if (this._debugMode === 'depth' || this._effectsRequireDepth) {
             this.cameraParamsId.setValue(this.cameraComponent.camera.fillShaderParams(this.cameraParams));
         }
 
@@ -475,10 +484,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._cocTexture) {
             this.cocTextureId.setValue(this._cocTexture);
             this.blurTextureId.setValue(this.blurTexture);
-        }
-
-        if (this._ssaoTexture) {
-            this.ssaoTextureId.setValue(this._ssaoTexture);
         }
 
         // the uniform values of the effects are bound right before the draw, not when they are set:

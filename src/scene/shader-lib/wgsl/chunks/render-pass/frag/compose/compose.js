@@ -10,13 +10,13 @@ export default /* wgsl */`
     uniform composeTargetFlipY: f32;
 
     #include "composeDofPS"
-    #include "composeSsaoPS"
 
-    // The depth debug mode displays a depth some other pass in this frame has already produced - the
-    // debug modes never turn any rendering on, so the mode is switched to depthmissing when nothing
-    // did, see RenderPassCompose. That is also why this is included here rather than unconditionally:
-    // declaring the depth sampler in a frame with no depth to bind to it is an error.
-    #if DEBUG_COMPOSE == depth
+    // The scene depth, for the depth debug mode and the effects requiring the depth. The debug mode
+    // displays a depth some other pass in this frame has already produced - the debug modes never
+    // turn any rendering on, so the mode is switched to depthmissing when nothing did, see
+    // RenderPassCompose. That is also why this is included only when needed: declaring the depth
+    // sampler in a frame with no depth to bind to it is an error.
+    #ifdef COMPOSE_SCENE_DEPTH
         #include "screenDepthPS"
     #endif
 
@@ -48,11 +48,6 @@ export default /* wgsl */`
             result = applyDof(result, uv);
         #endif
 
-        // Apply SSAO
-        #ifdef SSAO_TEXTURE
-            result = applySsao(result, uv);
-        #endif
-
         // COMPOSESLOT_HDR effects - linear, scene-referred colour
         #include "composeSlotHdrCallPS, COMPOSE_HDR_COUNT"
 
@@ -73,8 +68,6 @@ export default /* wgsl */`
                 result = vec3f(dCoc, 0.0);
             #elif defined(DOF) && DEBUG_COMPOSE == dofblur
                 result = dBlur;
-            #elif defined(SSAO_TEXTURE) && DEBUG_COMPOSE == ssao
-                result = vec3f(dSsao);
             #elif DEBUG_COMPOSE == depth
                 // a linear ramp over the camera clip range
                 let dDepth = getLinearScreenDepth(uv);
