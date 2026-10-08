@@ -313,8 +313,6 @@ function basisInitialize(config) {
     }
 }
 
-let deviceDetails = null;
-
 /**
  * Enqueue a blob of basis data for transcoding.
  *
@@ -335,16 +333,16 @@ let deviceDetails = null;
 function basisTranscode(device, url, data, callback, options) {
     basisInitialize();
 
-    if (!deviceDetails) {
-        deviceDetails = {
-            formats: getCompressionFormats(device),
+    // the capabilities of the device the texture is transcoded for, collected for each job, as
+    // textures can be loaded for multiple devices, for example WebGPU and WebGL
+    const deviceDetails = {
+        formats: getCompressionFormats(device),
 
-            // WebGPU has no 16-bit uncompressed formats, and requires the dimensions of compressed
-            // textures to be multiples of the block size, unless it supports unaligned ones
-            webgpu: device.isWebGPU,
-            unalignedCompression: !!device.extCompressedTextureUnaligned
-        };
-    }
+        // WebGPU has no 16-bit uncompressed formats, and requires the dimensions of compressed
+        // textures to be multiples of the block size, unless it supports unaligned ones
+        webgpu: device.isWebGPU,
+        unalignedCompression: !!device.extCompressedTextureUnaligned
+    };
 
     queue.enqueueJob(url, data, callback, {
         deviceDetails: deviceDetails,
