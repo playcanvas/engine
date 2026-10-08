@@ -25,6 +25,19 @@ class CountingPass extends FramePass {
     }
 }
 
+// stands in for a pass which renders to a target once for all the views, such as the shadow pass of
+// a directional light rendering its shadow map
+class CountingTargetPass extends CountingPass {
+    colorArrayOps = [];
+
+    depthStencilOps = { clearDepth: true, clearStencil: true, storeDepth: false, storeStencil: false };
+
+    constructor(device, name, renderTarget) {
+        super(device, name, false);
+        this.renderTarget = renderTarget;
+    }
+}
+
 describe('FrameGraph', function () {
     /** @type {Application} */
     let app;
@@ -117,6 +130,68 @@ describe('FrameGraph', function () {
 
             expect(shadow.executeCount).to.equal(1);
             expect(forward.executeCount).to.equal(2);
+        });
+
+        describe('with two cameras rendering in the scope', function () {
+
+            // the forward passes of two cameras, each with the shadow pass of a directional light,
+            // rendering to the given shadow maps
+            const addCameras = (frameGraph, shadowMapA, shadowMapB) => {
+                const forwardA = new CountingPass(device, 'ForwardA');
+                const shadowA = new CountingTargetPass(device, 'ShadowA', shadowMapA);
+                forwardA.beforePasses.push(shadowA);
+
+                const forwardB = new CountingPass(device, 'ForwardB');
+                const shadowB = new CountingTargetPass(device, 'ShadowB', shadowMapB);
+                forwardB.beforePasses.push(shadowB);
+
+                frameGraph.addRenderPass(forwardA);
+                frameGraph.addRenderPass(forwardB);
+                return { forwardA, shadowA, forwardB, shadowB };
+            };
+
+            it('keeps the shadow passes of a light the cameras share in place', function () {
+                // the light renders its shadow map for each camera, before the camera uses it
+                const frameGraph = new FrameGraph();
+                const shadowMap = {};
+
+                frameGraph.beginMultiView(device);
+                const { forwardA, shadowA, forwardB, shadowB } = addCameras(frameGraph, shadowMap, shadowMap);
+                frameGraph.endMultiView();
+
+                expect(frameGraph.renderPasses).to.have.lengthOf(1);
+                expect(frameGraph.renderPasses[0].children).to.deep.equal([shadowA, forwardA, shadowB, forwardB]);
+            });
+
+            it('moves the shadow passes of different lights ahead of the captured passes', function () {
+                const frameGraph = new FrameGraph();
+
+                frameGraph.beginMultiView(device);
+                const { forwardA, shadowA, forwardB, shadowB } = addCameras(frameGraph, {}, {});
+                frameGraph.endMultiView();
+
+                const [first, second, wrapper] = frameGraph.renderPasses;
+                expect(frameGraph.renderPasses).to.have.lengthOf(3);
+                expect(first).to.equal(shadowA);
+                expect(second).to.equal(shadowB);
+                expect(wrapper.children).to.deep.equal([forwardA, forwardB]);
+            });
+
+            it('renders the shadow passes of a light the cameras share once per view', function () {
+                const frameGraph = new FrameGraph();
+                const shadowMap = {};
+                const view = { colorTexture: null, viewDescriptor: null, viewFormat: null };
+                const xrDevice = { xrSubImages: [view, view], backBuffer: null };
+
+                frameGraph.beginMultiView(xrDevice);
+                const passes = addCameras(frameGraph, shadowMap, shadowMap);
+                frameGraph.endMultiView();
+                frameGraph.render(device);
+
+                Object.values(passes).forEach((pass) => {
+                    expect(pass.executeCount).to.equal(2);
+                });
+            });
         });
     });
 });

@@ -28,8 +28,7 @@ class FrameGraph {
     /**
      * Active multi-view capture wrapper. When non-null, passes scheduled via
      * {@link FrameGraph#addRenderPass} are appended as children of this wrapper instead of being
-     * pushed directly into {@link FrameGraph#renderPasses}, except for the passes which do not
-     * render per view (see {@link FramePass#perView}). Set/cleared via
+     * pushed directly into {@link FrameGraph#renderPasses}. Set/cleared via
      * {@link FrameGraph#beginMultiView} / {@link FrameGraph#endMultiView}.
      *
      * @type {FramePassMultiView|null}
@@ -39,10 +38,7 @@ class FrameGraph {
     /**
      * Open a multi-view capture scope. Subsequent passes added through
      * {@link FrameGraph#addRenderPass} are captured as children of a single
-     * {@link FramePassMultiView} until {@link FrameGraph#endMultiView} is called. A pass which
-     * does not render per view (see {@link FramePass#perView}), such as the shadow pass of a
-     * directional light, is added to the frame directly instead, so it renders once. As the wrapper
-     * is only added when the scope closes, such a pass renders before all the captured passes.
+     * {@link FramePassMultiView} until {@link FrameGraph#endMultiView} is called.
      *
      * @param {GraphicsDevice} device - The graphics device used to construct the wrapper.
      */
@@ -54,13 +50,62 @@ class FrameGraph {
     /**
      * Close the multi-view capture scope. Pushes the wrapper into the frame graph render passes
      * unless it captured no children (in which case it is dropped).
+     *
+     * A captured pass which does not render per view (see {@link FramePass#perView}), such as the
+     * shadow pass of a directional light, is moved out of the wrapper ahead of it, so it renders
+     * once before all the views. This is not done when another such pass of the scope renders to
+     * the same target, such as the shadow passes of a light shared by several cameras rendered in
+     * the scope. Each of those renders the target for the passes following it, and so keeps its
+     * place between them, rendering per view.
      */
     endMultiView() {
         const wrap = this.multiview;
         this.multiview = null;
-        if (wrap?.children.length) {
+        if (!wrap) {
+            return;
+        }
+
+        // move the passes which render once for all the views out of the wrapper, compacting the
+        // passes staying in it in place. The moved passes are added to the frame before the
+        // wrapper, which is added last, so they render before all the views.
+        const children = wrap.children;
+        let kept = 0;
+        for (let i = 0; i < children.length; i++) {
+            const pass = children[i];
+            if (!pass.perView && !this._sharesTarget(children, pass)) {
+                this.renderPasses.push(pass);
+            } else {
+                children[kept++] = pass;
+            }
+        }
+        children.length = kept;
+
+        // drop the wrapper when no pass renders per view
+        if (kept) {
             this.renderPasses.push(wrap);
         }
+    }
+
+    /**
+     * Returns true when another pass which does not render per view renders to the same target
+     * as the pass. Passes without a target are treated as sharing it, as what they write is not
+     * known.
+     *
+     * @param {FramePass[]} passes - The passes of a multi-view capture scope.
+     * @param {FramePass} pass - The pass to test.
+     * @returns {boolean} True when the target is shared.
+     * @private
+     */
+    _sharesTarget(passes, pass) {
+        // an undefined target compares equal to another undefined target, which makes passes
+        // without a target share it
+        for (let i = 0; i < passes.length; i++) {
+            const other = passes[i];
+            if (other !== pass && !other.perView && other.renderTarget === pass.renderTarget) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -81,7 +126,7 @@ class FrameGraph {
         }
 
         if (renderPass.enabled) {
-            if (this.multiview && renderPass.perView) {
+            if (this.multiview) {
                 this.multiview.addChild(renderPass);
             } else {
                 this.renderPasses.push(renderPass);
