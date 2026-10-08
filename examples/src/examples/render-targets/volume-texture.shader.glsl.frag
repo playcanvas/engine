@@ -10,6 +10,9 @@ uniform vec3 uBoxMax;
 
 uniform float uDensity;
 uniform float uBrightness;
+
+// the mip level of the volume to sample
+uniform float uLod;
 uniform vec3 view_position;
 
 varying vec3 vFarPosition;
@@ -46,7 +49,8 @@ void main(void)
     for (int i = 0; i < STEPS; i++) {
         float t = tEnter + (float(i) + jitter) * stepLength;
         vec3 uvw = (view_position + rayDir * t - uBoxMin) / boxSize;
-        vec4 voxel = textureLod(uVolume, uvw, 0.0);
+        // the depth slices of the volume are stacked along the height
+        vec4 voxel = textureLod(uVolume, uvw.xzy, uLod);
         float alpha = 1.0 - exp(-voxel.a * uDensity * stepLength);
         color += transmittance * alpha * voxel.rgb;
         transmittance *= 1.0 - alpha;

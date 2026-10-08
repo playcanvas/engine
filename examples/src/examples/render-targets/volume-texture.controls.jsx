@@ -1,4 +1,10 @@
-import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    Panel,
+    SliderInput
+} from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -29,6 +35,31 @@ export function Controls({ observer }) {
                         min={0}
                         max={4}
                         precision={2}
+                    />
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Volume'>
+                <LabelGroup text='Dynamic'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.dynamic' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Mipmaps'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.mipmaps' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Mip level'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.mipLevel' }}
+                        min={0}
+                        max={7}
+                        precision={0}
                     />
                 </LabelGroup>
             </Panel>

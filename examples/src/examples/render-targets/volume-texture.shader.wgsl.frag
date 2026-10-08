@@ -11,6 +11,9 @@ uniform uBoxMax: vec3f;
 
 uniform uDensity: f32;
 uniform uBrightness: f32;
+
+// the mip level of the volume to sample
+uniform uLod: f32;
 uniform view_position: vec3f;
 
 varying vFarPosition: vec3f;
@@ -51,7 +54,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     for (var i = 0; i < STEPS; i++) {
         let t = tEnter + (f32(i) + jitter) * stepLength;
         let uvw = (uniform.view_position + rayDir * t - uniform.uBoxMin) / boxSize;
-        let voxel = textureSampleLevel(uVolume, uVolumeSampler, uvw, 0.0);
+        // the depth slices of the volume are stacked along the height
+        let voxel = textureSampleLevel(uVolume, uVolumeSampler, uvw.xzy, uniform.uLod);
         let alpha = 1.0 - exp(-voxel.a * uniform.uDensity * stepLength);
         color += transmittance * alpha * voxel.rgb;
         transmittance *= 1.0 - alpha;

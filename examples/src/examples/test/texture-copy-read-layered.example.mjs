@@ -3,7 +3,9 @@
 // Hidden test for Texture.read() and Texture.copy() on layered textures - cubemap faces, texture
 // array layers and the depth slices of volume textures, including whole volume reads and copies,
 // sub-regions and mip levels. Each texel holds a unique value, and every result is verified by
-// reading it back. Runs on both WebGL2 and WebGPU.
+// reading it back. Also renders to the depth slices of volume textures using render targets, and
+// verifies the rendered slices and the generated mipmaps of volume textures. Runs on both WebGL2
+// and WebGPU.
 //
 // @flag HIDDEN
 
@@ -18,8 +20,12 @@ import {
     FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
     RESOLUTION_AUTO,
+    RenderTarget,
+    SEMANTIC_POSITION,
+    ShaderUtils,
     Texture,
-    createGraphicsDevice
+    createGraphicsDevice,
+    drawQuadWithShader
 } from 'playcanvas';
 
 import { deviceType } from 'examples/context';
@@ -162,7 +168,82 @@ const check = (label, actual, expected) => {
     console.log(`${passed ? 'PASS' : 'FAIL'}: ${label}`);
 };
 
+/**
+ * Compares a result against the expected pixels, allowing a difference of one per channel for the
+ * rounding of filtered values, and records it.
+ *
+ * @param {string} label - The name of the check.
+ * @param {ArrayLike<number>} actual - The pixels read back.
+ * @param {Uint8Array} expected - The expected pixels.
+ */
+const checkClose = (label, actual, expected) => {
+    let passed = actual.length === expected.length;
+    for (let i = 0; passed && i < expected.length; i++) {
+        passed = Math.abs(actual[i] - expected[i]) <= 1;
+    }
+    results.push({ label, passed });
+    console.log(`${passed ? 'PASS' : 'FAIL'}: ${label}`);
+};
+
 const read = (texture, w, h, options) => texture.read(0, 0, w, h, { immediate: true, ...options });
+
+// a shader rendering a flat color, to render into the depth slices of volume textures
+const colorShader = ShaderUtils.createShader(device, {
+    uniqueName: 'VolumeSliceColorShader',
+    attributes: { aPosition: SEMANTIC_POSITION },
+    vertexChunk: 'quadVS',
+    fragmentGLSL: `
+        uniform vec4 uColor;
+        void main(void) {
+            gl_FragColor = uColor;
+        }`,
+    fragmentWGSL: `
+        uniform uColor: vec4f;
+        @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+            var output: FragmentOutput;
+            output.color = uniform.uColor;
+            return output;
+        }`
+});
+
+/**
+ * Renders a flat color into a render target.
+ *
+ * @param {RenderTarget} renderTarget - The render target.
+ * @param {number[]} rgba - The color, 4 values 0-255.
+ */
+const renderColor = (renderTarget, rgba) => {
+    device.scope.resolve('uColor').setValue(rgba.map((v) => v / 255));
+    drawQuadWithShader(device, renderTarget, colorShader);
+};
+
+/**
+ * Creates the pixels of a layer filled with a flat color.
+ *
+ * @param {number} width - The width of the layer.
+ * @param {number} height - The height of the layer.
+ * @param {number[]} rgba - The color, 4 values 0-255.
+ * @returns {Uint8Array} The RGBA8 pixels.
+ */
+const flatPixels = (width, height, rgba) => {
+    const data = new Uint8Array(width * height * 4);
+    for (let i = 0; i < data.length; i += 4) {
+        data.set(rgba, i);
+    }
+    return data;
+};
+
+// the flat color of a depth slice, with values chosen so their averages are whole numbers
+const sliceColor = (slice) => [slice * 32, 255 - slice * 32, 128, 255];
+
+// the color of a mip level depth slice, the average of the colors of the depth slices of mip 0 it
+// is filtered from
+const mipSliceColor = (level, slice) => {
+    const count = 1 << level;
+    const first = slice * count;
+    const r = ((first + (first + count - 1)) / 2) * 32;
+    return [r, 255 - r, 128, 255];
+};
 
 // ----- cubemap faces -----
 {
@@ -321,6 +402,127 @@ const read = (texture, w, h, options) => texture.read(0, 0, w, h, { immediate: t
     const dst = createTexture({ name: 'volume-mips-dst', width: 4, height: 4, depth: 3, volume: true });
     dst.copy(volume, { sourceMipLevel: 1 });
     check('volume mips: copy all slices of mip 1 to mip 0', await read(dst, 4, 4, {}), levels[1]);
+}
+
+// ----- render to volume depth slices -----
+{
+    const size = 4;
+    const depth = 4;
+
+    // a render target for each depth slice, rendered with the color of the slice
+    const volume = createTexture({ name: 'render-volume', width: size, height: size, depth, volume: true });
+    const renderTargets = [...Array(depth).keys()].map(
+        (slice) => new RenderTarget({ colorBuffer: volume, slice, depth: false })
+    );
+    renderTargets.forEach((renderTarget, slice) => renderColor(renderTarget, sliceColor(slice)));
+    check(
+        'render: all slices',
+        await read(volume, size, size, {}),
+        concat([...Array(depth).keys()].map((slice) => flatPixels(size, size, sliceColor(slice))))
+    );
+
+    // rendering to a single slice leaves the others untouched
+    renderColor(renderTargets[2], [10, 20, 30, 255]);
+    check(
+        'render: a single slice',
+        await read(volume, size, size, { slice: 2 }),
+        flatPixels(size, size, [10, 20, 30, 255])
+    );
+    check(
+        'render: a single slice leaves slice 1 untouched',
+        await read(volume, size, size, { slice: 1 }),
+        flatPixels(size, size, sliceColor(1))
+    );
+    renderTargets.forEach((renderTarget) => renderTarget.destroy());
+
+    // a render target with a 2D depth buffer
+    const depthTarget = new RenderTarget({ colorBuffer: volume, slice: 3, depth: true });
+    renderColor(depthTarget, [40, 50, 60, 255]);
+    check(
+        'render: a slice with a depth buffer',
+        await read(volume, size, size, { slice: 3 }),
+        flatPixels(size, size, [40, 50, 60, 255])
+    );
+    depthTarget.destroy();
+
+    // multisampling is not supported, and is ignored
+    const msaaTarget = new RenderTarget({ colorBuffer: volume, slice: 0, depth: false, samples: 4 });
+    check('render: multisampling is ignored', [msaaTarget.samples], new Uint8Array([1]));
+    renderColor(msaaTarget, [70, 80, 90, 255]);
+    check(
+        'render: a slice with multisampling requested',
+        await read(volume, size, size, { slice: 0 }),
+        flatPixels(size, size, [70, 80, 90, 255])
+    );
+    msaaTarget.destroy();
+}
+
+// ----- volume mipmaps generated after rendering -----
+{
+    const size = 8;
+    const depth = 8;
+    const volume = createTexture({
+        name: 'render-volume-mips',
+        width: size,
+        height: size,
+        depth,
+        volume: true,
+        mipmaps: true
+    });
+
+    // render all slices, and generate the mipmaps once, after the last one
+    const renderTargets = [...Array(depth).keys()].map(
+        (slice) =>
+            new RenderTarget({
+                colorBuffer: volume,
+                slice,
+                depth: false,
+                mipLevel: slice < depth - 1 ? 0 : undefined
+            })
+    );
+    renderTargets.forEach((renderTarget, slice) => renderColor(renderTarget, sliceColor(slice)));
+
+    const levels = [1, 2, 3];
+    const reads = await Promise.all(
+        levels.map((level) => read(volume, size >> level, size >> level, { mipLevel: level }))
+    );
+    levels.forEach((level, i) => {
+        const levelSize = size >> level;
+        const levelDepth = depth >> level;
+        const expected = concat(
+            [...Array(levelDepth).keys()].map((slice) => flatPixels(levelSize, levelSize, mipSliceColor(level, slice)))
+        );
+        checkClose(`render mips: mip ${level} generated after rendering`, reads[i], expected);
+    });
+    renderTargets.forEach((renderTarget) => renderTarget.destroy());
+}
+
+// ----- volume mipmaps generated after upload -----
+{
+    const size = 8;
+    const depth = 8;
+    const data = concat([...Array(depth).keys()].map((slice) => flatPixels(size, size, sliceColor(slice))));
+    const volume = createTexture({
+        name: 'upload-volume-mips',
+        width: size,
+        height: size,
+        depth,
+        volume: true,
+        mipmaps: true,
+        levels: [data]
+    });
+    const levels = [1, 2, 3];
+    const reads = await Promise.all(
+        levels.map((level) => read(volume, size >> level, size >> level, { mipLevel: level }))
+    );
+    levels.forEach((level, i) => {
+        const levelSize = size >> level;
+        const levelDepth = depth >> level;
+        const expected = concat(
+            [...Array(levelDepth).keys()].map((slice) => flatPixels(levelSize, levelSize, mipSliceColor(level, slice)))
+        );
+        checkClose(`upload mips: mip ${level} generated after upload`, reads[i], expected);
+    });
 }
 
 // Summary

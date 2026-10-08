@@ -65,6 +65,39 @@ const createMocks = ({ msColorBuffer = true, resolveBuffer = false } = {}) => {
 
 describe('WebgpuRenderTarget#initColor', function () {
 
+    it('renders to a depth slice of a volume texture', function () {
+        const views = [];
+        const colorBuffer = {
+            volume: true,
+            samples: 1,
+            impl: {
+                format: 'rgba8unorm',
+                createView(desc) {
+                    views.push(desc);
+                    return { desc };
+                }
+            }
+        };
+        const renderTarget = {
+            samples: 1,
+            width: 4,
+            height: 4,
+            mipLevel: 1,
+            slice: 3,
+            name: 'volume-rt',
+            transientColor: false,
+            getColorBuffer: () => colorBuffer,
+            getResolveBuffer: () => null
+        };
+        const impl = new WebgpuRenderTarget(renderTarget);
+        const colorAttachment = impl.initColor({}, {}, renderTarget, 0);
+
+        // the 3d view of the mip level, with the depth slice selected by the attachment
+        expect(views).to.deep.equal([{ mipLevelCount: 1, baseMipLevel: 1 }]);
+        expect(colorAttachment.view.desc).to.equal(views[0]);
+        expect(colorAttachment.depthSlice).to.equal(3);
+    });
+
     it('renders directly into an explicit multisampled color buffer without allocating one', function () {
         const { created, wgpu, renderTarget, device } = createMocks();
         const impl = new WebgpuRenderTarget(renderTarget);
