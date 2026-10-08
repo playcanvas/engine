@@ -688,13 +688,15 @@ class CameraFrame {
         this._hdrFormat = this.device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
 
         // the active registered effects owning passes, the resources they require and what else
-        // their passes depend on - the frame passes are rebuilt when this changes
+        // their passes depend on - the frame passes are rebuilt when this changes. The effects are
+        // identified by instance, so that replacing one with a new instance of the same id builds
+        // the passes of the new one.
         let effectPasses = '';
         const { effects } = this;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
             if (effect._ownsPasses && effect.active) {
-                effectPasses += `${effect.id}:${effect.requires}:${effect.buildKey()};`;
+                effectPasses += `${effect._uid}:${effect.requires}:${effect.buildKey()};`;
             }
         }
         options.effectPasses = effectPasses;

@@ -5,6 +5,7 @@ import { Debug } from '../../../src/core/debug.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import { FRAMERESOURCE_SCENECOLORHALF } from '../../../src/extras/render-passes/constants.js';
+import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
@@ -384,6 +385,70 @@ describe('FramePassCameraFrame', function () {
             expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(effect.pass);
             assert.restore();
             effect.destroy();
+            cameraFrame.update();
+        });
+
+        it('builds the passes of a new instance replacing an effect with the same id', function () {
+            const old = new PassEffect(app.graphicsDevice);
+            cameraFrame.addEffect(old);
+            cameraFrame.update();
+            const [oldPass] = old.created;
+
+            // replaced without an update in between, the old instance kept by its owner
+            const replacement = new PassEffect(app.graphicsDevice);
+            cameraFrame.removeEffect(old);
+            cameraFrame.addEffect(replacement);
+            cameraFrame.update();
+
+            const { beforePasses } = cameraFrame.renderPassCamera;
+            expect(replacement.created).to.have.lengthOf(1);
+            expect(beforePasses).to.include(replacement.pass);
+            expect(beforePasses).to.not.include(oldPass);
+            expect(cameraFrame._activeEffects).to.include(replacement);
+            expect(cameraFrame._activeEffects).to.not.include(old);
+            expect(oldPass.destroy.callCount).to.equal(0);
+
+            old.destroy();
+            expect(oldPass.destroy.callCount).to.equal(1);
+            replacement.destroy();
+            cameraFrame.update();
+        });
+
+        it('builds the passes of a new instance replacing a destroyed effect with the same id', function () {
+            const old = new PassEffect(app.graphicsDevice);
+            cameraFrame.addEffect(old);
+            cameraFrame.update();
+            const [oldPass] = old.created;
+
+            old.destroy();
+            const replacement = new PassEffect(app.graphicsDevice);
+            cameraFrame.addEffect(replacement);
+            cameraFrame.update();
+
+            expect(oldPass.destroy.callCount).to.equal(1);
+            expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(oldPass);
+            expect(cameraFrame.renderPassCamera.beforePasses).to.include(replacement.pass);
+            replacement.destroy();
+            cameraFrame.update();
+        });
+
+        it('builds the passes of a new bloom replacing the built-in one', function () {
+            cameraFrame.update();
+            const builtIn = cameraFrame.bloom;
+            const oldPass = builtIn._pass;
+
+            const replacement = new BloomEffect(app.graphicsDevice);
+            replacement.intensity = 0.05;
+            cameraFrame.removeEffect(builtIn);
+            cameraFrame.addEffect(replacement);
+            cameraFrame.update();
+
+            const { beforePasses } = cameraFrame.renderPassCamera;
+            expect(replacement._pass).to.not.equal(null);
+            expect(beforePasses).to.include(replacement._pass);
+            expect(beforePasses).to.not.include(oldPass);
+            expect(cameraFrame._activeEffects).to.include(replacement);
+            replacement.destroy();
             cameraFrame.update();
         });
 

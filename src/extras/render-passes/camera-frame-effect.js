@@ -65,6 +65,9 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 // capitalizes the first character of a name, to derive the identifiers an effect's chunk uses
 const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
 
+// the identifier of the next effect instance constructed
+let uid = 0;
+
 /**
  * Base class of an effect registered with a {@link CameraFrame}. An effect is constructed with the
  * graphics device, its id and its declarations - the compose slot it applies at and its shader
@@ -176,6 +179,15 @@ class CameraFrameEffect {
      * @type {CameraFrame|null}
      */
     cameraFrame = null;
+
+    /**
+     * A number unique to this instance, telling apart effects constructed with the same id - such
+     * as an effect replaced by a new instance of it.
+     *
+     * @type {number}
+     * @ignore
+     */
+    _uid = uid++;
 
     /** @private */
     _id;
