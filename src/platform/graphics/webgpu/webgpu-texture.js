@@ -622,9 +622,12 @@ class WebgpuTexture {
                 bytesPerRow: formatInfo.blockSize * blockDim(width),
                 rowsPerImage: blockDim(height)
             };
+            // WebGPU requires the copy size to be a multiple of the block size, so round it up to
+            // cover the partial blocks of mip levels that are not a multiple of the block size,
+            // for example the 8x6 level of a 1024x768 texture
             size = {
-                width: Math.max(4, width),
-                height: Math.max(4, height),
+                width: math.roundUp(width, 4),
+                height: math.roundUp(height, 4),
                 depthOrArrayLayers: depth
             };
         } else {
