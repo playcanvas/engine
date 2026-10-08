@@ -132,14 +132,19 @@ class BasisQueue {
     }
 
     enqueueJob(url, data, callback, options) {
-        if (this.callbacks.hasOwnProperty(url)) {
-            // duplicate URL request
-            this.callbacks[url].push(callback);
+        // requests for the same URL share a transcode only when their options match, as those
+        // include the capabilities of the device, which select the output format
+        const key = `${url}|${JSON.stringify(options)}`;
+
+        if (this.callbacks.hasOwnProperty(key)) {
+            // duplicate request
+            this.callbacks[key].push(callback);
         } else {
-            // new URL request
-            this.callbacks[url] = [callback];
+            // new request
+            this.callbacks[key] = [callback];
 
             const job = {
+                key: key,
                 url: url,
                 data: data,
                 options: options
@@ -161,8 +166,8 @@ class BasisQueue {
         }
     }
 
-    handleResponse(url, err, data) {
-        const callback = this.callbacks[url];
+    handleResponse(key, err, data) {
+        const callback = this.callbacks[key];
 
         if (err) {
             for (let i = 0; i < callback.length; ++i) {
@@ -183,7 +188,7 @@ class BasisQueue {
                 (callback[i])(null, data);
             }
         }
-        delete this.callbacks[url];
+        delete this.callbacks[key];
     }
 }
 
@@ -194,7 +199,7 @@ class BasisClient {
         this.worker = new Worker(config.workerUrl);
         this.worker.addEventListener('message', (message) => {
             const data = message.data;
-            this.queue.handleResponse(data.url, data.err, data.data);
+            this.queue.handleResponse(data.key, data.err, data.data);
             if (!this.eager) {
                 this.queue.enqueueClient(this);
             }
@@ -214,6 +219,7 @@ class BasisClient {
         }
         this.worker.postMessage({
             type: 'transcode',
+            key: job.key,
             url: job.url,
             format: job.format,
             data: job.data,

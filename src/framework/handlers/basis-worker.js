@@ -398,8 +398,8 @@ function BasisWorker() {
     };
 
     // download and transcode the file given the basis module and
-    // file url
-    const workerTranscode = (url, data, options) => {
+    // file url. the job key is returned with the result to identify the job
+    const workerTranscode = (key, url, data, options) => {
         try {
             const result = transcode(url, data, options);
 
@@ -417,9 +417,9 @@ function BasisWorker() {
                 return level.buffer;
             });
 
-            self.postMessage({ url: url, data: result }, transfer);
+            self.postMessage({ key: key, url: url, data: result }, transfer);
         } catch (err) {
-            self.postMessage({ url: url, err: err }, null);
+            self.postMessage({ key: key, url: url, err: err }, null);
         }
     };
 
@@ -457,14 +457,14 @@ function BasisWorker() {
             case 'init':
                 workerInit(data.config, () => {
                     for (let i = 0; i < queue.length; ++i) {
-                        workerTranscode(queue[i].url, queue[i].data, queue[i].options);
+                        workerTranscode(queue[i].key, queue[i].url, queue[i].data, queue[i].options);
                     }
                     queue.length = 0;
                 });
                 break;
             case 'transcode':
                 if (basis) {
-                    workerTranscode(data.url, data.data, data.options);
+                    workerTranscode(data.key, data.url, data.data, data.options);
                 } else {
                     queue.push(data);
                 }
