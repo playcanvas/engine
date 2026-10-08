@@ -7,6 +7,8 @@ import { expect } from 'chai';
 
 import { MapUtils } from '../../../src/core/map-utils.js';
 import { Preprocessor } from '../../../src/core/preprocessor.js';
+import { FRAMERESOURCE_SCENECOLORHALF } from '../../../src/extras/render-passes/constants.js';
+import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
 import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
 import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
@@ -106,21 +108,33 @@ describe('RenderPassCompose shader snapshot', function () {
         // behind the effects is a stub supplying the scene format the sharpening reads
         pass.cas = new CasEffect(device);
         pass.fringing = new FringingEffect(device);
+        pass.bloom = new BloomEffect(device);
         pass.colorEnhance = new ColorEnhanceEffect(device);
         pass.grading = new GradingEffect(device);
         pass.colorLut = new ColorLutEffect(device);
         pass.vignette = new VignetteEffect(device);
-        const effects = [pass.cas, pass.fringing, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const effects = [pass.cas, pass.fringing, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
         const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F };
         effects.forEach((effect) => {
             effect.cameraFrame = cameraFrame;
         });
         pass.builtInEffects = effects;
+
+        // the effects whose passes exist, which the frame passes create when they are built
+        pass.passEffects = [];
         return pass;
     };
 
+    // bloom contributes once its passes exist - here it creates them over the stand-in half
+    // resolution scene texture
+    const enableBloom = (pass) => {
+        pass.bloom.intensity = 0.05;
+        pass.bloom.createPasses({ [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom }, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.passEffects.push(pass.bloom);
+    };
+
     const enableAll = (pass) => {
-        pass.bloomTexture = textures.bloom;
+        enableBloom(pass);
         pass.cocTexture = textures.coc;
         pass.blurTexture = textures.blur;
         pass.blurTextureUpscale = true;
@@ -157,7 +171,7 @@ describe('RenderPassCompose shader snapshot', function () {
     const combinations = [
         { name: 'off' },
         { name: 'off-gamma-none', set: () => ({ _gammaCorrection: GAMMA_NONE }) },
-        { name: 'bloom', set: (pass, t) => ({ bloomTexture: t.bloom }) },
+        { name: 'bloom', set: pass => enableBloom(pass) },
         { name: 'dof', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur }) },
         { name: 'dof-upscale', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur, blurTextureUpscale: true }) },
         { name: 'ssao', set: (pass, t) => ({ ssaoTexture: t.ssao }) },
@@ -202,9 +216,11 @@ describe('RenderPassCompose shader snapshot', function () {
             const properties = combination.set(pass, textures);
             if (properties && typeof properties === 'object') Object.assign(pass, properties);
         }
-        // the effects applied the way CameraFrame#update applies them: the active ones take part,
-        // each applying its parameters, the defines among them
-        const active = pass.builtInEffects.filter(effect => effect.active);
+        // the effects applied the way CameraFrame#update applies them: the active ones take part -
+        // those owning passes once their passes exist - each applying its parameters, the defines
+        // among them
+        const active = pass.builtInEffects.filter(effect => effect.active &&
+            (!effect._ownsPasses || pass.passEffects.includes(effect)));
         active.forEach(effect => effect.update());
         pass.effects = active;
         if (combination.customChunks) {

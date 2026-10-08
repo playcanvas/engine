@@ -5,6 +5,7 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @import { CameraFrame } from './camera-frame.js'
  * @import { FramePass } from '../../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { ScopeId } from '../../platform/graphics/scope-id.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js'
@@ -27,8 +28,45 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @property {number} sceneHeight - The height of the scene texture this frame, in pixels.
  */
 
+/**
+ * The frame resources handed to {@link CameraFrameEffect#createPasses}: those the effect lists in
+ * {@link CameraFrameEffect#requires}, under the values of the FRAMERESOURCE_* constants. Each
+ * stays the same object for the life of the passes, and the textures are resized with the scene.
+ *
+ * @typedef {object} CameraFrameEffectResources
+ * @property {Texture} [depth] - The scene depth, see FRAMERESOURCE_DEPTH.
+ * @property {Texture} [prepassDepth] - The scene depth rendered by a prepass, see
+ * FRAMERESOURCE_PREPASSDEPTH.
+ * @property {Texture} [sceneColorHalf] - The half resolution scene color, see
+ * FRAMERESOURCE_SCENECOLORHALF.
+ * @property {Texture} [sceneColorGrab] - The mipmapped copy of the opaque scene color, see
+ * FRAMERESOURCE_SCENECOLORGRAB.
+ * @property {RenderTarget} [sceneTarget] - The scene render target, see FRAMERESOURCE_SCENETARGET.
+ * @ignore
+ */
+
+/**
+ * The stages of the frame an effect's passes run at, handed to
+ * {@link CameraFrameEffect#createPasses}, each an empty array the effect adds its passes for that
+ * stage to, in execution order.
+ *
+ * @typedef {object} CameraFrameEffectPasses
+ * @property {FramePass[]} preScene - Passes running before the scene renders, after the prepass
+ * when one renders - for output the scene's materials read.
+ * @property {FramePass[]} postOpaque - Passes running after the opaque geometry and the scene
+ * color copy, before the transparent geometry.
+ * @property {FramePass[]} postScene - Passes running after the scene, before its temporal
+ * anti-aliasing - for passes rendering into the scene.
+ * @property {FramePass[]} postTemporal - Passes running after the temporal anti-aliasing and the
+ * half resolution copy of the scene, before the composition.
+ * @ignore
+ */
+
 // capitalizes the first character of a name, to derive the identifiers an effect's chunk uses
 const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
+
+// the identifier of the next effect instance constructed
+let uid = 0;
 
 /**
  * Base class of an effect registered with a {@link CameraFrame}. An effect is constructed with the
@@ -56,8 +94,8 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  * aspect ratio, as it is always current for the camera being drawn.
  *
  * Like the rest of the camera frame, an effect is configured when {@link CameraFrame#update} is
- * called: changes to its parameters take effect at the next update, and every frame rendered after
- * it uses exactly what the update applied.
+ * called: changes to its parameters, and adding or removing it, take effect at the next update,
+ * and every frame rendered after it uses exactly what the update applied.
  *
  * Lifetime:
  *
@@ -110,11 +148,13 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  * }
  *
  * cameraFrame.addEffect(new TintEffect(app.graphicsDevice));
+ * cameraFrame.update();
  *
  * // The same effect without a class, for effects driven by data
  * const tint = new CameraFrameEffect(app.graphicsDevice, 'tint', { slot: COMPOSESLOT_LDR, glsl, wgsl });
  * tint.setUniform('tintColor', new Float32Array([1, 0.9, 0.8]));
  * cameraFrame.addEffect(tint);
+ * cameraFrame.update();
  * @category Graphics
  */
 class CameraFrameEffect {
@@ -141,14 +181,13 @@ class CameraFrameEffect {
     cameraFrame = null;
 
     /**
-     * The frame resources provisioned for the effect's passes. Valid from
-     * {@link CameraFrameEffect#createPasses} until {@link CameraFrameEffect#destroyPasses}, null
-     * otherwise.
+     * A number unique to this instance, telling apart effects constructed with the same id - such
+     * as an effect replaced by a new instance of it.
      *
-     * @type {object|null}
+     * @type {number}
      * @ignore
      */
-    resources = null;
+    _uid = uid++;
 
     /** @private */
     _id;
@@ -173,9 +212,6 @@ class CameraFrameEffect {
 
     /** @private */
     _requires;
-
-    /** @private */
-    _stage;
 
     /**
      * The compose defines the effect has set, see {@link CameraFrameEffect#setDefine}.
@@ -221,6 +257,8 @@ class CameraFrameEffect {
      * it should differ from the derived `compose<Id>PS`.
      * @param {string} [options.entryPoint] - The name of the function the composition calls, when it
      * should differ from the derived `apply<Id>`.
+     * @param {string[]} [options.requires] - The frame resources the effect needs, the
+     * FRAMERESOURCE_* constants, see {@link CameraFrameEffect#requires}.
      */
     constructor(device, id, options = {}) {
         Debug.assert(device, 'CameraFrameEffect: a graphics device is required.');
@@ -233,14 +271,7 @@ class CameraFrameEffect {
         this._debugViews = options.debugViews ?? [];
         this._chunkName = options.chunkName ?? null;
         this._entryPoint = options.entryPoint ?? null;
-
-        // the declarations of an effect owning passes - the frame resources they need and the
-        // stage they run at - are accepted but not documented until pass ownership is complete
-        const passOptions = /** @type {{ requires?: string[], stage?: string }} */ (
-            /** @type {object} */ (options)
-        );
-        this._requires = passOptions.requires ?? [];
-        this._stage = passOptions.stage ?? null;
+        this._requires = options.requires ?? [];
     }
 
     /**
@@ -322,25 +353,27 @@ class CameraFrameEffect {
     }
 
     /**
-     * Gets the frame resources the effect's passes need. Override as a getter when the requirement
-     * depends on a parameter.
+     * Gets the frame resources the effect needs, the FRAMERESOURCE_* constants - for its passes,
+     * or for its compose chunk, such as the scene depth. The camera frame provides them while the
+     * effect is active. Requirements which depend on the device are computed when constructing the
+     * effect; override this as a getter when they depend on a parameter, and the camera frame
+     * provides what it returns from the next {@link CameraFrame#update}.
      *
      * @type {string[]}
-     * @ignore
      */
     get requires() {
         return this._requires;
     }
 
     /**
-     * Gets the stage the effect's passes run at, or null when it owns none. Override as a getter
-     * when the stage depends on a parameter.
+     * Whether the effect owns passes, which it does by implementing
+     * {@link CameraFrameEffect#createPasses}.
      *
-     * @type {string|null}
+     * @type {boolean}
      * @ignore
      */
-    get stage() {
-        return this._stage;
+    get _ownsPasses() {
+        return this.createPasses !== CameraFrameEffect.prototype.createPasses;
     }
 
     /**
@@ -385,19 +418,50 @@ class CameraFrameEffect {
     }
 
     /**
-     * Creates the passes the effect owns, when it has any. Called when the frame graph is built.
+     * Creates the passes the effect owns, when it has any. Called by {@link CameraFrame#update}
+     * when it builds the frame graph, for an active effect registered with the camera frame.
+     * Implementing it is what makes an effect own passes. The effect adds each pass to the array of
+     * the stage it runs at, in execution order - one effect can run passes at several stages:
      *
-     * @param {object} resources - The provisioned frame resources.
-     * @returns {FramePass[]} The passes, in execution order.
+     * ```javascript
+     * createPasses(resources, passes) {
+     *     this._pass = new MyPass(this.device, resources.sceneColorHalf);
+     *     passes.postTemporal.push(this._pass);
+     * }
+     * ```
+     *
+     * The effect owns the passes it creates: it releases them in
+     * {@link CameraFrameEffect#destroyPasses}.
+     *
+     * The resources are stable: each texture stays the same object until the passes are
+     * destroyed, so it can be handed to the passes once, here. Its size can change, as render
+     * targets resize with the canvas, so its dimensions must not be cached. Values which change
+     * from frame to frame, the resolved scene color among them, are never resources - they are
+     * handed to {@link CameraFrameEffect#frameUpdate} instead.
+     *
+     * @param {CameraFrameEffectResources} resources - The frame resources the effect requires.
+     * @param {CameraFrameEffectPasses} passes - An empty array for each stage of the frame, to add
+     * the passes to.
      * @ignore
      */
-    createPasses(resources) {
-        return [];
+    createPasses(resources, passes) {
     }
 
     /**
-     * Destroys the passes and any resources {@link CameraFrameEffect#createPasses} created. Called
-     * when the frame graph is torn down.
+     * Destroys the passes and any resources {@link CameraFrameEffect#createPasses} created.
+     *
+     * It is also called when the effect has no passes. Each time the camera frame rebuilds the
+     * frame graph, it calls this on every registered effect implementing
+     * {@link CameraFrameEffect#createPasses}, including inactive effects that never created any. {@link CameraFrameEffect#destroy} calls it too, including
+     * after the camera frame has already released the passes. So destroy only what exists, and
+     * clear the references:
+     *
+     * ```javascript
+     * destroyPasses() {
+     *     this._pass?.destroy();
+     *     this._pass = null;
+     * }
+     * ```
      *
      * @ignore
      */
@@ -447,8 +511,8 @@ class CameraFrameEffect {
 
     /**
      * Applies the effect's parameters. Called by {@link CameraFrame#update} while the effect is
-     * active, and when it is added to a camera frame: set the uniform values with
-     * {@link CameraFrameEffect#setUniform} here, and the defines which depend on the parameters.
+     * active: set the uniform values with {@link CameraFrameEffect#setUniform} here, and the
+     * defines which depend on the parameters.
      * Everything it sets is what the frames rendered until the next update use.
      */
     update() {
@@ -470,8 +534,10 @@ class CameraFrameEffect {
 
     /**
      * Destroys the effect, removing it from its camera frame if it is still registered and
-     * releasing everything it owns. Subclasses which create resources in their constructor release
-     * them in an override, calling `super.destroy()`.
+     * releasing everything it owns, the passes it created included. Subclasses which create
+     * resources in their constructor release them in an override, calling `super.destroy()`. The
+     * removal takes effect for the frames rendered after the next {@link CameraFrame#update}, which
+     * is due before the next frame renders.
      */
     destroy() {
         this.cameraFrame?.removeEffect(this);

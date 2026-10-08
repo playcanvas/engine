@@ -1,11 +1,9 @@
 import composePS from '../chunks/render-pass/frag/compose/compose.js';
-import composeBloomPS from '../chunks/render-pass/frag/compose/compose-bloom.js';
 import composeDofPS from '../chunks/render-pass/frag/compose/compose-dof.js';
 import composeSsaoPS from '../chunks/render-pass/frag/compose/compose-ssao.js';
 
 export const composeChunksGLSL = {
     composePS,
-    composeBloomPS,
     composeDofPS,
     composeSsaoPS,
 

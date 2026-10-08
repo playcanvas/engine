@@ -28,7 +28,12 @@ export { GltfExporter } from './exporters/gltf-exporter.js';
 // RENDER PASSES
 export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/constants.js';
 export { COMPOSESLOT_SCENE, COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_OUTPUT } from './render-passes/constants.js';
+export {
+    FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENECOLORGRAB,
+    FRAMERESOURCE_SCENETARGET
+} from './render-passes/constants.js';
 export { CameraFrameEffect } from './render-passes/camera-frame-effect.js';
+export { BloomEffect } from './render-passes/effects/bloom-effect.js';
 export { CasEffect } from './render-passes/effects/cas-effect.js';
 export { ColorEnhanceEffect } from './render-passes/effects/color-enhance-effect.js';
 export { ColorLutEffect } from './render-passes/effects/color-lut-effect.js';

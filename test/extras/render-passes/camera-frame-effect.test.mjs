@@ -4,16 +4,21 @@ import { restore, spy, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
-import { COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_SCENE } from '../../../src/extras/render-passes/constants.js';
+import {
+    COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_SCENE, FRAMERESOURCE_SCENECOLORHALF
+} from '../../../src/extras/render-passes/constants.js';
+import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
 import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
 import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
 import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
+import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
 import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import { RenderPassShaderQuad } from '../../../src/scene/graphics/render-pass-shader-quad.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
@@ -65,8 +70,7 @@ describe('CameraFrameEffect', function () {
                 glsl: 'g',
                 wgsl: 'w',
                 debugViews: ['grain'],
-                requires: ['depth'],
-                stage: 'postscene'
+                requires: ['depth']
             });
             expect(effect.id).to.equal('grain');
             expect(effect.slot).to.equal(COMPOSESLOT_LDR);
@@ -75,7 +79,6 @@ describe('CameraFrameEffect', function () {
             expect(effect.getChunk(SHADERLANGUAGE_WGSL)).to.equal('w');
             expect(effect.debugViews).to.deep.equal(['grain']);
             expect(effect.requires).to.deep.equal(['depth']);
-            expect(effect.stage).to.equal('postscene');
         });
 
         it('has no slot, chunk, passes or debug views unless given them', function () {
@@ -85,12 +88,12 @@ describe('CameraFrameEffect', function () {
             expect(effect.wgsl).to.equal(null);
             expect(effect.debugViews).to.deep.equal([]);
             expect(effect.requires).to.deep.equal([]);
-            expect(effect.stage).to.equal(null);
+            expect(effect._ownsPasses).to.equal(false);
         });
 
         it('keeps its declarations read-only', function () {
             const effect = new CameraFrameEffect(device, 'grain', { slot: COMPOSESLOT_LDR, glsl: 'g' });
-            for (const name of ['id', 'slot', 'glsl', 'wgsl', 'debugViews', 'chunkName', 'entryPoint', 'requires', 'stage']) {
+            for (const name of ['id', 'slot', 'glsl', 'wgsl', 'debugViews', 'chunkName', 'entryPoint', 'requires']) {
                 expect(() => {
                     effect[name] = 'x';
                 }, name).to.throw(TypeError);
@@ -102,18 +105,28 @@ describe('CameraFrameEffect', function () {
                 lighting = false;
 
                 constructor() {
-                    super(device, 'ssao', { requires: ['depth'] });
+                    super(device, 'ssao');
                 }
 
-                get stage() {
-                    return this.lighting ? 'prescene' : 'postscene';
+                get requires() {
+                    return [this.lighting ? 'prepassDepth' : 'depth'];
                 }
             }
             const effect = new Ssao();
-            expect(effect.stage).to.equal('postscene');
-            effect.lighting = true;
-            expect(effect.stage).to.equal('prescene');
             expect(effect.requires).to.deep.equal(['depth']);
+            effect.lighting = true;
+            expect(effect.requires).to.deep.equal(['prepassDepth']);
+        });
+
+        it('owns passes when it implements createPasses', function () {
+            class WithPasses extends CameraFrameEffect {
+                createPasses(resources, passes) {
+                }
+            }
+            expect(new WithPasses(device, 'withPasses')._ownsPasses).to.equal(true);
+            expect(new BloomEffect(device)._ownsPasses).to.equal(true);
+            expect(new CameraFrameEffect(device, 'plain')._ownsPasses).to.equal(false);
+            expect(new VignetteEffect(device)._ownsPasses).to.equal(false);
         });
 
         it('asserts when constructed without an id or a device', function () {
@@ -131,6 +144,7 @@ describe('CameraFrameEffect', function () {
             const builtIns = [
                 [CasEffect, 'cas', COMPOSESLOT_SCENE],
                 [FringingEffect, 'fringing', COMPOSESLOT_SCENE],
+                [BloomEffect, 'bloom', COMPOSESLOT_HDR],
                 [ColorEnhanceEffect, 'colorEnhance', COMPOSESLOT_HDR],
                 [GradingEffect, 'grading', COMPOSESLOT_HDR],
                 [ColorLutEffect, 'colorLut', COMPOSESLOT_LDR],
@@ -164,6 +178,8 @@ describe('CameraFrameEffect', function () {
             expect(new VignetteEffect(device).entryPoint).to.equal('applyVignette');
             expect(new GradingEffect(device).chunkName).to.equal('composeGradingPS');
             expect(new GradingEffect(device).defineName).to.equal('GRADING');
+            expect(new BloomEffect(device).chunkName).to.equal('composeBloomPS');
+            expect(new BloomEffect(device).defineName).to.equal('BLOOM');
             expect(new CasEffect(device).chunkName).to.equal('composeCasPS');
             expect(new CasEffect(device).defineName).to.equal('CAS');
             expect(new FringingEffect(device).chunkName).to.equal('composeFringingPS');
@@ -173,7 +189,7 @@ describe('CameraFrameEffect', function () {
         });
 
         it('names an entry function each built-in chunk declares', function () {
-            for (const EffectClass of [CasEffect, FringingEffect, ColorEnhanceEffect, GradingEffect, ColorLutEffect, VignetteEffect]) {
+            for (const EffectClass of [CasEffect, FringingEffect, BloomEffect, ColorEnhanceEffect, GradingEffect, ColorLutEffect, VignetteEffect]) {
                 const effect = new EffectClass(device);
                 expect(effect.glsl, effect.id).to.include(` ${effect.entryPoint}(`);
                 expect(effect.wgsl, effect.id).to.include(`fn ${effect.entryPoint}(`);
@@ -280,6 +296,122 @@ describe('CameraFrameEffect', function () {
         });
     });
 
+    describe('bloom', function () {
+
+        // a bloom effect on a camera frame stand-in supplying the scene format
+        const createBloom = (hdrFormat = PIXELFORMAT_RGBA16F) => {
+            const bloom = new BloomEffect(device);
+            bloom.cameraFrame = /** @type {any} */ ({ hdrFormat });
+            return bloom;
+        };
+
+        // the frame resources the camera frame would provide for it, under the constant's value
+        const createResources = () => {
+            const texture = new Texture(device, { name: 'half', width: 64, height: 32, format: PIXELFORMAT_RGBA16F });
+            return { [FRAMERESOURCE_SCENECOLORHALF]: texture };
+        };
+
+        // the passes it creates after the temporal anti-aliasing, the only stage it uses
+        const createPasses = (bloom, resources = createResources()) => {
+            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            bloom.createPasses(resources, passes);
+            expect(passes.preScene.length + passes.postOpaque.length + passes.postScene.length).to.equal(0);
+            return passes.postTemporal;
+        };
+
+        it('owns passes, which read the half resolution scene', function () {
+            const bloom = createBloom();
+            expect(bloom._ownsPasses).to.equal(true);
+            expect(bloom.requires).to.deep.equal([FRAMERESOURCE_SCENECOLORHALF]);
+            expect(bloom.debugViews).to.deep.equal(['bloom']);
+        });
+
+        it('is active with an intensity on an HDR scene only', function () {
+            const bloom = createBloom();
+            expect(bloom.active).to.equal(false);
+            bloom.intensity = 0.05;
+            expect(bloom.active).to.equal(true);
+            bloom.enabled = false;
+            expect(bloom.active).to.equal(false);
+
+            const ldr = createBloom(PIXELFORMAT_RGBA8);
+            ldr.intensity = 0.05;
+            expect(ldr.active).to.equal(false);
+        });
+
+        it('creates its pass over the half resolution scene, and destroys it', function () {
+            const bloom = createBloom();
+            const resources = createResources();
+            const passes = createPasses(bloom, resources);
+            expect(passes).to.have.lengthOf(1);
+            const [pass] = passes;
+            expect(pass).to.be.an.instanceOf(FramePassBloom);
+            expect(pass._sourceTexture).to.equal(resources.sceneColorHalf);
+            expect(pass.textureFormat).to.equal(PIXELFORMAT_RGBA16F);
+
+            const destroy = spy(pass, 'destroy');
+            bloom.destroyPasses();
+            expect(destroy.callCount).to.equal(1);
+
+            // and again is a no-op, the passes being gone
+            bloom.destroyPasses();
+            bloom.cameraFrame = null;
+            bloom.destroy();
+            expect(destroy.callCount).to.equal(1);
+        });
+
+        it('applies its parameters to its pass and the composition when updated', function () {
+            const bloom = createBloom();
+            bloom.intensity = 0.05;
+            const [pass] = createPasses(bloom);
+
+            bloom.blurLevel = 5;
+            bloom.threshold = 2;
+            bloom.update();
+            expect(pass.blurLevel).to.equal(5);
+            expect(pass.threshold).to.equal(2);
+
+            bloom._bindUniforms();
+            expect(device.scope.resolve('bloomTexture').value).to.equal(pass.bloomTexture);
+            expect(device.scope.resolve('bloomIntensity').value).to.equal(0.05);
+        });
+
+        it('generates the bloom from the full resolution scene of each frame in high quality', function () {
+            const bloom = createBloom();
+            bloom.highQuality = true;
+            expect(bloom.requires).to.deep.equal([]);
+
+            const [pass] = createPasses(bloom, {});
+            expect(pass._sourceTexture).to.equal(null);
+            expect(pass._removeInvalid).to.equal(true);
+
+            const scene = new Texture(device, { name: 'scene', width: 128, height: 64, format: PIXELFORMAT_RGBA16F });
+            bloom.frameUpdate({ sceneTexture: scene, sceneWidth: 128, sceneHeight: 64 });
+            expect(pass._sourceTexture).to.equal(scene);
+
+            // one more level, the first being a finer one, keeps the blur the same size on screen
+            bloom.blurLevel = 5;
+            bloom.update();
+            expect(pass.blurLevel).to.equal(6);
+        });
+
+        it('renders what its passes were built for until they are rebuilt', function () {
+            const bloom = createBloom();
+            const resources = createResources();
+            const [pass] = createPasses(bloom, resources);
+            expect(pass._removeInvalid).to.equal(false);
+
+            // high quality takes a rebuild, which a change of the requirements causes on update
+            bloom.highQuality = true;
+            const scene = new Texture(device, { name: 'scene', width: 128, height: 64, format: PIXELFORMAT_RGBA16F });
+            bloom.frameUpdate({ sceneTexture: scene, sceneWidth: 128, sceneHeight: 64 });
+            expect(pass._sourceTexture).to.equal(resources.sceneColorHalf);
+            bloom.blurLevel = 5;
+            bloom.update();
+            expect(pass.blurLevel).to.equal(5);
+        });
+    });
+
     describe('setDefine', function () {
 
         it('versions the defines only when they change', function () {
@@ -350,6 +482,25 @@ describe('CameraFrameEffect', function () {
             expect(cameraFrame.getEffect('vignette')).to.equal(undefined);
         });
 
+        it('applies neither adding nor removing an effect until the effects are applied', function () {
+            const cameraFrame = createCameraFrame();
+            const vignette = new VignetteEffect(device);
+            vignette.intensity = 0.5;
+            const update = spy(vignette, 'update');
+
+            cameraFrame.addEffect(vignette);
+            expect(cameraFrame._activeEffects).to.deep.equal([]);
+            expect(update.callCount).to.equal(0);
+
+            cameraFrame._applyEffects();
+            expect(cameraFrame._activeEffects).to.deep.equal([vignette]);
+            expect(update.callCount).to.equal(1);
+
+            cameraFrame.removeEffect(vignette);
+            expect(cameraFrame._activeEffects).to.deep.equal([vignette]);
+            expect(update.callCount).to.equal(1);
+        });
+
         it('inserts before another effect by instance or by id', function () {
             const cameraFrame = createCameraFrame();
             const grading = new GradingEffect(device);
@@ -401,7 +552,7 @@ describe('CameraFrameEffect', function () {
 
         it('asserts on a debug view shadowing a built-in one', function () {
             const cameraFrame = createCameraFrame();
-            cameraFrame.addEffect(createEffect('shadow', null, { debugViews: ['bloom'] }));
+            cameraFrame.addEffect(createEffect('shadow', null, { debugViews: ['depth'] }));
             expect(failedAsserts().some(message => message.includes('shadows a built-in debug view'))).to.equal(true);
         });
     });
