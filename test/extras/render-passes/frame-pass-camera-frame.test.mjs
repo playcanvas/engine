@@ -11,10 +11,12 @@ import {
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
 import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
+import { FramePassVolumetricFog } from '../../../src/extras/render-passes/frame-pass-volumetric-fog.js';
 import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
 import { ShaderUtils } from '../../../src/scene/shader-lib/shader-utils.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -771,6 +773,137 @@ describe('FramePassCameraFrame', function () {
             cameraFrame.ssao.type = SSAOTYPE_NONE;
             cameraFrame.update();
             expect(cameraFrame.renderPassCamera.composePass.debug).to.equal(null);
+        });
+    });
+
+    describe('volumetric fog', function () {
+
+        const fogPass = () => cameraFrame.renderPassCamera.beforePasses.find(pass => pass instanceof FramePassVolumetricFog);
+
+        // lit by a directional light, with nothing else but TAA needing the depth
+        beforeEach(function () {
+            const entity = new Entity('Light');
+            entity.addComponent('light', { type: 'directional' });
+            app.root.addChild(entity);
+            cameraFrame.volumetricFog.light = entity.light;
+            cameraFrame.volumetricFog.enabled = true;
+            cameraFrame.bloom.intensity = 0;
+            cameraFrame.dof.enabled = false;
+        });
+
+        it('blends the fog into the scene after the scene and the occlusion, before TAA', function () {
+            cameraFrame.ssao.type = SSAOTYPE_COMBINE;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            const pass = fogPass();
+            const ssao = passes.find(p => p instanceof RenderPassSsao);
+
+            expect(pass).to.equal(cameraFrame.volumetricFog._pass);
+            expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(ssao));
+            expect(passes.indexOf(ssao)).to.be.below(passes.indexOf(pass));
+            expect(passes.indexOf(pass)).to.be.below(passes.indexOf(framePass.taaPass));
+            expect(cameraFrame._activeEffects).to.include(cameraFrame.volumetricFog);
+        });
+
+        it('renders the depth while it is active, and releases its passes once disabled', function () {
+            cameraFrame.taa.enabled = false;
+            cameraFrame.update();
+            let framePass = cameraFrame.renderPassCamera;
+            const pass = fogPass();
+            expect(framePass.options.prepassEnabled || framePass.options.sceneTextureDepth).to.equal(true);
+
+            const destroy = spy(pass, 'destroy');
+            cameraFrame.volumetricFog.enabled = false;
+            cameraFrame.update();
+            framePass = cameraFrame.renderPassCamera;
+            expect(destroy.callCount).to.equal(1);
+            expect(fogPass()).to.equal(undefined);
+            expect(framePass.options.prepassEnabled || framePass.options.sceneTextureDepth).to.equal(false);
+            expect(cameraFrame._activeEffects).to.not.include(cameraFrame.volumetricFog);
+        });
+
+        it('blends into the scene color alone while the scene renders the depth, and into the multi-sampled scene', function () {
+
+            // the scene renders the depth on a device capable of it, which the null device is made
+            const device = app.graphicsDevice;
+            if (device.isNull) {
+                device.supportsIndependentBlending = true;
+                device.textureFloatBlendable = true;
+            }
+            cameraFrame.update();
+            let framePass = cameraFrame.renderPassCamera;
+            let target = fogPass().combinePass.renderTarget;
+            if (device.isNull) {
+                expect(framePass.options.sceneTextureDepth).to.equal(true);
+            }
+            if (framePass.options.sceneTextureDepth) {
+                expect(target).to.equal(framePass.rtSceneColor);
+                expect(target.depth).to.equal(false);
+                expect(target.colorBufferCount).to.equal(1);
+            } else {
+                expect(target).to.equal(framePass.rt);
+            }
+            expect(target.colorBuffer).to.equal(framePass.sceneTexture);
+
+            // the depth is then rendered by the prepass, to its own render target
+            cameraFrame.rendering.samples = 4;
+            cameraFrame.update();
+            framePass = cameraFrame.renderPassCamera;
+            target = fogPass().combinePass.renderTarget;
+            expect(framePass.options.prepassEnabled).to.equal(true);
+            expect(framePass.rtSceneColor).to.equal(null);
+            expect(target).to.equal(framePass.rt);
+        });
+
+        it('is inactive without a light source, and on an orthographic camera', function () {
+            const fog = cameraFrame.volumetricFog;
+            const warnOnce = stub(Debug, 'warnOnce');
+            fog.light = null;
+            cameraFrame.update();
+            expect(fogPass()).to.equal(undefined);
+
+            fog.localSpotLights = true;
+            cameraFrame.update();
+            expect(fogPass()).to.not.equal(undefined);
+            expect(warnOnce.callCount).to.equal(0);
+
+            cameraFrame.cameraComponent.projection = PROJECTION_ORTHOGRAPHIC;
+            cameraFrame.update();
+            expect(fogPass()).to.equal(undefined);
+            expect(warnOnce.callCount).to.be.above(0);
+        });
+
+        it('lights the fog by the local lights with the light clusters of the scene pass, also once rebuilt', function () {
+            cameraFrame.volumetricFog.localSpotLights = true;
+            cameraFrame.update();
+            let framePass = cameraFrame.renderPassCamera;
+            framePass.frameUpdate();
+            expect(fogPass().localPass.scenePass).to.equal(framePass.scenePass);
+
+            // a change of the scene format rebuilds the frame passes, with a new scene pass
+            const { scenePass } = framePass;
+            cameraFrame.rendering.samples = 4;
+            cameraFrame.update();
+            framePass = cameraFrame.renderPassCamera;
+            framePass.frameUpdate();
+            expect(framePass.scenePass).to.not.equal(scenePass);
+            expect(fogPass().localPass.scenePass).to.equal(framePass.scenePass);
+        });
+
+        it('cycles its noise pattern over the frames while TAA is enabled', function () {
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            framePass.frameUpdate();
+            fogPass().frameUpdate();
+            expect(fogPass().temporalDither).to.equal(true);
+            expect(fogPass().fogPass.noiseOffset).to.not.equal(0);
+
+            cameraFrame.taa.enabled = false;
+            cameraFrame.update();
+            fogPass().frameUpdate();
+            expect(fogPass().temporalDither).to.equal(false);
+            expect(fogPass().fogPass.noiseOffset).to.equal(0);
         });
     });
 });

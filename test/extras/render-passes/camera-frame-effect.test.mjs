@@ -6,7 +6,7 @@ import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-fram
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import {
     COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_SCENE, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH,
-    FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
+    FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENETARGET, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
 } from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
@@ -17,14 +17,18 @@ import { FringingEffect } from '../../../src/extras/render-passes/effects/fringi
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
 import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
+import { VolumetricFogEffect } from '../../../src/extras/render-passes/effects/volumetric-fog-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
 import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
+import { FramePassVolumetricFog } from '../../../src/extras/render-passes/frame-pass-volumetric-fog.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
 import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../../src/scene/constants.js';
 import { RenderPassShaderQuad } from '../../../src/scene/graphics/render-pass-shader-quad.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
@@ -649,6 +653,214 @@ describe('CameraFrameEffect', function () {
             ssao.destroyPasses();
             ssao.destroyPasses();
             expect(destroy.callCount).to.equal(1);
+        });
+    });
+
+    describe('volumetric fog', function () {
+
+        // a fog effect on a camera frame stand-in supplying the camera, its scene and the TAA setting
+        const createFog = ({ clusteredLightingEnabled = true } = {}) => {
+            const fog = new VolumetricFogEffect(device);
+            fog.cameraFrame = /** @type {any} */ ({
+                cameraComponent: {
+                    projection: PROJECTION_PERSPECTIVE,
+                    shaderParams: new CameraShaderParams(),
+                    system: { app: { scene: { clusteredLightingEnabled } } }
+                },
+                taa: { enabled: false },
+                renderPassCamera: null
+            });
+            return fog;
+        };
+
+        // a light component stand-in, and the light it holds
+        const createLight = (type = 'directional') => /** @type {any} */ ({ type, light: { type } });
+
+        // the scene depth and the scene render target the camera frame would provide for it
+        const createResources = () => {
+            const texture = new Texture(device, { name: 'depth', width: 64, height: 32, format: PIXELFORMAT_RGBA16F });
+            const colorBuffer = new Texture(device, { name: 'scene', width: 64, height: 32, format: PIXELFORMAT_RGBA16F });
+            return {
+                [FRAMERESOURCE_DEPTH]: { texture, defines: new Map(), key: '' },
+                [FRAMERESOURCE_SCENETARGET]: new RenderTarget({ colorBuffer, depth: false })
+            };
+        };
+
+        const createPasses = (fog, resources = createResources()) => {
+            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            fog.createPasses(resources, passes);
+            return passes;
+        };
+
+        const warnings = () => Debug.warnOnce.getCalls().map(call => call.args[0]);
+
+        it('is disabled by default, and active once enabled with a directional light', function () {
+            const fog = createFog();
+            fog.light = createLight();
+            expect(fog.active).to.equal(false);
+            fog.enabled = true;
+            expect(fog.active).to.equal(true);
+            expect(warnings()).to.have.lengthOf(0);
+        });
+
+        it('is inactive without a light source, the local lights alone being one', function () {
+            const fog = createFog();
+            fog.enabled = true;
+            expect(fog.active).to.equal(false);
+            fog.localOmniLights = true;
+            expect(fog.active).to.equal(true);
+            fog.localOmniLights = false;
+            fog.localSpotLights = true;
+            expect(fog.active).to.equal(true);
+            expect(warnings()).to.have.lengthOf(0);
+        });
+
+        it('ignores the local lights without the clustered lighting, with a warning', function () {
+            const fog = createFog({ clusteredLightingEnabled: false });
+            fog.enabled = true;
+            fog.localSpotLights = true;
+            expect(fog.active).to.equal(false);
+            fog.light = createLight();
+            expect(fog.active).to.equal(true);
+            expect(warnings()).to.have.lengthOf(2);
+            expect(warnings().every(warning => warning.includes('clustered lighting'))).to.equal(true);
+        });
+
+        it('is disabled with a light other than a directional one, with a warning', function () {
+            const fog = createFog();
+            fog.enabled = true;
+            fog.localOmniLights = true;
+            fog.light = createLight('spot');
+            expect(fog.active).to.equal(false);
+            expect(warnings()).to.have.lengthOf(1);
+            expect(warnings()[0]).to.include('directional');
+        });
+
+        it('is disabled on a camera other than a perspective one, with a warning', function () {
+            const fog = createFog();
+            fog.enabled = true;
+            fog.light = createLight();
+            fog.cameraFrame.cameraComponent.projection = PROJECTION_ORTHOGRAPHIC;
+            expect(fog.active).to.equal(false);
+            expect(warnings()).to.have.lengthOf(1);
+            expect(warnings()[0]).to.include('perspective');
+        });
+
+        it('is inactive while it is not registered with a camera frame', function () {
+            const fog = new VolumetricFogEffect(device);
+            fog.enabled = true;
+            fog.light = createLight();
+            expect(fog.active).to.equal(false);
+        });
+
+        it('owns passes requiring the scene depth and the scene render target, outside of the composition', function () {
+            const fog = createFog();
+            expect(fog.id).to.equal('volumetricFog');
+            expect(fog.requires).to.deep.equal([FRAMERESOURCE_DEPTH, FRAMERESOURCE_SCENETARGET]);
+            expect(fog.slot).to.equal(null);
+            expect(fog.debugViews).to.deep.equal([]);
+            expect(fog._ownsPasses).to.equal(true);
+        });
+
+        it('blends the fog into the scene render target after the scene, at a resolution relative to it', function () {
+            const fog = createFog();
+            const resources = createResources();
+            const passes = createPasses(fog, resources);
+            expect(passes.postScene).to.have.lengthOf(1);
+            expect(passes.preScene).to.have.lengthOf(0);
+            expect(passes.postTemporal).to.have.lengthOf(0);
+
+            const [pass] = passes.postScene;
+            expect(pass).to.be.an.instanceOf(FramePassVolumetricFog);
+            expect(pass).to.equal(fog._pass);
+            expect(pass.combinePass.renderTarget).to.equal(resources.sceneTarget);
+            expect(pass.fogPass._options.resizeSource).to.equal(resources.sceneTarget.colorBuffer);
+        });
+
+        it('applies its parameters to its passes when updated, clamped to their ranges', function () {
+            const fog = createFog();
+            const [pass] = createPasses(fog).postScene;
+            const light = createLight();
+            Object.assign(fog, {
+                light,
+                localOmniLights: true,
+                localSpotLights: true,
+                localIntensity: 2,
+                localSteps: 100,
+                density: 0.2,
+                heightBase: 3,
+                heightFalloff: 0.1,
+                extinction: -1,
+                anisotropy: 2,
+                intensity: 4,
+                ambientIntensity: 0.5,
+                maxDistance: 50,
+                steps: 1,
+                scale: 2
+            });
+            fog.tint.set(1, 0.5, 0.25);
+            fog.ambientColor.set(0.25, 0.5, 1);
+            fog.update();
+
+            expect(pass.light).to.equal(light.light);
+            expect(pass.localOmniLights).to.equal(true);
+            expect(pass.localSpotLights).to.equal(true);
+            expect(pass.localIntensity).to.equal(2);
+            expect(pass.localSteps).to.equal(64);
+            expect(pass.density).to.equal(0.2);
+            expect(pass.heightBase).to.equal(3);
+            expect(pass.heightFalloff).to.equal(0.1);
+            expect(pass.extinction).to.equal(0);
+            expect(pass.anisotropy).to.equal(0.95);
+            expect(pass.intensity).to.equal(4);
+            expect(pass.ambientIntensity).to.equal(0.5);
+            expect(pass.maxDistance).to.equal(50);
+            expect(pass.steps).to.equal(4);
+            expect(pass.scale).to.equal(1);
+            expect(pass.fogPass.scaleX).to.equal(1);
+
+            // the colors are copied, so the pass is not changed until the next update
+            expect(pass.tint).to.not.equal(fog.tint);
+            expect(pass.tint.equals(fog.tint)).to.equal(true);
+            expect(pass.ambientColor).to.not.equal(fog.ambientColor);
+            expect(pass.ambientColor.equals(fog.ambientColor)).to.equal(true);
+
+            Object.assign(fog, { light: null, localSteps: 0, anisotropy: -1, steps: 1000, scale: 0 });
+            fog.update();
+            expect(pass.light).to.equal(null);
+            expect(pass.localSteps).to.equal(2);
+            expect(pass.anisotropy).to.equal(0);
+            expect(pass.steps).to.equal(128);
+            expect(pass.scale).to.equal(0.25);
+        });
+
+        it('cycles its noise pattern over the frames while TAA is enabled', function () {
+            const fog = createFog();
+            const [pass] = createPasses(fog).postScene;
+            fog.update();
+            expect(pass.temporalDither).to.equal(false);
+            fog.cameraFrame.taa.enabled = true;
+            fog.update();
+            expect(pass.temporalDither).to.equal(true);
+        });
+
+        it('lights the fog by the local lights with the light clusters the scene renders with', function () {
+            const fog = createFog();
+            const [pass] = createPasses(fog).postScene;
+            const scenePass = {};
+            fog.cameraFrame.renderPassCamera = { scenePass };
+            fog.frameUpdate(/** @type {any} */ ({}));
+            expect(pass.localPass.scenePass).to.equal(scenePass);
+        });
+
+        it('destroys its passes once', function () {
+            const fog = createFog();
+            const [pass] = createPasses(fog).postScene;
+            const destroy = spy(pass, 'destroy');
+            fog.destroyPasses();
+            fog.destroyPasses();
+            expect(destroy.callCount).to.equal(1);
+            expect(fog._pass).to.equal(null);
         });
     });
 

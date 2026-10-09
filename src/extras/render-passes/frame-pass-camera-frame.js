@@ -9,9 +9,8 @@ import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
-import { FramePassVolumetricFog } from './frame-pass-volumetric-fog.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
-import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF } from './constants.js';
+import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENETARGET } from './constants.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { Color } from '../../core/math/color.js';
@@ -66,9 +65,6 @@ class CameraFrameOptions {
     // scene render target, instead of, or in addition to, by the depth prepass. This is not a user
     // setting - sanitizeOptions derives it from what needs the depth and what the device supports.
     sceneTextureDepth = false;
-
-    // Volumetric fog
-    volumetricFogEnabled = false;
 }
 
 // the formats the scene depth can be rendered to, in the order of preference
@@ -93,8 +89,6 @@ class FramePassCameraFrame extends FramePass {
     taaPass;
 
     scenePassHalf;
-
-    volumetricFogPass;
 
     /**
      * The values of the frame being prepared, handed to the effects - one object, refilled every
@@ -275,7 +269,6 @@ class FramePassCameraFrame extends FramePass {
         this.taaPass = null;
         this.afterPass = null;
         this.scenePassHalf = null;
-        this.volumetricFogPass = null;
     }
 
     sanitizeOptions(options) {
@@ -283,7 +276,7 @@ class FramePassCameraFrame extends FramePass {
 
         // depth consumed by the passes running after the scene pass, those of the effects requiring
         // the scene depth included
-        const postProcessDepth = options.taaEnabled || options.volumetricFogEnabled || options.depthRequired;
+        const postProcessDepth = options.taaEnabled || options.depthRequired;
 
         const inSceneDepth = this.needsInSceneDepth(options);
         const splatDepth = this.app.scene.getGsplatParams()?.sceneDepthWrite ?? false;
@@ -488,7 +481,6 @@ class FramePassCameraFrame extends FramePass {
             options.prepassEnabled !== currentOptions.prepassEnabled ||
             options.sceneTextureDepth !== currentOptions.sceneTextureDepth ||
             options.sceneColorMap !== currentOptions.sceneColorMap ||
-            options.volumetricFogEnabled !== currentOptions.volumetricFogEnabled ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -671,7 +663,7 @@ class FramePassCameraFrame extends FramePass {
             ...stagePasses.preScene,
             this.scenePass, this.colorGrabPass, this.scenePassTransparent,
             ...stagePasses.postScene,
-            this.volumetricFogPass, this.taaPass, this.scenePassHalf,
+            this.taaPass, this.scenePassHalf,
             ...stagePasses.postTemporal,
             this.composePass, this.afterPass
         ];
@@ -684,9 +676,6 @@ class FramePassCameraFrame extends FramePass {
 
         // scene including color grab pass
         const scenePassesInfo = this.setupScenePass(options);
-
-        // volumetric fog, blended into the scene render target before TAA
-        this.setupVolumetricFogPass(options);
 
         // TAA
         const sceneTextureWithTaa = this.setupTaaPass(options);
@@ -918,6 +907,10 @@ class FramePassCameraFrame extends FramePass {
                 if (name === FRAMERESOURCE_DEPTH || name === FRAMERESOURCE_PREPASSDEPTH) {
                     depth ??= this.createEffectDepth();
                     resources[name] = depth;
+                } else if (name === FRAMERESOURCE_SCENETARGET) {
+                    // passes sampling the scene depth cannot render to the render target it is
+                    // attached to, so they render to the alias of the scene color instead
+                    resources[name] = this.rtSceneColor ?? this.rt;
                 } else {
                     Debug.assert(name === FRAMERESOURCE_SCENECOLORHALF, `CameraFrame: effect '${effect.id}' requires the frame resource '${name}', which is not supported yet.`);
                     resources[name] = this.sceneTextureHalf;
@@ -932,20 +925,6 @@ class FramePassCameraFrame extends FramePass {
             stagePasses.preScene.push(...passes.preScene);
             stagePasses.postScene.push(...passes.postScene);
             stagePasses.postTemporal.push(...passes.postTemporal);
-        }
-    }
-
-    setupVolumetricFogPass(options) {
-        if (options.volumetricFogEnabled) {
-
-            // the scene pass provides the light clusters used by the local lights of the fog. The fog
-            // samples the scene depth, and so blends into the alias of the scene color rather than the
-            // scene render target, which the depth is attached to.
-            this.volumetricFogPass = new FramePassVolumetricFog(this.device, this.cameraComponent,
-                this.sceneTexture, this.rtSceneColor ?? this.rt, this.scenePass);
-
-            // when TAA is used, the fog noise pattern changes each frame and TAA resolves it
-            this.volumetricFogPass.temporalDither = options.taaEnabled;
         }
     }
 
