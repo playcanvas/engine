@@ -672,7 +672,7 @@ class StandardMaterial extends Material {
      * released by the material asset handler.
      *
      * @type {Set<WeakRef<StandardMaterial>>|null}
-     * @ignore
+     * @private
      */
     _pendingCopies = null;
 
@@ -681,7 +681,7 @@ class StandardMaterial extends Material {
      * other copies, and whose textures it receives as they load.
      *
      * @type {StandardMaterial|null}
-     * @ignore
+     * @private
      */
     _pendingSource = null;
 
