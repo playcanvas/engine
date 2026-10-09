@@ -434,6 +434,42 @@ describe('MaterialHandler', function () {
                 expect(copy.diffuseMap).to.equal(other.resource);
             });
 
+            // two waiting material assets, the material of the first of which is a copy of the
+            // material of the second, so it receives the textures of both assets
+            const copiedInto = async () => {
+                const own = pendingTexture('own');
+                const diffuse = pendingTexture('diffuse');
+                const emissive = pendingTexture('emissive');
+                const material = await loadMaterial(new Asset('material', 'material', null, { diffuseMap: own.id }));
+                const source = await loadMaterial(new Asset('source', 'material', null, {
+                    diffuseMap: diffuse.id, emissiveMap: emissive.id
+                }));
+                material.copy(source);
+                return { material, source, textures: [emissive, own, diffuse] };
+            };
+
+            it('gives a copy of a material which is a copy itself the textures the material receives', async function () {
+                const { material, textures } = await copiedInto();
+                const copy = material.clone();
+
+                textures.forEach(completeLoad);
+                const [emissive, own] = textures;
+                expect(material.diffuseMap).to.equal(own.resource);
+                expect(material.emissiveMap).to.equal(emissive.resource);
+                expect(copy.diffuseMap).to.equal(material.diffuseMap);
+                expect(copy.emissiveMap).to.equal(material.emissiveMap);
+            });
+
+            it('gives materials copied into each other the textures', async function () {
+                const { material, source, textures } = await copiedInto();
+                source.copy(material);
+
+                textures.forEach(completeLoad);
+                const [emissive] = textures;
+                expect(material.emissiveMap).to.equal(emissive.resource);
+                expect(source.emissiveMap).to.equal(emissive.resource);
+            });
+
             it('stops tracking the copies once the material has all its textures', async function () {
                 const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
                 const material = await loadById(diffuse, gloss);

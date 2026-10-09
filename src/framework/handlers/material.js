@@ -143,40 +143,63 @@ class MaterialHandler extends ResourceHandler {
         return false;
     }
 
+    /**
+     * Assigns a texture a material received to the map of the copies made of the material while
+     * it waited, unless a texture was assigned to the map of a copy since. A copy which is the
+     * material of another material asset, and so has copies of its own, passes the texture on to
+     * them. This ends, also for materials copied into each other, as each copy receiving the
+     * texture held a placeholder in the map, and holds the texture after.
+     *
+     * @param {StandardMaterial} material - The material.
+     * @param {string} parameterName - The name of the map.
+     * @param {Texture} texture - The texture.
+     * @param {boolean} release - Whether to stop tracking the copies, as the material has all its
+     * textures.
+     * @private
+     */
+    _assignToPendingCopies(material, parameterName, texture, release) {
+        const copies = material._pendingCopies;
+        if (!copies) {
+            return;
+        }
+
+        for (const ref of copies) {
+            const copy = ref.deref();
+
+            // the copy is collected, destroyed, or copied from another material since
+            if (copy?._pendingSource !== material) {
+                copies.delete(ref);
+                continue;
+            }
+
+            if (this._placeholders.has(copy[parameterName])) {
+                copy[parameterName] = texture;
+                copy.update();
+
+                // the copies of the copy are released by the asset of the copy
+                this._assignToPendingCopies(copy, parameterName, texture, false);
+            }
+
+            if (release) {
+                copy._pendingSource = null;
+            }
+        }
+
+        if (release) {
+            material._pendingCopies = null;
+        }
+    }
+
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
         const material = materialAsset.resource;
         const texture = textureAsset.resource;
         this._assignTexture(parameterName, materialAsset, texture);
         material.update();
 
-        // the copies made of the material while it waited receive the texture in the map, unless
-        // a texture was assigned to the map of the copy since
-        const copies = material._pendingCopies;
-        if (copies) {
-            const waiting = this._isWaitingForTextures(material);
-            for (const ref of copies) {
-                const copy = ref.deref();
-
-                // the copy is collected, destroyed, or copied from another material since
-                if (copy?._pendingSource !== material) {
-                    copies.delete(ref);
-                    continue;
-                }
-
-                if (this._placeholders.has(copy[parameterName])) {
-                    copy[parameterName] = texture;
-                    copy.update();
-                }
-
-                if (!waiting) {
-                    copy._pendingSource = null;
-                }
-            }
-
-            // stop tracking the copies once the material has all its textures
-            if (!waiting) {
-                material._pendingCopies = null;
-            }
+        // the copies made of the material while it waited receive the texture, and are released
+        // once the material has all its textures
+        if (material._pendingCopies) {
+            this._assignToPendingCopies(material, parameterName, texture, !this._isWaitingForTextures(material));
         }
     }
 
