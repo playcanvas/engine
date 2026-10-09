@@ -667,9 +667,9 @@ class StandardMaterial extends Material {
     _mapTransforms = new StandardMaterialMapTransforms();
 
     /**
-     * The copies of this material made while it waits for texture assets to load, which receive
-     * the textures in the maps still holding placeholders as the textures load. Created and
-     * released by the material asset handler.
+     * The copies of this material made while it waits for the texture assets it references to
+     * load, which receive the textures in the maps still holding placeholders as the textures
+     * load. Created and released by the material asset handler.
      *
      * @type {Set<WeakRef<StandardMaterial>>|null}
      * @private
@@ -677,13 +677,22 @@ class StandardMaterial extends Material {
     _pendingCopies = null;
 
     /**
-     * The material waiting for texture assets this material is a copy of, directly or through
-     * other copies, and whose textures it receives as they load.
+     * The sets of copies this material is in, of the materials waiting for texture assets it is a
+     * copy of, directly or through other copies, so it receives their textures as they load.
      *
-     * @type {StandardMaterial|null}
+     * @type {Set<WeakRef<StandardMaterial>>[]|null}
      * @private
      */
-    _pendingSource = null;
+    _pendingSets = null;
+
+    /**
+     * The reference to this material in the sets of copies it is in. Copying into this material
+     * again replaces it, which removes this material from those sets.
+     *
+     * @type {WeakRef<StandardMaterial>|null}
+     * @private
+     */
+    _pendingRef = null;
 
     /**
      * A custom function that will be called after all shader generator properties are collected
@@ -1776,12 +1785,20 @@ class StandardMaterial extends Material {
         // clone user attributes
         this.userAttributes = new Map(source.userAttributes);
 
-        // a copy of a material waiting for texture assets, or of a copy of one, receives the
-        // textures as they load
-        const pendingSource = source._pendingCopies ? source : source._pendingSource;
-        const pendingCopies = pendingSource?._pendingCopies;
-        pendingCopies?.add(new WeakRef(this));
-        this._pendingSource = pendingCopies ? pendingSource : null;
+        // a copy joins the set of copies of the material if it waits for texture assets, and the
+        // sets the material is in, so the asset of each material it copies receives its textures
+        let pendingSets = null;
+        const ownCopies = source._pendingCopies;
+        if (ownCopies || source._pendingSets) {
+            pendingSets = source._pendingSets?.slice() ?? [];
+            if (ownCopies && !pendingSets.includes(ownCopies)) {
+                pendingSets.push(ownCopies);
+            }
+        }
+        const pendingRef = pendingSets ? new WeakRef(this) : null;
+        pendingSets?.forEach(set => set.add(pendingRef));
+        this._pendingSets = pendingSets;
+        this._pendingRef = pendingRef;
 
         return this;
     }
@@ -1980,7 +1997,8 @@ class StandardMaterial extends Material {
         this._assetReferences = null;
 
         this._pendingCopies = null;
-        this._pendingSource = null;
+        this._pendingSets = null;
+        this._pendingRef = null;
 
         super.destroy();
     }
