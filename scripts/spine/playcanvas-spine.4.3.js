@@ -15698,9 +15698,11 @@ var spine = (function (pc) {
 	    } finally {
 	      _iterator.f();
 	    }
-	    var json = new SkeletonJson(new AtlasAttachmentLoader(atlas));
-	    json.scale *= 0.01;
-	    var _skeletonData = json.readSkeletonData(skeletonData);
+	    var attachmentLoader = new AtlasAttachmentLoader(atlas);
+	    var binary = skeletonData instanceof ArrayBuffer || ArrayBuffer.isView(skeletonData);
+	    var reader = binary ? new SkeletonBinary(attachmentLoader) : new SkeletonJson(attachmentLoader);
+	    reader.scale *= 0.01;
+	    var _skeletonData = reader.readSkeletonData(skeletonData);
 	    this.skeletonVersion = semver.valid(semver.coerce(_skeletonData.version));
 	    this.skeleton = new Skeleton(_skeletonData);
 	    this.skeleton.updateWorldTransform(Physics.update);
@@ -15761,7 +15763,6 @@ var spine = (function (pc) {
 	          mesh.vertexBuffer = null;
 	          mesh.indexBuffer[0] = null;
 	          meshInstance.destroy();
-	          mesh.destroy();
 	        }
 	      } catch (err) {
 	        _iterator2.e(err);
@@ -16107,7 +16108,7 @@ var spine = (function (pc) {
 	      if (type === 'texture') {
 	        this.textures.push(resource);
 	      }
-	      if (type === 'json') {
+	      if (type === 'json' || type === 'binary') {
 	        this.skeletonData = resource;
 	      }
 	      if (type === 'text') {
