@@ -41,6 +41,10 @@ class MaterialHandler extends ResourceHandler {
         // the textures assigned to the texture parameters of materials while their textures load
         this._placeholders = new PlaceholderTextures(app.graphicsDevice);
 
+        // the texture parameters of each material which hold a placeholder until their texture is
+        // assigned; the material waits for its textures while any remain
+        this._pendingMaps = new WeakMap();
+
         // the json parser is the catch-all for material assets; the handler keeps a reference to
         // it as patch uses its migrate/initialize when binding standard material assets
         this._parser = new JsonStandardMaterialParser();
@@ -81,6 +85,7 @@ class MaterialHandler extends ResourceHandler {
     _assignTexture(parameterName, materialAsset, texture) {
         // NB removed swapping out asset id for resource here
         materialAsset.resource[parameterName] = texture;
+        this._pendingMaps.get(materialAsset.resource)?.delete(parameterName);
     }
 
     /**
@@ -118,31 +123,15 @@ class MaterialHandler extends ResourceHandler {
         const material = materialAsset.resource;
         material[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset, textureAsset);
 
+        let pendingMaps = this._pendingMaps.get(material);
+        if (!pendingMaps) {
+            pendingMaps = new Set();
+            this._pendingMaps.set(material, pendingMaps);
+        }
+        pendingMaps.add(parameterName);
+
         // track the copies made of the material while it waits, see StandardMaterial#copy
         material._pendingCopies ??= new Set();
-    }
-
-    /**
-     * Returns whether a material waits for the texture assets it references to load: an asset
-     * whose texture is still to load, or a removed asset whose placeholder a map holds until the
-     * asset is added again.
-     *
-     * @param {StandardMaterial} material - The material.
-     * @returns {boolean} True if the material waits for a texture asset.
-     * @private
-     */
-    _isWaitingForTextures(material) {
-        const references = material._assetReferences;
-        for (const name of standardMaterialTextureParameters) {
-            const reference = references[name];
-            if (reference) {
-                const textureAsset = reference.asset;
-                if (textureAsset ? !textureAsset.resource : this._placeholders.has(material[name])) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
@@ -151,49 +140,28 @@ class MaterialHandler extends ResourceHandler {
         this._assignTexture(parameterName, materialAsset, texture);
         material.update();
 
-        // the copies made of the material while it waited receive the texture in every map of the
-        // material referencing it, on the first of the loads for those maps, unless a texture was
-        // assigned to the map of the copy since; once the material has all its textures, they
-        // leave its set of copies
+        // the copies made of the material while it waited receive the texture in the map, unless a
+        // texture was assigned to the map of the copy since, and stop being tracked once the
+        // material has all the textures it waited for
         const copies = material._pendingCopies;
         if (copies) {
-            const references = material._assetReferences;
-            const release = !this._isWaitingForTextures(material);
-
-            // on leaving, the copies receive the textures of all the maps, as the load of a map may
-            // still be to handle, when this texture loaded from within the load event of its texture
-            const names = standardMaterialTextureParameters.filter((name) => {
-                const reference = references[name];
-                return reference && (release ? !!reference.asset?.resource : referencesAsset(reference, textureAsset));
-            });
-
+            const release = !this._pendingMaps.get(material)?.size;
             for (const ref of copies) {
                 const copy = ref.deref();
 
-                // the copy is collected, destroyed, or copied into again since
-                if (copy?._pendingRef !== ref) {
+                // the copy is collected, destroyed, or copied from another material since
+                if (copy?._pendingSource !== material) {
                     copies.delete(ref);
                     continue;
                 }
 
-                let assigned = false;
-                for (const name of names) {
-                    if (this._placeholders.has(copy[name])) {
-                        copy[name] = release ? references[name].asset.resource : texture;
-                        assigned = true;
-                    }
-                }
-                if (assigned) {
+                if (this._placeholders.has(copy[parameterName])) {
+                    copy[parameterName] = texture;
                     copy.update();
                 }
 
                 if (release) {
-                    const sets = copy._pendingSets;
-                    sets.splice(sets.indexOf(copies), 1);
-                    if (sets.length === 0) {
-                        copy._pendingSets = null;
-                        copy._pendingRef = null;
-                    }
+                    copy._pendingSource = null;
                 }
             }
 
@@ -308,6 +276,9 @@ class MaterialHandler extends ResourceHandler {
                     } else {
                         assetReference.id = null;
                     }
+
+                    // so its load is no longer waited for
+                    this._pendingMaps.get(material)?.delete(name);
                 } else {
                     // no asset reference and no data field
                     // do nothing

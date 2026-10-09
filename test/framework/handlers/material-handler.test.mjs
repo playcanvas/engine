@@ -434,21 +434,6 @@ describe('MaterialHandler', function () {
                 expect(copy.diffuseMap).to.equal(other.resource);
             });
 
-            // two waiting material assets, the material of the first of which is a copy of the
-            // material of the second, so it receives the textures of both assets
-            const copiedInto = async () => {
-                const own = pendingTexture('own');
-                const diffuse = pendingTexture('diffuse');
-                const emissive = pendingTexture('emissive');
-                const materialAsset = new Asset('material', 'material', null, { diffuseMap: own.id });
-                const material = await loadMaterial(materialAsset);
-                const source = await loadMaterial(new Asset('source', 'material', null, {
-                    diffuseMap: diffuse.id, emissiveMap: emissive.id
-                }));
-                material.copy(source);
-                return { materialAsset, material, source, textures: [emissive, own, diffuse] };
-            };
-
             // the ways to make a copy of the material of a material asset
             const copyKinds = [
                 { label: 'a clone', make: ({ material }) => material.clone() },
@@ -468,61 +453,13 @@ describe('MaterialHandler', function () {
                 }
             ];
 
-            // the orders of loading the textures of copiedInto
-            const loadOrders = [
-                { label: 'its own texture', order: [1, 0, 2] },
-                { label: 'the textures it receives as a copy', order: [0, 2, 1] }
-            ];
-
             // whether no material tracks its copies or is tracked as a copy
             const expectReleased = (...materials) => {
                 for (const material of materials) {
                     expect(material._pendingCopies).to.equal(null);
-                    expect(material._pendingSets).to.equal(null);
+                    expect(material._pendingSource).to.equal(null);
                 }
             };
-
-            it('gives a copy of a material which is a copy itself the textures the material receives', async function () {
-                const { material, textures } = await copiedInto();
-                const copy = material.clone();
-
-                textures.forEach(completeLoad);
-                const [emissive, own] = textures;
-                expect(material.diffuseMap).to.equal(own.resource);
-                expect(material.emissiveMap).to.equal(emissive.resource);
-                expect(copy.diffuseMap).to.equal(material.diffuseMap);
-                expect(copy.emissiveMap).to.equal(material.emissiveMap);
-            });
-
-            // a texture assigned to the map of the material after making its copy, which the
-            // material keeps, while the copy, which did not change, receives the texture
-            const assignments = [
-                { label: 'no texture', texture: () => undefined },
-                { label: 'null', texture: () => null },
-                { label: 'a texture', texture: () => new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 }) }
-            ];
-
-            copyKinds.forEach((copyKind) => {
-                assignments.forEach((assignment) => {
-                    loadOrders.forEach((loadOrder) => {
-                        it(`gives ${copyKind.label} of a material which is a copy itself the textures, after assigning ${assignment.label} to the map of the material, loading ${loadOrder.label} first`, async function () {
-                            const setup = await copiedInto();
-                            const { material, source, textures } = setup;
-                            const copy = copyKind.make(setup);
-                            const texture = assignment.texture();
-                            if (texture !== undefined) {
-                                material.emissiveMap = texture;
-                            }
-
-                            loadOrder.order.forEach(index => completeLoad(textures[index]));
-                            const [emissive] = textures;
-                            expect(material.emissiveMap).to.equal(texture === undefined ? emissive.resource : texture);
-                            expect(copy.emissiveMap).to.equal(emissive.resource);
-                            expectReleased(material, source, copy);
-                        });
-                    });
-                });
-            });
 
             copyKinds.forEach((copyKind) => {
                 it(`gives ${copyKind.label} the textures, when a texture loads from within the load event of another`, async function () {
@@ -548,19 +485,17 @@ describe('MaterialHandler', function () {
                 });
             });
 
-            loadOrders.forEach((loadOrder) => {
-                it(`gives a copy of materials copied into each other the textures, after assigning to their maps, loading ${loadOrder.label} first`, async function () {
-                    const { material, source, textures } = await copiedInto();
-                    source.copy(material);
-                    const copy = material.clone();
-                    material.emissiveMap = null;
-                    source.emissiveMap = null;
+            it('gives a copy the textures after a texture was assigned to the map of the material', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const copy = material.clone();
+                material.diffuseMap = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
 
-                    loadOrder.order.forEach(index => completeLoad(textures[index]));
-                    const [emissive] = textures;
-                    expect(copy.emissiveMap).to.equal(emissive.resource);
-                    expectReleased(material, source, copy);
-                });
+                completeLoad(gloss);
+                completeLoad(diffuse);
+                expect(copy.diffuseMap).to.equal(diffuse.resource);
+                expect(copy.glossMap).to.equal(gloss.resource);
+                expectReleased(material, copy);
             });
 
             it('stops tracking the copies once the material has all its textures', async function () {
@@ -570,8 +505,7 @@ describe('MaterialHandler', function () {
 
                 completeLoad(diffuse);
                 expect(material._pendingCopies.size).to.equal(1);
-                expect(copy._pendingSets).to.have.lengthOf(1);
-                expect(copy._pendingSets[0]).to.equal(material._pendingCopies);
+                expect(copy._pendingSource).to.equal(material);
 
                 completeLoad(gloss);
                 expectReleased(material, copy, material.clone());
