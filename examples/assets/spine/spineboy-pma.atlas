@@ -1,0 +1,85 @@
+spineboy-pma.png
+	size: 1024, 256
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+crosshair
+	bounds: 186, 17, 45, 45
+eye-indifferent
+	bounds: 137, 17, 47, 45
+eye-surprised
+	bounds: 623, 45, 47, 45
+front-bracer
+	bounds: 613, 3, 29, 40
+front-fist-closed
+	bounds: 278, 2, 38, 41
+front-fist-open
+	bounds: 233, 18, 43, 44
+front-foot
+	bounds: 72, 39, 63, 35
+front-shin
+	bounds: 952, 41, 41, 92
+front-thigh
+	bounds: 995, 120, 23, 56
+front-upper-arm
+	bounds: 995, 69, 23, 49
+goggles
+	bounds: 167, 64, 131, 83
+gun
+	bounds: 300, 45, 105, 102
+head
+	bounds: 29, 76, 136, 149
+hoverboard-board
+	bounds: 167, 149, 246, 76
+hoverboard-thruster
+	bounds: 674, 8, 30, 32
+hoverglow-small
+	bounds: 813, 60, 137, 38
+mouth-grind
+	bounds: 416, 13, 47, 30
+mouth-oooo
+	bounds: 367, 13, 47, 30
+mouth-smile
+	bounds: 318, 13, 47, 30
+muzzle-glow
+	bounds: 706, 15, 25, 25
+muzzle-ring
+	bounds: 2, 120, 25, 105
+muzzle01
+	bounds: 554, 50, 67, 40
+muzzle02
+	bounds: 484, 48, 68, 42
+muzzle03
+	bounds: 685, 42, 83, 53
+muzzle04
+	bounds: 407, 45, 75, 45
+muzzle05
+	bounds: 2, 36, 68, 38
+neck
+	bounds: 2, 97, 18, 21
+portal-bg
+	bounds: 550, 92, 133, 133
+portal-flare1
+	bounds: 484, 16, 56, 30
+portal-flare2
+	bounds: 810, 27, 57, 31
+portal-flare3
+	bounds: 869, 28, 58, 30
+portal-shade
+	bounds: 415, 92, 133, 133
+portal-streaks1
+	bounds: 685, 97, 126, 128
+portal-streaks2
+	bounds: 813, 100, 125, 125
+rear-bracer
+	bounds: 644, 7, 28, 36
+rear-foot
+	bounds: 554, 18, 57, 30
+rear-shin
+	bounds: 770, 6, 38, 89
+rear-thigh
+	bounds: 991, 178, 28, 47
+rear-upper-arm
+	bounds: 995, 23, 20, 44
+torso
+	bounds: 940, 135, 49, 90
