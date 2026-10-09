@@ -50,22 +50,26 @@ class FramePassDof extends FramePass {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {CameraComponent} cameraComponent - The camera component.
-     * @param {Texture} sceneTexture - The full resolution texture.
+     * @param {Texture} sizeTexture - A texture of the full resolution of the scene, which the CoC is
+     * rendered at.
      * @param {Texture} sceneTextureHalf - The half resolution texture.
-     * @param {boolean} highQuality - Whether to use high quality setup.
+     * @param {boolean} highQuality - Whether to use high quality setup, which blurs the full
+     * resolution scene, set with {@link FramePassDof#setSceneTexture}.
      * @param {boolean} nearBlur - Whether to apply near blur.
      */
-    constructor(device, cameraComponent, sceneTexture, sceneTextureHalf, highQuality, nearBlur) {
+    constructor(device, cameraComponent, sizeTexture, sceneTextureHalf, highQuality, nearBlur) {
         super(device);
         this.highQuality = highQuality;
 
         // full resolution CoC texture
-        this.cocPass = this.setupCocPass(device, cameraComponent, sceneTexture, nearBlur);
+        this.cocPass = this.setupCocPass(device, cameraComponent, sizeTexture, nearBlur);
         this.beforePasses.push(this.cocPass);
 
-        // prepare the source image for the background blur, half or quarter resolution
-        const sourceTexture = highQuality ? sceneTexture : sceneTextureHalf;
-        this.farPass = this.setupFarPass(device, sourceTexture, 0.5);
+        // prepare the source image for the background blur, half or quarter resolution. The full
+        // resolution scene the high quality setup blurs is set every frame, as with TAA enabled it
+        // alternates between two textures.
+        const sourceTexture = highQuality ? null : sceneTextureHalf;
+        this.farPass = this.setupFarPass(device, sourceTexture, sceneTextureHalf.format, 0.5);
         this.beforePasses.push(this.farPass);
 
         // blur pass - based on CoC, blur either the foreground or the background texture
@@ -121,10 +125,10 @@ class FramePassDof extends FramePass {
         return cocPass;
     }
 
-    setupFarPass(device, sourceTexture, scale) {
+    setupFarPass(device, sourceTexture, format, scale) {
 
         // Premultiply coc for far blur, to limit the sharp objects leaking into the background
-        this.farRt = this.createRenderTarget('FarDofTexture', sourceTexture.format);
+        this.farRt = this.createRenderTarget('FarDofTexture', format);
         const farPass = new RenderPassDownsample(device, sourceTexture, {
             boxFilter: true,
             premultiplyTexture: this.cocTexture,
@@ -178,8 +182,8 @@ class FramePassDof extends FramePass {
     }
 
     /**
-     * Sets the full resolution scene texture the blur reads. The camera frame sets it every frame,
-     * as with TAA enabled it alternates between the two TAA history textures.
+     * Sets the full resolution scene texture the blur reads. Set every frame, as with TAA enabled
+     * it alternates between the two TAA history textures.
      *
      * @param {Texture} texture - The full resolution scene texture.
      */

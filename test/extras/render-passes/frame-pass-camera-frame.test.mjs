@@ -10,6 +10,7 @@ import {
 } from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
+import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
 import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
@@ -87,7 +88,8 @@ describe('FramePassCameraFrame', function () {
         cameraFrame.dof.highQuality = true;
         cameraFrame.update();
         const framePass = cameraFrame.renderPassCamera;
-        const { taaPass, scenePassHalf, dofPass, composePass } = framePass;
+        const { taaPass, scenePassHalf, composePass } = framePass;
+        const dofPass = cameraFrame.dof._pass;
 
         // over two frames, as TAA alternates between its two history textures
         const outputs = [];
@@ -106,7 +108,8 @@ describe('FramePassCameraFrame', function () {
         cameraFrame.dof.highQuality = false;
         cameraFrame.update();
         const framePass = cameraFrame.renderPassCamera;
-        const { taaPass, scenePassHalf, dofPass } = framePass;
+        const { taaPass, scenePassHalf } = framePass;
+        const dofPass = cameraFrame.dof._pass;
 
         for (let i = 0; i < 2; i++) {
             framePass.frameUpdate();
@@ -191,7 +194,7 @@ describe('FramePassCameraFrame', function () {
 
         const bloomPasses = framePass => framePass.beforePasses.filter(pass => pass instanceof FramePassBloom);
 
-        it('runs the passes of the bloom effect between the half resolution scene and the depth of field', function () {
+        it('runs the passes of the bloom effect after the half resolution scene and those of the depth of field', function () {
             cameraFrame.update();
             const framePass = cameraFrame.renderPassCamera;
             const { bloom } = cameraFrame;
@@ -201,7 +204,10 @@ describe('FramePassCameraFrame', function () {
             expect(bloomPass).to.equal(bloom._pass);
             expect(bloomPass._sourceTexture).to.equal(framePass.sceneTextureHalf);
             expect(passes.indexOf(framePass.scenePassHalf)).to.be.below(passes.indexOf(bloomPass));
-            expect(passes.indexOf(bloomPass)).to.be.below(passes.indexOf(framePass.dofPass));
+
+            // the depth of field registers before the bloom, as it composites before it
+            expect(passes.indexOf(cameraFrame.dof._pass)).to.be.below(passes.indexOf(bloomPass));
+            expect(passes.indexOf(bloomPass)).to.be.below(passes.indexOf(framePass.composePass));
             expect(cameraFrame._activeEffects).to.include(bloom);
         });
 
@@ -346,7 +352,7 @@ describe('FramePassCameraFrame', function () {
             const [bloomPass] = beforePasses.filter(pass => pass instanceof FramePassBloom);
             expect(beforePasses.indexOf(bloomPass)).to.be.below(beforePasses.indexOf(first.pass));
             expect(beforePasses.indexOf(first.pass)).to.be.below(beforePasses.indexOf(second.pass));
-            expect(beforePasses.indexOf(second.pass)).to.be.below(beforePasses.indexOf(cameraFrame.renderPassCamera.dofPass));
+            expect(beforePasses.indexOf(second.pass)).to.be.below(beforePasses.indexOf(cameraFrame.renderPassCamera.composePass));
 
             first.destroy();
             second.destroy();
@@ -601,6 +607,69 @@ describe('FramePassCameraFrame', function () {
             first.destroy();
             second.destroy();
             cameraFrame.update();
+        });
+    });
+
+    describe('depth of field', function () {
+
+        const dofPasses = () => cameraFrame.renderPassCamera.beforePasses.filter(pass => pass instanceof FramePassDof);
+
+        it('renders the depth and the half resolution scene while it is enabled, and rebuilds on a quality change', function () {
+            cameraFrame.taa.enabled = false;
+            cameraFrame.bloom.intensity = 0;
+            cameraFrame.update();
+            let framePass = cameraFrame.renderPassCamera;
+            const [pass] = dofPasses();
+            expect(pass).to.equal(cameraFrame.dof._pass);
+            expect(framePass.scenePassHalf).to.not.equal(null);
+            expect(framePass.options.prepassEnabled || framePass.options.sceneTextureDepth).to.equal(true);
+            expect(framePass.beforePasses.indexOf(pass)).to.be.below(framePass.beforePasses.indexOf(framePass.composePass));
+
+            const destroy = spy(pass, 'destroy');
+            cameraFrame.dof.highQuality = false;
+            cameraFrame.update();
+            expect(destroy.callCount).to.equal(1);
+            expect(dofPasses()[0]).to.not.equal(pass);
+
+            cameraFrame.dof.enabled = false;
+            cameraFrame.update();
+            framePass = cameraFrame.renderPassCamera;
+            expect(dofPasses()).to.have.lengthOf(0);
+            expect(framePass.scenePassHalf).to.equal(null);
+            expect(framePass.options.prepassEnabled || framePass.options.sceneTextureDepth).to.equal(false);
+            expect(cameraFrame._activeEffects).to.not.include(cameraFrame.dof);
+        });
+
+        it('renders the depth it needs when enabled while the camera frame was disabled', function () {
+            // nothing else needing the depth
+            const assert = stub(Debug, 'assert');
+            cameraFrame.taa.enabled = false;
+            cameraFrame.dof.enabled = false;
+            cameraFrame.update();
+
+            // changed while disabled, which the update ignores, and applied when enabled again
+            cameraFrame.enabled = false;
+            cameraFrame.dof.enabled = true;
+            cameraFrame.update();
+            cameraFrame.enabled = true;
+
+            const framePass = cameraFrame.renderPassCamera;
+            expect(dofPasses()).to.have.lengthOf(1);
+            expect(framePass.options.prepassEnabled || framePass.options.sceneTextureDepth).to.equal(true);
+            expect(assert.getCalls().filter(call => !call.args[0])).to.have.lengthOf(0);
+            assert.restore();
+        });
+
+        it('keeps its debug views while it is enabled', function () {
+            for (const view of ['dofcoc', 'dofblur']) {
+                cameraFrame.debug = view;
+                cameraFrame.dof.enabled = true;
+                cameraFrame.update();
+                expect(cameraFrame.renderPassCamera.composePass.debug).to.equal(view);
+                cameraFrame.dof.enabled = false;
+                cameraFrame.update();
+                expect(cameraFrame.renderPassCamera.composePass.debug).to.equal(null);
+            }
         });
     });
 

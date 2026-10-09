@@ -37,6 +37,7 @@ export { BloomEffect } from './render-passes/effects/bloom-effect.js';
 export { CasEffect } from './render-passes/effects/cas-effect.js';
 export { ColorEnhanceEffect } from './render-passes/effects/color-enhance-effect.js';
 export { ColorLutEffect } from './render-passes/effects/color-lut-effect.js';
+export { DofEffect } from './render-passes/effects/dof-effect.js';
 export { FringingEffect } from './render-passes/effects/fringing-effect.js';
 export { GradingEffect } from './render-passes/effects/grading-effect.js';
 export { SsaoEffect } from './render-passes/effects/ssao-effect.js';
