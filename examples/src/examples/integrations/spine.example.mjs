@@ -36,11 +36,16 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    skeleton: new Asset('skeleton', 'json', { url: './assets/spine/spineboy-pro.json' }),
-    atlas: new Asset('atlas', 'text', { url: './assets/spine/spineboy-pma.atlas' }),
+    skeleton: new Asset('skeleton', 'json', { url: './assets/spine/spineboy/spineboy-pro.json' }),
+    atlas: new Asset('atlas', 'text', { url: './assets/spine/spineboy/spineboy-pma.atlas' }),
     // the texture asset name has to match the page name in the atlas, and as Spine 4.3 renders in
     // gamma space, the texture is loaded without sRGB
-    texture: new Asset('spineboy-pma.png', 'texture', { url: './assets/spine/spineboy-pma.png' }, { srgb: false }),
+    texture: new Asset(
+        'spineboy-pma.png',
+        'texture',
+        { url: './assets/spine/spineboy/spineboy-pma.png' },
+        { srgb: false }
+    ),
     spinescript: new Asset('spinescript', 'script', {
         url: './scripts/spine/playcanvas-spine.4.3.js'
     })

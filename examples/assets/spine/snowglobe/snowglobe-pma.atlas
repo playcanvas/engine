@@ -1,0 +1,172 @@
+snowglobe-pma.png
+	size: 2048, 1024
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+arm-down-l
+	bounds: 830, 87, 56, 54
+arm-down-l-fuzzy
+	bounds: 965, 87, 57, 59
+arm-down-r
+	bounds: 793, 676, 76, 53
+arm-down-r-fuzzy
+	bounds: 716, 101, 61, 66
+arm-up-l
+	bounds: 657, 225, 49, 114
+arm-up-r
+	bounds: 657, 119, 58, 104
+blue-present-base
+	bounds: 657, 451, 126, 139
+blue-present-decoration
+	bounds: 657, 574, 41, 40
+green-present-decoration
+	bounds: 657, 574, 41, 40
+body
+	bounds: 811, 846, 139, 151
+ear-l
+	bounds: 586, 15, 55, 50
+ear-r
+	bounds: 644, 51, 45, 66
+elf-shadow
+	bounds: 2, 2, 395, 158
+eye-reflex-l
+	bounds: 936, 967, 12, 13
+eye-reflex-r
+	bounds: 676, 985, 10, 12
+eye-white-l
+	bounds: 985, 171, 35, 43
+eye-white-r
+	bounds: 708, 291, 34, 48
+eyelashes-l
+	bounds: 734, 570, 32, 40
+eyelashes-r
+	bounds: 858, 656, 32, 47
+gift-base
+	bounds: 763, 390, 125, 105
+gift-decoration
+	bounds: 927, 45, 48, 40
+globe-reflections
+	bounds: 9, 162, 646, 835
+glove-fingers-l
+	bounds: 983, 322, 39, 51
+glove-fingers-r
+	bounds: 830, 29, 41, 56
+glove-l
+	bounds: 504, 53, 40, 61
+glove-r
+	bounds: 458, 51, 44, 65
+glove-shadow-l
+	bounds: 742, 362, 28, 57
+glove-shadow-r
+	bounds: 546, 46, 38, 62
+green-present-base
+	bounds: 896, 613, 126, 139
+hair-front
+	bounds: 872, 353, 150, 101
+hair-side
+	bounds: 657, 845, 27, 53
+hair-strand-1
+	bounds: 888, 45, 37, 65
+hair-strand-2
+	bounds: 921, 779, 26, 66
+hair-strand-3
+	bounds: 743, 33, 40, 53
+hair-strand-4
+	bounds: 969, 720, 37, 69
+	rotate: 90
+hair-strand-5
+	bounds: 977, 38, 25, 47
+hair-strand-6
+	bounds: 921, 742, 14, 35
+hat
+	bounds: 657, 776, 153, 221
+head-base
+	bounds: 657, 612, 134, 135
+iris-l
+	bounds: 784, 494, 40, 41
+iris-r
+	bounds: 735, 755, 40, 41
+leg-down-l
+	bounds: 506, 109, 92, 51
+leg-down-r
+	bounds: 911, 111, 72, 103
+leg-up-l
+	bounds: 952, 850, 65, 147
+leg-up-l-fuzzy
+	bounds: 772, 169, 73, 65
+leg-up-r
+	bounds: 657, 341, 83, 118
+	offsets: 0, 22, 83, 140
+leg-up-r-fuzzy
+	bounds: 847, 143, 65, 71
+mouth
+	bounds: 694, 762, 39, 13
+neck-scarf
+	bounds: 777, 731, 142, 114
+nose
+	bounds: 657, 983, 17, 14
+nose-shadow
+	bounds: 932, 982, 15, 15
+pupil-l
+	bounds: 731, 422, 32, 32
+pupil-r
+	bounds: 826, 497, 32, 32
+red-present-base
+	bounds: 777, 531, 126, 139
+red-present-decoration
+	bounds: 794, 847, 41, 40
+scarf-end-l
+	bounds: 744, 280, 126, 109
+scarf-end-r
+	bounds: 871, 259, 151, 87
+scarf-pompom-l
+	bounds: 691, 53, 50, 46
+scarf-pompom-r
+	bounds: 399, 59, 49, 47
+scarf-ribbon-bottom-l
+	bounds: 399, 107, 106, 53
+scarf-ribbon-bottom-r
+	bounds: 895, 216, 105, 57
+scarf-ribbon-middle-l
+	bounds: 952, 759, 63, 90
+scarf-ribbon-middle-r
+	bounds: 708, 189, 62, 89
+scarf-ribbon-top-l
+	bounds: 905, 553, 105, 58
+scarf-ribbon-top-r
+	bounds: 787, 236, 106, 53
+scarf-shadow
+	bounds: 873, 468, 149, 74
+shoe-l
+	bounds: 779, 72, 49, 95
+shoe-r
+	bounds: 598, 67, 44, 93
+shoelace
+	bounds: 787, 979, 21, 18
+snow
+	bounds: 657, 748, 27, 28
+string
+	bounds: 2, 944, 5, 53
+
+snowglobe-pma_2.png
+	size: 1024, 2048
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+globe-base-back
+	bounds: 217, 2, 606, 258
+	rotate: 90
+globe-base-front
+	bounds: 2, 528, 706, 458
+globe-shadow
+	bounds: 2, 988, 920, 366
+
+snowglobe-pma_3.png
+	size: 1024, 512
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+globe-borders
+	bounds: 444, 2, 440, 441
+globe-texture
+	bounds: 2, 2, 440, 441

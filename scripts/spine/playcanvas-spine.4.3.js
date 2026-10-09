@@ -15674,10 +15674,12 @@ var spine = (function (pc) {
 	};
 	var Spine = function () {
 	  function Spine(app, atlasData, skeletonData, textureData) {
+	    var _this = this;
 	    _classCallCheck(this, Spine);
 	    _defineProperty(this, "autoUpdate", true);
 	    _defineProperty(this, "skeleton", void 0);
 	    _defineProperty(this, "states", void 0);
+	    _defineProperty(this, "skeletonPhysics", void 0);
 	    this._app = app;
 	    this._position = new pc__namespace.Vec3();
 	    var atlas = new TextureAtlas(atlasData);
@@ -15710,6 +15712,21 @@ var spine = (function (pc) {
 	    this.states = [new AnimationState(this.stateData)];
 	    this._renderer = new SkeletonRendererCore();
 	    this._node = new pc__namespace.GraphNode();
+	    this._physicsRotation = 0;
+	    this._physicsQuat = new pc__namespace.Quat();
+	    this._physicsLastQuat = new pc__namespace.Quat();
+	    this._physicsHasLastQuat = false;
+	    this._physicsWorldToLocal = new pc__namespace.Mat4();
+	    this._physicsWorldToLocalValid = false;
+	    this._physicsPoint = new pc__namespace.Vec3();
+	    this.skeletonPhysics = new SkeletonPhysicsMovement(this.skeleton, {
+	      readTransform: function readTransform(out, readRotation) {
+	        return _this._readPhysicsTransform(out, readRotation);
+	      },
+	      worldToSkeleton: function worldToSkeleton(point) {
+	        return _this._physicsWorldToSkeleton(point);
+	      }
+	    });
 	    this._aabb = new pc__namespace.BoundingBox();
 	    this._aabbMin = new pc__namespace.Vec3();
 	    this._aabbMax = new pc__namespace.Vec3();
@@ -15992,6 +16009,7 @@ var spine = (function (pc) {
 	      for (var _i3 = 0; _i3 < states.length; _i3++) {
 	        states[_i3].apply(this.skeleton);
 	      }
+	      this.skeletonPhysics.applyTransformMovement();
 	      this.skeleton.update(dt);
 	      if (this.autoUpdate) {
 	        this.skeleton.updateWorldTransform(Physics.update);
@@ -16002,6 +16020,40 @@ var spine = (function (pc) {
 	    key: "setPosition",
 	    value: function setPosition(p) {
 	      this._position.copy(p);
+	    }
+	  }, {
+	    key: "_readPhysicsTransform",
+	    value: function _readPhysicsTransform(out, readRotation) {
+	      var node = this._node;
+	      var position = node.getPosition();
+	      out.x = position.x;
+	      out.y = position.y;
+	      out.z = position.z;
+	      this._physicsWorldToLocalValid = false;
+	      if (!readRotation) return;
+	      var quat = this._physicsQuat.copy(node.getRotation());
+	      if (this._physicsHasLastQuat) {
+	        var relative = this._physicsLastQuat.invert().mul(quat).normalize();
+	        var twistLength = Math.hypot(relative.z, relative.w);
+	        if (twistLength > 0.000001) {
+	          this._physicsRotation += 2 * Math.atan2(relative.z / twistLength, relative.w / twistLength) * pc__namespace.math.RAD_TO_DEG;
+	        }
+	      }
+	      this._physicsLastQuat.copy(quat);
+	      this._physicsHasLastQuat = true;
+	      out.rotation = this._physicsRotation;
+	    }
+	  }, {
+	    key: "_physicsWorldToSkeleton",
+	    value: function _physicsWorldToSkeleton(point) {
+	      if (!this._physicsWorldToLocalValid) {
+	        this._physicsWorldToLocal.copy(this._node.getWorldTransform()).invert();
+	        this._physicsWorldToLocalValid = true;
+	      }
+	      var local = this._physicsWorldToLocal.transformPoint(this._physicsPoint.set(point.x, point.y, point.z), this._physicsPoint);
+	      point.x = local.x;
+	      point.y = local.y;
+	      point.z = local.z;
 	    }
 	  }, {
 	    key: "setTint",
