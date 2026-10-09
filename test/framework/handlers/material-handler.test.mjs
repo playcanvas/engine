@@ -524,6 +524,30 @@ describe('MaterialHandler', function () {
                 });
             });
 
+            copyKinds.forEach((copyKind) => {
+                it(`gives ${copyKind.label} the textures, when a texture loads from within the load event of another`, async function () {
+                    const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                    completeLoad(gloss);
+                    const materialAsset = new Asset('material', 'material', null, {
+                        useMetalness: true, diffuseMap: diffuse.id, glossMap: gloss.id
+                    });
+                    const material = await loadMaterial(materialAsset);
+                    const copy = copyKind.make({ material, materialAsset });
+
+                    // the asset registry fires its load event before the load event of the asset,
+                    // which the material handles, so the gloss loads before that of the diffuse
+                    app.assets.on('load', (asset) => {
+                        if (asset === diffuse) {
+                            completeLoad(gloss);
+                        }
+                    });
+                    completeLoad(diffuse);
+                    expect(material.diffuseMap).to.equal(diffuse.resource);
+                    expect(copy.diffuseMap).to.equal(diffuse.resource);
+                    expectReleased(material, copy);
+                });
+            });
+
             loadOrders.forEach((loadOrder) => {
                 it(`gives a copy of materials copied into each other the textures, after assigning to their maps, loading ${loadOrder.label} first`, async function () {
                     const { material, source, textures } = await copiedInto();

@@ -158,8 +158,15 @@ class MaterialHandler extends ResourceHandler {
         const copies = material._pendingCopies;
         if (copies) {
             const references = material._assetReferences;
-            const names = standardMaterialTextureParameters.filter(name => references[name] && referencesAsset(references[name], textureAsset));
             const release = !this._isWaitingForTextures(material);
+
+            // on leaving, the copies receive the textures of all the maps, as the load of a map may
+            // still be to handle, when this texture loaded from within the load event of its texture
+            const names = standardMaterialTextureParameters.filter((name) => {
+                const reference = references[name];
+                return reference && (release ? !!reference.asset?.resource : referencesAsset(reference, textureAsset));
+            });
+
             for (const ref of copies) {
                 const copy = ref.deref();
 
@@ -172,7 +179,7 @@ class MaterialHandler extends ResourceHandler {
                 let assigned = false;
                 for (const name of names) {
                     if (this._placeholders.has(copy[name])) {
-                        copy[name] = texture;
+                        copy[name] = release ? references[name].asset.resource : texture;
                         assigned = true;
                     }
                 }
