@@ -23,6 +23,8 @@ export const exampleRedirects = {
     'graphics/volumetric-fog': 'camera-frame/volumetric-fog',
     'graphics/volumetric-fog-local-lights': 'camera-frame/volumetric-fog-local-lights',
     'graphics/volumetric-fog-shafts': 'camera-frame/volumetric-fog-shafts',
+    'loaders/loaders-gl': 'integrations/loaders-gl',
+    'misc/spineboy': 'integrations/spine',
     'shaders/integer-textures': 'render-targets/integer-textures',
     'shaders/paint-mesh': 'render-targets/paint-mesh'
 };
