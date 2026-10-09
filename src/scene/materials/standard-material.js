@@ -667,6 +667,25 @@ class StandardMaterial extends Material {
     _mapTransforms = new StandardMaterialMapTransforms();
 
     /**
+     * The copies of this material made while it waits for texture assets to load, which receive
+     * the textures in the maps still holding placeholders as the textures load. Created and
+     * released by the material asset handler.
+     *
+     * @type {Set<WeakRef<StandardMaterial>>|null}
+     * @ignore
+     */
+    _pendingCopies = null;
+
+    /**
+     * The material waiting for texture assets this material is a copy of, directly or through
+     * other copies, and whose textures it receives as they load.
+     *
+     * @type {StandardMaterial|null}
+     * @ignore
+     */
+    _pendingSource = null;
+
+    /**
      * A custom function that will be called after all shader generator properties are collected
      * and before shader code is generated. This function will receive an object with shader
      * generator settings (based on current material and scene properties), that you can change and
@@ -1757,6 +1776,13 @@ class StandardMaterial extends Material {
         // clone user attributes
         this.userAttributes = new Map(source.userAttributes);
 
+        // a copy of a material waiting for texture assets, or of a copy of one, receives the
+        // textures as they load
+        const pendingSource = source._pendingCopies ? source : source._pendingSource;
+        const pendingCopies = pendingSource?._pendingCopies;
+        pendingCopies?.add(new WeakRef(this));
+        this._pendingSource = pendingCopies ? pendingSource : null;
+
         return this;
     }
 
@@ -1952,6 +1978,9 @@ class StandardMaterial extends Material {
             this._assetReferences[asset]._unbind();
         }
         this._assetReferences = null;
+
+        this._pendingCopies = null;
+        this._pendingSource = null;
 
         super.destroy();
     }

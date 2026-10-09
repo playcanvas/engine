@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
@@ -374,6 +375,151 @@ describe('MaterialHandler', function () {
             expect(material.metalnessMap).to.equal(material.glossMap);
             expect(drawnShader(instance)).to.equal(shader);
             expect(neededShader(instance)).to.equal(shader);
+        });
+
+        describe('copies', function () {
+
+            referenceKinds.forEach((kind) => {
+                it(`gives a copy made while the material waits the textures it references by ${kind.label}, without changing the shader of the copy`, async function () {
+                    const [diffuse, gloss] = colorAndGloss(kind);
+                    const material = await kind.load(diffuse, gloss);
+                    const copy = material.clone();
+
+                    expectSameShaderAfterLoad(copy, [gloss, diffuse]);
+                    expect(material.diffuseMap).to.equal(diffuse.resource);
+                    expect(material.glossMap).to.equal(gloss.resource);
+                });
+            });
+
+            it('gives copies of copies the textures, and a texture asset referenced by several maps to each of them', async function () {
+                const packed = pendingTexture('packed');
+                const normal = pendingTexture('normalMap');
+                const material = await loadMaterial(new Asset('material', 'material', null, {
+                    useMetalness: true, aoMap: packed.id, glossMap: packed.id, normalMap: normal.id
+                }));
+                const copy = material.clone();
+                const copyOfCopy = copy.clone();
+
+                completeLoad(packed);
+                completeLoad(normal);
+                for (const target of [copy, copyOfCopy]) {
+                    expect(target.aoMap).to.equal(packed.resource);
+                    expect(target.glossMap).to.equal(packed.resource);
+                    expect(target.normalMap).to.equal(normal.resource);
+                }
+            });
+
+            it('keeps a texture assigned to a copy', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const copy = material.clone();
+                const texture = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+                copy.diffuseMap = texture;
+
+                completeLoad(diffuse);
+                completeLoad(gloss);
+                expect(copy.diffuseMap).to.equal(texture);
+                expect(copy.glossMap).to.equal(gloss.resource);
+            });
+
+            it('gives a copy the textures of the material it was copied from last', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const other = pendingTexture('other');
+                const otherMaterial = await loadMaterial(new Asset('other', 'material', null, { diffuseMap: other.id }));
+                const copy = material.clone().copy(otherMaterial);
+
+                completeLoad(diffuse);
+                completeLoad(other);
+                expect(copy.diffuseMap).to.equal(other.resource);
+            });
+
+            it('stops tracking the copies once the material has all its textures', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const copy = material.clone();
+
+                completeLoad(diffuse);
+                expect(material._pendingCopies.size).to.equal(1);
+                expect(copy._pendingSource).to.equal(material);
+
+                completeLoad(gloss);
+                expect(material._pendingCopies).to.equal(null);
+                expect(copy._pendingSource).to.equal(null);
+                expect(material.clone()._pendingSource).to.equal(null);
+            });
+
+            it('skips a destroyed copy', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                material.clone().destroy();
+
+                completeLoad(diffuse);
+                expect(material.diffuseMap).to.equal(diffuse.resource);
+                expect(material._pendingCopies.size).to.equal(0);
+            });
+
+            it('gives a copy made while a texture is unloaded the texture when it loads again', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                completeLoad(diffuse);
+                const material = await loadMaterial(new Asset('material', 'material', null, { diffuseMap: diffuse.id }));
+                expect(material._pendingCopies).to.equal(null);
+
+                diffuse.unload();
+                const copy = material.clone();
+                completeLoad(diffuse);
+                expect(copy.diffuseMap).to.equal(diffuse.resource);
+            });
+
+            it('gives a dynamic batch built while the material waits the textures', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                const materialAsset = new Asset('material', 'material', null, { diffuseMap: diffuse.id });
+                const material = await loadMaterial(materialAsset);
+
+                const group = app.batcher.addGroup('dynamic', true, 100);
+                for (let i = 0; i < 2; i++) {
+                    const entity = new Entity();
+                    entity.addComponent('render', { type: 'box', materialAssets: [materialAsset.id], batchGroupId: group.id });
+                    app.root.addChild(entity);
+                }
+                app.batcher.updateAll();
+                const batchMaterial = app.batcher._batchList[0].meshInstance.material;
+                expect(batchMaterial).to.not.equal(material);
+
+                completeLoad(diffuse);
+                expect(batchMaterial.diffuseMap).to.equal(diffuse.resource);
+            });
+
+            // runs the garbage collector until the referent is gone or the attempts run out; a
+            // deref keeps its target alive for the rest of the current job, so gc and deref run
+            // in different jobs
+            const tick = () => new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+            const collected = async (ref, attempts = 10) => {
+                if (attempts === 0) {
+                    return false;
+                }
+                global.gc();
+                await tick();
+                const alive = ref.deref() !== undefined;
+                await tick();
+                return alive ? collected(ref, attempts - 1) : true;
+            };
+
+            it('lets a copy dropped while the material waits be garbage collected', async function () {
+                if (typeof global.gc !== 'function') {
+                    this.skip();
+                }
+
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const ref = new WeakRef(material.clone());
+
+                expect(await collected(ref)).to.equal(true);
+                completeLoad(diffuse);
+                expect(material._pendingCopies.size).to.equal(0);
+            });
         });
     });
 });

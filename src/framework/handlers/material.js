@@ -115,12 +115,69 @@ class MaterialHandler extends ResourceHandler {
 
     // assign a placeholder texture while waiting for one to load
     _assignPlaceholderTexture(parameterName, materialAsset, textureAsset) {
-        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset, textureAsset);
+        const material = materialAsset.resource;
+        material[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset, textureAsset);
+
+        // track the copies made of the material while it waits, see StandardMaterial#copy
+        material._pendingCopies ??= new Set();
+    }
+
+    /**
+     * Returns whether a material waits for texture assets to load. A map waits while it holds a
+     * placeholder, which covers a texture asset referenced by several maps until its load is
+     * handled for each of them, or while it references a texture asset with no texture, which
+     * covers a map whose placeholder was replaced.
+     *
+     * @param {StandardMaterial} material - The material.
+     * @returns {boolean} True if the material waits for a texture asset.
+     * @private
+     */
+    _isWaitingForTextures(material) {
+        const references = material._assetReferences;
+        for (const name of standardMaterialTextureParameters) {
+            const textureAsset = references[name]?.asset;
+            if (this._placeholders.has(material[name]) || (textureAsset && !textureAsset.resource)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
-        this._assignTexture(parameterName, materialAsset, textureAsset.resource);
-        materialAsset.resource.update();
+        const material = materialAsset.resource;
+        const texture = textureAsset.resource;
+        this._assignTexture(parameterName, materialAsset, texture);
+        material.update();
+
+        // the copies made of the material while it waited receive the texture in the map, unless
+        // a texture was assigned to the map of the copy since
+        const copies = material._pendingCopies;
+        if (copies) {
+            const waiting = this._isWaitingForTextures(material);
+            for (const ref of copies) {
+                const copy = ref.deref();
+
+                // the copy is collected, destroyed, or copied from another material since
+                if (copy?._pendingSource !== material) {
+                    copies.delete(ref);
+                    continue;
+                }
+
+                if (this._placeholders.has(copy[parameterName])) {
+                    copy[parameterName] = texture;
+                    copy.update();
+                }
+
+                if (!waiting) {
+                    copy._pendingSource = null;
+                }
+            }
+
+            // stop tracking the copies once the material has all its textures
+            if (!waiting) {
+                material._pendingCopies = null;
+            }
+        }
     }
 
     _onTextureAdd(parameterName, materialAsset, textureAsset) {
