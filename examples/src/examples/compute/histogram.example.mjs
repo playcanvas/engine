@@ -17,6 +17,7 @@ import {
     CameraComponentSystem,
     Color,
     Compute,
+    ComputePass,
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
@@ -160,11 +161,17 @@ solid.setLocalPosition(0, 0.4, 0);
 solid.setLocalScale(0.35, 0.35, 0.35);
 app.root.addChild(solid);
 
-let firstFrame = true;
+// The compute shader runs after the camera renders, so it processes the color map of the frame the
+// camera rendered
+const computePass = new ComputePass(device, [compute]);
+computePass.name = 'HistogramPass';
+if (device.supportsCompute) {
+    camera.camera.afterPasses.push(computePass);
+}
+
 let readGeneration = 0;
 const onDeviceLost = device.on('devicelost', () => {
     readGeneration++;
-    firstFrame = true;
 });
 app.on('destroy', () => {
     readGeneration++;
@@ -172,22 +179,20 @@ app.on('destroy', () => {
 });
 
 app.on('update', (/** @type {number} */ _dt) => {
-    // The update function runs every frame before the frame gets rendered. On the first time it
-    // runs, the scene color map has not been rendered yet, so we skip the first frame.
-    if (firstFrame) {
-        firstFrame = false;
-        return;
-    }
-
     if (device.supportsCompute) {
-        // Clear the storage buffer, to avoid the accumulation buildup
+        // Clear the storage buffer, to avoid the accumulation buildup. The clear executes before
+        // the compute pass, which runs later in the frame.
         histogramStorageBuffer.clear();
 
-        // Dispatch the compute shader
+        // The size of the dispatch, which the compute pass uses
         compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
-        device.computeDispatch([compute], 'HistogramDispatch');
+    }
+});
 
-        // Read back the histogram data from the storage buffer. None that the returned promise
+// After the frame renders, including the compute pass
+app.on('postrender', () => {
+    if (device.supportsCompute) {
+        // Read back the histogram data from the storage buffer. Note that the returned promise
         // will be resolved later, when the GPU is done running it, and so the histogram on the
         // screen will be up to few frames behind.
         const histogramData = new Uint32Array(numBins);

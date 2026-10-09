@@ -25,6 +25,7 @@ import {
     CameraFrame,
     Color,
     Compute,
+    ComputePass,
     ContainerHandler,
     DepthState,
     Entity,
@@ -254,6 +255,12 @@ const compute = new Compute(device, shader, 'Scanner');
 compute.setSceneDepthMap(cameraEntity.camera.sceneDepthMapHandle);
 compute.setSceneColorMap(cameraEntity.camera.sceneColorMapHandle);
 
+// The scanner runs in a compute pass after the main camera renders, so it scans the scene maps of
+// the frame the camera rendered, and the overlay drawn after it matches the scene
+const scannerPass = new ComputePass(device, [compute]);
+scannerPass.name = 'ScannerPass';
+cameraEntity.camera.afterPasses.push(scannerPass);
+
 // The overlay is added over the final image by a camera rendering after the main one, so that it
 // is drawn the same way whether the main camera uses the camera frame or not
 const overlayLayer = new Layer({ name: 'ScannerOverlay' });
@@ -387,16 +394,8 @@ data.on('*:set', (/** @type {string} */ path) => {
 
 const scanColor = [0.2, 0.75, 1];
 let time = 0;
-let firstFrame = true;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
-
-    // the scene maps are rendered for the first time as the first frame renders, so there is
-    // nothing to scan before that
-    if (firstFrame) {
-        firstFrame = false;
-        return;
-    }
 
     updateOverlayTexture();
 
@@ -415,10 +414,8 @@ app.on('update', (/** @type {number} */ dt) => {
     const fov = cameraEntity.camera.fov * math.DEG_TO_RAD;
     compute.setParameter('pixelSize', (2 * Math.tan(fov * 0.5)) / overlayTexture.height);
 
-    // This runs before the frame renders, so it uses the scene maps of the previous frame. The
-    // overlay trails the scene by a frame while the camera moves.
+    // the size of the dispatch, which the scanner pass uses after the camera renders
     compute.setupDispatch(Math.ceil(overlayTexture.width / 8), Math.ceil(overlayTexture.height / 8));
-    device.computeDispatch([compute], 'ScannerDispatch');
 });
 
 const walkerPosition = new Vec3();
