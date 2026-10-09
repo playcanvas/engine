@@ -22,6 +22,156 @@ var spine = (function (pc) {
 
 	var pc__namespace = /*#__PURE__*/_interopNamespaceDefault(pc);
 
+	function _arrayLikeToArray(r, a) {
+	  (null == a || a > r.length) && (a = r.length);
+	  for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+	  return n;
+	}
+	function _arrayWithHoles(r) {
+	  if (Array.isArray(r)) return r;
+	}
+	function _arrayWithoutHoles(r) {
+	  if (Array.isArray(r)) return _arrayLikeToArray(r);
+	}
+	function _assertThisInitialized(e) {
+	  if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	  return e;
+	}
+	function asyncGeneratorStep(n, t, e, r, o, a, c) {
+	  try {
+	    var i = n[a](c),
+	      u = i.value;
+	  } catch (n) {
+	    return void e(n);
+	  }
+	  i.done ? t(u) : Promise.resolve(u).then(r, o);
+	}
+	function _asyncToGenerator(n) {
+	  return function () {
+	    var t = this,
+	      e = arguments;
+	    return new Promise(function (r, o) {
+	      var a = n.apply(t, e);
+	      function _next(n) {
+	        asyncGeneratorStep(a, r, o, _next, _throw, "next", n);
+	      }
+	      function _throw(n) {
+	        asyncGeneratorStep(a, r, o, _next, _throw, "throw", n);
+	      }
+	      _next(void 0);
+	    });
+	  };
+	}
+	function _callSuper(t, o, e) {
+	  return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e));
+	}
+	function _classCallCheck(a, n) {
+	  if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
+	}
+	function _defineProperties(e, r) {
+	  for (var t = 0; t < r.length; t++) {
+	    var o = r[t];
+	    o.enumerable = o.enumerable || false, o.configurable = true, "value" in o && (o.writable = true), Object.defineProperty(e, _toPropertyKey(o.key), o);
+	  }
+	}
+	function _createClass(e, r, t) {
+	  return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
+	    writable: false
+	  }), e;
+	}
+	function _createForOfIteratorHelper(r, e) {
+	  var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+	  if (!t) {
+	    if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e) {
+	      t && (r = t);
+	      var n = 0,
+	        F = function () {};
+	      return {
+	        s: F,
+	        n: function () {
+	          return n >= r.length ? {
+	            done: true
+	          } : {
+	            done: false,
+	            value: r[n++]
+	          };
+	        },
+	        e: function (r) {
+	          throw r;
+	        },
+	        f: F
+	      };
+	    }
+	    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+	  }
+	  var o,
+	    a = true,
+	    u = false;
+	  return {
+	    s: function () {
+	      t = t.call(r);
+	    },
+	    n: function () {
+	      var r = t.next();
+	      return a = r.done, r;
+	    },
+	    e: function (r) {
+	      u = true, o = r;
+	    },
+	    f: function () {
+	      try {
+	        a || null == t.return || t.return();
+	      } finally {
+	        if (u) throw o;
+	      }
+	    }
+	  };
+	}
+	function _defineProperty(e, r, t) {
+	  return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+	    value: t,
+	    enumerable: true,
+	    configurable: true,
+	    writable: true
+	  }) : e[r] = t, e;
+	}
+	function _get() {
+	  return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) {
+	    var p = _superPropBase(e, t);
+	    if (p) {
+	      var n = Object.getOwnPropertyDescriptor(p, t);
+	      return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value;
+	    }
+	  }, _get.apply(null, arguments);
+	}
+	function _getPrototypeOf(t) {
+	  return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) {
+	    return t.__proto__ || Object.getPrototypeOf(t);
+	  }, _getPrototypeOf(t);
+	}
+	function _inherits(t, e) {
+	  if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function");
+	  t.prototype = Object.create(e && e.prototype, {
+	    constructor: {
+	      value: t,
+	      writable: true,
+	      configurable: true
+	    }
+	  }), Object.defineProperty(t, "prototype", {
+	    writable: false
+	  }), e && _setPrototypeOf(t, e);
+	}
+	function _isNativeReflectConstruct() {
+	  try {
+	    var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
+	  } catch (t) {}
+	  return (_isNativeReflectConstruct = function () {
+	    return !!t;
+	  })();
+	}
+	function _iterableToArray(r) {
+	  if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r);
+	}
 	function _iterableToArrayLimit(r, l) {
 	  var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
 	  if (null != t) {
@@ -30,15 +180,15 @@ var spine = (function (pc) {
 	      i,
 	      u,
 	      a = [],
-	      f = !0,
-	      o = !1;
+	      f = true,
+	      o = false;
 	    try {
 	      if (i = (t = t.call(r)).next, 0 === l) {
 	        if (Object(t) !== t) return;
 	        f = !1;
 	      } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
 	    } catch (r) {
-	      o = !0, n = r;
+	      o = true, n = r;
 	    } finally {
 	      try {
 	        if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
@@ -49,306 +199,159 @@ var spine = (function (pc) {
 	    return a;
 	  }
 	}
-	function _regeneratorRuntime() {
-	  _regeneratorRuntime = function () {
-	    return e;
-	  };
-	  var t,
-	    e = {},
-	    r = Object.prototype,
-	    n = r.hasOwnProperty,
-	    o = Object.defineProperty || function (t, e, r) {
-	      t[e] = r.value;
-	    },
-	    i = "function" == typeof Symbol ? Symbol : {},
-	    a = i.iterator || "@@iterator",
-	    c = i.asyncIterator || "@@asyncIterator",
-	    u = i.toStringTag || "@@toStringTag";
-	  function define(t, e, r) {
-	    return Object.defineProperty(t, e, {
-	      value: r,
-	      enumerable: !0,
-	      configurable: !0,
-	      writable: !0
-	    }), t[e];
-	  }
-	  try {
-	    define({}, "");
-	  } catch (t) {
-	    define = function (t, e, r) {
-	      return t[e] = r;
-	    };
-	  }
-	  function wrap(t, e, r, n) {
-	    var i = e && e.prototype instanceof Generator ? e : Generator,
-	      a = Object.create(i.prototype),
-	      c = new Context(n || []);
-	    return o(a, "_invoke", {
-	      value: makeInvokeMethod(t, r, c)
-	    }), a;
-	  }
-	  function tryCatch(t, e, r) {
-	    try {
-	      return {
-	        type: "normal",
-	        arg: t.call(e, r)
+	function _nonIterableRest() {
+	  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+	}
+	function _nonIterableSpread() {
+	  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+	}
+	function _possibleConstructorReturn(t, e) {
+	  if (e && ("object" == typeof e || "function" == typeof e)) return e;
+	  if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined");
+	  return _assertThisInitialized(t);
+	}
+	function _regenerator() {
+	  /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */
+	  var e,
+	    t,
+	    r = "function" == typeof Symbol ? Symbol : {},
+	    n = r.iterator || "@@iterator",
+	    o = r.toStringTag || "@@toStringTag";
+	  function i(r, n, o, i) {
+	    var c = n && n.prototype instanceof Generator ? n : Generator,
+	      u = Object.create(c.prototype);
+	    return _regeneratorDefine(u, "_invoke", function (r, n, o) {
+	      var i,
+	        c,
+	        u,
+	        f = 0,
+	        p = o || [],
+	        y = false,
+	        G = {
+	          p: 0,
+	          n: 0,
+	          v: e,
+	          a: d,
+	          f: d.bind(e, 4),
+	          d: function (t, r) {
+	            return i = t, c = 0, u = e, G.n = r, a;
+	          }
+	        };
+	      function d(r, n) {
+	        for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) {
+	          var o,
+	            i = p[t],
+	            d = G.p,
+	            l = i[2];
+	          r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0));
+	        }
+	        if (o || r > 1) return a;
+	        throw y = true, n;
+	      }
+	      return function (o, p, l) {
+	        if (f > 1) throw TypeError("Generator is already running");
+	        for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) {
+	          i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u);
+	          try {
+	            if (f = 2, i) {
+	              if (c || (o = "next"), t = i[o]) {
+	                if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object");
+	                if (!t.done) return t;
+	                u = t.value, c < 2 && (c = 0);
+	              } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1);
+	              i = e;
+	            } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break;
+	          } catch (t) {
+	            i = e, c = 1, u = t;
+	          } finally {
+	            f = 1;
+	          }
+	        }
+	        return {
+	          value: t,
+	          done: y
+	        };
 	      };
-	    } catch (t) {
-	      return {
-	        type: "throw",
-	        arg: t
-	      };
-	    }
+	    }(r, o, i), true), u;
 	  }
-	  e.wrap = wrap;
-	  var h = "suspendedStart",
-	    l = "suspendedYield",
-	    f = "executing",
-	    s = "completed",
-	    y = {};
+	  var a = {};
 	  function Generator() {}
 	  function GeneratorFunction() {}
 	  function GeneratorFunctionPrototype() {}
-	  var p = {};
-	  define(p, a, function () {
+	  t = Object.getPrototypeOf;
+	  var c = [][n] ? t(t([][n]())) : (_regeneratorDefine(t = {}, n, function () {
+	      return this;
+	    }), t),
+	    u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c);
+	  function f(e) {
+	    return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e;
+	  }
+	  return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine(u), _regeneratorDefine(u, o, "Generator"), _regeneratorDefine(u, n, function () {
 	    return this;
-	  });
-	  var d = Object.getPrototypeOf,
-	    v = d && d(d(values([])));
-	  v && v !== r && n.call(v, a) && (p = v);
-	  var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p);
-	  function defineIteratorMethods(t) {
-	    ["next", "throw", "return"].forEach(function (e) {
-	      define(t, e, function (t) {
-	        return this._invoke(e, t);
-	      });
-	    });
-	  }
-	  function AsyncIterator(t, e) {
-	    function invoke(r, o, i, a) {
-	      var c = tryCatch(t[r], t, o);
-	      if ("throw" !== c.type) {
-	        var u = c.arg,
-	          h = u.value;
-	        return h && "object" == typeof h && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) {
-	          invoke("next", t, i, a);
-	        }, function (t) {
-	          invoke("throw", t, i, a);
-	        }) : e.resolve(h).then(function (t) {
-	          u.value = t, i(u);
-	        }, function (t) {
-	          return invoke("throw", t, i, a);
-	        });
-	      }
-	      a(c.arg);
-	    }
-	    var r;
-	    o(this, "_invoke", {
-	      value: function (t, n) {
-	        function callInvokeWithMethodAndArg() {
-	          return new e(function (e, r) {
-	            invoke(t, n, e, r);
-	          });
-	        }
-	        return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
-	      }
-	    });
-	  }
-	  function makeInvokeMethod(e, r, n) {
-	    var o = h;
-	    return function (i, a) {
-	      if (o === f) throw new Error("Generator is already running");
-	      if (o === s) {
-	        if ("throw" === i) throw a;
-	        return {
-	          value: t,
-	          done: !0
-	        };
-	      }
-	      for (n.method = i, n.arg = a;;) {
-	        var c = n.delegate;
-	        if (c) {
-	          var u = maybeInvokeDelegate(c, n);
-	          if (u) {
-	            if (u === y) continue;
-	            return u;
-	          }
-	        }
-	        if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) {
-	          if (o === h) throw o = s, n.arg;
-	          n.dispatchException(n.arg);
-	        } else "return" === n.method && n.abrupt("return", n.arg);
-	        o = f;
-	        var p = tryCatch(e, r, n);
-	        if ("normal" === p.type) {
-	          if (o = n.done ? s : l, p.arg === y) continue;
-	          return {
-	            value: p.arg,
-	            done: n.done
-	          };
-	        }
-	        "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg);
-	      }
-	    };
-	  }
-	  function maybeInvokeDelegate(e, r) {
-	    var n = r.method,
-	      o = e.iterator[n];
-	    if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y;
-	    var i = tryCatch(o, e.iterator, r.arg);
-	    if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y;
-	    var a = i.arg;
-	    return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y);
-	  }
-	  function pushTryEntry(t) {
-	    var e = {
-	      tryLoc: t[0]
-	    };
-	    1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e);
-	  }
-	  function resetTryEntry(t) {
-	    var e = t.completion || {};
-	    e.type = "normal", delete e.arg, t.completion = e;
-	  }
-	  function Context(t) {
-	    this.tryEntries = [{
-	      tryLoc: "root"
-	    }], t.forEach(pushTryEntry, this), this.reset(!0);
-	  }
-	  function values(e) {
-	    if (e || "" === e) {
-	      var r = e[a];
-	      if (r) return r.call(e);
-	      if ("function" == typeof e.next) return e;
-	      if (!isNaN(e.length)) {
-	        var o = -1,
-	          i = function next() {
-	            for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next;
-	            return next.value = t, next.done = !0, next;
-	          };
-	        return i.next = i;
-	      }
-	    }
-	    throw new TypeError(typeof e + " is not iterable");
-	  }
-	  return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", {
-	    value: GeneratorFunctionPrototype,
-	    configurable: !0
-	  }), o(GeneratorFunctionPrototype, "constructor", {
-	    value: GeneratorFunction,
-	    configurable: !0
-	  }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) {
-	    var e = "function" == typeof t && t.constructor;
-	    return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name));
-	  }, e.mark = function (t) {
-	    return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t;
-	  }, e.awrap = function (t) {
-	    return {
-	      __await: t
-	    };
-	  }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () {
-	    return this;
-	  }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) {
-	    void 0 === i && (i = Promise);
-	    var a = new AsyncIterator(wrap(t, r, n, o), i);
-	    return e.isGeneratorFunction(r) ? a : a.next().then(function (t) {
-	      return t.done ? t.value : a.next();
-	    });
-	  }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () {
-	    return this;
-	  }), define(g, "toString", function () {
+	  }), _regeneratorDefine(u, "toString", function () {
 	    return "[object Generator]";
-	  }), e.keys = function (t) {
-	    var e = Object(t),
-	      r = [];
-	    for (var n in e) r.push(n);
-	    return r.reverse(), function next() {
-	      for (; r.length;) {
-	        var t = r.pop();
-	        if (t in e) return next.value = t, next.done = !1, next;
-	      }
-	      return next.done = !0, next;
+	  }), (_regenerator = function () {
+	    return {
+	      w: i,
+	      m: f
 	    };
-	  }, e.values = values, Context.prototype = {
-	    constructor: Context,
-	    reset: function (e) {
-	      if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t);
-	    },
-	    stop: function () {
-	      this.done = !0;
-	      var t = this.tryEntries[0].completion;
-	      if ("throw" === t.type) throw t.arg;
-	      return this.rval;
-	    },
-	    dispatchException: function (e) {
-	      if (this.done) throw e;
-	      var r = this;
-	      function handle(n, o) {
-	        return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o;
-	      }
-	      for (var o = this.tryEntries.length - 1; o >= 0; --o) {
-	        var i = this.tryEntries[o],
-	          a = i.completion;
-	        if ("root" === i.tryLoc) return handle("end");
-	        if (i.tryLoc <= this.prev) {
-	          var c = n.call(i, "catchLoc"),
-	            u = n.call(i, "finallyLoc");
-	          if (c && u) {
-	            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
-	            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
-	          } else if (c) {
-	            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
-	          } else {
-	            if (!u) throw new Error("try statement without catch or finally");
-	            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
-	          }
-	        }
-	      }
-	    },
-	    abrupt: function (t, e) {
-	      for (var r = this.tryEntries.length - 1; r >= 0; --r) {
-	        var o = this.tryEntries[r];
-	        if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) {
-	          var i = o;
-	          break;
-	        }
-	      }
-	      i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null);
-	      var a = i ? i.completion : {};
-	      return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a);
-	    },
-	    complete: function (t, e) {
-	      if ("throw" === t.type) throw t.arg;
-	      return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y;
-	    },
-	    finish: function (t) {
-	      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
-	        var r = this.tryEntries[e];
-	        if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y;
-	      }
-	    },
-	    catch: function (t) {
-	      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
-	        var r = this.tryEntries[e];
-	        if (r.tryLoc === t) {
-	          var n = r.completion;
-	          if ("throw" === n.type) {
-	            var o = n.arg;
-	            resetTryEntry(r);
-	          }
-	          return o;
-	        }
-	      }
-	      throw new Error("illegal catch attempt");
-	    },
-	    delegateYield: function (e, r, n) {
-	      return this.delegate = {
-	        iterator: values(e),
-	        resultName: r,
-	        nextLoc: n
-	      }, "next" === this.method && (this.arg = t), y;
+	  })();
+	}
+	function _regeneratorDefine(e, r, n, t) {
+	  var i = Object.defineProperty;
+	  try {
+	    i({}, "", {});
+	  } catch (e) {
+	    i = 0;
+	  }
+	  _regeneratorDefine = function (e, r, n, t) {
+	    function o(r, n) {
+	      _regeneratorDefine(e, r, function (e) {
+	        return this._invoke(r, n, e);
+	      });
 	    }
-	  }, e;
+	    r ? i ? i(e, r, {
+	      value: n,
+	      enumerable: !t,
+	      configurable: !t,
+	      writable: !t
+	    }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2));
+	  }, _regeneratorDefine(e, r, n, t);
+	}
+	function _setPrototypeOf(t, e) {
+	  return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) {
+	    return t.__proto__ = e, t;
+	  }, _setPrototypeOf(t, e);
+	}
+	function _slicedToArray(r, e) {
+	  return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest();
+	}
+	function _superPropBase(t, o) {
+	  for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t)););
+	  return t;
+	}
+	function _superPropGet(t, o, e, r) {
+	  var p = _get(_getPrototypeOf(t.prototype ), o, e);
+	  return "function" == typeof p ? function (t) {
+	    return p.apply(e, t);
+	  } : p;
+	}
+	function _toConsumableArray(r) {
+	  return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread();
+	}
+	function _toPrimitive(t, e) {
+	  if ("object" != typeof t || !t) return t;
+	  var r;
+	  if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+	    var i = r.call(t, e);
+	    if ("object" != typeof i) return i;
+	    throw new TypeError("@@toPrimitive must return a primitive value.");
+	  }
+	  return ("string" === e ? String : Number)(t);
+	}
+	function _toPropertyKey(t) {
+	  var i = _toPrimitive(t, "string");
+	  return "symbol" == typeof i ? i : i + "";
 	}
 	function _typeof(o) {
 	  "@babel/helpers - typeof";
@@ -359,253 +362,15 @@ var spine = (function (pc) {
 	    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
 	  }, _typeof(o);
 	}
-	function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-	  try {
-	    var info = gen[key](arg);
-	    var value = info.value;
-	  } catch (error) {
-	    reject(error);
-	    return;
+	function _unsupportedIterableToArray(r, a) {
+	  if (r) {
+	    if ("string" == typeof r) return _arrayLikeToArray(r, a);
+	    var t = {}.toString.call(r).slice(8, -1);
+	    return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
 	  }
-	  if (info.done) {
-	    resolve(value);
-	  } else {
-	    Promise.resolve(value).then(_next, _throw);
-	  }
-	}
-	function _asyncToGenerator(fn) {
-	  return function () {
-	    var self = this,
-	      args = arguments;
-	    return new Promise(function (resolve, reject) {
-	      var gen = fn.apply(self, args);
-	      function _next(value) {
-	        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-	      }
-	      function _throw(err) {
-	        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-	      }
-	      _next(undefined);
-	    });
-	  };
-	}
-	function _classCallCheck(instance, Constructor) {
-	  if (!(instance instanceof Constructor)) {
-	    throw new TypeError("Cannot call a class as a function");
-	  }
-	}
-	function _defineProperties(target, props) {
-	  for (var i = 0; i < props.length; i++) {
-	    var descriptor = props[i];
-	    descriptor.enumerable = descriptor.enumerable || false;
-	    descriptor.configurable = true;
-	    if ("value" in descriptor) descriptor.writable = true;
-	    Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
-	  }
-	}
-	function _createClass(Constructor, protoProps, staticProps) {
-	  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-	  if (staticProps) _defineProperties(Constructor, staticProps);
-	  Object.defineProperty(Constructor, "prototype", {
-	    writable: false
-	  });
-	  return Constructor;
-	}
-	function _defineProperty(obj, key, value) {
-	  key = _toPropertyKey(key);
-	  if (key in obj) {
-	    Object.defineProperty(obj, key, {
-	      value: value,
-	      enumerable: true,
-	      configurable: true,
-	      writable: true
-	    });
-	  } else {
-	    obj[key] = value;
-	  }
-	  return obj;
-	}
-	function _inherits(subClass, superClass) {
-	  if (typeof superClass !== "function" && superClass !== null) {
-	    throw new TypeError("Super expression must either be null or a function");
-	  }
-	  subClass.prototype = Object.create(superClass && superClass.prototype, {
-	    constructor: {
-	      value: subClass,
-	      writable: true,
-	      configurable: true
-	    }
-	  });
-	  Object.defineProperty(subClass, "prototype", {
-	    writable: false
-	  });
-	  if (superClass) _setPrototypeOf(subClass, superClass);
-	}
-	function _getPrototypeOf(o) {
-	  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
-	    return o.__proto__ || Object.getPrototypeOf(o);
-	  };
-	  return _getPrototypeOf(o);
-	}
-	function _setPrototypeOf(o, p) {
-	  _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {
-	    o.__proto__ = p;
-	    return o;
-	  };
-	  return _setPrototypeOf(o, p);
-	}
-	function _assertThisInitialized(self) {
-	  if (self === void 0) {
-	    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-	  }
-	  return self;
-	}
-	function _possibleConstructorReturn(self, call) {
-	  if (call && (typeof call === "object" || typeof call === "function")) {
-	    return call;
-	  } else if (call !== void 0) {
-	    throw new TypeError("Derived constructors may only return object or undefined");
-	  }
-	  return _assertThisInitialized(self);
-	}
-	function _superPropBase(object, property) {
-	  while (!Object.prototype.hasOwnProperty.call(object, property)) {
-	    object = _getPrototypeOf(object);
-	    if (object === null) break;
-	  }
-	  return object;
-	}
-	function _get() {
-	  if (typeof Reflect !== "undefined" && Reflect.get) {
-	    _get = Reflect.get.bind();
-	  } else {
-	    _get = function _get(target, property, receiver) {
-	      var base = _superPropBase(target, property);
-	      if (!base) return;
-	      var desc = Object.getOwnPropertyDescriptor(base, property);
-	      if (desc.get) {
-	        return desc.get.call(arguments.length < 3 ? target : receiver);
-	      }
-	      return desc.value;
-	    };
-	  }
-	  return _get.apply(this, arguments);
-	}
-	function _slicedToArray(arr, i) {
-	  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
-	}
-	function _toConsumableArray(arr) {
-	  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
-	}
-	function _arrayWithoutHoles(arr) {
-	  if (Array.isArray(arr)) return _arrayLikeToArray(arr);
-	}
-	function _arrayWithHoles(arr) {
-	  if (Array.isArray(arr)) return arr;
-	}
-	function _iterableToArray(iter) {
-	  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
-	}
-	function _unsupportedIterableToArray(o, minLen) {
-	  if (!o) return;
-	  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-	  var n = Object.prototype.toString.call(o).slice(8, -1);
-	  if (n === "Object" && o.constructor) n = o.constructor.name;
-	  if (n === "Map" || n === "Set") return Array.from(o);
-	  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-	}
-	function _arrayLikeToArray(arr, len) {
-	  if (len == null || len > arr.length) len = arr.length;
-	  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-	  return arr2;
-	}
-	function _nonIterableSpread() {
-	  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-	}
-	function _nonIterableRest() {
-	  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-	}
-	function _createForOfIteratorHelper(o, allowArrayLike) {
-	  var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
-	  if (!it) {
-	    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike  ) {
-	      if (it) o = it;
-	      var i = 0;
-	      var F = function () {};
-	      return {
-	        s: F,
-	        n: function () {
-	          if (i >= o.length) return {
-	            done: true
-	          };
-	          return {
-	            done: false,
-	            value: o[i++]
-	          };
-	        },
-	        e: function (e) {
-	          throw e;
-	        },
-	        f: F
-	      };
-	    }
-	    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-	  }
-	  var normalCompletion = true,
-	    didErr = false,
-	    err;
-	  return {
-	    s: function () {
-	      it = it.call(o);
-	    },
-	    n: function () {
-	      var step = it.next();
-	      normalCompletion = step.done;
-	      return step;
-	    },
-	    e: function (e) {
-	      didErr = true;
-	      err = e;
-	    },
-	    f: function () {
-	      try {
-	        if (!normalCompletion && it.return != null) it.return();
-	      } finally {
-	        if (didErr) throw err;
-	      }
-	    }
-	  };
-	}
-	function _toPrimitive(input, hint) {
-	  if (typeof input !== "object" || input === null) return input;
-	  var prim = input[Symbol.toPrimitive];
-	  if (prim !== undefined) {
-	    var res = prim.call(input, hint || "default");
-	    if (typeof res !== "object") return res;
-	    throw new TypeError("@@toPrimitive must return a primitive value.");
-	  }
-	  return (hint === "string" ? String : Number)(input);
-	}
-	function _toPropertyKey(arg) {
-	  var key = _toPrimitive(arg, "string");
-	  return typeof key === "symbol" ? key : String(key);
 	}
 
 	var _Color, _MathUtils, _Interpolation;
-	function _callSuper$t(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var IntSet = function () {
 	  function IntSet() {
 	    _classCallCheck(this, IntSet);
@@ -859,7 +624,7 @@ var spine = (function (pc) {
 	_defineProperty(Interpolation, "linear", new (function (_Interpolation3) {
 	  function _class() {
 	    _classCallCheck(this, _class);
-	    return _callSuper$t(this, _class, arguments);
+	    return _callSuper(this, _class, arguments);
 	  }
 	  _inherits(_class, _Interpolation3);
 	  return _createClass(_class, [{
@@ -872,7 +637,7 @@ var spine = (function (pc) {
 	_defineProperty(Interpolation, "smooth", new (function (_Interpolation4) {
 	  function _class2() {
 	    _classCallCheck(this, _class2);
-	    return _callSuper$t(this, _class2, arguments);
+	    return _callSuper(this, _class2, arguments);
 	  }
 	  _inherits(_class2, _Interpolation4);
 	  return _createClass(_class2, [{
@@ -885,7 +650,7 @@ var spine = (function (pc) {
 	_defineProperty(Interpolation, "slowFast", new (function (_Interpolation5) {
 	  function _class3() {
 	    _classCallCheck(this, _class3);
-	    return _callSuper$t(this, _class3, arguments);
+	    return _callSuper(this, _class3, arguments);
 	  }
 	  _inherits(_class3, _Interpolation5);
 	  return _createClass(_class3, [{
@@ -898,7 +663,7 @@ var spine = (function (pc) {
 	_defineProperty(Interpolation, "fastSlow", new (function (_Interpolation6) {
 	  function _class4() {
 	    _classCallCheck(this, _class4);
-	    return _callSuper$t(this, _class4, arguments);
+	    return _callSuper(this, _class4, arguments);
 	  }
 	  _inherits(_class4, _Interpolation6);
 	  return _createClass(_class4, [{
@@ -911,7 +676,7 @@ var spine = (function (pc) {
 	_defineProperty(Interpolation, "circle", new (function (_Interpolation7) {
 	  function _class5() {
 	    _classCallCheck(this, _class5);
-	    return _callSuper$t(this, _class5, arguments);
+	    return _callSuper(this, _class5, arguments);
 	  }
 	  _inherits(_class5, _Interpolation7);
 	  return _createClass(_class5, [{
@@ -929,12 +694,12 @@ var spine = (function (pc) {
 	}(_Interpolation))());
 	var Pow = function (_Interpolation2) {
 	  function Pow(power) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, Pow);
-	    _this2 = _callSuper$t(this, Pow);
-	    _defineProperty(_this2, "power", 2);
-	    _this2.power = power;
-	    return _this2;
+	    _this = _callSuper(this, Pow);
+	    _defineProperty(_this, "power", 2);
+	    _this.power = power;
+	    return _this;
 	  }
 	  _inherits(Pow, _Interpolation2);
 	  return _createClass(Pow, [{
@@ -948,7 +713,7 @@ var spine = (function (pc) {
 	var PowOut = function (_Pow2) {
 	  function PowOut(power) {
 	    _classCallCheck(this, PowOut);
-	    return _callSuper$t(this, PowOut, [power]);
+	    return _callSuper(this, PowOut, [power]);
 	  }
 	  _inherits(PowOut, _Pow2);
 	  return _createClass(PowOut, [{
@@ -1196,20 +961,6 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$s(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var Texture = function () {
 	  function Texture(image) {
 	    _classCallCheck(this, Texture);
@@ -1257,7 +1008,7 @@ var spine = (function (pc) {
 	var FakeTexture = function (_Texture2) {
 	  function FakeTexture() {
 	    _classCallCheck(this, FakeTexture);
-	    return _callSuper$s(this, FakeTexture, arguments);
+	    return _callSuper(this, FakeTexture, arguments);
 	  }
 	  _inherits(FakeTexture, _Texture2);
 	  return _createClass(FakeTexture, [{
@@ -1272,20 +1023,6 @@ var spine = (function (pc) {
 	  }]);
 	}(Texture);
 
-	function _callSuper$r(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var TextureAtlas = function () {
 	  function TextureAtlas(atlasText) {
 	    _classCallCheck(this, TextureAtlas);
@@ -1517,44 +1254,30 @@ var spine = (function (pc) {
 	}();
 	var TextureAtlasRegion = function (_TextureRegion) {
 	  function TextureAtlasRegion(page, name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, TextureAtlasRegion);
-	    _this2 = _callSuper$r(this, TextureAtlasRegion);
-	    _defineProperty(_this2, "page", void 0);
-	    _defineProperty(_this2, "name", void 0);
-	    _defineProperty(_this2, "x", 0);
-	    _defineProperty(_this2, "y", 0);
-	    _defineProperty(_this2, "offsetX", 0);
-	    _defineProperty(_this2, "offsetY", 0);
-	    _defineProperty(_this2, "originalWidth", 0);
-	    _defineProperty(_this2, "originalHeight", 0);
-	    _defineProperty(_this2, "index", 0);
-	    _defineProperty(_this2, "degrees", 0);
-	    _defineProperty(_this2, "names", null);
-	    _defineProperty(_this2, "values", null);
-	    _this2.page = page;
-	    _this2.name = name;
-	    page.regions.push(_this2);
-	    return _this2;
+	    _this = _callSuper(this, TextureAtlasRegion);
+	    _defineProperty(_this, "page", void 0);
+	    _defineProperty(_this, "name", void 0);
+	    _defineProperty(_this, "x", 0);
+	    _defineProperty(_this, "y", 0);
+	    _defineProperty(_this, "offsetX", 0);
+	    _defineProperty(_this, "offsetY", 0);
+	    _defineProperty(_this, "originalWidth", 0);
+	    _defineProperty(_this, "originalHeight", 0);
+	    _defineProperty(_this, "index", 0);
+	    _defineProperty(_this, "degrees", 0);
+	    _defineProperty(_this, "names", null);
+	    _defineProperty(_this, "values", null);
+	    _this.page = page;
+	    _this.name = name;
+	    page.regions.push(_this);
+	    return _this;
 	  }
 	  _inherits(TextureAtlasRegion, _TextureRegion);
 	  return _createClass(TextureAtlasRegion);
 	}(TextureRegion);
 
-	function _callSuper$q(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var Attachment = function () {
 	  function Attachment(name) {
 	    _classCallCheck(this, Attachment);
@@ -1586,14 +1309,14 @@ var spine = (function (pc) {
 	_defineProperty(Attachment, "empty", []);
 	var VertexAttachment = function (_Attachment2) {
 	  function VertexAttachment(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, VertexAttachment);
-	    _this2 = _callSuper$q(this, VertexAttachment, [name]);
-	    _defineProperty(_this2, "id", VertexAttachment.nextID++);
-	    _defineProperty(_this2, "bones", null);
-	    _defineProperty(_this2, "vertices", []);
-	    _defineProperty(_this2, "worldVerticesLength", 0);
-	    return _this2;
+	    _this = _callSuper(this, VertexAttachment, [name]);
+	    _defineProperty(_this, "id", VertexAttachment.nextID++);
+	    _defineProperty(_this, "bones", null);
+	    _defineProperty(_this, "vertices", []);
+	    _defineProperty(_this, "worldVerticesLength", 0);
+	    return _this;
 	  }
 	  _inherits(VertexAttachment, _Attachment2);
 	  return _createClass(VertexAttachment, [{
@@ -1684,38 +1407,24 @@ var spine = (function (pc) {
 	}(Attachment);
 	_defineProperty(VertexAttachment, "nextID", 0);
 
-	function _callSuper$p(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var MeshAttachment = function (_VertexAttachment) {
 	  function MeshAttachment(name, sequence) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, MeshAttachment);
-	    _this2 = _callSuper$p(this, MeshAttachment, [name]);
-	    _defineProperty(_this2, "sequence", void 0);
-	    _defineProperty(_this2, "regionUVs", []);
-	    _defineProperty(_this2, "triangles", []);
-	    _defineProperty(_this2, "hullLength", 0);
-	    _defineProperty(_this2, "path", void 0);
-	    _defineProperty(_this2, "color", new Color(1, 1, 1, 1));
-	    _defineProperty(_this2, "sourceMesh", null);
-	    _defineProperty(_this2, "edges", []);
-	    _defineProperty(_this2, "width", 0);
-	    _defineProperty(_this2, "height", 0);
-	    _defineProperty(_this2, "tempColor", new Color(0, 0, 0, 0));
-	    _this2.sequence = sequence;
-	    return _this2;
+	    _this = _callSuper(this, MeshAttachment, [name]);
+	    _defineProperty(_this, "sequence", void 0);
+	    _defineProperty(_this, "regionUVs", []);
+	    _defineProperty(_this, "triangles", []);
+	    _defineProperty(_this, "hullLength", 0);
+	    _defineProperty(_this, "path", void 0);
+	    _defineProperty(_this, "color", new Color(1, 1, 1, 1));
+	    _defineProperty(_this, "sourceMesh", null);
+	    _defineProperty(_this, "edges", []);
+	    _defineProperty(_this, "width", 0);
+	    _defineProperty(_this, "height", 0);
+	    _defineProperty(_this, "tempColor", new Color(0, 0, 0, 0));
+	    _this.sequence = sequence;
+	    return _this;
 	  }
 	  _inherits(MeshAttachment, _VertexAttachment);
 	  return _createClass(MeshAttachment, [{
@@ -1842,38 +1551,24 @@ var spine = (function (pc) {
 	  }]);
 	}(VertexAttachment);
 
-	function _callSuper$o(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var RegionAttachment = function (_Attachment) {
 	  function RegionAttachment(name, sequence) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, RegionAttachment);
-	    _this2 = _callSuper$o(this, RegionAttachment, [name]);
-	    _defineProperty(_this2, "sequence", void 0);
-	    _defineProperty(_this2, "x", 0);
-	    _defineProperty(_this2, "y", 0);
-	    _defineProperty(_this2, "scaleX", 1);
-	    _defineProperty(_this2, "scaleY", 1);
-	    _defineProperty(_this2, "rotation", 0);
-	    _defineProperty(_this2, "width", 0);
-	    _defineProperty(_this2, "height", 0);
-	    _defineProperty(_this2, "path", void 0);
-	    _defineProperty(_this2, "color", new Color(1, 1, 1, 1));
-	    _defineProperty(_this2, "tempColor", new Color(1, 1, 1, 1));
-	    _this2.sequence = sequence;
-	    return _this2;
+	    _this = _callSuper(this, RegionAttachment, [name]);
+	    _defineProperty(_this, "sequence", void 0);
+	    _defineProperty(_this, "x", 0);
+	    _defineProperty(_this, "y", 0);
+	    _defineProperty(_this, "scaleX", 1);
+	    _defineProperty(_this, "scaleY", 1);
+	    _defineProperty(_this, "rotation", 0);
+	    _defineProperty(_this, "width", 0);
+	    _defineProperty(_this, "height", 0);
+	    _defineProperty(_this, "path", void 0);
+	    _defineProperty(_this, "color", new Color(1, 1, 1, 1));
+	    _defineProperty(_this, "tempColor", new Color(1, 1, 1, 1));
+	    _this.sequence = sequence;
+	    return _this;
 	  }
 	  _inherits(RegionAttachment, _Attachment);
 	  return _createClass(RegionAttachment, [{
@@ -2133,20 +1828,6 @@ var spine = (function (pc) {
 	var SequenceModeValues = [SequenceMode.hold, SequenceMode.once, SequenceMode.loop, SequenceMode.pingpong, SequenceMode.onceReverse, SequenceMode.loopReverse, SequenceMode.pingpongReverse];
 
 	var _DrawOrderTimeline;
-	function _callSuper$n(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var Animation = function () {
 	  function Animation(name, timelines, duration) {
 	    _classCallCheck(this, Animation);
@@ -2287,16 +1968,16 @@ var spine = (function (pc) {
 	}
 	var CurveTimeline = function (_Timeline2) {
 	  function CurveTimeline(frameCount, bezierCount) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, CurveTimeline);
 	    for (var _len2 = arguments.length, propertyIds = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
 	      propertyIds[_key2 - 2] = arguments[_key2];
 	    }
-	    _this2 = _callSuper$n(this, CurveTimeline, [frameCount].concat(propertyIds));
-	    _defineProperty(_this2, "curves", void 0);
-	    _this2.curves = Utils.newFloatArray(frameCount + bezierCount * 18);
-	    _this2.curves[frameCount - 1] = 1;
-	    return _this2;
+	    _this = _callSuper(this, CurveTimeline, [frameCount].concat(propertyIds));
+	    _defineProperty(_this, "curves", void 0);
+	    _this.curves = Utils.newFloatArray(frameCount + bezierCount * 18);
+	    _this.curves[frameCount - 1] = 1;
+	    return _this;
 	  }
 	  _inherits(CurveTimeline, _Timeline2);
 	  return _createClass(CurveTimeline, [{
@@ -2373,7 +2054,7 @@ var spine = (function (pc) {
 	var CurveTimeline1 = function (_CurveTimeline2) {
 	  function CurveTimeline1(frameCount, bezierCount, propertyId) {
 	    _classCallCheck(this, CurveTimeline1);
-	    return _callSuper$n(this, CurveTimeline1, [frameCount, bezierCount, propertyId]);
+	    return _callSuper(this, CurveTimeline1, [frameCount, bezierCount, propertyId]);
 	  }
 	  _inherits(CurveTimeline1, _CurveTimeline2);
 	  return _createClass(CurveTimeline1, [{
@@ -2468,13 +2149,13 @@ var spine = (function (pc) {
 	}
 	var BoneTimeline1 = function (_CurveTimeline3) {
 	  function BoneTimeline1(frameCount, bezierCount, boneIndex, property) {
-	    var _this3;
+	    var _this2;
 	    _classCallCheck(this, BoneTimeline1);
-	    _this3 = _callSuper$n(this, BoneTimeline1, [frameCount, bezierCount, "".concat(property, "|").concat(boneIndex)]);
-	    _defineProperty(_this3, "boneIndex", void 0);
-	    _this3.boneIndex = boneIndex;
-	    _this3.additive = true;
-	    return _this3;
+	    _this2 = _callSuper(this, BoneTimeline1, [frameCount, bezierCount, "".concat(property, "|").concat(boneIndex)]);
+	    _defineProperty(_this2, "boneIndex", void 0);
+	    _this2.boneIndex = boneIndex;
+	    _this2.additive = true;
+	    return _this2;
 	  }
 	  _inherits(BoneTimeline1, _CurveTimeline3);
 	  return _createClass(BoneTimeline1, [{
@@ -2487,13 +2168,13 @@ var spine = (function (pc) {
 	}(CurveTimeline1);
 	var BoneTimeline2 = function (_CurveTimeline4) {
 	  function BoneTimeline2(frameCount, bezierCount, boneIndex, property1, property2) {
-	    var _this4;
+	    var _this3;
 	    _classCallCheck(this, BoneTimeline2);
-	    _this4 = _callSuper$n(this, BoneTimeline2, [frameCount, bezierCount, "".concat(property1, "|").concat(boneIndex), "".concat(property2, "|").concat(boneIndex)]);
-	    _defineProperty(_this4, "boneIndex", void 0);
-	    _this4.boneIndex = boneIndex;
-	    _this4.additive = true;
-	    return _this4;
+	    _this3 = _callSuper(this, BoneTimeline2, [frameCount, bezierCount, "".concat(property1, "|").concat(boneIndex), "".concat(property2, "|").concat(boneIndex)]);
+	    _defineProperty(_this3, "boneIndex", void 0);
+	    _this3.boneIndex = boneIndex;
+	    _this3.additive = true;
+	    return _this3;
 	  }
 	  _inherits(BoneTimeline2, _CurveTimeline4);
 	  return _createClass(BoneTimeline2, [{
@@ -2520,7 +2201,7 @@ var spine = (function (pc) {
 	var RotateTimeline = function (_BoneTimeline3) {
 	  function RotateTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, RotateTimeline);
-	    return _callSuper$n(this, RotateTimeline, [frameCount, bezierCount, boneIndex, Property.rotate]);
+	    return _callSuper(this, RotateTimeline, [frameCount, bezierCount, boneIndex, Property.rotate]);
 	  }
 	  _inherits(RotateTimeline, _BoneTimeline3);
 	  return _createClass(RotateTimeline, [{
@@ -2533,7 +2214,7 @@ var spine = (function (pc) {
 	var TranslateTimeline = function (_BoneTimeline4) {
 	  function TranslateTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, TranslateTimeline);
-	    return _callSuper$n(this, TranslateTimeline, [frameCount, bezierCount, boneIndex, Property.x, Property.y]);
+	    return _callSuper(this, TranslateTimeline, [frameCount, bezierCount, boneIndex, Property.x, Property.y]);
 	  }
 	  _inherits(TranslateTimeline, _BoneTimeline4);
 	  return _createClass(TranslateTimeline, [{
@@ -2592,7 +2273,7 @@ var spine = (function (pc) {
 	var TranslateXTimeline = function (_BoneTimeline5) {
 	  function TranslateXTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, TranslateXTimeline);
-	    return _callSuper$n(this, TranslateXTimeline, [frameCount, bezierCount, boneIndex, Property.x]);
+	    return _callSuper(this, TranslateXTimeline, [frameCount, bezierCount, boneIndex, Property.x]);
 	  }
 	  _inherits(TranslateXTimeline, _BoneTimeline5);
 	  return _createClass(TranslateXTimeline, [{
@@ -2605,7 +2286,7 @@ var spine = (function (pc) {
 	var TranslateYTimeline = function (_BoneTimeline6) {
 	  function TranslateYTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, TranslateYTimeline);
-	    return _callSuper$n(this, TranslateYTimeline, [frameCount, bezierCount, boneIndex, Property.y]);
+	    return _callSuper(this, TranslateYTimeline, [frameCount, bezierCount, boneIndex, Property.y]);
 	  }
 	  _inherits(TranslateYTimeline, _BoneTimeline6);
 	  return _createClass(TranslateYTimeline, [{
@@ -2618,7 +2299,7 @@ var spine = (function (pc) {
 	var ScaleTimeline = function (_BoneTimeline7) {
 	  function ScaleTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, ScaleTimeline);
-	    return _callSuper$n(this, ScaleTimeline, [frameCount, bezierCount, boneIndex, Property.scaleX, Property.scaleY]);
+	    return _callSuper(this, ScaleTimeline, [frameCount, bezierCount, boneIndex, Property.scaleX, Property.scaleY]);
 	  }
 	  _inherits(ScaleTimeline, _BoneTimeline7);
 	  return _createClass(ScaleTimeline, [{
@@ -2694,7 +2375,7 @@ var spine = (function (pc) {
 	var ScaleXTimeline = function (_BoneTimeline8) {
 	  function ScaleXTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, ScaleXTimeline);
-	    return _callSuper$n(this, ScaleXTimeline, [frameCount, bezierCount, boneIndex, Property.scaleX]);
+	    return _callSuper(this, ScaleXTimeline, [frameCount, bezierCount, boneIndex, Property.scaleX]);
 	  }
 	  _inherits(ScaleXTimeline, _BoneTimeline8);
 	  return _createClass(ScaleXTimeline, [{
@@ -2707,7 +2388,7 @@ var spine = (function (pc) {
 	var ScaleYTimeline = function (_BoneTimeline9) {
 	  function ScaleYTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, ScaleYTimeline);
-	    return _callSuper$n(this, ScaleYTimeline, [frameCount, bezierCount, boneIndex, Property.scaleY]);
+	    return _callSuper(this, ScaleYTimeline, [frameCount, bezierCount, boneIndex, Property.scaleY]);
 	  }
 	  _inherits(ScaleYTimeline, _BoneTimeline9);
 	  return _createClass(ScaleYTimeline, [{
@@ -2717,12 +2398,12 @@ var spine = (function (pc) {
 	    }
 	  }]);
 	}(BoneTimeline1);
-	var ShearTimeline = function (_BoneTimeline10) {
+	var ShearTimeline = function (_BoneTimeline0) {
 	  function ShearTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, ShearTimeline);
-	    return _callSuper$n(this, ShearTimeline, [frameCount, bezierCount, boneIndex, Property.shearX, Property.shearY]);
+	    return _callSuper(this, ShearTimeline, [frameCount, bezierCount, boneIndex, Property.shearX, Property.shearY]);
 	  }
-	  _inherits(ShearTimeline, _BoneTimeline10);
+	  _inherits(ShearTimeline, _BoneTimeline0);
 	  return _createClass(ShearTimeline, [{
 	    key: "apply1",
 	    value: function apply1(pose, setup, time, alpha, from, add, out) {
@@ -2776,12 +2457,12 @@ var spine = (function (pc) {
 	    }
 	  }]);
 	}(BoneTimeline2);
-	var ShearXTimeline = function (_BoneTimeline11) {
+	var ShearXTimeline = function (_BoneTimeline1) {
 	  function ShearXTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, ShearXTimeline);
-	    return _callSuper$n(this, ShearXTimeline, [frameCount, bezierCount, boneIndex, Property.shearX]);
+	    return _callSuper(this, ShearXTimeline, [frameCount, bezierCount, boneIndex, Property.shearX]);
 	  }
-	  _inherits(ShearXTimeline, _BoneTimeline11);
+	  _inherits(ShearXTimeline, _BoneTimeline1);
 	  return _createClass(ShearXTimeline, [{
 	    key: "apply1",
 	    value: function apply1(pose, setup, time, alpha, from, add, out) {
@@ -2789,12 +2470,12 @@ var spine = (function (pc) {
 	    }
 	  }]);
 	}(BoneTimeline1);
-	var ShearYTimeline = function (_BoneTimeline12) {
+	var ShearYTimeline = function (_BoneTimeline10) {
 	  function ShearYTimeline(frameCount, bezierCount, boneIndex) {
 	    _classCallCheck(this, ShearYTimeline);
-	    return _callSuper$n(this, ShearYTimeline, [frameCount, bezierCount, boneIndex, Property.shearY]);
+	    return _callSuper(this, ShearYTimeline, [frameCount, bezierCount, boneIndex, Property.shearY]);
 	  }
-	  _inherits(ShearYTimeline, _BoneTimeline12);
+	  _inherits(ShearYTimeline, _BoneTimeline10);
 	  return _createClass(ShearYTimeline, [{
 	    key: "apply1",
 	    value: function apply1(pose, setup, time, alpha, from, add, out) {
@@ -2804,13 +2485,13 @@ var spine = (function (pc) {
 	}(BoneTimeline1);
 	var InheritTimeline = function (_Timeline3) {
 	  function InheritTimeline(frameCount, boneIndex) {
-	    var _this5;
+	    var _this4;
 	    _classCallCheck(this, InheritTimeline);
-	    _this5 = _callSuper$n(this, InheritTimeline, [frameCount, "".concat(Property.inherit, "|").concat(boneIndex)]);
-	    _defineProperty(_this5, "boneIndex", void 0);
-	    _this5.boneIndex = boneIndex;
-	    _this5.instant = true;
-	    return _this5;
+	    _this4 = _callSuper(this, InheritTimeline, [frameCount, "".concat(Property.inherit, "|").concat(boneIndex)]);
+	    _defineProperty(_this4, "boneIndex", void 0);
+	    _this4.boneIndex = boneIndex;
+	    _this4.instant = true;
+	    return _this4;
 	  }
 	  _inherits(InheritTimeline, _Timeline3);
 	  return _createClass(InheritTimeline, [{
@@ -2844,15 +2525,15 @@ var spine = (function (pc) {
 	}(Timeline);
 	var SlotCurveTimeline = function (_CurveTimeline5) {
 	  function SlotCurveTimeline(frameCount, bezierCount, slotIndex) {
-	    var _this6;
+	    var _this5;
 	    _classCallCheck(this, SlotCurveTimeline);
 	    for (var _len3 = arguments.length, propertyIds = new Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
 	      propertyIds[_key3 - 3] = arguments[_key3];
 	    }
-	    _this6 = _callSuper$n(this, SlotCurveTimeline, [frameCount, bezierCount].concat(propertyIds));
-	    _defineProperty(_this6, "slotIndex", void 0);
-	    _this6.slotIndex = slotIndex;
-	    return _this6;
+	    _this5 = _callSuper(this, SlotCurveTimeline, [frameCount, bezierCount].concat(propertyIds));
+	    _defineProperty(_this5, "slotIndex", void 0);
+	    _this5.slotIndex = slotIndex;
+	    return _this5;
 	  }
 	  _inherits(SlotCurveTimeline, _CurveTimeline5);
 	  return _createClass(SlotCurveTimeline, [{
@@ -2866,7 +2547,7 @@ var spine = (function (pc) {
 	var RGBATimeline = function (_SlotCurveTimeline2) {
 	  function RGBATimeline(frameCount, bezierCount, slotIndex) {
 	    _classCallCheck(this, RGBATimeline);
-	    return _callSuper$n(this, RGBATimeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex), "".concat(Property.alpha, "|").concat(slotIndex)]);
+	    return _callSuper(this, RGBATimeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex), "".concat(Property.alpha, "|").concat(slotIndex)]);
 	  }
 	  _inherits(RGBATimeline, _SlotCurveTimeline2);
 	  return _createClass(RGBATimeline, [{
@@ -2946,7 +2627,7 @@ var spine = (function (pc) {
 	var RGBTimeline = function (_SlotCurveTimeline3) {
 	  function RGBTimeline(frameCount, bezierCount, slotIndex) {
 	    _classCallCheck(this, RGBTimeline);
-	    return _callSuper$n(this, RGBTimeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex)]);
+	    return _callSuper(this, RGBTimeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex)]);
 	  }
 	  _inherits(RGBTimeline, _SlotCurveTimeline3);
 	  return _createClass(RGBTimeline, [{
@@ -3036,12 +2717,12 @@ var spine = (function (pc) {
 	}(SlotCurveTimeline);
 	var AlphaTimeline = function (_CurveTimeline6) {
 	  function AlphaTimeline(frameCount, bezierCount, slotIndex) {
-	    var _this7;
+	    var _this6;
 	    _classCallCheck(this, AlphaTimeline);
-	    _this7 = _callSuper$n(this, AlphaTimeline, [frameCount, bezierCount, "".concat(Property.alpha, "|").concat(slotIndex)]);
-	    _defineProperty(_this7, "slotIndex", 0);
-	    _this7.slotIndex = slotIndex;
-	    return _this7;
+	    _this6 = _callSuper(this, AlphaTimeline, [frameCount, bezierCount, "".concat(Property.alpha, "|").concat(slotIndex)]);
+	    _defineProperty(_this6, "slotIndex", 0);
+	    _this6.slotIndex = slotIndex;
+	    return _this6;
 	  }
 	  _inherits(AlphaTimeline, _CurveTimeline6);
 	  return _createClass(AlphaTimeline, [{
@@ -3078,7 +2759,7 @@ var spine = (function (pc) {
 	var RGBA2Timeline = function (_SlotCurveTimeline4) {
 	  function RGBA2Timeline(frameCount, bezierCount, slotIndex) {
 	    _classCallCheck(this, RGBA2Timeline);
-	    return _callSuper$n(this, RGBA2Timeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex), "".concat(Property.alpha, "|").concat(slotIndex), "".concat(Property.rgb2, "|").concat(slotIndex)]);
+	    return _callSuper(this, RGBA2Timeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex), "".concat(Property.alpha, "|").concat(slotIndex), "".concat(Property.rgb2, "|").concat(slotIndex)]);
 	  }
 	  _inherits(RGBA2Timeline, _SlotCurveTimeline4);
 	  return _createClass(RGBA2Timeline, [{
@@ -3200,7 +2881,7 @@ var spine = (function (pc) {
 	var RGB2Timeline = function (_SlotCurveTimeline5) {
 	  function RGB2Timeline(frameCount, bezierCount, slotIndex) {
 	    _classCallCheck(this, RGB2Timeline);
-	    return _callSuper$n(this, RGB2Timeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex), "".concat(Property.rgb2, "|").concat(slotIndex)]);
+	    return _callSuper(this, RGB2Timeline, [frameCount, bezierCount, slotIndex, "".concat(Property.rgb, "|").concat(slotIndex), "".concat(Property.rgb2, "|").concat(slotIndex)]);
 	  }
 	  _inherits(RGB2Timeline, _SlotCurveTimeline5);
 	  return _createClass(RGB2Timeline, [{
@@ -3324,15 +3005,15 @@ var spine = (function (pc) {
 	}(SlotCurveTimeline);
 	var AttachmentTimeline = function (_Timeline4) {
 	  function AttachmentTimeline(frameCount, slotIndex) {
-	    var _this8;
+	    var _this7;
 	    _classCallCheck(this, AttachmentTimeline);
-	    _this8 = _callSuper$n(this, AttachmentTimeline, [frameCount, "".concat(Property.attachment, "|").concat(slotIndex)]);
-	    _defineProperty(_this8, "slotIndex", 0);
-	    _defineProperty(_this8, "attachmentNames", void 0);
-	    _this8.slotIndex = slotIndex;
-	    _this8.attachmentNames = new Array(frameCount);
-	    _this8.instant = true;
-	    return _this8;
+	    _this7 = _callSuper(this, AttachmentTimeline, [frameCount, "".concat(Property.attachment, "|").concat(slotIndex)]);
+	    _defineProperty(_this7, "slotIndex", 0);
+	    _defineProperty(_this7, "attachmentNames", void 0);
+	    _this7.slotIndex = slotIndex;
+	    _this7.attachmentNames = new Array(frameCount);
+	    _this7.instant = true;
+	    return _this7;
 	  }
 	  _inherits(AttachmentTimeline, _Timeline4);
 	  return _createClass(AttachmentTimeline, [{
@@ -3365,17 +3046,17 @@ var spine = (function (pc) {
 	}(Timeline);
 	var DeformTimeline = function (_CurveTimeline7) {
 	  function DeformTimeline(frameCount, bezierCount, slotIndex, attachment) {
-	    var _this9;
+	    var _this8;
 	    _classCallCheck(this, DeformTimeline);
-	    _this9 = _callSuper$n(this, DeformTimeline, [frameCount, bezierCount, "".concat(Property.deform, "|").concat(slotIndex, "|").concat(attachment.id)]);
-	    _defineProperty(_this9, "slotIndex", void 0);
-	    _defineProperty(_this9, "attachment", void 0);
-	    _defineProperty(_this9, "vertices", void 0);
-	    _this9.slotIndex = slotIndex;
-	    _this9.attachment = attachment;
-	    _this9.vertices = new Array(frameCount);
-	    _this9.additive = true;
-	    return _this9;
+	    _this8 = _callSuper(this, DeformTimeline, [frameCount, bezierCount, "".concat(Property.deform, "|").concat(slotIndex, "|").concat(attachment.id)]);
+	    _defineProperty(_this8, "slotIndex", void 0);
+	    _defineProperty(_this8, "attachment", void 0);
+	    _defineProperty(_this8, "vertices", void 0);
+	    _this8.slotIndex = slotIndex;
+	    _this8.attachment = attachment;
+	    _this8.vertices = new Array(frameCount);
+	    _this8.additive = true;
+	    return _this8;
 	  }
 	  _inherits(DeformTimeline, _CurveTimeline7);
 	  return _createClass(DeformTimeline, [{
@@ -3586,42 +3267,42 @@ var spine = (function (pc) {
 	              }
 	            }
 	          } else if (percent === 0) Utils.arrayCopy(v1, 0, deform, 0, vertexCount);else {
-	            for (var _i10 = 0; _i10 < vertexCount; _i10++) {
-	              var _prev2 = v1[_i10];
-	              deform[_i10] = _prev2 + (v2[_i10] - _prev2) * percent;
+	            for (var _i0 = 0; _i0 < vertexCount; _i0++) {
+	              var _prev2 = v1[_i0];
+	              deform[_i0] = _prev2 + (v2[_i0] - _prev2) * percent;
 	            }
 	          }
 	        } else if (fromSetup) {
 	          if (!vertexAttachment.bones) {
 	            var _setupVertices4 = vertexAttachment.vertices;
-	            for (var _i11 = 0; _i11 < vertexCount; _i11++) {
-	              var _prev3 = v1[_i11],
-	                _setup6 = _setupVertices4[_i11];
-	              deform[_i11] = _setup6 + (_prev3 + (v2[_i11] - _prev3) * percent - _setup6) * alpha;
+	            for (var _i1 = 0; _i1 < vertexCount; _i1++) {
+	              var _prev3 = v1[_i1],
+	                _setup6 = _setupVertices4[_i1];
+	              deform[_i1] = _setup6 + (_prev3 + (v2[_i1] - _prev3) * percent - _setup6) * alpha;
 	            }
 	          } else {
-	            for (var _i12 = 0; _i12 < vertexCount; _i12++) {
-	              var _prev4 = v1[_i12];
-	              deform[_i12] = (_prev4 + (v2[_i12] - _prev4) * percent) * alpha;
+	            for (var _i10 = 0; _i10 < vertexCount; _i10++) {
+	              var _prev4 = v1[_i10];
+	              deform[_i10] = (_prev4 + (v2[_i10] - _prev4) * percent) * alpha;
 	            }
 	          }
 	        } else if (add) {
 	          if (!vertexAttachment.bones) {
 	            var _setupVertices5 = vertexAttachment.vertices;
-	            for (var _i13 = 0; _i13 < vertexCount; _i13++) {
-	              var _prev5 = v1[_i13];
-	              deform[_i13] += (_prev5 + (v2[_i13] - _prev5) * percent - _setupVertices5[_i13]) * alpha;
+	            for (var _i11 = 0; _i11 < vertexCount; _i11++) {
+	              var _prev5 = v1[_i11];
+	              deform[_i11] += (_prev5 + (v2[_i11] - _prev5) * percent - _setupVertices5[_i11]) * alpha;
 	            }
 	          } else {
-	            for (var _i14 = 0; _i14 < vertexCount; _i14++) {
-	              var _prev6 = v1[_i14];
-	              deform[_i14] += (_prev6 + (v2[_i14] - _prev6) * percent) * alpha;
+	            for (var _i12 = 0; _i12 < vertexCount; _i12++) {
+	              var _prev6 = v1[_i12];
+	              deform[_i12] += (_prev6 + (v2[_i12] - _prev6) * percent) * alpha;
 	            }
 	          }
 	        } else {
-	          for (var _i15 = 0; _i15 < vertexCount; _i15++) {
-	            var _prev7 = v1[_i15];
-	            deform[_i15] += (_prev7 + (v2[_i15] - _prev7) * percent - deform[_i15]) * alpha;
+	          for (var _i13 = 0; _i13 < vertexCount; _i13++) {
+	            var _prev7 = v1[_i13];
+	            deform[_i13] += (_prev7 + (v2[_i13] - _prev7) * percent - deform[_i13]) * alpha;
 	          }
 	        }
 	      }
@@ -3630,15 +3311,15 @@ var spine = (function (pc) {
 	}(CurveTimeline);
 	var SequenceTimeline = function (_Timeline5) {
 	  function SequenceTimeline(frameCount, slotIndex, attachment) {
-	    var _this10;
+	    var _this9;
 	    _classCallCheck(this, SequenceTimeline);
-	    _this10 = _callSuper$n(this, SequenceTimeline, [frameCount, "".concat(Property.sequence, "|").concat(slotIndex, "|").concat(attachment.sequence.id)]);
-	    _defineProperty(_this10, "slotIndex", void 0);
-	    _defineProperty(_this10, "attachment", void 0);
-	    _this10.slotIndex = slotIndex;
-	    _this10.attachment = attachment;
-	    _this10.instant = true;
-	    return _this10;
+	    _this9 = _callSuper(this, SequenceTimeline, [frameCount, "".concat(Property.sequence, "|").concat(slotIndex, "|").concat(attachment.sequence.id)]);
+	    _defineProperty(_this9, "slotIndex", void 0);
+	    _defineProperty(_this9, "attachment", void 0);
+	    _this9.slotIndex = slotIndex;
+	    _this9.attachment = attachment;
+	    _this9.instant = true;
+	    return _this9;
 	  }
 	  _inherits(SequenceTimeline, _Timeline5);
 	  return _createClass(SequenceTimeline, [{
@@ -3764,13 +3445,13 @@ var spine = (function (pc) {
 	_defineProperty(SequenceTimeline, "DELAY", 2);
 	var EventTimeline = function (_Timeline6) {
 	  function EventTimeline(frameCount) {
-	    var _this11;
+	    var _this0;
 	    _classCallCheck(this, EventTimeline);
-	    _this11 = _callSuper$n(this, EventTimeline, [frameCount].concat(_toConsumableArray(EventTimeline.propertyIds)));
-	    _defineProperty(_this11, "events", void 0);
-	    _this11.events = new Array(frameCount);
-	    _this11.instant = true;
-	    return _this11;
+	    _this0 = _callSuper(this, EventTimeline, [frameCount].concat(_toConsumableArray(EventTimeline.propertyIds)));
+	    _defineProperty(_this0, "events", void 0);
+	    _this0.events = new Array(frameCount);
+	    _this0.instant = true;
+	    return _this0;
 	  }
 	  _inherits(EventTimeline, _Timeline6);
 	  return _createClass(EventTimeline, [{
@@ -3811,13 +3492,13 @@ var spine = (function (pc) {
 	_defineProperty(EventTimeline, "propertyIds", ["".concat(Property.event)]);
 	var DrawOrderTimeline = function (_Timeline7) {
 	  function DrawOrderTimeline(frameCount) {
-	    var _this12;
+	    var _this1;
 	    _classCallCheck(this, DrawOrderTimeline);
-	    _this12 = _callSuper$n(this, DrawOrderTimeline, [frameCount].concat(_toConsumableArray(DrawOrderTimeline.propertyIds)));
-	    _defineProperty(_this12, "drawOrders", void 0);
-	    _this12.drawOrders = new Array(frameCount);
-	    _this12.instant = true;
-	    return _this12;
+	    _this1 = _callSuper(this, DrawOrderTimeline, [frameCount].concat(_toConsumableArray(DrawOrderTimeline.propertyIds)));
+	    _defineProperty(_this1, "drawOrders", void 0);
+	    _this1.drawOrders = new Array(frameCount);
+	    _this1.instant = true;
+	    return _this1;
 	  }
 	  _inherits(DrawOrderTimeline, _Timeline7);
 	  return _createClass(DrawOrderTimeline, [{
@@ -3852,29 +3533,29 @@ var spine = (function (pc) {
 	_defineProperty(DrawOrderTimeline, "propertyIds", [_DrawOrderTimeline.propertyID]);
 	var DrawOrderFolderTimeline = function (_Timeline8) {
 	  function DrawOrderFolderTimeline(frameCount, slots, slotCount) {
-	    var _this13;
+	    var _this10;
 	    _classCallCheck(this, DrawOrderFolderTimeline);
-	    _this13 = _callSuper$n(this, DrawOrderFolderTimeline, [frameCount].concat(_toConsumableArray(DrawOrderFolderTimeline.propertyIds(slots))));
-	    _defineProperty(_this13, "slots", void 0);
-	    _defineProperty(_this13, "inFolder", void 0);
-	    _defineProperty(_this13, "drawOrders", void 0);
-	    _this13.slots = slots;
-	    _this13.drawOrders = new Array(frameCount);
-	    _this13.inFolder = new Array(slotCount);
+	    _this10 = _callSuper(this, DrawOrderFolderTimeline, [frameCount].concat(_toConsumableArray(DrawOrderFolderTimeline.propertyIds(slots))));
+	    _defineProperty(_this10, "slots", void 0);
+	    _defineProperty(_this10, "inFolder", void 0);
+	    _defineProperty(_this10, "drawOrders", void 0);
+	    _this10.slots = slots;
+	    _this10.drawOrders = new Array(frameCount);
+	    _this10.inFolder = new Array(slotCount);
 	    var _iterator5 = _createForOfIteratorHelper(slots),
 	      _step5;
 	    try {
 	      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
 	        var i = _step5.value;
-	        _this13.inFolder[i] = true;
+	        _this10.inFolder[i] = true;
 	      }
 	    } catch (err) {
 	      _iterator5.e(err);
 	    } finally {
 	      _iterator5.f();
 	    }
-	    _this13.instant = true;
-	    return _this13;
+	    _this10.instant = true;
+	    return _this10;
 	  }
 	  _inherits(DrawOrderFolderTimeline, _Timeline8);
 	  return _createClass(DrawOrderFolderTimeline, [{
@@ -3947,12 +3628,12 @@ var spine = (function (pc) {
 	}
 	var IkConstraintTimeline = function (_CurveTimeline8) {
 	  function IkConstraintTimeline(frameCount, bezierCount, constraintIndex) {
-	    var _this14;
+	    var _this11;
 	    _classCallCheck(this, IkConstraintTimeline);
-	    _this14 = _callSuper$n(this, IkConstraintTimeline, [frameCount, bezierCount, "".concat(Property.ikConstraint, "|").concat(constraintIndex)]);
-	    _defineProperty(_this14, "constraintIndex", 0);
-	    _this14.constraintIndex = constraintIndex;
-	    return _this14;
+	    _this11 = _callSuper(this, IkConstraintTimeline, [frameCount, bezierCount, "".concat(Property.ikConstraint, "|").concat(constraintIndex)]);
+	    _defineProperty(_this11, "constraintIndex", 0);
+	    _this11.constraintIndex = constraintIndex;
+	    return _this11;
 	  }
 	  _inherits(IkConstraintTimeline, _CurveTimeline8);
 	  return _createClass(IkConstraintTimeline, [{
@@ -4044,13 +3725,13 @@ var spine = (function (pc) {
 	}(CurveTimeline);
 	var TransformConstraintTimeline = function (_CurveTimeline9) {
 	  function TransformConstraintTimeline(frameCount, bezierCount, constraintIndex) {
-	    var _this15;
+	    var _this12;
 	    _classCallCheck(this, TransformConstraintTimeline);
-	    _this15 = _callSuper$n(this, TransformConstraintTimeline, [frameCount, bezierCount, "".concat(Property.transformConstraint, "|").concat(constraintIndex)]);
-	    _defineProperty(_this15, "constraintIndex", 0);
-	    _this15.constraintIndex = constraintIndex;
-	    _this15.additive = true;
-	    return _this15;
+	    _this12 = _callSuper(this, TransformConstraintTimeline, [frameCount, bezierCount, "".concat(Property.transformConstraint, "|").concat(constraintIndex)]);
+	    _defineProperty(_this12, "constraintIndex", 0);
+	    _this12.constraintIndex = constraintIndex;
+	    _this12.additive = true;
+	    return _this12;
 	  }
 	  _inherits(TransformConstraintTimeline, _CurveTimeline9);
 	  return _createClass(TransformConstraintTimeline, [{
@@ -4161,25 +3842,25 @@ var spine = (function (pc) {
 	    }
 	  }]);
 	}(CurveTimeline);
-	var ConstraintTimeline1 = function (_CurveTimeline10) {
+	var ConstraintTimeline1 = function (_CurveTimeline0) {
 	  function ConstraintTimeline1(frameCount, bezierCount, constraintIndex, property) {
-	    var _this16;
+	    var _this13;
 	    _classCallCheck(this, ConstraintTimeline1);
-	    _this16 = _callSuper$n(this, ConstraintTimeline1, [frameCount, bezierCount, "".concat(property, "|").concat(constraintIndex)]);
-	    _defineProperty(_this16, "constraintIndex", void 0);
-	    _this16.constraintIndex = constraintIndex;
-	    return _this16;
+	    _this13 = _callSuper(this, ConstraintTimeline1, [frameCount, bezierCount, "".concat(property, "|").concat(constraintIndex)]);
+	    _defineProperty(_this13, "constraintIndex", void 0);
+	    _this13.constraintIndex = constraintIndex;
+	    return _this13;
 	  }
-	  _inherits(ConstraintTimeline1, _CurveTimeline10);
+	  _inherits(ConstraintTimeline1, _CurveTimeline0);
 	  return _createClass(ConstraintTimeline1);
 	}(CurveTimeline1);
 	var PathConstraintPositionTimeline = function (_ConstraintTimeline2) {
 	  function PathConstraintPositionTimeline(frameCount, bezierCount, constraintIndex) {
-	    var _this17;
+	    var _this14;
 	    _classCallCheck(this, PathConstraintPositionTimeline);
-	    _this17 = _callSuper$n(this, PathConstraintPositionTimeline, [frameCount, bezierCount, constraintIndex, Property.pathConstraintPosition]);
-	    _this17.additive = true;
-	    return _this17;
+	    _this14 = _callSuper(this, PathConstraintPositionTimeline, [frameCount, bezierCount, constraintIndex, Property.pathConstraintPosition]);
+	    _this14.additive = true;
+	    return _this14;
 	  }
 	  _inherits(PathConstraintPositionTimeline, _ConstraintTimeline2);
 	  return _createClass(PathConstraintPositionTimeline, [{
@@ -4196,7 +3877,7 @@ var spine = (function (pc) {
 	var PathConstraintSpacingTimeline = function (_ConstraintTimeline3) {
 	  function PathConstraintSpacingTimeline(frameCount, bezierCount, constraintIndex) {
 	    _classCallCheck(this, PathConstraintSpacingTimeline);
-	    return _callSuper$n(this, PathConstraintSpacingTimeline, [frameCount, bezierCount, constraintIndex, Property.pathConstraintSpacing]);
+	    return _callSuper(this, PathConstraintSpacingTimeline, [frameCount, bezierCount, constraintIndex, Property.pathConstraintSpacing]);
 	  }
 	  _inherits(PathConstraintSpacingTimeline, _ConstraintTimeline3);
 	  return _createClass(PathConstraintSpacingTimeline, [{
@@ -4210,16 +3891,16 @@ var spine = (function (pc) {
 	    }
 	  }]);
 	}(ConstraintTimeline1);
-	var PathConstraintMixTimeline = function (_CurveTimeline11) {
+	var PathConstraintMixTimeline = function (_CurveTimeline1) {
 	  function PathConstraintMixTimeline(frameCount, bezierCount, constraintIndex) {
-	    var _this18;
+	    var _this15;
 	    _classCallCheck(this, PathConstraintMixTimeline);
-	    _this18 = _callSuper$n(this, PathConstraintMixTimeline, [frameCount, bezierCount, "".concat(Property.pathConstraintMix, "|").concat(constraintIndex)]);
-	    _defineProperty(_this18, "constraintIndex", void 0);
-	    _this18.constraintIndex = constraintIndex;
-	    return _this18;
+	    _this15 = _callSuper(this, PathConstraintMixTimeline, [frameCount, bezierCount, "".concat(Property.pathConstraintMix, "|").concat(constraintIndex)]);
+	    _defineProperty(_this15, "constraintIndex", void 0);
+	    _this15.constraintIndex = constraintIndex;
+	    return _this15;
 	  }
-	  _inherits(PathConstraintMixTimeline, _CurveTimeline11);
+	  _inherits(PathConstraintMixTimeline, _CurveTimeline1);
 	  return _createClass(PathConstraintMixTimeline, [{
 	    key: "getFrameEntries",
 	    value: function getFrameEntries() {
@@ -4304,7 +3985,7 @@ var spine = (function (pc) {
 	var PhysicsConstraintTimeline = function (_ConstraintTimeline4) {
 	  function PhysicsConstraintTimeline(frameCount, bezierCount, constraintIndex, property) {
 	    _classCallCheck(this, PhysicsConstraintTimeline);
-	    return _callSuper$n(this, PhysicsConstraintTimeline, [frameCount, bezierCount, constraintIndex, property]);
+	    return _callSuper(this, PhysicsConstraintTimeline, [frameCount, bezierCount, constraintIndex, property]);
 	  }
 	  _inherits(PhysicsConstraintTimeline, _ConstraintTimeline4);
 	  return _createClass(PhysicsConstraintTimeline, [{
@@ -4342,7 +4023,7 @@ var spine = (function (pc) {
 	var PhysicsConstraintInertiaTimeline = function (_PhysicsConstraintTim) {
 	  function PhysicsConstraintInertiaTimeline(frameCount, bezierCount, constraintIndex) {
 	    _classCallCheck(this, PhysicsConstraintInertiaTimeline);
-	    return _callSuper$n(this, PhysicsConstraintInertiaTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintInertia]);
+	    return _callSuper(this, PhysicsConstraintInertiaTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintInertia]);
 	  }
 	  _inherits(PhysicsConstraintInertiaTimeline, _PhysicsConstraintTim);
 	  return _createClass(PhysicsConstraintInertiaTimeline, [{
@@ -4365,7 +4046,7 @@ var spine = (function (pc) {
 	var PhysicsConstraintStrengthTimeline = function (_PhysicsConstraintTim2) {
 	  function PhysicsConstraintStrengthTimeline(frameCount, bezierCount, constraintIndex) {
 	    _classCallCheck(this, PhysicsConstraintStrengthTimeline);
-	    return _callSuper$n(this, PhysicsConstraintStrengthTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintStrength]);
+	    return _callSuper(this, PhysicsConstraintStrengthTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintStrength]);
 	  }
 	  _inherits(PhysicsConstraintStrengthTimeline, _PhysicsConstraintTim2);
 	  return _createClass(PhysicsConstraintStrengthTimeline, [{
@@ -4388,7 +4069,7 @@ var spine = (function (pc) {
 	var PhysicsConstraintDampingTimeline = function (_PhysicsConstraintTim3) {
 	  function PhysicsConstraintDampingTimeline(frameCount, bezierCount, constraintIndex) {
 	    _classCallCheck(this, PhysicsConstraintDampingTimeline);
-	    return _callSuper$n(this, PhysicsConstraintDampingTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintDamping]);
+	    return _callSuper(this, PhysicsConstraintDampingTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintDamping]);
 	  }
 	  _inherits(PhysicsConstraintDampingTimeline, _PhysicsConstraintTim3);
 	  return _createClass(PhysicsConstraintDampingTimeline, [{
@@ -4411,7 +4092,7 @@ var spine = (function (pc) {
 	var PhysicsConstraintMassTimeline = function (_PhysicsConstraintTim4) {
 	  function PhysicsConstraintMassTimeline(frameCount, bezierCount, constraintIndex) {
 	    _classCallCheck(this, PhysicsConstraintMassTimeline);
-	    return _callSuper$n(this, PhysicsConstraintMassTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintMass]);
+	    return _callSuper(this, PhysicsConstraintMassTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintMass]);
 	  }
 	  _inherits(PhysicsConstraintMassTimeline, _PhysicsConstraintTim4);
 	  return _createClass(PhysicsConstraintMassTimeline, [{
@@ -4433,11 +4114,11 @@ var spine = (function (pc) {
 	}(PhysicsConstraintTimeline);
 	var PhysicsConstraintWindTimeline = function (_PhysicsConstraintTim5) {
 	  function PhysicsConstraintWindTimeline(frameCount, bezierCount, constraintIndex) {
-	    var _this19;
+	    var _this16;
 	    _classCallCheck(this, PhysicsConstraintWindTimeline);
-	    _this19 = _callSuper$n(this, PhysicsConstraintWindTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintWind]);
-	    _this19.additive = true;
-	    return _this19;
+	    _this16 = _callSuper(this, PhysicsConstraintWindTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintWind]);
+	    _this16.additive = true;
+	    return _this16;
 	  }
 	  _inherits(PhysicsConstraintWindTimeline, _PhysicsConstraintTim5);
 	  return _createClass(PhysicsConstraintWindTimeline, [{
@@ -4459,11 +4140,11 @@ var spine = (function (pc) {
 	}(PhysicsConstraintTimeline);
 	var PhysicsConstraintGravityTimeline = function (_PhysicsConstraintTim6) {
 	  function PhysicsConstraintGravityTimeline(frameCount, bezierCount, constraintIndex) {
-	    var _this20;
+	    var _this17;
 	    _classCallCheck(this, PhysicsConstraintGravityTimeline);
-	    _this20 = _callSuper$n(this, PhysicsConstraintGravityTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintGravity]);
-	    _this20.additive = true;
-	    return _this20;
+	    _this17 = _callSuper(this, PhysicsConstraintGravityTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintGravity]);
+	    _this17.additive = true;
+	    return _this17;
 	  }
 	  _inherits(PhysicsConstraintGravityTimeline, _PhysicsConstraintTim6);
 	  return _createClass(PhysicsConstraintGravityTimeline, [{
@@ -4486,7 +4167,7 @@ var spine = (function (pc) {
 	var PhysicsConstraintMixTimeline = function (_PhysicsConstraintTim7) {
 	  function PhysicsConstraintMixTimeline(frameCount, bezierCount, constraintIndex) {
 	    _classCallCheck(this, PhysicsConstraintMixTimeline);
-	    return _callSuper$n(this, PhysicsConstraintMixTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintMix]);
+	    return _callSuper(this, PhysicsConstraintMixTimeline, [frameCount, bezierCount, constraintIndex, Property.physicsConstraintMix]);
 	  }
 	  _inherits(PhysicsConstraintMixTimeline, _PhysicsConstraintTim7);
 	  return _createClass(PhysicsConstraintMixTimeline, [{
@@ -4508,13 +4189,13 @@ var spine = (function (pc) {
 	}(PhysicsConstraintTimeline);
 	var PhysicsConstraintResetTimeline = function (_Timeline9) {
 	  function PhysicsConstraintResetTimeline(frameCount, constraintIndex) {
-	    var _this21;
+	    var _this18;
 	    _classCallCheck(this, PhysicsConstraintResetTimeline);
-	    _this21 = _callSuper$n(this, PhysicsConstraintResetTimeline, [frameCount].concat(_toConsumableArray(PhysicsConstraintResetTimeline.propertyIds)));
-	    _defineProperty(_this21, "constraintIndex", void 0);
-	    _this21.constraintIndex = constraintIndex;
-	    _this21.instant = true;
-	    return _this21;
+	    _this18 = _callSuper(this, PhysicsConstraintResetTimeline, [frameCount].concat(_toConsumableArray(PhysicsConstraintResetTimeline.propertyIds)));
+	    _defineProperty(_this18, "constraintIndex", void 0);
+	    _this18.constraintIndex = constraintIndex;
+	    _this18.instant = true;
+	    return _this18;
 	  }
 	  _inherits(PhysicsConstraintResetTimeline, _Timeline9);
 	  return _createClass(PhysicsConstraintResetTimeline, [{
@@ -4564,7 +4245,7 @@ var spine = (function (pc) {
 	var SliderTimeline = function (_ConstraintTimeline5) {
 	  function SliderTimeline(frameCount, bezierCount, constraintIndex) {
 	    _classCallCheck(this, SliderTimeline);
-	    return _callSuper$n(this, SliderTimeline, [frameCount, bezierCount, constraintIndex, Property.sliderTime]);
+	    return _callSuper(this, SliderTimeline, [frameCount, bezierCount, constraintIndex, Property.sliderTime]);
 	  }
 	  _inherits(SliderTimeline, _ConstraintTimeline5);
 	  return _createClass(SliderTimeline, [{
@@ -4580,11 +4261,11 @@ var spine = (function (pc) {
 	}(ConstraintTimeline1);
 	var SliderMixTimeline = function (_ConstraintTimeline6) {
 	  function SliderMixTimeline(frameCount, bezierCount, constraintIndex) {
-	    var _this22;
+	    var _this19;
 	    _classCallCheck(this, SliderMixTimeline);
-	    _this22 = _callSuper$n(this, SliderMixTimeline, [frameCount, bezierCount, constraintIndex, Property.sliderMix]);
-	    _this22.additive = true;
-	    return _this22;
+	    _this19 = _callSuper(this, SliderMixTimeline, [frameCount, bezierCount, constraintIndex, Property.sliderMix]);
+	    _this19.additive = true;
+	    return _this19;
 	  }
 	  _inherits(SliderMixTimeline, _ConstraintTimeline6);
 	  return _createClass(SliderMixTimeline, [{
@@ -5643,14 +5324,14 @@ var spine = (function (pc) {
 	    value: function loadAll() {
 	      var _this = this;
 	      var promise = new Promise(function (resolve, reject) {
-	        var check = function check() {
+	        var _check = function check() {
 	          if (_this.isLoadingComplete()) {
 	            if (_this.hasErrors()) reject(_this.errors);else resolve(_this);
 	            return;
 	          }
-	          requestAnimationFrame(check);
+	          requestAnimationFrame(_check);
 	        };
-	        requestAnimationFrame(check);
+	        requestAnimationFrame(_check);
 	      });
 	      return promise;
 	    }
@@ -5875,21 +5556,18 @@ var spine = (function (pc) {
 	  }, {
 	    key: "loadBinaryAsync",
 	    value: function () {
-	      var _loadBinaryAsync = _asyncToGenerator(_regeneratorRuntime().mark(function _callee(path) {
+	      var _loadBinaryAsync = _asyncToGenerator(_regenerator().m(function _callee(path) {
 	        var _this9 = this;
-	        return _regeneratorRuntime().wrap(function _callee$(_context) {
-	          while (1) switch (_context.prev = _context.next) {
+	        return _regenerator().w(function (_context) {
+	          while (1) switch (_context.n) {
 	            case 0:
-	              return _context.abrupt("return", new Promise(function (resolve, reject) {
+	              return _context.a(2, new Promise(function (resolve, reject) {
 	                _this9.loadBinary(path, function (_, binary) {
 	                  return resolve(binary);
 	                }, function (_, message) {
 	                  return reject(message);
 	                });
 	              }));
-	            case 1:
-	            case "end":
-	              return _context.stop();
 	          }
 	        }, _callee);
 	      }));
@@ -5901,21 +5579,18 @@ var spine = (function (pc) {
 	  }, {
 	    key: "loadJsonAsync",
 	    value: function () {
-	      var _loadJsonAsync = _asyncToGenerator(_regeneratorRuntime().mark(function _callee2(path) {
-	        var _this10 = this;
-	        return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-	          while (1) switch (_context2.prev = _context2.next) {
+	      var _loadJsonAsync = _asyncToGenerator(_regenerator().m(function _callee2(path) {
+	        var _this0 = this;
+	        return _regenerator().w(function (_context2) {
+	          while (1) switch (_context2.n) {
 	            case 0:
-	              return _context2.abrupt("return", new Promise(function (resolve, reject) {
-	                _this10.loadJson(path, function (_, object) {
+	              return _context2.a(2, new Promise(function (resolve, reject) {
+	                _this0.loadJson(path, function (_, object) {
 	                  return resolve(object);
 	                }, function (_, message) {
 	                  return reject(message);
 	                });
 	              }));
-	            case 1:
-	            case "end":
-	              return _context2.stop();
 	          }
 	        }, _callee2);
 	      }));
@@ -5927,21 +5602,18 @@ var spine = (function (pc) {
 	  }, {
 	    key: "loadTextureAsync",
 	    value: function () {
-	      var _loadTextureAsync = _asyncToGenerator(_regeneratorRuntime().mark(function _callee3(path) {
-	        var _this11 = this;
-	        return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-	          while (1) switch (_context3.prev = _context3.next) {
+	      var _loadTextureAsync = _asyncToGenerator(_regenerator().m(function _callee3(path) {
+	        var _this1 = this;
+	        return _regenerator().w(function (_context3) {
+	          while (1) switch (_context3.n) {
 	            case 0:
-	              return _context3.abrupt("return", new Promise(function (resolve, reject) {
-	                _this11.loadTexture(path, function (_, texture) {
+	              return _context3.a(2, new Promise(function (resolve, reject) {
+	                _this1.loadTexture(path, function (_, texture) {
 	                  return resolve(texture);
 	                }, function (_, message) {
 	                  return reject(message);
 	                });
 	              }));
-	            case 1:
-	            case "end":
-	              return _context3.stop();
 	          }
 	        }, _callee3);
 	      }));
@@ -5953,21 +5625,18 @@ var spine = (function (pc) {
 	  }, {
 	    key: "loadTextureAtlasAsync",
 	    value: function () {
-	      var _loadTextureAtlasAsync = _asyncToGenerator(_regeneratorRuntime().mark(function _callee4(path) {
-	        var _this12 = this;
-	        return _regeneratorRuntime().wrap(function _callee4$(_context4) {
-	          while (1) switch (_context4.prev = _context4.next) {
+	      var _loadTextureAtlasAsync = _asyncToGenerator(_regenerator().m(function _callee4(path) {
+	        var _this10 = this;
+	        return _regenerator().w(function (_context4) {
+	          while (1) switch (_context4.n) {
 	            case 0:
-	              return _context4.abrupt("return", new Promise(function (resolve, reject) {
-	                _this12.loadTextureAtlas(path, function (_, atlas) {
+	              return _context4.a(2, new Promise(function (resolve, reject) {
+	                _this10.loadTextureAtlas(path, function (_, atlas) {
 	                  return resolve(atlas);
 	                }, function (_, message) {
 	                  return reject(message);
 	                });
 	              }));
-	            case 1:
-	            case "end":
-	              return _context4.stop();
 	          }
 	        }, _callee4);
 	      }));
@@ -5979,21 +5648,18 @@ var spine = (function (pc) {
 	  }, {
 	    key: "loadTextureAtlasButNoTexturesAsync",
 	    value: function () {
-	      var _loadTextureAtlasButNoTexturesAsync = _asyncToGenerator(_regeneratorRuntime().mark(function _callee5(path) {
-	        var _this13 = this;
-	        return _regeneratorRuntime().wrap(function _callee5$(_context5) {
-	          while (1) switch (_context5.prev = _context5.next) {
+	      var _loadTextureAtlasButNoTexturesAsync = _asyncToGenerator(_regenerator().m(function _callee5(path) {
+	        var _this11 = this;
+	        return _regenerator().w(function (_context5) {
+	          while (1) switch (_context5.n) {
 	            case 0:
-	              return _context5.abrupt("return", new Promise(function (resolve, reject) {
-	                _this13.loadTextureAtlasButNoTextures(path, function (_, atlas) {
+	              return _context5.a(2, new Promise(function (resolve, reject) {
+	                _this11.loadTextureAtlasButNoTextures(path, function (_, atlas) {
 	                  return resolve(atlas);
 	                }, function (_, message) {
 	                  return reject(message);
 	                });
 	              }));
-	            case 1:
-	            case "end":
-	              return _context5.stop();
 	          }
 	        }, _callee5);
 	      }));
@@ -6093,11 +5759,11 @@ var spine = (function (pc) {
 	  }, {
 	    key: "createTextureAtlas",
 	    value: function createTextureAtlas(atlasText, parentPath, path, fileAlias) {
-	      var _this14 = this;
+	      var _this12 = this;
 	      var atlas = new TextureAtlas(atlasText);
 	      atlas.dispose = function () {
-	        if (_this14.cache.assetsRefCount[path] <= 0) return;
-	        _this14.disposeAssetInternal(path);
+	        if (_this12.cache.assetsRefCount[path] <= 0) return;
+	        _this12.disposeAssetInternal(path);
 	        var _iterator2 = _createForOfIteratorHelper(atlas.pages),
 	          _step2;
 	        try {
@@ -6130,11 +5796,11 @@ var spine = (function (pc) {
 	  }, {
 	    key: "createTexture",
 	    value: function createTexture(path, pma, image) {
-	      var _this15 = this;
+	      var _this13 = this;
 	      var texture = this.textureLoader(image, pma);
 	      var textureDispose = texture.dispose.bind(texture);
 	      texture.dispose = function () {
-	        if (_this15.disposeAssetInternal(path)) textureDispose();
+	        if (_this13.disposeAssetInternal(path)) textureDispose();
 	      };
 	      return texture;
 	    }
@@ -6156,16 +5822,13 @@ var spine = (function (pc) {
 	  return _createClass(AssetCache, [{
 	    key: "addAsset",
 	    value: function () {
-	      var _addAsset = _asyncToGenerator(_regeneratorRuntime().mark(function _callee6(path, asset) {
-	        return _regeneratorRuntime().wrap(function _callee6$(_context6) {
-	          while (1) switch (_context6.prev = _context6.next) {
+	      var _addAsset = _asyncToGenerator(_regenerator().m(function _callee6(path, asset) {
+	        return _regenerator().w(function (_context6) {
+	          while (1) switch (_context6.n) {
 	            case 0:
 	              this.assetsLoaded[path] = Promise.resolve(asset);
 	              this.assets[path] = asset;
-	              return _context6.abrupt("return", asset);
-	            case 3:
-	            case "end":
-	              return _context6.stop();
+	              return _context6.a(2, asset);
 	          }
 	        }, _callee6, this);
 	      }));
@@ -6236,7 +5899,7 @@ var spine = (function (pc) {
 	  }, {
 	    key: "downloadText",
 	    value: function downloadText(url, success, error) {
-	      var _this16 = this;
+	      var _this14 = this;
 	      if (this.start(url, success, error)) return;
 	      var rawDataUri = this.rawDataUris[url];
 	      if (rawDataUri && !rawDataUri.includes(".")) {
@@ -6251,7 +5914,7 @@ var spine = (function (pc) {
 	      request.overrideMimeType("text/html");
 	      request.open("GET", rawDataUri ? rawDataUri : url, true);
 	      var done = function done() {
-	        _this16.finish(url, request.status, request.responseText);
+	        _this14.finish(url, request.status, request.responseText);
 	      };
 	      request.onload = done;
 	      request.onerror = done;
@@ -6267,7 +5930,7 @@ var spine = (function (pc) {
 	  }, {
 	    key: "downloadBinary",
 	    value: function downloadBinary(url, success, error) {
-	      var _this17 = this;
+	      var _this15 = this;
 	      if (this.start(url, success, error)) return;
 	      var rawDataUri = this.rawDataUris[url];
 	      if (rawDataUri && !rawDataUri.includes(".")) {
@@ -6282,10 +5945,10 @@ var spine = (function (pc) {
 	      request.open("GET", rawDataUri ? rawDataUri : url, true);
 	      request.responseType = "arraybuffer";
 	      var onerror = function onerror() {
-	        _this17.finish(url, request.status, request.response);
+	        _this15.finish(url, request.status, request.response);
 	      };
 	      request.onload = function () {
-	        if (request.status === 200 || request.status === 0) _this17.finish(url, 200, new Uint8Array(request.response));else onerror();
+	        if (request.status === 200 || request.status === 0) _this15.finish(url, 200, new Uint8Array(request.response));else onerror();
 	      };
 	      request.onerror = onerror;
 	      request.send();
@@ -6315,27 +5978,13 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$m(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var BoundingBoxAttachment = function (_VertexAttachment) {
 	  function BoundingBoxAttachment(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, BoundingBoxAttachment);
-	    _this2 = _callSuper$m(this, BoundingBoxAttachment, [name]);
-	    _defineProperty(_this2, "color", new Color(1, 1, 1, 1));
-	    return _this2;
+	    _this = _callSuper(this, BoundingBoxAttachment, [name]);
+	    _defineProperty(_this, "color", new Color(1, 1, 1, 1));
+	    return _this;
 	  }
 	  _inherits(BoundingBoxAttachment, _VertexAttachment);
 	  return _createClass(BoundingBoxAttachment, [{
@@ -6349,30 +5998,16 @@ var spine = (function (pc) {
 	  }]);
 	}(VertexAttachment);
 
-	function _callSuper$l(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var ClippingAttachment = function (_VertexAttachment) {
 	  function ClippingAttachment(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, ClippingAttachment);
-	    _this2 = _callSuper$l(this, ClippingAttachment, [name]);
-	    _defineProperty(_this2, "endSlot", null);
-	    _defineProperty(_this2, "convex", false);
-	    _defineProperty(_this2, "inverse", false);
-	    _defineProperty(_this2, "color", new Color(0.2275, 0.2275, 0.8078, 1));
-	    return _this2;
+	    _this = _callSuper(this, ClippingAttachment, [name]);
+	    _defineProperty(_this, "endSlot", null);
+	    _defineProperty(_this, "convex", false);
+	    _defineProperty(_this, "inverse", false);
+	    _defineProperty(_this, "color", new Color(0.2275, 0.2275, 0.8078, 1));
+	    return _this;
 	  }
 	  _inherits(ClippingAttachment, _VertexAttachment);
 	  return _createClass(ClippingAttachment, [{
@@ -6389,30 +6024,16 @@ var spine = (function (pc) {
 	  }]);
 	}(VertexAttachment);
 
-	function _callSuper$k(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var PathAttachment = function (_VertexAttachment) {
 	  function PathAttachment(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, PathAttachment);
-	    _this2 = _callSuper$k(this, PathAttachment, [name]);
-	    _defineProperty(_this2, "lengths", []);
-	    _defineProperty(_this2, "closed", false);
-	    _defineProperty(_this2, "constantSpeed", false);
-	    _defineProperty(_this2, "color", new Color(1, 1, 1, 1));
-	    return _this2;
+	    _this = _callSuper(this, PathAttachment, [name]);
+	    _defineProperty(_this, "lengths", []);
+	    _defineProperty(_this, "closed", false);
+	    _defineProperty(_this, "constantSpeed", false);
+	    _defineProperty(_this, "color", new Color(1, 1, 1, 1));
+	    return _this;
 	  }
 	  _inherits(PathAttachment, _VertexAttachment);
 	  return _createClass(PathAttachment, [{
@@ -6430,30 +6051,16 @@ var spine = (function (pc) {
 	  }]);
 	}(VertexAttachment);
 
-	function _callSuper$j(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var PointAttachment = function (_VertexAttachment) {
 	  function PointAttachment(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, PointAttachment);
-	    _this2 = _callSuper$j(this, PointAttachment, [name]);
-	    _defineProperty(_this2, "x", 0);
-	    _defineProperty(_this2, "y", 0);
-	    _defineProperty(_this2, "rotation", 0);
-	    _defineProperty(_this2, "color", new Color(0.38, 0.94, 0, 1));
-	    return _this2;
+	    _this = _callSuper(this, PointAttachment, [name]);
+	    _defineProperty(_this, "x", 0);
+	    _defineProperty(_this, "y", 0);
+	    _defineProperty(_this, "rotation", 0);
+	    _defineProperty(_this, "color", new Color(0.38, 0.94, 0, 1));
+	    return _this;
 	  }
 	  _inherits(PointAttachment, _VertexAttachment);
 	  return _createClass(PointAttachment, [{
@@ -6553,38 +6160,24 @@ var spine = (function (pc) {
 	  this.setupPose = setupPose;
 	});
 
-	function _callSuper$i(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var BoneData = function (_PosedData) {
 	  function BoneData(index, name, parent) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, BoneData);
-	    _this2 = _callSuper$i(this, BoneData, [name, new BonePose()]);
-	    _defineProperty(_this2, "index", 0);
-	    _defineProperty(_this2, "parent", null);
-	    _defineProperty(_this2, "length", 0);
-	    _defineProperty(_this2, "color", new Color());
-	    _defineProperty(_this2, "icon", void 0);
-	    _defineProperty(_this2, "iconSize", 1);
-	    _defineProperty(_this2, "iconRotation", 0);
-	    _defineProperty(_this2, "visible", false);
+	    _this = _callSuper(this, BoneData, [name, new BonePose()]);
+	    _defineProperty(_this, "index", 0);
+	    _defineProperty(_this, "parent", null);
+	    _defineProperty(_this, "length", 0);
+	    _defineProperty(_this, "color", new Color());
+	    _defineProperty(_this, "icon", void 0);
+	    _defineProperty(_this, "iconSize", 1);
+	    _defineProperty(_this, "iconRotation", 0);
+	    _defineProperty(_this, "visible", false);
 	    if (index < 0) throw new Error("index must be >= 0.");
 	    if (!name) throw new Error("name cannot be null.");
-	    _this2.index = index;
-	    _this2.parent = parent;
-	    return _this2;
+	    _this.index = index;
+	    _this.parent = parent;
+	    return _this;
 	  }
 	  _inherits(BoneData, _PosedData);
 	  return _createClass(BoneData, [{
@@ -7094,28 +6687,14 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$h(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var PosedActive = function (_Posed) {
 	  function PosedActive(data, pose, constrained) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, PosedActive);
-	    _this2 = _callSuper$h(this, PosedActive, [data, pose, constrained]);
-	    _defineProperty(_this2, "active", false);
-	    _this2.setupPose();
-	    return _this2;
+	    _this = _callSuper(this, PosedActive, [data, pose, constrained]);
+	    _defineProperty(_this, "active", false);
+	    _this.setupPose();
+	    return _this;
 	  }
 	  _inherits(PosedActive, _Posed);
 	  return _createClass(PosedActive, [{
@@ -7126,32 +6705,18 @@ var spine = (function (pc) {
 	  }]);
 	}(Posed);
 
-	function _callSuper$g(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var Bone = function (_PosedActive) {
 	  function Bone(data, parent) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, Bone);
-	    _this2 = _callSuper$g(this, Bone, [data, new BonePose(), new BonePose()]);
-	    _defineProperty(_this2, "parent", null);
-	    _defineProperty(_this2, "children", []);
-	    _defineProperty(_this2, "sorted", false);
-	    _this2.parent = parent;
-	    _this2.appliedPose.bone = _this2;
-	    _this2.constrainedPose.bone = _this2;
-	    return _this2;
+	    _this = _callSuper(this, Bone, [data, new BonePose(), new BonePose()]);
+	    _defineProperty(_this, "parent", null);
+	    _defineProperty(_this, "children", []);
+	    _defineProperty(_this, "sorted", false);
+	    _this.parent = parent;
+	    _this.appliedPose.bone = _this;
+	    _this.constrainedPose.bone = _this;
+	    return _this;
 	  }
 	  _inherits(Bone, _PosedActive);
 	  return _createClass(Bone, [{
@@ -7164,24 +6729,10 @@ var spine = (function (pc) {
 	  }]);
 	}(PosedActive);
 
-	function _callSuper$f(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var Constraint = function (_PosedActive) {
 	  function Constraint(data, pose, constrained) {
 	    _classCallCheck(this, Constraint);
-	    return _callSuper$f(this, Constraint, [data, pose, constrained]);
+	    return _callSuper(this, Constraint, [data, pose, constrained]);
 	  }
 	  _inherits(Constraint, _PosedActive);
 	  return _createClass(Constraint, [{
@@ -7229,24 +6780,10 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$e(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var ConstraintData = function (_PosedData) {
 	  function ConstraintData(name, setup) {
 	    _classCallCheck(this, ConstraintData);
-	    return _callSuper$e(this, ConstraintData, [name, setup]);
+	    return _callSuper(this, ConstraintData, [name, setup]);
 	  }
 	  _inherits(ConstraintData, _PosedData);
 	  return _createClass(ConstraintData);
@@ -7313,43 +6850,29 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$d(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var IkConstraint = function (_Constraint) {
 	  function IkConstraint(data, skeleton) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, IkConstraint);
-	    _this2 = _callSuper$d(this, IkConstraint, [data, new IkConstraintPose(), new IkConstraintPose()]);
-	    _defineProperty(_this2, "bones", void 0);
-	    _defineProperty(_this2, "target", void 0);
+	    _this = _callSuper(this, IkConstraint, [data, new IkConstraintPose(), new IkConstraintPose()]);
+	    _defineProperty(_this, "bones", void 0);
+	    _defineProperty(_this, "target", void 0);
 	    if (!skeleton) throw new Error("skeleton cannot be null.");
-	    _this2.bones = [];
+	    _this.bones = [];
 	    var _iterator = _createForOfIteratorHelper(data.bones),
 	      _step;
 	    try {
 	      for (_iterator.s(); !(_step = _iterator.n()).done;) {
 	        var boneData = _step.value;
-	        _this2.bones.push(skeleton.bones[boneData.index].constrainedPose);
+	        _this.bones.push(skeleton.bones[boneData.index].constrainedPose);
 	      }
 	    } catch (err) {
 	      _iterator.e(err);
 	    } finally {
 	      _iterator.f();
 	    }
-	    _this2.target = skeleton.bones[data.target.index];
-	    return _this2;
+	    _this.target = skeleton.bones[data.target.index];
+	    return _this;
 	  }
 	  _inherits(IkConstraint, _Constraint);
 	  return _createClass(IkConstraint, [{
@@ -7642,29 +7165,15 @@ var spine = (function (pc) {
 	  }]);
 	}(Constraint);
 
-	function _callSuper$c(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var IkConstraintData = function (_ConstraintData) {
 	  function IkConstraintData(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, IkConstraintData);
-	    _this2 = _callSuper$c(this, IkConstraintData, [name, new IkConstraintPose()]);
-	    _defineProperty(_this2, "bones", []);
-	    _defineProperty(_this2, "_target", null);
-	    _defineProperty(_this2, "_scaleYMode", ScaleYMode.None);
-	    return _this2;
+	    _this = _callSuper(this, IkConstraintData, [name, new IkConstraintPose()]);
+	    _defineProperty(_this, "bones", []);
+	    _defineProperty(_this, "_target", null);
+	    _defineProperty(_this, "_scaleYMode", ScaleYMode.None);
+	    return _this;
 	  }
 	  _inherits(IkConstraintData, _ConstraintData);
 	  return _createClass(IkConstraintData, [{
@@ -7714,32 +7223,18 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$b(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var PathConstraintData = function (_ConstraintData) {
 	  function PathConstraintData(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, PathConstraintData);
-	    _this2 = _callSuper$b(this, PathConstraintData, [name, new PathConstraintPose()]);
-	    _defineProperty(_this2, "bones", []);
-	    _defineProperty(_this2, "_slot", null);
-	    _defineProperty(_this2, "positionMode", PositionMode.Fixed);
-	    _defineProperty(_this2, "spacingMode", SpacingMode.Fixed);
-	    _defineProperty(_this2, "rotateMode", RotateMode.Chain);
-	    _defineProperty(_this2, "offsetRotation", 0);
-	    return _this2;
+	    _this = _callSuper(this, PathConstraintData, [name, new PathConstraintPose()]);
+	    _defineProperty(_this, "bones", []);
+	    _defineProperty(_this, "_slot", null);
+	    _defineProperty(_this, "positionMode", PositionMode.Fixed);
+	    _defineProperty(_this, "spacingMode", SpacingMode.Fixed);
+	    _defineProperty(_this, "rotateMode", RotateMode.Chain);
+	    _defineProperty(_this, "offsetRotation", 0);
+	    return _this;
 	  }
 	  _inherits(PathConstraintData, _ConstraintData);
 	  return _createClass(PathConstraintData, [{
@@ -7776,51 +7271,37 @@ var spine = (function (pc) {
 	  RotateMode[RotateMode["ChainScale"] = 2] = "ChainScale";
 	})(RotateMode || (RotateMode = {}));
 
-	function _callSuper$a(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var PathConstraint = function (_Constraint) {
 	  function PathConstraint(data, skeleton) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, PathConstraint);
-	    _this2 = _callSuper$a(this, PathConstraint, [data, new PathConstraintPose(), new PathConstraintPose()]);
-	    _defineProperty(_this2, "data", void 0);
-	    _defineProperty(_this2, "bones", void 0);
-	    _defineProperty(_this2, "slot", void 0);
-	    _defineProperty(_this2, "spaces", []);
-	    _defineProperty(_this2, "positions", []);
-	    _defineProperty(_this2, "world", []);
-	    _defineProperty(_this2, "curves", []);
-	    _defineProperty(_this2, "lengths", []);
-	    _defineProperty(_this2, "segments", []);
+	    _this = _callSuper(this, PathConstraint, [data, new PathConstraintPose(), new PathConstraintPose()]);
+	    _defineProperty(_this, "data", void 0);
+	    _defineProperty(_this, "bones", void 0);
+	    _defineProperty(_this, "slot", void 0);
+	    _defineProperty(_this, "spaces", []);
+	    _defineProperty(_this, "positions", []);
+	    _defineProperty(_this, "world", []);
+	    _defineProperty(_this, "curves", []);
+	    _defineProperty(_this, "lengths", []);
+	    _defineProperty(_this, "segments", []);
 	    if (!skeleton) throw new Error("skeleton cannot be null.");
-	    _this2.data = data;
-	    _this2.bones = [];
-	    var _iterator = _createForOfIteratorHelper(_this2.data.bones),
+	    _this.data = data;
+	    _this.bones = [];
+	    var _iterator = _createForOfIteratorHelper(_this.data.bones),
 	      _step;
 	    try {
 	      for (_iterator.s(); !(_step = _iterator.n()).done;) {
 	        var boneData = _step.value;
-	        _this2.bones.push(skeleton.bones[boneData.index].constrainedPose);
+	        _this.bones.push(skeleton.bones[boneData.index].constrainedPose);
 	      }
 	    } catch (err) {
 	      _iterator.e(err);
 	    } finally {
 	      _iterator.f();
 	    }
-	    _this2.slot = skeleton.slots[data.slot.index];
-	    return _this2;
+	    _this.slot = skeleton.slots[data.slot.index];
+	    return _this;
 	  }
 	  _inherits(PathConstraint, _Constraint);
 	  return _createClass(PathConstraint, [{
@@ -8368,37 +7849,23 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$9(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var Slot = function (_Posed) {
 	  function Slot(data, skeleton) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, Slot);
-	    _this2 = _callSuper$9(this, Slot, [data, new SlotPose(), new SlotPose()]);
-	    _defineProperty(_this2, "skeleton", void 0);
-	    _defineProperty(_this2, "bone", void 0);
-	    _defineProperty(_this2, "attachmentState", 0);
+	    _this = _callSuper(this, Slot, [data, new SlotPose(), new SlotPose()]);
+	    _defineProperty(_this, "skeleton", void 0);
+	    _defineProperty(_this, "bone", void 0);
+	    _defineProperty(_this, "attachmentState", 0);
 	    if (!skeleton) throw new Error("skeleton cannot be null.");
-	    _this2.skeleton = skeleton;
-	    _this2.bone = skeleton.bones[data.boneData.index];
+	    _this.skeleton = skeleton;
+	    _this.bone = skeleton.bones[data.boneData.index];
 	    if (data.setupPose.darkColor != null) {
-	      _this2.pose.darkColor = new Color();
-	      _this2.constrainedPose.darkColor = new Color();
+	      _this.pose.darkColor = new Color();
+	      _this.constrainedPose.darkColor = new Color();
 	    }
-	    _this2.setupPose();
-	    return _this2;
+	    _this.setupPose();
+	    return _this;
 	  }
 	  _inherits(Slot, _Posed);
 	  return _createClass(Slot, [{
@@ -8816,50 +8283,36 @@ var spine = (function (pc) {
 	_defineProperty(Skeleton, "quadTriangles", [0, 1, 2, 2, 3, 0]);
 	_defineProperty(Skeleton, "yDown", false);
 
-	function _callSuper$8(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var PhysicsConstraint = function (_Constraint) {
 	  function PhysicsConstraint(data, skeleton) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, PhysicsConstraint);
-	    _this2 = _callSuper$8(this, PhysicsConstraint, [data, new PhysicsConstraintPose(), new PhysicsConstraintPose()]);
-	    _defineProperty(_this2, "bone", void 0);
-	    _defineProperty(_this2, "_reset", true);
-	    _defineProperty(_this2, "ux", 0);
-	    _defineProperty(_this2, "uy", 0);
-	    _defineProperty(_this2, "cx", 0);
-	    _defineProperty(_this2, "cy", 0);
-	    _defineProperty(_this2, "tx", 0);
-	    _defineProperty(_this2, "ty", 0);
-	    _defineProperty(_this2, "xOffset", 0);
-	    _defineProperty(_this2, "xLag", 0);
-	    _defineProperty(_this2, "xVelocity", 0);
-	    _defineProperty(_this2, "yOffset", 0);
-	    _defineProperty(_this2, "yLag", 0);
-	    _defineProperty(_this2, "yVelocity", 0);
-	    _defineProperty(_this2, "rotateOffset", 0);
-	    _defineProperty(_this2, "rotateLag", 0);
-	    _defineProperty(_this2, "rotateVelocity", 0);
-	    _defineProperty(_this2, "scaleOffset", 0);
-	    _defineProperty(_this2, "scaleLag", 0);
-	    _defineProperty(_this2, "scaleVelocity", 0);
-	    _defineProperty(_this2, "remaining", 0);
-	    _defineProperty(_this2, "lastTime", 0);
+	    _this = _callSuper(this, PhysicsConstraint, [data, new PhysicsConstraintPose(), new PhysicsConstraintPose()]);
+	    _defineProperty(_this, "bone", void 0);
+	    _defineProperty(_this, "_reset", true);
+	    _defineProperty(_this, "ux", 0);
+	    _defineProperty(_this, "uy", 0);
+	    _defineProperty(_this, "cx", 0);
+	    _defineProperty(_this, "cy", 0);
+	    _defineProperty(_this, "tx", 0);
+	    _defineProperty(_this, "ty", 0);
+	    _defineProperty(_this, "xOffset", 0);
+	    _defineProperty(_this, "xLag", 0);
+	    _defineProperty(_this, "xVelocity", 0);
+	    _defineProperty(_this, "yOffset", 0);
+	    _defineProperty(_this, "yLag", 0);
+	    _defineProperty(_this, "yVelocity", 0);
+	    _defineProperty(_this, "rotateOffset", 0);
+	    _defineProperty(_this, "rotateLag", 0);
+	    _defineProperty(_this, "rotateVelocity", 0);
+	    _defineProperty(_this, "scaleOffset", 0);
+	    _defineProperty(_this, "scaleLag", 0);
+	    _defineProperty(_this, "scaleVelocity", 0);
+	    _defineProperty(_this, "remaining", 0);
+	    _defineProperty(_this, "lastTime", 0);
 	    if (skeleton == null) throw new Error("skeleton cannot be null.");
-	    _this2.bone = skeleton.bones[data.bone.index].constrainedPose;
-	    return _this2;
+	    _this.bone = skeleton.bones[data.bone.index].constrainedPose;
+	    return _this;
 	  }
 	  _inherits(PhysicsConstraint, _Constraint);
 	  return _createClass(PhysicsConstraint, [{
@@ -9131,42 +8584,28 @@ var spine = (function (pc) {
 	  }]);
 	}(Constraint);
 
-	function _callSuper$7(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var PhysicsConstraintData = function (_ConstraintData) {
 	  function PhysicsConstraintData(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, PhysicsConstraintData);
-	    _this2 = _callSuper$7(this, PhysicsConstraintData, [name, new PhysicsConstraintPose()]);
-	    _defineProperty(_this2, "_bone", null);
-	    _defineProperty(_this2, "x", 0);
-	    _defineProperty(_this2, "y", 0);
-	    _defineProperty(_this2, "rotate", 0);
-	    _defineProperty(_this2, "scaleX", 0);
-	    _defineProperty(_this2, "shearX", 0);
-	    _defineProperty(_this2, "limit", 0);
-	    _defineProperty(_this2, "step", 0);
-	    _defineProperty(_this2, "inertiaGlobal", false);
-	    _defineProperty(_this2, "strengthGlobal", false);
-	    _defineProperty(_this2, "dampingGlobal", false);
-	    _defineProperty(_this2, "massGlobal", false);
-	    _defineProperty(_this2, "windGlobal", false);
-	    _defineProperty(_this2, "gravityGlobal", false);
-	    _defineProperty(_this2, "mixGlobal", false);
-	    _defineProperty(_this2, "_scaleYMode", ScaleYMode.None);
-	    return _this2;
+	    _this = _callSuper(this, PhysicsConstraintData, [name, new PhysicsConstraintPose()]);
+	    _defineProperty(_this, "_bone", null);
+	    _defineProperty(_this, "x", 0);
+	    _defineProperty(_this, "y", 0);
+	    _defineProperty(_this, "rotate", 0);
+	    _defineProperty(_this, "scaleX", 0);
+	    _defineProperty(_this, "shearX", 0);
+	    _defineProperty(_this, "limit", 0);
+	    _defineProperty(_this, "step", 0);
+	    _defineProperty(_this, "inertiaGlobal", false);
+	    _defineProperty(_this, "strengthGlobal", false);
+	    _defineProperty(_this, "dampingGlobal", false);
+	    _defineProperty(_this, "massGlobal", false);
+	    _defineProperty(_this, "windGlobal", false);
+	    _defineProperty(_this, "gravityGlobal", false);
+	    _defineProperty(_this, "mixGlobal", false);
+	    _defineProperty(_this, "_scaleYMode", ScaleYMode.None);
+	    return _this;
 	  }
 	  _inherits(PhysicsConstraintData, _ConstraintData);
 	  return _createClass(PhysicsConstraintData, [{
@@ -9220,29 +8659,15 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$6(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var Slider = function (_Constraint) {
 	  function Slider(data, skeleton) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, Slider);
-	    _this2 = _callSuper$6(this, Slider, [data, new SliderPose(), new SliderPose()]);
-	    _defineProperty(_this2, "bone", null);
+	    _this = _callSuper(this, Slider, [data, new SliderPose(), new SliderPose()]);
+	    _defineProperty(_this, "bone", null);
 	    if (!skeleton) throw new Error("skeleton cannot be null.");
-	    if (data.bone != null) _this2.bone = skeleton.bones[data.bone.index];
-	    return _this2;
+	    if (data.bone != null) _this.bone = skeleton.bones[data.bone.index];
+	    return _this;
 	  }
 	  _inherits(Slider, _Constraint);
 	  return _createClass(Slider, [{
@@ -9307,35 +8732,21 @@ var spine = (function (pc) {
 	}(Constraint);
 	_defineProperty(Slider, "offsets", [0, 0, 0, 0, 0, 0]);
 
-	function _callSuper$5(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var SliderData = function (_ConstraintData) {
 	  function SliderData(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, SliderData);
-	    _this2 = _callSuper$5(this, SliderData, [name, new SliderPose()]);
-	    _defineProperty(_this2, "animation", void 0);
-	    _defineProperty(_this2, "additive", false);
-	    _defineProperty(_this2, "loop", false);
-	    _defineProperty(_this2, "bone", null);
-	    _defineProperty(_this2, "property", void 0);
-	    _defineProperty(_this2, "scale", 0);
-	    _defineProperty(_this2, "offset", 0);
-	    _defineProperty(_this2, "local", false);
-	    _defineProperty(_this2, "max", 0);
-	    return _this2;
+	    _this = _callSuper(this, SliderData, [name, new SliderPose()]);
+	    _defineProperty(_this, "animation", void 0);
+	    _defineProperty(_this, "additive", false);
+	    _defineProperty(_this, "loop", false);
+	    _defineProperty(_this, "bone", null);
+	    _defineProperty(_this, "property", void 0);
+	    _defineProperty(_this, "scale", 0);
+	    _defineProperty(_this, "offset", 0);
+	    _defineProperty(_this, "local", false);
+	    _defineProperty(_this, "max", 0);
+	    return _this;
 	  }
 	  _inherits(SliderData, _ConstraintData);
 	  return _createClass(SliderData, [{
@@ -9603,35 +9014,21 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$4(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var SlotData = function (_PosedData) {
 	  function SlotData(index, name, boneData) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, SlotData);
-	    _this2 = _callSuper$4(this, SlotData, [name, new SlotPose()]);
-	    _defineProperty(_this2, "index", 0);
-	    _defineProperty(_this2, "boneData", void 0);
-	    _defineProperty(_this2, "attachmentName", null);
-	    _defineProperty(_this2, "blendMode", BlendMode.Normal);
-	    _defineProperty(_this2, "visible", true);
+	    _this = _callSuper(this, SlotData, [name, new SlotPose()]);
+	    _defineProperty(_this, "index", 0);
+	    _defineProperty(_this, "boneData", void 0);
+	    _defineProperty(_this, "attachmentName", null);
+	    _defineProperty(_this, "blendMode", BlendMode.Normal);
+	    _defineProperty(_this, "visible", true);
 	    if (index < 0) throw new Error("index must be >= 0.");
 	    if (!boneData) throw new Error("boneData cannot be null.");
-	    _this2.index = index;
-	    _this2.boneData = boneData;
-	    return _this2;
+	    _this.index = index;
+	    _this.boneData = boneData;
+	    return _this;
 	  }
 	  _inherits(SlotData, _PosedData);
 	  return _createClass(SlotData);
@@ -9667,35 +9064,21 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$3(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var TransformConstraint = function (_Constraint) {
 	  function TransformConstraint(data, skeleton) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, TransformConstraint);
-	    _this2 = _callSuper$3(this, TransformConstraint, [data, new TransformConstraintPose(), new TransformConstraintPose()]);
-	    _defineProperty(_this2, "bones", void 0);
-	    _defineProperty(_this2, "source", void 0);
+	    _this = _callSuper(this, TransformConstraint, [data, new TransformConstraintPose(), new TransformConstraintPose()]);
+	    _defineProperty(_this, "bones", void 0);
+	    _defineProperty(_this, "source", void 0);
 	    if (!skeleton) throw new Error("skeleton cannot be null.");
-	    _this2.bones = [];
+	    _this.bones = [];
 	    var _iterator = _createForOfIteratorHelper(data.bones),
 	      _step;
 	    try {
 	      for (_iterator.s(); !(_step = _iterator.n()).done;) {
 	        var boneData = _step.value;
-	        _this2.bones.push(skeleton.bones[boneData.index].constrainedPose);
+	        _this.bones.push(skeleton.bones[boneData.index].constrainedPose);
 	      }
 	    } catch (err) {
 	      _iterator.e(err);
@@ -9704,8 +9087,8 @@ var spine = (function (pc) {
 	    }
 	    var source = skeleton.bones[data.source.index];
 	    if (source == null) throw new Error("source cannot be null.");
-	    _this2.source = source;
-	    return _this2;
+	    _this.source = source;
+	    return _this;
 	  }
 	  _inherits(TransformConstraint, _Constraint);
 	  return _createClass(TransformConstraint, [{
@@ -9777,36 +9160,22 @@ var spine = (function (pc) {
 	  }]);
 	}(Constraint);
 
-	function _callSuper$2(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var TransformConstraintData = function (_ConstraintData) {
 	  function TransformConstraintData(name) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, TransformConstraintData);
-	    _this2 = _callSuper$2(this, TransformConstraintData, [name, new TransformConstraintPose()]);
-	    _defineProperty(_this2, "bones", []);
-	    _defineProperty(_this2, "_source", null);
-	    _defineProperty(_this2, "offsets", [0, 0, 0, 0, 0, 0]);
-	    _defineProperty(_this2, "offsetX", 0);
-	    _defineProperty(_this2, "offsetY", 0);
-	    _defineProperty(_this2, "localSource", false);
-	    _defineProperty(_this2, "localTarget", false);
-	    _defineProperty(_this2, "additive", false);
-	    _defineProperty(_this2, "clamp", false);
-	    _defineProperty(_this2, "properties", []);
-	    return _this2;
+	    _this = _callSuper(this, TransformConstraintData, [name, new TransformConstraintPose()]);
+	    _defineProperty(_this, "bones", []);
+	    _defineProperty(_this, "_source", null);
+	    _defineProperty(_this, "offsets", [0, 0, 0, 0, 0, 0]);
+	    _defineProperty(_this, "offsetX", 0);
+	    _defineProperty(_this, "offsetY", 0);
+	    _defineProperty(_this, "localSource", false);
+	    _defineProperty(_this, "localTarget", false);
+	    _defineProperty(_this, "additive", false);
+	    _defineProperty(_this, "clamp", false);
+	    _defineProperty(_this, "properties", []);
+	    return _this;
 	  }
 	  _inherits(TransformConstraintData, _ConstraintData);
 	  return _createClass(TransformConstraintData, [{
@@ -9904,7 +9273,7 @@ var spine = (function (pc) {
 	var FromRotate = function (_FromProperty2) {
 	  function FromRotate() {
 	    _classCallCheck(this, FromRotate);
-	    return _callSuper$2(this, FromRotate, arguments);
+	    return _callSuper(this, FromRotate, arguments);
 	  }
 	  _inherits(FromRotate, _FromProperty2);
 	  return _createClass(FromRotate, [{
@@ -9922,7 +9291,7 @@ var spine = (function (pc) {
 	var ToRotate = function (_ToProperty2) {
 	  function ToRotate() {
 	    _classCallCheck(this, ToRotate);
-	    return _callSuper$2(this, ToRotate, arguments);
+	    return _callSuper(this, ToRotate, arguments);
 	  }
 	  _inherits(ToRotate, _ToProperty2);
 	  return _createClass(ToRotate, [{
@@ -9959,7 +9328,7 @@ var spine = (function (pc) {
 	var FromX = function (_FromProperty3) {
 	  function FromX() {
 	    _classCallCheck(this, FromX);
-	    return _callSuper$2(this, FromX, arguments);
+	    return _callSuper(this, FromX, arguments);
 	  }
 	  _inherits(FromX, _FromProperty3);
 	  return _createClass(FromX, [{
@@ -9972,7 +9341,7 @@ var spine = (function (pc) {
 	var ToX = function (_ToProperty3) {
 	  function ToX() {
 	    _classCallCheck(this, ToX);
-	    return _callSuper$2(this, ToX, arguments);
+	    return _callSuper(this, ToX, arguments);
 	  }
 	  _inherits(ToX, _ToProperty3);
 	  return _createClass(ToX, [{
@@ -9993,7 +9362,7 @@ var spine = (function (pc) {
 	var FromY = function (_FromProperty4) {
 	  function FromY() {
 	    _classCallCheck(this, FromY);
-	    return _callSuper$2(this, FromY, arguments);
+	    return _callSuper(this, FromY, arguments);
 	  }
 	  _inherits(FromY, _FromProperty4);
 	  return _createClass(FromY, [{
@@ -10006,7 +9375,7 @@ var spine = (function (pc) {
 	var ToY = function (_ToProperty4) {
 	  function ToY() {
 	    _classCallCheck(this, ToY);
-	    return _callSuper$2(this, ToY, arguments);
+	    return _callSuper(this, ToY, arguments);
 	  }
 	  _inherits(ToY, _ToProperty4);
 	  return _createClass(ToY, [{
@@ -10027,7 +9396,7 @@ var spine = (function (pc) {
 	var FromScaleX = function (_FromProperty5) {
 	  function FromScaleX() {
 	    _classCallCheck(this, FromScaleX);
-	    return _callSuper$2(this, FromScaleX, arguments);
+	    return _callSuper(this, FromScaleX, arguments);
 	  }
 	  _inherits(FromScaleX, _FromProperty5);
 	  return _createClass(FromScaleX, [{
@@ -10043,7 +9412,7 @@ var spine = (function (pc) {
 	var ToScaleX = function (_ToProperty5) {
 	  function ToScaleX() {
 	    _classCallCheck(this, ToScaleX);
-	    return _callSuper$2(this, ToScaleX, arguments);
+	    return _callSuper(this, ToScaleX, arguments);
 	  }
 	  _inherits(ToScaleX, _ToProperty5);
 	  return _createClass(ToScaleX, [{
@@ -10076,7 +9445,7 @@ var spine = (function (pc) {
 	var FromScaleY = function (_FromProperty6) {
 	  function FromScaleY() {
 	    _classCallCheck(this, FromScaleY);
-	    return _callSuper$2(this, FromScaleY, arguments);
+	    return _callSuper(this, FromScaleY, arguments);
 	  }
 	  _inherits(FromScaleY, _FromProperty6);
 	  return _createClass(FromScaleY, [{
@@ -10092,7 +9461,7 @@ var spine = (function (pc) {
 	var ToScaleY = function (_ToProperty6) {
 	  function ToScaleY() {
 	    _classCallCheck(this, ToScaleY);
-	    return _callSuper$2(this, ToScaleY, arguments);
+	    return _callSuper(this, ToScaleY, arguments);
 	  }
 	  _inherits(ToScaleY, _ToProperty6);
 	  return _createClass(ToScaleY, [{
@@ -10125,7 +9494,7 @@ var spine = (function (pc) {
 	var FromShearY = function (_FromProperty7) {
 	  function FromShearY() {
 	    _classCallCheck(this, FromShearY);
-	    return _callSuper$2(this, FromShearY, arguments);
+	    return _callSuper(this, FromShearY, arguments);
 	  }
 	  _inherits(FromShearY, _FromProperty7);
 	  return _createClass(FromShearY, [{
@@ -10141,7 +9510,7 @@ var spine = (function (pc) {
 	var ToShearY = function (_ToProperty7) {
 	  function ToShearY() {
 	    _classCallCheck(this, ToShearY);
-	    return _callSuper$2(this, ToShearY, arguments);
+	    return _callSuper(this, ToShearY, arguments);
 	  }
 	  _inherits(ToShearY, _ToProperty7);
 	  return _createClass(ToShearY, [{
@@ -10581,7 +9950,7 @@ var spine = (function (pc) {
 	        for (var _i9 = 0; _i9 < n; _i9++) to[_i9] = from[input.readInt(true)];
 	        slotCount = input.readInt(true);
 	      }
-	      for (var _i10 = 0; _i10 < slotCount; _i10++) {
+	      for (var _i0 = 0; _i0 < slotCount; _i0++) {
 	        var slotIndex = input.readInt(true);
 	        for (var ii = 0, nn = input.readInt(true); ii < nn; ii++) {
 	          var placeholder = input.readStringRef();
@@ -10798,7 +10167,7 @@ var spine = (function (pc) {
 	      if (scale === 1) {
 	        for (var i = 0; i < n; i++) array[i] = input.readFloat();
 	      } else {
-	        for (var _i11 = 0; _i11 < n; _i11++) array[_i11] = input.readFloat() * scale;
+	        for (var _i1 = 0; _i1 < n; _i1++) array[_i1] = input.readFloat() * scale;
 	      }
 	      return array;
 	    }
@@ -11014,7 +10383,7 @@ var spine = (function (pc) {
 	          }
 	        }
 	      }
-	      for (var _i12 = 0, _n = input.readInt(true); _i12 < _n; _i12++) {
+	      for (var _i10 = 0, _n = input.readInt(true); _i10 < _n; _i10++) {
 	        var boneIndex = input.readInt(true);
 	        for (var _ii4 = 0, _nn = input.readInt(true); _ii4 < _nn; _ii4++) {
 	          var type = input.readByte(),
@@ -11062,7 +10431,7 @@ var spine = (function (pc) {
 	          }
 	        }
 	      }
-	      for (var _i13 = 0, _n2 = input.readInt(true); _i13 < _n2; _i13++) {
+	      for (var _i11 = 0, _n2 = input.readInt(true); _i11 < _n2; _i11++) {
 	        var index = input.readInt(true),
 	          _frameCount2 = input.readInt(true),
 	          _frameLast = _frameCount2 - 1;
@@ -11075,27 +10444,27 @@ var spine = (function (pc) {
 	          _timeline7.setFrame(_frame7, _time9, mix, softness, (flags & 8) !== 0 ? 1 : -1, (flags & 16) !== 0, (flags & 32) !== 0);
 	          if (_frame7 === _frameLast) break;
 	          flags = input.readByte();
-	          var _time10 = input.readFloat(),
+	          var _time0 = input.readFloat(),
 	            mix2 = (flags & 1) !== 0 ? (flags & 2) !== 0 ? input.readFloat() : 1 : 0;
 	          var softness2 = (flags & 4) !== 0 ? input.readFloat() * scale : 0;
 	          if ((flags & 64) !== 0) {
 	            _timeline7.setStepped(_frame7);
 	          } else if ((flags & 128) !== 0) {
-	            setBezier(input, _timeline7, _bezier5++, _frame7, 0, _time9, _time10, mix, mix2, 1);
-	            setBezier(input, _timeline7, _bezier5++, _frame7, 1, _time9, _time10, softness, softness2, scale);
+	            setBezier(input, _timeline7, _bezier5++, _frame7, 0, _time9, _time0, mix, mix2, 1);
+	            setBezier(input, _timeline7, _bezier5++, _frame7, 1, _time9, _time0, softness, softness2, scale);
 	          }
-	          _time9 = _time10;
+	          _time9 = _time0;
 	          mix = mix2;
 	          softness = softness2;
 	        }
 	        timelines.push(_timeline7);
 	      }
-	      for (var _i14 = 0, _n3 = input.readInt(true); _i14 < _n3; _i14++) {
+	      for (var _i12 = 0, _n3 = input.readInt(true); _i12 < _n3; _i12++) {
 	        var _index = input.readInt(true),
 	          _frameCount3 = input.readInt(true),
 	          _frameLast2 = _frameCount3 - 1;
 	        var _timeline8 = new TransformConstraintTimeline(_frameCount3, input.readInt(true), _index);
-	        var _time11 = input.readFloat(),
+	        var _time1 = input.readFloat(),
 	          mixRotate = input.readFloat(),
 	          mixX = input.readFloat(),
 	          mixY = input.readFloat(),
@@ -11103,9 +10472,9 @@ var spine = (function (pc) {
 	          mixScaleY = input.readFloat(),
 	          mixShearY = input.readFloat();
 	        for (var _frame8 = 0, _bezier6 = 0;; _frame8++) {
-	          _timeline8.setFrame(_frame8, _time11, mixRotate, mixX, mixY, mixScaleX, mixScaleY, mixShearY);
+	          _timeline8.setFrame(_frame8, _time1, mixRotate, mixX, mixY, mixScaleX, mixScaleY, mixShearY);
 	          if (_frame8 === _frameLast2) break;
-	          var _time12 = input.readFloat(),
+	          var _time10 = input.readFloat(),
 	            mixRotate2 = input.readFloat(),
 	            mixX2 = input.readFloat(),
 	            mixY2 = input.readFloat(),
@@ -11117,14 +10486,14 @@ var spine = (function (pc) {
 	              _timeline8.setStepped(_frame8);
 	              break;
 	            case CURVE_BEZIER:
-	              setBezier(input, _timeline8, _bezier6++, _frame8, 0, _time11, _time12, mixRotate, mixRotate2, 1);
-	              setBezier(input, _timeline8, _bezier6++, _frame8, 1, _time11, _time12, mixX, mixX2, 1);
-	              setBezier(input, _timeline8, _bezier6++, _frame8, 2, _time11, _time12, mixY, mixY2, 1);
-	              setBezier(input, _timeline8, _bezier6++, _frame8, 3, _time11, _time12, mixScaleX, mixScaleX2, 1);
-	              setBezier(input, _timeline8, _bezier6++, _frame8, 4, _time11, _time12, mixScaleY, mixScaleY2, 1);
-	              setBezier(input, _timeline8, _bezier6++, _frame8, 5, _time11, _time12, mixShearY, mixShearY2, 1);
+	              setBezier(input, _timeline8, _bezier6++, _frame8, 0, _time1, _time10, mixRotate, mixRotate2, 1);
+	              setBezier(input, _timeline8, _bezier6++, _frame8, 1, _time1, _time10, mixX, mixX2, 1);
+	              setBezier(input, _timeline8, _bezier6++, _frame8, 2, _time1, _time10, mixY, mixY2, 1);
+	              setBezier(input, _timeline8, _bezier6++, _frame8, 3, _time1, _time10, mixScaleX, mixScaleX2, 1);
+	              setBezier(input, _timeline8, _bezier6++, _frame8, 4, _time1, _time10, mixScaleY, mixScaleY2, 1);
+	              setBezier(input, _timeline8, _bezier6++, _frame8, 5, _time1, _time10, mixShearY, mixShearY2, 1);
 	          }
-	          _time11 = _time12;
+	          _time1 = _time10;
 	          mixRotate = mixRotate2;
 	          mixX = mixX2;
 	          mixY = mixY2;
@@ -11134,7 +10503,7 @@ var spine = (function (pc) {
 	        }
 	        timelines.push(_timeline8);
 	      }
-	      for (var _i15 = 0, _n4 = input.readInt(true); _i15 < _n4; _i15++) {
+	      for (var _i13 = 0, _n4 = input.readInt(true); _i13 < _n4; _i13++) {
 	        var _index2 = input.readInt(true);
 	        var data = skeletonData.constraints[_index2];
 	        for (var _ii5 = 0, _nn2 = input.readInt(true); _ii5 < _nn2; _ii5++) {
@@ -11151,14 +10520,14 @@ var spine = (function (pc) {
 	            case PATH_MIX:
 	              {
 	                var _timeline9 = new PathConstraintMixTimeline(_frameCount4, _bezierCount5, _index2);
-	                var _time13 = input.readFloat(),
+	                var _time11 = input.readFloat(),
 	                  _mixRotate = input.readFloat(),
 	                  _mixX = input.readFloat(),
 	                  _mixY = input.readFloat();
 	                for (var _frame9 = 0, _bezier7 = 0, _frameLast3 = _timeline9.getFrameCount() - 1;; _frame9++) {
-	                  _timeline9.setFrame(_frame9, _time13, _mixRotate, _mixX, _mixY);
+	                  _timeline9.setFrame(_frame9, _time11, _mixRotate, _mixX, _mixY);
 	                  if (_frame9 === _frameLast3) break;
-	                  var _time14 = input.readFloat(),
+	                  var _time12 = input.readFloat(),
 	                    _mixRotate2 = input.readFloat(),
 	                    _mixX2 = input.readFloat(),
 	                    _mixY2 = input.readFloat();
@@ -11167,11 +10536,11 @@ var spine = (function (pc) {
 	                      _timeline9.setStepped(_frame9);
 	                      break;
 	                    case CURVE_BEZIER:
-	                      setBezier(input, _timeline9, _bezier7++, _frame9, 0, _time13, _time14, _mixRotate, _mixRotate2, 1);
-	                      setBezier(input, _timeline9, _bezier7++, _frame9, 1, _time13, _time14, _mixX, _mixX2, 1);
-	                      setBezier(input, _timeline9, _bezier7++, _frame9, 2, _time13, _time14, _mixY, _mixY2, 1);
+	                      setBezier(input, _timeline9, _bezier7++, _frame9, 0, _time11, _time12, _mixRotate, _mixRotate2, 1);
+	                      setBezier(input, _timeline9, _bezier7++, _frame9, 1, _time11, _time12, _mixX, _mixX2, 1);
+	                      setBezier(input, _timeline9, _bezier7++, _frame9, 2, _time11, _time12, _mixY, _mixY2, 1);
 	                  }
-	                  _time13 = _time14;
+	                  _time11 = _time12;
 	                  _mixRotate = _mixRotate2;
 	                  _mixX = _mixX2;
 	                  _mixY = _mixY2;
@@ -11181,15 +10550,15 @@ var spine = (function (pc) {
 	          }
 	        }
 	      }
-	      for (var _i16 = 0, _n5 = input.readInt(true); _i16 < _n5; _i16++) {
+	      for (var _i14 = 0, _n5 = input.readInt(true); _i14 < _n5; _i14++) {
 	        var _index3 = input.readInt(true) - 1;
 	        for (var _ii6 = 0, _nn3 = input.readInt(true); _ii6 < _nn3; _ii6++) {
 	          var _type2 = input.readByte(),
 	            _frameCount5 = input.readInt(true);
 	          if (_type2 === PHYSICS_RESET) {
-	            var _timeline10 = new PhysicsConstraintResetTimeline(_frameCount5, _index3);
-	            for (var _frame10 = 0; _frame10 < _frameCount5; _frame10++) _timeline10.setFrame(_frame10, input.readFloat());
-	            timelines.push(_timeline10);
+	            var _timeline0 = new PhysicsConstraintResetTimeline(_frameCount5, _index3);
+	            for (var _frame0 = 0; _frame0 < _frameCount5; _frame0++) _timeline0.setFrame(_frame0, input.readFloat());
+	            timelines.push(_timeline0);
 	            continue;
 	          }
 	          var _bezierCount6 = input.readInt(true);
@@ -11220,7 +10589,7 @@ var spine = (function (pc) {
 	          }
 	        }
 	      }
-	      for (var _i17 = 0, _n6 = input.readInt(true); _i17 < _n6; _i17++) {
+	      for (var _i15 = 0, _n6 = input.readInt(true); _i15 < _n6; _i15++) {
 	        var _index4 = input.readInt(true);
 	        for (var _ii7 = 0, _nn4 = input.readInt(true); _ii7 < _nn4; _ii7++) {
 	          var _type3 = input.readByte(),
@@ -11238,7 +10607,7 @@ var spine = (function (pc) {
 	          }
 	        }
 	      }
-	      for (var _i18 = 0, _n7 = input.readInt(true); _i18 < _n7; _i18++) {
+	      for (var _i16 = 0, _n7 = input.readInt(true); _i16 < _n7; _i16++) {
 	        var skin = skeletonData.skins[input.readInt(true)];
 	        for (var _ii8 = 0, _nn5 = input.readInt(true); _ii8 < _nn5; _ii8++) {
 	          var _slotIndex = input.readInt(true);
@@ -11257,9 +10626,9 @@ var spine = (function (pc) {
 	                  var vertices = vertexAttachment.vertices;
 	                  var deformLength = weighted ? vertices.length / 3 * 2 : vertices.length;
 	                  var _bezierCount8 = input.readInt(true);
-	                  var _timeline11 = new DeformTimeline(_frameCount7, _bezierCount8, _slotIndex, vertexAttachment);
-	                  var _time15 = input.readFloat();
-	                  for (var _frame11 = 0, _bezier8 = 0;; _frame11++) {
+	                  var _timeline1 = new DeformTimeline(_frameCount7, _bezierCount8, _slotIndex, vertexAttachment);
+	                  var _time13 = input.readFloat();
+	                  for (var _frame1 = 0, _bezier8 = 0;; _frame1++) {
 	                    var deform = void 0;
 	                    var end = input.readInt(true);
 	                    if (end === 0) deform = weighted ? Utils.newFloatArray(deformLength) : vertices;else {
@@ -11275,30 +10644,30 @@ var spine = (function (pc) {
 	                        for (var _v2 = 0, vn = deform.length; _v2 < vn; _v2++) deform[_v2] += vertices[_v2];
 	                      }
 	                    }
-	                    _timeline11.setFrame(_frame11, _time15, deform);
-	                    if (_frame11 === _frameLast4) break;
-	                    var _time16 = input.readFloat();
+	                    _timeline1.setFrame(_frame1, _time13, deform);
+	                    if (_frame1 === _frameLast4) break;
+	                    var _time14 = input.readFloat();
 	                    switch (input.readByte()) {
 	                      case CURVE_STEPPED:
-	                        _timeline11.setStepped(_frame11);
+	                        _timeline1.setStepped(_frame1);
 	                        break;
 	                      case CURVE_BEZIER:
-	                        setBezier(input, _timeline11, _bezier8++, _frame11, 0, _time15, _time16, 0, 1, 1);
+	                        setBezier(input, _timeline1, _bezier8++, _frame1, 0, _time13, _time14, 0, 1, 1);
 	                    }
-	                    _time15 = _time16;
+	                    _time13 = _time14;
 	                  }
-	                  timelines.push(_timeline11);
+	                  timelines.push(_timeline1);
 	                  break;
 	                }
 	              case ATTACHMENT_SEQUENCE:
 	                {
-	                  var _timeline12 = new SequenceTimeline(_frameCount7, _slotIndex, attachment);
-	                  for (var _frame12 = 0; _frame12 < _frameCount7; _frame12++) {
-	                    var _time17 = input.readFloat();
+	                  var _timeline10 = new SequenceTimeline(_frameCount7, _slotIndex, attachment);
+	                  for (var _frame10 = 0; _frame10 < _frameCount7; _frame10++) {
+	                    var _time15 = input.readFloat();
 	                    var modeAndIndex = input.readInt32();
-	                    _timeline12.setFrame(_frame12, _time17, SequenceModeValues[modeAndIndex & 0xf], modeAndIndex >> 4, input.readFloat());
+	                    _timeline10.setFrame(_frame10, _time15, SequenceModeValues[modeAndIndex & 0xf], modeAndIndex >> 4, input.readFloat());
 	                  }
-	                  timelines.push(_timeline12);
+	                  timelines.push(_timeline10);
 	                  break;
 	                }
 	            }
@@ -11308,27 +10677,27 @@ var spine = (function (pc) {
 	      var slotCount = skeletonData.slots.length;
 	      var drawOrderCount = input.readInt(true);
 	      if (drawOrderCount > 0) {
-	        var _timeline13 = new DrawOrderTimeline(drawOrderCount);
-	        for (var _i19 = 0; _i19 < drawOrderCount; _i19++) _timeline13.setFrame(_i19, input.readFloat(), readDrawOrder$1(input, slotCount));
-	        timelines.push(_timeline13);
+	        var _timeline11 = new DrawOrderTimeline(drawOrderCount);
+	        for (var _i17 = 0; _i17 < drawOrderCount; _i17++) _timeline11.setFrame(_i17, input.readFloat(), readDrawOrder$1(input, slotCount));
+	        timelines.push(_timeline11);
 	      }
 	      var folderCount = input.readInt(true);
-	      for (var _i20 = 0; _i20 < folderCount; _i20++) {
+	      for (var _i18 = 0; _i18 < folderCount; _i18++) {
 	        var folderSlotCount = input.readInt(true);
 	        var folderSlots = new Array(folderSlotCount);
 	        for (var _ii9 = 0; _ii9 < folderSlotCount; _ii9++) folderSlots[_ii9] = input.readInt(true);
 	        var keyCount = input.readInt(true);
-	        var _timeline14 = new DrawOrderFolderTimeline(keyCount, folderSlots, slotCount);
-	        for (var _ii10 = 0; _ii10 < keyCount; _ii10++) _timeline14.setFrame(_ii10, input.readFloat(), readDrawOrder$1(input, folderSlotCount));
-	        timelines.push(_timeline14);
+	        var _timeline12 = new DrawOrderFolderTimeline(keyCount, folderSlots, slotCount);
+	        for (var _ii0 = 0; _ii0 < keyCount; _ii0++) _timeline12.setFrame(_ii0, input.readFloat(), readDrawOrder$1(input, folderSlotCount));
+	        timelines.push(_timeline12);
 	      }
 	      var eventCount = input.readInt(true);
 	      if (eventCount > 0) {
-	        var _timeline15 = new EventTimeline(eventCount);
-	        for (var _i21 = 0; _i21 < eventCount; _i21++) {
-	          var _time18 = input.readFloat();
+	        var _timeline13 = new EventTimeline(eventCount);
+	        for (var _i19 = 0; _i19 < eventCount; _i19++) {
+	          var _time16 = input.readFloat();
 	          var eventData = skeletonData.events[input.readInt(true)];
-	          var event = new Event(_time18, eventData);
+	          var event = new Event(_time16, eventData);
 	          event.intValue = input.readInt(false);
 	          event.floatValue = input.readFloat();
 	          event.stringValue = input.readString();
@@ -11337,12 +10706,12 @@ var spine = (function (pc) {
 	            event.volume = input.readFloat();
 	            event.balance = input.readFloat();
 	          }
-	          _timeline15.setFrame(_i21, event);
+	          _timeline13.setFrame(_i19, event);
 	        }
-	        timelines.push(_timeline15);
+	        timelines.push(_timeline13);
 	      }
 	      var duration = 0;
-	      for (var _i22 = 0, _n8 = timelines.length; _i22 < _n8; _i22++) duration = Math.max(duration, timelines[_i22].getDuration());
+	      for (var _i20 = 0, _n8 = timelines.length; _i20 < _n8; _i20++) duration = Math.max(duration, timelines[_i20].getDuration());
 	      var animation = new Animation(name, timelines, duration);
 	      if (nonessential) Color.rgba8888ToColor(animation.color, input.readInt32());
 	      return animation;
@@ -11557,7 +10926,7 @@ var spine = (function (pc) {
 	    drawOrder[originalIndex + input.readInt(true)] = originalIndex++;
 	  }
 	  while (originalIndex < slotCount) unchanged[unchangedIndex++] = originalIndex++;
-	  for (var _i23 = slotCount - 1; _i23 >= 0; _i23--) if (drawOrder[_i23] === -1) drawOrder[_i23] = unchanged[--unchangedIndex];
+	  for (var _i21 = slotCount - 1; _i21 >= 0; _i21--) if (drawOrder[_i21] === -1) drawOrder[_i21] = unchanged[--unchangedIndex];
 	  return drawOrder;
 	}
 	function setBezier(input, timeline, bezier, frame, value, time1, time2, value1, value2, scale) {
@@ -12483,8 +11852,8 @@ var spine = (function (pc) {
 	          _v6 = uvs[_uv + 1];
 	        t = triangles[_i3 + 2];
 	        _v4 = t * stride;
-	        var _x10 = vertices[vertexStart + _v4],
-	          _y10 = vertices[vertexStart + _v4 + 1];
+	        var _x0 = vertices[vertexStart + _v4],
+	          _y0 = vertices[vertexStart + _v4 + 1];
 	        _uv = t << 1;
 	        var _u6 = uvs[_uv],
 	          _v7 = uvs[_uv + 1];
@@ -12492,20 +11861,20 @@ var spine = (function (pc) {
 	          _d7 = 0,
 	          _d8 = 0,
 	          _d9 = 0,
-	          _d10 = 0;
+	          _d0 = 0;
 	        for (var p = 0; p < polygonsCount; p++) {
 	          var _s3 = this.clippedVerticesLength;
-	          if (this.clip(_x8, _y8, _x9, _y9, _x10, _y10, polygons[p])) {
+	          if (this.clip(_x8, _y8, _x9, _y9, _x0, _y0, polygons[p])) {
 	            clipOutputItems = clipOutput;
 	            var clipOutputLength = clipOutput.length;
 	            if (clipOutputLength === 0) continue;
 	            var clipOutputCount = clipOutputLength >> 1;
-	            if (_d10 === 0) {
-	              _d6 = _y9 - _y10;
-	              _d7 = _x10 - _x9;
-	              _d8 = _x8 - _x10;
-	              _d9 = _y10 - _y8;
-	              _d10 = 1 / (_d6 * _d8 - _d7 * _d9);
+	            if (_d0 === 0) {
+	              _d6 = _y9 - _y0;
+	              _d7 = _x0 - _x9;
+	              _d8 = _x8 - _x0;
+	              _d9 = _y0 - _y8;
+	              _d0 = 1 / (_d6 * _d8 - _d7 * _d9);
 	            }
 	            var _newLength = _s3 + clipOutputCount * stride;
 	            if (clippedVertices.length < _newLength) {
@@ -12522,14 +11891,14 @@ var spine = (function (pc) {
 	            var _uvIndex = this.clippedUVsLength;
 	            this.clippedUVsLength = _uvIndex + clipOutputCount * 2;
 	            for (var _ii6 = 0; _ii6 < clipOutputLength; _ii6 += 2, _s3 += stride, _uvIndex += 2) {
-	              var _x11 = clipOutputItems[_ii6],
-	                _y11 = clipOutputItems[_ii6 + 1];
-	              _cv5[_s3] = _x11;
-	              _cv5[_s3 + 1] = _y11;
-	              var _c4 = _x11 - _x10,
-	                _c5 = _y11 - _y10,
-	                _a2 = (_d6 * _c4 + _d7 * _c5) * _d10,
-	                _b2 = (_d9 * _c4 + _d8 * _c5) * _d10,
+	              var _x1 = clipOutputItems[_ii6],
+	                _y1 = clipOutputItems[_ii6 + 1];
+	              _cv5[_s3] = _x1;
+	              _cv5[_s3 + 1] = _y1;
+	              var _c4 = _x1 - _x0,
+	                _c5 = _y1 - _y0,
+	                _a2 = (_d6 * _c4 + _d7 * _c5) * _d0,
+	                _b2 = (_d9 * _c4 + _d8 * _c5) * _d0,
 	                _c6 = 1 - _a2 - _b2;
 	              _cu[_uvIndex] = _u4 * _a2 + _u5 * _b2 + _u6 * _c6;
 	              _cu[_uvIndex + 1] = _v5 * _a2 + _v6 * _b2 + _v7 * _c6;
@@ -12561,8 +11930,8 @@ var spine = (function (pc) {
 	            clippedVertices[_s3 + 1] = _y8;
 	            clippedVertices[_s3 + stride] = _x9;
 	            clippedVertices[_s3 + stride + 1] = _y9;
-	            clippedVertices[_s3 + stride * 2] = _x10;
-	            clippedVertices[_s3 + stride * 2 + 1] = _y10;
+	            clippedVertices[_s3 + stride * 2] = _x0;
+	            clippedVertices[_s3 + stride * 2 + 1] = _y0;
 	            var uvLength = this.clippedUVsLength + 3 * 2;
 	            if (clippedUVs.length < uvLength) {
 	              this._clippedUVsTyped = new Float32Array(uvLength * 2);
@@ -12827,28 +12196,28 @@ var spine = (function (pc) {
 	      v[3] = sorted[3];
 	      var s = 4;
 	      for (var _i6 = 4; _i6 < n; _i6 += 2, s += 2) {
-	        var _x12 = sorted[_i6],
-	          _y12 = sorted[_i6 + 1];
-	        while ((v[s - 2] - v[s - 4]) * (_y12 - v[s - 3]) - (v[s - 1] - v[s - 3]) * (_x12 - v[s - 4]) >= 0) {
+	        var _x10 = sorted[_i6],
+	          _y10 = sorted[_i6 + 1];
+	        while ((v[s - 2] - v[s - 4]) * (_y10 - v[s - 3]) - (v[s - 1] - v[s - 3]) * (_x10 - v[s - 4]) >= 0) {
 	          s -= 2;
 	          if (s === 2) break;
 	        }
-	        v[s] = _x12;
-	        v[s + 1] = _y12;
+	        v[s] = _x10;
+	        v[s + 1] = _y10;
 	      }
 	      v[s] = sorted[n - 4];
 	      v[s + 1] = sorted[n - 3];
 	      var t = s;
 	      s += 2;
 	      for (var _i7 = n - 6; _i7 >= 0; _i7 -= 2, s += 2) {
-	        var _x13 = sorted[_i7],
-	          _y13 = sorted[_i7 + 1];
-	        while ((v[s - 2] - v[s - 4]) * (_y13 - v[s - 3]) - (v[s - 1] - v[s - 3]) * (_x13 - v[s - 4]) >= 0) {
+	        var _x11 = sorted[_i7],
+	          _y11 = sorted[_i7 + 1];
+	        while ((v[s - 2] - v[s - 4]) * (_y11 - v[s - 3]) - (v[s - 1] - v[s - 3]) * (_x11 - v[s - 4]) >= 0) {
 	          s -= 2;
 	          if (s === t) break;
 	        }
-	        v[s] = _x13;
-	        v[s + 1] = _y13;
+	        v[s] = _x11;
+	        v[s + 1] = _y11;
 	      }
 	      polygon.length = s - 2;
 	    }
@@ -13604,10 +12973,10 @@ var spine = (function (pc) {
 	                  var _timeline4 = new RGB2Timeline(frames, frames * 6, slotIndex);
 	                  var _keyMap4 = timelineMap[0];
 	                  var _time5 = getValue(_keyMap4, "time", 0);
-	                  var _color10 = Color.fromString(_keyMap4.light);
-	                  var _color11 = Color.fromString(_keyMap4.dark);
+	                  var _color0 = Color.fromString(_keyMap4.light);
+	                  var _color1 = Color.fromString(_keyMap4.dark);
 	                  for (var _frame4 = 0, _bezier3 = 0;; _frame4++) {
-	                    _timeline4.setFrame(_frame4, _time5, _color10.r, _color10.g, _color10.b, _color11.r, _color11.g, _color11.b);
+	                    _timeline4.setFrame(_frame4, _time5, _color0.r, _color0.g, _color0.b, _color1.r, _color1.g, _color1.b);
 	                    var _nextMap3 = timelineMap[_frame4 + 1];
 	                    if (!_nextMap3) {
 	                      _timeline4.shrink(_bezier3);
@@ -13618,16 +12987,16 @@ var spine = (function (pc) {
 	                    var _newColor4 = Color.fromString(_nextMap3.dark);
 	                    var _curve3 = _keyMap4.curve;
 	                    if (_curve3) {
-	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 0, _time5, _time6, _color10.r, _newColor3.r, 1);
-	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 1, _time5, _time6, _color10.g, _newColor3.g, 1);
-	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 2, _time5, _time6, _color10.b, _newColor3.b, 1);
-	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 3, _time5, _time6, _color11.r, _newColor4.r, 1);
-	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 4, _time5, _time6, _color11.g, _newColor4.g, 1);
-	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 5, _time5, _time6, _color11.b, _newColor4.b, 1);
+	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 0, _time5, _time6, _color0.r, _newColor3.r, 1);
+	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 1, _time5, _time6, _color0.g, _newColor3.g, 1);
+	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 2, _time5, _time6, _color0.b, _newColor3.b, 1);
+	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 3, _time5, _time6, _color1.r, _newColor4.r, 1);
+	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 4, _time5, _time6, _color1.g, _newColor4.g, 1);
+	                      _bezier3 = readCurve(_curve3, _timeline4, _bezier3, _frame4, 5, _time5, _time6, _color1.b, _newColor4.b, 1);
 	                    }
 	                    _time5 = _time6;
-	                    _color10 = _newColor3;
-	                    _color11 = _newColor4;
+	                    _color0 = _newColor3;
+	                    _color1 = _newColor4;
 	                    _keyMap4 = _nextMap3;
 	                  }
 	                  timelines.push(_timeline4);
@@ -13752,7 +13121,7 @@ var spine = (function (pc) {
 	              _timeline7.shrink(_bezier5);
 	              break;
 	            }
-	            var _time10 = getValue(_nextMap5, "time", 0);
+	            var _time0 = getValue(_nextMap5, "time", 0);
 	            var mixRotate2 = getValue(_nextMap5, "mixRotate", 1);
 	            var mixX2 = getValue(_nextMap5, "mixX", 1),
 	              mixY2 = getValue(_nextMap5, "mixY", mixX2);
@@ -13761,14 +13130,14 @@ var spine = (function (pc) {
 	            var mixShearY2 = getValue(_nextMap5, "mixShearY", 1);
 	            var _curve5 = _keyMap6.curve;
 	            if (_curve5) {
-	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 0, _time9, _time10, mixRotate, mixRotate2, 1);
-	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 1, _time9, _time10, mixX, mixX2, 1);
-	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 2, _time9, _time10, mixY, mixY2, 1);
-	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 3, _time9, _time10, mixScaleX, mixScaleX2, 1);
-	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 4, _time9, _time10, mixScaleY, mixScaleY2, 1);
-	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 5, _time9, _time10, mixShearY, mixShearY2, 1);
+	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 0, _time9, _time0, mixRotate, mixRotate2, 1);
+	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 1, _time9, _time0, mixX, mixX2, 1);
+	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 2, _time9, _time0, mixY, mixY2, 1);
+	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 3, _time9, _time0, mixScaleX, mixScaleX2, 1);
+	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 4, _time9, _time0, mixScaleY, mixScaleY2, 1);
+	              _bezier5 = readCurve(_curve5, _timeline7, _bezier5, _frame7, 5, _time9, _time0, mixShearY, mixShearY2, 1);
 	            }
-	            _time9 = _time10;
+	            _time9 = _time0;
 	            mixRotate = mixRotate2;
 	            mixX = mixX2;
 	            mixY = mixY2;
@@ -13806,35 +13175,35 @@ var spine = (function (pc) {
 	                }
 	              case "mix":
 	                {
-	                  var _timeline10 = new PathConstraintMixTimeline(_frames2, _frames2 * 3, index);
-	                  var _time11 = getValue(_keyMap7, "time", 0);
+	                  var _timeline0 = new PathConstraintMixTimeline(_frames2, _frames2 * 3, index);
+	                  var _time1 = getValue(_keyMap7, "time", 0);
 	                  var _mixRotate = getValue(_keyMap7, "mixRotate", 1);
 	                  var _mixX = getValue(_keyMap7, "mixX", 1);
 	                  var _mixY = getValue(_keyMap7, "mixY", _mixX);
 	                  for (var _frame8 = 0, _bezier6 = 0;; _frame8++) {
-	                    _timeline10.setFrame(_frame8, _time11, _mixRotate, _mixX, _mixY);
+	                    _timeline0.setFrame(_frame8, _time1, _mixRotate, _mixX, _mixY);
 	                    var _nextMap6 = _timelineMap3[_frame8 + 1];
 	                    if (!_nextMap6) {
-	                      _timeline10.shrink(_bezier6);
+	                      _timeline0.shrink(_bezier6);
 	                      break;
 	                    }
-	                    var _time12 = getValue(_nextMap6, "time", 0);
+	                    var _time10 = getValue(_nextMap6, "time", 0);
 	                    var _mixRotate2 = getValue(_nextMap6, "mixRotate", 1);
 	                    var _mixX2 = getValue(_nextMap6, "mixX", 1);
 	                    var _mixY2 = getValue(_nextMap6, "mixY", _mixX2);
 	                    var _curve6 = _keyMap7.curve;
 	                    if (_curve6) {
-	                      _bezier6 = readCurve(_curve6, _timeline10, _bezier6, _frame8, 0, _time11, _time12, _mixRotate, _mixRotate2, 1);
-	                      _bezier6 = readCurve(_curve6, _timeline10, _bezier6, _frame8, 1, _time11, _time12, _mixX, _mixX2, 1);
-	                      _bezier6 = readCurve(_curve6, _timeline10, _bezier6, _frame8, 2, _time11, _time12, _mixY, _mixY2, 1);
+	                      _bezier6 = readCurve(_curve6, _timeline0, _bezier6, _frame8, 0, _time1, _time10, _mixRotate, _mixRotate2, 1);
+	                      _bezier6 = readCurve(_curve6, _timeline0, _bezier6, _frame8, 1, _time1, _time10, _mixX, _mixX2, 1);
+	                      _bezier6 = readCurve(_curve6, _timeline0, _bezier6, _frame8, 2, _time1, _time10, _mixY, _mixY2, 1);
 	                    }
-	                    _time11 = _time12;
+	                    _time1 = _time10;
 	                    _mixRotate = _mixRotate2;
 	                    _mixX = _mixX2;
 	                    _mixY = _mixY2;
 	                    _keyMap7 = _nextMap6;
 	                  }
-	                  timelines.push(_timeline10);
+	                  timelines.push(_timeline0);
 	                  break;
 	                }
 	            }
@@ -13855,7 +13224,7 @@ var spine = (function (pc) {
 	            var _keyMap8 = _timelineMap4[0];
 	            if (!_keyMap8) continue;
 	            var _frames3 = _timelineMap4.length;
-	            var _timeline11 = void 0;
+	            var _timeline1 = void 0;
 	            var defaultValue = 0;
 	            if (_timelineName3 === "reset") {
 	              var resetTimeline = new PhysicsConstraintResetTimeline(_frames3, _index);
@@ -13865,33 +13234,33 @@ var spine = (function (pc) {
 	            }
 	            switch (_timelineName3) {
 	              case "inertia":
-	                _timeline11 = new PhysicsConstraintInertiaTimeline(_frames3, _frames3, _index);
+	                _timeline1 = new PhysicsConstraintInertiaTimeline(_frames3, _frames3, _index);
 	                break;
 	              case "strength":
-	                _timeline11 = new PhysicsConstraintStrengthTimeline(_frames3, _frames3, _index);
+	                _timeline1 = new PhysicsConstraintStrengthTimeline(_frames3, _frames3, _index);
 	                break;
 	              case "damping":
-	                _timeline11 = new PhysicsConstraintDampingTimeline(_frames3, _frames3, _index);
+	                _timeline1 = new PhysicsConstraintDampingTimeline(_frames3, _frames3, _index);
 	                break;
 	              case "mass":
-	                _timeline11 = new PhysicsConstraintMassTimeline(_frames3, _frames3, _index);
+	                _timeline1 = new PhysicsConstraintMassTimeline(_frames3, _frames3, _index);
 	                break;
 	              case "wind":
-	                _timeline11 = new PhysicsConstraintWindTimeline(_frames3, _frames3, _index);
+	                _timeline1 = new PhysicsConstraintWindTimeline(_frames3, _frames3, _index);
 	                break;
 	              case "gravity":
-	                _timeline11 = new PhysicsConstraintGravityTimeline(_frames3, _frames3, _index);
+	                _timeline1 = new PhysicsConstraintGravityTimeline(_frames3, _frames3, _index);
 	                break;
 	              case "mix":
 	                {
 	                  defaultValue = 1;
-	                  _timeline11 = new PhysicsConstraintMixTimeline(_frames3, _frames3, _index);
+	                  _timeline1 = new PhysicsConstraintMixTimeline(_frames3, _frames3, _index);
 	                  break;
 	                }
 	              default:
 	                continue;
 	            }
-	            readTimeline1(timelines, _timelineMap4, _timeline11, defaultValue, 1);
+	            readTimeline1(timelines, _timelineMap4, _timeline1, defaultValue, 1);
 	          }
 	        }
 	      }
@@ -13933,20 +13302,20 @@ var spine = (function (pc) {
 	              if (!attachment) throw new Error("Timeline attachment not found: ".concat(attachmentMapName));
 	              for (var timelineMapName in attachmentMap) {
 	                var _timelineMap6 = attachmentMap[timelineMapName];
-	                var _keyMap10 = _timelineMap6[0];
-	                if (!_keyMap10) continue;
+	                var _keyMap0 = _timelineMap6[0];
+	                if (!_keyMap0) continue;
 	                if (timelineMapName === "deform") {
 	                  var weighted = attachment.bones;
 	                  var vertices = attachment.vertices;
 	                  var deformLength = weighted ? vertices.length / 3 * 2 : vertices.length;
-	                  var _timeline12 = new DeformTimeline(_timelineMap6.length, _timelineMap6.length, _slotIndex, attachment);
-	                  var _time13 = getValue(_keyMap10, "time", 0);
-	                  for (var _frame10 = 0, _bezier7 = 0;; _frame10++) {
+	                  var _timeline10 = new DeformTimeline(_timelineMap6.length, _timelineMap6.length, _slotIndex, attachment);
+	                  var _time11 = getValue(_keyMap0, "time", 0);
+	                  for (var _frame0 = 0, _bezier7 = 0;; _frame0++) {
 	                    var deform = void 0;
-	                    var verticesValue = getValue(_keyMap10, "vertices", null);
+	                    var verticesValue = getValue(_keyMap0, "vertices", null);
 	                    if (!verticesValue) deform = weighted ? Utils.newFloatArray(deformLength) : vertices;else {
 	                      deform = Utils.newFloatArray(deformLength);
-	                      var start = getValue(_keyMap10, "offset", 0);
+	                      var start = getValue(_keyMap0, "offset", 0);
 	                      Utils.arrayCopy(verticesValue, 0, deform, start, verticesValue.length);
 	                      if (scale !== 1) {
 	                        for (var i = start, n = i + verticesValue.length; i < n; i++) deform[i] *= scale;
@@ -13955,32 +13324,32 @@ var spine = (function (pc) {
 	                        for (var _i7 = 0; _i7 < deformLength; _i7++) deform[_i7] += vertices[_i7];
 	                      }
 	                    }
-	                    _timeline12.setFrame(_frame10, _time13, deform);
-	                    var _nextMap7 = _timelineMap6[_frame10 + 1];
+	                    _timeline10.setFrame(_frame0, _time11, deform);
+	                    var _nextMap7 = _timelineMap6[_frame0 + 1];
 	                    if (!_nextMap7) {
-	                      _timeline12.shrink(_bezier7);
+	                      _timeline10.shrink(_bezier7);
 	                      break;
 	                    }
-	                    var _time14 = getValue(_nextMap7, "time", 0);
-	                    var _curve7 = _keyMap10.curve;
-	                    if (_curve7) _bezier7 = readCurve(_curve7, _timeline12, _bezier7, _frame10, 0, _time13, _time14, 0, 1, 1);
-	                    _time13 = _time14;
-	                    _keyMap10 = _nextMap7;
+	                    var _time12 = getValue(_nextMap7, "time", 0);
+	                    var _curve7 = _keyMap0.curve;
+	                    if (_curve7) _bezier7 = readCurve(_curve7, _timeline10, _bezier7, _frame0, 0, _time11, _time12, 0, 1, 1);
+	                    _time11 = _time12;
+	                    _keyMap0 = _nextMap7;
 	                  }
-	                  timelines.push(_timeline12);
+	                  timelines.push(_timeline10);
 	                } else if (timelineMapName === "sequence") {
-	                  var _timeline13 = new SequenceTimeline(_timelineMap6.length, _slotIndex, attachment);
+	                  var _timeline11 = new SequenceTimeline(_timelineMap6.length, _slotIndex, attachment);
 	                  var lastDelay = 0;
-	                  for (var _frame11 = 0; _frame11 < _timelineMap6.length; _frame11++) {
-	                    var delay = getValue(_keyMap10, "delay", lastDelay);
-	                    var _time15 = getValue(_keyMap10, "time", 0);
-	                    var mode = SequenceMode[getValue(_keyMap10, "mode", "hold")];
-	                    var _index3 = getValue(_keyMap10, "index", 0);
-	                    _timeline13.setFrame(_frame11, _time15, mode, _index3, delay);
+	                  for (var _frame1 = 0; _frame1 < _timelineMap6.length; _frame1++) {
+	                    var delay = getValue(_keyMap0, "delay", lastDelay);
+	                    var _time13 = getValue(_keyMap0, "time", 0);
+	                    var mode = SequenceMode[getValue(_keyMap0, "mode", "hold")];
+	                    var _index3 = getValue(_keyMap0, "index", 0);
+	                    _timeline11.setFrame(_frame1, _time13, mode, _index3, delay);
 	                    lastDelay = delay;
-	                    _keyMap10 = _timelineMap6[_frame11 + 1];
+	                    _keyMap0 = _timelineMap6[_frame1 + 1];
 	                  }
-	                  timelines.push(_timeline13);
+	                  timelines.push(_timeline11);
 	                }
 	              }
 	            }
@@ -13988,22 +13357,22 @@ var spine = (function (pc) {
 	        }
 	      }
 	      if (map.drawOrder) {
-	        var _timeline14 = new DrawOrderTimeline(map.drawOrder.length);
+	        var _timeline12 = new DrawOrderTimeline(map.drawOrder.length);
 	        var slotCount = skeletonData.slots.length;
-	        var _frame12 = 0;
+	        var _frame10 = 0;
 	        var _iterator3 = _createForOfIteratorHelper(map.drawOrder),
 	          _step3;
 	        try {
 	          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
 	            var drawOrderMap = _step3.value;
-	            _timeline14.setFrame(_frame12++, getValue(drawOrderMap, "time", 0), readDrawOrder(skeletonData, drawOrderMap, slotCount, null));
+	            _timeline12.setFrame(_frame10++, getValue(drawOrderMap, "time", 0), readDrawOrder(skeletonData, drawOrderMap, slotCount, null));
 	          }
 	        } catch (err) {
 	          _iterator3.e(err);
 	        } finally {
 	          _iterator3.f();
 	        }
-	        timelines.push(_timeline14);
+	        timelines.push(_timeline12);
 	      }
 	      if (map.drawOrderFolder) {
 	        var _iterator4 = _createForOfIteratorHelper(map.drawOrderFolder),
@@ -14029,21 +13398,21 @@ var spine = (function (pc) {
 	              _iterator5.f();
 	            }
 	            var drawOrderFolderEntries = getValue(_timelineMap7, "keys", []);
-	            var _timeline15 = new DrawOrderFolderTimeline(drawOrderFolderEntries.length, folderSlots, skeletonData.slots.length);
-	            var _frame13 = 0;
+	            var _timeline13 = new DrawOrderFolderTimeline(drawOrderFolderEntries.length, folderSlots, skeletonData.slots.length);
+	            var _frame11 = 0;
 	            var _iterator6 = _createForOfIteratorHelper(drawOrderFolderEntries),
 	              _step6;
 	            try {
 	              for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
 	                var drawOrderFolderMap = _step6.value;
-	                _timeline15.setFrame(_frame13++, getValue(drawOrderFolderMap, "time", 0), readDrawOrder(skeletonData, drawOrderFolderMap, folderSlots.length, folderSlots));
+	                _timeline13.setFrame(_frame11++, getValue(drawOrderFolderMap, "time", 0), readDrawOrder(skeletonData, drawOrderFolderMap, folderSlots.length, folderSlots));
 	              }
 	            } catch (err) {
 	              _iterator6.e(err);
 	            } finally {
 	              _iterator6.f();
 	            }
-	            timelines.push(_timeline15);
+	            timelines.push(_timeline13);
 	          }
 	        } catch (err) {
 	          _iterator4.e(err);
@@ -14052,9 +13421,9 @@ var spine = (function (pc) {
 	        }
 	      }
 	      if (map.events) {
-	        var _timeline16 = new EventTimeline(map.events.length);
-	        var _frame14 = 0;
-	        for (var _i8 = 0; _i8 < map.events.length; _i8++, _frame14++) {
+	        var _timeline14 = new EventTimeline(map.events.length);
+	        var _frame12 = 0;
+	        for (var _i8 = 0; _i8 < map.events.length; _i8++, _frame12++) {
 	          var eventMap = map.events[_i8];
 	          var data = skeletonData.findEvent(eventMap.name);
 	          if (!data) throw new Error("Event not found: ".concat(eventMap.name));
@@ -14067,9 +13436,9 @@ var spine = (function (pc) {
 	            event.volume = getValue(eventMap, "volume", setup.volume);
 	            event.balance = getValue(eventMap, "balance", setup.volume);
 	          }
-	          _timeline16.setFrame(_frame14, event);
+	          _timeline14.setFrame(_frame12, event);
 	        }
-	        timelines.push(_timeline16);
+	        timelines.push(_timeline14);
 	      }
 	      var duration = 0;
 	      for (var _i9 = 0, _n2 = timelines.length; _i9 < _n2; _i9++) duration = Math.max(duration, timelines[_i9].getDuration());
@@ -14165,9 +13534,9 @@ var spine = (function (pc) {
 	      var index = 0;
 	      if (!folderSlots) index = slot.index;else {
 	        index = -1;
-	        for (var _i10 = 0; _i10 < slotCount; _i10++) {
-	          if (folderSlots[_i10] === slot.index) {
-	            index = _i10;
+	        for (var _i0 = 0; _i0 < slotCount; _i0++) {
+	          if (folderSlots[_i0] === slot.index) {
+	            index = _i0;
 	            break;
 	          }
 	        }
@@ -14894,612 +14263,778 @@ var spine = (function (pc) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 	}
 
-	var SEMVER_SPEC_VERSION = '2.0.0';
-	var MAX_LENGTH$1 = 256;
-	var MAX_SAFE_INTEGER$1 = Number.MAX_SAFE_INTEGER || 9007199254740991;
-	var MAX_SAFE_COMPONENT_LENGTH = 16;
-	var MAX_SAFE_BUILD_LENGTH = MAX_LENGTH$1 - 6;
-	var RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
-	var constants = {
-	  MAX_LENGTH: MAX_LENGTH$1,
-	  MAX_SAFE_COMPONENT_LENGTH: MAX_SAFE_COMPONENT_LENGTH,
-	  MAX_SAFE_BUILD_LENGTH: MAX_SAFE_BUILD_LENGTH,
-	  MAX_SAFE_INTEGER: MAX_SAFE_INTEGER$1,
-	  RELEASE_TYPES: RELEASE_TYPES,
-	  SEMVER_SPEC_VERSION: SEMVER_SPEC_VERSION,
-	  FLAG_INCLUDE_PRERELEASE: 1,
-	  FLAG_LOOSE: 2
-	};
-	var constants$1 = getDefaultExportFromCjs(constants);
-
-	var debug$1 = (typeof process === "undefined" ? "undefined" : _typeof(process)) === 'object' && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? function () {
-	  var _console;
-	  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-	    args[_key] = arguments[_key];
-	  }
-	  return (_console = console).error.apply(_console, ['SEMVER'].concat(args));
-	} : function () {};
-	var debug_1 = debug$1;
-	getDefaultExportFromCjs(debug_1);
-
-	var re$2 = {exports: {}};
-
-	(function (module, exports) {
-	  var MAX_SAFE_COMPONENT_LENGTH = constants.MAX_SAFE_COMPONENT_LENGTH,
-	    MAX_SAFE_BUILD_LENGTH = constants.MAX_SAFE_BUILD_LENGTH,
-	    MAX_LENGTH = constants.MAX_LENGTH;
-	  var debug = debug_1;
-	  exports = module.exports = {};
-	  var re = exports.re = [];
-	  var safeRe = exports.safeRe = [];
-	  var src = exports.src = [];
-	  var t = exports.t = {};
-	  var R = 0;
-	  var LETTERDASHNUMBER = '[a-zA-Z0-9-]';
-	  var safeRegexReplacements = [['\\s', 1], ['\\d', MAX_LENGTH], [LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH]];
-	  var makeSafeRegex = function makeSafeRegex(value) {
-	    for (var _i = 0, _safeRegexReplacement = safeRegexReplacements; _i < _safeRegexReplacement.length; _i++) {
-	      var _safeRegexReplacement2 = _slicedToArray(_safeRegexReplacement[_i], 2),
-	        token = _safeRegexReplacement2[0],
-	        max = _safeRegexReplacement2[1];
-	      value = value.split("".concat(token, "*")).join("".concat(token, "{0,").concat(max, "}")).split("".concat(token, "+")).join("".concat(token, "{1,").concat(max, "}"));
-	    }
-	    return value;
+	var constants$1;
+	var hasRequiredConstants;
+	function requireConstants() {
+	  if (hasRequiredConstants) return constants$1;
+	  hasRequiredConstants = 1;
+	  var SEMVER_SPEC_VERSION = '2.0.0';
+	  var MAX_LENGTH = 256;
+	  var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
+	  var MAX_SAFE_COMPONENT_LENGTH = 16;
+	  var MAX_SAFE_BUILD_LENGTH = MAX_LENGTH - 6;
+	  var RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
+	  constants$1 = {
+	    MAX_LENGTH: MAX_LENGTH,
+	    MAX_SAFE_COMPONENT_LENGTH: MAX_SAFE_COMPONENT_LENGTH,
+	    MAX_SAFE_BUILD_LENGTH: MAX_SAFE_BUILD_LENGTH,
+	    MAX_SAFE_INTEGER: MAX_SAFE_INTEGER,
+	    RELEASE_TYPES: RELEASE_TYPES,
+	    SEMVER_SPEC_VERSION: SEMVER_SPEC_VERSION,
+	    FLAG_INCLUDE_PRERELEASE: 1,
+	    FLAG_LOOSE: 2
 	  };
-	  var createToken = function createToken(name, value, isGlobal) {
-	    var safe = makeSafeRegex(value);
-	    var index = R++;
-	    debug(name, index, value);
-	    t[name] = index;
-	    src[index] = value;
-	    re[index] = new RegExp(value, isGlobal ? 'g' : undefined);
-	    safeRe[index] = new RegExp(safe, isGlobal ? 'g' : undefined);
+	  return constants$1;
+	}
+
+	var constantsExports = requireConstants();
+	var constants = /*@__PURE__*/getDefaultExportFromCjs(constantsExports);
+
+	var debug_1;
+	var hasRequiredDebug;
+	function requireDebug() {
+	  if (hasRequiredDebug) return debug_1;
+	  hasRequiredDebug = 1;
+	  var debug = (typeof process === "undefined" ? "undefined" : _typeof(process)) === 'object' && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? function () {
+	    var _console;
+	    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+	      args[_key] = arguments[_key];
+	    }
+	    return (_console = console).error.apply(_console, ['SEMVER'].concat(args));
+	  } : function () {};
+	  debug_1 = debug;
+	  return debug_1;
+	}
+
+	var re = {exports: {}};
+
+	var hasRequiredRe;
+	function requireRe() {
+	  if (hasRequiredRe) return re.exports;
+	  hasRequiredRe = 1;
+	  (function (module, exports) {
+
+	    var _require$$ = requireConstants(),
+	      MAX_SAFE_COMPONENT_LENGTH = _require$$.MAX_SAFE_COMPONENT_LENGTH,
+	      MAX_SAFE_BUILD_LENGTH = _require$$.MAX_SAFE_BUILD_LENGTH,
+	      MAX_LENGTH = _require$$.MAX_LENGTH;
+	    var debug = requireDebug();
+	    exports = module.exports = {};
+	    var re = exports.re = [];
+	    var safeRe = exports.safeRe = [];
+	    var src = exports.src = [];
+	    var safeSrc = exports.safeSrc = [];
+	    var t = exports.t = {};
+	    var R = 0;
+	    var LETTERDASHNUMBER = '[a-zA-Z0-9-]';
+	    var safeRegexReplacements = [['\\s', 1], ['\\d', MAX_LENGTH], [LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH]];
+	    var makeSafeRegex = function makeSafeRegex(value) {
+	      for (var _i = 0, _safeRegexReplacement = safeRegexReplacements; _i < _safeRegexReplacement.length; _i++) {
+	        var _safeRegexReplacement2 = _slicedToArray(_safeRegexReplacement[_i], 2),
+	          token = _safeRegexReplacement2[0],
+	          max = _safeRegexReplacement2[1];
+	        value = value.split("".concat(token, "*")).join("".concat(token, "{0,").concat(max, "}")).split("".concat(token, "+")).join("".concat(token, "{1,").concat(max, "}"));
+	      }
+	      return value;
+	    };
+	    var createToken = function createToken(name, value, isGlobal) {
+	      var safe = makeSafeRegex(value);
+	      var index = R++;
+	      debug(name, index, value);
+	      t[name] = index;
+	      src[index] = value;
+	      safeSrc[index] = safe;
+	      re[index] = new RegExp(value, isGlobal ? 'g' : undefined);
+	      safeRe[index] = new RegExp(safe, isGlobal ? 'g' : undefined);
+	    };
+	    createToken('NUMERICIDENTIFIER', '0|[1-9]\\d*');
+	    createToken('NUMERICIDENTIFIERLOOSE', '\\d+');
+	    createToken('NONNUMERICIDENTIFIER', "\\d*[a-zA-Z-]".concat(LETTERDASHNUMBER, "*"));
+	    createToken('MAINVERSION', "(".concat(src[t.NUMERICIDENTIFIER], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIER], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIER], ")"));
+	    createToken('MAINVERSIONLOOSE', "(".concat(src[t.NUMERICIDENTIFIERLOOSE], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIERLOOSE], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIERLOOSE], ")"));
+	    createToken('PRERELEASEIDENTIFIER', "(?:".concat(src[t.NONNUMERICIDENTIFIER], "|").concat(src[t.NUMERICIDENTIFIER], ")"));
+	    createToken('PRERELEASEIDENTIFIERLOOSE', "(?:".concat(src[t.NONNUMERICIDENTIFIER], "|").concat(src[t.NUMERICIDENTIFIERLOOSE], ")"));
+	    createToken('PRERELEASE', "(?:-(".concat(src[t.PRERELEASEIDENTIFIER], "(?:\\.").concat(src[t.PRERELEASEIDENTIFIER], ")*))"));
+	    createToken('PRERELEASELOOSE', "(?:-?(".concat(src[t.PRERELEASEIDENTIFIERLOOSE], "(?:\\.").concat(src[t.PRERELEASEIDENTIFIERLOOSE], ")*))"));
+	    createToken('BUILDIDENTIFIER', "".concat(LETTERDASHNUMBER, "+"));
+	    createToken('BUILD', "(?:\\+(".concat(src[t.BUILDIDENTIFIER], "(?:\\.").concat(src[t.BUILDIDENTIFIER], ")*))"));
+	    createToken('FULLPLAIN', "v?".concat(src[t.MAINVERSION]).concat(src[t.PRERELEASE], "?").concat(src[t.BUILD], "?"));
+	    createToken('FULL', "^".concat(src[t.FULLPLAIN], "$"));
+	    createToken('LOOSEPLAIN', "[v=\\s]*".concat(src[t.MAINVERSIONLOOSE]).concat(src[t.PRERELEASELOOSE], "?").concat(src[t.BUILD], "?"));
+	    createToken('LOOSE', "^".concat(src[t.LOOSEPLAIN], "$"));
+	    createToken('GTLT', '((?:<|>)?=?)');
+	    createToken('XRANGEIDENTIFIERLOOSE', "".concat(src[t.NUMERICIDENTIFIERLOOSE], "|x|X|\\*"));
+	    createToken('XRANGEIDENTIFIER', "".concat(src[t.NUMERICIDENTIFIER], "|x|X|\\*"));
+	    createToken('XRANGEPLAIN', "[v=\\s]*(".concat(src[t.XRANGEIDENTIFIER], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIER], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIER], ")") + "(?:".concat(src[t.PRERELEASE], ")?").concat(src[t.BUILD], "?") + ")?)?");
+	    createToken('XRANGEPLAINLOOSE', "[v=\\s]*(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:".concat(src[t.PRERELEASELOOSE], ")?").concat(src[t.BUILD], "?") + ")?)?");
+	    createToken('XRANGE', "^".concat(src[t.GTLT], "\\s*").concat(src[t.XRANGEPLAIN], "$"));
+	    createToken('XRANGELOOSE', "^".concat(src[t.GTLT], "\\s*").concat(src[t.XRANGEPLAINLOOSE], "$"));
+	    createToken('COERCEPLAIN', "".concat('(^|[^\\d])' + '(\\d{1,').concat(MAX_SAFE_COMPONENT_LENGTH, "})") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?"));
+	    createToken('COERCE', "".concat(src[t.COERCEPLAIN], "(?:$|[^\\d])"));
+	    createToken('COERCEFULL', src[t.COERCEPLAIN] + "(?:".concat(src[t.PRERELEASE], ")?") + "(?:".concat(src[t.BUILD], ")?") + "(?:$|[^\\d])");
+	    createToken('COERCERTL', src[t.COERCE], true);
+	    createToken('COERCERTLFULL', src[t.COERCEFULL], true);
+	    createToken('LONETILDE', '(?:~>?)');
+	    createToken('TILDETRIM', "(\\s*)".concat(src[t.LONETILDE], "\\s+"), true);
+	    exports.tildeTrimReplace = '$1~';
+	    createToken('TILDE', "^".concat(src[t.LONETILDE]).concat(src[t.XRANGEPLAIN], "$"));
+	    createToken('TILDELOOSE', "^".concat(src[t.LONETILDE]).concat(src[t.XRANGEPLAINLOOSE], "$"));
+	    createToken('LONECARET', '(?:\\^)');
+	    createToken('CARETTRIM', "(\\s*)".concat(src[t.LONECARET], "\\s+"), true);
+	    exports.caretTrimReplace = '$1^';
+	    createToken('CARET', "^".concat(src[t.LONECARET]).concat(src[t.XRANGEPLAIN], "$"));
+	    createToken('CARETLOOSE', "^".concat(src[t.LONECARET]).concat(src[t.XRANGEPLAINLOOSE], "$"));
+	    createToken('COMPARATORLOOSE', "^".concat(src[t.GTLT], "\\s*(").concat(src[t.LOOSEPLAIN], ")$|^$"));
+	    createToken('COMPARATOR', "^".concat(src[t.GTLT], "\\s*(").concat(src[t.FULLPLAIN], ")$|^$"));
+	    createToken('COMPARATORTRIM', "(\\s*)".concat(src[t.GTLT], "\\s*(").concat(src[t.LOOSEPLAIN], "|").concat(src[t.XRANGEPLAIN], ")"), true);
+	    exports.comparatorTrimReplace = '$1$2$3';
+	    createToken('HYPHENRANGE', "^\\s*(".concat(src[t.XRANGEPLAIN], ")") + "\\s+-\\s+" + "(".concat(src[t.XRANGEPLAIN], ")") + "\\s*$");
+	    createToken('HYPHENRANGELOOSE', "^\\s*(".concat(src[t.XRANGEPLAINLOOSE], ")") + "\\s+-\\s+" + "(".concat(src[t.XRANGEPLAINLOOSE], ")") + "\\s*$");
+	    createToken('STAR', '(<|>)?=?\\s*\\*');
+	    createToken('GTE0', '^\\s*>=\\s*0\\.0\\.0\\s*$');
+	    createToken('GTE0PRE', '^\\s*>=\\s*0\\.0\\.0-0\\s*$');
+	  })(re, re.exports);
+	  return re.exports;
+	}
+
+	var parseOptions_1;
+	var hasRequiredParseOptions;
+	function requireParseOptions() {
+	  if (hasRequiredParseOptions) return parseOptions_1;
+	  hasRequiredParseOptions = 1;
+	  var looseOption = Object.freeze({
+	    loose: true
+	  });
+	  var emptyOpts = Object.freeze({});
+	  var parseOptions = function parseOptions(options) {
+	    if (!options) {
+	      return emptyOpts;
+	    }
+	    if (_typeof(options) !== 'object') {
+	      return looseOption;
+	    }
+	    return options;
 	  };
-	  createToken('NUMERICIDENTIFIER', '0|[1-9]\\d*');
-	  createToken('NUMERICIDENTIFIERLOOSE', '\\d+');
-	  createToken('NONNUMERICIDENTIFIER', "\\d*[a-zA-Z-]".concat(LETTERDASHNUMBER, "*"));
-	  createToken('MAINVERSION', "(".concat(src[t.NUMERICIDENTIFIER], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIER], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIER], ")"));
-	  createToken('MAINVERSIONLOOSE', "(".concat(src[t.NUMERICIDENTIFIERLOOSE], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIERLOOSE], ")\\.") + "(".concat(src[t.NUMERICIDENTIFIERLOOSE], ")"));
-	  createToken('PRERELEASEIDENTIFIER', "(?:".concat(src[t.NUMERICIDENTIFIER], "|").concat(src[t.NONNUMERICIDENTIFIER], ")"));
-	  createToken('PRERELEASEIDENTIFIERLOOSE', "(?:".concat(src[t.NUMERICIDENTIFIERLOOSE], "|").concat(src[t.NONNUMERICIDENTIFIER], ")"));
-	  createToken('PRERELEASE', "(?:-(".concat(src[t.PRERELEASEIDENTIFIER], "(?:\\.").concat(src[t.PRERELEASEIDENTIFIER], ")*))"));
-	  createToken('PRERELEASELOOSE', "(?:-?(".concat(src[t.PRERELEASEIDENTIFIERLOOSE], "(?:\\.").concat(src[t.PRERELEASEIDENTIFIERLOOSE], ")*))"));
-	  createToken('BUILDIDENTIFIER', "".concat(LETTERDASHNUMBER, "+"));
-	  createToken('BUILD', "(?:\\+(".concat(src[t.BUILDIDENTIFIER], "(?:\\.").concat(src[t.BUILDIDENTIFIER], ")*))"));
-	  createToken('FULLPLAIN', "v?".concat(src[t.MAINVERSION]).concat(src[t.PRERELEASE], "?").concat(src[t.BUILD], "?"));
-	  createToken('FULL', "^".concat(src[t.FULLPLAIN], "$"));
-	  createToken('LOOSEPLAIN', "[v=\\s]*".concat(src[t.MAINVERSIONLOOSE]).concat(src[t.PRERELEASELOOSE], "?").concat(src[t.BUILD], "?"));
-	  createToken('LOOSE', "^".concat(src[t.LOOSEPLAIN], "$"));
-	  createToken('GTLT', '((?:<|>)?=?)');
-	  createToken('XRANGEIDENTIFIERLOOSE', "".concat(src[t.NUMERICIDENTIFIERLOOSE], "|x|X|\\*"));
-	  createToken('XRANGEIDENTIFIER', "".concat(src[t.NUMERICIDENTIFIER], "|x|X|\\*"));
-	  createToken('XRANGEPLAIN', "[v=\\s]*(".concat(src[t.XRANGEIDENTIFIER], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIER], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIER], ")") + "(?:".concat(src[t.PRERELEASE], ")?").concat(src[t.BUILD], "?") + ")?)?");
-	  createToken('XRANGEPLAINLOOSE', "[v=\\s]*(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:".concat(src[t.PRERELEASELOOSE], ")?").concat(src[t.BUILD], "?") + ")?)?");
-	  createToken('XRANGE', "^".concat(src[t.GTLT], "\\s*").concat(src[t.XRANGEPLAIN], "$"));
-	  createToken('XRANGELOOSE', "^".concat(src[t.GTLT], "\\s*").concat(src[t.XRANGEPLAINLOOSE], "$"));
-	  createToken('COERCEPLAIN', "".concat('(^|[^\\d])' + '(\\d{1,').concat(MAX_SAFE_COMPONENT_LENGTH, "})") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?"));
-	  createToken('COERCE', "".concat(src[t.COERCEPLAIN], "(?:$|[^\\d])"));
-	  createToken('COERCEFULL', src[t.COERCEPLAIN] + "(?:".concat(src[t.PRERELEASE], ")?") + "(?:".concat(src[t.BUILD], ")?") + "(?:$|[^\\d])");
-	  createToken('COERCERTL', src[t.COERCE], true);
-	  createToken('COERCERTLFULL', src[t.COERCEFULL], true);
-	  createToken('LONETILDE', '(?:~>?)');
-	  createToken('TILDETRIM', "(\\s*)".concat(src[t.LONETILDE], "\\s+"), true);
-	  exports.tildeTrimReplace = '$1~';
-	  createToken('TILDE', "^".concat(src[t.LONETILDE]).concat(src[t.XRANGEPLAIN], "$"));
-	  createToken('TILDELOOSE', "^".concat(src[t.LONETILDE]).concat(src[t.XRANGEPLAINLOOSE], "$"));
-	  createToken('LONECARET', '(?:\\^)');
-	  createToken('CARETTRIM', "(\\s*)".concat(src[t.LONECARET], "\\s+"), true);
-	  exports.caretTrimReplace = '$1^';
-	  createToken('CARET', "^".concat(src[t.LONECARET]).concat(src[t.XRANGEPLAIN], "$"));
-	  createToken('CARETLOOSE', "^".concat(src[t.LONECARET]).concat(src[t.XRANGEPLAINLOOSE], "$"));
-	  createToken('COMPARATORLOOSE', "^".concat(src[t.GTLT], "\\s*(").concat(src[t.LOOSEPLAIN], ")$|^$"));
-	  createToken('COMPARATOR', "^".concat(src[t.GTLT], "\\s*(").concat(src[t.FULLPLAIN], ")$|^$"));
-	  createToken('COMPARATORTRIM', "(\\s*)".concat(src[t.GTLT], "\\s*(").concat(src[t.LOOSEPLAIN], "|").concat(src[t.XRANGEPLAIN], ")"), true);
-	  exports.comparatorTrimReplace = '$1$2$3';
-	  createToken('HYPHENRANGE', "^\\s*(".concat(src[t.XRANGEPLAIN], ")") + "\\s+-\\s+" + "(".concat(src[t.XRANGEPLAIN], ")") + "\\s*$");
-	  createToken('HYPHENRANGELOOSE', "^\\s*(".concat(src[t.XRANGEPLAINLOOSE], ")") + "\\s+-\\s+" + "(".concat(src[t.XRANGEPLAINLOOSE], ")") + "\\s*$");
-	  createToken('STAR', '(<|>)?=?\\s*\\*');
-	  createToken('GTE0', '^\\s*>=\\s*0\\.0\\.0\\s*$');
-	  createToken('GTE0PRE', '^\\s*>=\\s*0\\.0\\.0-0\\s*$');
-	})(re$2, re$2.exports);
-	var reExports = re$2.exports;
-	getDefaultExportFromCjs(reExports);
+	  parseOptions_1 = parseOptions;
+	  return parseOptions_1;
+	}
 
-	var looseOption = Object.freeze({
-	  loose: true
-	});
-	var emptyOpts = Object.freeze({});
-	var parseOptions$1 = function parseOptions(options) {
-	  if (!options) {
-	    return emptyOpts;
-	  }
-	  if (_typeof(options) !== 'object') {
-	    return looseOption;
-	  }
-	  return options;
-	};
-	var parseOptions_1 = parseOptions$1;
-	getDefaultExportFromCjs(parseOptions_1);
+	var identifiers;
+	var hasRequiredIdentifiers;
+	function requireIdentifiers() {
+	  if (hasRequiredIdentifiers) return identifiers;
+	  hasRequiredIdentifiers = 1;
+	  var numeric = /^[0-9]+$/;
+	  var compareIdentifiers = function compareIdentifiers(a, b) {
+	    if (typeof a === 'number' && typeof b === 'number') {
+	      return a === b ? 0 : a < b ? -1 : 1;
+	    }
+	    var anum = numeric.test(a);
+	    var bnum = numeric.test(b);
+	    if (anum && bnum) {
+	      a = +a;
+	      b = +b;
+	    }
+	    return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
+	  };
+	  var rcompareIdentifiers = function rcompareIdentifiers(a, b) {
+	    return compareIdentifiers(b, a);
+	  };
+	  identifiers = {
+	    compareIdentifiers: compareIdentifiers,
+	    rcompareIdentifiers: rcompareIdentifiers
+	  };
+	  return identifiers;
+	}
 
-	var numeric = /^[0-9]+$/;
-	var compareIdentifiers$1 = function compareIdentifiers(a, b) {
-	  var anum = numeric.test(a);
-	  var bnum = numeric.test(b);
-	  if (anum && bnum) {
-	    a = +a;
-	    b = +b;
-	  }
-	  return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
-	};
-	var rcompareIdentifiers = function rcompareIdentifiers(a, b) {
-	  return compareIdentifiers$1(b, a);
-	};
-	var identifiers = {
-	  compareIdentifiers: compareIdentifiers$1,
-	  rcompareIdentifiers: rcompareIdentifiers
-	};
-	getDefaultExportFromCjs(identifiers);
-
-	var debug = debug_1;
-	var MAX_LENGTH = constants.MAX_LENGTH,
-	  MAX_SAFE_INTEGER = constants.MAX_SAFE_INTEGER;
-	var re$1 = reExports.safeRe,
-	  t$1 = reExports.t;
-	var parseOptions = parseOptions_1;
-	var compareIdentifiers = identifiers.compareIdentifiers;
-	var SemVer$3 = function () {
-	  function SemVer(version, options) {
-	    _classCallCheck(this, SemVer);
-	    options = parseOptions(options);
-	    if (version instanceof SemVer) {
-	      if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) {
-	        return version;
-	      } else {
-	        version = version.version;
-	      }
-	    } else if (typeof version !== 'string') {
-	      throw new TypeError("Invalid version. Must be a string. Got type \"".concat(_typeof(version), "\"."));
+	var semver$1;
+	var hasRequiredSemver;
+	function requireSemver() {
+	  if (hasRequiredSemver) return semver$1;
+	  hasRequiredSemver = 1;
+	  var debug = requireDebug();
+	  var _require$$ = requireConstants(),
+	    MAX_LENGTH = _require$$.MAX_LENGTH,
+	    MAX_SAFE_INTEGER = _require$$.MAX_SAFE_INTEGER;
+	  var _require$$2 = requireRe(),
+	    re = _require$$2.safeRe,
+	    t = _require$$2.t;
+	  var parseOptions = requireParseOptions();
+	  var _require$$3 = requireIdentifiers(),
+	    compareIdentifiers = _require$$3.compareIdentifiers;
+	  var isPrereleaseIdentifier = function isPrereleaseIdentifier(prerelease, identifier) {
+	    var identifiers = identifier.split('.');
+	    if (identifiers.length > prerelease.length) {
+	      return false;
 	    }
-	    if (version.length > MAX_LENGTH) {
-	      throw new TypeError("version is longer than ".concat(MAX_LENGTH, " characters"));
-	    }
-	    debug('SemVer', version, options);
-	    this.options = options;
-	    this.loose = !!options.loose;
-	    this.includePrerelease = !!options.includePrerelease;
-	    var m = version.trim().match(options.loose ? re$1[t$1.LOOSE] : re$1[t$1.FULL]);
-	    if (!m) {
-	      throw new TypeError("Invalid Version: ".concat(version));
-	    }
-	    this.raw = version;
-	    this.major = +m[1];
-	    this.minor = +m[2];
-	    this.patch = +m[3];
-	    if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
-	      throw new TypeError('Invalid major version');
-	    }
-	    if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
-	      throw new TypeError('Invalid minor version');
-	    }
-	    if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
-	      throw new TypeError('Invalid patch version');
-	    }
-	    if (!m[4]) {
-	      this.prerelease = [];
-	    } else {
-	      this.prerelease = m[4].split('.').map(function (id) {
-	        if (/^[0-9]+$/.test(id)) {
-	          var num = +id;
-	          if (num >= 0 && num < MAX_SAFE_INTEGER) {
-	            return num;
-	          }
-	        }
-	        return id;
-	      });
-	    }
-	    this.build = m[5] ? m[5].split('.') : [];
-	    this.format();
-	  }
-	  return _createClass(SemVer, [{
-	    key: "format",
-	    value: function format() {
-	      this.version = "".concat(this.major, ".").concat(this.minor, ".").concat(this.patch);
-	      if (this.prerelease.length) {
-	        this.version += "-".concat(this.prerelease.join('.'));
-	      }
-	      return this.version;
-	    }
-	  }, {
-	    key: "toString",
-	    value: function toString() {
-	      return this.version;
-	    }
-	  }, {
-	    key: "compare",
-	    value: function compare(other) {
-	      debug('SemVer.compare', this.version, this.options, other);
-	      if (!(other instanceof SemVer)) {
-	        if (typeof other === 'string' && other === this.version) {
-	          return 0;
-	        }
-	        other = new SemVer(other, this.options);
-	      }
-	      if (other.version === this.version) {
-	        return 0;
-	      }
-	      return this.compareMain(other) || this.comparePre(other);
-	    }
-	  }, {
-	    key: "compareMain",
-	    value: function compareMain(other) {
-	      if (!(other instanceof SemVer)) {
-	        other = new SemVer(other, this.options);
-	      }
-	      return compareIdentifiers(this.major, other.major) || compareIdentifiers(this.minor, other.minor) || compareIdentifiers(this.patch, other.patch);
-	    }
-	  }, {
-	    key: "comparePre",
-	    value: function comparePre(other) {
-	      if (!(other instanceof SemVer)) {
-	        other = new SemVer(other, this.options);
-	      }
-	      if (this.prerelease.length && !other.prerelease.length) {
-	        return -1;
-	      } else if (!this.prerelease.length && other.prerelease.length) {
-	        return 1;
-	      } else if (!this.prerelease.length && !other.prerelease.length) {
-	        return 0;
-	      }
-	      var i = 0;
-	      do {
-	        var a = this.prerelease[i];
-	        var b = other.prerelease[i];
-	        debug('prerelease compare', i, a, b);
-	        if (a === undefined && b === undefined) {
-	          return 0;
-	        } else if (b === undefined) {
-	          return 1;
-	        } else if (a === undefined) {
-	          return -1;
-	        } else if (a === b) {
-	          continue;
-	        } else {
-	          return compareIdentifiers(a, b);
-	        }
-	      } while (++i);
-	    }
-	  }, {
-	    key: "compareBuild",
-	    value: function compareBuild(other) {
-	      if (!(other instanceof SemVer)) {
-	        other = new SemVer(other, this.options);
-	      }
-	      var i = 0;
-	      do {
-	        var a = this.build[i];
-	        var b = other.build[i];
-	        debug('build compare', i, a, b);
-	        if (a === undefined && b === undefined) {
-	          return 0;
-	        } else if (b === undefined) {
-	          return 1;
-	        } else if (a === undefined) {
-	          return -1;
-	        } else if (a === b) {
-	          continue;
-	        } else {
-	          return compareIdentifiers(a, b);
-	        }
-	      } while (++i);
-	    }
-	  }, {
-	    key: "inc",
-	    value: function inc(release, identifier, identifierBase) {
-	      switch (release) {
-	        case 'premajor':
-	          this.prerelease.length = 0;
-	          this.patch = 0;
-	          this.minor = 0;
-	          this.major++;
-	          this.inc('pre', identifier, identifierBase);
-	          break;
-	        case 'preminor':
-	          this.prerelease.length = 0;
-	          this.patch = 0;
-	          this.minor++;
-	          this.inc('pre', identifier, identifierBase);
-	          break;
-	        case 'prepatch':
-	          this.prerelease.length = 0;
-	          this.inc('patch', identifier, identifierBase);
-	          this.inc('pre', identifier, identifierBase);
-	          break;
-	        case 'prerelease':
-	          if (this.prerelease.length === 0) {
-	            this.inc('patch', identifier, identifierBase);
-	          }
-	          this.inc('pre', identifier, identifierBase);
-	          break;
-	        case 'major':
-	          if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) {
-	            this.major++;
-	          }
-	          this.minor = 0;
-	          this.patch = 0;
-	          this.prerelease = [];
-	          break;
-	        case 'minor':
-	          if (this.patch !== 0 || this.prerelease.length === 0) {
-	            this.minor++;
-	          }
-	          this.patch = 0;
-	          this.prerelease = [];
-	          break;
-	        case 'patch':
-	          if (this.prerelease.length === 0) {
-	            this.patch++;
-	          }
-	          this.prerelease = [];
-	          break;
-	        case 'pre':
-	          {
-	            var base = Number(identifierBase) ? 1 : 0;
-	            if (!identifier && identifierBase === false) {
-	              throw new Error('invalid increment argument: identifier is empty');
-	            }
-	            if (this.prerelease.length === 0) {
-	              this.prerelease = [base];
-	            } else {
-	              var i = this.prerelease.length;
-	              while (--i >= 0) {
-	                if (typeof this.prerelease[i] === 'number') {
-	                  this.prerelease[i]++;
-	                  i = -2;
-	                }
-	              }
-	              if (i === -1) {
-	                if (identifier === this.prerelease.join('.') && identifierBase === false) {
-	                  throw new Error('invalid increment argument: identifier already exists');
-	                }
-	                this.prerelease.push(base);
-	              }
-	            }
-	            if (identifier) {
-	              var prerelease = [identifier, base];
-	              if (identifierBase === false) {
-	                prerelease = [identifier];
-	              }
-	              if (compareIdentifiers(this.prerelease[0], identifier) === 0) {
-	                if (isNaN(this.prerelease[1])) {
-	                  this.prerelease = prerelease;
-	                }
-	              } else {
-	                this.prerelease = prerelease;
-	              }
-	            }
-	            break;
-	          }
-	        default:
-	          throw new Error("invalid increment argument: ".concat(release));
-	      }
-	      this.raw = this.format();
-	      if (this.build.length) {
-	        this.raw += "+".concat(this.build.join('.'));
-	      }
-	      return this;
-	    }
-	  }]);
-	}();
-	var semver$1 = SemVer$3;
-	getDefaultExportFromCjs(semver$1);
-
-	var SemVer$2 = semver$1;
-	var parse$2 = function parse(version, options) {
-	  var throwErrors = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-	  if (version instanceof SemVer$2) {
-	    return version;
-	  }
-	  try {
-	    return new SemVer$2(version, options);
-	  } catch (er) {
-	    if (!throwErrors) {
-	      return null;
-	    }
-	    throw er;
-	  }
-	};
-	var parse_1 = parse$2;
-	getDefaultExportFromCjs(parse_1);
-
-	var parse$1 = parse_1;
-	var valid = function valid(version, options) {
-	  var v = parse$1(version, options);
-	  return v ? v.version : null;
-	};
-	var valid_1 = valid;
-	var valid$1 = getDefaultExportFromCjs(valid_1);
-
-	var SemVer$1 = semver$1;
-	var parse = parse_1;
-	var re = reExports.safeRe,
-	  t = reExports.t;
-	var coerce = function coerce(version, options) {
-	  if (version instanceof SemVer$1) {
-	    return version;
-	  }
-	  if (typeof version === 'number') {
-	    version = String(version);
-	  }
-	  if (typeof version !== 'string') {
-	    return null;
-	  }
-	  options = options || {};
-	  var match = null;
-	  if (!options.rtl) {
-	    match = version.match(options.includePrerelease ? re[t.COERCEFULL] : re[t.COERCE]);
-	  } else {
-	    var coerceRtlRegex = options.includePrerelease ? re[t.COERCERTLFULL] : re[t.COERCERTL];
-	    var next;
-	    while ((next = coerceRtlRegex.exec(version)) && (!match || match.index + match[0].length !== version.length)) {
-	      if (!match || next.index + next[0].length !== match.index + match[0].length) {
-	        match = next;
-	      }
-	      coerceRtlRegex.lastIndex = next.index + next[1].length + next[2].length;
-	    }
-	    coerceRtlRegex.lastIndex = -1;
-	  }
-	  if (match === null) {
-	    return null;
-	  }
-	  var major = match[2];
-	  var minor = match[3] || '0';
-	  var patch = match[4] || '0';
-	  var prerelease = options.includePrerelease && match[5] ? "-".concat(match[5]) : '';
-	  var build = options.includePrerelease && match[6] ? "+".concat(match[6]) : '';
-	  return parse("".concat(major, ".").concat(minor, ".").concat(patch).concat(prerelease).concat(build), options);
-	};
-	var coerce_1 = coerce;
-	var coerce$1 = getDefaultExportFromCjs(coerce_1);
-
-	var LRUCache = function () {
-	  function LRUCache() {
-	    _classCallCheck(this, LRUCache);
-	    this.max = 1000;
-	    this.map = new Map();
-	  }
-	  return _createClass(LRUCache, [{
-	    key: "get",
-	    value: function get(key) {
-	      var value = this.map.get(key);
-	      if (value === undefined) {
-	        return undefined;
-	      } else {
-	        this.map.delete(key);
-	        this.map.set(key, value);
-	        return value;
-	      }
-	    }
-	  }, {
-	    key: "delete",
-	    value: function _delete(key) {
-	      if (this.map.has(key)) {
-	        this.map.delete(key);
-	        return true;
-	      } else {
+	    for (var i = 0; i < identifiers.length; i++) {
+	      if (compareIdentifiers(prerelease[i], identifiers[i]) !== 0) {
 	        return false;
 	      }
 	    }
-	  }, {
-	    key: "set",
-	    value: function set(key, value) {
-	      var deleted = this.delete(key);
-	      if (!deleted && value !== undefined) {
-	        if (this.map.size >= this.max) {
-	          var firstKey = this.map.keys().next().value;
-	          this.delete(firstKey);
+	    return true;
+	  };
+	  var SemVer = function () {
+	    function SemVer(version, options) {
+	      _classCallCheck(this, SemVer);
+	      options = parseOptions(options);
+	      if (version instanceof SemVer) {
+	        if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) {
+	          return version;
+	        } else {
+	          version = version.version;
 	        }
-	        this.map.set(key, value);
+	      } else if (typeof version !== 'string') {
+	        throw new TypeError("Invalid version. Must be a string. Got type \"".concat(_typeof(version), "\"."));
 	      }
-	      return this;
+	      if (version.length > MAX_LENGTH) {
+	        throw new TypeError("version is longer than ".concat(MAX_LENGTH, " characters"));
+	      }
+	      debug('SemVer', version, options);
+	      this.options = options;
+	      this.loose = !!options.loose;
+	      this.includePrerelease = !!options.includePrerelease;
+	      var m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
+	      if (!m) {
+	        throw new TypeError("Invalid Version: ".concat(version));
+	      }
+	      this.raw = version;
+	      this.major = +m[1];
+	      this.minor = +m[2];
+	      this.patch = +m[3];
+	      if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
+	        throw new TypeError('Invalid major version');
+	      }
+	      if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
+	        throw new TypeError('Invalid minor version');
+	      }
+	      if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
+	        throw new TypeError('Invalid patch version');
+	      }
+	      if (!m[4]) {
+	        this.prerelease = [];
+	      } else {
+	        this.prerelease = m[4].split('.').map(function (id) {
+	          if (/^[0-9]+$/.test(id)) {
+	            var num = +id;
+	            if (num >= 0 && num < MAX_SAFE_INTEGER) {
+	              return num;
+	            }
+	          }
+	          return id;
+	        });
+	      }
+	      this.build = m[5] ? m[5].split('.') : [];
+	      this.format();
 	    }
-	  }]);
-	}();
-	var lrucache = LRUCache;
-	getDefaultExportFromCjs(lrucache);
-
-	var SemVer = semver$1;
-	var compare$6 = function compare(a, b, loose) {
-	  return new SemVer(a, loose).compare(new SemVer(b, loose));
-	};
-	var compare_1 = compare$6;
-	getDefaultExportFromCjs(compare_1);
-
-	var compare$5 = compare_1;
-	var eq$1 = function eq(a, b, loose) {
-	  return compare$5(a, b, loose) === 0;
-	};
-	var eq_1 = eq$1;
-	getDefaultExportFromCjs(eq_1);
-
-	var compare$4 = compare_1;
-	var neq$1 = function neq(a, b, loose) {
-	  return compare$4(a, b, loose) !== 0;
-	};
-	var neq_1 = neq$1;
-	getDefaultExportFromCjs(neq_1);
-
-	var compare$3 = compare_1;
-	var gt$1 = function gt(a, b, loose) {
-	  return compare$3(a, b, loose) > 0;
-	};
-	var gt_1 = gt$1;
-	getDefaultExportFromCjs(gt_1);
-
-	var compare$2 = compare_1;
-	var gte$1 = function gte(a, b, loose) {
-	  return compare$2(a, b, loose) >= 0;
-	};
-	var gte_1 = gte$1;
-	getDefaultExportFromCjs(gte_1);
-
-	var compare$1 = compare_1;
-	var lt$1 = function lt(a, b, loose) {
-	  return compare$1(a, b, loose) < 0;
-	};
-	var lt_1 = lt$1;
-	getDefaultExportFromCjs(lt_1);
-
-	var compare = compare_1;
-	var lte$1 = function lte(a, b, loose) {
-	  return compare(a, b, loose) <= 0;
-	};
-	var lte_1 = lte$1;
-	getDefaultExportFromCjs(lte_1);
-
-	var eq = eq_1;
-	var neq = neq_1;
-	var gt = gt_1;
-	var gte = gte_1;
-	var lt = lt_1;
-	var lte = lte_1;
-	var cmp = function cmp(a, op, b, loose) {
-	  switch (op) {
-	    case '===':
-	      if (_typeof(a) === 'object') {
-	        a = a.version;
+	    return _createClass(SemVer, [{
+	      key: "format",
+	      value: function format() {
+	        this.version = "".concat(this.major, ".").concat(this.minor, ".").concat(this.patch);
+	        if (this.prerelease.length) {
+	          this.version += "-".concat(this.prerelease.join('.'));
+	        }
+	        return this.version;
 	      }
-	      if (_typeof(b) === 'object') {
-	        b = b.version;
+	    }, {
+	      key: "toString",
+	      value: function toString() {
+	        return this.version;
 	      }
-	      return a === b;
-	    case '!==':
-	      if (_typeof(a) === 'object') {
-	        a = a.version;
+	    }, {
+	      key: "compare",
+	      value: function compare(other) {
+	        debug('SemVer.compare', this.version, this.options, other);
+	        if (!(other instanceof SemVer)) {
+	          if (typeof other === 'string' && other === this.version) {
+	            return 0;
+	          }
+	          other = new SemVer(other, this.options);
+	        }
+	        if (other.version === this.version) {
+	          return 0;
+	        }
+	        return this.compareMain(other) || this.comparePre(other);
 	      }
-	      if (_typeof(b) === 'object') {
-	        b = b.version;
+	    }, {
+	      key: "compareMain",
+	      value: function compareMain(other) {
+	        if (!(other instanceof SemVer)) {
+	          other = new SemVer(other, this.options);
+	        }
+	        if (this.major < other.major) {
+	          return -1;
+	        }
+	        if (this.major > other.major) {
+	          return 1;
+	        }
+	        if (this.minor < other.minor) {
+	          return -1;
+	        }
+	        if (this.minor > other.minor) {
+	          return 1;
+	        }
+	        if (this.patch < other.patch) {
+	          return -1;
+	        }
+	        if (this.patch > other.patch) {
+	          return 1;
+	        }
+	        return 0;
 	      }
-	      return a !== b;
-	    case '':
-	    case '=':
-	    case '==':
-	      return eq(a, b, loose);
-	    case '!=':
-	      return neq(a, b, loose);
-	    case '>':
-	      return gt(a, b, loose);
-	    case '>=':
-	      return gte(a, b, loose);
-	    case '<':
-	      return lt(a, b, loose);
-	    case '<=':
-	      return lte(a, b, loose);
-	    default:
-	      throw new TypeError("Invalid operator: ".concat(op));
-	  }
-	};
-	var cmp_1 = cmp;
-	getDefaultExportFromCjs(cmp_1);
+	    }, {
+	      key: "comparePre",
+	      value: function comparePre(other) {
+	        if (!(other instanceof SemVer)) {
+	          other = new SemVer(other, this.options);
+	        }
+	        if (this.prerelease.length && !other.prerelease.length) {
+	          return -1;
+	        } else if (!this.prerelease.length && other.prerelease.length) {
+	          return 1;
+	        } else if (!this.prerelease.length && !other.prerelease.length) {
+	          return 0;
+	        }
+	        var i = 0;
+	        do {
+	          var a = this.prerelease[i];
+	          var b = other.prerelease[i];
+	          debug('prerelease compare', i, a, b);
+	          if (a === undefined && b === undefined) {
+	            return 0;
+	          } else if (b === undefined) {
+	            return 1;
+	          } else if (a === undefined) {
+	            return -1;
+	          } else if (a === b) {
+	            continue;
+	          } else {
+	            return compareIdentifiers(a, b);
+	          }
+	        } while (++i);
+	      }
+	    }, {
+	      key: "compareBuild",
+	      value: function compareBuild(other) {
+	        if (!(other instanceof SemVer)) {
+	          other = new SemVer(other, this.options);
+	        }
+	        var i = 0;
+	        do {
+	          var a = this.build[i];
+	          var b = other.build[i];
+	          debug('build compare', i, a, b);
+	          if (a === undefined && b === undefined) {
+	            return 0;
+	          } else if (b === undefined) {
+	            return 1;
+	          } else if (a === undefined) {
+	            return -1;
+	          } else if (a === b) {
+	            continue;
+	          } else {
+	            return compareIdentifiers(a, b);
+	          }
+	        } while (++i);
+	      }
+	    }, {
+	      key: "inc",
+	      value: function inc(release, identifier, identifierBase) {
+	        if (release.startsWith('pre')) {
+	          if (!identifier && identifierBase === false) {
+	            throw new Error('invalid increment argument: identifier is empty');
+	          }
+	          if (identifier) {
+	            var match = "-".concat(identifier).match(this.options.loose ? re[t.PRERELEASELOOSE] : re[t.PRERELEASE]);
+	            if (!match || match[1] !== identifier) {
+	              throw new Error("invalid identifier: ".concat(identifier));
+	            }
+	          }
+	        }
+	        switch (release) {
+	          case 'premajor':
+	            this.prerelease.length = 0;
+	            this.patch = 0;
+	            this.minor = 0;
+	            this.major++;
+	            this.inc('pre', identifier, identifierBase);
+	            break;
+	          case 'preminor':
+	            this.prerelease.length = 0;
+	            this.patch = 0;
+	            this.minor++;
+	            this.inc('pre', identifier, identifierBase);
+	            break;
+	          case 'prepatch':
+	            this.prerelease.length = 0;
+	            this.inc('patch', identifier, identifierBase);
+	            this.inc('pre', identifier, identifierBase);
+	            break;
+	          case 'prerelease':
+	            if (this.prerelease.length === 0) {
+	              this.inc('patch', identifier, identifierBase);
+	            }
+	            this.inc('pre', identifier, identifierBase);
+	            break;
+	          case 'release':
+	            if (this.prerelease.length === 0) {
+	              throw new Error("version ".concat(this.raw, " is not a prerelease"));
+	            }
+	            this.prerelease.length = 0;
+	            break;
+	          case 'major':
+	            if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) {
+	              this.major++;
+	            }
+	            this.minor = 0;
+	            this.patch = 0;
+	            this.prerelease = [];
+	            break;
+	          case 'minor':
+	            if (this.patch !== 0 || this.prerelease.length === 0) {
+	              this.minor++;
+	            }
+	            this.patch = 0;
+	            this.prerelease = [];
+	            break;
+	          case 'patch':
+	            if (this.prerelease.length === 0) {
+	              this.patch++;
+	            }
+	            this.prerelease = [];
+	            break;
+	          case 'pre':
+	            {
+	              var base = Number(identifierBase) ? 1 : 0;
+	              if (this.prerelease.length === 0) {
+	                this.prerelease = [base];
+	              } else {
+	                var i = this.prerelease.length;
+	                while (--i >= 0) {
+	                  if (typeof this.prerelease[i] === 'number') {
+	                    this.prerelease[i]++;
+	                    i = -2;
+	                  }
+	                }
+	                if (i === -1) {
+	                  if (identifier === this.prerelease.join('.') && identifierBase === false) {
+	                    throw new Error('invalid increment argument: identifier already exists');
+	                  }
+	                  this.prerelease.push(base);
+	                }
+	              }
+	              if (identifier) {
+	                var prerelease = [identifier, base];
+	                if (identifierBase === false) {
+	                  prerelease = [identifier];
+	                }
+	                if (isPrereleaseIdentifier(this.prerelease, identifier)) {
+	                  var prereleaseBase = this.prerelease[identifier.split('.').length];
+	                  if (isNaN(prereleaseBase)) {
+	                    this.prerelease = prerelease;
+	                  }
+	                } else {
+	                  this.prerelease = prerelease;
+	                }
+	              }
+	              break;
+	            }
+	          default:
+	            throw new Error("invalid increment argument: ".concat(release));
+	        }
+	        this.raw = this.format();
+	        if (this.build.length) {
+	          this.raw += "+".concat(this.build.join('.'));
+	        }
+	        return this;
+	      }
+	    }]);
+	  }();
+	  semver$1 = SemVer;
+	  return semver$1;
+	}
+
+	var parse_1;
+	var hasRequiredParse;
+	function requireParse() {
+	  if (hasRequiredParse) return parse_1;
+	  hasRequiredParse = 1;
+	  var SemVer = requireSemver();
+	  var parse = function parse(version, options) {
+	    var throwErrors = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+	    if (version instanceof SemVer) {
+	      return version;
+	    }
+	    try {
+	      return new SemVer(version, options);
+	    } catch (er) {
+	      if (!throwErrors) {
+	        return null;
+	      }
+	      throw er;
+	    }
+	  };
+	  parse_1 = parse;
+	  return parse_1;
+	}
+
+	var valid_1;
+	var hasRequiredValid;
+	function requireValid() {
+	  if (hasRequiredValid) return valid_1;
+	  hasRequiredValid = 1;
+	  var parse = requireParse();
+	  var valid = function valid(version, options) {
+	    var v = parse(version, options);
+	    return v ? v.version : null;
+	  };
+	  valid_1 = valid;
+	  return valid_1;
+	}
+
+	var validExports = requireValid();
+	var valid = /*@__PURE__*/getDefaultExportFromCjs(validExports);
+
+	var coerce_1;
+	var hasRequiredCoerce;
+	function requireCoerce() {
+	  if (hasRequiredCoerce) return coerce_1;
+	  hasRequiredCoerce = 1;
+	  var SemVer = requireSemver();
+	  var parse = requireParse();
+	  var _require$$ = requireRe(),
+	    re = _require$$.safeRe,
+	    t = _require$$.t;
+	  var coerce = function coerce(version, options) {
+	    if (version instanceof SemVer) {
+	      return version;
+	    }
+	    if (typeof version === 'number') {
+	      version = String(version);
+	    }
+	    if (typeof version !== 'string') {
+	      return null;
+	    }
+	    options = options || {};
+	    var match = null;
+	    if (!options.rtl) {
+	      match = version.match(options.includePrerelease ? re[t.COERCEFULL] : re[t.COERCE]);
+	    } else {
+	      var coerceRtlRegex = options.includePrerelease ? re[t.COERCERTLFULL] : re[t.COERCERTL];
+	      var next;
+	      while ((next = coerceRtlRegex.exec(version)) && (!match || match.index + match[0].length !== version.length)) {
+	        if (!match || next.index + next[0].length !== match.index + match[0].length) {
+	          match = next;
+	        }
+	        coerceRtlRegex.lastIndex = next.index + next[1].length + next[2].length;
+	      }
+	      coerceRtlRegex.lastIndex = -1;
+	    }
+	    if (match === null) {
+	      return null;
+	    }
+	    var major = match[2];
+	    var minor = match[3] || '0';
+	    var patch = match[4] || '0';
+	    var prerelease = options.includePrerelease && match[5] ? "-".concat(match[5]) : '';
+	    var build = options.includePrerelease && match[6] ? "+".concat(match[6]) : '';
+	    return parse("".concat(major, ".").concat(minor, ".").concat(patch).concat(prerelease).concat(build), options);
+	  };
+	  coerce_1 = coerce;
+	  return coerce_1;
+	}
+
+	var coerceExports = requireCoerce();
+	var coerce = /*@__PURE__*/getDefaultExportFromCjs(coerceExports);
+
+	var lrucache;
+	var hasRequiredLrucache;
+	function requireLrucache() {
+	  if (hasRequiredLrucache) return lrucache;
+	  hasRequiredLrucache = 1;
+	  var LRUCache = function () {
+	    function LRUCache() {
+	      _classCallCheck(this, LRUCache);
+	      this.max = 1000;
+	      this.map = new Map();
+	    }
+	    return _createClass(LRUCache, [{
+	      key: "get",
+	      value: function get(key) {
+	        var value = this.map.get(key);
+	        if (value === undefined) {
+	          return undefined;
+	        } else {
+	          this.map.delete(key);
+	          this.map.set(key, value);
+	          return value;
+	        }
+	      }
+	    }, {
+	      key: "delete",
+	      value: function _delete(key) {
+	        return this.map.delete(key);
+	      }
+	    }, {
+	      key: "set",
+	      value: function set(key, value) {
+	        var deleted = this.delete(key);
+	        if (!deleted && value !== undefined) {
+	          if (this.map.size >= this.max) {
+	            var firstKey = this.map.keys().next().value;
+	            this.delete(firstKey);
+	          }
+	          this.map.set(key, value);
+	        }
+	        return this;
+	      }
+	    }]);
+	  }();
+	  lrucache = LRUCache;
+	  return lrucache;
+	}
+
+	var compare_1;
+	var hasRequiredCompare;
+	function requireCompare() {
+	  if (hasRequiredCompare) return compare_1;
+	  hasRequiredCompare = 1;
+	  var SemVer = requireSemver();
+	  var compare = function compare(a, b, loose) {
+	    return new SemVer(a, loose).compare(new SemVer(b, loose));
+	  };
+	  compare_1 = compare;
+	  return compare_1;
+	}
+
+	var eq_1;
+	var hasRequiredEq;
+	function requireEq() {
+	  if (hasRequiredEq) return eq_1;
+	  hasRequiredEq = 1;
+	  var compare = requireCompare();
+	  var eq = function eq(a, b, loose) {
+	    return compare(a, b, loose) === 0;
+	  };
+	  eq_1 = eq;
+	  return eq_1;
+	}
+
+	var neq_1;
+	var hasRequiredNeq;
+	function requireNeq() {
+	  if (hasRequiredNeq) return neq_1;
+	  hasRequiredNeq = 1;
+	  var compare = requireCompare();
+	  var neq = function neq(a, b, loose) {
+	    return compare(a, b, loose) !== 0;
+	  };
+	  neq_1 = neq;
+	  return neq_1;
+	}
+
+	var gt_1;
+	var hasRequiredGt;
+	function requireGt() {
+	  if (hasRequiredGt) return gt_1;
+	  hasRequiredGt = 1;
+	  var compare = requireCompare();
+	  var gt = function gt(a, b, loose) {
+	    return compare(a, b, loose) > 0;
+	  };
+	  gt_1 = gt;
+	  return gt_1;
+	}
+
+	var gte_1;
+	var hasRequiredGte;
+	function requireGte() {
+	  if (hasRequiredGte) return gte_1;
+	  hasRequiredGte = 1;
+	  var compare = requireCompare();
+	  var gte = function gte(a, b, loose) {
+	    return compare(a, b, loose) >= 0;
+	  };
+	  gte_1 = gte;
+	  return gte_1;
+	}
+
+	var lt_1;
+	var hasRequiredLt;
+	function requireLt() {
+	  if (hasRequiredLt) return lt_1;
+	  hasRequiredLt = 1;
+	  var compare = requireCompare();
+	  var lt = function lt(a, b, loose) {
+	    return compare(a, b, loose) < 0;
+	  };
+	  lt_1 = lt;
+	  return lt_1;
+	}
+
+	var lte_1;
+	var hasRequiredLte;
+	function requireLte() {
+	  if (hasRequiredLte) return lte_1;
+	  hasRequiredLte = 1;
+	  var compare = requireCompare();
+	  var lte = function lte(a, b, loose) {
+	    return compare(a, b, loose) <= 0;
+	  };
+	  lte_1 = lte;
+	  return lte_1;
+	}
+
+	var cmp_1;
+	var hasRequiredCmp;
+	function requireCmp() {
+	  if (hasRequiredCmp) return cmp_1;
+	  hasRequiredCmp = 1;
+	  var eq = requireEq();
+	  var neq = requireNeq();
+	  var gt = requireGt();
+	  var gte = requireGte();
+	  var lt = requireLt();
+	  var lte = requireLte();
+	  var cmp = function cmp(a, op, b, loose) {
+	    switch (op) {
+	      case '===':
+	        if (_typeof(a) === 'object') {
+	          a = a.version;
+	        }
+	        if (_typeof(b) === 'object') {
+	          b = b.version;
+	        }
+	        return a === b;
+	      case '!==':
+	        if (_typeof(a) === 'object') {
+	          a = a.version;
+	        }
+	        if (_typeof(b) === 'object') {
+	          b = b.version;
+	        }
+	        return a !== b;
+	      case '':
+	      case '=':
+	      case '==':
+	        return eq(a, b, loose);
+	      case '!=':
+	        return neq(a, b, loose);
+	      case '>':
+	        return gt(a, b, loose);
+	      case '>=':
+	        return gte(a, b, loose);
+	      case '<':
+	        return lt(a, b, loose);
+	      case '<=':
+	        return lte(a, b, loose);
+	      default:
+	        throw new TypeError("Invalid operator: ".concat(op));
+	    }
+	  };
+	  cmp_1 = cmp;
+	  return cmp_1;
+	}
 
 	var comparator;
 	var hasRequiredComparator;
@@ -15618,12 +15153,13 @@ var spine = (function (pc) {
 	    }]);
 	  }();
 	  comparator = Comparator;
-	  var parseOptions = parseOptions_1;
-	  var re = reExports.safeRe,
-	    t = reExports.t;
-	  var cmp = cmp_1;
-	  var debug = debug_1;
-	  var SemVer = semver$1;
+	  var parseOptions = requireParseOptions();
+	  var _require$$ = requireRe(),
+	    re = _require$$.safeRe,
+	    t = _require$$.t;
+	  var cmp = requireCmp();
+	  var debug = requireDebug();
+	  var SemVer = requireSemver();
 	  var Range = requireRange();
 	  return comparator;
 	}
@@ -15633,6 +15169,7 @@ var spine = (function (pc) {
 	function requireRange() {
 	  if (hasRequiredRange) return range;
 	  hasRequiredRange = 1;
+	  var SPACE_CHARACTERS = /\s+/g;
 	  var Range = function () {
 	    function Range(range, options) {
 	      var _this = this;
@@ -15648,13 +15185,13 @@ var spine = (function (pc) {
 	      if (range instanceof Comparator) {
 	        this.raw = range.value;
 	        this.set = [[range]];
-	        this.format();
+	        this.formatted = undefined;
 	        return this;
 	      }
 	      this.options = options;
 	      this.loose = !!options.loose;
 	      this.includePrerelease = !!options.includePrerelease;
-	      this.raw = range.trim().split(/\s+/).join(' ');
+	      this.raw = range.trim().replace(SPACE_CHARACTERS, ' ');
 	      this.set = this.raw.split('||').map(function (r) {
 	        return _this.parseRange(r.trim());
 	      }).filter(function (c) {
@@ -15688,14 +15225,31 @@ var spine = (function (pc) {
 	          }
 	        }
 	      }
-	      this.format();
+	      this.formatted = undefined;
 	    }
 	    return _createClass(Range, [{
+	      key: "range",
+	      get: function get() {
+	        if (this.formatted === undefined) {
+	          this.formatted = '';
+	          for (var i = 0; i < this.set.length; i++) {
+	            if (i > 0) {
+	              this.formatted += '||';
+	            }
+	            var comps = this.set[i];
+	            for (var k = 0; k < comps.length; k++) {
+	              if (k > 0) {
+	                this.formatted += ' ';
+	              }
+	              this.formatted += comps[k].toString().trim();
+	            }
+	          }
+	        }
+	        return this.formatted;
+	      }
+	    }, {
 	      key: "format",
 	      value: function format() {
-	        this.range = this.set.map(function (comps) {
-	          return comps.join(' ').trim();
-	        }).join('||').trim();
 	        return this.range;
 	      }
 	    }, {
@@ -15707,6 +15261,7 @@ var spine = (function (pc) {
 	      key: "parseRange",
 	      value: function parseRange(range) {
 	        var _this2 = this;
+	        range = range.replace(BUILDSTRIPRE, '');
 	        var memoOpts = (this.options.includePrerelease && FLAG_INCLUDE_PRERELEASE) | (this.options.loose && FLAG_LOOSE);
 	        var memoKey = memoOpts + ':' + range;
 	        var cached = cache.get(memoKey);
@@ -15800,19 +15355,23 @@ var spine = (function (pc) {
 	    }]);
 	  }();
 	  range = Range;
-	  var LRU = lrucache;
+	  var LRU = requireLrucache();
 	  var cache = new LRU();
-	  var parseOptions = parseOptions_1;
+	  var parseOptions = requireParseOptions();
 	  var Comparator = requireComparator();
-	  var debug = debug_1;
-	  var SemVer = semver$1;
-	  var re = reExports.safeRe,
-	    t = reExports.t,
-	    comparatorTrimReplace = reExports.comparatorTrimReplace,
-	    tildeTrimReplace = reExports.tildeTrimReplace,
-	    caretTrimReplace = reExports.caretTrimReplace;
-	  var FLAG_INCLUDE_PRERELEASE = constants.FLAG_INCLUDE_PRERELEASE,
-	    FLAG_LOOSE = constants.FLAG_LOOSE;
+	  var debug = requireDebug();
+	  var SemVer = requireSemver();
+	  var _require$$ = requireRe(),
+	    re = _require$$.safeRe,
+	    src = _require$$.src,
+	    t = _require$$.t,
+	    comparatorTrimReplace = _require$$.comparatorTrimReplace,
+	    tildeTrimReplace = _require$$.tildeTrimReplace,
+	    caretTrimReplace = _require$$.caretTrimReplace;
+	  var _require$$2 = requireConstants(),
+	    FLAG_INCLUDE_PRERELEASE = _require$$2.FLAG_INCLUDE_PRERELEASE,
+	    FLAG_LOOSE = _require$$2.FLAG_LOOSE;
+	  var BUILDSTRIPRE = new RegExp(src[t.BUILD], 'g');
 	  var isNullSet = function isNullSet(c) {
 	    return c.value === '<0.0.0-0';
 	  };
@@ -15832,6 +15391,7 @@ var spine = (function (pc) {
 	    return result;
 	  };
 	  var parseComparator = function parseComparator(comp, options) {
+	    comp = comp.replace(re[t.BUILD], '');
 	    debug('comp', comp, options);
 	    comp = replaceCarets(comp, options);
 	    debug('caret', comp);
@@ -15846,6 +15406,9 @@ var spine = (function (pc) {
 	  var isX = function isX(id) {
 	    return !id || id.toLowerCase() === 'x' || id === '*';
 	  };
+	  var invalidXRangeOrder = function invalidXRangeOrder(M, m, p) {
+	    return isX(M) && !isX(m) || isX(m) && p && !isX(p);
+	  };
 	  var replaceTildes = function replaceTildes(comp, options) {
 	    return comp.trim().split(/\s+/).map(function (c) {
 	      return replaceTilde(c, options);
@@ -15853,15 +15416,16 @@ var spine = (function (pc) {
 	  };
 	  var replaceTilde = function replaceTilde(comp, options) {
 	    var r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+	    var z = options.includePrerelease ? '-0' : '';
 	    return comp.replace(r, function (_, M, m, p, pr) {
 	      debug('tilde', comp, _, M, m, p, pr);
 	      var ret;
 	      if (isX(M)) {
 	        ret = '';
 	      } else if (isX(m)) {
-	        ret = ">=".concat(M, ".0.0 <").concat(+M + 1, ".0.0-0");
+	        ret = ">=".concat(M, ".0.0").concat(z, " <").concat(+M + 1, ".0.0-0");
 	      } else if (isX(p)) {
-	        ret = ">=".concat(M, ".").concat(m, ".0 <").concat(M, ".").concat(+m + 1, ".0-0");
+	        ret = ">=".concat(M, ".").concat(m, ".0").concat(z, " <").concat(M, ".").concat(+m + 1, ".0-0");
 	      } else if (pr) {
 	        debug('replaceTilde pr', pr);
 	        ret = ">=".concat(M, ".").concat(m, ".").concat(p, "-").concat(pr, " <").concat(M, ".").concat(+m + 1, ".0-0");
@@ -15909,9 +15473,9 @@ var spine = (function (pc) {
 	        debug('no pr');
 	        if (M === '0') {
 	          if (m === '0') {
-	            ret = ">=".concat(M, ".").concat(m, ".").concat(p).concat(z, " <").concat(M, ".").concat(m, ".").concat(+p + 1, "-0");
+	            ret = ">=".concat(M, ".").concat(m, ".").concat(p, " <").concat(M, ".").concat(m, ".").concat(+p + 1, "-0");
 	          } else {
-	            ret = ">=".concat(M, ".").concat(m, ".").concat(p).concat(z, " <").concat(M, ".").concat(+m + 1, ".0-0");
+	            ret = ">=".concat(M, ".").concat(m, ".").concat(p, " <").concat(M, ".").concat(+m + 1, ".0-0");
 	          }
 	        } else {
 	          ret = ">=".concat(M, ".").concat(m, ".").concat(p, " <").concat(+M + 1, ".0.0-0");
@@ -15932,6 +15496,9 @@ var spine = (function (pc) {
 	    var r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
 	    return comp.replace(r, function (ret, gtlt, M, m, p, pr) {
 	      debug('xRange', comp, ret, gtlt, M, m, p, pr);
+	      if (invalidXRangeOrder(M, m, p)) {
+	        return comp;
+	      }
 	      var xM = isX(M);
 	      var xm = xM || isX(m);
 	      var xp = xm || isX(p);
@@ -16045,23 +15612,32 @@ var spine = (function (pc) {
 	  return range;
 	}
 
-	var Range = requireRange();
-	var satisfies = function satisfies(version, range, options) {
-	  try {
-	    range = new Range(range, options);
-	  } catch (er) {
-	    return false;
-	  }
-	  return range.test(version);
-	};
-	var satisfies_1 = satisfies;
-	var satisfies$1 = getDefaultExportFromCjs(satisfies_1);
+	var satisfies_1;
+	var hasRequiredSatisfies;
+	function requireSatisfies() {
+	  if (hasRequiredSatisfies) return satisfies_1;
+	  hasRequiredSatisfies = 1;
+	  var Range = requireRange();
+	  var satisfies = function satisfies(version, range, options) {
+	    try {
+	      range = new Range(range, options);
+	    } catch (er) {
+	      return false;
+	    }
+	    return range.test(version);
+	  };
+	  satisfies_1 = satisfies;
+	  return satisfies_1;
+	}
+
+	var satisfiesExports = requireSatisfies();
+	var satisfies = /*@__PURE__*/getDefaultExportFromCjs(satisfiesExports);
 
 	var semver = {
-	  valid: valid$1,
-	  coerce: coerce$1,
-	  satisfies: satisfies$1,
-	  SEMVER_SPEC_VERSION: constants$1.SEMVER_SPEC_VERSION
+	  valid: valid,
+	  coerce: coerce,
+	  satisfies: satisfies,
+	  SEMVER_SPEC_VERSION: constants.SEMVER_SPEC_VERSION
 	};
 
 	var VERTEX_SIZE = 6;
@@ -16485,32 +16061,18 @@ var spine = (function (pc) {
 	  }]);
 	}();
 
-	function _callSuper$1(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var SpineComponent = function (_Component) {
 	  function SpineComponent(system, entity) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, SpineComponent);
-	    _this2 = _callSuper$1(this, SpineComponent, [system, entity]);
-	    _this2.on('set_atlasAsset', _this2.onSetAsset, _this2);
-	    _this2.on('set_textureAssets', _this2.onSetAssets, _this2);
-	    _this2.on('set_skeletonAsset', _this2.onSetAsset, _this2);
-	    _this2.on('set_atlasData', _this2.onSetResource, _this2);
-	    _this2.on('set_textures', _this2.onSetResource, _this2);
-	    _this2.on('set_skeletonData', _this2.onSetResource, _this2);
-	    return _this2;
+	    _this = _callSuper(this, SpineComponent, [system, entity]);
+	    _this.on('set_atlasAsset', _this.onSetAsset, _this);
+	    _this.on('set_textureAssets', _this.onSetAssets, _this);
+	    _this.on('set_skeletonAsset', _this.onSetAsset, _this);
+	    _this.on('set_atlasData', _this.onSetResource, _this);
+	    _this.on('set_textures', _this.onSetResource, _this);
+	    _this.on('set_skeletonData', _this.onSetResource, _this);
+	    return _this;
 	  }
 	  _inherits(SpineComponent, _Component);
 	  return _createClass(SpineComponent, [{
@@ -16710,39 +16272,25 @@ var spine = (function (pc) {
 	  this.skeletonData = null;
 	});
 
-	function _callSuper(_this, derived, args) {
-	  function isNativeReflectConstruct() {
-	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	    if (Reflect.construct.sham) return false;
-	    if (typeof Proxy === "function") return true;
-	    try {
-	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    } catch (e) {
-	      return false;
-	    }
-	  }
-	  derived = _getPrototypeOf(derived);
-	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
-	}
 	var SpineComponentSystem = function (_ComponentSystem) {
 	  function SpineComponentSystem(app) {
-	    var _this2;
+	    var _this;
 	    _classCallCheck(this, SpineComponentSystem);
-	    _this2 = _callSuper(this, SpineComponentSystem, [app]);
-	    _this2.id = 'spine';
-	    _this2.ComponentType = SpineComponent;
-	    _this2.DataType = SpineComponentData;
-	    _this2.schema = ['enabled', 'atlasAsset', 'textureAssets', 'skeletonAsset', 'atlasData', 'textures', 'skeletonData', 'speed', 'spine'];
-	    _this2.on('beforeremove', _this2.onBeforeRemove, _this2);
-	    _this2.app.systems.on('update', _this2.onUpdate, _this2);
-	    return _this2;
+	    _this = _callSuper(this, SpineComponentSystem, [app]);
+	    _this.id = 'spine';
+	    _this.ComponentType = SpineComponent;
+	    _this.DataType = SpineComponentData;
+	    _this.schema = ['enabled', 'atlasAsset', 'textureAssets', 'skeletonAsset', 'atlasData', 'textures', 'skeletonData', 'speed', 'spine'];
+	    _this.on('beforeremove', _this.onBeforeRemove, _this);
+	    _this.app.systems.on('update', _this.onUpdate, _this);
+	    return _this;
 	  }
 	  _inherits(SpineComponentSystem, _ComponentSystem);
 	  return _createClass(SpineComponentSystem, [{
 	    key: "initializeComponentData",
 	    value: function initializeComponentData(component, data, properties) {
 	      properties = ['enabled', 'atlasAsset', 'textureAssets', 'skeletonAsset', 'atlasData', 'textures', 'skeletonData', 'spine'];
-	      _get(_getPrototypeOf(SpineComponentSystem.prototype), "initializeComponentData", this).call(this, component, data, properties);
+	      _superPropGet(SpineComponentSystem, "initializeComponentData", this)([component, data, properties]);
 	    }
 	  }, {
 	    key: "onBeforeRemove",
@@ -16777,7 +16325,7 @@ var spine = (function (pc) {
 	  var app = pc__namespace.Application.getApplication();
 	  if (!app) {
 	    if (typeof document !== 'undefined') {
-	      console.warn("No Application found. An Application or AppBase must be instantiated before `playcanvas-spine`.");
+	      console.warn('No Application found. An Application or AppBase must be instantiated before `playcanvas-spine`.');
 	    }
 	    return;
 	  }
