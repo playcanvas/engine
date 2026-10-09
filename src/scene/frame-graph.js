@@ -52,8 +52,8 @@ class FrameGraph {
      * unless it captured no children (in which case it is dropped).
      *
      * A captured pass which does not render per view (see {@link FramePass#perView}), such as the
-     * shadow pass of a directional light, is moved out of the wrapper ahead of it, so it renders
-     * once before all the views. This is not done when another such pass of the scope renders to
+     * shadow pass of a directional light, or a compute pass executing before the views, is moved
+     * out of the wrapper ahead of it, so it renders once before all the views. This is not done when another such pass of the scope renders to
      * the same target, such as the shadow passes of a light shared by several cameras rendered in
      * the scope. Each of those renders the target for the passes following it, and so keeps its
      * place between them, rendering per view.
@@ -88,8 +88,8 @@ class FrameGraph {
 
     /**
      * Returns true when another pass which does not render per view renders to the same target
-     * as the pass. Passes without a target are treated as sharing it, as what they write is not
-     * known.
+     * as the pass. A pass without a target, such as a compute pass executing before the views,
+     * shares none.
      *
      * @param {FramePass[]} passes - The passes of a multi-view capture scope.
      * @param {FramePass} pass - The pass to test.
@@ -97,8 +97,10 @@ class FrameGraph {
      * @private
      */
     _sharesTarget(passes, pass) {
-        // an undefined target compares equal to another undefined target, which makes passes
-        // without a target share it
+        // an undefined target would compare equal to the undefined target of another such pass
+        if (pass.renderTarget === undefined) {
+            return false;
+        }
         for (let i = 0; i < passes.length; i++) {
             const other = passes[i];
             if (other !== pass && !other.perView && other.renderTarget === pass.renderTarget) {

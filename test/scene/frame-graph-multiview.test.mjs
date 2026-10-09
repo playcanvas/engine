@@ -94,6 +94,25 @@ describe('FrameGraph', function () {
             expect(wrapper.children).to.deep.equal([view]);
         });
 
+        it('adds several passes without a target, which do not render per view, ahead of the captured passes', function () {
+            const frameGraph = new FrameGraph();
+            const view = new CountingPass(device, 'View');
+            const first = new CountingPass(device, 'First', false);
+            const second = new CountingPass(device, 'Second', false);
+
+            frameGraph.beginMultiView(device);
+            frameGraph.addRenderPass(view);
+            frameGraph.addRenderPass(first);
+            frameGraph.addRenderPass(second);
+            frameGraph.endMultiView();
+
+            const [movedFirst, movedSecond, wrapper] = frameGraph.renderPasses;
+            expect(frameGraph.renderPasses).to.have.lengthOf(3);
+            expect(movedFirst).to.equal(first);
+            expect(movedSecond).to.equal(second);
+            expect(wrapper.children).to.deep.equal([view]);
+        });
+
         it('adds a before-pass which does not render per view ahead of the pass it precedes', function () {
             // a forward pass with the shadow pass of a directional light before it
             const frameGraph = new FrameGraph();

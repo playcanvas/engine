@@ -130,7 +130,8 @@ class Camera {
     /**
      * Frame passes that execute before this camera's main scene rendering, after the camera's
      * directional shadow passes. Entries are picked up by the RenderPassForward that renders
-     * this camera's layers.
+     * this camera's layers. When rendering multiple XR views, they execute for each view, apart
+     * from a compute pass, which executes once, as selected by its xrViewIndex.
      *
      * @type {FramePass[]}
      */

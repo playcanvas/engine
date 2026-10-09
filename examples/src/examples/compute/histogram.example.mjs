@@ -174,25 +174,51 @@ if (device.supportsCompute) {
 /** @type {number[]|null} */
 let histogramPositions = null;
 
-// True while a read of the histogram is in flight, to read one at a time
-let reading = false;
-
 let readGeneration = 0;
 const onDeviceLost = device.on('devicelost', () => {
     readGeneration++;
-    reading = false;
 });
 app.on('destroy', () => {
     readGeneration++;
     onDeviceLost.off();
 });
 
+// Before the compute pass dispatches, clear the storage buffer, to avoid the accumulation buildup
+computePass.onBefore = () => {
+    histogramStorageBuffer.clear();
+};
+
+// After the compute pass dispatches, read back the histogram data from the storage buffer. The
+// returned promise is resolved later, when the GPU is done running the compute pass, and so the
+// histogram on the screen is up to a few frames behind.
+computePass.onAfter = () => {
+    const histogramData = new Uint32Array(numBins);
+    const generation = readGeneration;
+    histogramStorageBuffer
+        .read(0, undefined, histogramData)
+        .then((data) => {
+            // A request can settle after recovery or application destruction.
+            if (generation !== readGeneration) return;
+
+            const scale = 1 / 50000;
+            const positions = [];
+            for (let x = 0; x < data.length; x++) {
+                const value = math.clamp(data[x] * scale, 0, 0.2);
+                positions.push(x * 0.001, -0.35, 4);
+                positions.push(x * 0.001, value - 0.35, 4);
+            }
+            histogramPositions = positions;
+        })
+        .catch((error) => {
+            // Interrupted reads are replaced by fresh results on subsequent frames.
+            if (error.name !== 'AbortError' && generation === readGeneration && !device.isContextLost()) {
+                throw error;
+            }
+        });
+};
+
 app.on('update', (/** @type {number} */ _dt) => {
     if (device.supportsCompute) {
-        // Clear the storage buffer, to avoid the accumulation buildup. The clear executes before
-        // the compute pass, which runs later in the frame.
-        histogramStorageBuffer.clear();
-
         // The size of the dispatch, which the compute pass uses
         compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
     }
@@ -200,42 +226,5 @@ app.on('update', (/** @type {number} */ _dt) => {
     // Render the most recently read histogram using lines
     if (histogramPositions) {
         app.drawLineArrays(histogramPositions, Color.YELLOW);
-    }
-});
-
-// After the frame renders, including the compute pass
-app.on('postrender', () => {
-    if (device.supportsCompute && !reading) {
-        // Read back the histogram data from the storage buffer. The returned promise is resolved
-        // later, when the GPU is done running the compute pass, and so the histogram on the screen
-        // is up to a few frames behind.
-        reading = true;
-        const histogramData = new Uint32Array(numBins);
-        const generation = readGeneration;
-        histogramStorageBuffer
-            .read(0, undefined, histogramData)
-            .then((data) => {
-                // A request can settle after recovery or application destruction.
-                if (generation !== readGeneration) return;
-                reading = false;
-
-                const scale = 1 / 50000;
-                const positions = [];
-                for (let x = 0; x < data.length; x++) {
-                    const value = math.clamp(data[x] * scale, 0, 0.2);
-                    positions.push(x * 0.001, -0.35, 4);
-                    positions.push(x * 0.001, value - 0.35, 4);
-                }
-                histogramPositions = positions;
-            })
-            .catch((error) => {
-                if (generation !== readGeneration) return;
-                reading = false;
-
-                // Interrupted reads are replaced by fresh results on subsequent frames.
-                if (error.name !== 'AbortError' && !device.isContextLost()) {
-                    throw error;
-                }
-            });
     }
 });
