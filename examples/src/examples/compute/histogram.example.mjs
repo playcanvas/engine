@@ -169,9 +169,18 @@ if (device.supportsCompute) {
     camera.camera.afterPasses.push(computePass);
 }
 
+// The line positions of the most recently read histogram. Lines are drawn for a single frame, so
+// these are drawn every frame, until the next histogram is read.
+/** @type {number[]|null} */
+let histogramPositions = null;
+
+// True while a read of the histogram is in flight, to read one at a time
+let reading = false;
+
 let readGeneration = 0;
 const onDeviceLost = device.on('devicelost', () => {
     readGeneration++;
+    reading = false;
 });
 app.on('destroy', () => {
     readGeneration++;
@@ -187,14 +196,20 @@ app.on('update', (/** @type {number} */ _dt) => {
         // The size of the dispatch, which the compute pass uses
         compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
     }
+
+    // Render the most recently read histogram using lines
+    if (histogramPositions) {
+        app.drawLineArrays(histogramPositions, Color.YELLOW);
+    }
 });
 
 // After the frame renders, including the compute pass
 app.on('postrender', () => {
-    if (device.supportsCompute) {
-        // Read back the histogram data from the storage buffer. Note that the returned promise
-        // will be resolved later, when the GPU is done running it, and so the histogram on the
-        // screen will be up to few frames behind.
+    if (device.supportsCompute && !reading) {
+        // Read back the histogram data from the storage buffer. The returned promise is resolved
+        // later, when the GPU is done running the compute pass, and so the histogram on the screen
+        // is up to a few frames behind.
+        reading = true;
         const histogramData = new Uint32Array(numBins);
         const generation = readGeneration;
         histogramStorageBuffer
@@ -202,8 +217,8 @@ app.on('postrender', () => {
             .then((data) => {
                 // A request can settle after recovery or application destruction.
                 if (generation !== readGeneration) return;
+                reading = false;
 
-                // Render the histogram using lines
                 const scale = 1 / 50000;
                 const positions = [];
                 for (let x = 0; x < data.length; x++) {
@@ -211,11 +226,14 @@ app.on('postrender', () => {
                     positions.push(x * 0.001, -0.35, 4);
                     positions.push(x * 0.001, value - 0.35, 4);
                 }
-                app.drawLineArrays(positions, Color.YELLOW);
+                histogramPositions = positions;
             })
             .catch((error) => {
+                if (generation !== readGeneration) return;
+                reading = false;
+
                 // Interrupted reads are replaced by fresh results on subsequent frames.
-                if (error.name !== 'AbortError' && generation === readGeneration && !device.isContextLost()) {
+                if (error.name !== 'AbortError' && !device.isContextLost()) {
                     throw error;
                 }
             });
