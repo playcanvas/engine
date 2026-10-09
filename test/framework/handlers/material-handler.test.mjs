@@ -470,6 +470,49 @@ describe('MaterialHandler', function () {
                 expect(source.emissiveMap).to.equal(emissive.resource);
             });
 
+            [null, 'a texture'].forEach((assigned) => {
+                it(`gives the copies of a material which is a copy itself the textures, after assigning ${assigned ?? 'null'} to the map of the material`, async function () {
+                    const { material, textures } = await copiedInto();
+                    const copy = material.clone();
+                    const texture = assigned && new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+                    material.emissiveMap = texture;
+
+                    textures.forEach(completeLoad);
+                    const [emissive] = textures;
+                    expect(material.emissiveMap).to.equal(texture);
+                    expect(copy.emissiveMap).to.equal(emissive.resource);
+                });
+            });
+
+            it('ends passing a texture on between materials copied into each other, after assigning to their maps', async function () {
+                const { material, source, textures } = await copiedInto();
+                source.copy(material);
+                const copy = material.clone();
+                material.emissiveMap = null;
+                source.emissiveMap = null;
+
+                textures.forEach(completeLoad);
+                const [emissive] = textures;
+                expect(copy.emissiveMap).to.equal(emissive.resource);
+            });
+
+            [
+                { label: 'its own textures', order: [1, 0, 2] },
+                { label: 'the textures it receives as a copy', order: [0, 2, 1] }
+            ].forEach(({ label, order }) => {
+                it(`stops tracking the copies of a material which is a copy itself, loading ${label} first`, async function () {
+                    const { material, source, textures } = await copiedInto();
+                    const copy = material.clone();
+
+                    order.forEach(index => completeLoad(textures[index]));
+                    expect(copy.emissiveMap).to.equal(textures[0].resource);
+                    expect(source._pendingCopies).to.equal(null);
+                    expect(material._pendingCopies).to.equal(null);
+                    expect(material._pendingSource).to.equal(null);
+                    expect(copy._pendingSource).to.equal(null);
+                });
+            });
+
             it('stops tracking the copies once the material has all its textures', async function () {
                 const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
                 const material = await loadById(diffuse, gloss);

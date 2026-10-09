@@ -147,21 +147,23 @@ class MaterialHandler extends ResourceHandler {
      * Assigns a texture a material received to the map of the copies made of the material while
      * it waited, unless a texture was assigned to the map of a copy since. A copy which is the
      * material of another material asset, and so has copies of its own, passes the texture on to
-     * them. This ends, also for materials copied into each other, as each copy receiving the
-     * texture held a placeholder in the map, and holds the texture after.
+     * them, also when a texture was assigned to its own map since, as its copies did not change.
      *
      * @param {StandardMaterial} material - The material.
      * @param {string} parameterName - The name of the map.
      * @param {Texture} texture - The texture.
      * @param {boolean} release - Whether to stop tracking the copies, as the material has all its
      * textures.
+     * @param {Set<StandardMaterial>} visited - The materials whose copies were given the texture,
+     * which ends the passing on for materials copied into each other.
      * @private
      */
-    _assignToPendingCopies(material, parameterName, texture, release) {
+    _assignToPendingCopies(material, parameterName, texture, release, visited) {
         const copies = material._pendingCopies;
-        if (!copies) {
+        if (!copies || visited.has(material)) {
             return;
         }
+        visited.add(material);
 
         for (const ref of copies) {
             const copy = ref.deref();
@@ -175,9 +177,12 @@ class MaterialHandler extends ResourceHandler {
             if (this._placeholders.has(copy[parameterName])) {
                 copy[parameterName] = texture;
                 copy.update();
+            }
 
-                // the copies of the copy are released by the asset of the copy
-                this._assignToPendingCopies(copy, parameterName, texture, false);
+            // the copies of the copy are released with the copies of the material, once the copy
+            // has all the textures of its own asset too, as its asset may not load any more
+            if (copy._pendingCopies) {
+                this._assignToPendingCopies(copy, parameterName, texture, release && !this._isWaitingForTextures(copy), visited);
             }
 
             if (release) {
@@ -199,7 +204,7 @@ class MaterialHandler extends ResourceHandler {
         // the copies made of the material while it waited receive the texture, and are released
         // once the material has all its textures
         if (material._pendingCopies) {
-            this._assignToPendingCopies(material, parameterName, texture, !this._isWaitingForTextures(material));
+            this._assignToPendingCopies(material, parameterName, texture, !this._isWaitingForTextures(material), new Set());
         }
     }
 
