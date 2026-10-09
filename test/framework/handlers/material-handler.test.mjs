@@ -547,6 +547,35 @@ describe('MaterialHandler', function () {
                 expect(copy.diffuseMap).to.equal(diffuse.resource);
             });
 
+            it('stops tracking the copies once the data of the material asset no longer references the textures it waited for', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                const materialAsset = new Asset('material', 'material', null, { diffuseMap: diffuse.id });
+                const material = await loadMaterial(materialAsset);
+                const copy = material.clone();
+
+                materialAsset.data = { diffuseMap: null };
+                expectReleased(material, copy);
+
+                // no copy made since is tracked
+                for (let i = 0; i < 100; i++) {
+                    material.clone().destroy();
+                }
+                expect(material._pendingCopies).to.equal(null);
+            });
+
+            it('stops tracking the copies once the data of the material asset references loaded textures instead', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                const loaded = pendingTexture('loaded', { srgb: true });
+                completeLoad(loaded);
+                const materialAsset = new Asset('material', 'material', null, { diffuseMap: diffuse.id });
+                const material = await loadMaterial(materialAsset);
+                const copy = material.clone();
+
+                materialAsset.data = { diffuseMap: loaded.id };
+                expect(material.diffuseMap).to.equal(loaded.resource);
+                expectReleased(material, copy);
+            });
+
             it('stops tracking the copies of a material referencing a texture asset which does not exist', async function () {
                 const gloss = pendingTexture('glossMap');
                 const material = await loadMaterial(new Asset('material', 'material', null, { glossMap: gloss.id, diffuseMap: 987654 }));

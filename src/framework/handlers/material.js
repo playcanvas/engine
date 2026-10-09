@@ -134,6 +134,20 @@ class MaterialHandler extends ResourceHandler {
         material._pendingCopies ??= new Set();
     }
 
+    // stop tracking the copies of a material once it waits for no more textures
+    _releasePendingCopies(material) {
+        const copies = material._pendingCopies;
+        if (copies && !this._pendingMaps.get(material)?.size) {
+            for (const ref of copies) {
+                const copy = ref.deref();
+                if (copy?._pendingSource === material) {
+                    copy._pendingSource = null;
+                }
+            }
+            material._pendingCopies = null;
+        }
+    }
+
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
         const material = materialAsset.resource;
         const texture = textureAsset.resource;
@@ -141,11 +155,9 @@ class MaterialHandler extends ResourceHandler {
         material.update();
 
         // the copies made of the material while it waited receive the texture in the map, unless a
-        // texture was assigned to the map of the copy since, and stop being tracked once the
-        // material has all the textures it waited for
+        // texture was assigned to the map of the copy since
         const copies = material._pendingCopies;
         if (copies) {
-            const release = !this._pendingMaps.get(material)?.size;
             for (const ref of copies) {
                 const copy = ref.deref();
 
@@ -159,15 +171,9 @@ class MaterialHandler extends ResourceHandler {
                     copy[parameterName] = texture;
                     copy.update();
                 }
-
-                if (release) {
-                    copy._pendingSource = null;
-                }
             }
 
-            if (release) {
-                material._pendingCopies = null;
-            }
+            this._releasePendingCopies(material);
         }
     }
 
@@ -344,6 +350,10 @@ class MaterialHandler extends ResourceHandler {
 
         // call to re-initialize material after all textures assigned
         this._parser.initialize(material, data);
+
+        // binding again can leave the material waiting for no more textures, by no longer
+        // referencing those it waited for, or referencing loaded ones instead, without a load
+        this._releasePendingCopies(material);
     }
 }
 
