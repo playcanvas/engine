@@ -9,7 +9,6 @@ import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
-import { FramePassDof } from './frame-pass-dof.js';
 import { FramePassVolumetricFog } from './frame-pass-volumetric-fog.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF } from './constants.js';
@@ -68,13 +67,6 @@ class CameraFrameOptions {
     // setting - sanitizeOptions derives it from what needs the depth and what the device supports.
     sceneTextureDepth = false;
 
-    // DOF
-    dofEnabled = false;
-
-    dofNearBlur = false;
-
-    dofHighQuality = true;
-
     // Volumetric fog
     volumetricFogEnabled = false;
 }
@@ -101,8 +93,6 @@ class FramePassCameraFrame extends FramePass {
     taaPass;
 
     scenePassHalf;
-
-    dofPass;
 
     volumetricFogPass;
 
@@ -285,7 +275,6 @@ class FramePassCameraFrame extends FramePass {
         this.taaPass = null;
         this.afterPass = null;
         this.scenePassHalf = null;
-        this.dofPass = null;
         this.volumetricFogPass = null;
     }
 
@@ -294,8 +283,7 @@ class FramePassCameraFrame extends FramePass {
 
         // depth consumed by the passes running after the scene pass, those of the effects requiring
         // the scene depth included
-        const postProcessDepth = options.taaEnabled || options.dofEnabled ||
-            options.volumetricFogEnabled || options.depthRequired;
+        const postProcessDepth = options.taaEnabled || options.volumetricFogEnabled || options.depthRequired;
 
         const inSceneDepth = this.needsInSceneDepth(options);
         const splatDepth = this.app.scene.getGsplatParams()?.sceneDepthWrite ?? false;
@@ -500,9 +488,6 @@ class FramePassCameraFrame extends FramePass {
             options.prepassEnabled !== currentOptions.prepassEnabled ||
             options.sceneTextureDepth !== currentOptions.sceneTextureDepth ||
             options.sceneColorMap !== currentOptions.sceneColorMap ||
-            options.dofEnabled !== currentOptions.dofEnabled ||
-            options.dofNearBlur !== currentOptions.dofNearBlur ||
-            options.dofHighQuality !== currentOptions.dofHighQuality ||
             options.volumetricFogEnabled !== currentOptions.volumetricFogEnabled ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
@@ -569,8 +554,8 @@ class FramePassCameraFrame extends FramePass {
             }
         }
 
-        // the effects and DOF can need the half resolution scene texture
-        this._sceneHalfEnabled = this.effectsRequire(FRAMERESOURCE_SCENECOLORHALF) || options.dofEnabled;
+        // the effects can need the half resolution scene texture
+        this._sceneHalfEnabled = this.effectsRequire(FRAMERESOURCE_SCENECOLORHALF);
 
         // whether the lit shaders apply SSAO as the scene renders - an effect generating it for them
         // turns this on as it creates its passes
@@ -688,7 +673,7 @@ class FramePassCameraFrame extends FramePass {
             ...stagePasses.postScene,
             this.volumetricFogPass, this.taaPass, this.scenePassHalf,
             ...stagePasses.postTemporal,
-            this.dofPass, this.composePass, this.afterPass
+            this.composePass, this.afterPass
         ];
     }
 
@@ -711,8 +696,6 @@ class FramePassCameraFrame extends FramePass {
 
         // the passes of the effects owning them, once the resources they require exist
         this.setupEffectPasses();
-
-        this.setupDofPass(options, this.sceneTexture, this.sceneTextureHalf);
 
         // compose
         this.setupComposePass(options);
@@ -952,12 +935,6 @@ class FramePassCameraFrame extends FramePass {
         }
     }
 
-    setupDofPass(options, inputTexture, inputTextureHalf) {
-        if (options.dofEnabled)  {
-            this.dofPass = new FramePassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality, options.dofNearBlur);
-        }
-    }
-
     setupVolumetricFogPass(options) {
         if (options.volumetricFogEnabled) {
 
@@ -989,11 +966,6 @@ class FramePassCameraFrame extends FramePass {
 
         // the composition assembles its shader from the effects registered with the camera frame
         this.composePass.effects = this.cameraFrame._activeEffects;
-
-        this.composePass.taaEnabled = options.taaEnabled;
-        this.composePass.cocTexture = this.dofPass?.cocTexture;
-        this.composePass.blurTexture = this.dofPass?.blurTexture;
-        this.composePass.blurTextureUpscale = !this.dofPass?.highQuality;
 
         // compose pass renders directly to target renderTarget
         const cameraComponent = this.cameraComponent;
@@ -1081,7 +1053,6 @@ class FramePassCameraFrame extends FramePass {
         // TAA history buffer is double buffered, assign the current one to the follow up passes.
         this.composePass.sceneTexture = sceneTexture;
         this.scenePassHalf?.setSourceTexture(sceneTexture);
-        this.dofPass?.setSceneTexture(sceneTexture);
 
         // The effects taking part get the values of this frame. This runs before any pass they
         // contribute to updates itself, as the frame graph updates a parent before its children,

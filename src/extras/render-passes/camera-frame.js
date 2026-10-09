@@ -8,6 +8,7 @@ import { BloomEffect } from './effects/bloom-effect.js';
 import { CasEffect } from './effects/cas-effect.js';
 import { ColorEnhanceEffect } from './effects/color-enhance-effect.js';
 import { ColorLutEffect } from './effects/color-lut-effect.js';
+import { DofEffect } from './effects/dof-effect.js';
 import { FringingEffect } from './effects/fringing-effect.js';
 import { GradingEffect } from './effects/grading-effect.js';
 import { SsaoEffect } from './effects/ssao-effect.js';
@@ -28,7 +29,7 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  *
  * @type {string[]}
  */
-const builtinDebugViews = ['scene', 'dofcoc', 'dofblur', 'depth', 'depthmissing'];
+const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
 
 /**
  * @typedef {Object} Rendering
@@ -79,25 +80,6 @@ const builtinDebugViews = ['scene', 'dofcoc', 'dofblur', 'depth', 'depthmissing'
  * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
  * also makes the image more blurry, and rendering.sharpness parameter can be used to counteract.
  * Defaults to 1.
- */
-
-/**
- * @typedef {Object} Dof
- * Properties related to Depth of Field (DOF), a technique used to simulate the optical effect where
- * objects at certain distances appear sharp while others are blurred, enhancing the perception of
- * focus and depth in the rendered scene.
- * @property {boolean} enabled - Whether DoF is enabled. Defaults to false.
- * @property {boolean} nearBlur - Whether the near blur is enabled. Defaults to false.
- * @property {number} focusDistance - The distance at which the focus is set. Defaults to 100.
- * @property {number} focusRange - The range around the focus distance where the focus is sharp.
- * Defaults to 10.
- * @property {number} blurRadius - The radius of the blur effect, typically 2-10 range. Defaults to 3.
- * @property {number} blurRings - The number of rings in the blur effect, typically 3-8 range. Defaults
- * to 4.
- * @property {number} blurRingPoints - The number of points in each ring of the blur effect, typically
- * 3-8 range. Defaults to 5.
- * @property {boolean} highQuality - Whether the high quality implementation is used. This will have
- * a higher performance cost, but will produce better quality results. Defaults to true.
  */
 
 /**
@@ -307,20 +289,12 @@ class CameraFrame {
     colorEnhance;
 
     /**
-     * DoF settings.
+     * The depth of field effect, registered with this camera frame. Its parameters are assigned
+     * directly.
      *
-     * @type {Dof}
+     * @type {DofEffect}
      */
-    dof = {
-        enabled: false,
-        nearBlur: false,
-        focusDistance: 100,
-        focusRange: 10,
-        blurRadius: 3,
-        blurRings: 4,
-        blurRingPoints: 5,
-        highQuality: true
-    };
+    dof;
 
     /**
      * Volumetric fog settings.
@@ -385,13 +359,14 @@ class CameraFrame {
         const device = app.graphicsDevice;
         this._cas = new CasEffect(device);
         this.fringing = new FringingEffect(device);
+        this.dof = new DofEffect(device);
         this.ssao = new SsaoEffect(device);
         this.bloom = new BloomEffect(device);
         this.colorEnhance = new ColorEnhanceEffect(device);
         this.grading = new GradingEffect(device);
         this.colorLUT = new ColorLutEffect(device);
         this.vignette = new VignetteEffect(device);
-        this._builtInEffects = [this._cas, this.fringing, this.ssao, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
+        this._builtInEffects = [this._cas, this.fringing, this.dof, this.ssao, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
 
         // rendering.sharpness is the sharpening effect's parameter, forwarded to it so that the
@@ -405,7 +380,6 @@ class CameraFrame {
             enumerable: true
         });
 
-        this.updateOptions();
         this.enable();
 
         // handle layer changes on the camera - render passes need to be update to reflect the changes
@@ -580,6 +554,10 @@ class CameraFrame {
     }
 
     enable() {
+
+        // the passes are built from the current settings, as CameraFrame#update builds them - the
+        // settings can have changed while the camera frame was disabled, which update ignores
+        this.updateOptions();
         this.renderPassCamera = this.createRenderPass();
         this.cameraComponent.framePasses = [this.renderPassCamera];
         this._applyEffects();
@@ -645,9 +623,6 @@ class CameraFrame {
         options.prepassEnabled = rendering.sceneDepthMap;
         options.taaEnabled = taa.enabled;
         options.formats = rendering.renderFormats.slice();
-        options.dofEnabled = this.dof.enabled;
-        options.dofNearBlur = this.dof.nearBlur;
-        options.dofHighQuality = this.dof.highQuality;
         options.volumetricFogEnabled = this._volumetricFogSupported();
 
         // the scene format, chosen before the effects are asked whether they are active, as an
@@ -745,18 +720,10 @@ class CameraFrame {
         renderPassCamera.update(options);
 
         // update parameters of individual render passes
-        const { composePass, dofPass, volumetricFogPass } = renderPassCamera;
+        const { composePass, volumetricFogPass } = renderPassCamera;
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
-
-        if (options.dofEnabled) {
-            dofPass.focusDistance = this.dof.focusDistance;
-            dofPass.focusRange = this.dof.focusRange;
-            dofPass.blurRadius = this.dof.blurRadius;
-            dofPass.blurRings = this.dof.blurRings;
-            dofPass.blurRingPoints = this.dof.blurRingPoints;
-        }
 
         if (options.volumetricFogEnabled) {
             const { volumetricFog } = this;

@@ -12,11 +12,13 @@ import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-eff
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
 import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
 import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
+import { DofEffect } from '../../../src/extras/render-passes/effects/dof-effect.js';
 import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
 import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
+import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
 import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
@@ -147,6 +149,7 @@ describe('CameraFrameEffect', function () {
             const builtIns = [
                 [CasEffect, 'cas', COMPOSESLOT_SCENE],
                 [FringingEffect, 'fringing', COMPOSESLOT_SCENE],
+                [DofEffect, 'dof', COMPOSESLOT_HDR],
                 [SsaoEffect, 'ssao', COMPOSESLOT_HDR],
                 [BloomEffect, 'bloom', COMPOSESLOT_HDR],
                 [ColorEnhanceEffect, 'colorEnhance', COMPOSESLOT_HDR],
@@ -182,6 +185,8 @@ describe('CameraFrameEffect', function () {
             expect(new VignetteEffect(device).entryPoint).to.equal('applyVignette');
             expect(new GradingEffect(device).chunkName).to.equal('composeGradingPS');
             expect(new GradingEffect(device).defineName).to.equal('GRADING');
+            expect(new DofEffect(device).chunkName).to.equal('composeDofPS');
+            expect(new DofEffect(device).defineName).to.equal('DOF');
             expect(new SsaoEffect(device).chunkName).to.equal('composeSsaoPS');
             expect(new SsaoEffect(device).defineName).to.equal('SSAO');
             expect(new BloomEffect(device).chunkName).to.equal('composeBloomPS');
@@ -195,7 +200,7 @@ describe('CameraFrameEffect', function () {
         });
 
         it('names an entry function each built-in chunk declares', function () {
-            for (const EffectClass of [CasEffect, FringingEffect, SsaoEffect, BloomEffect, ColorEnhanceEffect, GradingEffect, ColorLutEffect, VignetteEffect]) {
+            for (const EffectClass of [CasEffect, FringingEffect, DofEffect, SsaoEffect, BloomEffect, ColorEnhanceEffect, GradingEffect, ColorLutEffect, VignetteEffect]) {
                 const effect = new EffectClass(device);
                 expect(effect.glsl, effect.id).to.include(` ${effect.entryPoint}(`);
                 expect(effect.wgsl, effect.id).to.include(`fn ${effect.entryPoint}(`);
@@ -415,6 +420,122 @@ describe('CameraFrameEffect', function () {
             bloom.blurLevel = 5;
             bloom.update();
             expect(pass.blurLevel).to.equal(5);
+        });
+    });
+
+    describe('dof', function () {
+
+        // a depth of field effect on a camera frame stand-in supplying the camera
+        const createDof = (highQuality = true) => {
+            const dof = new DofEffect(device);
+            dof.enabled = true;
+            dof.highQuality = highQuality;
+            dof.cameraFrame = /** @type {any} */ ({ cameraComponent: { shaderParams: new CameraShaderParams() } });
+            return dof;
+        };
+
+        // the resources the camera frame would provide for it
+        const createResources = () => {
+            const depth = new Texture(device, { name: 'depth', width: 64, height: 32, format: PIXELFORMAT_RGBA16F });
+            const half = new Texture(device, { name: 'half', width: 32, height: 16, format: PIXELFORMAT_RGBA16F });
+            return {
+                [FRAMERESOURCE_DEPTH]: { texture: depth, defines: new Map(), key: '' },
+                [FRAMERESOURCE_SCENECOLORHALF]: half
+            };
+        };
+
+        const createPasses = (dof, resources = createResources()) => {
+            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            dof.createPasses(resources, passes);
+            expect(passes.preScene.length + passes.postOpaque.length + passes.postScene.length).to.equal(0);
+            return passes.postTemporal;
+        };
+
+        it('is disabled by default, and active once enabled', function () {
+            const dof = new DofEffect(device);
+            expect(dof.enabled).to.equal(false);
+            expect(dof.active).to.equal(false);
+            dof.enabled = true;
+            expect(dof.active).to.equal(true);
+        });
+
+        it('requires the scene depth and the half resolution scene, and provides two debug views', function () {
+            const dof = createDof();
+            expect(dof.requires).to.deep.equal([FRAMERESOURCE_DEPTH, FRAMERESOURCE_SCENECOLORHALF]);
+            expect(dof.debugViews).to.deep.equal(['dofcoc', 'dofblur']);
+        });
+
+        it('rebuilds its passes when the near blur or the quality change', function () {
+            const dof = createDof();
+            const key = dof.buildKey();
+            dof.nearBlur = true;
+            const nearKey = dof.buildKey();
+            expect(nearKey).to.not.equal(key);
+            dof.highQuality = false;
+            expect(dof.buildKey()).to.not.equal(nearKey);
+        });
+
+        it('blurs the full resolution scene of each frame in high quality', function () {
+            const dof = createDof(true);
+            const resources = createResources();
+            const [pass] = createPasses(dof, resources);
+            expect(pass).to.be.an.instanceOf(FramePassDof);
+            expect(pass.cocPass.options.resizeSource).to.equal(resources.depth.texture);
+            expect(pass.farPass.sourceTexture).to.equal(null);
+
+            const scene = new Texture(device, { name: 'scene', width: 64, height: 32, format: PIXELFORMAT_RGBA16F });
+            dof.frameUpdate({ sceneTexture: scene, sceneWidth: 64, sceneHeight: 32 });
+            expect(pass.farPass.sourceTexture).to.equal(scene);
+
+            dof.update();
+            expect(dof._defines.has('DOF_UPSCALE')).to.equal(false);
+        });
+
+        it('blurs the half resolution scene in low quality, and upscales it in the composition', function () {
+            const dof = createDof(false);
+            const resources = createResources();
+            const [pass] = createPasses(dof, resources);
+            expect(pass.farPass.sourceTexture).to.equal(resources.sceneColorHalf);
+
+            const scene = new Texture(device, { name: 'scene', width: 64, height: 32, format: PIXELFORMAT_RGBA16F });
+            dof.frameUpdate({ sceneTexture: scene, sceneWidth: 64, sceneHeight: 32 });
+            expect(pass.farPass.sourceTexture).to.equal(resources.sceneColorHalf);
+
+            dof.update();
+            expect(dof._defines.get('DOF_UPSCALE')).to.equal(true);
+        });
+
+        it('applies its parameters to its passes and the composition when updated', function () {
+            const dof = createDof();
+            const [pass] = createPasses(dof);
+            Object.assign(dof, { focusDistance: 7, focusRange: 3, blurRadius: 5, blurRings: 6, blurRingPoints: 7 });
+            dof.update();
+            expect(pass.focusDistance).to.equal(7);
+            expect(pass.focusRange).to.equal(3);
+            expect(pass.blurRadius).to.equal(5);
+            expect(pass.blurRings).to.equal(6);
+            expect(pass.blurRingPoints).to.equal(7);
+
+            dof._bindUniforms();
+            expect(device.scope.resolve('cocTexture').value).to.equal(pass.cocTexture);
+            expect(device.scope.resolve('blurTexture').value).to.equal(pass.blurTexture);
+        });
+
+        it('renders what its passes were built for until they are rebuilt', function () {
+            const dof = createDof(true);
+            createPasses(dof);
+            dof.highQuality = false;
+            dof.update();
+            expect(dof._defines.has('DOF_UPSCALE')).to.equal(false);
+        });
+
+        it('destroys its passes once', function () {
+            const dof = createDof();
+            const [pass] = createPasses(dof);
+            const destroy = spy(pass, 'destroy');
+            dof.destroyPasses();
+            dof.destroyPasses();
+            expect(destroy.callCount).to.equal(1);
         });
     });
 

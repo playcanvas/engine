@@ -16,6 +16,7 @@ import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-eff
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
 import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
 import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
+import { DofEffect } from '../../../src/extras/render-passes/effects/dof-effect.js';
 import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
 import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
@@ -88,8 +89,6 @@ describe('RenderPassCompose shader snapshot', function () {
 
         textures = {
             bloom: createTexture('bloom', 64, 64, PIXELFORMAT_RGBA16F),
-            coc: createTexture('coc', 128, 128, PIXELFORMAT_RGBA8),
-            blur: createTexture('blur', 64, 64, PIXELFORMAT_RGBA16F),
             ssao: createTexture('ssao', 128, 128, PIXELFORMAT_R32F),
             lut: createTexture('lut', 256, 16, PIXELFORMAT_RGBA8, true),
             lut2: createTexture('lut2', 256, 16, PIXELFORMAT_RGBA8, true)
@@ -114,13 +113,14 @@ describe('RenderPassCompose shader snapshot', function () {
         // camera the occlusion is generated for
         pass.cas = new CasEffect(device);
         pass.fringing = new FringingEffect(device);
+        pass.dof = new DofEffect(device);
         pass.ssao = new SsaoEffect(device);
         pass.bloom = new BloomEffect(device);
         pass.colorEnhance = new ColorEnhanceEffect(device);
         pass.grading = new GradingEffect(device);
         pass.colorLut = new ColorLutEffect(device);
         pass.vignette = new VignetteEffect(device);
-        const effects = [pass.cas, pass.fringing, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const effects = [pass.cas, pass.fringing, pass.dof, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
         const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F, cameraComponent };
         effects.forEach((effect) => {
             effect.cameraFrame = cameraFrame;
@@ -169,19 +169,28 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.sceneDepthAvailable = true;
     };
 
+    // the depth of field likewise, its low quality setup upscaling its quarter resolution blur
+    const enableDof = (pass, highQuality) => {
+        pass.dof.enabled = true;
+        pass.dof.highQuality = highQuality;
+        const resources = {
+            [FRAMERESOURCE_DEPTH]: { texture: textures.ssao, defines: new Map(), key: '' },
+            [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom
+        };
+        pass.dof.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.passEffects.push(pass.dof);
+    };
+
     const enableAll = (pass) => {
         enableBloom(pass);
         enableSsao(pass, SSAOTYPE_COMBINE);
-        pass.cocTexture = textures.coc;
-        pass.blurTexture = textures.blur;
-        pass.blurTextureUpscale = true;
+        enableDof(pass, false);
         pass.grading.enabled = true;
         pass.colorEnhance.enabled = true;
         pass.colorLut.texture = textures.lut;
         pass.colorLut.texture2 = textures.lut2;
         pass.vignette.intensity = 0.3;
         pass.fringing.intensity = 10;
-        pass.taaEnabled = true;
         pass.cas.sharpness = 0.5;
     };
 
@@ -208,8 +217,8 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'off' },
         { name: 'off-gamma-none', set: () => ({ _gammaCorrection: GAMMA_NONE }) },
         { name: 'bloom', set: pass => enableBloom(pass) },
-        { name: 'dof', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur }) },
-        { name: 'dof-upscale', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur, blurTextureUpscale: true }) },
+        { name: 'dof', set: pass => enableDof(pass, true) },
+        { name: 'dof-upscale', set: pass => enableDof(pass, false) },
         { name: 'ssao', set: pass => enableSsao(pass, SSAOTYPE_COMBINE) },
         { name: 'ssao-lighting', set: pass => enableSsao(pass, SSAOTYPE_LIGHTING) },
         {
@@ -231,7 +240,6 @@ describe('RenderPassCompose shader snapshot', function () {
         },
         { name: 'vignette', set: pass => (pass.vignette.intensity = 0.3) },
         { name: 'fringing', set: pass => (pass.fringing.intensity = 10) },
-        { name: 'taa', set: () => ({ taaEnabled: true }) },
         { name: 'cas-hdr', set: pass => (pass.cas.sharpness = 0.5) },
         {
             name: 'cas-ldr',
