@@ -1,4 +1,9 @@
 // @config
+//
+// A skeletal animation made with the {accent:Spine} 4.3 editor, played by the
+// [playcanvas-spine](https://github.com/playcanvas/playcanvas-spine) plugin. Spineboy aims at the
+// pointer using an IK constraint, and smoothly mixes between animations. Click to shoot.
+//
 // @credit
 // title: Spineboy
 // author: Esoteric Software
@@ -15,6 +20,7 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     JsonHandler,
+    PROJECTION_ORTHOGRAPHIC,
     RESOLUTION_AUTO,
     ScriptComponentSystem,
     ScriptHandler,
@@ -24,17 +30,19 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 
-import { deviceType } from 'examples/context';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
     skeleton: new Asset('skeleton', 'json', { url: './assets/spine/spineboy-pro.json' }),
-    atlas: new Asset('atlas', 'text', { url: './assets/spine/spineboy-pro.atlas' }),
-    texture: new Asset('spineboy-pro.png', 'texture', { url: './assets/spine/spineboy-pro.png' }),
+    atlas: new Asset('atlas', 'text', { url: './assets/spine/spineboy-pma.atlas' }),
+    // the texture asset name has to match the page name in the atlas, and as Spine 4.3 renders in
+    // gamma space, the texture is loaded without sRGB
+    texture: new Asset('spineboy-pma.png', 'texture', { url: './assets/spine/spineboy-pma.png' }, { srgb: false }),
     spinescript: new Asset('spinescript', 'script', {
-        url: './scripts/spine/playcanvas-spine.3.8.js'
+        url: './scripts/spine/playcanvas-spine.4.3.js'
     })
 };
 
@@ -61,50 +69,96 @@ app.setCanvasResolution(RESOLUTION_AUTO);
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
-app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
-});
 
+// the plugin adds the spine component system to the application when it loads
 await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 app.start();
 
-// Create camera entity
+// an orthographic camera, framing Spineboy at any aspect ratio
 const camera = new Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new Color(0.5, 0.6, 0.9)
+    clearColor: new Color(0.17, 0.19, 0.25),
+    projection: PROJECTION_ORTHOGRAPHIC
 });
+camera.setLocalPosition(0.6, 3.4, 10);
 app.root.addChild(camera);
-camera.translateLocal(0, 7, 20);
 
-/**
- * @param {Vec3} position - The local-space position.
- * @param {Vec3} scale - The local-space scale.
- * @param {number} timeScale - The animation time scale.
- */
-const createSpineInstance = (position, scale, timeScale) => {
-    const spineEntity = new Entity();
-    spineEntity.addComponent('spine', {
-        atlasAsset: assets.atlas.id,
-        skeletonAsset: assets.skeleton.id,
-        textureAssets: [assets.texture.id]
-    });
-    spineEntity.setLocalPosition(position);
-    spineEntity.setLocalScale(scale);
-    app.root.addChild(spineEntity);
+const fitCamera = () => {
+    const aspect = app.graphicsDevice.width / app.graphicsDevice.height;
+    camera.camera.orthoHeight = Math.max(4.6, 4.4 / aspect);
+};
+fitCamera();
+app.graphicsDevice.on('resizecanvas', fitCamera);
 
-    // Play spine animation
-    // @ts-ignore
-    spineEntity.spine.state.setAnimation(0, 'portal', true);
+// Spineboy, at the origin and unscaled, so the skeleton coordinates match the world coordinates
+const spineboy = new Entity('spineboy');
+spineboy.addComponent('spine', {
+    atlasAsset: assets.atlas.id,
+    skeletonAsset: assets.skeleton.id,
+    textureAssets: [assets.texture.id]
+});
+app.root.addChild(spineboy);
 
-    // @ts-ignore
-    spineEntity.spine.state.timeScale = timeScale;
+// the spine component comes from the plugin, which has no type information
+const { skeleton, state } = /** @type {any} */ (spineboy).spine;
+
+// mix between animations when they change
+state.data.defaultMix = 0.2;
+
+// track 0 plays the selected animation, track 1 aims at the crosshair bone and track 2 shoots
+const setAim = (/** @type {boolean} */ aim) => {
+    if (aim) {
+        state.setAnimation(1, 'aim', true);
+    } else {
+        state.setEmptyAnimation(1, 0.2);
+    }
 };
 
-// Create spine entity 1
-createSpineInstance(new Vec3(2, 2, 0), new Vec3(1, 1, 1), 1);
+data.set('spine', {
+    animation: 'run',
+    aim: true,
+    speed: 1
+});
+state.setAnimation(0, data.get('spine.animation'), true);
+setAim(data.get('spine.aim'));
 
-// Create spine entity 2
-createSpineInstance(new Vec3(2, 10, 0), new Vec3(-0.5, 0.5, 0.5), 0.5);
+const dataEvent = data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+    if (path === 'spine.animation') {
+        state.setAnimation(0, value, true);
+    } else if (path === 'spine.aim') {
+        setAim(value);
+    } else if (path === 'spine.speed') {
+        state.timeScale = value;
+    }
+});
+
+// move the crosshair bone, which the aim animation points the gun at, to the pointer
+const crosshair = skeleton.findBone('crosshair');
+const pointer = new Vec3();
+const onPointerMove = (/** @type {PointerEvent} */ event) => {
+    const rect = canvas.getBoundingClientRect();
+    camera.camera.screenToWorld(event.clientX - rect.left, event.clientY - rect.top, 10, pointer);
+    const position = crosshair.getAppliedPose().worldToParent({ x: pointer.x, y: pointer.y });
+    const pose = crosshair.getPose();
+    pose.x = position.x;
+    pose.y = position.y;
+};
+
+const onPointerDown = (/** @type {PointerEvent} */ event) => {
+    onPointerMove(event);
+    state.setAnimation(2, 'shoot', false);
+    state.addEmptyAnimation(2, 0.2, 0);
+};
+
+canvas.addEventListener('pointermove', onPointerMove);
+canvas.addEventListener('pointerdown', onPointerDown);
+
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+    canvas.removeEventListener('pointermove', onPointerMove);
+    canvas.removeEventListener('pointerdown', onPointerDown);
+    dataEvent.unbind();
+});
