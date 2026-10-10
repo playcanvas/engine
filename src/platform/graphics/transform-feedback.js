@@ -315,8 +315,8 @@ class TransformFeedback {
             // The swap exchanged the GPU buffers behind the input and output VertexBuffer objects,
             // but the objects themselves are unchanged. For a single input buffer that is enough, as
             // its vertex array object lives on the buffer and was swapped along with it. For more
-            // than one input buffer the draw takes its vertex array object from the device cache,
-            // which is keyed on the VertexBuffer objects - so the exchange is invisible to it, and
+            // than one input buffer the draw takes its vertex array object from the vertex array
+            // cache, which is keyed on the buffer objects - so the exchange is invisible to it, and
             // the cached vertex array object would keep reading the pre-swap buffers. Drop it, so
             // the next step rebuilds it against the buffers which are now current. Note this must be
             // keyed on every input buffer, including read-only ones, as they all took part in
