@@ -39,7 +39,7 @@ export default /* glsl */`
         #include "particle_normalMapPS"
     #endif
 
-    #if NORMAL != NONE
+    #if LIGHTING && NORMAL != NONE
         #ifdef HALF_LAMBERT
             #include "particle_halflambertPS"
         #else
