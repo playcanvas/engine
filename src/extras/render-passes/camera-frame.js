@@ -50,8 +50,8 @@ const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
  * full resolution rendering.
  * @property {number} samples - The number of samples of the {@link RenderTarget} used for the scene
  * rendering, in 1-4 range. Value of 1 disables multisample anti-aliasing, other values enable
- * anti-aliasing, Typically set to 1 when TAA is used, even though both anti-aliasing options can be
- * used together at a higher cost. Defaults to 1.
+ * anti-aliasing. Typically set to 1 when post-process anti-aliasing such as TAA or SMAA is used,
+ * although these techniques can be combined with MSAA at a higher cost. Defaults to 1.
  * @property {boolean} sceneColorMap - Whether rendering generates a scene color map. Defaults to false.
  * @property {boolean} sceneDepthMap - Whether rendering generates a scene depth map. Defaults to false.
  * @property {number} toneMapping - The tone mapping. Can be:
@@ -79,6 +79,13 @@ const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
  * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
  * also makes the image more blurry, and rendering.sharpness parameter can be used to counteract.
  * Defaults to 1.
+ */
+
+/**
+ * @typedef {Object} Smaa
+ * Properties related to Subpixel Morphological Anti-Aliasing (SMAA), a spatial post-processing
+ * technique that smooths geometric edges without using frame history.
+ * @property {boolean} enabled - Whether SMAA 1x is enabled. Defaults to false.
  */
 
 /**
@@ -216,6 +223,15 @@ class CameraFrame {
     taa = {
         enabled: false,
         jitter: 1
+    };
+
+    /**
+     * SMAA settings.
+     *
+     * @type {Smaa}
+     */
+    smaa = {
+        enabled: false
     };
 
     /**
@@ -545,12 +561,13 @@ class CameraFrame {
 
     updateOptions() {
 
-        const { options, rendering, taa } = this;
+        const { options, rendering, taa, smaa } = this;
         options.stencil = rendering.stencil;
         options.samples = rendering.samples;
         options.sceneColorMap = rendering.sceneColorMap;
         options.prepassEnabled = rendering.sceneDepthMap;
         options.taaEnabled = taa.enabled;
+        options.smaaEnabled = smaa.enabled;
         options.formats = rendering.renderFormats.slice();
 
         // the scene format, chosen before the effects are asked whether they are active, as an
