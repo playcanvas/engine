@@ -90,6 +90,12 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let offDiagonal = cov[0][1];
     let diagonal2 = cov[1][1] + 0.3;
 
+    // early-out gaussians smaller than minPixelSize, before paying for the eigen-decomposition
+    // (the vmin cap below is left out: it only matters on a viewport under minPixelSize / 2 pixels)
+    if (gsplatFootprintSmallerThan(diagonal1, offDiagonal, diagonal2, uniform.minPixelSize)) {
+        return false;
+    }
+
     let mid = 0.5 * (diagonal1 + diagonal2);
     let radius = length(vec2f((diagonal1 - diagonal2) / 2.0, offDiagonal));
     let lambda1 = mid + radius;
@@ -101,15 +107,11 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
-    // early-out gaussians smaller than minPixelSize
-    if (max(l1, l2) < uniform.minPixelSize) {
-        return false;
-    }
-
     let c = center.proj.ww * uniform.viewport_size.zw;
 
-    // cull against frustum x/y axes
-    if (any((abs(center.proj.xy) - vec2f(max(l1, l2)) * c) > center.proj.ww)) {
+    // cull against frustum x/y axes (l1 >= l2: lambda1 = mid + radius bounds both mid - radius
+    // and the 0.1 floor of lambda2, as mid >= 0.3)
+    if (any((abs(center.proj.xy) - vec2f(l1) * c) > center.proj.ww)) {
         return false;
     }
 

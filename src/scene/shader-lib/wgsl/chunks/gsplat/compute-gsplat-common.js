@@ -32,6 +32,14 @@ struct SplatCov2D {
     #endif
 }
 
+// Half-size of the axis-aligned bounding box of the footprint the quad renderers draw (see
+// gsplatFootprintSmallerThan in gsplatHelpersVS). An ellipse spans sqrt(a) and sqrt(c) per
+// standard deviation along x and y, so this is 2 * sqrt(2 * (a, c)), capped at 2 * vmin like the
+// quad's semi-axes.
+fn splatFootprintHalfSize(a: f32, c: f32, vmin: f32) -> vec2f {
+    return 2.0 * min(sqrt(2.0 * vec2f(a, c)), vec2f(vmin));
+}
+
 fn computeSplatCov(
     worldCenter: vec3f,
     rotation: half4,
@@ -216,29 +224,26 @@ fn computeSplatCov(
     }
 
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
-    let maxRadius = vmin;
-    let radiusXUncapped = sqrt(2.0 * a);
-    let radiusYUncapped = sqrt(2.0 * c);
-    let radiusX = min(radiusXUncapped, maxRadius);
-    let radiusY = min(radiusYUncapped, maxRadius);
 
-    if (max(radiusX, radiusY) < minPixelSize) {
+    // the quad's vmin cap is left out: it only matters on a viewport under minPixelSize / 2 pixels
+    if (gsplatFootprintSmallerThan(a, b, c, minPixelSize)) {
         return result;
     }
 
     // Frustum cull: reject splats entirely off-screen
+    let halfSize = splatFootprintHalfSize(a, c, vmin);
     #ifdef GSPLAT_XR
         // Stereo union: reject only when off-screen in BOTH eyes, otherwise splats visible only
         // near one eye's edge (e.g. the right edge of the right eye) would be missing.
-        if ((screen.x + radiusX < 0.0 || screen.x - radiusX > viewportWidth ||
-             screen.y + radiusY < 0.0 || screen.y - radiusY > viewportHeight) &&
-            (screen1.x + radiusX < 0.0 || screen1.x - radiusX > viewportWidth ||
-             screen1.y + radiusY < 0.0 || screen1.y - radiusY > viewportHeight)) {
+        if ((screen.x + halfSize.x < 0.0 || screen.x - halfSize.x > viewportWidth ||
+             screen.y + halfSize.y < 0.0 || screen.y - halfSize.y > viewportHeight) &&
+            (screen1.x + halfSize.x < 0.0 || screen1.x - halfSize.x > viewportWidth ||
+             screen1.y + halfSize.y < 0.0 || screen1.y - halfSize.y > viewportHeight)) {
             return result;
         }
     #else
-        if (screen.x + radiusX < 0.0 || screen.x - radiusX > viewportWidth ||
-            screen.y + radiusY < 0.0 || screen.y - radiusY > viewportHeight) {
+        if (screen.x + halfSize.x < 0.0 || screen.x - halfSize.x > viewportWidth ||
+            screen.y + halfSize.y < 0.0 || screen.y - halfSize.y > viewportHeight) {
             return result;
         }
     #endif
@@ -247,7 +252,8 @@ fn computeSplatCov(
     // so the Gaussian reaches its cutoff at the capped boundary. Without this,
     // the Gaussian is still opaque at the boundary, creating hard rectangular
     // edges. This matches the quad renderer's implicit UV renormalization.
-    let capScale = max(1.0, max(radiusXUncapped, radiusYUncapped) / maxRadius);
+    // max(sqrt(2a), sqrt(2c)) taken as one square root.
+    let capScale = max(1.0, sqrt(2.0 * max(a, c)) / vmin);
     let invCapScale2 = 1.0 / (capScale * capScale);
 
     result.screen = screen;
