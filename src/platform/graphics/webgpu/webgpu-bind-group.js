@@ -41,10 +41,11 @@ class WebgpuBindGroup {
         this.bindGroup = null;
         const device = bindGroup.device;
 
+        // the descriptor creates the samplers and texture views the bind group uses
+        WebgpuDebug.validate(device);
+
         /** @type {GPUBindGroupDescriptor} */
         const desc = this.createDescriptor(device, bindGroup);
-
-        WebgpuDebug.validate(device);
 
         this.bindGroup = device.wgpu.createBindGroup(desc);
 

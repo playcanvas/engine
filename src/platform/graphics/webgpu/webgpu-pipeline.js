@@ -1,5 +1,6 @@
 import { TRACEID_PIPELINELAYOUT_ALLOC } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * @import { BindGroupFormat } from '../bind-group-format.js'
@@ -61,10 +62,17 @@ class WebgpuPipeline {
         _layoutId++;
         DebugHelper.setLabel(desc, `PipelineLayoutDescr-${_layoutId}`);
 
+        WebgpuDebug.validate(this.device);
+
         /** @type {GPUPipelineLayout} */
         const pipelineLayout = this.device.wgpu.createPipelineLayout(desc);
         DebugHelper.setLabel(pipelineLayout, `PipelineLayout-${_layoutId}`);
         Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, {
+            desc: desc,
+            bindGroupFormats
+        });
+
+        WebgpuDebug.end(this.device, 'PipelineLayout creation', {
             desc: desc,
             bindGroupFormats
         });

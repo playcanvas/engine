@@ -1,6 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
 import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_INT, SAMPLETYPE_UINT } from '../constants.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuUtils } from './webgpu-utils.js';
 import { gpuTextureFormats } from './constants.js';
 
@@ -66,12 +67,19 @@ class WebgpuBindGroupFormat {
             this.desc = desc;
         });
 
+        WebgpuDebug.validate(device);
+
         /**
          * @type {GPUBindGroupLayout}
          * @private
          */
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(desc);
         DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
+
+        WebgpuDebug.end(device, 'BindGroupLayout creation', {
+            desc,
+            bindGroupFormat
+        });
     }
 
     destroy() {

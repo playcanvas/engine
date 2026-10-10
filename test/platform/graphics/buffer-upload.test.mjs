@@ -40,6 +40,8 @@ const createDevice = (backend) => {
         },
         wgpu: {
             createBuffer: sinon.spy(({ size }) => ({ size, data: new Uint8Array(size) })),
+            pushErrorScope() {},
+            popErrorScope: () => Promise.resolve(null),
             queue: {
                 writeBuffer: sinon.spy((buffer, offset, storage, srcOffset, length) => {
                     const view = new Uint8Array(storage.buffer ?? storage, (storage.byteOffset ?? 0) + srcOffset, length);
