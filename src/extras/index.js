@@ -44,6 +44,7 @@ export { SsaoEffect } from './render-passes/effects/ssao-effect.js';
 export { VignetteEffect } from './render-passes/effects/vignette-effect.js';
 export { VolumetricFogEffect } from './render-passes/effects/volumetric-fog-effect.js';
 export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
+export { FramePassSmaa } from './render-passes/frame-pass-smaa.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
 export { RenderPassDepthAwareBlur } from './render-passes/render-pass-depth-aware-blur.js';
 export { FramePassDof } from './render-passes/frame-pass-dof.js';
