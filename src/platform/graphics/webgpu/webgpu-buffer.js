@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
@@ -42,6 +43,10 @@ class WebgpuBuffer {
 
     allocate(device, size) {
         Debug.assert(!this.buffer, 'Buffer already allocated');
+
+        WebgpuDebug.memory(device);
+        WebgpuDebug.validate(device);
+
         this.buffer = device.wgpu.createBuffer({
             size,
             usage: this.usageFlags
@@ -54,6 +59,9 @@ class WebgpuBuffer {
                         this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
                             ''
         );
+
+        WebgpuDebug.end(device, 'Buffer creation', { size, buffer: this });
+        WebgpuDebug.end(device, 'Buffer creation', { size, buffer: this });
     }
 
     /**

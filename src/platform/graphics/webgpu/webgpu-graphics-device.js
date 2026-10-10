@@ -1352,8 +1352,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         if (this.shader.ready && !this.shader.failed) {
 
-            WebgpuDebug.validate(this);
-
             const passEncoder = this.passEncoder;
             Debug.assert(passEncoder);
 
@@ -1462,15 +1460,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * numInstances;
             }
             // #endif
-
-            WebgpuDebug.end(this, 'Drawing', {
-                vb0,
-                vb1,
-                indexBuffer,
-                primitive,
-                numInstances,
-                pipeline
-            });
         }
 
         if (last) {
@@ -1840,10 +1829,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         Debug.assert(!this.insideRenderPass, 'Attempted to submit command buffers while inside a pass. This finishes the parent command encoder and invalidates the active pass ("Parent encoder is already finished") .');
 
-        // end the current encoder
-        this.endCommandEncoder();
+        if (this.commandEncoder || this.commandBuffers.length > 0) {
 
-        if (this.commandBuffers.length > 0) {
+            // the validation errors of the recorded passes are generated when their encoder finishes,
+            // and submitting the invalid command buffer generates another, so one scope reports the
+            // first of them
+            WebgpuDebug.validate(this);
+
+            // end the current encoder
+            this.endCommandEncoder();
 
             // copy dynamic buffers data to the GPU (this schedules the copy CB to run before all other CBs)
             this.dynamicBuffers.submit();
@@ -1868,6 +1862,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // notify dynamic buffers
             this.dynamicBuffers.onCommandBuffersSubmitted();
+
+            WebgpuDebug.end(this, 'Command submission');
         }
 
         // destroy deferred resources after submit to ensure they're no longer referenced
