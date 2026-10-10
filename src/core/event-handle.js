@@ -63,6 +63,13 @@ class EventHandle {
     _once;
 
     /**
+     * True if this once listener has already been called, including during a nested fire.
+     *
+     * @private
+     */
+    _onceFired = false;
+
+    /**
      * True if event has been removed.
      *
      * @private
