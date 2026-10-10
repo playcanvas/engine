@@ -43,19 +43,6 @@ export default /* wgsl */`
             #endif
         #endif
 
-        #ifdef LIT_SCENE_COLOR
-            var uSceneColorMap : texture_2d<f32>;
-            var uSceneColorMapSampler : sampler;
-        #endif
-
-        #ifdef LIT_SCREEN_SIZE
-            uniform screen_size: vec4f;
-        #endif
-
-        #ifdef LIT_TRANSFORMS
-            var<private> matrix_viewProjection: mat4x4f;
-        #endif
-
         // parallax
         #ifdef STD_HEIGHT_MAP
             var<private> dUvOffset: vec2f;
