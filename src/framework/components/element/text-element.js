@@ -1114,9 +1114,11 @@ class TextElement {
                 const meshInfo = this._meshInfo[meshInfoId];
 
                 // The letter spacing goes in front of every glyph but the first on a line, as the
-                // kerning does, so it never widens a line past its last glyph. The zero width
-                // control characters take none.
-                const letterGap = lineHasGlyph && data !== CONTROL_GLYPH_DATA ? letterSpacing : 0;
+                // kerning does, so it never widens a line past its last glyph. Glyphs that take up
+                // no space, like the zero width control characters, take none - whether the font
+                // supplies them or not.
+                const zeroWidth = !data || data.xadvance === 0;
+                const letterGap = lineHasGlyph && !zeroWidth ? letterSpacing : 0;
 
                 const candidateLineWidth = _x + letterGap + this._spacing * advance;
 
@@ -1255,7 +1257,7 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                if (data !== CONTROL_GLYPH_DATA) {
+                if (!zeroWidth) {
                     lineHasGlyph = true;
                 }
 

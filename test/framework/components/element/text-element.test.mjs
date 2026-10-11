@@ -2409,13 +2409,36 @@ describe('TextElement', function () {
             }
         });
 
-        it('does not add space around zero width control characters', function () {
+        it('does not add space around zero width control characters missing from the font', function () {
             element.letterSpacing = 0.25;
             element.text = 'ab';
             const width = element.width;
 
             element.text = '‎a​b';
             expect(element.width).to.be.closeTo(width, 1e-4);
+        });
+
+        it('does not add space around zero width control characters the font supplies', function () {
+            // the test font with zero advance glyphs for the controls, as a CanvasFont creates them
+            const data = structuredClone(fontAsset.resource.data);
+            for (const char of ['​', '‎']) {
+                data.chars[char] = {
+                    ...data.chars.a,
+                    id: char.codePointAt(0),
+                    letter: char,
+                    width: 0,
+                    height: 0,
+                    xadvance: 0
+                };
+            }
+            element.font = new Font(fontAsset.resource.textures, data);
+            element.letterSpacing = 0.25;
+            element.text = 'ab';
+            const width = element.width;
+
+            element.text = '‎a​b';
+            expect(element.width).to.be.closeTo(width, 1e-4);
+            assertLineContents(['‎a​b']);
         });
 
         it('spaces rtl text evenly, to the same width as ltr text', function () {
