@@ -4,7 +4,9 @@
 // band animates its own color and opacity, and none may take on a neighbor's. The two COLOR FLOW
 // rows must match, CLIPPED must not be masked, and in the material switch the left square keeps
 // the material's color while the right one follows the element's. Pause to compare, in screen
-// or world space.
+// or world space. Even letter spacing switches the spaced out titles between letterSpacing, the
+// same space between every pair of letters, and spacing, which scales the advance of each letter
+// and so leaves wide letters further apart than narrow ones.
 //
 // @flag HIDDEN
 
@@ -199,6 +201,19 @@ const animate = (entity, phase) => {
     return entity;
 };
 
+const spacedOut = [];
+
+/**
+ * Space out the letters of a label.
+ * @param {Entity} entity - Text entity.
+ * @param {number} amount - Space between the letters, as a fraction of the font size.
+ * @returns {Entity} The text entity.
+ */
+const spaceOut = (entity, amount) => {
+    spacedOut.push({ entity, amount });
+    return entity;
+};
+
 /**
  * Create a section card.
  * @param {string} title - Card title.
@@ -209,14 +224,14 @@ const animate = (entity, phase) => {
  */
 const card = (title, subtitle, x, y) => {
     const panel = element(screen, title, x, y, { width: 340, height: 248, color: panelColor });
-    label(panel, title, 0, 96, 19);
+    spaceOut(label(panel, title, 0, 96, 19), 0.2);
     label(panel, subtitle, 0, -101, 12, { color: muted });
     return panel;
 };
 
-const title = label(screen, 'CHROMATIC / UI', -285, 312, 42);
+const title = spaceOut(label(screen, 'CHROMATIC / UI', -285, 312, 42), 0.3);
 const subtitle = label(screen, 'One palette. Independent elements.', -308, 274, 17, { color: muted });
-const footer = label(screen, 'IMAGES  /  TYPE  /  TRANSPARENCY', 0, -337, 14, { color: muted });
+const footer = spaceOut(label(screen, 'IMAGES  /  TYPE  /  TRANSPARENCY', 0, -337, 14, { color: muted }), 0.25);
 
 const images = card('01 / IMAGE MODES', 'Same atlas, different geometry', -360, 111);
 ['SIMPLE', 'SLICED', 'TILED'].forEach((name, i) => {
@@ -329,11 +344,24 @@ const settings = {
     alpha: 1,
     world: false,
     masks: true,
-    custom: true
+    custom: true,
+    letterSpacing: true
 };
 data.set('settings', settings);
 let time = 0;
 let refresh = true;
+
+// the advance of an average letter as a fraction of the font size, which gives the spacing
+// multiplier about the same overall width as the letter spacing it is compared with
+const AVERAGE_ADVANCE = 0.6;
+
+const applyLetterSpacing = () => {
+    for (const { entity, amount } of spacedOut) {
+        entity.element.letterSpacing = settings.letterSpacing ? amount : 0;
+        entity.element.spacing = settings.letterSpacing ? 1 : 1 + amount / AVERAGE_ADVANCE;
+    }
+};
+applyLetterSpacing();
 
 const resize = () => {
     app.resizeCanvas();
@@ -378,6 +406,9 @@ const settingsEvent = data.on('*:set', (/** @type {string} */ path) => {
         roundMask.element.mask = settings.masks;
         rectMask.element.opacity = settings.masks ? 1 : 0;
         roundMask.element.opacity = settings.masks ? 1 : 0;
+    }
+    if (path === 'settings.letterSpacing') {
+        applyLetterSpacing();
     }
     if (path === 'settings.custom') {
         reference.element.material = settings.custom ? customMaterial : null;

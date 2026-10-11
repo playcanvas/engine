@@ -266,6 +266,7 @@ class ElementComponentSystem extends ComponentSystem {
                 component.opacity = data.opacity;
             }
             if (data.spacing !== undefined) component.spacing = data.spacing;
+            if (data.letterSpacing !== undefined) component.letterSpacing = data.letterSpacing;
             if (data.fontSize !== undefined) {
                 component.fontSize = data.fontSize;
                 if (!data.lineHeight) component.lineHeight = data.fontSize;
@@ -342,6 +343,7 @@ class ElementComponentSystem extends ComponentSystem {
             spriteFrame: source.spriteFrame,
             pixelsPerUnit: source.pixelsPerUnit,
             spacing: source.spacing,
+            letterSpacing: source.letterSpacing,
             lineHeight: source.lineHeight,
             wrapLines: source.wrapLines,
             justify: source.justify,

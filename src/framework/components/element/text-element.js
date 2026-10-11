@@ -182,6 +182,7 @@ class TextElement {
         this._colorUniform = new Float32Array([1, 1, 1, 1]);
 
         this._spacing = 1;
+        this._letterSpacing = 0;
         this._fontSize = 32;
         this._fontMinY = 0;
         this._fontMaxY = 0;
@@ -898,6 +899,10 @@ class TextElement {
         let prevWasWhitespace = false;
         let seenNonWhitespaceThisLine = false;
 
+        // whether a glyph has been laid out on the current line yet - the letter spacing goes in
+        // front of every glyph after the first
+        let lineHasGlyph = false;
+
         const splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
 
         let maxLineWidth = this._element.calculatedWidth;
@@ -950,6 +955,7 @@ class TextElement {
             numGapsAtWordStart = 0;
             prevWasWhitespace = false;
             seenNonWhitespaceThisLine = false;
+            lineHasGlyph = false;
             wordStartX = 0;
             lineStartIndex = lineBreakIndex;
         }
@@ -988,8 +994,12 @@ class TextElement {
             numGapsAtWordStart = 0;
             prevWasWhitespace = false;
             seenNonWhitespaceThisLine = false;
+            lineHasGlyph = false;
 
             const scale = this._fontSize / MAGIC;
+
+            // the letter spacing is a fraction of the font size, so it follows the auto fitting
+            const letterSpacing = this._letterSpacing * this._fontSize;
 
             // scale max font extents
             fontMinY = this._fontMinY * scale;
@@ -1103,7 +1113,14 @@ class TextElement {
                     this._font.data.info.maps[meshInfoId].height;
                 const meshInfo = this._meshInfo[meshInfoId];
 
-                const candidateLineWidth = _x + this._spacing * advance;
+                // The letter spacing goes in front of every glyph but the first on a line, as the
+                // kerning does, so it never widens a line past its last glyph. Glyphs that take up
+                // no space, like the zero width control characters, take none - whether the font
+                // supplies them or not.
+                const zeroWidth = !data || data.xadvance === 0;
+                const letterGap = lineHasGlyph && !zeroWidth ? letterSpacing : 0;
+
+                const candidateLineWidth = _x + letterGap + this._spacing * advance;
 
                 // If we've exceeded the maximum line width, move everything from the beginning of
                 // the current word onwards down onto a new line.
@@ -1141,6 +1158,12 @@ class TextElement {
                             continue;
                         }
                     }
+                }
+
+                // the glyph goes after its letter spacing, unless the line was just broken in front
+                // of it, which made it the first glyph on its line
+                if (lineHasGlyph) {
+                    _x += letterGap;
                 }
 
                 quad = meshInfo.quad;
@@ -1232,6 +1255,10 @@ class TextElement {
                 // whitespaces.
                 if (!isWhitespace) {
                     _xMinusTrailingWhitespace = _x;
+                }
+
+                if (!zeroWidth) {
+                    lineHasGlyph = true;
                 }
 
                 if (this._isWordBoundary(char) || (this._isValidNextChar(nextchar) && (this._isNextCJKBoundary(char, nextchar) || this._isNextCJKWholeWord(nextchar)))) {
@@ -1826,6 +1853,18 @@ class TextElement {
 
     get spacing() {
         return this._spacing;
+    }
+
+    set letterSpacing(value) {
+        const _prev = this._letterSpacing;
+        this._letterSpacing = value;
+        if (_prev !== value && this._font) {
+            this._updateText();
+        }
+    }
+
+    get letterSpacing() {
+        return this._letterSpacing;
     }
 
     set fontSize(value) {
