@@ -93,6 +93,7 @@ describe('ElementComponent', function () {
             expect(e.element.shadowColor).to.equal(null);
             expect(e.element.shadowOffset).to.equal(null);
             expect(e.element.spacing).to.equal(null);
+            expect(e.element.letterSpacing).to.equal(null);
             expect(e.element.sprite).to.equal(null);
             expect(e.element.spriteAsset).to.equal(null);
             expect(e.element.spriteFrame).to.equal(null);

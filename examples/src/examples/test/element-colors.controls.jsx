@@ -24,7 +24,8 @@ export function Controls({ observer }) {
                 ['opacity', 'Pulse opacity'],
                 ['world', 'World space'],
                 ['masks', 'Masks'],
-                ['custom', 'Custom material']
+                ['custom', 'Custom material'],
+                ['letterSpacing', 'Even letter spacing']
             ].map(([name, title]) => (
                 <LabelGroup key={name} text={title}>
                     <BooleanInput
