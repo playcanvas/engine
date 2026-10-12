@@ -40,6 +40,8 @@ export { ColorLutEffect } from './render-passes/effects/color-lut-effect.js';
 export { DofEffect } from './render-passes/effects/dof-effect.js';
 export { FringingEffect } from './render-passes/effects/fringing-effect.js';
 export { GradingEffect } from './render-passes/effects/grading-effect.js';
+export { LensFlareEffect } from './render-passes/effects/lens-flare-effect.js';
+export { LensFlare } from './render-passes/lens-flare/lens-flare.js';
 export { SsaoEffect } from './render-passes/effects/ssao-effect.js';
 export { VignetteEffect } from './render-passes/effects/vignette-effect.js';
 export { VolumetricFogEffect } from './render-passes/effects/volumetric-fog-effect.js';
