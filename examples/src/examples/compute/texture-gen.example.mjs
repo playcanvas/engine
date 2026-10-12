@@ -227,9 +227,9 @@ app.on('update', (/** @type {number} */ dt) => {
         compute2.setParameter('frequency', 0.03);
         compute2.setParameter('tint', [1, 0, Math.sin(time) * 0.5 + 0.5, 1]);
 
-        // Set up both dispatches
-        compute1.setupDispatch(srcTexture.width, srcTexture.height);
-        compute2.setupDispatch(srcTexture.width, srcTexture.height);
+        // Set up both dispatches, a thread for each texel
+        compute1.setupDispatchThreads(srcTexture.width, srcTexture.height);
+        compute2.setupDispatchThreads(srcTexture.width, srcTexture.height);
 
         // Dispatch both compute shaders in a single compute pass
         device.computeDispatch([compute1, compute2], 'ComputeModifyTextureDispatch');

@@ -414,8 +414,9 @@ app.on('update', (/** @type {number} */ dt) => {
     const fov = cameraEntity.camera.fov * math.DEG_TO_RAD;
     compute.setParameter('pixelSize', (2 * Math.tan(fov * 0.5)) / overlayTexture.height);
 
-    // the size of the dispatch, which the scanner pass uses after the camera renders
-    compute.setupDispatch(Math.ceil(overlayTexture.width / 8), Math.ceil(overlayTexture.height / 8));
+    // the size of the dispatch, a thread for each overlay pixel, which the scanner pass uses after
+    // the camera renders
+    compute.setupDispatchThreads(overlayTexture.width, overlayTexture.height);
 });
 
 const walkerPosition = new Vec3();

@@ -272,10 +272,8 @@ app.on('update', (dt) => {
     }
 
     if (device.supportsCompute && compute && renderTarget) {
-        // Set up dispatch dimensions (workgroup size is 8x8 in shader)
-        const workgroupsX = Math.ceil(rtWidth / 8);
-        const workgroupsY = Math.ceil(rtHeight / 8);
-        compute.setupDispatch(workgroupsX, workgroupsY, 1);
+        // Set up the dispatch, a thread for each pixel
+        compute.setupDispatchThreads(rtWidth, rtHeight);
 
         // Dispatch the compute shader
         device.computeDispatch([compute], 'EdgeDetect-Dispatch');

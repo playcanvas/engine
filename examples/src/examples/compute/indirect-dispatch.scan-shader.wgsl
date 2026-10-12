@@ -53,7 +53,7 @@ fn loadDepth(coord: vec2i, texSize: vec2u) -> f32 {
     return textureLoad(depthTexture, clampedCoord, 0);
 }
 
-@compute @workgroup_size(1)
+@compute @workgroup_size(8, 8)
 fn main(@builtin(global_invocation_id) global_id: vec3u) {
     let tileX = global_id.x;
     let tileY = global_id.y;
