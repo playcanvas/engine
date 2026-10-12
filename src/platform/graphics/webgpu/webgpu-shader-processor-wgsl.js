@@ -640,8 +640,8 @@ class WebgpuShaderProcessorWGSL {
 
     /**
      * Returns the workgroup size the entry point of a compute shader declares using the
-     * `@workgroup_size` attribute. Each of its values is an integer literal, or the name of a
-     * module-scope `const` or `override` declared with an integer literal. A missing y or z is 1.
+     * `@workgroup_size` attribute, with integer literals. Values injected into the source, such as
+     * `{NAME}` defines, are literals by the time the source is processed. A missing y or z is 1.
      *
      * @param {string} source - The processed compute shader source.
      * @param {string} entryPoint - The name of the entry point function.
@@ -665,23 +665,12 @@ class WebgpuShaderProcessorWGSL {
             return null;
         }
 
-        // resolves an integer literal, or the name of a constant declared with one
-        const resolve = (value, depth = 0) => {
-            const literal = /^(0[xX][0-9a-fA-F]+|\d+)[iu]?$/.exec(value);
-            if (literal) {
-                return Number(literal[1]);
-            }
-            if (depth < 4 && /^[a-z_]\w*$/i.test(value)) {
-                const declaration = new RegExp(`\\b(?:const|override)\\s+${value}\\s*(?::\\s*\\w+\\s*)?=\\s*([^;]+);`).exec(src);
-                if (declaration) {
-                    return resolve(declaration[1].trim(), depth + 1);
-                }
-            }
-            return null;
-        };
-
+        // decimal integer literals, with an optional suffix - names and expressions are not resolved
         const values = sizeMatch[1].split(',').map(value => value.trim()).filter(value => value.length);
-        const size = values.map(value => resolve(value));
+        const size = values.map((value) => {
+            const literal = /^(\d+)[iu]?$/.exec(value);
+            return literal ? Number(literal[1]) : null;
+        });
         if (size.length === 0 || size.length > 3 || size.some(value => !value)) {
             return null;
         }

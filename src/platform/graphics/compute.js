@@ -530,10 +530,10 @@ class Compute {
      * Prepare the compute work dispatch, for a number of threads in each dimension, a thread being
      * one invocation of the compute shader, as identified by its `global_invocation_id`. The
      * workgroups to dispatch are derived from the workgroup size the entry point of the shader
-     * declares using `@workgroup_size`, which takes integer literals, or constants declared with
-     * them. The dispatch is rounded up to whole workgroups, so the shader skips the threads beyond
-     * the requested number. To do that, and to index the threads, it uses the functions of the
-     * `dispatchThreadsCS` chunk it includes:
+     * declares using `@workgroup_size` with integer literals, which can be the values of defines
+     * injected into the shader. The dispatch is rounded up to whole workgroups, so the shader skips
+     * the threads beyond the requested number. To do that, and to index the threads, it uses the
+     * functions of the `dispatchThreadsCS` chunk it includes:
      *
      * - `dispatchThreadCount() -> vec3u`: the number of threads the dispatch was set up for.
      * - `dispatchThreadInRange(globalId: vec3u) -> bool`: true when the thread is one of those
@@ -571,7 +571,7 @@ class Compute {
 
         const size = this.shader.impl.computeWorkgroupSize;
         if (!size) {
-            Debug.errorOnce(`Compute ${this.name}: setupDispatchThreads cannot determine the workgroup size of the shader. Declare it using @workgroup_size, with integer literals, or constants declared with them.`, this);
+            Debug.errorOnce(`Compute ${this.name}: setupDispatchThreads cannot determine the workgroup size of the shader. Declare it using @workgroup_size with integer literals.`, this);
             return;
         }
 

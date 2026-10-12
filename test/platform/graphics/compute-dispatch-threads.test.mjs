@@ -27,8 +27,8 @@ describe('WebgpuShaderProcessorWGSL.getWorkgroupSize', function () {
         expect(getSize('@compute @workgroup_size(4, 4, 4,) fn main() {}')).to.deep.equal([4, 4, 4]);
     });
 
-    it('reads literals with a suffix and hexadecimal literals', function () {
-        expect(getSize('@compute @workgroup_size(64u, 0x4i) fn main() {}')).to.deep.equal([64, 4, 1]);
+    it('reads literals with a suffix', function () {
+        expect(getSize('@compute @workgroup_size(64u, 4i) fn main() {}')).to.deep.equal([64, 4, 1]);
     });
 
     it('reads the attributes in any order, across lines', function () {
@@ -40,15 +40,17 @@ describe('WebgpuShaderProcessorWGSL.getWorkgroupSize', function () {
         expect(getSize(source)).to.deep.equal([16, 16, 1]);
     });
 
-    it('resolves constants declared with literals', function () {
-        const source = `
-            const WORKGROUP_SIZE: u32 = 256u;
-            override height = 2;
-            const DEPTH = HEIGHT_ALIAS;
-            const HEIGHT_ALIAS = 1;
-            @compute @workgroup_size(WORKGROUP_SIZE, height, DEPTH) fn main() {}
+    it('does not resolve names', function () {
+        expect(getSize('const SIZE = 64u; @compute @workgroup_size(SIZE) fn main() {}')).to.equal(null);
+        expect(getSize('override SIZE = 64; @compute @workgroup_size(SIZE) fn main() {}')).to.equal(null);
+
+        // a function-local constant of the same name, which is not in scope of the attribute
+        const shadowed = `
+            fn helper() -> u32 { const SIZE = 128u; return SIZE; }
+            const SIZE = 64u;
+            @compute @workgroup_size(SIZE) fn main() {}
         `;
-        expect(getSize(source)).to.deep.equal([256, 2, 1]);
+        expect(getSize(shadowed)).to.equal(null);
     });
 
     it('reads the attribute of the entry point', function () {
@@ -70,8 +72,8 @@ describe('WebgpuShaderProcessorWGSL.getWorkgroupSize', function () {
     });
 
     it('returns null when the size cannot be determined', function () {
-        expect(getSize('@compute @workgroup_size(SIZE * 2) fn main() {}')).to.equal(null);
-        expect(getSize('@compute @workgroup_size(UNDECLARED) fn main() {}')).to.equal(null);
+        expect(getSize('@compute @workgroup_size(32 * 2) fn main() {}')).to.equal(null);
+        expect(getSize('@compute @workgroup_size(0x40) fn main() {}')).to.equal(null);
         expect(getSize('@compute fn main() {}')).to.equal(null);
         expect(getSize('@compute @workgroup_size(64) fn other() {}')).to.equal(null);
     });
@@ -205,11 +207,9 @@ describe('Compute#setupDispatchThreads on the GPU', function () {
     const source = /* wgsl */`
         #include "dispatchThreadsCS"
 
-        const WORKGROUP_SIZE = 4u;
-
         var<storage, read_write> result: array<u32>;
 
-        @compute @workgroup_size(WORKGROUP_SIZE)
+        @compute @workgroup_size({WORKGROUP_SIZE})
         fn main(@builtin(global_invocation_id) id: vec3u) {
             if (!dispatchThreadInRange(id)) { return; }
             let index = dispatchThreadIndex(id);
@@ -217,8 +217,14 @@ describe('Compute#setupDispatchThreads on the GPU', function () {
         }
     `;
 
-    it('reads the workgroup size of the shader, and indexes the threads spread over rows', async function () {
-        const shader = new Shader(device, { name: 'DispatchThreadsTest', shaderLanguage: SHADERLANGUAGE_WGSL, cshader: source });
+    it('reads the workgroup size of the shader from a define, and indexes the threads spread over rows', async function () {
+        // the workgroup size is injected into the shader as a define
+        const shader = new Shader(device, {
+            name: 'DispatchThreadsTest',
+            shaderLanguage: SHADERLANGUAGE_WGSL,
+            cshader: source,
+            cdefines: new Map([['{WORKGROUP_SIZE}', '4']])
+        });
         expect(shader.impl.computeWorkgroupSize).to.deep.equal([4, 1, 1]);
 
         // a limit of 2 workgroups in a dimension spreads the 3 workgroups of the 10 threads over
