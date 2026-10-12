@@ -27,7 +27,8 @@ export default /* glsl */`
         // world position to screen space of the previous frame
         vec4 screenPrevious = matrix_viewProjectionPrevious * worldPosition;
 
-        return (screenPrevious.xy / screenPrevious.w) * 0.5 + 0.5;
+        // remove the jitter of the previous frame, as the history holds the image without it
+        return (screenPrevious.xy / screenPrevious.w + jitters.zw) * 0.5 + 0.5;
     }
 
     vec3 colorClampPremul(vec2 uv, vec3 historyPremul) {
