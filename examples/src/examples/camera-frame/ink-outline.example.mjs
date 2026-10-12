@@ -28,7 +28,7 @@ import {
     CurveSet,
     Entity,
     FILLMODE_FILL_WINDOW,
-    FRAMERESOURCE_PREPASSDEPTH,
+    FRAMERESOURCE_DEPTH,
     FRAMERESOURCE_SCENECOLORGRAB,
     FRAMERESOURCE_SCENETARGET,
     Keyboard,
@@ -250,7 +250,7 @@ app.root.addChild(cameraEntity);
 // runs, and the scene depth, and draws the lines into the scene. Pixels without a line are
 // discarded, so they stay as they were.
 class RenderPassInkOutline extends RenderPassShaderQuad {
-    // the width of the lines, in pixels
+    // the width of the lines, in whole pixels
     width = 1;
 
     // how sensitive the lines are to changes of the depth, and of the brightness
@@ -305,7 +305,12 @@ class RenderPassInkOutline extends RenderPassShaderQuad {
                     return abs(a - b) / (a + b + 0.05);
                 }
 
-                // the ink at a position, comparing the samples a and b away on both diagonals
+                // the center of the texel a position is in
+                vec2 snapToTexel(vec2 uv) {
+                    return (floor(uv / inkTexelSize) + 0.5) * inkTexelSize;
+                }
+
+                // the ink at a texel center, comparing the samples a and b away on both diagonals
                 float inkAt(vec2 uv, vec2 a, vec2 b) {
 
                     // The inverse of the depth changes linearly across a flat surface, so its second
@@ -324,16 +329,20 @@ class RenderPassInkOutline extends RenderPassShaderQuad {
                 }
 
                 void main() {
+
+                    // The depth is read from the nearest texel, so the samples compared are a whole
+                    // number of texels away from a texel center - on a flat surface they are then the
+                    // same distance away on both sides, and their second difference stays zero.
                     vec2 a = inkTexelSize * inkParams.x;
                     vec2 b = vec2(a.x, -a.y);
 
                     // The ink averaged over four positions spread across the pixel in a rotated grid,
                     // scaled with the width of the lines. The lines then fade out over a pixel or more
                     // at their edges, instead of stepping between the pixels.
-                    float ink = (inkAt(uv0 + a * vec2(-0.375, -0.125), a, b) +
-                                 inkAt(uv0 + a * vec2(0.125, -0.375), a, b) +
-                                 inkAt(uv0 + a * vec2(0.375, 0.125), a, b) +
-                                 inkAt(uv0 + a * vec2(-0.125, 0.375), a, b)) * 0.25 * inkParams.w;
+                    float ink = (inkAt(snapToTexel(uv0 + a * vec2(-0.375, -0.125)), a, b) +
+                                 inkAt(snapToTexel(uv0 + a * vec2(0.125, -0.375)), a, b) +
+                                 inkAt(snapToTexel(uv0 + a * vec2(0.375, 0.125)), a, b) +
+                                 inkAt(snapToTexel(uv0 + a * vec2(-0.125, 0.375)), a, b)) * 0.25 * inkParams.w;
                     if (ink <= 0.0) {
                         discard;
                     }
@@ -365,7 +374,12 @@ class RenderPassInkOutline extends RenderPassShaderQuad {
                     return abs(a - b) / (a + b + 0.05);
                 }
 
-                // the ink at a position, comparing the samples a and b away on both diagonals
+                // the center of the texel a position is in
+                fn snapToTexel(uv: vec2f) -> vec2f {
+                    return (floor(uv / uniform.inkTexelSize) + 0.5) * uniform.inkTexelSize;
+                }
+
+                // the ink at a texel center, comparing the samples a and b away on both diagonals
                 fn inkAt(uv: vec2f, a: vec2f, b: vec2f) -> f32 {
 
                     // The inverse of the depth changes linearly across a flat surface, so its second
@@ -385,16 +399,20 @@ class RenderPassInkOutline extends RenderPassShaderQuad {
 
                 @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
                     var output: FragmentOutput;
+
+                    // The depth is read from the nearest texel, so the samples compared are a whole
+                    // number of texels away from a texel center - on a flat surface they are then the
+                    // same distance away on both sides, and their second difference stays zero.
                     let a = uniform.inkTexelSize * uniform.inkParams.x;
                     let b = vec2f(a.x, -a.y);
 
                     // The ink averaged over four positions spread across the pixel in a rotated grid,
                     // scaled with the width of the lines. The lines then fade out over a pixel or more
                     // at their edges, instead of stepping between the pixels.
-                    let ink = (inkAt(uv0 + a * vec2f(-0.375, -0.125), a, b) +
-                               inkAt(uv0 + a * vec2f(0.125, -0.375), a, b) +
-                               inkAt(uv0 + a * vec2f(0.375, 0.125), a, b) +
-                               inkAt(uv0 + a * vec2f(-0.125, 0.375), a, b)) * 0.25 * uniform.inkParams.w;
+                    let ink = (inkAt(snapToTexel(uv0 + a * vec2f(-0.375, -0.125)), a, b) +
+                               inkAt(snapToTexel(uv0 + a * vec2f(0.125, -0.375)), a, b) +
+                               inkAt(snapToTexel(uv0 + a * vec2f(0.375, 0.125)), a, b) +
+                               inkAt(snapToTexel(uv0 + a * vec2f(-0.125, 0.375)), a, b)) * 0.25 * uniform.inkParams.w;
                     if (ink <= 0.0) {
                         discard;
                     }
@@ -419,7 +437,7 @@ class RenderPassInkOutline extends RenderPassShaderQuad {
 
     execute() {
         const params = this._params;
-        params[0] = this.width;
+        params[0] = Math.max(Math.round(this.width), 1);
         params[1] = this.depthThreshold;
         params[2] = this.colorThreshold;
         params[3] = this.intensity;
@@ -451,12 +469,11 @@ class RenderPassInkOutline extends RenderPassShaderQuad {
 // resources it lists in `requires` are what the camera frame provides to it:
 // - the copy of the opaque scene color, which the camera frame takes because the effect requires it,
 // - the render target the scene renders to, which the pass draws the lines into,
-// - the scene depth rendered by a prepass, as the pass runs before the transparent geometry renders,
-//   which is before the depth the scene renders is available.
+// - the scene depth, which at this point holds the depth of the opaque geometry.
 // The pass is added to the postOpaque stage, running after the opaque geometry and before the
 // transparent geometry, which renders over the lines.
 class InkOutlineEffect extends CameraFrameEffect {
-    // The width of the lines, in pixels
+    // The width of the lines, in whole pixels
     width = 3;
 
     // How sensitive the lines are to changes of the depth - lower values draw more lines
@@ -476,12 +493,12 @@ class InkOutlineEffect extends CameraFrameEffect {
 
     constructor(device) {
         super(device, 'inkOutline', {
-            requires: [FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENETARGET, FRAMERESOURCE_PREPASSDEPTH]
+            requires: [FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENETARGET, FRAMERESOURCE_DEPTH]
         });
     }
 
     createPasses(resources, passes) {
-        this._pass = new RenderPassInkOutline(this.device, this.cameraFrame.cameraComponent, resources.prepassDepth);
+        this._pass = new RenderPassInkOutline(this.device, this.cameraFrame.cameraComponent, resources.depth);
         this._pass.init(resources.sceneTarget);
         passes.postOpaque.push(this._pass);
     }

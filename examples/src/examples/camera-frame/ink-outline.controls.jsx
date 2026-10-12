@@ -30,9 +30,9 @@ export function Controls({ observer }) {
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'data.outline.width' }}
-                        min={0.5}
-                        max={3}
-                        precision={1}
+                        min={1}
+                        max={4}
+                        precision={0}
                     />
                 </LabelGroup>
                 <LabelGroup text='Depth Threshold'>

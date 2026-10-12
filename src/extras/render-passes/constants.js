@@ -63,10 +63,11 @@ export const COMPOSESLOT_OUTPUT = 'output';
 export const composeSlots = [COMPOSESLOT_SCENE, COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_OUTPUT];
 
 /**
- * A frame resource: the depth of the scene, available once the scene has rendered. List it in
- * {@link CameraFrameEffect#requires} to read the depth in the effect's shaders, using the
+ * A frame resource: the depth of the scene, available once the opaque geometry has rendered. List
+ * it in {@link CameraFrameEffect#requires} to read the depth in the effect's shaders, using the
  * `getLinearScreenDepth` function of the `screenDepthPS` chunk, which the composition includes for
- * the effect's compose chunk. The camera frame renders the depth the cheapest way available.
+ * the effect's compose chunk. The camera frame renders the depth the cheapest way available. Passes
+ * running between the opaque and the transparent geometry read the depth of the opaque geometry.
  *
  * @type {string}
  * @category Graphics
