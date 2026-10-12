@@ -4,10 +4,12 @@ struct Sphere {
     radius: f32
 }
 
+// the number of threads the dispatch was set up for, and functions to skip and index them
+#include "dispatchThreadsCS"
+
 // Simplified-syntax resources (no @group/@binding) - the engine reflects these into a bind group
 // automatically, so the example does not provide computeBindGroupFormat / computeUniformBufferFormats.
 // The loose uniforms are collapsed into a single generated uniform buffer.
-uniform count: u32;              // number of particles
 uniform dt: f32;                 // delta time
 uniform sphereCount: u32;        // number of spheres
 
@@ -17,9 +19,10 @@ var<storage, read> spheres: array<Sphere>;
 @compute @workgroup_size(64)
 fn main(@builtin(global_invocation_id) global_invocation_id: vec3u) {
 
-    // particle index - ignore if out of bounds (as they get batched into groups of 64)
-    let index = global_invocation_id.x * 1024 + global_invocation_id.y;
-    if (index >= uniform.count) { return; }
+    // a thread for each particle - skip the threads beyond the particles, as the dispatch is
+    // rounded up to whole workgroups of 64
+    if (!dispatchThreadInRange(global_invocation_id)) { return; }
+    let index = dispatchThreadIndex(global_invocation_id);
 
     // update times
     var particle = particles[index];
