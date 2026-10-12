@@ -6,6 +6,7 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @import { FramePass } from '../../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { SceneColorMapHandle } from '../../platform/graphics/scene-color-map-handle.js'
  * @import { ScopeId } from '../../platform/graphics/scope-id.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js'
@@ -55,8 +56,10 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * FRAMERESOURCE_PREPASSDEPTH.
  * @property {Texture} [sceneColorHalf] - The half resolution scene color, see
  * FRAMERESOURCE_SCENECOLORHALF.
- * @property {Texture} [sceneColorGrab] - The mipmapped copy of the opaque scene color, see
- * FRAMERESOURCE_SCENECOLORGRAB.
+ * @property {SceneColorMapHandle} [sceneColorGrab] - The handle of the mipmapped copy of the opaque
+ * scene color, see FRAMERESOURCE_SCENECOLORGRAB. The copy is a new texture whenever the scene
+ * resizes, which the handle always identifies, and it is published to the `uSceneColorMap`
+ * texture the shaders sample before the passes at the postOpaque stage run.
  * @property {RenderTarget} [sceneTarget] - The scene render target, see FRAMERESOURCE_SCENETARGET.
  * @ignore
  */
@@ -69,8 +72,9 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @typedef {object} CameraFrameEffectPasses
  * @property {FramePass[]} preScene - Passes running before the scene renders, after the prepass
  * when one renders - for output the scene's materials read.
- * @property {FramePass[]} postOpaque - Passes running after the opaque geometry and the scene
- * color copy, before the transparent geometry.
+ * @property {FramePass[]} postOpaque - Passes running after the opaque geometry, the skybox and the
+ * copy of the scene color, before the transparent geometry - for passes rendering into the scene
+ * which the transparent geometry renders over.
  * @property {FramePass[]} postScene - Passes running after the scene, before its temporal
  * anti-aliasing - for passes rendering into the scene.
  * @property {FramePass[]} postTemporal - Passes running after the temporal anti-aliasing and the

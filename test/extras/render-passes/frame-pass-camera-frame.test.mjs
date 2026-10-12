@@ -5,8 +5,8 @@ import { Debug } from '../../../src/core/debug.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import {
-    FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING,
-    SSAOTYPE_NONE
+    FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENECOLORHALF,
+    FRAMERESOURCE_SCENETARGET, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
 } from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
@@ -16,7 +16,7 @@ import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ss
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
-import { PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
+import { LAYERID_IMMEDIATE, LAYERID_WORLD, PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
 import { ShaderUtils } from '../../../src/scene/shader-lib/shader-utils.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -387,20 +387,6 @@ describe('FramePassCameraFrame', function () {
             cameraFrame.update();
         });
 
-        it('asserts on passes at a stage which is not supported yet', function () {
-            const assert = stub(Debug, 'assert');
-            const effect = new PassEffect(app.graphicsDevice);
-            effect.stage = 'postOpaque';
-            cameraFrame.addEffect(effect);
-            cameraFrame.update();
-            const failed = assert.getCalls().filter(call => !call.args[0]).map(call => call.args[1]);
-            expect(failed.some(message => message.includes('postOpaque stage'))).to.equal(true);
-            expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(effect.pass);
-            assert.restore();
-            effect.destroy();
-            cameraFrame.update();
-        });
-
         it('builds the passes of a new instance replacing an effect with the same id', function () {
             const old = new PassEffect(app.graphicsDevice);
             cameraFrame.addEffect(old);
@@ -546,6 +532,118 @@ describe('FramePassCameraFrame', function () {
             cameraFrame.update();
             cameraFrame.renderPassCamera.frameUpdate();
             expect(errorOnce.callCount).to.equal(1);
+        });
+    });
+
+    describe('after the opaque geometry', function () {
+
+        // nothing else running between the opaque and the transparent geometry
+        beforeEach(function () {
+            cameraFrame.taa.enabled = false;
+            cameraFrame.bloom.intensity = 0;
+            cameraFrame.dof.enabled = false;
+        });
+
+        const createEffect = (id, requires = []) => {
+            const effect = new PassEffect(app.graphicsDevice, id, requires);
+            effect.stage = 'postOpaque';
+            return effect;
+        };
+
+        it('renders the scene in one pass while nothing runs between its opaque and transparent geometry', function () {
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            expect(framePass.scenePassTransparent).to.not.exist;
+            expect(framePass.colorGrabPass).to.not.exist;
+        });
+
+        it('runs the passes at the postOpaque stage between the opaque and the transparent geometry', function () {
+            const first = createEffect('first');
+            const second = createEffect('second');
+            cameraFrame.addEffect(first);
+            cameraFrame.addEffect(second);
+            cameraFrame.update();
+
+            const framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            expect(framePass.scenePassTransparent).to.exist;
+            expect(framePass.colorGrabPass).to.not.exist;
+            expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(first.pass));
+            expect(passes.indexOf(first.pass)).to.be.below(passes.indexOf(second.pass));
+            expect(passes.indexOf(second.pass)).to.be.below(passes.indexOf(framePass.scenePassTransparent));
+
+            // the scene renders in one pass again once they are gone
+            first.destroy();
+            second.destroy();
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.scenePassTransparent).to.not.exist;
+        });
+
+        it('copies the opaque scene color for an effect requiring it, and hands it the handle of the copy', function () {
+            const effect = createEffect('grabber', [FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENETARGET]);
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+
+            let framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            expect(framePass.options.sceneColorMap).to.equal(true);
+            expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(framePass.colorGrabPass));
+            expect(passes.indexOf(framePass.colorGrabPass)).to.be.below(passes.indexOf(effect.pass));
+            expect(passes.indexOf(effect.pass)).to.be.below(passes.indexOf(framePass.scenePassTransparent));
+            expect(effect.resourcesGiven.sceneColorGrab).to.equal(cameraFrame.cameraComponent.sceneColorMapHandle);
+            expect(effect.resourcesGiven.sceneTarget).to.equal(framePass.rt);
+
+            // the copy is only taken while an effect requires it
+            effect.enabled = false;
+            cameraFrame.update();
+            framePass = cameraFrame.renderPassCamera;
+            expect(framePass.options.sceneColorMap).to.equal(false);
+            expect(framePass.colorGrabPass).to.not.exist;
+            effect.destroy();
+            cameraFrame.update();
+        });
+
+        it('copies the scene color for an active effect requiring it, one without passes included', function () {
+            const effect = new CameraFrameEffect(app.graphicsDevice, 'grabReader', { requires: [FRAMERESOURCE_SCENECOLORGRAB] });
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.colorGrabPass).to.exist;
+
+            effect.enabled = false;
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.colorGrabPass).to.not.exist;
+            cameraFrame.removeEffect(effect);
+        });
+
+        it('keeps the copy of the scene color the rendering options request', function () {
+            cameraFrame.rendering.sceneColorMap = true;
+            const effect = createEffect('grabber', [FRAMERESOURCE_SCENECOLORGRAB]);
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+            const { colorGrabPass } = cameraFrame.renderPassCamera;
+            expect(colorGrabPass).to.exist;
+
+            // one copy, shared with the materials
+            expect(cameraFrame.renderPassCamera.beforePasses.filter(pass => pass === colorGrabPass)).to.have.lengthOf(1);
+
+            effect.destroy();
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.colorGrabPass).to.exist;
+        });
+
+        it('runs passes after the opaque geometry when nothing transparent renders after them', function () {
+            const effect = createEffect('last');
+            cameraFrame.cameraComponent.layers = cameraFrame.cameraComponent.layers.filter(id => id !== LAYERID_WORLD && id !== LAYERID_IMMEDIATE);
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+
+            const framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            expect(framePass.scenePassTransparent).to.not.exist;
+            expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(effect.pass));
+            expect(passes.indexOf(effect.pass)).to.be.below(passes.indexOf(framePass.composePass));
+            effect.destroy();
+            cameraFrame.update();
         });
     });
 

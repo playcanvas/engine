@@ -95,9 +95,12 @@ export const FRAMERESOURCE_PREPASSDEPTH = 'prepassDepth';
 export const FRAMERESOURCE_SCENECOLORHALF = 'sceneColorHalf';
 
 /**
- * A frame resource: a copy of the scene color with mipmaps, taken after the opaque geometry has
- * rendered. It is the texture the `rendering.sceneColorMap` option of the camera frame provides to
- * the materials.
+ * A frame resource: a copy of the scene color with mipmaps, taken after the opaque geometry and the
+ * skybox have rendered, before the transparent geometry. List it in
+ * {@link CameraFrameEffect#requires} to read the opaque scene in the effect's shaders, which sample
+ * it as the `uSceneColorMap` texture - for example to distort it while rendering into the scene
+ * between its opaque and transparent geometry. It is the copy the `rendering.sceneColorMap` option
+ * of the camera frame provides to the materials, which requiring it enables.
  *
  * @type {string}
  * @category Graphics
