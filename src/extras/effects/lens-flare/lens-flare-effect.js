@@ -7,18 +7,18 @@ import { Vec4 } from '../../../core/math/vec4.js';
 import { now } from '../../../core/time.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-import glslComposeLensFlarePS from '../../../scene/shader-lib/glsl/chunks/render-pass/frag/compose/compose-lens-flare.js';
-import wgslComposeLensFlarePS from '../../../scene/shader-lib/wgsl/chunks/render-pass/frag/compose/compose-lens-flare.js';
-import { CameraFrameEffect } from '../camera-frame-effect.js';
-import { COMPOSESLOT_HDR, FRAMERESOURCE_DEPTH } from '../constants.js';
-import { FramePassLensFlare, LENSFLARE_ELEMENT_TEXTURE_WIDTH, LENSFLARE_MAX_FLARES } from '../lens-flare/frame-pass-lens-flare.js';
-import { LensFlare } from '../lens-flare/lens-flare.js';
-import { LensFlareShapes } from '../lens-flare/lens-flare-shapes.js';
+import glslComposeLensFlarePS from './glsl/compose-ps.js';
+import wgslComposeLensFlarePS from './wgsl/compose-ps.js';
+import { CameraFrameEffect } from '../../render-passes/camera-frame-effect.js';
+import { COMPOSESLOT_HDR, FRAMERESOURCE_DEPTH } from '../../render-passes/constants.js';
+import { FramePassLensFlare, LENSFLARE_ELEMENT_TEXTURE_WIDTH, LENSFLARE_MAX_FLARES } from './passes/frame-pass-lens-flare.js';
+import { LensFlare } from './lens-flare.js';
+import { LensFlareShapes } from './lens-flare-shapes.js';
 
 /**
- * @import { CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from '../camera-frame-effect.js'
+ * @import { CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from '../../render-passes/camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
- * @import { LensFlareShapeLibrary } from '../lens-flare/lens-flare-shapes.js'
+ * @import { LensFlareShapeLibrary } from './lens-flare-shapes.js'
  */
 
 const _viewProj = new Mat4();

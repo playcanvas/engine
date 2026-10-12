@@ -1,14 +1,14 @@
-import { Color } from '../../../core/math/color.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
-import { FramePass } from '../../../platform/graphics/frame-pass.js';
-import { RenderTarget } from '../../../platform/graphics/render-target.js';
-import { Texture } from '../../../platform/graphics/texture.js';
+import { Color } from '../../../../core/math/color.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../../../platform/graphics/constants.js';
+import { FramePass } from '../../../../platform/graphics/frame-pass.js';
+import { RenderTarget } from '../../../../platform/graphics/render-target.js';
+import { Texture } from '../../../../platform/graphics/texture.js';
 import { RenderPassLensFlareOcclusion } from './render-pass-lens-flare-occlusion.js';
 import { RenderPassLensFlareSprites } from './render-pass-lens-flare-sprites.js';
 
 /**
- * @import { CameraComponent } from '../../../framework/components/camera/component.js'
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ * @import { CameraComponent } from '../../../../framework/components/camera/component.js'
+ * @import { GraphicsDevice } from '../../../../platform/graphics/graphics-device.js'
  */
 
 /**

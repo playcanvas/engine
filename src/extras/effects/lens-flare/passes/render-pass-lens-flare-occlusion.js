@@ -1,14 +1,14 @@
-import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
-import { RenderPassShaderQuad } from '../../../scene/graphics/render-pass-shader-quad.js';
-import glslLensFlareOcclusionPS from '../../../scene/shader-lib/glsl/chunks/render-pass/frag/lens-flare-occlusion.js';
-import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
-import { ShaderUtils } from '../../../scene/shader-lib/shader-utils.js';
-import wgslLensFlareOcclusionPS from '../../../scene/shader-lib/wgsl/chunks/render-pass/frag/lens-flare-occlusion.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../../platform/graphics/constants.js';
+import { RenderPassShaderQuad } from '../../../../scene/graphics/render-pass-shader-quad.js';
+import glslLensFlareOcclusionPS from '../glsl/occlusion-ps.js';
+import { ShaderChunks } from '../../../../scene/shader-lib/shader-chunks.js';
+import { ShaderUtils } from '../../../../scene/shader-lib/shader-utils.js';
+import wgslLensFlareOcclusionPS from '../wgsl/occlusion-ps.js';
 
 /**
- * @import { CameraComponent } from '../../../framework/components/camera/component.js'
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
- * @import { Texture } from '../../../platform/graphics/texture.js'
+ * @import { CameraComponent } from '../../../../framework/components/camera/component.js'
+ * @import { GraphicsDevice } from '../../../../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../../../../platform/graphics/texture.js'
  */
 
 /**

@@ -1,16 +1,16 @@
-import { BlendState } from '../../../platform/graphics/blend-state.js';
-import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
-import { RenderPassShaderQuad } from '../../../scene/graphics/render-pass-shader-quad.js';
-import glslLensFlareSpritePS from '../../../scene/shader-lib/glsl/chunks/render-pass/frag/lens-flare-sprite.js';
-import glslLensFlareSpriteVS from '../../../scene/shader-lib/glsl/chunks/render-pass/vert/lens-flare-sprite.js';
-import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
-import { ShaderUtils } from '../../../scene/shader-lib/shader-utils.js';
-import wgslLensFlareSpritePS from '../../../scene/shader-lib/wgsl/chunks/render-pass/frag/lens-flare-sprite.js';
-import wgslLensFlareSpriteVS from '../../../scene/shader-lib/wgsl/chunks/render-pass/vert/lens-flare-sprite.js';
+import { BlendState } from '../../../../platform/graphics/blend-state.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../../platform/graphics/constants.js';
+import { RenderPassShaderQuad } from '../../../../scene/graphics/render-pass-shader-quad.js';
+import glslLensFlareSpritePS from '../glsl/sprite-ps.js';
+import glslLensFlareSpriteVS from '../glsl/sprite-vs.js';
+import { ShaderChunks } from '../../../../scene/shader-lib/shader-chunks.js';
+import { ShaderUtils } from '../../../../scene/shader-lib/shader-utils.js';
+import wgslLensFlareSpritePS from '../wgsl/sprite-ps.js';
+import wgslLensFlareSpriteVS from '../wgsl/sprite-vs.js';
 
 /**
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
- * @import { Texture } from '../../../platform/graphics/texture.js'
+ * @import { GraphicsDevice } from '../../../../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../../../../platform/graphics/texture.js'
  */
 
 /**

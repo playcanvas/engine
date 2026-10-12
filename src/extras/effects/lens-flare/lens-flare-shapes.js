@@ -7,10 +7,10 @@ import {
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { drawQuadWithShader } from '../../../scene/graphics/quad-render-utils.js';
-import glslLensFlareShapePS from '../../../scene/shader-lib/glsl/chunks/render-pass/frag/lens-flare-shape.js';
+import glslLensFlareShapePS from './glsl/shape-ps.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 import { ShaderUtils } from '../../../scene/shader-lib/shader-utils.js';
-import wgslLensFlareShapePS from '../../../scene/shader-lib/wgsl/chunks/render-pass/frag/lens-flare-shape.js';
+import wgslLensFlareShapePS from './wgsl/shape-ps.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
