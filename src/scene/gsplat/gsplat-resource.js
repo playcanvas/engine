@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
@@ -20,10 +21,32 @@ const getSHData = (gsplatData, numCoeffs) => {
     return result;
 };
 
+// maximum number of spherical beta lobes evaluated per splat, each stored in its own stream
+const SB_MAX_LOBES = 4;
+
+// sharpness of the softplus applied to the lobe colors, matching the trainers
+const SB_SOFTPLUS_BETA = 10 * Math.LN2;
+
+// largest finite half float value
+const HALF_MAX = 65504;
+
+const sbSoftplus = (x) => {
+    const bx = SB_SOFTPLUS_BETA * x;
+    // softplus(x) approaches x for large inputs, and exp() would overflow
+    return bx > 20 ? x : Math.log1p(Math.exp(bx)) / SB_SOFTPLUS_BETA;
+};
+
 /** @ignore */
 class GSplatResource extends GSplatResourceBase {
     /** @type {0 | 1 | 2 | 3} */
     shBands;
+
+    /**
+     * Number of spherical beta lobes evaluated per splat.
+     *
+     * @type {number}
+     */
+    sbLobes;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -59,6 +82,17 @@ class GSplatResource extends GSplatResourceBase {
             }
         }
 
+        // Add a stream per spherical beta lobe
+        this.sbLobes = Math.min(gsplatData.sbLobes, SB_MAX_LOBES);
+        Debug.call(() => {
+            if (gsplatData.sbLobes > SB_MAX_LOBES) {
+                Debug.warnOnce(`GSplatResource: the splat data has ${gsplatData.sbLobes} spherical beta lobes, only the first ${SB_MAX_LOBES} are rendered.`);
+            }
+        });
+        for (let i = 0; i < this.sbLobes; i++) {
+            streams.push({ name: `splatSB_${i}`, format: PIXELFORMAT_RGBA32U });
+        }
+
         // Create format with streams and shader chunk include
         this._format = new GSplatFormat(device, streams, {
             readGLSL: '#include "gsplatUncompressedVS"',
@@ -75,10 +109,17 @@ class GSplatResource extends GSplatResourceBase {
         if (this.shBands > 0) {
             this.updateSHData(gsplatData);
         }
+
+        if (this.sbLobes > 0) {
+            this.updateSBData(gsplatData);
+        }
     }
 
     configureMaterialDefines(defines) {
         defines.set('SH_BANDS', this.shBands);
+        if (this.sbLobes > 0) {
+            defines.set('SB_LOBES', this.sbLobes);
+        }
     }
 
     /**
@@ -254,6 +295,44 @@ class GSplatResource extends GSplatResourceBase {
         sh4to7Texture?.unlock();
         sh8to11Texture?.unlock();
         sh12to15Texture?.unlock();
+    }
+
+    /**
+     * Stores the spherical beta lobes in the form the shader evaluates, leaving it a single pow
+     * per lobe: the lobe axis from its spherical angles, the sharpness 4 * exp(beta), and the
+     * color passed through a softplus. Each lobe is packed as half floats into one texel of its
+     * own stream: (axis.x, axis.y), (axis.z, sharpness), (red, green), (blue, unused).
+     *
+     * @param {GSplatData} gsplatData - The source data
+     */
+    updateSBData(gsplatData) {
+        const float2Half = FloatPacking.float2Half;
+
+        // the properties are channel-major, sb_params_{channel * lobes + lobe}, with the channels
+        // red, green, blue, theta, phi and beta
+        const numLobes = gsplatData.sbLobes;
+
+        for (let l = 0; l < this.sbLobes; l++) {
+            const [r, g, b, theta, phi, beta] = [0, 1, 2, 3, 4, 5].map(c => gsplatData.getProp(`sb_params_${c * numLobes + l}`));
+
+            const texture = this.streams.getTexture(`splatSB_${l}`);
+            const data = texture.lock();
+
+            for (let i = 0; i < this.numSplats; i++) {
+                const sinTheta = Math.sin(theta[i]);
+                const x = sinTheta * Math.cos(phi[i]);
+                const y = sinTheta * Math.sin(phi[i]);
+                const z = Math.cos(theta[i]);
+                const sharpness = Math.min(4 * Math.exp(beta[i]), HALF_MAX);
+
+                data[i * 4 + 0] = float2Half(x) | (float2Half(y) << 16);
+                data[i * 4 + 1] = float2Half(z) | (float2Half(sharpness) << 16);
+                data[i * 4 + 2] = float2Half(sbSoftplus(r[i])) | (float2Half(sbSoftplus(g[i])) << 16);
+                data[i * 4 + 3] = float2Half(sbSoftplus(b[i]));
+            }
+
+            texture.unlock();
+        }
     }
 }
 

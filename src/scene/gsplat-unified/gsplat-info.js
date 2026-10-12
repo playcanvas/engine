@@ -519,8 +519,10 @@ class GSplatInfo {
         }
     }
 
-    get hasSphericalHarmonics() {
-        return this.resource.gsplatData?.shBands > 0;
+    // true when the splat color depends on the view direction, through spherical harmonics or
+    // spherical beta lobes, and needs re-evaluating as the camera moves
+    get hasViewDependentColor() {
+        return this.resource.gsplatData?.shBands > 0 || this.resource.sbLobes > 0;
     }
 }
 

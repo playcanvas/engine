@@ -32,4 +32,5 @@ vec3 getScale() {
 }
 
 #include "gsplatUncompressedSHVS"
+#include "gsplatUncompressedSBVS"
 `;
