@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F } from './constants.js';
 import { SceneColorMapHandle } from './scene-color-map-handle.js';
 import { SceneDepthMapHandle } from './scene-depth-map-handle.js';
@@ -10,7 +11,6 @@ import { Shader } from './shader.js';
  * @import { StorageBuffer } from './storage-buffer.js'
  * @import { Texture } from './texture.js'
  * @import { TextureView } from './texture-view.js'
- * @import { Vec2 } from '../../core/math/vec2.js'
  * @import { VertexBuffer } from './vertex-buffer.js'
  */
 
@@ -24,6 +24,15 @@ const COLOR_MAP = 'computeSceneColorMap';
 
 const isSceneMapName = name => name === DEPTH_MAP || name === DEPTH_CAMERA_PARAMS ||
     name === DEPTH_VIEW_PROJECTION_INVERSE || name === DEPTH_VIEWPORT || name === COLOR_MAP;
+
+// The uniforms the dispatchThreadsCS chunk declares, which the compute instance assigns itself in
+// setupDispatchThreads, so they cannot be set as parameters.
+const DISPATCH_THREAD_COUNT = 'computeDispatchThreadCount';
+const DISPATCH_ROW_THREADS = 'computeDispatchRowThreads';
+
+const isDispatchName = name => name === DISPATCH_THREAD_COUNT || name === DISPATCH_ROW_THREADS;
+
+const _dispatchSize = new Vec2();
 
 // The bits of the key of the shader variant compiled for the attached scene maps, each matching a
 // define the chunks are compiled with.
@@ -152,6 +161,15 @@ class Compute {
      */
     _variants = null;
 
+    /**
+     * The number of threads of the dispatch set up by {@link Compute#setupDispatchThreads}, for
+     * the uniform of the dispatchThreadsCS chunk.
+     *
+     * @type {Uint32Array}
+     * @private
+     */
+    _dispatchThreadCount = new Uint32Array(3);
+
     /** @ignore */
     countX = 1;
 
@@ -220,6 +238,7 @@ class Compute {
      */
     setParameter(name, value) {
         Debug.assert(!isSceneMapName(name), `Compute ${this.name}: the parameter ${name} is assigned from the scene map attached with setSceneDepthMap / setSceneColorMap, and cannot be set.`, this);
+        Debug.assert(!isDispatchName(name), `Compute ${this.name}: the parameter ${name} is assigned by setupDispatchThreads, and cannot be set.`, this);
         this._setParameter(name, value);
     }
 
@@ -365,6 +384,17 @@ class Compute {
     }
 
     /**
+     * Returns true when the shader declares a uniform of the given name.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {boolean} True when the shader declares it.
+     * @private
+     */
+    _declaresUniform(name) {
+        return !!this.shader?.impl?.computeReflectedUniformBufferFormat?.get(name);
+    }
+
+    /**
      * Frees resources associated with this compute instance.
      */
     destroy() {
@@ -478,7 +508,9 @@ class Compute {
     }
 
     /**
-     * Prepare the compute work dispatch.
+     * Prepare the compute work dispatch, for a grid of workgroups. To dispatch for a number of
+     * threads instead, with the workgroups derived from them, use
+     * {@link Compute#setupDispatchThreads}.
      *
      * @param {number} x - X dimension of the grid of work-groups to dispatch.
      * @param {number} [y] - Y dimension of the grid of work-groups to dispatch.
@@ -492,6 +524,91 @@ class Compute {
         // reset indirect dispatch state
         this.indirectSlotIndex = -1;
         this.indirectBuffer = null;
+    }
+
+    /**
+     * Prepare the compute work dispatch, for a number of threads in each dimension, a thread being
+     * one invocation of the compute shader, as identified by its `global_invocation_id`. The
+     * workgroups to dispatch are derived from the workgroup size the entry point of the shader
+     * declares using `@workgroup_size` with integer literals, which can be the values of defines
+     * injected into the shader. The dispatch is rounded up to whole workgroups, so the shader skips
+     * the threads beyond the requested number. To do that, and to index the threads, it uses the
+     * functions of the `dispatchThreadsCS` chunk it includes:
+     *
+     * - `dispatchThreadCount() -> vec3u`: the number of threads the dispatch was set up for.
+     * - `dispatchThreadInRange(globalId: vec3u) -> bool`: true when the thread is one of those
+     * threads.
+     * - `dispatchThreadIndex(globalId: vec3u) -> u32`: the linear index of the thread, x varying
+     * fastest.
+     *
+     * A dispatch of threads in one dimension, which needs more workgroups than the device supports
+     * in a single dimension, is spread over rows of workgroups. The shader then needs to include
+     * the chunk, as the functions account for that.
+     *
+     * A compute shader using the chunk, dispatched for a thread for each particle:
+     *
+     * ```wgsl
+     * #include "dispatchThreadsCS"
+     *
+     * @compute @workgroup_size(64)
+     * fn main(@builtin(global_invocation_id) id: vec3u) {
+     *     if (!dispatchThreadInRange(id)) { return; }
+     *     let index = dispatchThreadIndex(id);
+     * }
+     * ```
+     *
+     * @param {number} x - The number of threads in the X dimension.
+     * @param {number} [y] - The number of threads in the Y dimension. Defaults to 1.
+     * @param {number} [z] - The number of threads in the Z dimension. Defaults to 1.
+     * @example
+     * compute.setupDispatchThreads(particleCount);
+     */
+    setupDispatchThreads(x, y = 1, z = 1) {
+        // no compute backend to dispatch with
+        if (!this.impl) {
+            return;
+        }
+
+        const size = this.shader.impl.computeWorkgroupSize;
+        if (!size) {
+            Debug.errorOnce(`Compute ${this.name}: setupDispatchThreads cannot determine the workgroup size of the shader. Declare it using @workgroup_size with integer literals.`, this);
+            return;
+        }
+
+        const [sizeX, sizeY, sizeZ] = size;
+        let countX = Math.ceil(x / sizeX);
+        let countY = Math.ceil(y / sizeY);
+        const countZ = Math.ceil(z / sizeZ);
+        let rowThreads = x;
+
+        // spread a dispatch in one dimension over rows of workgroups when it needs more workgroups
+        // than a single dimension holds
+        const maxDimension = this.device.limits.maxComputeWorkgroupsPerDimension || 65535;
+        if (countX > maxDimension && y === 1 && z === 1 && sizeY === 1 && sizeZ === 1) {
+            Debug.assert(this._declaresUniform(DISPATCH_ROW_THREADS), `Compute ${this.name}: the dispatch of ${x} threads is spread over rows of workgroups, and the shader needs to include the dispatchThreadsCS chunk to index its threads.`, this);
+            Compute.calcDispatchSize(countX, _dispatchSize, maxDimension);
+            countX = _dispatchSize.x;
+            countY = _dispatchSize.y;
+            rowThreads = countX * sizeX;
+        }
+
+        Debug.assert(countX <= maxDimension && countY <= maxDimension && countZ <= maxDimension, `Compute ${this.name}: the dispatch of [${x}, ${y}, ${z}] threads needs [${countX}, ${countY}, ${countZ}] workgroups, more than the ${maxDimension} the device supports in a dimension.`, this);
+        Debug.call(() => {
+            if ((y === 1 && sizeY > 1) || (z === 1 && sizeZ > 1)) {
+                Debug.warnOnce(`Compute ${this.name}: the workgroup size [${sizeX}, ${sizeY}, ${sizeZ}] of the shader has more dimensions than the dispatch of [${x}, ${y}, ${z}] threads, which leaves most of its threads without work.`, this);
+            }
+        });
+
+        if (this._declaresUniform(DISPATCH_THREAD_COUNT)) {
+            const count = this._dispatchThreadCount;
+            count[0] = x;
+            count[1] = y;
+            count[2] = z;
+            this._setParameter(DISPATCH_THREAD_COUNT, count);
+            this._setParameter(DISPATCH_ROW_THREADS, rowThreads);
+        }
+
+        this.setupDispatch(countX, countY, countZ);
     }
 
     /**

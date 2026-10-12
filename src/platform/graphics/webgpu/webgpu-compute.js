@@ -205,6 +205,8 @@ class WebgpuCompute {
                     hint = 'The shader includes the sceneDepthCS chunk - attach a scene depth map using Compute#setSceneDepthMap.';
                 } else if (name === 'computeSceneColorMap') {
                     hint = 'The shader includes the sceneColorCS chunk - attach a scene color map using Compute#setSceneColorMap.';
+                } else if (name.startsWith('computeDispatch')) {
+                    hint = 'The shader includes the dispatchThreadsCS chunk - set up the dispatch using Compute#setupDispatchThreads.';
                 }
                 Debug.assert(false, `Compute ${compute.name}: the shader uses ${name}, which has no value. ${hint}`, compute);
             }

@@ -116,7 +116,7 @@ cameraEntity.script.create('orbitCameraInputTouch');
 const numParticles = 1024 * 1024;
 
 // a compute shader that will simulate the particles stored in a storage buffer. No bind group
-// or uniform buffer formats are provided - the loose uniforms (count, dt, sphereCount) and the
+// or uniform buffer formats are provided - the loose uniforms (dt, sphereCount) and the
 // storage buffers (particles, spheres) use the simplified WGSL syntax and are reflected
 // automatically by the engine from the shader source.
 const shader = device.supportsCompute
@@ -222,7 +222,6 @@ compute.setParameter('particles', particleStorageBuffer);
 compute.setParameter('spheres', sphereStorageBuffer);
 
 // Constant uniforms
-compute.setParameter('count', numParticles);
 compute.setParameter('sphereCount', numSpheres);
 
 // ------- Particle rendering -------
@@ -268,8 +267,8 @@ app.on('update', (/** @type {number} */ dt) => {
         // Update non-constant parameters each frame
         compute.setParameter('dt', dt);
 
-        // Dispatch the compute shader to simulate the particles
-        compute.setupDispatch(1024 / 64, 1024);
+        // Dispatch the compute shader to simulate the particles, a thread for each particle
+        compute.setupDispatchThreads(numParticles);
         device.computeDispatch([compute], 'ComputeParticlesDispatch');
     }
 });
