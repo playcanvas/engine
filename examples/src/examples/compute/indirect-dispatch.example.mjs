@@ -431,7 +431,8 @@ if (device.supportsCompute) {
         scanCompute.setParameter('completionCounter', completionCounterBuffer);
         scanCompute.setParameter('indirectDispatchBuffer', device.indirectDispatchBuffer);
 
-        scanCompute.setupDispatch(numTilesX, numTilesY, 1);
+        // a thread for each tile
+        scanCompute.setupDispatchThreads(numTilesX, numTilesY);
         device.computeDispatch([scanCompute], 'ScanDispatch');
 
         // --- Pass 2: Apply red tint to edge tiles (indirect dispatch) ---

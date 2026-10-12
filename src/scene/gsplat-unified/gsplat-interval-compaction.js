@@ -461,8 +461,7 @@ class GSplatIntervalCompaction {
 
         cullCompute.setParameter('numIntervals', numIntervals);
 
-        const cullWorkgroups = Math.ceil(numIntervals / WORKGROUP_SIZE);
-        cullCompute.setupDispatch(cullWorkgroups);
+        cullCompute.setupDispatchThreads(numIntervals);
         this.device.computeDispatch([cullCompute], 'GSplatIntervalCull');
 
         // --- Pass 2: Prefix sum over numIntervals + 1 elements ---

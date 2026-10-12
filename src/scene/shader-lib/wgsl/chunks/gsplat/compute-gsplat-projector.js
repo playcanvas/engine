@@ -23,6 +23,7 @@
 export const computeGsplatProjectorSource = /* wgsl */`
 
 #include "gsplatCommonCS"
+#include "dispatchThreadsCS"
 
 @group(0) @binding(0) var<storage, read> compactedSplatIds: array<u32>;
 @group(0) @binding(1) var<storage, read> sortElementCount: array<u32>;
@@ -91,7 +92,6 @@ var<workgroup> wgBase: u32;
 @compute @workgroup_size(256)
 fn main(
     @builtin(global_invocation_id) gid: vec3u,
-    @builtin(num_workgroups) numWorkgroups: vec3u,
     @builtin(local_invocation_index) localIdx: u32
 ) {
     if (localIdx == 0u) {
@@ -99,8 +99,8 @@ fn main(
     }
     workgroupBarrier();
 
-    // Indirect dispatch linearization: a 2D grid expanded into a flat thread index.
-    let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
+    // the flat thread index, also when the dispatch is spread over rows of workgroups
+    let threadIdx = dispatchThreadIndex(gid);
     let numVisible = sortElementCount[0];
 
     var valid = false;

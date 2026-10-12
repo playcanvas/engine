@@ -8,8 +8,14 @@ struct ub_compute {
 @group(0) @binding(1) var inputTexture: texture_2d<f32>;
 @group(0) @binding(2) var outputTexture: texture_storage_2d<rgba8unorm, write>;
 
-@compute @workgroup_size(1, 1, 1)
+@compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) global_id : vec3u) {
+
+    // a thread for each texel - skip the threads beyond the texture, as the dispatch is rounded up
+    // to whole workgroups
+    if (any(global_id.xy >= textureDimensions(outputTexture))) {
+        return;
+    }
 
     let uv = vec2i(global_id.xy);
 

@@ -219,8 +219,8 @@ computePass.onAfter = () => {
 
 app.on('update', (/** @type {number} */ _dt) => {
     if (device.supportsCompute) {
-        // The size of the dispatch, which the compute pass uses
-        compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
+        // The size of the dispatch, a thread for each pixel, which the compute pass uses
+        compute.setupDispatchThreads(app.graphicsDevice.width, app.graphicsDevice.height);
     }
 
     // Render the most recently read histogram using lines

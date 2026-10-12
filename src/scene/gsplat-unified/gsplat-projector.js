@@ -1,6 +1,5 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
@@ -46,7 +45,6 @@ import gsplatHelpersSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatHel
  */
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
-const PROJECTOR_WORKGROUP_SIZE = 256;
 
 // Defines owned by the projector itself - user render-stage material defines that collide with
 // these are ignored when merged into the projector compute, so user customization can't clobber
@@ -56,7 +54,6 @@ const PROJECTOR_INTERNAL_DEFINES = new Set([
 ]);
 
 const _cameraDir = new Vec3();
-const _dispatchSize = new Vec2();
 const _viewProjMat = new Mat4();
 const _viewProjData = new Float32Array(16);
 const _viewProj1Data = new Float32Array(16);
@@ -803,16 +800,10 @@ class GSplatProjector {
             compute.setParameter('fisheye_projMat11', fisheyeProj.projMat11);
         }
 
-        // 2D dispatch over the work-buffer capacity. The shader early-outs threads beyond
-        // sortElementCount[0]; sizing the dispatch for the full capacity (a CPU-known
-        // upper bound) avoids needing an extra indirect-args dispatch for this pass.
-        const workgroupCount = Math.ceil(totalCapacity / PROJECTOR_WORKGROUP_SIZE);
-        Compute.calcDispatchSize(
-            workgroupCount,
-            _dispatchSize,
-            this.device.limits.maxComputeWorkgroupsPerDimension || 65535
-        );
-        compute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
+        // a thread for each splat of the work-buffer capacity. The shader early-outs threads beyond
+        // sortElementCount[0]; sizing the dispatch for the full capacity (a CPU-known upper bound)
+        // avoids needing an extra indirect-args dispatch for this pass.
+        compute.setupDispatchThreads(totalCapacity);
         this.device.computeDispatch([compute], 'GSplatProjector');
     }
 

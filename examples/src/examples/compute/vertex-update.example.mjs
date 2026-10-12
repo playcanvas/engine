@@ -201,8 +201,8 @@ app.on('update', (dt) => {
         // Update non-constant parameters each frame
         compute.setParameter('time', time);
 
-        // Set up both dispatches
-        compute.setupDispatch(mesh.vertexBuffer.numVertices);
+        // Set up the dispatch, a thread for each vertex
+        compute.setupDispatchThreads(mesh.vertexBuffer.numVertices);
 
         // Dispatch the compute shader
         device.computeDispatch([compute], 'ModifyVBDispatch');
