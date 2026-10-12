@@ -2,27 +2,27 @@ import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
+import { BloomEffect } from '../../../src/extras/effects/bloom/bloom-effect.js';
+import { FramePassBloom } from '../../../src/extras/effects/bloom/passes/frame-pass-bloom.js';
+import { CasEffect } from '../../../src/extras/effects/cas/cas-effect.js';
+import { ColorEnhanceEffect } from '../../../src/extras/effects/color-enhance/color-enhance-effect.js';
+import { ColorLutEffect } from '../../../src/extras/effects/color-lut/color-lut-effect.js';
+import { DofEffect } from '../../../src/extras/effects/dof/dof-effect.js';
+import { FramePassDof } from '../../../src/extras/effects/dof/passes/frame-pass-dof.js';
+import { FringingEffect } from '../../../src/extras/effects/fringing/fringing-effect.js';
+import { GradingEffect } from '../../../src/extras/effects/grading/grading-effect.js';
+import { RenderPassSsao } from '../../../src/extras/effects/ssao/passes/render-pass-ssao.js';
+import { SsaoEffect } from '../../../src/extras/effects/ssao/ssao-effect.js';
+import { VignetteEffect } from '../../../src/extras/effects/vignette/vignette-effect.js';
+import { FramePassVolumetricFog } from '../../../src/extras/effects/volumetric-fog/passes/frame-pass-volumetric-fog.js';
+import { VolumetricFogEffect } from '../../../src/extras/effects/volumetric-fog/volumetric-fog-effect.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import {
     COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_SCENE, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH,
     FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENETARGET, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
 } from '../../../src/extras/render-passes/constants.js';
-import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
-import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
-import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
-import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
-import { DofEffect } from '../../../src/extras/render-passes/effects/dof-effect.js';
-import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
-import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
-import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
-import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
-import { VolumetricFogEffect } from '../../../src/extras/render-passes/effects/volumetric-fog-effect.js';
-import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
-import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
-import { FramePassVolumetricFog } from '../../../src/extras/render-passes/frame-pass-volumetric-fog.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
-import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';

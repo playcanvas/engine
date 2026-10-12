@@ -9,10 +9,10 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import glslSampleCatmullRomPS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/sampleCatmullRom.js';
-import wgslSampleCatmullRomPS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/sampleCatmullRom.js';
-import glsltaaResolvePS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/taaResolve.js';
-import wgsltaaResolvePS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/taaResolve.js';
+import glslSampleCatmullRomPS from './glsl/sample-catmull-rom-ps.js';
+import wgslSampleCatmullRomPS from './wgsl/sample-catmull-rom-ps.js';
+import glsltaaResolvePS from './glsl/taa-resolve-ps.js';
+import wgsltaaResolvePS from './wgsl/taa-resolve-ps.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
