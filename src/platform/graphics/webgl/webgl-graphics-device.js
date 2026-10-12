@@ -1174,9 +1174,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeContextCaches() {
         super.initializeContextCaches();
 
-        // cache of VAOs
-        this._vaoMap = new Map();
-
         this.boundVao = null;
         this.activeFramebuffer = null;
         this.feedback = null;
@@ -1971,30 +1968,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Generates the key of the vertex array object cache for the supplied vertex buffers. Each part
-     * identifies both the buffer and its format, and is delimited, so distinct buffer lists cannot
-     * generate the same key.
-     *
-     * @param {VertexBuffer[]} vertexBuffers - The vertex buffers of the draw.
-     * @returns {string} The cache key.
-     * @private
-     */
-    _vertexArrayKey(vertexBuffers) {
-        let key = '';
-        for (let i = 0; i < vertexBuffers.length; i++) {
-            key += vertexBuffers[i].vaoKeyPart;
-        }
-        return key;
-    }
-
-    /**
      * Removes the cached vertex array object for the supplied vertex buffers, if one exists.
      *
      * This is needed by code which exchanges the GPU buffers behind VertexBuffer objects while
      * leaving the objects themselves in place - see {@link TransformFeedback#process}. A vertex
-     * array object captures the GPU buffers it was built from, and this cache is keyed on the
-     * VertexBuffer objects, so such an exchange is invisible to it and a stale vertex array object
-     * would keep reading the buffers from before the exchange.
+     * array object captures the GPU buffers it was built from, and the cache is keyed on the buffer
+     * objects, so such an exchange is invisible to it and a stale vertex array object would keep
+     * reading the buffers from before the exchange.
      *
      * Only has an effect when more than one vertex buffer is supplied - a single vertex buffer stores
      * its vertex array object on itself, and so it travels with the buffer.
@@ -2005,11 +1985,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     removeVertexArrayFromCache(vertexBuffers) {
         if (vertexBuffers.length > 1) {
-            const key = this._vertexArrayKey(vertexBuffers);
-            const vao = this._vaoMap.get(key);
-            if (vao) {
-                this._vaoMap.delete(key);
-                this.gl.deleteVertexArray(vao);
+            const entry = vertexBuffers[0].impl.getVertexArrayEntry(vertexBuffers);
+            if (entry.vao) {
+                this.unbindVertexArray();
+                this.gl.deleteVertexArray(entry.vao);
+                entry.vao = null;
             }
         }
     }
@@ -2017,78 +1997,53 @@ class WebglGraphicsDevice extends GraphicsDevice {
     // function creates VertexArrayObject from list of vertex buffers
     createVertexArray(vertexBuffers) {
 
-        let key, vao;
+        // create VA object
+        const gl = this.gl;
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
 
-        // only use cache when more than 1 vertex buffer, otherwise it's unique
-        const useCache = vertexBuffers.length > 1;
-        if (useCache) {
+        // don't capture index buffer in VAO
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-            key = this._vertexArrayKey(vertexBuffers);
+        let locZero = false;
+        for (let i = 0; i < vertexBuffers.length; i++) {
 
-            // try to get VAO from cache
-            vao = this._vaoMap.get(key);
-        }
+            // bind buffer
+            const vertexBuffer = vertexBuffers[i];
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
 
-        // need to create new vao
-        if (!vao) {
+            // for each attribute
+            const elements = vertexBuffer.format.elements;
+            for (let j = 0; j < elements.length; j++) {
+                const e = elements[j];
+                const loc = semanticToLocation[e.name];
 
-            // create VA object
-            const gl = this.gl;
-            vao = gl.createVertexArray();
-            gl.bindVertexArray(vao);
+                if (loc === 0) {
+                    locZero = true;
+                }
 
-            // don't capture index buffer in VAO
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+                if (e.asInt) {
+                    gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
+                } else {
+                    gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                }
 
-            let locZero = false;
-            for (let i = 0; i < vertexBuffers.length; i++) {
+                gl.enableVertexAttribArray(loc);
 
-                // bind buffer
-                const vertexBuffer = vertexBuffers[i];
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
-
-                // for each attribute
-                const elements = vertexBuffer.format.elements;
-                for (let j = 0; j < elements.length; j++) {
-                    const e = elements[j];
-                    const loc = semanticToLocation[e.name];
-
-                    if (loc === 0) {
-                        locZero = true;
-                    }
-
-                    if (e.asInt) {
-                        gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
-                    } else {
-                        gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
-                    }
-
-                    gl.enableVertexAttribArray(loc);
-
-                    if (vertexBuffer.format.instancing) {
-                        gl.vertexAttribDivisor(loc, 1);
-                    }
+                if (vertexBuffer.format.instancing) {
+                    gl.vertexAttribDivisor(loc, 1);
                 }
             }
+        }
 
-            // end of VA object
-            gl.bindVertexArray(null);
+        // end of VA object
+        gl.bindVertexArray(null);
 
-            // unbind any array buffer
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        // unbind any array buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-            // add it to cache. Note that entries are not removed when one of the vertex buffers is
-            // destroyed - the cache only retains the vertex array object itself, not the buffers, and
-            // the number of buffers taking part in multi-buffer draws is small, so pruning per
-            // destroyed buffer is not considered worth the cost. The cache is released in full when
-            // the device is destroyed or the context is lost.
-            if (useCache) {
-                this._vaoMap.set(key, vao);
-            }
-
-            if (!locZero) {
-                Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
-            }
+        if (!locZero) {
+            Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
         }
 
         return vao;
@@ -2104,21 +2059,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     setBuffers(indexBuffer) {
         const gl = this.gl;
-        let vao;
+        const vertexBuffers = this.vertexBuffers;
 
-        // create VAO for specified vertex buffers
-        if (this.vertexBuffers.length === 1) {
-
-            // single VB keeps its VAO
-            const vertexBuffer = this.vertexBuffers[0];
+        // the VAO is cached on the first vertex buffer - directly when it is the only one, and in an
+        // entry keyed by the further buffers otherwise. A draw without vertex buffers uses the
+        // default VAO, which has no attributes enabled
+        let vao = null;
+        const vertexBuffer = vertexBuffers[0];
+        if (vertexBuffer) {
             Debug.assert(vertexBuffer.device === this, 'The VertexBuffer was not created using current GraphicsDevice');
-            if (!vertexBuffer.impl.vao) {
-                vertexBuffer.impl.vao = this.createVertexArray(this.vertexBuffers);
+            const entry = vertexBuffers.length === 1 ? vertexBuffer.impl : vertexBuffer.impl.getVertexArrayEntry(vertexBuffers);
+            if (!entry.vao) {
+                entry.vao = this.createVertexArray(vertexBuffers);
             }
-            vao = vertexBuffer.impl.vao;
-        } else {
-            // obtain temporary VAO for multiple vertex buffers
-            vao = this.createVertexArray(this.vertexBuffers);
+            vao = entry.vao;
         }
 
         // set active VAO
@@ -3248,17 +3202,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Frees memory from all vertex array objects ever allocated with this device.
+     * Deletes the vertex array objects of all vertex buffers of this device.
      *
      * @ignore
      */
     clearVertexArrayObjectCache() {
         const gl = this.gl;
-        this._vaoMap.forEach((item, key, mapObj) => {
-            gl.deleteVertexArray(item);
-        });
-
-        this._vaoMap.clear();
+        this.unbindVertexArray();
+        for (const buffer of this.buffers) {
+            if (buffer.impl instanceof WebglVertexBuffer) {
+                buffer.impl.deleteVertexArrays(gl);
+            }
+        }
     }
 
     /**

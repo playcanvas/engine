@@ -10,7 +10,7 @@ import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
-import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENETARGET } from './constants.js';
+import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENETARGET } from './constants.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { Color } from '../../core/math/color.js';
@@ -661,7 +661,9 @@ class FramePassCameraFrame extends FramePass {
         return [
             this.prePass,
             ...stagePasses.preScene,
-            this.scenePass, this.colorGrabPass, this.scenePassTransparent,
+            this.scenePass, this.colorGrabPass,
+            ...stagePasses.postOpaque,
+            this.scenePassTransparent,
             ...stagePasses.postScene,
             this.taaPass, this.scenePassHalf,
             ...stagePasses.postTemporal,
@@ -674,6 +676,10 @@ class FramePassCameraFrame extends FramePass {
         // pre-pass
         this.setupScenePrepass(options);
 
+        // the passes of the effects owning them, once the resources they require exist. They are
+        // created before the scene passes, as how the scene renders depends on the stages they run at
+        this.setupEffectPasses();
+
         // scene including color grab pass
         const scenePassesInfo = this.setupScenePass(options);
 
@@ -682,9 +688,6 @@ class FramePassCameraFrame extends FramePass {
 
         // downscale to half resolution
         this.setupSceneHalfPass(options, sceneTextureWithTaa);
-
-        // the passes of the effects owning them, once the resources they require exist
-        this.setupEffectPasses();
 
         // compose
         this.setupComposePass(options);
@@ -769,9 +772,13 @@ class FramePassCameraFrame extends FramePass {
         this.setupScenePassSettings(this.scenePass);
         this.scenePass.init(this.rt, this.sceneOptions);
 
-        // layers this pass renders depend on the grab pass being used
-        const lastLayerId = options.sceneColorMap ? options.lastGrabLayerId : options.lastSceneLayerId;
-        const lastLayerIsTransparent = options.sceneColorMap ? options.lastGrabLayerIsTransparent : options.lastSceneLayerIsTransparent;
+        // the scene renders in two parts when something runs between its opaque and its transparent
+        // layers - the grab pass, or the passes of the effects running after the opaque geometry
+        const split = options.sceneColorMap || this._stagePasses.postOpaque.length > 0;
+
+        // layers this pass renders depend on the scene rendering in two parts
+        const lastLayerId = split ? options.lastGrabLayerId : options.lastSceneLayerId;
+        const lastLayerIsTransparent = split ? options.lastGrabLayerIsTransparent : options.lastSceneLayerIsTransparent;
 
         // return values
         const ret = {
@@ -782,16 +789,19 @@ class FramePassCameraFrame extends FramePass {
         ret.lastAddedIndex = this.addCameraLayers(this.scenePass, ret.lastAddedIndex, ret.clearRenderTarget, lastLayerId, lastLayerIsTransparent);
         ret.clearRenderTarget = false;
 
-        // grab pass allowing us to copy the render scene into a texture and use for refraction
-        // the source for the copy is the texture we render the scene to
-        if (options.sceneColorMap) {
-            this.colorGrabPass = new FramePassColorGrab(device, this.cameraComponent.camera);
-            this.colorGrabPass.source = this.rt;
+        if (split) {
 
-            // the scene passes render the color linear, see setupScenePassSettings
-            this.colorGrabPass.gammaCorrection = GAMMA_NONE;
+            // grab pass allowing us to copy the render scene into a texture and use for refraction
+            // the source for the copy is the texture we render the scene to
+            if (options.sceneColorMap) {
+                this.colorGrabPass = new FramePassColorGrab(device, this.cameraComponent.camera);
+                this.colorGrabPass.source = this.rt;
 
-            // if grab pass is used, render the layers after it (otherwise they were already rendered)
+                // the scene passes render the color linear, see setupScenePassSettings
+                this.colorGrabPass.gammaCorrection = GAMMA_NONE;
+            }
+
+            // render the remaining layers after the split (otherwise they were already rendered)
             this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
             this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
@@ -812,11 +822,21 @@ class FramePassCameraFrame extends FramePass {
         }
 
         // The scene textures become available once the last pass rendering to the scene render target
-        // has finished, and only that pass publishes them. Publishing them from an earlier one would
-        // expose an attachment of the render target the remaining passes still render into, which the
+        // has finished, and that pass publishes them. Publishing them from an earlier one would expose
+        // an attachment of the render target the remaining passes still render into, which the
         // materials they render could then sample - reading a texture attached to the render target
         // being rendered into is not allowed.
-        (this.scenePassTransparent ?? this.scenePass).sceneTexturesCamera = this.cameraComponent.camera;
+        const camera = this.cameraComponent.camera;
+        (this.scenePassTransparent ?? this.scenePass).sceneTexturesCamera = camera;
+
+        // The passes of the effects running between the opaque and the transparent geometry read the
+        // depth of the opaque geometry, so the opaque pass publishes the scene textures as well. The
+        // transparent pass withdraws them before it renders into the render target they are attached
+        // to, and publishes them again once they are complete.
+        if (this.scenePassTransparent && this._stagePasses.postOpaque.length > 0) {
+            this.scenePass.sceneTexturesCamera = camera;
+            this.scenePassTransparent.clearSceneTextures = true;
+        }
 
         // Without a prepass nothing has published the scene depth by the time the scene renders, so the
         // first pass clears the uniform it is published to. This has to happen as the pass renders rather
@@ -911,8 +931,13 @@ class FramePassCameraFrame extends FramePass {
                     // passes sampling the scene depth cannot render to the render target it is
                     // attached to, so they render to the alias of the scene color instead
                     resources[name] = this.rtSceneColor ?? this.rt;
+                } else if (name === FRAMERESOURCE_SCENECOLORGRAB) {
+                    // the grab pass copies the scene color to a new texture whenever the scene
+                    // resizes, so the handle identifying the current copy is handed over
+                    Debug.assert(this.options.sceneColorMap, `CameraFrame: effect '${effect.id}' requires the copy of the scene color, but the grab pass is not enabled.`);
+                    resources[name] = this.cameraComponent.sceneColorMapHandle;
                 } else {
-                    Debug.assert(name === FRAMERESOURCE_SCENECOLORHALF, `CameraFrame: effect '${effect.id}' requires the frame resource '${name}', which is not supported yet.`);
+                    Debug.assert(name === FRAMERESOURCE_SCENECOLORHALF, `CameraFrame: effect '${effect.id}' requires the unknown frame resource '${name}'.`);
                     resources[name] = this.sceneTextureHalf;
                 }
             }
@@ -921,8 +946,8 @@ class FramePassCameraFrame extends FramePass {
             const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
             effect.createPasses(resources, passes);
 
-            Debug.assert(passes.postOpaque.length === 0, `CameraFrame: effect '${effect.id}' runs passes at the postOpaque stage, which is not supported yet.`);
             stagePasses.preScene.push(...passes.preScene);
+            stagePasses.postOpaque.push(...passes.postOpaque);
             stagePasses.postScene.push(...passes.postScene);
             stagePasses.postTemporal.push(...passes.postTemporal);
         }

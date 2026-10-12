@@ -2,6 +2,7 @@ import { Shader } from '../shader.js';
 import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, SHADERLANGUAGE_WGSL } from '../constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 import webgpuDepthResolve from '../shader-chunks/frag/webgpu-depth-resolve.js';
 
 /**
@@ -135,6 +136,8 @@ class WebgpuResolver {
         const device = this.device;
         const wgpu = device.wgpu;
 
+        WebgpuDebug.validate(device);
+
         // pipeline depends on the format and the resolve mode
         const pipeline = this.getPipeline(destinationTexture.format, mode);
 
@@ -187,6 +190,13 @@ class WebgpuResolver {
 
         // clear invalidated state
         device.pipeline = null;
+
+        WebgpuDebug.end(device, 'Depth resolve', {
+            sourceTexture,
+            destinationTexture,
+            mode,
+            destinationLayer
+        });
     }
 }
 

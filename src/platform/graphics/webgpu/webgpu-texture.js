@@ -151,11 +151,6 @@ class WebgpuTexture {
         this.gpuTexture = wgpu.createTexture(this.desc);
         DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
 
-        WebgpuDebug.end(device, 'Texture creation', {
-            desc: this.desc,
-            texture
-        });
-
         // default texture view descriptor
         let viewDescr;
 
@@ -169,6 +164,11 @@ class WebgpuTexture {
         }
 
         this.view = this.createView(viewDescr);
+
+        WebgpuDebug.end(device, 'Texture creation', {
+            desc: this.desc,
+            texture
+        });
 
         // Clear any cached views since the GPU texture was recreated
         this.viewCache.clear();
@@ -206,12 +206,14 @@ class WebgpuTexture {
             let view = this.viewCache.get(textureView.key);
             if (!view) {
                 // Create and cache the view
+                WebgpuDebug.validate(device);
                 view = this.createView({
                     baseMipLevel: textureView.baseMipLevel,
                     mipLevelCount: textureView.mipLevelCount,
                     baseArrayLayer: textureView.baseArrayLayer,
                     arrayLayerCount: textureView.arrayLayerCount
                 });
+                WebgpuDebug.end(device, 'TextureView creation', { textureView, texture: this.texture });
                 this.viewCache.set(textureView.key, view);
             }
             return view;
@@ -367,7 +369,10 @@ class WebgpuTexture {
             Debug.assert(!device.insideRenderPass,
                 `Texture.upload() for "${texture.name}" was called while inside a render pass, which is not currently supported. ` +
                 'Move texture updates to the before() or after() function of the RenderPass.');
+
+            WebgpuDebug.validate(device);
             this.uploadData(device);
+            WebgpuDebug.end(device, 'Texture upload', { texture });
 
             texture._needsUpload = false;
             texture._needsMipmapsUpload = false;
