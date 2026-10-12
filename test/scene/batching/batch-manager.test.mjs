@@ -76,6 +76,68 @@ describe('BatchManager', function () {
         expect(app.batcher._dirtyGroups[0]).to.equal(this.bg.id);
     });
 
+    it('generate: replaces the existing batches when called again', function () {
+        for (const name of ['e1', 'e2']) {
+            const entity = new Entity(name);
+            entity.addComponent('render', {
+                type: 'box',
+                batchGroupId: this.bg.id
+            });
+            app.root.addChild(entity);
+        }
+
+        app.batcher.generate();
+        const oldBatch = app.batcher._batchList[0];
+
+        app.batcher.generate();
+
+        expect(oldBatch.meshInstance).to.equal(null);
+        expect(app.batcher._batchList.length).to.equal(1);
+
+        const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
+        expect(layer.meshInstances.length).to.equal(1);
+        expect(layer.meshInstances[0]).to.equal(app.batcher._batchList[0].meshInstance);
+    });
+
+    it('generate: removes the batch of a disabled entity', function () {
+        const bg2 = app.batcher.addGroup('Test Group 2', false, 100);
+
+        const e1 = new Entity('e1');
+        e1.addComponent('render', {
+            type: 'box',
+            batchGroupId: this.bg.id
+        });
+        app.root.addChild(e1);
+
+        const e2 = new Entity('e2');
+        e2.addComponent('render', {
+            type: 'box',
+            batchGroupId: bg2.id
+        });
+        e2.enabled = false;
+        app.root.addChild(e2);
+
+        app.batcher.generate();
+        expect(app.batcher.getBatches(this.bg.id).length).to.equal(1);
+        expect(app.batcher.getBatches(bg2.id).length).to.equal(0);
+
+        // swap which entity is enabled, and regenerate all groups straight away
+        e1.enabled = false;
+        e2.enabled = true;
+        app.batcher.generate();
+
+        expect(app.batcher.getBatches(this.bg.id).length).to.equal(0);
+        const batches = app.batcher.getBatches(bg2.id);
+        expect(batches.length).to.equal(1);
+
+        const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
+        expect(layer.meshInstances.length).to.equal(1);
+        expect(layer.meshInstances[0]).to.equal(batches[0].meshInstance);
+
+        // the regenerated groups are no longer dirty, so the next frame does not batch them again
+        expect(app.batcher._dirtyGroups.length).to.equal(0);
+    });
+
 
     it('prepare: splits batches when castShadow differs', function () {
         const e1 = new Entity();
