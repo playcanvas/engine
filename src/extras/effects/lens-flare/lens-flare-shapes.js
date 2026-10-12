@@ -4,6 +4,8 @@ import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_RGBA8,
     SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
 } from '../../../platform/graphics/constants.js';
+import { Color } from '../../../core/math/color.js';
+import { RenderPass } from '../../../platform/graphics/render-pass.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { drawQuadWithShader } from '../../../scene/graphics/quad-render-utils.js';
@@ -43,6 +45,9 @@ import wgslLensFlareShapePS from './wgsl/shape-ps.js';
  * value, or an array of named shape descriptions.
  * @category Graphics
  */
+
+// what a layer without a texture is cleared to
+const transparent = new Color(0, 0, 0, 0);
 
 /**
  * Copies the textures of a {@link LensFlareShapeLibrary} into a texture array, one shape per
@@ -176,6 +181,7 @@ class LensFlareShapes {
 
         if (!texture) {
             Debug.warnOnce(`LensFlareEffect: shape '${name}' has no texture, leaving it empty.`);
+            this._clear(layer, name);
             return;
         }
 
@@ -197,6 +203,29 @@ class LensFlareShapes {
             depth: false
         });
         drawQuadWithShader(device, rt, shader, undefined, undefined, 'LensFlareShapeCopy');
+        rt.destroy();
+    }
+
+    /**
+     * Clears a layer of the texture array, so that a layer reused from a previous library does not
+     * keep its pixels when its shape has no texture.
+     *
+     * @param {number} layer - The layer.
+     * @param {string} name - The name of the shape.
+     * @private
+     */
+    _clear(layer, name) {
+        const rt = new RenderTarget({
+            name: `LensFlareShape-${name}`,
+            colorBuffer: this.texture,
+            layer,
+            depth: false
+        });
+        const pass = new RenderPass(this.device);
+        pass.init(rt);
+        pass.setClearColor(transparent);
+        pass.render();
+        pass.destroy();
         rt.destroy();
     }
 }

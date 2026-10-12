@@ -42,7 +42,12 @@ export default /* wgsl */`
             visibility = 0.0;
         }
 
-        output.color = vec4f(mix(previous, visibility, control.x), 0.0, 0.0, 1.0);
+        // move towards the measured visibility by the blend factor, but by at least one step of
+        // the 8-bit storage, so that the fade cannot stall short of the target
+        let diff = visibility - previous;
+        let stepSize = sign(diff) * max(abs(diff) * control.x, 1.0 / 255.0);
+        let result = select(previous + stepSize, visibility, abs(stepSize) >= abs(diff));
+        output.color = vec4f(result, 0.0, 0.0, 1.0);
         return output;
     }
 `;

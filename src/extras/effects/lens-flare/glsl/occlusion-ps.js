@@ -39,6 +39,11 @@ export default /* glsl */`
             visibility = 0.0;
         }
 
-        gl_FragColor = vec4(mix(previous, visibility, control.x), 0.0, 0.0, 1.0);
+        // move towards the measured visibility by the blend factor, but by at least one step of
+        // the 8-bit storage, so that the fade cannot stall short of the target
+        float diff = visibility - previous;
+        float stepSize = sign(diff) * max(abs(diff) * control.x, 1.0 / 255.0);
+        float result = abs(stepSize) >= abs(diff) ? visibility : previous + stepSize;
+        gl_FragColor = vec4(result, 0.0, 0.0, 1.0);
     }
 `;

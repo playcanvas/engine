@@ -7,6 +7,7 @@ import { Vec4 } from '../../../core/math/vec4.js';
 import { now } from '../../../core/time.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../../../scene/constants.js';
 import glslComposeLensFlarePS from './glsl/compose-ps.js';
 import wgslComposeLensFlarePS from './wgsl/compose-ps.js';
 import { CameraFrameEffect } from '../../render-passes/camera-frame-effect.js';
@@ -26,6 +27,7 @@ const _clip = new Vec4();
 const _position = new Vec3();
 const _direction = new Vec3();
 const _viewPosition = new Vec3();
+const _viewDirection = new Vec3();
 const _toCamera = new Vec3();
 const _color = new Color();
 
@@ -392,6 +394,7 @@ class LensFlareEffect extends CameraFrameEffect {
         _viewProj.mul2(camera.projectionMatrix, view);
         const cameraPosition = cameraComponent.entity.getPosition();
         const far = camera.farClip;
+        const orthographic = camera.projection === PROJECTION_ORTHOGRAPHIC;
 
         const flareData = this._flareData;
         const occlusionData = this._occlusionData;
@@ -441,10 +444,24 @@ class LensFlareEffect extends CameraFrameEffect {
                 fade = 0;
             }
 
-            // the source on screen
+            // whether the source is in front of the camera, tested in view space, as the clip space
+            // w does not tell for an orthographic projection
+            let inFront;
             if (directional) {
-                _clip.set(_direction.x, _direction.y, _direction.z, 0);
+                view.transformVector(_direction, _viewDirection);
+                inFront = _viewDirection.z < 0;
+
+                // an orthographic projection has no vanishing point for a direction, so the source
+                // is placed far along it instead
+                if (orthographic) {
+                    _position.copy(_direction).mulScalar(far * directionalDepth).add(cameraPosition);
+                    _clip.set(_position.x, _position.y, _position.z, 1);
+                } else {
+                    _clip.set(_direction.x, _direction.y, _direction.z, 0);
+                }
             } else {
+                view.transformPoint(_position, _viewPosition);
+                inFront = _viewPosition.z < 0;
                 _clip.set(_position.x, _position.y, _position.z, 1);
             }
             _viewProj.transformVec4(_clip, _clip);
@@ -452,7 +469,7 @@ class LensFlareEffect extends CameraFrameEffect {
             let x = 0;
             let y = 0;
             let onScreen = -1;
-            if (_clip.w > 1e-6) {
+            if (inFront && Math.abs(_clip.w) > 1e-6) {
                 x = _clip.x / _clip.w;
                 y = _clip.y / _clip.w;
 
@@ -470,7 +487,6 @@ class LensFlareEffect extends CameraFrameEffect {
             // the depth the visibility is tested against, and the distance fade
             let sourceDepth = far * directionalDepth;
             if (!directional) {
-                view.transformPoint(_position, _viewPosition);
                 sourceDepth = -_viewPosition.z - flare.occlusionOffset;
 
                 if (flare.fadeEnd > flare.fadeStart) {

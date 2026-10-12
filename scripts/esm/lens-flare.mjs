@@ -389,6 +389,14 @@ class LensFlareScript extends Script {
      */
     _effects = new Set();
 
+    /**
+     * The effects the flare should be registered with this frame, reused.
+     *
+     * @type {Set<LensFlareEffect>}
+     * @private
+     */
+    _wanted = new Set();
+
     initialize() {
         const light = this.entity.light ?? null;
         this.flare = new LensFlare(null, light ? { light } : { node: this.entity });
@@ -454,32 +462,46 @@ class LensFlareScript extends Script {
     }
 
     /**
-     * Registers the flare with the lens flare effect of the chosen camera, or of every camera,
-     * as the effects appear.
+     * Registers the flare with the lens flare effect of the chosen camera, or of every camera, as
+     * the effects appear, and removes it from the effects the selection no longer covers.
      *
      * @private
      */
     _attach() {
+        const wanted = this._wanted;
+        wanted.clear();
         if (this.camera) {
-            this._attachTo(this.camera);
+            const effect = this._effectOf(this.camera);
+            if (effect) wanted.add(effect);
         } else {
             const cameras = this.app.systems.camera.cameras;
             for (let i = 0; i < cameras.length; i++) {
-                this._attachTo(cameras[i].entity);
+                const effect = this._effectOf(cameras[i].entity);
+                if (effect) wanted.add(effect);
+            }
+        }
+
+        for (const effect of this._effects) {
+            if (!wanted.has(effect)) {
+                effect.remove(this.flare);
+                this._effects.delete(effect);
+            }
+        }
+        for (const effect of wanted) {
+            if (!this._effects.has(effect)) {
+                effect.add(this.flare);
+                this._effects.add(effect);
             }
         }
     }
 
     /**
-     * @param {Entity} cameraEntity - The camera entity.
+     * @param {Entity} cameraEntity - A camera entity.
+     * @returns {LensFlareEffect|null} The lens flare effect of its script, or null.
      * @private
      */
-    _attachTo(cameraEntity) {
-        const effect = cameraEntity.script?.get(LensFlareEffectScript)?.effect;
-        if (effect && !this._effects.has(effect)) {
-            effect.add(this.flare);
-            this._effects.add(effect);
-        }
+    _effectOf(cameraEntity) {
+        return cameraEntity.script?.get(LensFlareEffectScript)?.effect ?? null;
     }
 
     /**
