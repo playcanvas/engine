@@ -31,8 +31,9 @@ export default /* wgsl */`
         // world position to screen space of the previous frame
         let screenPrevious = uniform.matrix_viewProjectionPrevious * worldPosition;
 
-        // flip result back to texture sampling convention
-        var result = (screenPrevious.xy / screenPrevious.w) * 0.5 + 0.5;
+        // remove the jitter of the previous frame, as the history holds the image without it, and
+        // flip the result back to texture sampling convention
+        var result = (screenPrevious.xy / screenPrevious.w + uniform.jitters.zw) * 0.5 + 0.5;
         result.y = 1.0 - result.y;
 
         return result;
