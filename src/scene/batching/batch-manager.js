@@ -395,8 +395,9 @@ class BatchManager {
         const groupMeshInstances = {};
 
         if (!groupIds) {
-            // Full scene
-            groupIds = Object.keys(this._batchGroups);
+            // Full scene. Object keys are strings, convert them back to the numeric ids used by
+            // the batches and the dirty groups, as these are compared using indexOf.
+            groupIds = Object.keys(this._batchGroups).map(Number);
         }
 
         // delete old batches with matching batchGroupId
