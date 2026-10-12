@@ -2,16 +2,16 @@ import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORGRAB } from './constants.js';
-import { BloomEffect } from './effects/bloom-effect.js';
-import { CasEffect } from './effects/cas-effect.js';
-import { ColorEnhanceEffect } from './effects/color-enhance-effect.js';
-import { ColorLutEffect } from './effects/color-lut-effect.js';
-import { DofEffect } from './effects/dof-effect.js';
-import { FringingEffect } from './effects/fringing-effect.js';
-import { GradingEffect } from './effects/grading-effect.js';
-import { SsaoEffect } from './effects/ssao-effect.js';
-import { VignetteEffect } from './effects/vignette-effect.js';
-import { VolumetricFogEffect } from './effects/volumetric-fog-effect.js';
+import { BloomEffect } from '../effects/bloom/bloom-effect.js';
+import { CasEffect } from '../effects/cas/cas-effect.js';
+import { ColorEnhanceEffect } from '../effects/color-enhance/color-enhance-effect.js';
+import { ColorLutEffect } from '../effects/color-lut/color-lut-effect.js';
+import { DofEffect } from '../effects/dof/dof-effect.js';
+import { FringingEffect } from '../effects/fringing/fringing-effect.js';
+import { GradingEffect } from '../effects/grading/grading-effect.js';
+import { SsaoEffect } from '../effects/ssao/ssao-effect.js';
+import { VignetteEffect } from '../effects/vignette/vignette-effect.js';
+import { VolumetricFogEffect } from '../effects/volumetric-fog/volumetric-fog-effect.js';
 import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
 
 /**

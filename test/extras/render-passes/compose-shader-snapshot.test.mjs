@@ -7,20 +7,20 @@ import { expect } from 'chai';
 
 import { MapUtils } from '../../../src/core/map-utils.js';
 import { Preprocessor } from '../../../src/core/preprocessor.js';
+import { BloomEffect } from '../../../src/extras/effects/bloom/bloom-effect.js';
+import { CasEffect } from '../../../src/extras/effects/cas/cas-effect.js';
+import { ColorEnhanceEffect } from '../../../src/extras/effects/color-enhance/color-enhance-effect.js';
+import { ColorLutEffect } from '../../../src/extras/effects/color-lut/color-lut-effect.js';
+import { DofEffect } from '../../../src/extras/effects/dof/dof-effect.js';
+import { FringingEffect } from '../../../src/extras/effects/fringing/fringing-effect.js';
+import { GradingEffect } from '../../../src/extras/effects/grading/grading-effect.js';
+import { SsaoEffect } from '../../../src/extras/effects/ssao/ssao-effect.js';
+import { VignetteEffect } from '../../../src/extras/effects/vignette/vignette-effect.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import {
     COMPOSESLOT_HDR, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE,
     SSAOTYPE_LIGHTING
 } from '../../../src/extras/render-passes/constants.js';
-import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
-import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
-import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
-import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
-import { DofEffect } from '../../../src/extras/render-passes/effects/dof-effect.js';
-import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
-import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
-import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
-import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8,

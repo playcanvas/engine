@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
+import { FramePassBloom } from '../../../src/extras/effects/bloom/passes/frame-pass-bloom.js';
 import { PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { createGraphicsDevice, setupShaderLibrary } from '../../device.mjs';

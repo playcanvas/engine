@@ -2,17 +2,17 @@ import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
+import { BloomEffect } from '../../../src/extras/effects/bloom/bloom-effect.js';
+import { FramePassBloom } from '../../../src/extras/effects/bloom/passes/frame-pass-bloom.js';
+import { FramePassDof } from '../../../src/extras/effects/dof/passes/frame-pass-dof.js';
+import { RenderPassSsao } from '../../../src/extras/effects/ssao/passes/render-pass-ssao.js';
+import { FramePassVolumetricFog } from '../../../src/extras/effects/volumetric-fog/passes/frame-pass-volumetric-fog.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import {
     FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENECOLORHALF,
     FRAMERESOURCE_SCENETARGET, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
 } from '../../../src/extras/render-passes/constants.js';
-import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
-import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
-import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
-import { FramePassVolumetricFog } from '../../../src/extras/render-passes/frame-pass-volumetric-fog.js';
-import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ssao.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
