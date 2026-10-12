@@ -822,11 +822,21 @@ class FramePassCameraFrame extends FramePass {
         }
 
         // The scene textures become available once the last pass rendering to the scene render target
-        // has finished, and only that pass publishes them. Publishing them from an earlier one would
-        // expose an attachment of the render target the remaining passes still render into, which the
+        // has finished, and that pass publishes them. Publishing them from an earlier one would expose
+        // an attachment of the render target the remaining passes still render into, which the
         // materials they render could then sample - reading a texture attached to the render target
         // being rendered into is not allowed.
-        (this.scenePassTransparent ?? this.scenePass).sceneTexturesCamera = this.cameraComponent.camera;
+        const camera = this.cameraComponent.camera;
+        (this.scenePassTransparent ?? this.scenePass).sceneTexturesCamera = camera;
+
+        // The passes of the effects running between the opaque and the transparent geometry read the
+        // depth of the opaque geometry, so the opaque pass publishes the scene textures as well. The
+        // transparent pass withdraws them before it renders into the render target they are attached
+        // to, and publishes them again once they are complete.
+        if (this.scenePassTransparent && this._stagePasses.postOpaque.length > 0) {
+            this.scenePass.sceneTexturesCamera = camera;
+            this.scenePassTransparent.clearSceneTextures = true;
+        }
 
         // Without a prepass nothing has published the scene depth by the time the scene renders, so the
         // first pass clears the uniform it is published to. This has to happen as the pass renders rather

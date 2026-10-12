@@ -16,6 +16,7 @@ import { RenderPassSsao } from '../../../src/extras/render-passes/render-pass-ss
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
+import { SceneDepthMapHandle } from '../../../src/platform/graphics/scene-depth-map-handle.js';
 import { LAYERID_IMMEDIATE, LAYERID_WORLD, PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
 import { ShaderUtils } from '../../../src/scene/shader-lib/shader-utils.js';
 import { createApp } from '../../app.mjs';
@@ -644,6 +645,75 @@ describe('FramePassCameraFrame', function () {
             expect(passes.indexOf(effect.pass)).to.be.below(passes.indexOf(framePass.composePass));
             effect.destroy();
             cameraFrame.update();
+        });
+
+        describe('with the depth rendered by the scene', function () {
+
+            // the scene renders the depth on a device capable of it, which the null device is made
+            beforeEach(function () {
+                const device = app.graphicsDevice;
+                if (device.isNull) {
+                    device.supportsIndependentBlending = true;
+                    device.textureFloatBlendable = true;
+                }
+            });
+
+            const depthMap = () => app.graphicsDevice.scope.resolve(SceneDepthMapHandle.uniformName).value;
+
+            it('hands the passes after the opaque geometry the depth the scene renders, without a prepass', function () {
+                const effect = createEffect('depthReader', [FRAMERESOURCE_DEPTH]);
+                cameraFrame.addEffect(effect);
+                cameraFrame.update();
+
+                const framePass = cameraFrame.renderPassCamera;
+                if (app.graphicsDevice.isNull) {
+                    expect(framePass.options.sceneTextureDepth).to.equal(true);
+                }
+                if (framePass.options.sceneTextureDepth) {
+                    expect(framePass.prePass).to.not.exist;
+                    expect(effect.resourcesGiven.depth.texture).to.equal(framePass.sceneDepthTexture);
+                }
+                effect.destroy();
+                cameraFrame.update();
+            });
+
+            it('publishes the depth of the opaque geometry after it, and withdraws it before the transparent geometry renders', function () {
+                const effect = createEffect('depthReader', [FRAMERESOURCE_DEPTH]);
+                cameraFrame.addEffect(effect);
+                cameraFrame.update();
+
+                const framePass = cameraFrame.renderPassCamera;
+                const { scenePass, scenePassTransparent, sceneDepthTexture } = framePass;
+                const { camera } = cameraFrame.cameraComponent;
+                expect(scenePass.sceneTexturesCamera).to.equal(camera);
+                expect(scenePassTransparent.clearSceneTextures).to.equal(true);
+                expect(scenePassTransparent.sceneTexturesCamera).to.equal(camera);
+
+                // the uniform the depth is published to, as the scene passes render
+                if (sceneDepthTexture) {
+                    scenePass.before();
+                    expect(depthMap()).to.equal(null);
+                    scenePass.after();
+                    expect(depthMap()).to.equal(sceneDepthTexture);
+                    scenePassTransparent.before();
+                    expect(depthMap()).to.equal(null);
+                    scenePassTransparent.after();
+                    expect(depthMap()).to.equal(sceneDepthTexture);
+                }
+                effect.destroy();
+                cameraFrame.update();
+            });
+
+            it('publishes the depth once the scene has rendered while nothing runs after the opaque geometry', function () {
+                cameraFrame.rendering.sceneColorMap = true;
+                cameraFrame.taa.enabled = true;
+                cameraFrame.update();
+
+                const { scenePass, scenePassTransparent } = cameraFrame.renderPassCamera;
+                expect(scenePass.sceneTexturesCamera).to.equal(null);
+                expect(scenePassTransparent.clearSceneTextures).to.equal(false);
+                expect(scenePassTransparent.sceneTexturesCamera).to.equal(cameraFrame.cameraComponent.camera);
+            });
         });
     });
 

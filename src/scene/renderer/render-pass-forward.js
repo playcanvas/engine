@@ -81,20 +81,24 @@ class RenderPassForward extends RenderPass {
 
     /**
      * The camera whose scene textures this pass publishes when it finishes, making them available to
-     * the passes which consume them, or null if it publishes none. Only the last pass rendering to the
-     * render target they are attached to sets this - publishing earlier would expose an attachment of a
-     * render target the remaining passes still render into, and the materials they render could then
-     * sample it, which is not allowed.
+     * the passes which consume them, or null if it publishes none. The last pass rendering to the
+     * render target they are attached to sets this. An earlier pass can set it too, for passes
+     * consuming them before the remaining passes render, but only when the next of those clears them
+     * first, see {@link RenderPassForward#clearSceneTextures} - otherwise the materials the remaining
+     * passes render could sample an attachment of the render target they render into, which is not
+     * allowed.
      *
      * @type {Camera|null}
      */
     sceneTexturesCamera = null;
 
     /**
-     * True if this pass clears the uniforms the scene textures are published to before it renders. Only
-     * the first pass rendering to the render target they are attached to sets this, and only when no
-     * depth prepass has published to those uniforms already - it is what stops a material from sampling
-     * a scene texture which nothing has produced yet.
+     * True if this pass clears the uniforms the scene textures are published to before it renders. The
+     * first pass rendering to the render target they are attached to sets this, when no depth prepass
+     * has published to those uniforms already - it is what stops a material from sampling a scene
+     * texture which nothing has produced yet. A later pass sets it when an earlier one published them,
+     * see {@link RenderPassForward#sceneTexturesCamera}, so that its materials do not sample the
+     * attachments of the render target it renders into.
      *
      * @type {boolean}
      */
