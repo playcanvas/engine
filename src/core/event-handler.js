@@ -119,7 +119,8 @@ class EventHandler {
     }
 
     /**
-     * Attach an event handler to an event. This handler will be removed after being fired once.
+     * Attach an event handler to an event. The handler is removed before it is called, so it runs
+     * at most once, even if it fires the same event again or throws.
      *
      * @param {string} name - Name of the event to bind the callback to.
      * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
