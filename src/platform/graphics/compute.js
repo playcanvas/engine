@@ -545,17 +545,22 @@ class Compute {
      * in a single dimension, is spread over rows of workgroups. The shader then needs to include
      * the chunk, as the functions account for that.
      *
+     * A compute shader using the chunk, dispatched for a thread for each particle:
+     *
+     * ```wgsl
+     * #include "dispatchThreadsCS"
+     *
+     * @compute @workgroup_size(64)
+     * fn main(@builtin(global_invocation_id) id: vec3u) {
+     *     if (!dispatchThreadInRange(id)) { return; }
+     *     let index = dispatchThreadIndex(id);
+     * }
+     * ```
+     *
      * @param {number} x - The number of threads in the X dimension.
      * @param {number} [y] - The number of threads in the Y dimension. Defaults to 1.
      * @param {number} [z] - The number of threads in the Z dimension. Defaults to 1.
      * @example
-     * // the compute shader declares its workgroup size, and includes the chunk, for example:
-     * //     #include "dispatchThreadsCS"
-     * //     @compute @workgroup_size(64)
-     * //     fn main(@builtin(global_invocation_id) id: vec3u) {
-     * //         if (!dispatchThreadInRange(id)) { return; }
-     * //         let index = dispatchThreadIndex(id);
-     * //     }
      * compute.setupDispatchThreads(particleCount);
      */
     setupDispatchThreads(x, y = 1, z = 1) {
