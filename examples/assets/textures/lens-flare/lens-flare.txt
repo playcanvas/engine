@@ -1,0 +1,7 @@
+Lens flare element textures: glows, irises, a halo, spikes, diffraction bursts, streaks and
+spectral smudges, 512x512 PNGs with the shape in the colour channels and its coverage in alpha.
+
+Generated procedurally by a numpy script, generate.py, attached to the pull request which added them.
+It documents each shape, regenerates them, and with --all writes further variants.
+
+Created for the PlayCanvas Engine and released under its MIT license.
