@@ -4,18 +4,17 @@ export default /* glsl */`
 
     varying vec2 uv0;
     uniform sampler2D sceneTexture;
-    uniform vec2 sceneTextureInvRes;
+    // the size of the scene texture: width, height, 1 / width, 1 / height
+    uniform vec4 sceneTextureSize;
     uniform float composeTargetFlipY;
 
-    #include "composeBloomPS"
-    #include "composeDofPS"
-    #include "composeSsaoPS"
 
-    // The depth debug mode displays a depth some other pass in this frame has already produced - the
-    // debug modes never turn any rendering on, so the mode is switched to depthmissing when nothing
-    // did, see RenderPassCompose. That is also why this is included here rather than unconditionally:
-    // declaring the depth sampler in a frame with no depth to bind to it is an error.
-    #if DEBUG_COMPOSE == depth
+    // The scene depth, for the depth debug mode and the effects requiring the depth. The debug mode
+    // displays a depth some other pass in this frame has already produced - the debug modes never
+    // turn any rendering on, so the mode is switched to depthmissing when nothing did, see
+    // RenderPassCompose. That is also why this is included only when needed: declaring the depth
+    // sampler in a frame with no depth to bind to it is an error.
+    #ifdef COMPOSE_SCENE_DEPTH
         #include "screenDepthPS"
     #endif
 
@@ -39,21 +38,6 @@ export default /* glsl */`
 
         vec3 result = scene.rgb;
 
-        // Apply DOF
-        #ifdef DOF
-            result = applyDof(result, uv);
-        #endif
-
-        // Apply SSAO
-        #ifdef SSAO_TEXTURE
-            result = applySsao(result, uv);
-        #endif
-
-        // Apply Bloom
-        #ifdef BLOOM
-            result = applyBloom(result, uv);
-        #endif
-
         // COMPOSESLOT_HDR effects - linear, scene-referred colour
         #include "composeSlotHdrCallPS, COMPOSE_HDR_COUNT"
 
@@ -70,14 +54,6 @@ export default /* glsl */`
             #if DEBUG_COMPOSE == scene
                 // the scene texture itself, before any effect, those at COMPOSESLOT_SCENE included
                 result = texture2DLod(sceneTexture, uv, 0.0).rgb;
-            #elif defined(BLOOM) && DEBUG_COMPOSE == bloom
-                result = dBloom * bloomIntensity;
-            #elif defined(DOF) && DEBUG_COMPOSE == dofcoc
-                result = vec3(dCoc, 0.0);
-            #elif defined(DOF) && DEBUG_COMPOSE == dofblur
-                result = dBlur;
-            #elif defined(SSAO_TEXTURE) && DEBUG_COMPOSE == ssao
-                result = vec3(dSsao);
             #elif DEBUG_COMPOSE == depth
                 // a linear ramp over the camera clip range
                 float dDepth = getLinearScreenDepth(uv);

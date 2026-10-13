@@ -1,5 +1,4 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -123,9 +122,6 @@ class GSplatShadowRenderer {
      * @type {GSplatIntervalCompaction|null}
      */
     _compaction = null;
-
-    /** @type {Vec2} */
-    _cullDispatchSize = new Vec2(1, 1);
 
     /**
      * Reused light frustum planes (6 × vec4(normal, distance)) for the cull uniform, refilled per
@@ -450,6 +446,7 @@ class GSplatShadowRenderer {
         const totalActiveSplats = worldState.totalActiveSplats;
         const textureSize = this.world.workBuffer.textureSize;
         let prepared = false;
+        let dispatchIndex = 0;
         const camera = this.cameraNode.camera?.camera;
 
         this.entries.forEach((entry) => {
@@ -481,7 +478,7 @@ class GSplatShadowRenderer {
                 this._ensureCullShader();
             }
 
-            this._cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams);
+            this._cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams, dispatchIndex++);
         });
     }
 
@@ -543,9 +540,11 @@ class GSplatShadowRenderer {
      * @param {number} totalActiveSplats - Max output index count.
      * @param {number} textureSize - Work buffer texture size.
      * @param {GSplatParams} gsplatParams - Scene gsplat params.
+     * @param {number} dispatchIndex - The index of the entry among the entries culled this frame,
+     * which the shared interval compaction is dispatched with.
      * @private
      */
-    _cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams) {
+    _cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams, dispatchIndex) {
         const device = this.device;
 
         // resolve the light's shadow camera (fitted during cullComposition) and the shared camera-
@@ -589,13 +588,14 @@ class GSplatShadowRenderer {
         // lights — lights are culled sequentially, so this light's pass 2 consumes it before the next
         // light's pass 1 overwrites it (compute passes are ordered). bounds/transforms are the shared
         // camera-independent buffers; only the planes are per-light, passed via a lightweight culler
-        // view so the forward culler's own planes are never mutated.
+        // view so the forward culler's own planes are never mutated. Each light dispatches the
+        // compaction with its own index, as a compute instance is dispatched at most once in a frame.
         const compaction = this._compaction;
         compaction.dispatchCompact({
             boundsBuffer: frustumCuller.boundsBuffer,
             transformsBuffer: frustumCuller.transformsBuffer,
             frustumPlanes: this._frustumPlanes
-        }, numIntervals, totalActiveSplats, false);
+        }, numIntervals, totalActiveSplats, false, dispatchIndex);
 
         // PASS 2 (fine): flat one-thread-per-candidate cull over the candidate list — read + apply the
         // vertex modify + opacity/size/frustum tests — compacting survivors into this light's final
@@ -643,11 +643,9 @@ class GSplatShadowRenderer {
             }
         }
 
-        // flat dispatch over the work-buffer capacity (a CPU-known upper bound); threads beyond the
-        // candidate count early-out in the shader. Tiled across X/Y over the per-dimension limit.
-        const workgroupCount = Math.ceil(totalActiveSplats / WORKGROUP_SIZE);
-        Compute.calcDispatchSize(workgroupCount, this._cullDispatchSize, device.limits.maxComputeWorkgroupsPerDimension || 65535);
-        cull.setupDispatch(this._cullDispatchSize.x, this._cullDispatchSize.y, 1);
+        // a thread for each splat of the work-buffer capacity (a CPU-known upper bound); threads
+        // beyond the candidate count early-out in the shader
+        cull.setupDispatchThreads(totalActiveSplats);
         device.computeDispatch([cull], 'GSplatShadowCull');
 
         // turn the visible count into indirect draw args

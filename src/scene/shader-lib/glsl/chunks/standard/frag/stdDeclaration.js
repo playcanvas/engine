@@ -42,18 +42,6 @@ export default /* glsl */`
             #endif
         #endif
 
-        #ifdef LIT_SCENE_COLOR
-            uniform sampler2D uSceneColorMap;
-        #endif
-
-        #ifdef LIT_SCREEN_SIZE
-            uniform vec4 screen_size;
-        #endif
-
-        #ifdef LIT_TRANSFORMS
-            uniform mat4 matrix_viewProjection;
-        #endif
-
         // parallax
         #ifdef STD_HEIGHT_MAP
             vec2 dUvOffset;

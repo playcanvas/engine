@@ -8,7 +8,7 @@ import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
 import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
-import { composeSlots } from './constants.js';
+import { composeSlots, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH } from './constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js';
@@ -32,23 +32,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
      */
     sceneTexture = null;
 
-    bloomIntensity = 0.01;
-
-    _bloomTexture = null;
-
-    _cocTexture = null;
-
-    blurTexture = null;
-
-    blurTextureUpscale = false;
-
-    _ssaoTexture = null;
-
     _toneMapping = TONEMAP_LINEAR;
 
     _shaderDirty = true;
-
-    _taaEnabled = false;
 
     _gammaCorrection = GAMMA_SRGB;
 
@@ -63,8 +49,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
     _customComposeChunks = new Map(legacyComposeChunks.map(name => [name, '']));
 
     /**
-     * The effects contributing to the composition, in the order they are applied within their
-     * slot.
+     * The effects taking part in the composition, in the order they are applied within their
+     * slot - the active ones as of the last CameraFrame#update.
      *
      * @type {CameraFrameEffect[]}
      * @private
@@ -72,13 +58,22 @@ class RenderPassCompose extends RenderPassShaderQuad {
     _effects = [];
 
     /**
-     * The per-frame state of the effects the shader was last built for - which are active, and
-     * the version of their defines. Tracked outside the shader rebuild so that an effect becoming
-     * active or changing a define is detected without the effect needing property setters.
+     * The version of the defines of each of the effects the shader was last built for, so that a
+     * define an update changed is detected without the effects needing property setters.
      *
+     * @type {number[]}
      * @private
      */
-    _effectsState = '';
+    _effectVersions = [];
+
+    /**
+     * Whether an effect taking part in the composition requires the scene depth, which its chunk
+     * then reads with the functions of the depth chunk the composition includes.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _effectsRequireDepth = false;
 
     /**
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
@@ -96,29 +91,51 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
-        this.bloomTextureId = scope.resolve('bloomTexture');
-        this.cocTextureId = scope.resolve('cocTexture');
-        this.ssaoTextureId = scope.resolve('ssaoTexture');
-        this.blurTextureId = scope.resolve('blurTexture');
-        this.bloomIntensityId = scope.resolve('bloomIntensity');
-        this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
-        this.sceneTextureInvResValue = new Float32Array(2);
+        this.sceneTextureSizeId = scope.resolve('sceneTextureSize');
+        this.sceneTextureSizeValue = new Float32Array(4);
         this.composeTargetFlipYId = scope.resolve('composeTargetFlipY');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
     }
 
     /**
-     * Sets the effects contributing to the composition. Each effect's chunk can be overridden by
-     * its chunk name in the device's shader chunks; without an override the effect's own source
-     * is used.
+     * Sets the effects taking part in the composition, all of which it composes. Each effect's
+     * chunk can be overridden by its chunk name in the device's shader chunks; without an override
+     * the effect's own source is used. Assigned on every CameraFrame#update - which can run every
+     * frame - so assigning the same effects with unchanged defines costs only the comparison.
      *
      * @type {CameraFrameEffect[]}
      */
     set effects(value) {
-        this._effects = value ?? [];
-        this._trackEffectChunks();
-        this._shaderDirty = true;
+
+        // whether a composed effect requires the scene depth, which can depend on its parameters
+        let requireDepth = false;
+        for (let i = 0; i < value.length; i++) {
+            const effect = value[i];
+            if (effect.slot) {
+                const { requires } = effect;
+                requireDepth ||= requires.includes(FRAMERESOURCE_DEPTH) || requires.includes(FRAMERESOURCE_PREPASSDEPTH);
+            }
+        }
+
+        const effects = this._effects;
+        const versions = this._effectVersions;
+        let changed = effects.length !== value.length || requireDepth !== this._effectsRequireDepth;
+        for (let i = 0; !changed && i < value.length; i++) {
+            changed = effects[i] !== value[i] || versions[i] !== value[i]._definesVersion;
+        }
+
+        if (changed) {
+            this._effectsRequireDepth = requireDepth;
+            effects.length = 0;
+            versions.length = 0;
+            for (let i = 0; i < value.length; i++) {
+                effects.push(value[i]);
+                versions.push(value[i]._definesVersion);
+            }
+            this._trackEffectChunks();
+            this._shaderDirty = true;
+        }
     }
 
     get effects() {
@@ -197,7 +214,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const debugMode = this._debugMode;
 
         for (const effect of this._effects) {
-            if (!effect.active) continue;
 
             // the define marking the effect active, for chunks which test for it, and any the
             // effect set itself
@@ -276,50 +292,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._debug;
     }
 
-    set bloomTexture(value) {
-        if (this._bloomTexture !== value) {
-            this._bloomTexture = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get bloomTexture() {
-        return this._bloomTexture;
-    }
-
-    set cocTexture(value) {
-        if (this._cocTexture !== value) {
-            this._cocTexture = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get cocTexture() {
-        return this._cocTexture;
-    }
-
-    set ssaoTexture(value) {
-        if (this._ssaoTexture !== value) {
-            this._ssaoTexture = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get ssaoTexture() {
-        return this._ssaoTexture;
-    }
-
-    set taaEnabled(value) {
-        if (this._taaEnabled !== value) {
-            this._taaEnabled = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get taaEnabled() {
-        return this._taaEnabled;
-    }
-
     set toneMapping(value) {
         if (this._toneMapping !== value) {
             this._toneMapping = value;
@@ -364,18 +336,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
             }
         }
 
-        // detect an effect becoming active, or changing its defines
-        let effectsState = '';
-        for (const effect of this._effects) {
-            if (effect.active) {
-                effectsState += `${effect.id}:${effect._definesVersion};`;
-            }
-        }
-        if (this._effectsState !== effectsState) {
-            this._effectsState = effectsState;
-            this._shaderDirty = true;
-        }
-
         // need to rebuild shader
         if (this._shaderDirty) {
             this._shaderDirty = false;
@@ -418,32 +378,25 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const startHash = hashCode(customChunks.get('composeMainStartPS') ?? '');
         const endHash = hashCode(customChunks.get('composeMainEndPS') ?? '');
 
-        // the depth debug mode samples the scene depth, whose encoding varies with what produced it
+        // the scene depth is read by the depth debug mode and by the effects requiring it, in the
+        // encoding of what produced it. Requiring the depth makes the camera frame produce it.
         const debugMode = this._debugMode;
+        const sceneDepth = debugMode === 'depth' || this._effectsRequireDepth;
         const depthDefines = new Map();
-        const depthKey = debugMode === 'depth' ?
-            ShaderUtils.addScreenDepthChunkDefines(this.cameraComponent.shaderParams, depthDefines) : '';
+        const depthKey = sceneDepth ?
+            `-depth${ShaderUtils.addScreenDepthChunkDefines(this.cameraComponent.shaderParams, depthDefines)}` : '';
 
         const key =
             `${this.toneMapping}` +
             `-${gammaCorrectionName}` +
-            `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
-            `-${this.cocTexture ? 'dof' : 'nodof'}` +
-            `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
-            `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
-            `-${this.taaEnabled ? 'taa' : 'notaa'}` +
             `-${debugMode ?? ''}${depthKey}` +
             `-decl${declHash}-start${startHash}-end${endHash}`;
 
         const defines = new Map();
         defines.set('TONEMAP', tonemapNames[this.toneMapping]);
         defines.set('GAMMA', gammaCorrectionName);
-        if (this.bloomTexture) defines.set('BLOOM', true);
-        if (this.cocTexture) defines.set('DOF', true);
-        if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
-        if (this.ssaoTexture) defines.set('SSAO', true);
-        if (this.taaEnabled) defines.set('TAA', true);
         if (debugMode) defines.set('DEBUG_COMPOSE', debugMode);
+        if (sceneDepth) defines.set('COMPOSE_SCENE_DEPTH', true);
         depthDefines.forEach((value, name) => defines.set(name, value));
 
         // the effects: the active ids stay readable in the shader name, while their defines and
@@ -454,9 +407,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         let effectIds = '';
         let effectsHash = 0;
         for (const effect of this._effects) {
-            if (effect.active) {
-                effectIds += `${effectIds ? ',' : ''}${effect.id}`;
-            }
+            effectIds += `${effectIds ? ',' : ''}${effect.id}`;
         }
         effectDefines.forEach((value, name) => {
             defines.set(name, value);
@@ -472,45 +423,32 @@ class RenderPassCompose extends RenderPassShaderQuad {
     execute() {
 
         // the clip range the depth debug mode maps to its ramp, and what the depth chunk linearizes
-        // with. Only set for that mode, so the rest of the composition leaves the camera state alone.
-        if (this._debugMode === 'depth') {
+        // with. Only set when the depth is read, so the rest of the composition leaves the camera
+        // state alone.
+        if (this._debugMode === 'depth' || this._effectsRequireDepth) {
             this.cameraParamsId.setValue(this.cameraComponent.camera.fillShaderParams(this.cameraParams));
         }
 
         const sceneTex = this.sceneTexture;
         this.sceneTextureId.setValue(sceneTex);
-        this.sceneTextureInvResValue[0] = 1.0 / sceneTex.width;
-        this.sceneTextureInvResValue[1] = 1.0 / sceneTex.height;
-        this.sceneTextureInvResId.setValue(this.sceneTextureInvResValue);
+        const size = this.sceneTextureSizeValue;
+        size[0] = sceneTex.width;
+        size[1] = sceneTex.height;
+        size[2] = 1.0 / sceneTex.width;
+        size[3] = 1.0 / sceneTex.height;
+        this.sceneTextureSizeId.setValue(size);
 
         // the scene chain renders with the API-native orientation - when the target render
         // target stores a flipped image, flip the sampling vertically so the composed result
         // lands in the requested row order
         this.composeTargetFlipYId.setValue(this.renderTarget?.flipY ? 1 : 0);
 
-        if (this._bloomTexture) {
-            this.bloomTextureId.setValue(this._bloomTexture);
-            this.bloomIntensityId.setValue(this.bloomIntensity);
-        }
-
-        if (this._cocTexture) {
-            this.cocTextureId.setValue(this._cocTexture);
-            this.blurTextureId.setValue(this.blurTexture);
-        }
-
-        if (this._ssaoTexture) {
-            this.ssaoTextureId.setValue(this._ssaoTexture);
-        }
-
-        // the effects write their uniforms right before the draw, not while the frame is prepared:
+        // the uniform values of the effects are bound right before the draw, not when they are set:
         // every camera is prepared before any of them renders, and the uniforms are shared, so a
-        // value written earlier would be the last camera's
+        // value bound earlier would be the last camera's
         const effects = this._effects;
         for (let i = 0; i < effects.length; i++) {
-            const effect = effects[i];
-            if (effect.active) {
-                effect.update();
-            }
+            effects[i]._bindUniforms();
         }
 
         super.execute();

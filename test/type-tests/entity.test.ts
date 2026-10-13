@@ -50,7 +50,8 @@ type T6 = Expect<Equal<typeof collision, CollisionComponent | null>>;
 
 // ---- system-level overrides: callbacks, array forms, deprecated aliases and plain data
 entity.addComponent('camera', { calculateTransform: (transform, view) => {}, clearColor: [0, 0, 0, 1], rect: [0, 0, 1, 1] });
-entity.addComponent('light', { enable: true, color: [1, 1, 1], cookieOffset: [0, 0] });
+entity.addComponent('light', { enable: true, color: [1, 1, 1], cookieOffset: [0, 0], cookieAsset: new Asset('c', 'texture') });
+entity.addComponent('element', { type: 'text', alignment: [0, 0.5] });
 entity.addComponent('particlesystem', {
     emitterExtents: [1, 1, 1], alphaGraph: { type: 1, keys: [0, 1, 1, 0] }, colorGraph: { keys: [[0, 1], [0, 1], [0, 1]] }, mesh: 12
 });

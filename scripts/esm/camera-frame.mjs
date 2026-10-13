@@ -260,6 +260,14 @@ class Bloom {
      * @step 0.01
      */
     threshold = 0;
+
+    /**
+     * Whether the bloom is generated from the full resolution scene instead of a half resolution
+     * copy, for a sharper and more stable glow, at a higher performance cost.
+     *
+     * @visibleif {enabled}
+     */
+    highQuality = false;
 }
 
 /**
@@ -845,6 +853,7 @@ class CameraFrame extends Script {
         if (bloom.enabled) {
             dstBloom.blurLevel = bloom.blurLevel;
             dstBloom.threshold = bloom.threshold;
+            dstBloom.highQuality = bloom.highQuality;
         }
 
         // grading

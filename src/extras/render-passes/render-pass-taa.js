@@ -1,6 +1,8 @@
 import {
     FILTER_LINEAR,
     ADDRESS_CLAMP_TO_EDGE,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA32F,
     SEMANTIC_POSITION,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
@@ -9,10 +11,10 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import glslSampleCatmullRomPS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/sampleCatmullRom.js';
-import wgslSampleCatmullRomPS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/sampleCatmullRom.js';
-import glsltaaResolvePS from '../../scene/shader-lib/glsl/chunks/render-pass/frag/taaResolve.js';
-import wgsltaaResolvePS from '../../scene/shader-lib/wgsl/chunks/render-pass/frag/taaResolve.js';
+import glslSampleCatmullRomPS from './glsl/sample-catmull-rom-ps.js';
+import wgslSampleCatmullRomPS from './wgsl/sample-catmull-rom-ps.js';
+import glsltaaResolvePS from './glsl/taa-resolve-ps.js';
+import wgsltaaResolvePS from './wgsl/taa-resolve-ps.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 
 /**
@@ -91,13 +93,19 @@ class RenderPassTAA extends RenderPassShaderQuad {
 
     setup() {
 
+        // The history accumulates each frame with a small weight, and so needs at least half float
+        // precision - in a lower precision format, such as the RG11B10 the scene often renders to,
+        // the small steps towards the converged value round away, and the history stops converging.
+        const format = this.device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true) ??
+            this.sourceTexture.format;
+
         // double buffered history render target
         for (let i = 0; i < 2; ++i) {
             this.historyTextures[i] = new Texture(this.device, {
                 name: `TAA-History-${i}`,
                 width: 4,
                 height: 4,
-                format: this.sourceTexture.format,
+                format,
                 mipmaps: false,
                 minFilter: FILTER_LINEAR,
                 magFilter: FILTER_LINEAR,

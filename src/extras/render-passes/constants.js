@@ -61,3 +61,58 @@ export const COMPOSESLOT_OUTPUT = 'output';
  * @ignore
  */
 export const composeSlots = [COMPOSESLOT_SCENE, COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_OUTPUT];
+
+/**
+ * A frame resource: the depth of the scene, available once the opaque geometry has rendered. List
+ * it in {@link CameraFrameEffect#requires} to read the depth in the effect's shaders, using the
+ * `getLinearScreenDepth` function of the `screenDepthPS` chunk, which the composition includes for
+ * the effect's compose chunk. The camera frame renders the depth the cheapest way available. Passes
+ * running between the opaque and the transparent geometry read the depth of the opaque geometry.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const FRAMERESOURCE_DEPTH = 'depth';
+
+/**
+ * A frame resource: the depth of the scene, rendered by a prepass before the scene, so that it is
+ * also available to passes running before the scene and while it renders. List it in
+ * {@link CameraFrameEffect#requires} instead of {@link FRAMERESOURCE_DEPTH} when the depth is
+ * needed that early. The prepass renders the opaque geometry an additional time.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const FRAMERESOURCE_PREPASSDEPTH = 'prepassDepth';
+
+/**
+ * A frame resource: the scene color at half resolution, for the effect's passes to read. It is a
+ * box filtered copy of the scene color, taken after temporal anti-aliasing when it is enabled. It
+ * stays the same texture for the life of the passes, and is resized with the scene.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const FRAMERESOURCE_SCENECOLORHALF = 'sceneColorHalf';
+
+/**
+ * A frame resource: a copy of the scene color with mipmaps, taken after the opaque geometry and the
+ * skybox have rendered, before the transparent geometry. List it in
+ * {@link CameraFrameEffect#requires} to read the opaque scene in the effect's shaders, which sample
+ * it as the `uSceneColorMap` texture - for example to distort it while rendering into the scene
+ * between its opaque and transparent geometry. It is the copy the `rendering.sceneColorMap` option
+ * of the camera frame provides to the materials, which requiring it enables.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const FRAMERESOURCE_SCENECOLORGRAB = 'sceneColorGrab';
+
+/**
+ * A frame resource: the render target the scene renders to, for passes rendering into the scene
+ * before its temporal anti-aliasing, such as volumetric fog.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const FRAMERESOURCE_SCENETARGET = 'sceneTarget';

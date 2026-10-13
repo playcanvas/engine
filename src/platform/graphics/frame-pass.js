@@ -60,6 +60,17 @@ class FramePass {
     requiresCubemaps = false;
 
     /**
+     * True if the pass renders once for each view when the frame renders multiple XR views, which
+     * is the case for a pass rendering the views. False for a pass which does not depend on the
+     * view, such as the shadow pass of a directional light, which then renders once for all views,
+     * unless another such pass renders to the same target for those views. A pass rendering per
+     * view can skip some of the views, such as a compute pass executing in a single view.
+     *
+     * @ignore
+     */
+    perView = true;
+
+    /**
      * Frame passes which need to be executed before this pass.
      *
      * @type {FramePass[]}

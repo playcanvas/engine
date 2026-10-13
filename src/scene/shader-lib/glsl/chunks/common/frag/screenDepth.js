@@ -1,4 +1,8 @@
 export default /* glsl */`
+// the chunk can be included more than once - by the composition and the effects it composes
+#ifndef _SCREENDEPTH_INCLUDED_
+#define _SCREENDEPTH_INCLUDED_
+
 uniform highp sampler2D uSceneDepthMap;
 
 #if defined(SCENE_DEPTHMAP_LINEAR) && defined(SCENE_DEPTHMAP_PACKED)
@@ -74,4 +78,6 @@ float getLinearScreenDepth(vec2 uv) {
 float getLinearDepth(vec3 pos) {
     return -(matrix_view * vec4(pos, 1.0)).z;
 }
+
+#endif
 `;

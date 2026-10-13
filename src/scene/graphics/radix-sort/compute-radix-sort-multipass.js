@@ -506,8 +506,8 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
             }
             device.computeDispatch([histogramCompute], `RadixSort4bit-Histogram${suffix}`);
 
-            // Phase 2: Prefix sum on block sums
-            this._prefixSumKernel.dispatch(device);
+            // Phase 2: Prefix sum on block sums, dispatched once for each pass
+            this._prefixSumKernel.dispatch(device, pass);
 
             // Phase 3: Ranked scatter - recompute local ranks in shared memory and scatter
             reorderCompute.setParameter('inputKeys', currentKeys);

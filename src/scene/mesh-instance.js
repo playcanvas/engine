@@ -59,6 +59,7 @@ import { isViewTexture } from './renderer/view-textures.js';
  * @import { SkinInstance } from './skin-instance.js'
  * @import { StencilParameters } from '../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { TextureView } from '../platform/graphics/texture-view.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @import { Vec3 } from '../core/math/vec3.js'
  * @import { CameraComponent } from '../framework/components/camera/component.js';
@@ -1617,7 +1618,8 @@ class MeshInstance {
      * guaranteed to be re-read on later draws.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
+     * @param {number|number[]|Texture|TextureView|Float32Array} data - The value for the specified
+     * parameter. A {@link TextureView} is only supported on WebGPU, see {@link Texture#getView}.
      */
     setParameter(name, data) {
 

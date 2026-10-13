@@ -575,7 +575,7 @@ class Texture {
 
     _updateNumLevels() {
 
-        const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
+        const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height, this._volume ? this._depth : 1) : 1;
         const requestedLevels = this._numLevelsRequested;
         if (requestedLevels !== undefined && requestedLevels > maxLevels) {
             Debug.warn('Texture#numLevels: requested mip level count is greater than the maximum possible, will be clamped to', maxLevels, this);
@@ -960,7 +960,11 @@ class Texture {
 
     get gpuSize() {
         const mips = this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap) * this._samples;
+
+        // unlike the depth of a volume texture, the layers of a texture array are not reduced by
+        // the mip levels, and so each layer has a full mip chain
+        const layers = Math.max(this._arrayLength, 1);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap) * layers * this._samples;
     }
 
     /**
@@ -1435,7 +1439,13 @@ class Texture {
      * when this function is called with high frequency (per frame). Note that this is only utilized
      * on the WebGL platform, and ignored on WebGPU.
      * @param {number} [options.mipLevel] - The mip level to download. Defaults to 0.
-     * @param {number} [options.face] - The face to download. Defaults to 0.
+     * @param {number} [options.face] - If the texture is a cubemap, the face to download.
+     * Defaults to 0.
+     * @param {number} [options.layer] - If the texture is a 2D array texture, the array layer to
+     * download. Defaults to 0.
+     * @param {number} [options.slice] - If the texture is a volume texture, the depth slice to
+     * download. When not specified, all depth slices of the mip level are downloaded, one after
+     * another, and the returned data holds `width * height * depth` pixels.
      * @param {Uint8Array|Uint16Array|Uint32Array|Float32Array} [options.data] - The data buffer to
      * write the pixel data to. If not provided, a new buffer will be created. The type of the buffer
      * must match the texture's format.
@@ -1452,6 +1462,13 @@ class Texture {
      */
     read(x, y, width, height, options = {}) {
         Debug.assert(this._samples === 1, 'Cannot read back a multisampled texture.', this);
+        Debug.call(() => {
+            if (options.slice !== undefined) {
+                const depth = TextureUtils.calcLevelDimension(this._depth, options.mipLevel ?? 0);
+                Debug.assert(this._volume, `Texture#read: the slice option only applies to volume textures, '${this.name}' is not one.`, this);
+                Debug.assert(options.slice >= 0 && options.slice < depth, `Texture#read: slice ${options.slice} is out of range of the ${depth} depth slices of '${this.name}'.`, this);
+            }
+        });
         return this.impl.read?.(x, y, width, height, options);
     }
 
@@ -1493,8 +1510,12 @@ class Texture {
             Debug.error('Texture#copy: copying compressed textures is not supported.');
             return false;
         }
-        if (source._volume || this._volume) {
-            Debug.error('Texture#copy: copying 3D (volume) textures is not supported.');
+        if (source._volume !== this._volume) {
+            Debug.error(`Texture#copy: a volume texture can only be copied to or from another volume texture (source '${source.name}', destination '${this.name}').`);
+            return false;
+        }
+        if (options.slice !== undefined && !source._volume) {
+            Debug.error('Texture#copy: the slice option only applies to volume textures.');
             return false;
         }
         if (source._samples !== this._samples) {
@@ -1514,12 +1535,31 @@ class Texture {
         }
 
         // number of array layers / cubemap faces
+        Debug.assert(options.face === undefined || options.layer === undefined, 'Texture#copy: options.face and options.layer must not be used together.');
+        if (options.face !== undefined && (source.array || this.array)) {
+            Debug.deprecated('Texture#copy: the face option selecting a layer of a texture array is deprecated, use the layer option instead.');
+        }
         const sourceLayers = source.cubemap ? 6 : Math.max(1, source.arrayLength);
         const destLayers = this.cubemap ? 6 : Math.max(1, this.arrayLength);
-        const face = options.face ?? 0;
-        if (face < 0 || face >= sourceLayers || face >= destLayers) {
-            Debug.error(`Texture#copy: face ${face} is out of range.`);
+        const layer = options.layer ?? options.face ?? 0;
+        if (layer < 0 || layer >= sourceLayers || layer >= destLayers) {
+            Debug.error(`Texture#copy: face / layer ${layer} is out of range.`);
             return false;
+        }
+
+        // depth slices of volume textures - a single slice, or all slices of the source mip level
+        if (source._volume) {
+            const sourceDepth = Math.max(1, source.depth >> sourceMipLevel);
+            const destDepth = Math.max(1, this.depth >> destMipLevel);
+            if (options.slice !== undefined) {
+                if (options.slice < 0 || options.slice >= sourceDepth || options.slice >= destDepth) {
+                    Debug.error(`Texture#copy: slice ${options.slice} is out of range (source has ${sourceDepth} depth slices, destination has ${destDepth}).`);
+                    return false;
+                }
+            } else if (sourceDepth > destDepth) {
+                Debug.error(`Texture#copy: the ${sourceDepth} depth slices of the source do not fit into the ${destDepth} depth slices of the destination. Use the slice option to copy a single slice.`);
+                return false;
+            }
         }
 
         // region bounds, evaluated at the chosen mip levels
@@ -1562,8 +1602,14 @@ class Texture {
      * @param {object} [options] - Optional arguments.
      * @param {number} [options.sourceMipLevel] - The source mip level to copy from. Defaults to 0.
      * @param {number} [options.destMipLevel] - The destination mip level to copy to. Defaults to 0.
-     * @param {number} [options.face] - The cubemap face or array layer to copy (applies to both
-     * source and destination). Defaults to 0.
+     * @param {number} [options.face] - If the textures are cubemaps, the face to copy (applies to
+     * both source and destination). Defaults to 0.
+     * @param {number} [options.layer] - If the textures are 2D array textures, the array layer to
+     * copy (applies to both source and destination). Defaults to 0.
+     * @param {number} [options.slice] - If the textures are volume textures, the depth slice to
+     * copy (applies to both source and destination). When not specified, all depth slices of the
+     * source mip level are copied, which requires the destination mip level to have at least as
+     * many depth slices.
      * @param {number} [options.sourceX] - The left edge of the source region. Defaults to 0.
      * @param {number} [options.sourceY] - The top edge of the source region. Defaults to 0.
      * @param {number} [options.width] - The width of the copied region. Defaults to the full width
@@ -1573,7 +1619,7 @@ class Texture {
      * @param {number} [options.destX] - The left edge of the destination region. Defaults to 0.
      * @param {number} [options.destY] - The top edge of the destination region. Defaults to 0.
      * @param {RenderTarget} [options.sourceRenderTarget] - A render target wrapping the source
-     * texture as its color buffer, at the matching face / mip level. Provide as an optimization to
+     * texture as its color buffer, at the matching face / layer / mip level. Provide as an optimization to
      * avoid allocating a temporary one when copying with high frequency (per frame). Note that this
      * is only utilized on the WebGL platform, and ignored on WebGPU.
      * @returns {boolean} True if the copy was successful, false otherwise.
@@ -1587,9 +1633,11 @@ class Texture {
 
     /**
      * Creates a TextureView for this texture, specifying a subset of mip levels and array layers.
-     * TextureViews can be used with compute shaders to access specific portions of a texture.
+     * TextureViews can be bound to compute shaders and materials to access specific portions of a
+     * texture. See {@link TextureView} for more details.
      *
-     * Note: TextureView is only supported on WebGPU. On WebGL, the full texture is always bound.
+     * Note: TextureView is only supported on WebGPU. On WebGL, the full texture is always bound,
+     * including all its mip levels and array layers.
      *
      * @param {number} [baseMipLevel] - The first mip level accessible to the view. Defaults to 0.
      * @param {number} [mipLevelCount] - The number of mip levels accessible to the view. Defaults
@@ -1605,6 +1653,10 @@ class Texture {
      *
      * // Use with compute shader
      * compute.setParameter('outputTexture', mip1View);
+     *
+     * // Sample array layer 1 of a texture array in a material, while a render target renders to
+     * // its layer 0 in the same render pass. The shader samples the view's layer 0.
+     * material.setParameter('uLayers', textureArray.getView(0, 1, 1, 1));
      */
     getView(baseMipLevel = 0, mipLevelCount = 1, baseArrayLayer = 0, arrayLayerCount = 1) {
         return new TextureView(this, baseMipLevel, mipLevelCount, baseArrayLayer, arrayLayerCount);

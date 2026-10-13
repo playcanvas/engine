@@ -31,6 +31,7 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
+import { TextureView } from '../texture-view.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
@@ -1173,9 +1174,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeContextCaches() {
         super.initializeContextCaches();
 
-        // cache of VAOs
-        this._vaoMap = new Map();
-
         this.boundVao = null;
         this.activeFramebuffer = null;
         this.feedback = null;
@@ -1407,7 +1405,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const sourceMipLevel = options.sourceMipLevel ?? 0;
         const destMipLevel = options.destMipLevel ?? 0;
-        const face = options.face ?? 0;
+
+        // the cubemap face or array layer, or the depth slices of volume textures - a single slice,
+        // or all slices of the source mip level
+        const layer = source.volume ? (options.slice ?? 0) : (options.layer ?? options.face ?? 0);
+        const layerCount = source.volume && options.slice === undefined ? TextureUtils.calcLevelDimension(source.depth, sourceMipLevel) : 1;
 
         const sx = options.sourceX ?? 0;
         const sy = options.sourceY ?? 0;
@@ -1419,13 +1421,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, 'COPY-TEX');
 
         // wrap the source in a render target so it can be read from a framebuffer (mip level and
-        // face are selected by the render target). Reuse a caller-supplied one if provided, as an
+        // face / layer are selected by the render target). Reuse a caller-supplied one if provided, as an
         // optimization for high-frequency copies.
         const sourceRenderTarget = options.sourceRenderTarget ?? new RenderTarget({
             name: 'TextureCopySource',
             colorBuffer: source,
             depth: false,
-            face: face,
+            layer: layer,
             mipLevel: sourceMipLevel
         });
 
@@ -1438,11 +1440,27 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // ensure the destination texture is created / uploaded and bound on a texture unit
         this.setTexture(dest, 0);
 
-        // destination face / target (cubemap face selected explicitly, otherwise 2D)
-        const destTarget = dest.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + face : gl.TEXTURE_2D;
+        // copy the source framebuffer region into the bound destination texture - into a layer of
+        // a texture array, the depth slices of a volume texture, a cubemap face, or a 2D texture
+        if (dest.volume) {
 
-        // copy the source framebuffer region into the bound destination texture
-        gl.copyTexSubImage2D(destTarget, destMipLevel, dx, dy, sx, sy, w, h);
+            // each depth slice of the source is attached to the framebuffer in turn, and the first
+            // one is attached back after, for a render target the caller reuses
+            for (let i = 0; i < layerCount; i++) {
+                if (i > 0) {
+                    gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, source.impl._glTexture, sourceMipLevel, layer + i);
+                }
+                gl.copyTexSubImage3D(gl.TEXTURE_3D, destMipLevel, dx, dy, layer + i, sx, sy, w, h);
+            }
+            if (layerCount > 1) {
+                gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, source.impl._glTexture, sourceMipLevel, layer);
+            }
+        } else if (dest.array) {
+            gl.copyTexSubImage3D(gl.TEXTURE_2D_ARRAY, destMipLevel, dx, dy, layer, sx, sy, w, h);
+        } else {
+            const destTarget = dest.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + layer : gl.TEXTURE_2D;
+            gl.copyTexSubImage2D(destTarget, destMipLevel, dx, dy, sx, sy, w, h);
+        }
 
         // destroy the temporary render target if we created it
         if (!options.sourceRenderTarget) {
@@ -1668,6 +1686,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         DebugGraphics.pushGpuMarker(this, `MIPS${i}`);
 
+                        // TODO: this regenerates the mipmaps of all cubemap faces / array layers,
+                        // not only the one rendered to (#9688)
                         this.activeTexture(this.maxCombinedTextures - 1);
                         this.bindTexture(colorBuffer);
                         this.gl.generateMipmap(colorBuffer.impl._glTarget);
@@ -1748,8 +1768,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // If the active render target is auto-mipmapped, generate its mip chain
             const colorBuffer = target._colorBuffer;
             if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
-                // FIXME: if colorBuffer is a cubemap currently we're re-generating mipmaps after
-                // updating each face!
+                // TODO: this regenerates the mipmaps of all cubemap faces / array layers, not only
+                // the one rendered to (#9688)
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
                 this.gl.generateMipmap(colorBuffer.impl._glTarget);
@@ -1948,30 +1968,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Generates the key of the vertex array object cache for the supplied vertex buffers. Each part
-     * identifies both the buffer and its format, and is delimited, so distinct buffer lists cannot
-     * generate the same key.
-     *
-     * @param {VertexBuffer[]} vertexBuffers - The vertex buffers of the draw.
-     * @returns {string} The cache key.
-     * @private
-     */
-    _vertexArrayKey(vertexBuffers) {
-        let key = '';
-        for (let i = 0; i < vertexBuffers.length; i++) {
-            key += vertexBuffers[i].vaoKeyPart;
-        }
-        return key;
-    }
-
-    /**
      * Removes the cached vertex array object for the supplied vertex buffers, if one exists.
      *
      * This is needed by code which exchanges the GPU buffers behind VertexBuffer objects while
      * leaving the objects themselves in place - see {@link TransformFeedback#process}. A vertex
-     * array object captures the GPU buffers it was built from, and this cache is keyed on the
-     * VertexBuffer objects, so such an exchange is invisible to it and a stale vertex array object
-     * would keep reading the buffers from before the exchange.
+     * array object captures the GPU buffers it was built from, and the cache is keyed on the buffer
+     * objects, so such an exchange is invisible to it and a stale vertex array object would keep
+     * reading the buffers from before the exchange.
      *
      * Only has an effect when more than one vertex buffer is supplied - a single vertex buffer stores
      * its vertex array object on itself, and so it travels with the buffer.
@@ -1982,11 +1985,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     removeVertexArrayFromCache(vertexBuffers) {
         if (vertexBuffers.length > 1) {
-            const key = this._vertexArrayKey(vertexBuffers);
-            const vao = this._vaoMap.get(key);
-            if (vao) {
-                this._vaoMap.delete(key);
-                this.gl.deleteVertexArray(vao);
+            const entry = vertexBuffers[0].impl.getVertexArrayEntry(vertexBuffers);
+            if (entry.vao) {
+                this.unbindVertexArray();
+                this.gl.deleteVertexArray(entry.vao);
+                entry.vao = null;
             }
         }
     }
@@ -1994,78 +1997,53 @@ class WebglGraphicsDevice extends GraphicsDevice {
     // function creates VertexArrayObject from list of vertex buffers
     createVertexArray(vertexBuffers) {
 
-        let key, vao;
+        // create VA object
+        const gl = this.gl;
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
 
-        // only use cache when more than 1 vertex buffer, otherwise it's unique
-        const useCache = vertexBuffers.length > 1;
-        if (useCache) {
+        // don't capture index buffer in VAO
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-            key = this._vertexArrayKey(vertexBuffers);
+        let locZero = false;
+        for (let i = 0; i < vertexBuffers.length; i++) {
 
-            // try to get VAO from cache
-            vao = this._vaoMap.get(key);
-        }
+            // bind buffer
+            const vertexBuffer = vertexBuffers[i];
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
 
-        // need to create new vao
-        if (!vao) {
+            // for each attribute
+            const elements = vertexBuffer.format.elements;
+            for (let j = 0; j < elements.length; j++) {
+                const e = elements[j];
+                const loc = semanticToLocation[e.name];
 
-            // create VA object
-            const gl = this.gl;
-            vao = gl.createVertexArray();
-            gl.bindVertexArray(vao);
+                if (loc === 0) {
+                    locZero = true;
+                }
 
-            // don't capture index buffer in VAO
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+                if (e.asInt) {
+                    gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
+                } else {
+                    gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                }
 
-            let locZero = false;
-            for (let i = 0; i < vertexBuffers.length; i++) {
+                gl.enableVertexAttribArray(loc);
 
-                // bind buffer
-                const vertexBuffer = vertexBuffers[i];
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
-
-                // for each attribute
-                const elements = vertexBuffer.format.elements;
-                for (let j = 0; j < elements.length; j++) {
-                    const e = elements[j];
-                    const loc = semanticToLocation[e.name];
-
-                    if (loc === 0) {
-                        locZero = true;
-                    }
-
-                    if (e.asInt) {
-                        gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
-                    } else {
-                        gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
-                    }
-
-                    gl.enableVertexAttribArray(loc);
-
-                    if (vertexBuffer.format.instancing) {
-                        gl.vertexAttribDivisor(loc, 1);
-                    }
+                if (vertexBuffer.format.instancing) {
+                    gl.vertexAttribDivisor(loc, 1);
                 }
             }
+        }
 
-            // end of VA object
-            gl.bindVertexArray(null);
+        // end of VA object
+        gl.bindVertexArray(null);
 
-            // unbind any array buffer
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        // unbind any array buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-            // add it to cache. Note that entries are not removed when one of the vertex buffers is
-            // destroyed - the cache only retains the vertex array object itself, not the buffers, and
-            // the number of buffers taking part in multi-buffer draws is small, so pruning per
-            // destroyed buffer is not considered worth the cost. The cache is released in full when
-            // the device is destroyed or the context is lost.
-            if (useCache) {
-                this._vaoMap.set(key, vao);
-            }
-
-            if (!locZero) {
-                Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
-            }
+        if (!locZero) {
+            Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
         }
 
         return vao;
@@ -2081,21 +2059,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     setBuffers(indexBuffer) {
         const gl = this.gl;
-        let vao;
+        const vertexBuffers = this.vertexBuffers;
 
-        // create VAO for specified vertex buffers
-        if (this.vertexBuffers.length === 1) {
-
-            // single VB keeps its VAO
-            const vertexBuffer = this.vertexBuffers[0];
+        // the VAO is cached on the first vertex buffer - directly when it is the only one, and in an
+        // entry keyed by the further buffers otherwise. A draw without vertex buffers uses the
+        // default VAO, which has no attributes enabled
+        let vao = null;
+        const vertexBuffer = vertexBuffers[0];
+        if (vertexBuffer) {
             Debug.assert(vertexBuffer.device === this, 'The VertexBuffer was not created using current GraphicsDevice');
-            if (!vertexBuffer.impl.vao) {
-                vertexBuffer.impl.vao = this.createVertexArray(this.vertexBuffers);
+            const entry = vertexBuffers.length === 1 ? vertexBuffer.impl : vertexBuffer.impl.getVertexArrayEntry(vertexBuffers);
+            if (!entry.vao) {
+                entry.vao = this.createVertexArray(vertexBuffers);
             }
-            vao = vertexBuffer.impl.vao;
-        } else {
-            // obtain temporary VAO for multiple vertex buffers
-            vao = this.createVertexArray(this.vertexBuffers);
+            vao = entry.vao;
         }
 
         // set active VAO
@@ -2199,6 +2176,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                             Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`, shader);
                             samplerValue = this.builtInTextures.pink;
                         }
+                    }
+
+                    // WebGL has no texture views, so the whole texture of a view is bound
+                    if (samplerValue instanceof TextureView) {
+                        Debug.warnOnce(`Texture view of texture ${samplerValue.texture.name} is bound to ${sampler.scopeId.name}. WebGL does not support texture views, and binds the whole texture instead.`);
+                        samplerValue = samplerValue.texture;
                     }
 
                     if (samplerValue instanceof Texture) {
@@ -2497,9 +2480,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {boolean} [frequent] - Set for a read issued every frame or every few frames, which
      * runs the copy out of the pixel buffer at the start of the next frame instead of as soon as
      * the data is available. Defaults to false.
+     * @param {number} [sliceCount] - The number of slices to read, one after another into the
+     * pixels. Defaults to 1.
+     * @param {Function} [selectSlice] - Called with the index of each slice after the first, before
+     * it is read, to attach it to the current framebuffer.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false, frequent = false) {
+    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false, frequent = false, sliceCount = 1, selectSlice = null) {
         const gl = this.gl;
 
         let format, pixelType;
@@ -2516,7 +2503,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const buf = gl.createBuffer();
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
         gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
-        gl.readPixels(x, y, w, h, format, pixelType, 0);
+        const sliceBytes = pixels.byteLength / sliceCount;
+        for (let i = 0; i < sliceCount; i++) {
+            if (i > 0) {
+                selectSlice(i);
+            }
+            gl.readPixels(x, y, w, h, format, pixelType, i * sliceBytes);
+        }
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
         // async wait for previous read to finish
@@ -2608,14 +2601,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     readTextureAsync(texture, x, y, width, height, options) {
 
-        const face = options.face ?? 0;
         const mipLevel = options.mipLevel ?? 0;
+
+        // the cubemap face or array layer, or the depth slices of a volume texture - a single
+        // slice, or all slices of the mip level
+        const layer = texture.volume ? (options.slice ?? 0) : (options.layer ?? options.face ?? 0);
+        const layerCount = texture.volume && options.slice === undefined ? TextureUtils.calcLevelDimension(texture.depth, mipLevel) : 1;
 
         // create a temporary render target if needed
         const renderTarget = options.renderTarget ?? new RenderTarget({
             colorBuffer: texture,
             depth: false,
-            face: face,
+            layer: layer,
             mipLevel: mipLevel
         });
         Debug.assert(renderTarget.colorBuffer === texture);
@@ -2626,14 +2623,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Use caller's buffer or allocate output buffer in the user's expected format
         const ArrayType = getPixelFormatArrayType(texture._format);
-        const outputData = options.data ?? new ArrayType(
-            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
-        );
+        const byteSize = TextureUtils.calcLevelGpuSize(width, height, layerCount, texture._format);
+        const outputData = options.data ?? new ArrayType(byteSize / ArrayType.BYTES_PER_ELEMENT);
 
-        // For formats requiring RGBA readback, allocate a larger RGBA buffer
+        // For formats requiring RGBA readback, allocate a larger RGBA buffer. Otherwise read into a
+        // view of the exact size of the read, as the caller's buffer can be larger, and the slices
+        // are read one after another into it.
         const readBuffer = needsRgbaReadback ?
-            new Uint8Array(width * height * 4) :
-            outputData;
+            new Uint8Array(width * height * layerCount * 4) :
+            new Uint8Array(outputData.buffer, outputData.byteOffset, byteSize);
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
@@ -2661,9 +2659,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.on('destroy', release);
         }
 
+        // the depth slices after the first are read by attaching each to the framebuffer in turn,
+        // and the first one is attached back after, for a render target the caller reuses
+        const gl = this.gl;
+        const selectSlice = (slice) => {
+            gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture.impl._glTexture, mipLevel, layer + slice);
+        };
+
         return new Promise((resolve, reject) => {
             const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback,
-                options.frequent ?? false);
+                options.frequent ?? false, layerCount, selectSlice);
+            if (layerCount > 1) {
+                selectSlice(0);
+            }
 
             readPromise.then((data) => {
 
@@ -2680,7 +2688,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 // Extract channels from RGBA data if needed
                 if (needsRgbaReadback) {
-                    const pixelCount = width * height;
+                    const pixelCount = width * height * layerCount;
                     for (let i = 0; i < pixelCount; i++) {
                         for (let c = 0; c < rgbaChannels; c++) {
                             outputData[i * rgbaChannels + c] = data[i * 4 + c];
@@ -2688,7 +2696,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                     resolve(outputData);
                 } else {
-                    resolve(data);
+                    resolve(outputData);
                 }
             }).catch((error) => {
                 release();
@@ -3194,17 +3202,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Frees memory from all vertex array objects ever allocated with this device.
+     * Deletes the vertex array objects of all vertex buffers of this device.
      *
      * @ignore
      */
     clearVertexArrayObjectCache() {
         const gl = this.gl;
-        this._vaoMap.forEach((item, key, mapObj) => {
-            gl.deleteVertexArray(item);
-        });
-
-        this._vaoMap.clear();
+        this.unbindVertexArray();
+        for (const buffer of this.buffers) {
+            if (buffer.impl instanceof WebglVertexBuffer) {
+                buffer.impl.deleteVertexArrays(gl);
+            }
+        }
     }
 
     /**

@@ -8,6 +8,9 @@ import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME } from '../constants.js';
  * @ignore
  */
 class RenderPassShadowDirectional extends RenderPass {
+    // the shadow map does not depend on the XR view, so it is rendered once for all of them
+    perView = false;
+
     constructor(device, shadowRenderer, light, camera, cascadeMask) {
         super(device);
         DebugHelper.setName(this, `RenderPassShadowDir-${light._node.name}`);

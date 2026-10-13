@@ -14,12 +14,10 @@ import {
     AssetListLoader,
     BUFFERUSAGE_COPY_DST,
     BUFFERUSAGE_COPY_SRC,
-    BindGroupFormat,
-    BindStorageBufferFormat,
-    BindTextureFormat,
     CameraComponentSystem,
     Color,
     Compute,
+    ComputePass,
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
@@ -27,7 +25,6 @@ import {
     RESOLUTION_AUTO,
     RenderComponentSystem,
     SHADERLANGUAGE_WGSL,
-    SHADERSTAGE_COMPUTE,
     ScriptComponentSystem,
     Shader,
     StorageBuffer,
@@ -110,8 +107,8 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.setPosition(0, 0, 5);
 
-// Enable the camera to render the scene's color map, available as uSceneColorMap in the shaders.
-// This allows us to use the rendered scene as an input for the histogram compute shader.
+// Enable the camera to render the scene's color map. This allows us to use the rendered scene as an
+// input for the histogram compute shader.
 camera.camera.requestSceneColorMap(true);
 
 // Create directional light entity
@@ -130,20 +127,13 @@ Rotator.prototype.update = function (/** @type {number} */ dt) {
     this.entity.rotate(5 * dt, 10 * dt, -15 * dt);
 };
 
-// A compute shader that will compute the histogram of the input texture and write the result to the storage buffer
+// A compute shader that will compute the histogram of the scene color map and write the result to
+// the storage buffer. Its resources use the simplified WGSL syntax, and are reflected automatically.
 const shader = device.supportsCompute
     ? new Shader(device, {
           name: 'ComputeShader',
           shaderLanguage: SHADERLANGUAGE_WGSL,
-          cshader: computeShaderWgsl,
-
-          // Format of a bind group, providing resources for the compute shader
-          computeBindGroupFormat: new BindGroupFormat(device, [
-              // Input texture - the scene color map, without a sampler
-              new BindTextureFormat('uSceneColorMap', SHADERSTAGE_COMPUTE, undefined, undefined, false),
-              // Output storage buffer
-              new BindStorageBufferFormat('outBuffer', SHADERSTAGE_COMPUTE)
-          ])
+          cshader: computeShaderWgsl
       })
     : null;
 
@@ -156,10 +146,12 @@ const histogramStorageBuffer = new StorageBuffer(
         BUFFERUSAGE_COPY_DST // needed for clearing the buffer
 );
 
-// Create an instance of the compute shader, and set the input and output data. Note that we do
-// Not provide a value for `uSceneColorMap` as this is done by the engine internally.
+// Create an instance of the compute shader, and set the input and output data. The scene color map
+// of the camera is attached once - each dispatch then reads the color map the camera rendered most
+// recently.
 const compute = new Compute(device, shader, 'ComputeHistogram');
-compute.setParameter('outBuffer', histogramStorageBuffer);
+compute.setSceneColorMap(camera.camera.sceneColorMapHandle);
+compute.setParameter('bins', histogramStorageBuffer);
 
 // Instantiate the spinning mesh
 const solid = assets.solid.resource.instantiateRenderEntity();
@@ -169,59 +161,70 @@ solid.setLocalPosition(0, 0.4, 0);
 solid.setLocalScale(0.35, 0.35, 0.35);
 app.root.addChild(solid);
 
-let firstFrame = true;
+// The compute shader runs after the camera renders, so it processes the color map of the frame the
+// camera rendered
+const computePass = new ComputePass(device, [compute]);
+computePass.name = 'HistogramPass';
+if (device.supportsCompute) {
+    camera.camera.afterPasses.push(computePass);
+}
+
+// The line positions of the most recently read histogram. Lines are drawn for a single frame, so
+// these are drawn every frame, until the next histogram is read.
+/** @type {number[]|null} */
+let histogramPositions = null;
+
 let readGeneration = 0;
 const onDeviceLost = device.on('devicelost', () => {
     readGeneration++;
-    firstFrame = true;
 });
 app.on('destroy', () => {
     readGeneration++;
     onDeviceLost.off();
 });
 
+// Before the compute pass dispatches, clear the storage buffer, to avoid the accumulation buildup
+computePass.onBefore = () => {
+    histogramStorageBuffer.clear();
+};
+
+// After the compute pass dispatches, read back the histogram data from the storage buffer. The
+// returned promise is resolved later, when the GPU is done running the compute pass, and so the
+// histogram on the screen is up to a few frames behind.
+computePass.onAfter = () => {
+    const histogramData = new Uint32Array(numBins);
+    const generation = readGeneration;
+    histogramStorageBuffer
+        .read(0, undefined, histogramData)
+        .then((data) => {
+            // A request can settle after recovery or application destruction.
+            if (generation !== readGeneration) return;
+
+            const scale = 1 / 50000;
+            const positions = [];
+            for (let x = 0; x < data.length; x++) {
+                const value = math.clamp(data[x] * scale, 0, 0.2);
+                positions.push(x * 0.001, -0.35, 4);
+                positions.push(x * 0.001, value - 0.35, 4);
+            }
+            histogramPositions = positions;
+        })
+        .catch((error) => {
+            // Interrupted reads are replaced by fresh results on subsequent frames.
+            if (error.name !== 'AbortError' && generation === readGeneration && !device.isContextLost()) {
+                throw error;
+            }
+        });
+};
+
 app.on('update', (/** @type {number} */ _dt) => {
-    // The update function runs every frame before the frame gets rendered. On the first time it
-    // runs, the scene color map has not been rendered yet, so we skip the first frame.
-    if (firstFrame) {
-        firstFrame = false;
-        return;
+    if (device.supportsCompute) {
+        // The size of the dispatch, a thread for each pixel, which the compute pass uses
+        compute.setupDispatchThreads(app.graphicsDevice.width, app.graphicsDevice.height);
     }
 
-    if (device.supportsCompute) {
-        // Clear the storage buffer, to avoid the accumulation buildup
-        histogramStorageBuffer.clear();
-
-        // Dispatch the compute shader
-        compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
-        device.computeDispatch([compute], 'HistogramDispatch');
-
-        // Read back the histogram data from the storage buffer. None that the returned promise
-        // will be resolved later, when the GPU is done running it, and so the histogram on the
-        // screen will be up to few frames behind.
-        const histogramData = new Uint32Array(numBins);
-        const generation = readGeneration;
-        histogramStorageBuffer
-            .read(0, undefined, histogramData)
-            .then((data) => {
-                // A request can settle after recovery or application destruction.
-                if (generation !== readGeneration) return;
-
-                // Render the histogram using lines
-                const scale = 1 / 50000;
-                const positions = [];
-                for (let x = 0; x < data.length; x++) {
-                    const value = math.clamp(data[x] * scale, 0, 0.2);
-                    positions.push(x * 0.001, -0.35, 4);
-                    positions.push(x * 0.001, value - 0.35, 4);
-                }
-                app.drawLineArrays(positions, Color.YELLOW);
-            })
-            .catch((error) => {
-                // Interrupted reads are replaced by fresh results on subsequent frames.
-                if (error.name !== 'AbortError' && generation === readGeneration && !device.isContextLost()) {
-                    throw error;
-                }
-            });
+    // Render the most recently read histogram using lines
+    if (histogramPositions) {
+        app.drawLineArrays(histogramPositions, Color.YELLOW);
     }
 });

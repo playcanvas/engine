@@ -1,0 +1,304 @@
+import { expect } from 'chai';
+import sinon from 'sinon';
+
+import { Entity } from '../../../src/framework/entity.js';
+import { ComputePass } from '../../../src/platform/graphics/compute-pass.js';
+import { Compute } from '../../../src/platform/graphics/compute.js';
+import { BUFFERUSAGE_COPY_SRC, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
+import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
+import { Shader } from '../../../src/platform/graphics/shader.js';
+import { StorageBuffer } from '../../../src/platform/graphics/storage-buffer.js';
+import { FrameGraph } from '../../../src/scene/frame-graph.js';
+import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
+
+/**
+ * @import { Application } from '../../../src/framework/application.js'
+ */
+
+// Dawn's null backend validates the API and compiles the shaders, but executes no GPU work, so the
+// values the shaders compute are only checked on a backend which runs them
+const executesGpuWork = !!process.env.PC_WEBGPU_BACKEND && process.env.PC_WEBGPU_BACKEND !== 'null';
+
+// stands in for a compute instance in the tests which do not dispatch it on the GPU
+const createCompute = name => ({ name });
+
+// stands in for a render pass rendering to a target, without clearing it
+class TargetPass extends FramePass {
+    colorArrayOps = [{ clear: false, store: false }];
+
+    depthStencilOps = { clearDepth: false, clearStencil: false, storeDepth: false, storeStencil: false };
+
+    constructor(device, renderTarget) {
+        super(device);
+        this.renderTarget = renderTarget;
+    }
+}
+
+describe('ComputePass', function () {
+    /** @type {Application} */
+    let app;
+
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
+    let device;
+
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+        device = app.graphicsDevice;
+    });
+
+    afterEach(function () {
+        sinon.restore();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
+    });
+
+    describe('#execute', function () {
+
+        it('dispatches its computes in order, in a single compute pass', function () {
+            const computes = [createCompute('First'), createCompute('Second')];
+            const pass = new ComputePass(device, computes);
+            pass.name = 'TestPass';
+            const dispatch = sinon.stub(device, 'computeDispatch');
+
+            pass.render();
+
+            expect(dispatch.calledOnce).to.equal(true);
+            expect(dispatch.firstCall.args[0]).to.equal(computes);
+            expect(dispatch.firstCall.args[1]).to.equal('TestPass');
+        });
+
+        it('does not dispatch without computes', function () {
+            const pass = new ComputePass(device);
+            const dispatch = sinon.stub(device, 'computeDispatch');
+
+            pass.render();
+
+            expect(dispatch.called).to.equal(false);
+        });
+
+        it('runs the computes on the GPU', async function () {
+            if (!device.supportsCompute) {
+                this.skip();
+            }
+
+            const shader = new Shader(device, {
+                name: 'ComputePassTest',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: /* wgsl */`
+                    uniform value: f32;
+                    var<storage, read_write> result: array<f32>;
+
+                    @compute @workgroup_size(1)
+                    fn main() {
+                        result[0] = uniform.value;
+                    }
+                `
+            });
+            const results = new StorageBuffer(device, 16, BUFFERUSAGE_COPY_SRC);
+            const compute = new Compute(device, shader, 'ComputePassTest');
+            compute.setParameter('result', results);
+            compute.setParameter('value', 5);
+            compute.setupDispatch(1, 1, 1);
+
+            new ComputePass(device, [compute]).render();
+            const data = await results.read(0, 4, new Float32Array(1), true);
+            if (executesGpuWork) {
+                expect(data[0]).to.equal(5);
+            }
+
+            compute.destroy();
+            shader.destroy();
+            results.destroy();
+        });
+    });
+
+    describe('#onBefore', function () {
+
+        it('is called with the pass, before the dispatch', function () {
+            const calls = [];
+            const pass = new ComputePass(device, [createCompute('Compute')]);
+            pass.onBefore = p => calls.push(['before', p]);
+            sinon.stub(device, 'computeDispatch').callsFake(() => calls.push(['dispatch']));
+
+            pass.render();
+
+            expect(calls).to.deep.equal([['before', pass], ['dispatch']]);
+        });
+    });
+
+    describe('#onAfter', function () {
+
+        it('is called with the pass, after the dispatch', function () {
+            const calls = [];
+            const pass = new ComputePass(device, [createCompute('Compute')]);
+            pass.onAfter = p => calls.push(['after', p]);
+            sinon.stub(device, 'computeDispatch').callsFake(() => calls.push(['dispatch']));
+
+            pass.render();
+
+            expect(calls).to.deep.equal([['dispatch'], ['after', pass]]);
+        });
+
+        it('is not called when the pass is disabled', function () {
+            const pass = new ComputePass(device, [createCompute('Compute')]);
+            pass.onAfter = sinon.spy();
+            pass.enabled = false;
+            sinon.stub(device, 'computeDispatch');
+
+            pass.render();
+
+            expect(pass.onAfter.called).to.equal(false);
+        });
+    });
+
+    describe('#xrViewIndex', function () {
+
+        // stands in for a device rendering two XR views, recording the computes dispatched and the
+        // index of the view they are dispatched in
+        const createXrDevice = () => {
+            const view = { colorTexture: null, viewDescriptor: null, viewFormat: null };
+            const xrDevice = {
+                xrSubImages: [view, view],
+                xrCurrentViewIndex: -1,
+                backBuffer: null,
+                renderPassIndex: 0,
+                dispatched: [],
+                computeDispatch(computes) {
+                    this.dispatched.push([computes[0].name, this.xrCurrentViewIndex]);
+                }
+            };
+            return xrDevice;
+        };
+
+        // renders the passes in a scope capturing the passes of the XR views, after a pass rendering
+        // the views, as the camera's depth prepass does
+        const renderViews = (xrDevice, passes) => {
+            const frameGraph = new FrameGraph();
+            frameGraph.beginMultiView(xrDevice);
+            frameGraph.addRenderPass(new FramePass(xrDevice));
+            passes.forEach(pass => frameGraph.addRenderPass(pass));
+            frameGraph.endMultiView();
+            frameGraph.render(xrDevice);
+            return frameGraph;
+        };
+
+        it('defaults to the first view', function () {
+            const pass = new ComputePass(device);
+            expect(pass.xrViewIndex).to.equal(0);
+            expect(pass.perView).to.equal(true);
+        });
+
+        it('executes once, in the view with the index', function () {
+            const xrDevice = createXrDevice();
+            const first = new ComputePass(xrDevice, [createCompute('First')]);
+            const second = new ComputePass(xrDevice, [createCompute('Second')]);
+            second.xrViewIndex = 1;
+
+            renderViews(xrDevice, [first, second]);
+
+            expect(xrDevice.dispatched).to.deep.equal([['First', 0], ['Second', 1]]);
+        });
+
+        it('calls the callbacks only in the view it executes in', function () {
+            const xrDevice = createXrDevice();
+            const pass = new ComputePass(xrDevice, [createCompute('Compute')]);
+            pass.xrViewIndex = 1;
+            pass.onBefore = sinon.spy();
+            pass.onAfter = sinon.spy();
+
+            renderViews(xrDevice, [pass]);
+
+            expect(pass.onBefore.calledOnce).to.equal(true);
+            expect(pass.onAfter.calledOnce).to.equal(true);
+        });
+
+        it('executes once before the views when -1', function () {
+            const xrDevice = createXrDevice();
+            const first = new ComputePass(xrDevice, [createCompute('First')]);
+            const second = new ComputePass(xrDevice, [createCompute('Second')]);
+            first.xrViewIndex = -1;
+            second.xrViewIndex = -1;
+            expect(first.perView).to.equal(false);
+
+            const frameGraph = renderViews(xrDevice, [first, second]);
+
+            // both are moved ahead of the passes rendering the views, in order
+            const [movedFirst, movedSecond, wrapper] = frameGraph.renderPasses;
+            expect(movedFirst).to.equal(first);
+            expect(movedSecond).to.equal(second);
+            expect(wrapper.children).to.have.lengthOf(1);
+            expect(xrDevice.dispatched).to.deep.equal([['First', -1], ['Second', -1]]);
+        });
+
+        it('executes for -1 and 0 outside of the views', function () {
+            const xrDevice = createXrDevice();
+            const passes = [-1, 0, 1].map((index) => {
+                const pass = new ComputePass(xrDevice, [createCompute(`View${index}`)]);
+                pass.xrViewIndex = index;
+                return pass;
+            });
+
+            passes.forEach(pass => pass.render());
+
+            expect(xrDevice.dispatched).to.deep.equal([['View-1', -1], ['View0', -1]]);
+        });
+    });
+
+    describe('in the frame graph', function () {
+
+        it('keeps the render passes around it apart', function () {
+            const renderTarget = {};
+            const addPasses = (between) => {
+                const frameGraph = new FrameGraph();
+                const before = new TargetPass(device, renderTarget);
+                const after = new TargetPass(device, renderTarget);
+                frameGraph.addRenderPass(before);
+                if (between) frameGraph.addRenderPass(between);
+                frameGraph.addRenderPass(after);
+                frameGraph.compile();
+                return { before, after };
+            };
+
+            // the two passes render to the same target, and merge when next to each other
+            const merged = addPasses(null);
+            expect(merged.before._skipEnd).to.equal(true);
+            expect(merged.after._skipStart).to.equal(true);
+
+            // a compute pass between them ends the first one, and starts the second one anew
+            const apart = addPasses(new ComputePass(device, [createCompute('Between')]));
+            expect(apart.before._skipEnd).to.equal(false);
+            expect(apart.after._skipStart).to.equal(false);
+        });
+
+        it('executes after the camera renders, in its after passes', function () {
+            const entity = new Entity('Camera');
+            entity.addComponent('camera');
+            app.root.addChild(entity);
+
+            const compute = createCompute('After');
+            const pass = new ComputePass(device, [compute]);
+            entity.camera.afterPasses.push(pass);
+            const dispatch = sinon.stub(device, 'computeDispatch');
+            app.render();
+            expect(dispatch.calledWith([compute])).to.equal(true);
+
+            const passes = app.frameGraph.renderPasses;
+            const lastForward = passes.findLastIndex(p => p instanceof RenderPassForward);
+            expect(lastForward).to.be.at.least(0);
+            expect(passes.indexOf(pass)).to.be.greaterThan(lastForward);
+        });
+    });
+
+    describe('#destroy', function () {
+
+        it('releases the computes', function () {
+            const pass = new ComputePass(device, [createCompute('Released')]);
+            pass.destroy();
+            expect(pass.computes).to.have.lengthOf(0);
+        });
+    });
+});

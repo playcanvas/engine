@@ -149,6 +149,56 @@ describe('Texture', function () {
         });
     });
 
+    describe('#gpuSize', function () {
+
+        it('accounts for all layers of a texture array', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 8, height: 8, arrayLength: 3, mipmaps: false });
+
+            // 8x8 * 4 bytes * 3 layers
+            expect(texture.gpuSize).to.equal(768);
+            texture.destroy();
+        });
+
+        it('gives each layer of a texture array a full mip chain', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 8, height: 8, arrayLength: 3, mipmaps: true });
+
+            // (8x8 + 4x4 + 2x2 + 1x1) * 4 bytes * 3 layers
+            expect(texture.gpuSize).to.equal(1020);
+            texture.destroy();
+        });
+    });
+
+    describe('#gpuSize: volume textures', function () {
+
+        it('accounts for all depth slices of a volume texture', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 8, height: 8, depth: 4, volume: true, mipmaps: false });
+
+            // 8x8x4 * 4 bytes
+            expect(texture.gpuSize).to.equal(1024);
+            texture.destroy();
+        });
+
+        it('halves the depth of a volume texture with each mip level', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 8, height: 8, depth: 4, volume: true, mipmaps: true });
+
+            // (8x8x4 + 4x4x2 + 2x2x1 + 1x1x1) * 4 bytes
+            expect(texture.numLevels).to.equal(4);
+            expect(texture.gpuSize).to.equal(1172);
+            texture.destroy();
+        });
+
+        it('counts the mip levels of a volume texture deeper than it is wide and high', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 4, height: 4, depth: 16, volume: true, mipmaps: true });
+
+            // the depth dominates the mip chain: 16, 8, 4, 2, 1
+            expect(texture.numLevels).to.equal(5);
+
+            // (4x4x16 + 2x2x8 + 1x1x4 + 1x1x2 + 1x1x1) * 4 bytes
+            expect(texture.gpuSize).to.equal(1180);
+            texture.destroy();
+        });
+    });
+
     describe('#lock: cubemap', function () {
 
         const createCubemap = (options = {}) => new Texture(device, {

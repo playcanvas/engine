@@ -21,6 +21,8 @@ import { ElementComponent } from './component.js';
  * {@link ComponentOptionsOverrides}.
  *
  * @typedef {object} ElementComponentOptionsOverrides
+ * @property {Vec2 | number[]} [alignment] - Same as {@link ElementComponent#alignment}, also
+ * accepting an `[x, y]` array.
  * @property {Vec4 | number[]} [anchor] - Same as {@link ElementComponent#anchor}, also accepting an
  * `[x, y, z, w]` array.
  * @property {number | null} [batchGroupId] - Same as {@link ElementComponent#batchGroupId}. `null`
@@ -264,6 +266,7 @@ class ElementComponentSystem extends ComponentSystem {
                 component.opacity = data.opacity;
             }
             if (data.spacing !== undefined) component.spacing = data.spacing;
+            if (data.letterSpacing !== undefined) component.letterSpacing = data.letterSpacing;
             if (data.fontSize !== undefined) {
                 component.fontSize = data.fontSize;
                 if (!data.lineHeight) component.lineHeight = data.fontSize;
@@ -340,6 +343,7 @@ class ElementComponentSystem extends ComponentSystem {
             spriteFrame: source.spriteFrame,
             pixelsPerUnit: source.pixelsPerUnit,
             spacing: source.spacing,
+            letterSpacing: source.letterSpacing,
             lineHeight: source.lineHeight,
             wrapLines: source.wrapLines,
             justify: source.justify,

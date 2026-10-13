@@ -17,6 +17,7 @@ import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameter
 
 /**
  * @import { Camera } from '../camera.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { FrameGraph } from '../frame-graph.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
@@ -707,6 +708,9 @@ class ForwardRenderer extends Renderer {
                 });
                 if (mv) frameGraph.endMultiView();
 
+                // the camera renders using only its frame passes
+                this.addCameraAfterPasses(frameGraph, camera);
+
             } else {
 
                 const isDepthLayer = layer.id === LAYERID_DEPTH;
@@ -766,8 +770,32 @@ class ForwardRenderer extends Renderer {
 
                     if (mv) frameGraph.endMultiView();
 
+                    // after the last block of passes the camera renders
+                    if (renderAction.lastCameraUse) {
+                        this.addCameraAfterPasses(frameGraph, camera);
+                    }
+
                     newStart = true;
                 }
+            }
+        }
+    }
+
+    /**
+     * Adds the frame passes which execute after everything the camera renders in the frame. They
+     * are added outside of the scope capturing the passes of the XR views, so they execute once
+     * for all the views.
+     *
+     * @param {FrameGraph} frameGraph - The frame graph.
+     * @param {CameraComponent} camera - The camera component.
+     * @private
+     */
+    addCameraAfterPasses(frameGraph, camera) {
+        const { afterPasses } = camera.camera;
+        for (let i = 0; i < afterPasses.length; i++) {
+            const pass = afterPasses[i];
+            if (pass.enabled) {
+                frameGraph.addRenderPass(pass);
             }
         }
     }

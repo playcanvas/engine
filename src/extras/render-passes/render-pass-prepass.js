@@ -99,7 +99,7 @@ class RenderPassPrepass extends RenderPass {
     after() {
         // publish the linear depth texture, which the pass writes outright
         this.camera.camera.publishSceneDepthMap(this.linearDepthTexture, this.device.renderVersion,
-            true, this.linearDepthFormat === PIXELFORMAT_RGBA8, false);
+            true, this.linearDepthFormat === PIXELFORMAT_RGBA8, false, this.renderTarget.flipY);
     }
 
     execute() {

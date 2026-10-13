@@ -14,6 +14,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { Mat4 } from '../../../core/math/mat4.js'
+ * @import { ComputePass } from '../../../platform/graphics/compute-pass.js'
  * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
  * @import { SceneColorMapHandle } from '../../../platform/graphics/scene-color-map-handle.js'
@@ -246,6 +247,33 @@ class CameraComponent extends Component {
      */
     get framePasses() {
         return this._camera.framePasses;
+    }
+
+    /**
+     * Gets the frame passes which execute before the camera's main scene rendering, after its
+     * directional shadow passes. When rendering multiple XR views, they execute for each view,
+     * apart from a compute pass, which executes once, as selected by
+     * {@link ComputePass#xrViewIndex}. Add passes to the array, or remove them from it, to change
+     * them.
+     *
+     * @type {FramePass[]}
+     * @ignore
+     */
+    get beforePasses() {
+        return this._camera.beforePasses;
+    }
+
+    /**
+     * Gets the frame passes which execute after everything the camera renders in the frame,
+     * including its frame passes when it uses those, and before the cameras rendering after it.
+     * When rendering multiple XR views, they execute once, after all the views. Add passes to the
+     * array, or remove them from it, to change them.
+     *
+     * @type {FramePass[]}
+     * @ignore
+     */
+    get afterPasses() {
+        return this._camera.afterPasses;
     }
 
     /**

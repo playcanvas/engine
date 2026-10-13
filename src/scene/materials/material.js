@@ -40,6 +40,7 @@ import { isViewTexture } from '../renderer/view-textures.js';
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { TextureView } from '../../platform/graphics/texture-view.js'
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
  * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  * @import { ShaderChunkMap } from '../shader-lib/shader-chunk-map.js';
@@ -1431,7 +1432,9 @@ class Material {
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the specified parameter.
+     * @param {number|number[]|ArrayBufferView|Texture|TextureView|StorageBuffer} data - The value for the
+     * specified parameter. A {@link TextureView} is only supported on WebGPU, see
+     * {@link Texture#getView}.
      */
     setParameter(name, data) {
 

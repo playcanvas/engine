@@ -92,6 +92,7 @@ export { createGraphicsDevice } from './platform/graphics/graphics-device-create
 export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
+export { ComputePass } from './platform/graphics/compute-pass.js';
 export { DepthState } from './platform/graphics/depth-state.js';
 export { DrawCommands } from './platform/graphics/draw-commands.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';

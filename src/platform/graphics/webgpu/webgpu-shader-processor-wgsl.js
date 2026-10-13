@@ -638,6 +638,48 @@ class WebgpuShaderProcessorWGSL {
         };
     }
 
+    /**
+     * Returns the workgroup size the entry point of a compute shader declares using the
+     * `@workgroup_size` attribute, with integer literals. Values injected into the source, such as
+     * `{NAME}` defines, are literals by the time the source is processed. A missing y or z is 1.
+     *
+     * @param {string} source - The processed compute shader source.
+     * @param {string} entryPoint - The name of the entry point function.
+     * @returns {number[]|null} The x, y and z of the workgroup size, or null when it cannot be
+     * determined from the source.
+     */
+    static getWorkgroupSize(source, entryPoint) {
+
+        // without comments, which could contain any of the matched text
+        const src = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+
+        // the attributes of the entry point are between the end of the previous declaration and it
+        const fnMatch = new RegExp(`\\bfn\\s+${entryPoint}\\s*\\(`).exec(src);
+        if (!fnMatch) {
+            return null;
+        }
+        const attributesStart = Math.max(src.lastIndexOf('}', fnMatch.index), src.lastIndexOf(';', fnMatch.index)) + 1;
+        const attributes = src.slice(attributesStart, fnMatch.index);
+        const sizeMatch = /@workgroup_size\s*\(([^)]*)\)/.exec(attributes);
+        if (!sizeMatch) {
+            return null;
+        }
+
+        // decimal integer literals, with an optional suffix - names and expressions are not resolved
+        const values = sizeMatch[1].split(',').map(value => value.trim()).filter(value => value.length);
+        const size = values.map((value) => {
+            const literal = /^(\d+)[iu]?$/.exec(value);
+            return literal ? Number(literal[1]) : null;
+        });
+        if (size.length === 0 || size.length > 3 || size.some(value => !value)) {
+            return null;
+        }
+        while (size.length < 3) {
+            size.push(1);
+        }
+        return size;
+    }
+
     // Extract required information from the shader source code.
     static extract(src) {
         // collected data

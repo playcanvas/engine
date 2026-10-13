@@ -28,22 +28,32 @@ export { GltfExporter } from './exporters/gltf-exporter.js';
 // RENDER PASSES
 export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/constants.js';
 export { COMPOSESLOT_SCENE, COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_OUTPUT } from './render-passes/constants.js';
+export {
+    FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENECOLORGRAB,
+    FRAMERESOURCE_SCENETARGET
+} from './render-passes/constants.js';
 export { CameraFrameEffect } from './render-passes/camera-frame-effect.js';
-export { CasEffect } from './render-passes/effects/cas-effect.js';
-export { ColorEnhanceEffect } from './render-passes/effects/color-enhance-effect.js';
-export { ColorLutEffect } from './render-passes/effects/color-lut-effect.js';
-export { FringingEffect } from './render-passes/effects/fringing-effect.js';
-export { GradingEffect } from './render-passes/effects/grading-effect.js';
-export { VignetteEffect } from './render-passes/effects/vignette-effect.js';
+export { BloomEffect } from './effects/bloom/bloom-effect.js';
+export { CasEffect } from './effects/cas/cas-effect.js';
+export { ColorEnhanceEffect } from './effects/color-enhance/color-enhance-effect.js';
+export { ColorLutEffect } from './effects/color-lut/color-lut-effect.js';
+export { DofEffect } from './effects/dof/dof-effect.js';
+export { FringingEffect } from './effects/fringing/fringing-effect.js';
+export { GradingEffect } from './effects/grading/grading-effect.js';
+export { LensFlareEffect } from './effects/lens-flare/lens-flare-effect.js';
+export { LensFlare } from './effects/lens-flare/lens-flare.js';
+export { SsaoEffect } from './effects/ssao/ssao-effect.js';
+export { VignetteEffect } from './effects/vignette/vignette-effect.js';
+export { VolumetricFogEffect } from './effects/volumetric-fog/volumetric-fog-effect.js';
 export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
-export { RenderPassDepthAwareBlur } from './render-passes/render-pass-depth-aware-blur.js';
-export { FramePassDof } from './render-passes/frame-pass-dof.js';
+export { RenderPassDepthAwareBlur } from './effects/ssao/passes/render-pass-depth-aware-blur.js';
+export { FramePassDof } from './effects/dof/passes/frame-pass-dof.js';
 export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
 export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
-export { FramePassBloom } from './render-passes/frame-pass-bloom.js';
+export { FramePassBloom } from './effects/bloom/passes/frame-pass-bloom.js';
 export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
-export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
+export { RenderPassSsao } from './effects/ssao/passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 

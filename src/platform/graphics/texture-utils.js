@@ -60,14 +60,14 @@ class TextureUtils {
         const blockSize = formatInfo.blockSize ?? 0;
         let blockWidth = Math.floor((width + 3) / 4);
         const blockHeight = Math.floor((height + 3) / 4);
-        const blockDepth = Math.floor((depth + 3) / 4);
 
         if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
             format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
             blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
         }
 
-        return blockWidth * blockHeight * blockDepth * blockSize;
+        // compressed blocks are 2D, so each depth slice of a volume texture is compressed separately
+        return blockWidth * blockHeight * depth * blockSize;
     }
 
     /**

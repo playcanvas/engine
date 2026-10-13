@@ -71,6 +71,20 @@ export function Controls({ observer }) {
                 />
             </LabelGroup>
             <Panel headerText='Bloom'>
+                <LabelGroup text='Enabled'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.bloom.enabled' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='High Quality'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.bloom.highQuality' }}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Intensity'>
                     <SliderInput
                         binding={new BindingTwoWay()}
@@ -98,6 +112,13 @@ export function Controls({ observer }) {
                         max={100}
                         precision={2}
                         step={0.01}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Show Bloom Only'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.bloom.debug' }}
                     />
                 </LabelGroup>
             </Panel>

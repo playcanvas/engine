@@ -54,6 +54,14 @@ class WebgpuShader {
     _computeKey;
 
     /**
+     * Cached workgroup size of the compute entry point, null when it cannot be determined.
+     *
+     * @type {number[]|null|undefined}
+     * @private
+     */
+    _computeWorkgroupSize;
+
+    /**
      * Caller-provided bind group format (compute, group 0), or null if none was supplied.
      *
      * @type {import('../bind-group-format.js').BindGroupFormat|null}
@@ -325,6 +333,21 @@ class WebgpuShader {
             this._computeKey = computeShaderIds.get(keyString);
         }
         return this._computeKey;
+    }
+
+    /**
+     * The workgroup size the compute entry point declares, as its x, y and z, or null when it
+     * cannot be determined from the shader source. Determined when first requested.
+     *
+     * @type {number[]|null}
+     * @ignore
+     */
+    get computeWorkgroupSize() {
+        if (this._computeWorkgroupSize === undefined) {
+            this._computeWorkgroupSize = this._computeCode ?
+                WebgpuShaderProcessorWGSL.getWorkgroupSize(this._computeCode, this.computeEntryPoint) : null;
+        }
+        return this._computeWorkgroupSize;
     }
 
     /**

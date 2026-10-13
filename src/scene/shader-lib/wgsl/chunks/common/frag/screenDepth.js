@@ -1,4 +1,7 @@
 export default /* wgsl */`
+// the chunk can be included more than once - by the composition and the effects it composes
+#ifndef _SCREENDEPTH_INCLUDED_
+#define _SCREENDEPTH_INCLUDED_
 
 var uSceneDepthMap: texture_2d<uff>;
 
@@ -73,4 +76,6 @@ fn getLinearScreenDepth(uv: vec2f) -> f32 {
 fn getLinearDepth(pos: vec3f) -> f32 {
     return -(uniform.matrix_view * vec4f(pos, 1.0)).z;
 }
+
+#endif
 `;

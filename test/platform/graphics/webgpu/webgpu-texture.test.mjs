@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 
-import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U } from '../../../../src/platform/graphics/constants.js';
+import {
+    ADDRESS_REPEAT, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U
+} from '../../../../src/platform/graphics/constants.js';
 import { WebgpuTexture } from '../../../../src/platform/graphics/webgpu/webgpu-texture.js';
 
 // WebgpuTexture reads the WebGPU GPUTextureUsage global. The headless test runner has no
@@ -142,5 +145,46 @@ describe('WebgpuTexture', function () {
         expect(impl.gpuTexture).to.not.equal(null);
         expect(created[0].format).to.equal('rgba16uint');
         expect(created[0].sampleCount).to.equal(4);
+    });
+
+    describe('#getSampler', function () {
+
+        // returns the descriptor of the sampler created for a texture with mipmaps
+        const getSamplerDesc = (minFilter) => {
+            const samplers = [];
+            const device = createMockDevice([]);
+            device.wgpu.createSampler = (desc) => {
+                samplers.push(desc);
+                return {};
+            };
+            device.maxTextureAnisotropy = 1;
+            const impl = new WebgpuTexture(createMockTexture(device, {
+                format: PIXELFORMAT_RGBA8,
+                numLevels: 4,
+                minFilter,
+                magFilter: FILTER_LINEAR,
+                addressU: ADDRESS_REPEAT,
+                addressV: ADDRESS_REPEAT,
+                addressW: ADDRESS_REPEAT,
+                _anisotropy: 1
+            }));
+            impl.getSampler(device);
+            return samplers[0];
+        };
+
+        it('samples only the base level for filters without mipmapping', function () {
+            for (const minFilter of [FILTER_NEAREST, FILTER_LINEAR]) {
+                const desc = getSamplerDesc(minFilter);
+                expect(desc.mipmapFilter).to.equal('nearest');
+                expect(desc.lodMaxClamp).to.equal(0.25);
+            }
+        });
+
+        it('samples all levels for mipmap filters', function () {
+            const desc = getSamplerDesc(FILTER_LINEAR_MIPMAP_LINEAR);
+            expect(desc.minFilter).to.equal('linear');
+            expect(desc.mipmapFilter).to.equal('linear');
+            expect(desc.lodMaxClamp).to.equal(undefined);
+        });
     });
 });
