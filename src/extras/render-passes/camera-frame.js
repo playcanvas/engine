@@ -79,6 +79,11 @@ const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
  * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
  * also makes the image more blurry, and rendering.sharpness parameter can be used to counteract.
  * Defaults to 1.
+ * @property {boolean} upscale - Whether TAA accumulates the frames rendered at a lower resolution,
+ * see rendering.renderTargetScale, at the full resolution - the jitter placing their samples at
+ * different positions within the full resolution pixels, which recovers detail lost to the lower
+ * resolution. Moving objects can blur or ghost more than with TAA alone, as the history is relied
+ * on for longer while upscaling. Defaults to false.
  */
 
 /**
@@ -215,7 +220,8 @@ class CameraFrame {
      */
     taa = {
         enabled: false,
-        jitter: 1
+        jitter: 1,
+        upscale: false
     };
 
     /**
@@ -550,6 +556,7 @@ class CameraFrame {
         options.samples = rendering.samples;
         options.prepassEnabled = rendering.sceneDepthMap;
         options.taaEnabled = taa.enabled;
+        options.taaUpscale = taa.enabled && taa.upscale;
         options.formats = rendering.renderFormats.slice();
 
         // the scene format, chosen before the effects are asked whether they are active, as an

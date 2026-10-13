@@ -482,6 +482,15 @@ class Taa {
      * @step 0.1
      */
     jitter = 1;
+
+    /**
+     * Whether TAA accumulates the frames rendered at a lower resolution, see
+     * rendering.renderTargetScale, at the full resolution, recovering detail the lower resolution
+     * loses.
+     *
+     * @visibleif {enabled}
+     */
+    upscale = false;
 }
 
 /**
@@ -897,6 +906,7 @@ class CameraFrame extends Script {
         dstTaa.enabled = taa.enabled;
         if (taa.enabled) {
             dstTaa.jitter = taa.jitter;
+            dstTaa.upscale = taa.upscale;
         }
 
         // fringing

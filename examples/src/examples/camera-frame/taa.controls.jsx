@@ -3,6 +3,7 @@ import {
     BooleanInput,
     LabelGroup,
     Panel,
+    SelectInput,
     SliderInput
 } from '@playcanvas/pcui/react';
 
@@ -19,13 +20,27 @@ export function Controls({ observer }) {
     return (
         <>
             <Panel headerText='Scene Rendering'>
+                <LabelGroup text='mode'>
+                    <SelectInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.scene.mode' }}
+                        type='string'
+                        options={[
+                            { v: 'full', t: 'Full res' },
+                            { v: 'scaled', t: 'Scaled' },
+                            { v: 'sharpen', t: 'Scaled + sharpen' },
+                            { v: 'temporal', t: 'Temporal' },
+                            { v: 'temporalSharpen', t: 'Temporal + sharpen' }
+                        ]}
+                    />
+                </LabelGroup>
                 <LabelGroup text='resolution'>
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'data.scene.scale' }}
-                        min={0.5}
+                        min={0.25}
                         max={1}
-                        precision={1}
+                        precision={2}
                     />
                 </LabelGroup>
                 <LabelGroup text='Bloom'>
