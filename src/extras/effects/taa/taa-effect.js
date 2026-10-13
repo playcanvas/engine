@@ -117,6 +117,11 @@ class TaaEffect extends CameraFrameEffect {
         this._upscale = false;
     }
 
+    update() {
+        // the history is blended at the exposure the composition displays the scene with
+        this._pass.toneMapping = this.cameraFrame.rendering.toneMapping;
+    }
+
     /**
      * @param {CameraFrameEffectScene} scene - The scene being resolved.
      * @ignore
