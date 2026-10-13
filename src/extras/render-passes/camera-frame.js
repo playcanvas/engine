@@ -82,7 +82,8 @@ const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
  * @property {boolean} upscale - Whether TAA accumulates the frames rendered at a lower resolution,
  * see rendering.renderTargetScale, at the full resolution - the jitter placing their samples at
  * different positions within the full resolution pixels, which recovers detail lost to the lower
- * resolution. Defaults to false.
+ * resolution. Moving objects can blur or ghost more than with TAA alone, as the history is relied
+ * on for longer while upscaling. Defaults to false.
  */
 
 /**
