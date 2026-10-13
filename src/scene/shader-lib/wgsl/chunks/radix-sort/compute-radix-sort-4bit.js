@@ -50,11 +50,13 @@ fn main(
         let GID = WID + r * THREADS_PER_WORKGROUP + TID;
         let is_valid = GID < elementCount && WORKGROUP_ID < uniforms.workgroupCount;
 
-        if (is_valid) {
-            let elm = input[GID];
-            let digit = (elm >> CURRENT_BIT) & 0xFu;
-            atomicAdd(&histogram[digit], 1u);
-        }
+        // Every invocation issues the atomic, adding 0 when out of range. Issued only by valid
+        // invocations, the atomics of a partially active wave were dropped on Adreno: the last,
+        // partial workgroup lost elements, the scan was short, and the reorder wrote stale
+        // indices and duplicates. An out-of-range invocation reads element 0, never past the end.
+        let elm = input[select(0u, GID, is_valid)];
+        let digit = (elm >> CURRENT_BIT) & 0xFu;
+        atomicAdd(&histogram[digit], select(0u, 1u, is_valid));
     }
     workgroupBarrier();
 
