@@ -11,6 +11,7 @@ import {
 import { Texture } from '../../../../platform/graphics/texture.js';
 import { RenderPassShaderQuad } from '../../../../scene/graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../../../../platform/graphics/render-target.js';
+import { TONEMAP_LINEAR, TONEMAP_NONE } from '../../../../scene/constants.js';
 import { ShaderUtils } from '../../../../scene/shader-lib/shader-utils.js';
 import glslSampleCatmullRomPS from '../glsl/sample-catmull-rom-ps.js';
 import wgslSampleCatmullRomPS from '../wgsl/sample-catmull-rom-ps.js';
@@ -67,6 +68,15 @@ class RenderPassTAA extends RenderPassShaderQuad {
      * @type {boolean}
      */
     upscale = false;
+
+    /**
+     * The tone mapping the composition displays the resolved scene with. The history and the
+     * current frame are blended at the exposure the scene is displayed with, and without tone
+     * mapping, the composition applies no exposure.
+     *
+     * @type {number}
+     */
+    toneMapping = TONEMAP_LINEAR;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -128,6 +138,8 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.jittersId = scope.resolve('jitters');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.exposureId = scope.resolve('exposure');
+        this.taaExposureId = scope.resolve('taaExposure');
 
         this.setup(options.format ?? PIXELFORMAT_RGBA8);
     }
@@ -222,6 +234,9 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.jittersId.setValue(camera._jitters);
 
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
+
+        // the exposure the renderer set up for the camera, unless the composition applies none
+        this.taaExposureId.setValue(this.toneMapping === TONEMAP_NONE ? 1 : (this.exposureId.value ?? 1));
     }
 
     /**
