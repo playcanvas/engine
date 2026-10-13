@@ -43,18 +43,14 @@ export { GradingEffect } from './effects/grading/grading-effect.js';
 export { LensFlareEffect } from './effects/lens-flare/lens-flare-effect.js';
 export { LensFlare } from './effects/lens-flare/lens-flare.js';
 export { SsaoEffect } from './effects/ssao/ssao-effect.js';
+export { TaaEffect } from './effects/taa/taa-effect.js';
 export { VignetteEffect } from './effects/vignette/vignette-effect.js';
 export { VolumetricFogEffect } from './effects/volumetric-fog/volumetric-fog-effect.js';
 export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
-export { RenderPassDepthAwareBlur } from './effects/ssao/passes/render-pass-depth-aware-blur.js';
-export { FramePassDof } from './effects/dof/passes/frame-pass-dof.js';
 export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
 export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
-export { FramePassBloom } from './effects/bloom/passes/frame-pass-bloom.js';
 export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
-export { RenderPassSsao } from './effects/ssao/passes/render-pass-ssao.js';
-export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUT

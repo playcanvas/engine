@@ -8,7 +8,6 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 import { RenderPassCompose } from './render-pass-compose.js';
-import { RenderPassTAA } from './render-pass-taa.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENETARGET } from './constants.js';
 import { Debug } from '../../core/debug.js';
@@ -17,7 +16,7 @@ import { Color } from '../../core/math/color.js';
 
 /**
  * @import { CameraFrame } from './camera-frame.js'
- * @import { CameraFrameEffect, CameraFrameEffectContext, CameraFrameEffectDepth, CameraFrameEffectPasses, CameraFrameEffectResources } from './camera-frame-effect.js'
+ * @import { CameraFrameEffect, CameraFrameEffectContext, CameraFrameEffectDepth, CameraFrameEffectPasses, CameraFrameEffectResources, CameraFrameEffectScene } from './camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
@@ -45,12 +44,6 @@ class CameraFrameOptions {
     lastSceneLayerId = LAYERID_IMMEDIATE;
 
     lastSceneLayerIsTransparent = true;
-
-    // TAA
-    taaEnabled = false;
-
-    // whether TAA accumulates the lower resolution frames at the resolution of the render target
-    taaUpscale = false;
 
     // The active registered effects owning passes, and what their passes depend on - see
     // CameraFrame#updateOptions. A change rebuilds the passes.
@@ -89,8 +82,6 @@ class FramePassCameraFrame extends FramePass {
 
     composePass;
 
-    taaPass;
-
     scenePassHalf;
 
     /**
@@ -100,7 +91,16 @@ class FramePassCameraFrame extends FramePass {
      * @type {CameraFrameEffectContext}
      * @private
      */
-    _effectContext = { sceneTexture: null, sceneWidth: 0, sceneHeight: 0 };
+    _effectContext = { sceneTexture: null, sceneWidth: 0, sceneHeight: 0, renderWidth: 0, renderHeight: 0 };
+
+    /**
+     * The scene being resolved, handed to the effects resolving it - one object, refilled every
+     * frame.
+     *
+     * @type {CameraFrameEffectScene}
+     * @private
+     */
+    _resolvedScene = { texture: null, width: 0, height: 0 };
 
     /**
      * The registered effects owning passes which this frame created passes for, in registration
@@ -117,7 +117,7 @@ class FramePassCameraFrame extends FramePass {
      * @type {CameraFrameEffectPasses}
      * @private
      */
-    _stagePasses = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+    _stagePasses = { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] };
 
     _renderTargetScale = 1;
 
@@ -269,7 +269,6 @@ class FramePassCameraFrame extends FramePass {
         this.scenePassTransparent = null;
         this.colorGrabPass = null;
         this.composePass = null;
-        this.taaPass = null;
         this.afterPass = null;
         this.scenePassHalf = null;
     }
@@ -277,9 +276,9 @@ class FramePassCameraFrame extends FramePass {
     sanitizeOptions(options) {
         options = Object.assign(new CameraFrameOptions(), options);
 
-        // depth consumed by the passes running after the scene pass, those of the effects requiring
-        // the scene depth included
-        const postProcessDepth = options.taaEnabled || options.depthRequired;
+        // depth consumed by the passes running after the scene pass - those of the effects requiring
+        // the scene depth
+        const postProcessDepth = options.depthRequired;
 
         const inSceneDepth = this.needsInSceneDepth(options);
         const splatDepth = this.app.scene.getGsplatParams()?.sceneDepthWrite ?? false;
@@ -477,8 +476,6 @@ class FramePassCameraFrame extends FramePass {
 
         return options.depthRequired !== currentOptions.depthRequired ||
             options.prepassDepthRequired !== currentOptions.prepassDepthRequired ||
-            options.taaEnabled !== currentOptions.taaEnabled ||
-            options.taaUpscale !== currentOptions.taaUpscale ||
             options.samples !== currentOptions.samples ||
             options.stencil !== currentOptions.stencil ||
             options.effectPasses !== currentOptions.effectPasses ||
@@ -669,8 +666,9 @@ class FramePassCameraFrame extends FramePass {
             ...stagePasses.postOpaque,
             this.scenePassTransparent,
             ...stagePasses.postScene,
-            this.taaPass, this.scenePassHalf,
-            ...stagePasses.postTemporal,
+            ...stagePasses.resolve,
+            this.scenePassHalf,
+            ...stagePasses.postResolve,
             this.composePass, this.afterPass
         ];
     }
@@ -687,11 +685,8 @@ class FramePassCameraFrame extends FramePass {
         // scene including color grab pass
         const scenePassesInfo = this.setupScenePass(options);
 
-        // TAA
-        const sceneTextureWithTaa = this.setupTaaPass(options);
-
-        // downscale to half resolution
-        this.setupSceneHalfPass(options, sceneTextureWithTaa);
+        // downscale to half resolution, from the resolved scene, which is handed to it every frame
+        this.setupSceneHalfPass(options, this.sceneTexture);
 
         // compose
         this.setupComposePass(options);
@@ -947,24 +942,15 @@ class FramePassCameraFrame extends FramePass {
             }
 
             /** @type {CameraFrameEffectPasses} */
-            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            const passes = { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] };
             effect.createPasses(resources, passes);
 
             stagePasses.preScene.push(...passes.preScene);
             stagePasses.postOpaque.push(...passes.postOpaque);
             stagePasses.postScene.push(...passes.postScene);
-            stagePasses.postTemporal.push(...passes.postTemporal);
+            stagePasses.resolve.push(...passes.resolve);
+            stagePasses.postResolve.push(...passes.postResolve);
         }
-    }
-
-    setupTaaPass(options) {
-        let textureWithTaa = this.sceneTexture;
-        if (options.taaEnabled) {
-            this.taaPass = new RenderPassTAA(this.device, this.sceneTexture, this.cameraComponent, options.taaUpscale);
-            textureWithTaa = this.taaPass.historyTexture;
-        }
-
-        return textureWithTaa;
     }
 
     setupComposePass(options) {
@@ -1032,8 +1018,8 @@ class FramePassCameraFrame extends FramePass {
         // scene pass does when it resizes it, for what needs it before that pass has updated.
         const { scenePass } = this;
         const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
-        const sceneWidth = Math.floor(resizeSource.width * scenePass.scaleX);
-        const sceneHeight = Math.floor(resizeSource.height * scenePass.scaleY);
+        const renderWidth = Math.floor(resizeSource.width * scenePass.scaleX);
+        const renderHeight = Math.floor(resizeSource.height * scenePass.scaleY);
 
         if (this.sceneDepthTexture) {
 
@@ -1042,7 +1028,7 @@ class FramePassCameraFrame extends FramePass {
             // this frame's size rather than to the render target's - reading that back would leave
             // this alias attached to the texture the shared one has replaced, and the passes
             // rendering into it writing to nothing for that frame.
-            this.rtSceneColor.resize(sceneWidth, sceneHeight);
+            this.rtSceneColor.resize(renderWidth, renderHeight);
 
             // cleared to the reciprocal of the far clip, which makes the background a surface at
             // that distance taking part in the average the blended geometry accumulates - whatever
@@ -1055,22 +1041,34 @@ class FramePassCameraFrame extends FramePass {
             this.scenePass.setClearColor(clearValue, this.sceneDepthSlot);
         }
 
-        // scene texture is either output of taa pass or the scene render target
-        const sceneTexture = this.taaPass?.update() ?? this.rt.colorBuffer;
+        // The effects owning passes resolve the scene in turn, in the order they are registered, each
+        // reading what the ones before it resolved - the scene render target's color to begin with -
+        // and handing on what its passes render to this frame. The scene color the frame reads from
+        // then on, which with TAA alternates between its two history textures, is the last of them.
+        const scene = this._resolvedScene;
+        scene.texture = this.rt.colorBuffer;
+        scene.width = renderWidth;
+        scene.height = renderHeight;
+        const passEffects = this._passEffects;
+        for (let i = 0; i < passEffects.length; i++) {
+            passEffects[i].resolveScene(scene);
+        }
+        const sceneTexture = scene.texture;
 
-        // TAA history buffer is double buffered, assign the current one to the follow up passes.
         this.composePass.sceneTexture = sceneTexture;
         this.scenePassHalf?.setSourceTexture(sceneTexture);
 
         // The effects taking part get the values of this frame. This runs before any pass they
         // contribute to updates itself, as the frame graph updates a parent before its children,
-        // and after the TAA history was assigned above, so the scene texture handed to them is this
+        // and after the scene was resolved above, so the scene texture handed to them is this
         // frame's. Their configuration was applied by CameraFrame#update, and the compose pass binds
         // their uniform values right before it draws.
         const context = this._effectContext;
         context.sceneTexture = sceneTexture;
-        context.sceneWidth = sceneWidth;
-        context.sceneHeight = sceneHeight;
+        context.sceneWidth = scene.width;
+        context.sceneHeight = scene.height;
+        context.renderWidth = renderWidth;
+        context.renderHeight = renderHeight;
 
         const effects = this.cameraFrame._activeEffects;
         for (let i = 0; i < effects.length; i++) {

@@ -3,19 +3,26 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     PIXELFORMAT_RGBA16F,
     PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8,
     SEMANTIC_POSITION,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
-} from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
-import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
-import glslSampleCatmullRomPS from './glsl/sample-catmull-rom-ps.js';
-import wgslSampleCatmullRomPS from './wgsl/sample-catmull-rom-ps.js';
-import glsltaaResolvePS from './glsl/taa-resolve-ps.js';
-import wgsltaaResolvePS from './wgsl/taa-resolve-ps.js';
-import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
+} from '../../../../platform/graphics/constants.js';
+import { Texture } from '../../../../platform/graphics/texture.js';
+import { RenderPassShaderQuad } from '../../../../scene/graphics/render-pass-shader-quad.js';
+import { RenderTarget } from '../../../../platform/graphics/render-target.js';
+import { ShaderUtils } from '../../../../scene/shader-lib/shader-utils.js';
+import glslSampleCatmullRomPS from '../glsl/sample-catmull-rom-ps.js';
+import wgslSampleCatmullRomPS from '../wgsl/sample-catmull-rom-ps.js';
+import glsltaaResolvePS from '../glsl/resolve-ps.js';
+import wgsltaaResolvePS from '../wgsl/resolve-ps.js';
+import { ShaderChunks } from '../../../../scene/shader-lib/shader-chunks.js';
+
+/**
+ * @import { CameraComponent } from '../../../../framework/components/camera/component.js'
+ * @import { CameraFrameEffectDepth } from '../../../render-passes/camera-frame-effect.js'
+ * @import { GraphicsDevice } from '../../../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * A render pass implementation of Temporal Anti-Aliasing (TAA).
@@ -45,6 +52,15 @@ class RenderPassTAA extends RenderPassShaderQuad {
     historyRenderTargets = [];
 
     /**
+     * The texture the pass resolves, the scene of the frame. Use
+     * {@link RenderPassTAA#setSourceTexture} to change it, which also sizes the history from it
+     * when not upscaling.
+     *
+     * @type {Texture|null}
+     */
+    sourceTexture = null;
+
+    /**
      * Whether the history has the resolution of the camera's render target rather than of the
      * source texture, accumulating the jittered frames rendered at a lower resolution into it.
      *
@@ -52,11 +68,23 @@ class RenderPassTAA extends RenderPassShaderQuad {
      */
     upscale = false;
 
-    constructor(device, sourceTexture, cameraComponent, upscale = false) {
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {CameraComponent} cameraComponent - The camera, whose jitter and matrices the
+     * resolve reprojects the history with.
+     * @param {object} [options] - The options.
+     * @param {boolean} [options.upscale] - Whether the history has the resolution of the camera's
+     * render target, see {@link RenderPassTAA#upscale}. Defaults to false.
+     * @param {number} [options.format] - The format of the history on a device which cannot render
+     * to a half float format, normally the format of the scene. Defaults to
+     * {@link PIXELFORMAT_RGBA8}.
+     * @param {CameraFrameEffectDepth|null} [options.depth] - The scene depth the resolve reads. When
+     * not given, the defines describing how it is stored are taken from the camera.
+     */
+    constructor(device, cameraComponent, options = {}) {
         super(device);
-        this.sourceTexture = sourceTexture;
         this.cameraComponent = cameraComponent;
-        this.upscale = upscale;
+        this.upscale = options.upscale ?? false;
 
         // register shader chunks
         ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('sampleCatmullRomPS', glslSampleCatmullRomPS);
@@ -66,15 +94,22 @@ class RenderPassTAA extends RenderPassShaderQuad {
 
         const defines = new Map();
         defines.set('QUALITY_HIGH', true);
-        if (upscale) {
+        if (this.upscale) {
             defines.set('TAA_UPSCALE', true);
         }
 
         // add defines needed for correct use of screenDepthPS chunk
-        const depthKey = ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
+        const { depth } = options;
+        let depthKey;
+        if (depth) {
+            depth.defines.forEach((value, key) => defines.set(key, value));
+            depthKey = depth.key;
+        } else {
+            depthKey = ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
+        }
 
         this.shader = ShaderUtils.createShader(device, {
-            uniqueName: `TaaResolveShader${upscale ? 'Upscale' : ''}${depthKey}`,
+            uniqueName: `TaaResolveShader${this.upscale ? 'Upscale' : ''}${depthKey}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'quadVS',
             fragmentChunk: 'taaResolvePS',
@@ -94,24 +129,37 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
 
-        this.setup();
+        this.setup(options.format ?? PIXELFORMAT_RGBA8);
     }
 
     destroy() {
-        if (this.renderTarget) {
-            this.renderTarget.destroyTextureBuffers();
-            this.renderTarget.destroy();
-            this.renderTarget = null;
-        }
+
+        // both history buffers, the one rendered to this frame and the one read
+        this.historyRenderTargets.forEach((renderTarget) => {
+            renderTarget.destroyTextureBuffers();
+            renderTarget.destroy();
+        });
+        this.historyRenderTargets.length = 0;
+        this.historyTextures.length = 0;
+        this.historyTexture = null;
+        this.renderTarget = null;
+        this.sourceTexture = null;
+
+        super.destroy();
     }
 
-    setup() {
+    /**
+     * @param {number} fallbackFormat - The format of the history when the device cannot render to
+     * a half float format.
+     * @private
+     */
+    setup(fallbackFormat) {
 
         // The history accumulates each frame with a small weight, and so needs at least half float
         // precision - in a lower precision format, such as the RG11B10 the scene often renders to,
         // the small steps towards the converged value round away, and the history stops converging.
         const format = this.device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true) ??
-            this.sourceTexture.format;
+            fallbackFormat;
 
         // double buffered history render target
         for (let i = 0; i < 2; ++i) {
@@ -133,12 +181,25 @@ class RenderPassTAA extends RenderPassShaderQuad {
             });
         }
 
-        // the history has the resolution of the source, or when upscaling, of the render target the
-        // camera renders to - the back buffer when it has none
+        // the history has the resolution of the source, set with setSourceTexture, or when
+        // upscaling, of the render target the camera renders to - the back buffer when it has none
         this.historyTexture = this.historyTextures[0];
         this.init(this.historyRenderTargets[0], {
-            resizeSource: this.upscale ? this.cameraComponent.renderTarget : this.sourceTexture
+            resizeSource: this.upscale ? this.cameraComponent.renderTarget : null
         });
+    }
+
+    /**
+     * Sets the texture the pass resolves, which changes when the scene is resolved by another pass
+     * before this one. Unless upscaling, the history is sized from it.
+     *
+     * @param {Texture} texture - The texture.
+     */
+    setSourceTexture(texture) {
+        this.sourceTexture = texture;
+        if (!this.upscale) {
+            this.options.resizeSource = texture;
+        }
     }
 
     before() {
@@ -163,7 +224,11 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
     }
 
-    // called when the parent render pass gets added to the frame graph
+    /**
+     * Swaps the history textures, once per frame before the pass renders.
+     *
+     * @returns {Texture} The history texture the pass renders to this frame.
+     */
     update() {
 
         // swap source and destination history texture

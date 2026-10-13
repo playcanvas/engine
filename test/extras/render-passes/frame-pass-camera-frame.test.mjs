@@ -2,9 +2,12 @@ import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BloomEffect } from '../../../src/extras/effects/bloom/bloom-effect.js';
 import { FramePassBloom } from '../../../src/extras/effects/bloom/passes/frame-pass-bloom.js';
 import { FramePassDof } from '../../../src/extras/effects/dof/passes/frame-pass-dof.js';
+import { LensFlareEffect } from '../../../src/extras/effects/lens-flare/lens-flare-effect.js';
+import { LensFlare } from '../../../src/extras/effects/lens-flare/lens-flare.js';
 import { RenderPassSsao } from '../../../src/extras/effects/ssao/passes/render-pass-ssao.js';
 import { FramePassVolumetricFog } from '../../../src/extras/effects/volumetric-fog/passes/frame-pass-volumetric-fog.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
@@ -17,6 +20,7 @@ import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
 import { SceneDepthMapHandle } from '../../../src/platform/graphics/scene-depth-map-handle.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { LAYERID_IMMEDIATE, LAYERID_WORLD, PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
 import { ShaderUtils } from '../../../src/scene/shader-lib/shader-utils.js';
 import { createApp } from '../../app.mjs';
@@ -37,7 +41,7 @@ class PassEffect extends CameraFrameEffect {
     passesGiven = null;
 
     // the stage the pass is added to
-    stage = 'postTemporal';
+    stage = 'postResolve';
 
     constructor(device, id = 'passEffect', requires = [FRAMERESOURCE_SCENECOLORHALF]) {
         super(device, id, { requires });
@@ -55,6 +59,48 @@ class PassEffect extends CameraFrameEffect {
     destroyPasses() {
         this.pass?.destroy();
         this.pass = null;
+    }
+}
+
+// an effect resolving the scene, as a user would write one: a pass rendering a new scene color,
+// which the rest of the frame reads in place of the one it was given
+class ResolveEffect extends CameraFrameEffect {
+    /** @type {FramePass|null} */
+    pass = null;
+
+    /** @type {Texture|null} */
+    output = null;
+
+    /** @type {Texture[]} */
+    inputs = [];
+
+    // the camera jitter the effect needs
+    jitterNeeded = 0;
+
+    constructor(device, id = 'resolveEffect') {
+        super(device, id);
+    }
+
+    get cameraJitter() {
+        return this.jitterNeeded;
+    }
+
+    createPasses(resources, passes) {
+        this.pass = new FramePass(this.device);
+        this.output = new Texture(this.device, { name: 'Resolved', width: 4, height: 4 });
+        passes.resolve.push(this.pass);
+    }
+
+    destroyPasses() {
+        this.pass?.destroy();
+        this.pass = null;
+        this.output?.destroy();
+        this.output = null;
+    }
+
+    resolveScene(scene) {
+        this.inputs.push(scene.texture);
+        scene.texture = this.output;
     }
 }
 
@@ -91,7 +137,8 @@ describe('FramePassCameraFrame', function () {
         cameraFrame.dof.highQuality = true;
         cameraFrame.update();
         const framePass = cameraFrame.renderPassCamera;
-        const { taaPass, scenePassHalf, composePass } = framePass;
+        const { scenePassHalf, composePass } = framePass;
+        const taaPass = cameraFrame.taa._pass;
         const dofPass = cameraFrame.dof._pass;
 
         // over two frames, as TAA alternates between its two history textures
@@ -111,7 +158,8 @@ describe('FramePassCameraFrame', function () {
         cameraFrame.dof.highQuality = false;
         cameraFrame.update();
         const framePass = cameraFrame.renderPassCamera;
-        const { taaPass, scenePassHalf } = framePass;
+        const { scenePassHalf } = framePass;
+        const taaPass = cameraFrame.taa._pass;
         const dofPass = cameraFrame.dof._pass;
 
         for (let i = 0; i < 2; i++) {
@@ -125,25 +173,34 @@ describe('FramePassCameraFrame', function () {
     it('upscales with TAA while both are enabled, rebuilding when that changes', function () {
         cameraFrame.rendering.renderTargetScale = 0.5;
         cameraFrame.update();
-        let framePass = cameraFrame.renderPassCamera;
-        expect(framePass.options.taaUpscale).to.equal(false);
-        expect(framePass.taaPass.upscale).to.equal(false);
+        const { taa } = cameraFrame;
+        const firstPass = taa._pass;
+        expect(firstPass.upscale).to.equal(false);
 
-        cameraFrame.taa.upscale = true;
+        taa.upscale = true;
         cameraFrame.update();
-        framePass = cameraFrame.renderPassCamera;
-        expect(framePass.options.taaUpscale).to.equal(true);
-        expect(framePass.taaPass.upscale).to.equal(true);
+        expect(taa._pass).to.not.equal(firstPass);
+        expect(taa._pass.upscale).to.equal(true);
 
-        // the composition reads the upscaled history
+        // the composition reads the upscaled history, which has the resolution of the back buffer
+        const framePass = cameraFrame.renderPassCamera;
+        const probe = new CameraFrameEffect(app.graphicsDevice, 'probe');
+        const frameUpdate = spy(probe, 'frameUpdate');
+        cameraFrame.addEffect(probe);
+        cameraFrame.update();
         framePass.frameUpdate();
-        expect(framePass.composePass.sceneTexture).to.equal(framePass.taaPass.historyTexture);
+        expect(framePass.composePass.sceneTexture).to.equal(taa._pass.historyTexture);
+        const [frame] = frameUpdate.lastCall.args;
+        const { backBuffer } = app.graphicsDevice;
+        expect([frame.sceneWidth, frame.sceneHeight]).to.deep.equal([backBuffer.width, backBuffer.height]);
+        expect([frame.renderWidth, frame.renderHeight]).to.deep.equal([Math.floor(backBuffer.width * 0.5), Math.floor(backBuffer.height * 0.5)]);
+        cameraFrame.removeEffect(probe);
 
         // without TAA there is nothing to upscale with
-        cameraFrame.taa.enabled = false;
+        taa.enabled = false;
         cameraFrame.update();
-        expect(cameraFrame.renderPassCamera.options.taaUpscale).to.equal(false);
-        expect(cameraFrame.renderPassCamera.taaPass).to.not.exist;
+        expect(taa._pass).to.equal(null);
+        expect(cameraFrame.renderPassCamera.beforePasses.some(pass => pass.constructor.name === 'RenderPassTAA')).to.equal(false);
     });
 
     describe('effects', function () {
@@ -188,7 +245,7 @@ describe('FramePassCameraFrame', function () {
             for (let i = 0; i < 2; i++) {
                 framePass.frameUpdate();
                 const [frame] = frameUpdate.lastCall.args;
-                expect(frame.sceneTexture).to.equal(framePass.taaPass.historyTexture);
+                expect(frame.sceneTexture).to.equal(cameraFrame.taa._pass.historyTexture);
                 seen.push(frame.sceneTexture);
             }
             expect(seen[0]).to.not.equal(seen[1]);
@@ -213,6 +270,9 @@ describe('FramePassCameraFrame', function () {
             expect(frame.sceneWidth).to.equal(Math.floor(backBuffer.width * 0.5));
             expect(frame.sceneHeight).to.equal(Math.floor(backBuffer.height * 0.5));
             expect(frame.sceneWidth).to.not.equal(frame.sceneTexture.width);
+
+            // the scene renders at the resolution of the scene texture, as TAA is not upscaling
+            expect([frame.renderWidth, frame.renderHeight]).to.deep.equal([frame.sceneWidth, frame.sceneHeight]);
             cameraFrame.removeEffect(effect);
         });
     });
@@ -289,9 +349,9 @@ describe('FramePassCameraFrame', function () {
             const sources = [];
             for (let i = 0; i < 2; i++) {
                 framePass.frameUpdate();
-                expect(bloomPass._sourceTexture).to.equal(framePass.taaPass.historyTexture);
+                expect(bloomPass._sourceTexture).to.equal(cameraFrame.taa._pass.historyTexture);
                 bloomPass.frameUpdate();
-                expect(bloomPass._firstPass.sourceTexture).to.equal(framePass.taaPass.historyTexture);
+                expect(bloomPass._firstPass.sourceTexture).to.equal(cameraFrame.taa._pass.historyTexture);
                 sources.push(bloomPass._sourceTexture);
             }
             expect(sources[0]).to.not.equal(sources[1]);
@@ -371,7 +431,7 @@ describe('FramePassCameraFrame', function () {
             cameraFrame.addEffect(second);
             cameraFrame.update();
 
-            expect(first.passesGiven).to.deep.equal({ preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+            expect(first.passesGiven).to.deep.equal({ preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
             expect(first.resourcesGiven).to.deep.equal({ sceneColorHalf: cameraFrame.renderPassCamera.sceneTextureHalf });
 
             // after the bloom, which the camera frame registered before them
@@ -867,6 +927,138 @@ describe('FramePassCameraFrame', function () {
         });
     });
 
+    describe('resolving the scene', function () {
+
+        /** @type {ResolveEffect} */
+        let resolve;
+
+        beforeEach(function () {
+            resolve = new ResolveEffect(app.graphicsDevice);
+        });
+
+        afterEach(function () {
+            resolve.destroy();
+        });
+
+        it('runs the passes resolving the scene after the scene, before its half resolution copy, each reading what the one before it resolved', function () {
+            const frameUpdate = spy(resolve, 'frameUpdate');
+            cameraFrame.addEffect(resolve);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            const taaPass = cameraFrame.taa._pass;
+            const dofPass = cameraFrame.dof._pass;
+
+            // TAA is registered first, as a built-in effect
+            expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(taaPass));
+            expect(passes.indexOf(taaPass)).to.be.below(passes.indexOf(resolve.pass));
+            expect(passes.indexOf(resolve.pass)).to.be.below(passes.indexOf(framePass.scenePassHalf));
+            expect(passes.indexOf(framePass.scenePassHalf)).to.be.below(passes.indexOf(dofPass));
+
+            for (let i = 0; i < 2; i++) {
+                framePass.frameUpdate();
+
+                // the TAA resolves the scene render target's color, and this effect the TAA output
+                expect(taaPass.sourceTexture).to.equal(framePass.sceneTexture);
+                expect(resolve.inputs[resolve.inputs.length - 1]).to.equal(taaPass.historyTexture);
+
+                // the rest of the frame reads what this effect resolved
+                expect(framePass.composePass.sceneTexture).to.equal(resolve.output);
+                expect(framePass.scenePassHalf.sourceTexture).to.equal(resolve.output);
+                const [frame] = frameUpdate.lastCall.args;
+                expect(frame.sceneTexture).to.equal(resolve.output);
+                expect([frame.renderWidth, frame.renderHeight]).to.deep.equal([frame.sceneWidth, frame.sceneHeight]);
+            }
+        });
+
+        it('resolves the scene before the TAA when inserted before it', function () {
+            cameraFrame.insertEffectBefore(resolve, cameraFrame.taa);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const passes = framePass.beforePasses;
+            const taaPass = cameraFrame.taa._pass;
+            expect(passes.indexOf(resolve.pass)).to.be.below(passes.indexOf(taaPass));
+
+            framePass.frameUpdate();
+            expect(resolve.inputs).to.deep.equal([framePass.sceneTexture]);
+            expect(taaPass.sourceTexture).to.equal(resolve.output);
+            expect(framePass.composePass.sceneTexture).to.equal(taaPass.historyTexture);
+        });
+
+        it('reads the scene render target when no effect resolves the scene', function () {
+            cameraFrame.taa.enabled = false;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            expect(cameraFrame.taa._pass).to.equal(null);
+
+            framePass.frameUpdate();
+            expect(framePass.composePass.sceneTexture).to.equal(framePass.sceneTexture);
+            expect(framePass.scenePassHalf.sourceTexture).to.equal(framePass.sceneTexture);
+        });
+
+        it('jitters the camera by the most the effects taking part need, and not at all once none does', function () {
+            const { cameraComponent, taa } = cameraFrame;
+            taa.jitter = 0.25;
+            cameraFrame.update();
+            expect(cameraComponent.jitter).to.equal(0.25);
+
+            // applied with the effects, on the next update
+            resolve.jitterNeeded = 0.75;
+            cameraFrame.addEffect(resolve);
+            expect(cameraComponent.jitter).to.equal(0.25);
+            cameraFrame.update();
+            expect(cameraComponent.jitter).to.equal(0.75);
+
+            taa.enabled = false;
+            cameraFrame.update();
+            expect(cameraComponent.jitter).to.equal(0.75);
+
+            cameraFrame.removeEffect(resolve);
+            cameraFrame.update();
+            expect(cameraComponent.jitter).to.equal(0);
+
+            // disabling the camera frame stops the jitter, and enabling it applies it again
+            taa.enabled = true;
+            cameraFrame.update();
+            cameraFrame.enabled = false;
+            expect(cameraComponent.jitter).to.equal(0);
+            cameraFrame.enabled = true;
+            expect(cameraComponent.jitter).to.equal(0.25);
+        });
+
+        it('keeps resolving the scene with a removed TAA until the next update, upscaling included', function () {
+            const { taa } = cameraFrame;
+            taa.upscale = true;
+            cameraFrame.rendering.renderTargetScale = 0.5;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const pass = taa._pass;
+            framePass.frameUpdate();
+
+            // the removal applies at the next update, the frame rendering the TAA until then
+            cameraFrame.removeEffect(taa);
+            expect(taa.cameraFrame).to.equal(null);
+            for (let i = 0; i < 2; i++) {
+                expect(() => framePass.frameUpdate()).to.not.throw();
+                expect(framePass.composePass.sceneTexture).to.equal(pass.historyTexture);
+            }
+
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(pass);
+            expect(cameraFrame.cameraComponent.jitter).to.equal(0);
+        });
+
+        it('renders the scene depth for the TAA', function () {
+            cameraFrame.dof.enabled = false;
+            cameraFrame.update();
+            expect(cameraFrame.options.depthRequired).to.equal(true);
+
+            cameraFrame.taa.enabled = false;
+            cameraFrame.update();
+            expect(cameraFrame.options.depthRequired).to.equal(false);
+        });
+    });
+
     describe('ssao', function () {
 
         const ssaoPass = () => cameraFrame.renderPassCamera.beforePasses.find(pass => pass instanceof RenderPassSsao);
@@ -879,7 +1071,7 @@ describe('FramePassCameraFrame', function () {
             const pass = ssaoPass();
 
             expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(pass));
-            expect(passes.indexOf(pass)).to.be.below(passes.indexOf(framePass.taaPass));
+            expect(passes.indexOf(pass)).to.be.below(passes.indexOf(cameraFrame.taa._pass));
             expect(pass.sourceTexture).to.equal(framePass.sceneDepthTexture ?? framePass.prePass.linearDepthTexture);
             expect(cameraFrame.cameraComponent.shaderParams.ssaoEnabled).to.equal(false);
             expect(cameraFrame._activeEffects).to.include(cameraFrame.ssao);
@@ -968,6 +1160,28 @@ describe('FramePassCameraFrame', function () {
         });
     });
 
+    describe('lens flare', function () {
+
+        it('keeps drawing the flares after it is removed, until the next update', function () {
+            const lensFlare = new LensFlareEffect(app.graphicsDevice);
+            lensFlare.add(new LensFlare(null, { position: new Vec3(0, 0, -10) }));
+            cameraFrame.addEffect(lensFlare);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const pass = lensFlare._pass;
+            expect(framePass.beforePasses).to.include(pass);
+            framePass.frameUpdate();
+
+            cameraFrame.removeEffect(lensFlare);
+            expect(lensFlare.cameraFrame).to.equal(null);
+            expect(() => framePass.frameUpdate()).to.not.throw();
+
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(pass);
+            lensFlare.destroy();
+        });
+    });
+
     describe('volumetric fog', function () {
 
         const fogPass = () => cameraFrame.renderPassCamera.beforePasses.find(pass => pass instanceof FramePassVolumetricFog);
@@ -994,8 +1208,24 @@ describe('FramePassCameraFrame', function () {
             expect(pass).to.equal(cameraFrame.volumetricFog._pass);
             expect(passes.indexOf(framePass.scenePass)).to.be.below(passes.indexOf(ssao));
             expect(passes.indexOf(ssao)).to.be.below(passes.indexOf(pass));
-            expect(passes.indexOf(pass)).to.be.below(passes.indexOf(framePass.taaPass));
+            expect(passes.indexOf(pass)).to.be.below(passes.indexOf(cameraFrame.taa._pass));
             expect(cameraFrame._activeEffects).to.include(cameraFrame.volumetricFog);
+        });
+
+        it('keeps rendering its passes after it is removed, until the next update', function () {
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const fog = cameraFrame.volumetricFog;
+            const pass = fogPass();
+            framePass.frameUpdate();
+
+            cameraFrame.removeEffect(fog);
+            expect(fog.cameraFrame).to.equal(null);
+            expect(() => framePass.frameUpdate()).to.not.throw();
+            expect(pass.localPass.scenePass).to.equal(framePass.scenePass);
+
+            cameraFrame.update();
+            expect(fogPass()).to.equal(undefined);
         });
 
         it('renders the depth while it is active, and releases its passes once disabled', function () {

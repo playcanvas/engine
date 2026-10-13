@@ -7,6 +7,7 @@ import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_SCENETARGET } from '../../render-pas
 import { FramePassVolumetricFog } from './passes/frame-pass-volumetric-fog.js';
 
 /**
+ * @import { CameraFrame } from '../../render-passes/camera-frame.js'
  * @import { CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from '../../render-passes/camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  * @import { LightComponent } from '../../../framework/components/light/component.js'
@@ -186,6 +187,15 @@ class VolumetricFogEffect extends CameraFrameEffect {
     _pass = null;
 
     /**
+     * The camera frame the effect's passes were created for, while they exist. Its frame keeps
+     * rendering them until the camera frame next updates, after the effect is removed from it too.
+     *
+     * @type {CameraFrame|null}
+     * @private
+     */
+    _passesCameraFrame = null;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      */
     constructor(device) {
@@ -237,6 +247,7 @@ class VolumetricFogEffect extends CameraFrameEffect {
         this._pass = new FramePassVolumetricFog(this.device, this.cameraFrame.cameraComponent,
             sceneTarget.colorBuffer, sceneTarget);
         passes.postScene.push(this._pass);
+        this._passesCameraFrame = this.cameraFrame;
     }
 
     /**
@@ -245,6 +256,7 @@ class VolumetricFogEffect extends CameraFrameEffect {
     destroyPasses() {
         this._pass?.destroy();
         this._pass = null;
+        this._passesCameraFrame = null;
     }
 
     update() {
@@ -275,8 +287,10 @@ class VolumetricFogEffect extends CameraFrameEffect {
      * @param {CameraFrameEffectContext} frame - The values of this frame.
      */
     frameUpdate(frame) {
-        // the local lights are lit by the light clusters the scene pass renders with
-        this._pass.localPass.scenePass = this.cameraFrame.renderPassCamera.scenePass;
+        // the local lights are lit by the light clusters the scene pass renders with - of the camera
+        // frame the passes were created for, as the effect can be removed from it while its frame
+        // still renders them, until the camera frame updates
+        this._pass.localPass.scenePass = this._passesCameraFrame.renderPassCamera.scenePass;
     }
 }
 
