@@ -650,7 +650,7 @@ class AssetRegistry extends EventHandler {
             asset.once('error', (err) => {
                 // store the error on the asset in case user requests this asset again
                 if (err) {
-                    this.loadFromUrlError = err;
+                    asset.loadFromUrlError = err;
                 }
                 callback(err, asset);
             });

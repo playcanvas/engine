@@ -294,6 +294,17 @@ describe('AssetRegistry', function () {
             });
         });
 
+        it('reports a failed load again when its url is requested again', async () => {
+            const load = () => new Promise((resolve) => {
+                app.assets.loadFromUrl(`${assetPath}missing.glb`, 'container', (err, asset) => resolve({ err, asset }));
+            });
+            const first = await load();
+            expect(first.err).to.exist;
+            const again = await load();
+            expect(again.err).to.equal(first.err);
+            expect(again.asset.resource).to.not.exist;
+        });
+
         it('loads css assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.css`, 'css', (err, asset) => {
                 expect(err).to.be.null;
