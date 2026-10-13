@@ -22,6 +22,7 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     LightComponentSystem,
+    MiniStats,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     SHADERLANGUAGE_WGSL,
@@ -78,6 +79,9 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -228,3 +232,5 @@ app.on('update', (/** @type {number} */ _dt) => {
         app.drawLineArrays(histogramPositions, Color.YELLOW);
     }
 });
+
+export { miniStats };

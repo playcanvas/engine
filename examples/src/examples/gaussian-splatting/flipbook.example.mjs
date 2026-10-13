@@ -118,7 +118,7 @@ const roomEntity = assets.apartment.resource.instantiateRenderEntity({
 roomEntity.setLocalScale(30, 30, 30);
 app.root.addChild(roomEntity);
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats']));
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'compute']));
 
 // Create an Entity with a camera component
 const camera = new Entity();

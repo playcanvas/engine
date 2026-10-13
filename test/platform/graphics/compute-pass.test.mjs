@@ -116,6 +116,45 @@ describe('ComputePass', function () {
         });
     });
 
+    describe('device stats', function () {
+
+        it('counts the dispatches of its computes, and its compute pass', function () {
+            if (!device.supportsCompute) {
+                this.skip();
+            }
+
+            const shader = new Shader(device, {
+                name: 'ComputePassStatsTest',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: /* wgsl */`
+                    var<storage, read_write> result: array<f32>;
+
+                    @compute @workgroup_size(1)
+                    fn main() {
+                        result[0] = 1.0;
+                    }
+                `
+            });
+            const results = new StorageBuffer(device, 16, BUFFERUSAGE_COPY_SRC);
+            const computes = ['First', 'Second'].map((name) => {
+                const compute = new Compute(device, shader, name);
+                compute.setParameter('result', results);
+                compute.setupDispatch(1, 1, 1);
+                return compute;
+            });
+
+            device._computeDispatchesPerFrame = 0;
+            device._computePassesPerFrame = 0;
+            new ComputePass(device, computes).render();
+            expect(device._computeDispatchesPerFrame).to.equal(2);
+            expect(device._computePassesPerFrame).to.equal(1);
+
+            computes.forEach(compute => compute.destroy());
+            shader.destroy();
+            results.destroy();
+        });
+    });
+
     describe('#onBefore', function () {
 
         it('is called with the pass, before the dispatch', function () {

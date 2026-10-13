@@ -79,6 +79,23 @@ describe('AppStats', function () {
         expect(app.stats.drawCallCount).to.equal(0);
     });
 
+    it('publishes and resets the compute dispatch and compute pass counts at the frame boundary', function () {
+        const device = app.graphicsDevice;
+        device._computeDispatchesPerFrame = 5;
+        device._computePassesPerFrame = 3;
+        app.stats.updateBasic(1000, 0.016, 16, app.renderer, device);
+        expect(app.stats.computeDispatchCount).to.equal(5);
+        expect(app.stats.computePassCount).to.equal(3);
+        expect(app.stats.frame.computeDispatches).to.equal(5);
+        expect(app.stats.frame.computePasses).to.equal(3);
+        expect(device._computeDispatchesPerFrame).to.equal(0);
+        expect(device._computePassesPerFrame).to.equal(0);
+
+        app.stats.updateBasic(1016, 0.016, 16, app.renderer, device);
+        expect(app.stats.computeDispatchCount).to.equal(0);
+        expect(app.stats.computePassCount).to.equal(0);
+    });
+
     it('tracks allocation and destruction in bytes while preserving legacy memory paths', function () {
         const stats = app.stats;
         const total = stats.vramTotalBytes;

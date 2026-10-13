@@ -19,6 +19,7 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     Mat4,
+    MiniStats,
     Quat,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -89,6 +90,9 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Setup skydome
 app.scene.skyboxMip = 2;
@@ -230,3 +234,5 @@ app.on('update', (dt) => {
     camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));
     camera.lookAt(Vec3.ZERO);
 });
+
+export { miniStats };

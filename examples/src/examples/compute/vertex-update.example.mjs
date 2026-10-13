@@ -17,6 +17,7 @@ import {
     LightComponentSystem,
     Mesh,
     MeshInstance,
+    MiniStats,
     Mouse,
     RENDERSTYLE_SOLID,
     RENDERSTYLE_WIREFRAME,
@@ -101,6 +102,9 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Setup skydome
 app.scene.skyboxMip = 2;
@@ -211,3 +215,5 @@ app.on('update', (dt) => {
         entity.render.renderStyle = Math.floor(time * 0.5) % 2 ? RENDERSTYLE_WIREFRAME : RENDERSTYLE_SOLID;
     }
 });
+
+export { miniStats };
