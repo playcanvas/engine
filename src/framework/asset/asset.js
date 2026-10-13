@@ -313,6 +313,7 @@ class Asset extends EventHandler {
     /**
      * The error the asset's last load from a URL failed with, which
      * {@link AssetRegistry#loadFromUrl} reports again when the URL is requested again, or null.
+     * A successful load, however it was asked for, and unloading clear it.
      *
      * @type {*}
      * @ignore
@@ -751,7 +752,6 @@ class Asset extends EventHandler {
         // no need to be reloaded
         if (this.loaded) {
             this.loaded = false;
-            this.loadFromUrlError = null;
             this.registry.load(this);
         }
     }

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { restore, spy } from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
@@ -303,6 +303,28 @@ describe('AssetRegistry', function () {
             const again = await load();
             expect(again.err).to.equal(first.err);
             expect(again.asset.resource).to.not.exist;
+        });
+
+        it('reports a failed load no more once a forced reload succeeds', async () => {
+            // the first load fails, the forced reload after it succeeds
+            const load = stub(app.loader, 'load');
+            load.onFirstCall().callsFake((url, type, callback) => callback(404));
+            load.onSecondCall().callsFake((url, type, callback) => callback(null, 'reloaded'));
+
+            const url = `${assetPath}flaky.txt`;
+            const fromUrl = () => new Promise((resolve) => {
+                app.assets.loadFromUrl(url, 'text', (err, asset) => resolve({ err, asset }));
+            });
+            const first = await fromUrl();
+            expect(first.err).to.equal(404);
+
+            await new Promise((resolve) => {
+                first.asset.once('load', resolve);
+                app.assets.load(first.asset, { force: true });
+            });
+            const again = await fromUrl();
+            expect(again.err).to.be.null;
+            expect(again.asset.resource).to.equal('reloaded');
         });
 
         it('loads css assets', (done) => {

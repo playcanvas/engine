@@ -525,6 +525,9 @@ class AssetRegistry extends EventHandler {
                 this.fire(`error:${asset.id}`, err, asset);
                 asset.fire('error', err, asset);
             } else {
+                // however it loaded, an earlier loadFromUrl failure no longer holds
+                asset.loadFromUrlError = null;
+
                 if (asset.type === 'script') {
                     const handler = this._loader.getHandler('script');
                     if (handler._cache[asset.id] && handler._cache[asset.id].parentNode === document.head) {
