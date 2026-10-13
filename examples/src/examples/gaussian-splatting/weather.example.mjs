@@ -91,7 +91,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats']));
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'compute']));
 
 // LOD streaming settings
 app.scene.gsplat.lodUpdateAngle = 90;

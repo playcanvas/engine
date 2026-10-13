@@ -26,6 +26,7 @@ import {
     FILTER_LINEAR,
     Layer,
     LightComponentSystem,
+    MiniStats,
     PIXELFORMAT_RGBA8,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -132,6 +133,9 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Set up environment lighting
 app.scene.envAtlas = assets.helipad.resource;
@@ -287,3 +291,5 @@ app.on('update', (dt) => {
         textures.draw(storageTexture, gap * 0.5, 0.5 + gap * 0.25, 1 - gap, 0.5 - gap);
     }
 });
+
+export { miniStats };
