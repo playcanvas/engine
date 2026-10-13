@@ -42,6 +42,7 @@ export { FringingEffect } from './effects/fringing/fringing-effect.js';
 export { GradingEffect } from './effects/grading/grading-effect.js';
 export { LensFlareEffect } from './effects/lens-flare/lens-flare-effect.js';
 export { LensFlare } from './effects/lens-flare/lens-flare.js';
+export { SmaaEffect } from './effects/smaa/smaa-effect.js';
 export { SsaoEffect } from './effects/ssao/ssao-effect.js';
 export { TaaEffect } from './effects/taa/taa-effect.js';
 export { VignetteEffect } from './effects/vignette/vignette-effect.js';

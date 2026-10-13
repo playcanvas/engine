@@ -1,6 +1,6 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import {
-    PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RG32F,
+    BUFFERUSAGE_STORAGE, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, SAMPLETYPE_FLOAT, pixelFormatInfo
 } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -192,6 +192,7 @@ class WebgpuBindGroup {
 
             Debug.assert(wgpuBuffer, `NULL storage buffer [${storageBufferFormats[bufferIndex].name}] (slot ${slot}, id ${buffer.id}, size ${buffer.byteSize}) cannot be used by the bind group`);
             Debug.call(() => {
+                if (!(buffer.impl.usageFlags & BUFFERUSAGE_STORAGE)) Debug.errorOnce(`${buffer.constructor.name} ${buffer.name ?? buffer.id} is bound to the storage buffer [${storageBufferFormats[bufferIndex].name}] (slot ${slot}) of bind group ${bindGroup.name ?? bindGroup.id}, but was created without storage usage, so the bind group is invalid. Create a VertexBuffer or IndexBuffer bound to a storage buffer with the storage option.`, buffer);
                 this.debugFormat += `${slot}: SB\n`;
             });
 

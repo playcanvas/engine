@@ -8,9 +8,9 @@ export default /* wgsl */`
 
     // reversible LDR <-> HDR tone mapping, as CAS needs LDR input
     #ifdef CAS_HDR
-        fn maxComponent(x: f32, y: f32, z: f32) -> f32 { return max(x, max(y, z)); }
-        fn toSDR(c: vec3f) -> vec3f { return c / (1.0 + maxComponent(c.r, c.g, c.b)); }
-        fn toHDR(c: vec3f) -> vec3f { return c / max(1.0 - maxComponent(c.r, c.g, c.b), 1e-4); }
+        #include "reversibleTonemapPS"
+        fn toSDR(c: vec3f) -> vec3f { return reversibleTonemap(c); }
+        fn toHDR(c: vec3f) -> vec3f { return reversibleTonemapInverse(c); }
     #else
         fn toSDR(c: vec3f) -> vec3f { return c; }
         fn toHDR(c: vec3f) -> vec3f { return c; }
