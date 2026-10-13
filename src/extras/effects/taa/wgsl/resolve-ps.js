@@ -9,7 +9,7 @@ export default /* wgsl */`
     var historyTextureSampler: sampler;
     uniform matrix_viewProjectionPrevious: mat4x4f;
     uniform matrix_viewProjectionInverse: mat4x4f;
-    uniform exposure: f32;
+    uniform taaExposure: f32;   // the exposure the scene is displayed with
     uniform jitters: vec4f;   // xy: current frame, zw: previous frame
     uniform textureSize: vec2f;
     uniform historySize: vec2f;
@@ -187,7 +187,7 @@ export default /* wgsl */`
         // their exposed values. Blended in linear HDR, the samples of a bright surface partially
         // covering a pixel dominate its average, which the tone mapping then displays nearly as
         // bright as the surface - the edges of bright geometry would stay thick and aliased.
-        let e = max(uniform.exposure, 1e-6);
+        let e = max(uniform.taaExposure, 1e-6);
         let mixedPremul = reversibleTonemapInverse(mix(reversibleTonemap(historyPremulClamped * e), reversibleTonemap(srcPremul * e), mixFactor)) / e;
         let a = srcColor.a;
         // UNORM8 alpha step — avoid un-premul in the lowest band (quantization / noise).

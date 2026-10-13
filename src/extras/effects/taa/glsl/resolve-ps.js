@@ -7,7 +7,7 @@ export default /* glsl */`
     uniform sampler2D historyTexture;
     uniform mat4 matrix_viewProjectionPrevious;
     uniform mat4 matrix_viewProjectionInverse;
-    uniform float exposure;
+    uniform float taaExposure;   // the exposure the scene is displayed with
     uniform vec4 jitters;   // xy: current frame, zw: previous frame
     uniform vec2 textureSize;
     uniform vec2 historySize;
@@ -169,7 +169,7 @@ export default /* glsl */`
         // their exposed values. Blended in linear HDR, the samples of a bright surface partially
         // covering a pixel dominate its average, which the tone mapping then displays nearly as
         // bright as the surface - the edges of bright geometry would stay thick and aliased.
-        float e = max(exposure, 1e-6);
+        float e = max(taaExposure, 1e-6);
         vec3 mixedPremul = reversibleTonemapInverse(mix(reversibleTonemap(historyPremulClamped * e), reversibleTonemap(srcPremul * e), mixFactor)) / e;
         float a = srcColor.a;
         // Match UNORM8 alpha quantum: below one step, un-premul is ill-defined / noisy; use current RGB.
