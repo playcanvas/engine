@@ -97,6 +97,23 @@ class WebgpuXrBridge {
                 }
             }
 
+            // The view's depth, where the runtime provides one, is cleared to the far plane, so the
+            // compositor reprojects a frame that misses its display time by its rotation rather
+            // than by unrelated contents: Safari on visionOS hands out a depth texture whether or
+            // not the layer asked for one, and reads it (ignoreDepthValues is false), while the
+            // scene renders its depth into the framebuffer's own buffer. The same array layer as
+            // the view's color
+            const depthTexture = sub.depthStencilTexture;
+            if (depthTexture) {
+                device.resolver.clearDepth(device.getCommandEncoder(), depthTexture, {
+                    dimension: '2d',
+                    baseMipLevel: 0,
+                    mipLevelCount: 1,
+                    baseArrayLayer: viewDescriptor?.baseArrayLayer ?? 0,
+                    arrayLayerCount: 1
+                });
+            }
+
             // Prefer the view descriptor's format when present: WebXR runtimes may use it to
             // declare a per-eye view-format (e.g. bgra8unorm-srgb over a bgra8unorm texture) so
             // shader writes are gamma-encoded for the compositor. Falling back to the texture's

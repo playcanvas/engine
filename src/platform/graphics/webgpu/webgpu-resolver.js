@@ -11,7 +11,8 @@ import webgpuDepthResolve from '../shader-chunks/frag/webgpu-depth-resolve.js';
  */
 
 /**
- * A WebGPU helper class implementing custom resolve of multi-sampled textures.
+ * A WebGPU helper class implementing custom resolve of multi-sampled textures, and clears of depth
+ * textures to the far plane.
  *
  * @ignore
  */
@@ -197,6 +198,36 @@ class WebgpuResolver {
             mode,
             destinationLayer
         });
+    }
+
+    /**
+     * Clears a depth texture, or a slice of one, to the far plane, along with its stencil if it
+     * has one.
+     *
+     * @param {GPUCommandEncoder} commandEncoder - Command encoder to use for the clear.
+     * @param {GPUTexture} texture - The depth texture.
+     * @param {GPUTextureViewDescriptor} [viewDescriptor] - The slice of the texture to clear.
+     * @private
+     */
+    clearDepth(commandEncoder, texture, viewDescriptor) {
+        /** @type {GPURenderPassDepthStencilAttachment} */
+        const attachment = {
+            view: texture.createView(viewDescriptor),
+            depthClearValue: 1,
+            depthLoadOp: 'clear',
+            depthStoreOp: 'store'
+        };
+        if (texture.format.includes('stencil')) {
+            attachment.stencilLoadOp = 'clear';
+            attachment.stencilStoreOp = 'store';
+        }
+
+        const passEncoder = commandEncoder.beginRenderPass({
+            colorAttachments: [],
+            depthStencilAttachment: attachment
+        });
+        DebugHelper.setLabel(passEncoder, 'DepthClear-PassEncoder');
+        passEncoder.end();
     }
 }
 
