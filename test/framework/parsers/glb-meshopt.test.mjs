@@ -276,6 +276,14 @@ describe('GlbParser meshopt compression', function () {
 
     const getMesh = result => result.renders[0].meshes[0];
 
+    // the xyz of each normal, as WebGPU pads three component byte normals to four components
+    const getNormals = (mesh) => {
+        const data = [];
+        const count = mesh.getNormals(data);
+        const components = data.length / count;
+        return data.filter((v, i) => i % components < 3);
+    };
+
     // rotates each triangle to start at its lowest index
     const normalizeTriangles = (array) => {
         const result = [];
@@ -309,8 +317,7 @@ describe('GlbParser meshopt compression', function () {
 
         expectGeometry(getMesh(result));
 
-        const decodedNormals = [];
-        getMesh(result).getNormals(decodedNormals);
+        const decodedNormals = getNormals(getMesh(result));
         const expectedNormals = Array.from(normals).filter((v, i) => i % 4 !== 3);
         expect(decodedNormals).to.deep.equal(expectedNormals);
 
@@ -326,8 +333,7 @@ describe('GlbParser meshopt compression', function () {
         expectGeometry(getMesh(result));
 
         // normals are quantized to normalized bytes by the octahedral filter
-        const decodedNormals = [];
-        getMesh(result).getNormals(decodedNormals);
+        const decodedNormals = getNormals(getMesh(result));
         const expectedNormals = Array.from(normals).filter((v, i) => i % 4 !== 3);
         expectCloseTo(decodedNormals.map(v => v / 127), expectedNormals, 0.03);
 
