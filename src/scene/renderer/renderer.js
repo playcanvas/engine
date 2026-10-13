@@ -633,7 +633,8 @@ class Renderer {
             // render target to the color of the attachment 0. The color is in sRGB space, and a
             // color buffer of an sRGB format encodes the value it is cleared to, so it is cleared
             // to the linear value instead
-            const srgb = (device.renderTarget ?? device.backBuffer)?.isColorBufferSrgb(0);
+            const srgb = (flags & CLEARFLAG_COLOR) !== 0 &&
+                (device.renderTarget ?? device.backBuffer)?.isColorBufferSrgb(0);
             const c = srgb ? _tempClearColorLinear.linear(camera._clearColor) : camera._clearColor;
             _tempClearColor[0] = c.r;
             _tempClearColor[1] = c.g;
