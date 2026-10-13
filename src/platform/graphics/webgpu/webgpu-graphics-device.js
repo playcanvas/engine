@@ -1611,6 +1611,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     startRenderPass(renderPass) {
 
+        this._closeComputePass();
+
         // upload textures that need it, to avoid them being uploaded / their mips generated during the pass
         // TODO: this needs a better solution
         this._uploadDirtyTextures();
@@ -1764,6 +1766,36 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this, 'ComputePass');
     }
 
+    /**
+     * EXPERIMENT (not for main): when true, consecutive compute dispatches are recorded into a single
+     * compute pass, which stays open until the command encoder is needed for anything else, such as
+     * a buffer clear, a copy or a render pass.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    mergeComputePasses = false;
+
+    /**
+     * True while a compute pass merging consecutive dispatches is open.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _computePassOpen = false;
+
+    /**
+     * Ends the compute pass merging consecutive dispatches, when one is open.
+     *
+     * @private
+     */
+    _closeComputePass() {
+        if (this._computePassOpen) {
+            this._computePassOpen = false;
+            this.endComputePass();
+        }
+    }
+
     computeDispatch(computes, name = 'Unnamed') {
 
         // read the attached scene maps, before the pass starts, as this can switch a compute to a
@@ -1772,7 +1804,21 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             computes[i].prepareDispatch();
         }
 
-        this.startComputePass(name);
+        if (this.mergeComputePasses) {
+            // textures to upload end the open pass, as they are uploaded outside of passes
+            if (this.texturesToUpload.size > 0) {
+                this._closeComputePass();
+                this._uploadDirtyTextures();
+            }
+            if (!this._computePassOpen) {
+                this.startComputePass(name);
+                this._computePassOpen = true;
+                this._computePassesPerFrame++;
+            }
+        } else {
+            this.startComputePass(name);
+            this._computePassesPerFrame++;
+        }
 
         // update uniform buffers and bind groups
         for (let i = 0; i < computes.length; i++) {
@@ -1785,14 +1831,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             compute.impl.dispatch(compute.countX, compute.countY, compute.countZ);
         }
 
-        this.endComputePass();
+        if (!this.mergeComputePasses) {
+            this.endComputePass();
+        }
 
-        // track the dispatches and the compute pass recording them
+        // track the dispatches
         this._computeDispatchesPerFrame += computes.length;
-        this._computePassesPerFrame++;
     }
 
     getCommandEncoder() {
+
+        // anything else recording into the encoder ends the compute pass merging dispatches
+        this._closeComputePass();
 
         // use existing or create new encoder
         let commandEncoder = this.commandEncoder;
@@ -1807,6 +1857,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     endCommandEncoder() {
+
+        this._closeComputePass();
 
         Debug.assert(!this.insideRenderPass, 'Attempted to finish GPUCommandEncoder while inside a pass. This will invalidate the current pass encoder and cause "Parent encoder is already finished" validation errors.');
 
@@ -1830,6 +1882,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     submit() {
+
+        this._closeComputePass();
 
         Debug.assert(!this.insideRenderPass, 'Attempted to submit command buffers while inside a pass. This finishes the parent command encoder and invalidates the active pass ("Parent encoder is already finished") .');
 
