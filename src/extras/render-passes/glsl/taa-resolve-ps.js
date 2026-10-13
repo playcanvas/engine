@@ -8,6 +8,7 @@ export default /* glsl */`
     uniform mat4 matrix_viewProjectionInverse;
     uniform vec4 jitters;   // xy: current frame, zw: previous frame
     uniform vec2 textureSize;
+    uniform vec2 historySize;
 
     varying vec2 uv0;
 
@@ -49,10 +50,67 @@ export default /* glsl */`
         return clamp(historyPremul, minPremul, maxPremul);
     }
 
+    #ifdef TAA_UPSCALE
+
+        // The current frame renders at a lower resolution than the history. Each of its texels holds
+        // the image at its center moved by the jitter of the frame, so from frame to frame its sample
+        // lands at a different position within the pixels of the history. The current color at this
+        // pixel is reconstructed from the texels around it, weighted by how close their samples are
+        // to it, and the weight of the nearest decides how much of it the history takes - over the
+        // jitter sequence, each pixel of the history accumulates the samples landing on it.
+        vec4 upscaleCurrent(vec2 uv, out float weight, out vec3 minPremul, out vec3 maxPremul) {
+
+            // this pixel and the jitter, in texels of the current frame
+            vec2 position = uv * textureSize;
+            vec2 jitter = jitters.xy * 0.5 * textureSize;
+
+            // the texel whose sample is nearest to this pixel
+            vec2 nearest = floor(position - jitter);
+
+            // pixels of the history per texel of the current frame
+            float scale = historySize.x / textureSize.x;
+
+            vec4 sum = vec4(0.0);
+            float sumWeight = 0.0;
+            vec4 nearestColor = vec4(0.0);
+            weight = 0.0;
+            minPremul = vec3(9999.0);
+            maxPremul = vec3(-9999.0);
+            for (float x = -1.0; x <= 1.0; ++x) {
+                for (float y = -1.0; y <= 1.0; ++y) {
+                    vec2 texel = nearest + vec2(x, y);
+                    vec4 s = texture2DLod(sourceTexture, (texel + 0.5) / textureSize, 0.0);
+                    vec3 premul = s.rgb * s.a;
+                    minPremul = min(minPremul, premul);
+                    maxPremul = max(maxPremul, premul);
+                    if (x == 0.0 && y == 0.0) {
+                        nearestColor = s;
+                    }
+
+                    // the distance of its sample to this pixel, in pixels of the history
+                    vec2 d = (texel + 0.5 + jitter - position) * scale;
+                    float w = exp(-2.29 * dot(d, d));
+                    sum += s * w;
+                    sumWeight += w;
+                    weight = max(weight, w);
+                }
+            }
+            return sumWeight > 1e-4 ? sum / sumWeight : nearestColor;
+        }
+
+    #endif
+
     void main()
     {
         // current frame
-        vec4 srcColor = texture2D(sourceTexture, uv0);
+        #ifdef TAA_UPSCALE
+            float currentWeight;
+            vec3 minPremul;
+            vec3 maxPremul;
+            vec4 srcColor = upscaleCurrent(uv0, currentWeight, minPremul, maxPremul);
+        #else
+            vec4 srcColor = texture2D(sourceTexture, uv0);
+        #endif
 
         // current depth is in linear space, convert it to non-linear space
         float linearDepth = getLinearScreenDepth(uv0);
@@ -63,7 +121,7 @@ export default /* glsl */`
 
         #ifdef QUALITY_HIGH
 
-            vec4 historySample = SampleTextureCatmullRom(TEXTURE_PASS(historyTexture), historyUv, textureSize);
+            vec4 historySample = SampleTextureCatmullRom(TEXTURE_PASS(historyTexture), historyUv, historySize);
 
         #else
 
@@ -79,10 +137,18 @@ export default /* glsl */`
         vec3 historyPremul = historySample.rgb * historySample.a;
         vec3 srcPremul = srcColor.rgb * srcColor.a;
 
-        vec3 historyPremulClamped = colorClampPremul(uv0, historyPremul);
+        #ifdef TAA_UPSCALE
+            // clamped to the range of the texels around this pixel, and taking more of the current
+            // frame the closer its nearest sample is to this pixel
+            vec3 historyPremulClamped = clamp(historyPremul, minPremul, maxPremul);
+            float blend = 0.1 * currentWeight;
+        #else
+            vec3 historyPremulClamped = colorClampPremul(uv0, historyPremul);
+            float blend = 0.05;
+        #endif
 
         float mixFactor = (historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0) ?
-            1.0 : 0.05;
+            1.0 : blend;
 
         vec3 mixedPremul = mix(historyPremulClamped, srcPremul, mixFactor);
         float a = srcColor.a;

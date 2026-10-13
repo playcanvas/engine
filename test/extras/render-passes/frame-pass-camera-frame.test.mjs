@@ -122,6 +122,30 @@ describe('FramePassCameraFrame', function () {
         }
     });
 
+    it('upscales with TAA while both are enabled, rebuilding when that changes', function () {
+        cameraFrame.rendering.renderTargetScale = 0.5;
+        cameraFrame.update();
+        let framePass = cameraFrame.renderPassCamera;
+        expect(framePass.options.taaUpscale).to.equal(false);
+        expect(framePass.taaPass.upscale).to.equal(false);
+
+        cameraFrame.taa.upscale = true;
+        cameraFrame.update();
+        framePass = cameraFrame.renderPassCamera;
+        expect(framePass.options.taaUpscale).to.equal(true);
+        expect(framePass.taaPass.upscale).to.equal(true);
+
+        // the composition reads the upscaled history
+        framePass.frameUpdate();
+        expect(framePass.composePass.sceneTexture).to.equal(framePass.taaPass.historyTexture);
+
+        // without TAA there is nothing to upscale with
+        cameraFrame.taa.enabled = false;
+        cameraFrame.update();
+        expect(cameraFrame.renderPassCamera.options.taaUpscale).to.equal(false);
+        expect(cameraFrame.renderPassCamera.taaPass).to.not.exist;
+    });
+
     describe('effects', function () {
 
         it('applies a change to an effect when updated, rendering until then what the last update applied', function () {

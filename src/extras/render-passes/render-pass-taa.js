@@ -44,10 +44,19 @@ class RenderPassTAA extends RenderPassShaderQuad {
      */
     historyRenderTargets = [];
 
-    constructor(device, sourceTexture, cameraComponent) {
+    /**
+     * Whether the history has the resolution of the camera's render target rather than of the
+     * source texture, accumulating the jittered frames rendered at a lower resolution into it.
+     *
+     * @type {boolean}
+     */
+    upscale = false;
+
+    constructor(device, sourceTexture, cameraComponent, upscale = false) {
         super(device);
         this.sourceTexture = sourceTexture;
         this.cameraComponent = cameraComponent;
+        this.upscale = upscale;
 
         // register shader chunks
         ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('sampleCatmullRomPS', glslSampleCatmullRomPS);
@@ -57,12 +66,15 @@ class RenderPassTAA extends RenderPassShaderQuad {
 
         const defines = new Map();
         defines.set('QUALITY_HIGH', true);
+        if (upscale) {
+            defines.set('TAA_UPSCALE', true);
+        }
 
         // add defines needed for correct use of screenDepthPS chunk
         const depthKey = ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
 
         this.shader = ShaderUtils.createShader(device, {
-            uniqueName: `TaaResolveShader${depthKey}`,
+            uniqueName: `TaaResolveShader${upscale ? 'Upscale' : ''}${depthKey}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'quadVS',
             fragmentChunk: 'taaResolvePS',
@@ -73,6 +85,8 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.sourceTextureId = scope.resolve('sourceTexture');
         this.textureSizeId = scope.resolve('textureSize');
         this.textureSize = new Float32Array(2);
+        this.historySizeId = scope.resolve('historySize');
+        this.historySize = new Float32Array(2);
         this.historyTextureId = scope.resolve('historyTexture');
         this.viewProjPrevId = scope.resolve('matrix_viewProjectionPrevious');
         this.viewProjInvId = scope.resolve('matrix_viewProjectionInverse');
@@ -119,19 +133,27 @@ class RenderPassTAA extends RenderPassShaderQuad {
             });
         }
 
+        // the history has the resolution of the source, or when upscaling, of the render target the
+        // camera renders to - the back buffer when it has none
         this.historyTexture = this.historyTextures[0];
         this.init(this.historyRenderTargets[0], {
-            resizeSource: this.sourceTexture
+            resizeSource: this.upscale ? this.cameraComponent.renderTarget : this.sourceTexture
         });
     }
 
     before() {
+        const history = this.historyTextures[1 - this.historyIndex];
         this.sourceTextureId.setValue(this.sourceTexture);
-        this.historyTextureId.setValue(this.historyTextures[1 - this.historyIndex]);
+        this.historyTextureId.setValue(history);
 
         this.textureSize[0] = this.sourceTexture.width;
         this.textureSize[1] = this.sourceTexture.height;
         this.textureSizeId.setValue(this.textureSize);
+
+        // the size of the history read, which can differ from the one written on a frame it resizes
+        this.historySize[0] = history.width;
+        this.historySize[1] = history.height;
+        this.historySizeId.setValue(this.historySize);
 
         const camera = this.cameraComponent.camera;
         this.viewProjPrevId.setValue(camera._viewProjPrevious.data);

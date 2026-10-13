@@ -10,6 +10,7 @@ export default /* wgsl */`
     uniform matrix_viewProjectionInverse: mat4x4f;
     uniform jitters: vec4f;   // xy: current frame, zw: previous frame
     uniform textureSize: vec2f;
+    uniform historySize: vec2f;
 
     varying uv0: vec2f;
 
@@ -57,12 +58,77 @@ export default /* wgsl */`
         return clamp(historyPremul, minPremul, maxPremul);
     }
 
+    #ifdef TAA_UPSCALE
+
+        struct UpscaleSample {
+            color: vec4f,
+            weight: f32,
+            minPremul: vec3f,
+            maxPremul: vec3f
+        };
+
+        // The current frame renders at a lower resolution than the history. Each of its texels holds
+        // the image at its center moved by the jitter of the frame, so from frame to frame its sample
+        // lands at a different position within the pixels of the history. The current color at this
+        // pixel is reconstructed from the texels around it, weighted by how close their samples are
+        // to it, and the weight of the nearest decides how much of it the history takes - over the
+        // jitter sequence, each pixel of the history accumulates the samples landing on it.
+        fn upscaleCurrent(uv: vec2f) -> UpscaleSample {
+
+            // this pixel and the jitter, in texels of the current frame - uv is Y-flipped for
+            // texture sampling, and so is the jitter
+            let position = uv * uniform.textureSize;
+            let jitter = vec2f(uniform.jitters.x, -uniform.jitters.y) * 0.5 * uniform.textureSize;
+
+            // the texel whose sample is nearest to this pixel
+            let nearest = floor(position - jitter);
+
+            // pixels of the history per texel of the current frame
+            let scale = uniform.historySize.x / uniform.textureSize.x;
+
+            var result: UpscaleSample;
+            var sum = vec4f(0.0);
+            var sumWeight: f32 = 0.0;
+            var nearestColor = vec4f(0.0);
+            result.weight = 0.0;
+            result.minPremul = vec3f(9999.0);
+            result.maxPremul = vec3f(-9999.0);
+            for (var ix: i32 = -1; ix <= 1; ix = ix + 1) {
+                for (var iy: i32 = -1; iy <= 1; iy = iy + 1) {
+                    let texel = nearest + vec2f(f32(ix), f32(iy));
+                    let s = textureSampleLevel(sourceTexture, sourceTextureSampler, (texel + 0.5) / uniform.textureSize, 0.0);
+                    let premul = s.rgb * s.a;
+                    result.minPremul = min(result.minPremul, premul);
+                    result.maxPremul = max(result.maxPremul, premul);
+                    if (ix == 0 && iy == 0) {
+                        nearestColor = s;
+                    }
+
+                    // the distance of its sample to this pixel, in pixels of the history
+                    let d = (texel + 0.5 + jitter - position) * scale;
+                    let w = exp(-2.29 * dot(d, d));
+                    sum = sum + s * w;
+                    sumWeight = sumWeight + w;
+                    result.weight = max(result.weight, w);
+                }
+            }
+            result.color = select(nearestColor, sum / max(sumWeight, 1e-6), sumWeight > 1e-4);
+            return result;
+        }
+
+    #endif
+
     @fragment
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         var output: FragmentOutput;
 
         // current frame
-        let srcColor = textureSample(sourceTexture, sourceTextureSampler, uv0);
+        #ifdef TAA_UPSCALE
+            let upscaled = upscaleCurrent(uv0);
+            let srcColor = upscaled.color;
+        #else
+            let srcColor = textureSample(sourceTexture, sourceTextureSampler, uv0);
+        #endif
 
         // current depth is in linear space, convert it to non-linear space
         let linearDepth = getLinearScreenDepth(uv0);
@@ -73,7 +139,7 @@ export default /* wgsl */`
 
         #ifdef QUALITY_HIGH
 
-            var historySample: vec4f = SampleTextureCatmullRom(historyTexture, historyTextureSampler, historyUv, uniform.textureSize);
+            var historySample: vec4f = SampleTextureCatmullRom(historyTexture, historyTextureSampler, historyUv, uniform.historySize);
 
         #else
 
@@ -89,10 +155,18 @@ export default /* wgsl */`
         let historyPremul = historySample.rgb * historySample.a;
         let srcPremul = srcColor.rgb * srcColor.a;
 
-        let historyPremulClamped = colorClampPremul(uv0, historyPremul);
+        #ifdef TAA_UPSCALE
+            // clamped to the range of the texels around this pixel, and taking more of the current
+            // frame the closer its nearest sample is to this pixel
+            let historyPremulClamped = clamp(historyPremul, upscaled.minPremul, upscaled.maxPremul);
+            let blend = 0.1 * upscaled.weight;
+        #else
+            let historyPremulClamped = colorClampPremul(uv0, historyPremul);
+            let blend: f32 = 0.05;
+        #endif
 
         let mixFactor_condition = historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0;
-        let mixFactor = select(0.05, 1.0, mixFactor_condition);
+        let mixFactor = select(blend, 1.0, mixFactor_condition);
 
         let mixedPremul = mix(historyPremulClamped, srcPremul, mixFactor);
         let a = srcColor.a;

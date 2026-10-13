@@ -49,6 +49,9 @@ class CameraFrameOptions {
     // TAA
     taaEnabled = false;
 
+    // whether TAA accumulates the lower resolution frames at the resolution of the render target
+    taaUpscale = false;
+
     // The active registered effects owning passes, and what their passes depend on - see
     // CameraFrame#updateOptions. A change rebuilds the passes.
     effectPasses = '';
@@ -475,6 +478,7 @@ class FramePassCameraFrame extends FramePass {
         return options.depthRequired !== currentOptions.depthRequired ||
             options.prepassDepthRequired !== currentOptions.prepassDepthRequired ||
             options.taaEnabled !== currentOptions.taaEnabled ||
+            options.taaUpscale !== currentOptions.taaUpscale ||
             options.samples !== currentOptions.samples ||
             options.stencil !== currentOptions.stencil ||
             options.effectPasses !== currentOptions.effectPasses ||
@@ -956,7 +960,7 @@ class FramePassCameraFrame extends FramePass {
     setupTaaPass(options) {
         let textureWithTaa = this.sceneTexture;
         if (options.taaEnabled) {
-            this.taaPass = new RenderPassTAA(this.device, this.sceneTexture, this.cameraComponent);
+            this.taaPass = new RenderPassTAA(this.device, this.sceneTexture, this.cameraComponent, options.taaUpscale);
             textureWithTaa = this.taaPass.historyTexture;
         }
 

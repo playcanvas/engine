@@ -72,25 +72,21 @@ const _tempClearOptions = {
     flags: 0
 };
 
-// helton sequence of 2d offsets for jittering
-const _haltonSequence = [
-    new Vec2(0.5, 0.333333),
-    new Vec2(0.25, 0.666667),
-    new Vec2(0.75, 0.111111),
-    new Vec2(0.125, 0.444444),
-    new Vec2(0.625, 0.777778),
-    new Vec2(0.375, 0.222222),
-    new Vec2(0.875, 0.555556),
-    new Vec2(0.0625, 0.888889),
-    new Vec2(0.5625, 0.037037),
-    new Vec2(0.3125, 0.370370),
-    new Vec2(0.8125, 0.703704),
-    new Vec2(0.1875, 0.148148),
-    new Vec2(0.6875, 0.481481),
-    new Vec2(0.4375, 0.814815),
-    new Vec2(0.9375, 0.259259),
-    new Vec2(0.03125, 0.592593)
-];
+// the radical inverse of an index in a base, an element of the Halton sequence
+const halton = (index, base) => {
+    let result = 0;
+    let fraction = 1 / base;
+    for (let i = index; i > 0; i = Math.floor(i / base)) {
+        result += (i % base) * fraction;
+        fraction /= base;
+    }
+    return result;
+};
+
+// Halton sequence of 2d offsets for jittering. It is long enough for the temporal upscaling to place
+// samples across all pixels it upscales a lower resolution pixel to, and starts with the offsets
+// the TAA used before it was extended.
+const _haltonSequence = Array.from({ length: 128 }, (_, i) => new Vec2(halton(i + 1, 2), halton(i + 1, 3)));
 
 const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
