@@ -1,17 +1,25 @@
+import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { expect } from 'chai';
-import { restore, spy } from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
 import { MeshoptDecoder } from '../../../examples/assets/wasm/meshopt/meshopt_decoder.mjs';
 import { MeshoptEncoder } from '../../../examples/assets/wasm/meshopt/meshopt_encoder.js';
+import { platform } from '../../../src/core/platform.js';
 import { GlbParser } from '../../../src/framework/parsers/glb-parser.js';
 import { meshoptInitialize } from '../../../src/framework/parsers/meshopt-decoder.js';
 import { http } from '../../../src/platform/net/http.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
-const DECODER_URL = pathToFileURL('examples/assets/wasm/meshopt/meshopt_decoder.mjs').href;
+const DECODER_PATH = resolve('examples/assets/wasm/meshopt/meshopt_decoder.mjs');
+const DECODER_URL = pathToFileURL(DECODER_PATH).href;
+
+// the folder holding the decoder, as a url with a trailing slash
+const DECODER_FOLDER_URL = new URL('./', DECODER_URL).href;
 
 // glTF component types
 const BYTE = 5120;
@@ -355,6 +363,46 @@ describe('GlbParser meshopt compression', function () {
         const err = await parseError(createFile());
 
         expect(err.message).to.contain('Failed to load the meshopt decoder');
+    });
+
+    it('imports the decoder module again after a failed import', async function () {
+        // the module is missing for the first load, and in place for the second
+        const folder = mkdtempSync(join(tmpdir(), 'meshopt-'));
+        const path = join(folder, 'meshopt_decoder.mjs');
+
+        try {
+            meshoptInitialize({ url: pathToFileURL(path).href });
+            const err = await parseError(createFile());
+            expect(err.message).to.contain('Failed to load the meshopt decoder');
+
+            copyFileSync(DECODER_PATH, path);
+            expectGeometry(getMesh(await parse(createFile())));
+        } finally {
+            rmSync(folder, { recursive: true, force: true });
+        }
+    });
+
+    it('resolves a relative decoder url against the document base', async function () {
+        stub(platform, 'environment').value('browser');
+        const base = document.createElement('base');
+        base.href = DECODER_FOLDER_URL;
+        document.head.appendChild(base);
+
+        meshoptInitialize({ url: 'meshopt_decoder.mjs' });
+        expectGeometry(getMesh(await parse(createFile())));
+    });
+
+    it('resolves a relative decoder url against the worker location', async function () {
+        stub(platform, 'environment').value('worker');
+        stub(globalThis, 'document').value(undefined);
+        globalThis.location = { href: `${DECODER_FOLDER_URL}worker.js` };
+
+        try {
+            meshoptInitialize({ url: 'meshopt_decoder.mjs' });
+            expectGeometry(getMesh(await parse(createFile())));
+        } finally {
+            delete globalThis.location;
+        }
     });
 
     it('fails clearly without a decoder or a fallback', async function () {

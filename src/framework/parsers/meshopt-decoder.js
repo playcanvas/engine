@@ -14,26 +14,52 @@ let decoderConfig = null;
  */
 let decoderPromise = null;
 
-// resolve a relative module url against the page, as dynamic import resolves against the engine
+/**
+ * The number of failed decoder module imports, used to request a fresh module on a retry.
+ *
+ * @type {number}
+ */
+let failedImports = 0;
+
+// resolve a relative module url as the page or worker would, as dynamic import resolves it
+// against the engine instead
 const resolveUrl = (url) => {
     let baseUrl;
-    if (platform.browser && window.location.origin !== 'null') {
-        baseUrl = window.location.origin + window.location.pathname;
-    } else if (platform.environment === 'node') {
+    if (platform.environment === 'node') {
         const cwdUrl = new URL('file:///');
         cwdUrl.pathname = `${process.cwd()}/`;
         baseUrl = cwdUrl.href;
+    } else {
+        // the document base honors <base href>, and a worker has no document
+        baseUrl = globalThis.document?.baseURI ?? globalThis.location?.href;
     }
-    return new URL(url, baseUrl).toString();
+
+    const resolved = new URL(url, baseUrl);
+
+    // browsers keep a failed module import for its url, so a retry imports a distinct url. A
+    // fragment is not sent to the server, so signed urls stay valid.
+    if (failedImports > 0) {
+        resolved.hash = `meshopt-retry-${failedImports}`;
+    }
+
+    return resolved.toString();
+};
+
+const importDecoder = (url) => {
+    // @ts-ignore
+    return import(resolveUrl(url)).then(
+        module => module.MeshoptDecoder ?? module.default,
+        (err) => {
+            failedImports++;
+            throw err;
+        }
+    );
 };
 
 const loadDecoder = () => {
     const { decoder, url, numWorkers = 0 } = decoderConfig;
 
-    const promise = decoder ?
-        Promise.resolve(decoder) :
-        // @ts-ignore
-        import(resolveUrl(url)).then(module => module.MeshoptDecoder ?? module.default);
+    const promise = decoder ? Promise.resolve(decoder) : importDecoder(url);
 
     return promise.then((decoder) => {
         if (!decoder?.supported) {
