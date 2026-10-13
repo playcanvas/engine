@@ -203,6 +203,18 @@ describe('FramePassCameraFrame', function () {
         expect(cameraFrame.renderPassCamera.beforePasses.some(pass => pass.constructor.name === 'RenderPassTAA')).to.equal(false);
     });
 
+    it('renders with TAA, alone and upscaling, and with the sharpening of the HDR scene', function () {
+        for (const config of [{}, { upscale: true }, { sharpness: 0.5 }]) {
+            cameraFrame.taa.upscale = !!config.upscale;
+            cameraFrame.rendering.renderTargetScale = config.upscale ? 0.5 : 1;
+            cameraFrame.rendering.sharpness = config.sharpness ?? 0;
+            cameraFrame.update();
+            for (let i = 0; i < 2; i++) {
+                app.render();
+            }
+        }
+    });
+
     describe('effects', function () {
 
         it('applies a change to an effect when updated, rendering until then what the last update applied', function () {

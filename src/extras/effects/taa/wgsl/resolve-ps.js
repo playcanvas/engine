@@ -1,5 +1,6 @@
 export default /* wgsl */`
     #include "sampleCatmullRomPS"
+    #include "reversibleTonemapPS"
     #include "screenDepthPS"
 
     var sourceTexture: texture_2d<f32>;
@@ -8,11 +9,17 @@ export default /* wgsl */`
     var historyTextureSampler: sampler;
     uniform matrix_viewProjectionPrevious: mat4x4f;
     uniform matrix_viewProjectionInverse: mat4x4f;
+    uniform exposure: f32;
     uniform jitters: vec4f;   // xy: current frame, zw: previous frame
     uniform textureSize: vec2f;
     uniform historySize: vec2f;
 
     varying uv0: vec2f;
+
+    // the most of the current frame taken while the camera moves the surface of a pixel across the
+    // screen, and the motion from which it is taken, in pixels of the history
+    const TAA_MOTION_BLEND: f32 = 0.5;
+    const TAA_MOTION_PIXELS: f32 = 32.0;
 
     fn reproject(uv_in: vec2f, depth: f32) -> vec2f {
 
@@ -159,16 +166,29 @@ export default /* wgsl */`
             // clamped to the range of the texels around this pixel, and taking more of the current
             // frame the closer its nearest sample is to this pixel
             let historyPremulClamped = clamp(historyPremul, upscaled.minPremul, upscaled.maxPremul);
-            let blend = 0.1 * upscaled.weight;
+            let baseBlend = 0.1 * upscaled.weight;
         #else
             let historyPremulClamped = colorClampPremul(uv0, historyPremul);
-            let blend: f32 = 0.05;
+            let baseBlend: f32 = 0.05;
         #endif
+
+        // The further the history of this pixel was reprojected from, the faster the camera moves its
+        // surface across the screen: the history has been resampled further, which blurs it, and it is
+        // more likely not to hold this surface at all. The current frame is then taken more of, up to
+        // TAA_MOTION_BLEND from a motion of TAA_MOTION_PIXELS pixels of the history - while the camera
+        // is still, the history accumulates as before.
+        let motion = length((uv0 - historyUv) * uniform.historySize);
+        let blend = mix(baseBlend, max(baseBlend, TAA_MOTION_BLEND), clamp(motion / TAA_MOTION_PIXELS, 0.0, 1.0));
 
         let mixFactor_condition = historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0;
         let mixFactor = select(blend, 1.0, mixFactor_condition);
 
-        let mixedPremul = mix(historyPremulClamped, srcPremul, mixFactor);
+        // The history and the current frame are blended compressed by a reversible tone mapping of
+        // their exposed values. Blended in linear HDR, the samples of a bright surface partially
+        // covering a pixel dominate its average, which the tone mapping then displays nearly as
+        // bright as the surface - the edges of bright geometry would stay thick and aliased.
+        let e = max(uniform.exposure, 1e-6);
+        let mixedPremul = reversibleTonemapInverse(mix(reversibleTonemap(historyPremulClamped * e), reversibleTonemap(srcPremul * e), mixFactor)) / e;
         let a = srcColor.a;
         // UNORM8 alpha step — avoid un-premul in the lowest band (quantization / noise).
         let UNPREMUL_EPS = 1.0 / 255.0;

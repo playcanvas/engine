@@ -113,6 +113,7 @@ import refractionCubePS from '../chunks/lit/frag/refractionCube.js';
 import refractionDynamicPS from '../chunks/lit/frag/refractionDynamic.js';
 import reprojectPS from '../chunks/internal/frag/reproject.js';
 import reprojectVS from '../chunks/internal/vert/reproject.js';
+import reversibleTonemapPS from '../chunks/common/frag/reversibleTonemap.js';
 import screenDepthPS from '../chunks/common/frag/screenDepth.js';
 import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
 import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
@@ -294,6 +295,7 @@ const shaderChunksWGSL = {
     refractionDynamicPS,
     reprojectPS,
     reprojectVS,
+    reversibleTonemapPS,
     screenDepthPS,
     shadowCascadesPS,
     shadowCasterPS,

@@ -1,16 +1,23 @@
 export default /* glsl */`
     #include  "sampleCatmullRomPS"
+    #include  "reversibleTonemapPS"
     #include  "screenDepthPS"
 
     uniform sampler2D sourceTexture;
     uniform sampler2D historyTexture;
     uniform mat4 matrix_viewProjectionPrevious;
     uniform mat4 matrix_viewProjectionInverse;
+    uniform float exposure;
     uniform vec4 jitters;   // xy: current frame, zw: previous frame
     uniform vec2 textureSize;
     uniform vec2 historySize;
 
     varying vec2 uv0;
+
+    // the most of the current frame taken while the camera moves the surface of a pixel across the
+    // screen, and the motion from which it is taken, in pixels of the history
+    const float TAA_MOTION_BLEND = 0.5;
+    const float TAA_MOTION_PIXELS = 32.0;
 
     vec2 reproject(vec2 uv, float depth) {
 
@@ -147,10 +154,23 @@ export default /* glsl */`
             float blend = 0.05;
         #endif
 
+        // The further the history of this pixel was reprojected from, the faster the camera moves its
+        // surface across the screen: the history has been resampled further, which blurs it, and it is
+        // more likely not to hold this surface at all. The current frame is then taken more of, up to
+        // TAA_MOTION_BLEND from a motion of TAA_MOTION_PIXELS pixels of the history - while the camera
+        // is still, the history accumulates as before.
+        float motion = length((uv0 - historyUv) * historySize);
+        blend = mix(blend, max(blend, TAA_MOTION_BLEND), clamp(motion / TAA_MOTION_PIXELS, 0.0, 1.0));
+
         float mixFactor = (historyUv.x < 0.0 || historyUv.x > 1.0 || historyUv.y < 0.0 || historyUv.y > 1.0) ?
             1.0 : blend;
 
-        vec3 mixedPremul = mix(historyPremulClamped, srcPremul, mixFactor);
+        // The history and the current frame are blended compressed by a reversible tone mapping of
+        // their exposed values. Blended in linear HDR, the samples of a bright surface partially
+        // covering a pixel dominate its average, which the tone mapping then displays nearly as
+        // bright as the surface - the edges of bright geometry would stay thick and aliased.
+        float e = max(exposure, 1e-6);
+        vec3 mixedPremul = reversibleTonemapInverse(mix(reversibleTonemap(historyPremulClamped * e), reversibleTonemap(srcPremul * e), mixFactor)) / e;
         float a = srcColor.a;
         // Match UNORM8 alpha quantum: below one step, un-premul is ill-defined / noisy; use current RGB.
         const float UNPREMUL_EPS = 1.0 / 255.0;
