@@ -16,16 +16,23 @@ export default /* wgsl */`
 
     #include "reversibleTonemapPS"
 
-    // The scene is linear HDR, where blending a bright pixel with a dark one by half gives a
-    // result still displayed as bright as the bright one - so the edge would stay aliased. The
-    // colors are blended compressed by a reversible tone mapping of their exposed values instead,
-    // and expanded back after.
+    // below this alpha, the color of a blended pixel is not divided out of its alpha
+    const SMAA_UNPREMULTIPLY_ALPHA: f32 = 1.0 / 255.0;
+
+    // The colors are blended premultiplied by their alpha, so that the color of a transparent
+    // pixel, which is not displayed, does not tint the pixels blended with it. The scene is also
+    // linear HDR, where blending a bright pixel with a dark one by half gives a result still
+    // displayed as bright as the bright one - so the edge would stay aliased. The colors are
+    // blended compressed by a reversible tone mapping of their exposed values instead, and
+    // expanded back after.
     fn smaaCompress(color: vec4f, exposure: f32) -> vec4f {
-        return vec4f(reversibleTonemap(color.rgb * exposure), color.a);
+        return vec4f(reversibleTonemap(color.rgb * (color.a * exposure)), color.a);
     }
 
-    fn smaaExpand(color: vec4f, exposure: f32) -> vec4f {
-        return vec4f(reversibleTonemapInverse(color.rgb) / exposure, color.a);
+    // the blended color, with its alpha divided out - a pixel left transparent keeps its color
+    fn smaaExpand(blended: vec4f, color: vec4f, exposure: f32) -> vec4f {
+        let premultiplied = reversibleTonemapInverse(blended.rgb) / exposure;
+        return vec4f(select(color.rgb, premultiplied / blended.a, blended.a > SMAA_UNPREMULTIPLY_ALPHA), blended.a);
     }
 
     fn sampleColor(uv: vec2f) -> vec4f {
@@ -66,7 +73,7 @@ export default /* wgsl */`
             let positive = smaaCompress(sampleColor(uv0 + dir), e);
             let negative = smaaCompress(sampleColor(uv0 - dir), e);
             let blended = weight.x * mix(center, positive, fraction.x) + weight.y * mix(center, negative, fraction.y);
-            color = smaaExpand(blended, e);
+            color = smaaExpand(blended, color, e);
         }
 
         output.color = color;

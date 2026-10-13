@@ -21,10 +21,11 @@ export default /* wgsl */`
     // The brightness of the scene as displayed. The scene is linear HDR, before the exposure and
     // the tone mapping, while the edge threshold applies to the brightness the eye perceives - so
     // the exposed luma is compressed by a Reinhard curve and gamma encoded, approximating the
-    // displayed value whatever the tone mapping.
+    // displayed value whatever the tone mapping. It is premultiplied by the alpha, as the color of
+    // a transparent pixel is not displayed.
     fn smaaLuma(uv: vec2f) -> f32 {
-        let color = textureSampleLevel(smaaColorTexture, smaaColorTextureSampler, uv, 0.0).rgb;
-        let luma = clamp(dot(color, vec3f(0.2126, 0.7152, 0.0722)) * uniform.smaaExposure, 0.0, 1.0e4);
+        let color = textureSampleLevel(smaaColorTexture, smaaColorTextureSampler, uv, 0.0);
+        let luma = clamp(dot(color.rgb, vec3f(0.2126, 0.7152, 0.0722)) * (color.a * uniform.smaaExposure), 0.0, 1.0e4);
         return sqrt(luma / (1.0 + luma));
     }
 

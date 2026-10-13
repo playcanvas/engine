@@ -1,14 +1,23 @@
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
+import { Color } from '../../../src/core/math/color.js';
 import { FramePassSmaa } from '../../../src/extras/effects/smaa/passes/frame-pass-smaa.js';
 import { SmaaEffect } from '../../../src/extras/effects/smaa/smaa-effect.js';
 import { getSmaaLookupData } from '../../../src/extras/effects/smaa/smaa-lookup.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
+import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { TONEMAP_ACES, TONEMAP_NONE } from '../../../src/scene/constants.js';
+import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
+
+// Dawn's null backend validates the API and compiles the shaders, but executes no GPU work, so the
+// pixels the shaders render are only checked on a backend which runs them
+const executesGpuWork = !!process.env.PC_WEBGPU_BACKEND && process.env.PC_WEBGPU_BACKEND !== 'null';
 
 // FNV-1a hash of the bytes of the data
 const hashData = (data) => {
@@ -218,6 +227,60 @@ describe('SmaaEffect', function () {
                     app.render();
                 }
             }
+        });
+
+        it('blends the color of the visible pixels only, not that of the transparent ones', async function () {
+            await smaa._lookupReady;
+
+            // a white slanted box over a transparent blue background, whose color is not displayed
+            const material = new StandardMaterial();
+            material.useLighting = false;
+            material.diffuse = Color.BLACK;
+            material.emissive = Color.WHITE;
+            material.update();
+            const box = new Entity('Box');
+            box.addComponent('render', { type: 'box', material });
+            box.setLocalPosition(0, 0, -3);
+            box.setLocalEulerAngles(0, 0, 30);
+            app.root.addChild(box);
+
+            // a camera rendering to a texture, in place of the one rendering to the back buffer
+            const width = 96;
+            const height = 80;
+            const output = new Texture(app.graphicsDevice, { name: 'Output', width, height, format: PIXELFORMAT_RGBA8, mipmaps: false });
+            const renderTarget = new RenderTarget({ colorBuffer: output, depth: true });
+            cameraFrame.cameraComponent.entity.enabled = false;
+            const camera = new Entity('TextureCamera');
+            camera.addComponent('camera', { clearColor: new Color(0, 0, 1, 0), renderTarget });
+            app.root.addChild(camera);
+
+            const frame = new CameraFrame(app, camera.camera);
+            frame.rendering.renderFormats = [PIXELFORMAT_RGBA16F];
+            frame.rendering.toneMapping = TONEMAP_NONE;
+            frame.addEffect(smaa);
+            frame.update();
+            app.render();
+
+            if (executesGpuWork) {
+                // the pixels the edge partially covers keep the color of the box
+                const pixels = await output.read(0, 0, width, height, { renderTarget, immediate: true });
+                let covered = 0;
+                let tint = 0;
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const alpha = pixels[i + 3];
+                    if (alpha > 8 && alpha < 247) {
+                        covered++;
+                        tint = Math.max(tint, pixels[i + 2] - pixels[i], pixels[i + 2] - pixels[i + 1]);
+                    }
+                }
+                expect(covered).to.be.above(20);
+                expect(tint).to.be.at.most(2);
+            }
+
+            frame.destroy();
+            camera.destroy();
+            renderTarget.destroy();
+            output.destroy();
         });
 
         it('destroys its passes and its lookup textures once destroyed', function () {

@@ -20,10 +20,11 @@ export default /* glsl */`
     // The brightness of the scene as displayed. The scene is linear HDR, before the exposure and
     // the tone mapping, while the edge threshold applies to the brightness the eye perceives - so
     // the exposed luma is compressed by a Reinhard curve and gamma encoded, approximating the
-    // displayed value whatever the tone mapping.
+    // displayed value whatever the tone mapping. It is premultiplied by the alpha, as the color of
+    // a transparent pixel is not displayed.
     float smaaLuma(vec2 uv) {
-        vec3 color = texture2DLod(smaaColorTexture, uv, 0.0).rgb;
-        float luma = clamp(dot(color, vec3(0.2126, 0.7152, 0.0722)) * smaaExposure, 0.0, 1.0e4);
+        vec4 color = texture2DLod(smaaColorTexture, uv, 0.0);
+        float luma = clamp(dot(color.rgb, vec3(0.2126, 0.7152, 0.0722)) * (color.a * smaaExposure), 0.0, 1.0e4);
         return sqrt(luma / (1.0 + luma));
     }
 
