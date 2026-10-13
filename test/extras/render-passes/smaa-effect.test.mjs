@@ -229,7 +229,7 @@ describe('SmaaEffect', function () {
             }
         });
 
-        it('blends the color of the visible pixels only, not that of the transparent ones', async function () {
+        it('keeps the color of the geometry on the edges it partially covers, whatever the color of the transparent pixels', async function () {
             await smaa._lookupReady;
 
             // a white slanted box over a transparent blue background, whose color is not displayed
@@ -262,19 +262,20 @@ describe('SmaaEffect', function () {
             app.render();
 
             if (executesGpuWork) {
-                // the pixels the edge partially covers keep the color of the box
+                // the pixels the edge partially covers keep the white of the box, neither tinted by
+                // the transparent background nor darkened by the coverage
                 const pixels = await output.read(0, 0, width, height, { renderTarget, immediate: true });
                 let covered = 0;
-                let tint = 0;
+                let darkest = 255;
                 for (let i = 0; i < pixels.length; i += 4) {
                     const alpha = pixels[i + 3];
                     if (alpha > 8 && alpha < 247) {
                         covered++;
-                        tint = Math.max(tint, pixels[i + 2] - pixels[i], pixels[i + 2] - pixels[i + 1]);
+                        darkest = Math.min(darkest, pixels[i], pixels[i + 1], pixels[i + 2]);
                     }
                 }
                 expect(covered).to.be.above(20);
-                expect(tint).to.be.at.most(2);
+                expect(darkest).to.be.at.least(250);
             }
 
             frame.destroy();

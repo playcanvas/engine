@@ -17,20 +17,20 @@ export default /* glsl */`
     // below this alpha, the color of a blended pixel is not divided out of its alpha
     #define SMAA_UNPREMULTIPLY_ALPHA (1.0 / 255.0)
 
-    // The colors are blended premultiplied by their alpha, so that the color of a transparent
-    // pixel, which is not displayed, does not tint the pixels blended with it. The scene is also
-    // linear HDR, where blending a bright pixel with a dark one by half gives a result still
-    // displayed as bright as the bright one - so the edge would stay aliased. The colors are
-    // blended compressed by a reversible tone mapping of their exposed values instead, and
-    // expanded back after.
+    // The scene is linear HDR, where blending a bright pixel with a dark one by half gives a
+    // result still displayed as bright as the bright one - so the edge would stay aliased. The
+    // colors are blended compressed by a reversible tone mapping of their exposed values instead,
+    // and expanded back after. The compressed colors are blended premultiplied by their alpha, so
+    // that the color of a transparent pixel, which is not displayed, does not tint the pixels
+    // blended with it - and the alpha is divided out before the expansion, which is not linear.
     vec4 smaaCompress(vec4 color, float exposure) {
-        return vec4(reversibleTonemap(color.rgb * (color.a * exposure)), color.a);
+        return vec4(reversibleTonemap(color.rgb * exposure) * color.a, color.a);
     }
 
     // the blended color, with its alpha divided out - a pixel left transparent keeps its color
     vec4 smaaExpand(vec4 blended, vec4 color, float exposure) {
-        vec3 premultiplied = reversibleTonemapInverse(blended.rgb) / exposure;
-        return vec4(blended.a > SMAA_UNPREMULTIPLY_ALPHA ? premultiplied / blended.a : color.rgb, blended.a);
+        vec3 rgb = blended.a > SMAA_UNPREMULTIPLY_ALPHA ? reversibleTonemapInverse(blended.rgb / blended.a) / exposure : color.rgb;
+        return vec4(rgb, blended.a);
     }
 
     void main(void) {
