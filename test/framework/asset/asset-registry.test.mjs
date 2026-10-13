@@ -312,8 +312,12 @@ describe('AssetRegistry', function () {
             load.onSecondCall().callsFake((url, type, callback) => callback(null, 'reloaded'));
 
             const url = `${assetPath}flaky.txt`;
+            const results = [];
             const fromUrl = () => new Promise((resolve) => {
-                app.assets.loadFromUrl(url, 'text', (err, asset) => resolve({ err, asset }));
+                app.assets.loadFromUrl(url, 'text', (err, asset) => {
+                    results.push(err);
+                    resolve({ err, asset });
+                });
             });
             const first = await fromUrl();
             expect(first.err).to.equal(404);
@@ -322,8 +326,31 @@ describe('AssetRegistry', function () {
                 first.asset.once('load', resolve);
                 app.assets.load(first.asset, { force: true });
             });
+            // the failed request's load listener went with its error: its callback ran once
+            expect(results).to.deep.equal([404]);
+
             const again = await fromUrl();
             expect(again.err).to.be.null;
+            expect(again.asset.resource).to.equal('reloaded');
+        });
+
+        it('reports a failed load no more once the asset is unloaded', async () => {
+            // the first load fails, the load after unloading succeeds
+            const load = stub(app.loader, 'load');
+            load.onFirstCall().callsFake((url, type, callback) => callback(404));
+            load.onSecondCall().callsFake((url, type, callback) => callback(null, 'reloaded'));
+
+            const url = `${assetPath}flaky.txt`;
+            const fromUrl = () => new Promise((resolve) => {
+                app.assets.loadFromUrl(url, 'text', (err, asset) => resolve({ err, asset }));
+            });
+            const first = await fromUrl();
+            expect(first.err).to.equal(404);
+
+            first.asset.unload();
+            const again = await fromUrl();
+            expect(again.err).to.be.null;
+            expect(again.asset).to.equal(first.asset);
             expect(again.asset.resource).to.equal('reloaded');
         });
 
