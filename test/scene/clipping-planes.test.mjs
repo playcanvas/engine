@@ -415,5 +415,20 @@ describe('Clipping planes', function () {
             app.batcher.generate(app.batcher._dirtyGroups);
             expect(layerMeshInstances()).to.not.include(entity.render.meshInstances[0]);
         });
+
+        it('keeps a clipped entity hidden while its render component is disabled', function () {
+            const entity = new Entity('disabled');
+            entity.addComponent('render', { type: 'box', enabled: false });
+            app.root.addChild(entity);
+
+            // a disabled render component of an enabled entity joins the group it is given
+            entity.render.batchGroupId = group.id;
+            entity.render.clippingPlanes = [below()];
+
+            sinon.stub(Debug, 'warnOnce');
+            app.batcher.generate();
+
+            expect(layerMeshInstances()).to.not.include(entity.render.meshInstances[0]);
+        });
     });
 });
