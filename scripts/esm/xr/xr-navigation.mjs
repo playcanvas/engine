@@ -830,17 +830,17 @@ class XrNavigation extends Script {
     }
 
     /**
-     * Yaw-rotates the rig around the camera's local position, so the view pivots in place
-     * rather than orbiting the rig origin.
+     * Yaw-rotates the rig around the camera, so the view pivots in place rather than orbiting
+     * the rig origin. The camera's world position is held, which a scaled rig keeps too, where the
+     * camera's local position is scaled.
      *
      * @param {number} degrees - The rotation angle in degrees.
      * @private
      */
     _rotateRigAroundCamera(degrees) {
-        tmpVec3A.copy(this._cameraEntity.getLocalPosition());
-        this.entity.translateLocal(tmpVec3A);
+        tmpVec3A.copy(this._cameraEntity.getPosition());
         this.entity.rotateLocal(0, degrees, 0);
-        this.entity.translateLocal(tmpVec3A.mulScalar(-1));
+        this.entity.translate(tmpVec3A.sub(this._cameraEntity.getPosition()));
     }
 
     /**
