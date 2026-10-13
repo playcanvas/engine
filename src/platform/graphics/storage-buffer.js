@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_SB } from '../../core/constants.js';
-import { BUFFERUSAGE_STORAGE } from './constants.js';
+import { BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_STORAGE } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -104,6 +104,9 @@ class StorageBuffer {
      * loss. Other read failures also reject the promise.
      */
     read(offset = 0, size = this.byteSize, data = null, immediate = false) {
+        Debug.call(() => {
+            if (!(this.bufferUsage & BUFFERUSAGE_COPY_SRC)) Debug.errorOnce(`StorageBuffer ${this.name ?? this.id}: reading the buffer requires it to be created with BUFFERUSAGE_COPY_SRC.`, this);
+        });
         return this.impl.read(this.device, offset, size, data, immediate);
     }
 
@@ -118,6 +121,9 @@ class StorageBuffer {
      * data is a TypedArray and bytes otherwise. Defaults to the remaining size of the data.
      */
     write(bufferOffset = 0, data, dataOffset = 0, size) {
+        Debug.call(() => {
+            if (!(this.bufferUsage & BUFFERUSAGE_COPY_DST)) Debug.errorOnce(`StorageBuffer ${this.name ?? this.id}: writing to the buffer requires it to be created with BUFFERUSAGE_COPY_DST.`, this);
+        });
         this.impl.write(this.device, bufferOffset, data, dataOffset, size);
     }
 
@@ -129,6 +135,9 @@ class StorageBuffer {
      * buffer minus the offset.
      */
     clear(offset = 0, size = this.byteSize) {
+        Debug.call(() => {
+            if (!(this.bufferUsage & BUFFERUSAGE_COPY_DST)) Debug.errorOnce(`StorageBuffer ${this.name ?? this.id}: clearing the buffer requires it to be created with BUFFERUSAGE_COPY_DST.`, this);
+        });
         this.impl.clear(this.device, offset, size);
     }
 
@@ -144,6 +153,10 @@ class StorageBuffer {
     copy(srcBuffer, srcOffset = 0, dstOffset = 0, size = srcBuffer.byteSize - srcOffset) {
         Debug.assert(srcOffset + size <= srcBuffer.byteSize, 'Source copy range exceeds buffer size');
         Debug.assert(dstOffset + size <= this.byteSize, 'Destination copy range exceeds buffer size');
+        Debug.call(() => {
+            if (!(srcBuffer.bufferUsage & BUFFERUSAGE_COPY_SRC)) Debug.errorOnce(`StorageBuffer ${srcBuffer.name ?? srcBuffer.id}: copying from the buffer requires it to be created with BUFFERUSAGE_COPY_SRC.`, srcBuffer);
+            if (!(this.bufferUsage & BUFFERUSAGE_COPY_DST)) Debug.errorOnce(`StorageBuffer ${this.name ?? this.id}: copying to the buffer requires it to be created with BUFFERUSAGE_COPY_DST.`, this);
+        });
 
         const commandEncoder = this.device.getCommandEncoder();
         commandEncoder.copyBufferToBuffer(srcBuffer.impl.buffer, srcOffset, this.impl.buffer, dstOffset, size);
