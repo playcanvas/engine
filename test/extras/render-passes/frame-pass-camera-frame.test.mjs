@@ -21,7 +21,7 @@ import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
 import { SceneDepthMapHandle } from '../../../src/platform/graphics/scene-depth-map-handle.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
-import { LAYERID_IMMEDIATE, LAYERID_WORLD, PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
+import { LAYERID_IMMEDIATE, LAYERID_WORLD, PROJECTION_ORTHOGRAPHIC, TONEMAP_ACES, TONEMAP_NONE } from '../../../src/scene/constants.js';
 import { ShaderUtils } from '../../../src/scene/shader-lib/shader-utils.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -201,6 +201,33 @@ describe('FramePassCameraFrame', function () {
         cameraFrame.update();
         expect(taa._pass).to.equal(null);
         expect(cameraFrame.renderPassCamera.beforePasses.some(pass => pass.constructor.name === 'RenderPassTAA')).to.equal(false);
+    });
+
+    it('renders with TAA, alone and upscaling, and with the sharpening of the HDR scene', function () {
+        for (const config of [{}, { upscale: true }, { sharpness: 0.5 }]) {
+            cameraFrame.taa.upscale = !!config.upscale;
+            cameraFrame.rendering.renderTargetScale = config.upscale ? 0.5 : 1;
+            cameraFrame.rendering.sharpness = config.sharpness ?? 0;
+            cameraFrame.update();
+            for (let i = 0; i < 2; i++) {
+                app.render();
+            }
+        }
+    });
+
+    it('blends the TAA history at the exposure the scene is displayed with, which is none without tone mapping', function () {
+        const taaExposure = app.graphicsDevice.scope.resolve('taaExposure');
+        app.scene.exposure = 4;
+
+        cameraFrame.rendering.toneMapping = TONEMAP_ACES;
+        cameraFrame.update();
+        app.render();
+        expect(taaExposure.value).to.equal(4);
+
+        cameraFrame.rendering.toneMapping = TONEMAP_NONE;
+        cameraFrame.update();
+        app.render();
+        expect(taaExposure.value).to.equal(1);
     });
 
     describe('effects', function () {

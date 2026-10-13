@@ -8,9 +8,9 @@ export default /* glsl */`
 
     // reversible LDR <-> HDR tone mapping, as CAS needs LDR input
     #ifdef CAS_HDR
-        float maxComponent(float x, float y, float z) { return max(x, max(y, z)); }
-        vec3 toSDR(vec3 c) { return c / (1.0 + maxComponent(c.r, c.g, c.b)); }
-        vec3 toHDR(vec3 c) { return c / max(1.0 - maxComponent(c.r, c.g, c.b), 1e-4); }
+        #include "reversibleTonemapPS"
+        vec3 toSDR(vec3 c) { return reversibleTonemap(c); }
+        vec3 toHDR(vec3 c) { return reversibleTonemapInverse(c); }
     #else
         vec3 toSDR(vec3 c) { return c; }
         vec3 toHDR(vec3 c) { return c; }
