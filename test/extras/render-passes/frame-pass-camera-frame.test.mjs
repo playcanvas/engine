@@ -2,9 +2,12 @@ import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BloomEffect } from '../../../src/extras/effects/bloom/bloom-effect.js';
 import { FramePassBloom } from '../../../src/extras/effects/bloom/passes/frame-pass-bloom.js';
 import { FramePassDof } from '../../../src/extras/effects/dof/passes/frame-pass-dof.js';
+import { LensFlareEffect } from '../../../src/extras/effects/lens-flare/lens-flare-effect.js';
+import { LensFlare } from '../../../src/extras/effects/lens-flare/lens-flare.js';
 import { RenderPassSsao } from '../../../src/extras/effects/ssao/passes/render-pass-ssao.js';
 import { FramePassVolumetricFog } from '../../../src/extras/effects/volumetric-fog/passes/frame-pass-volumetric-fog.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
@@ -1023,6 +1026,28 @@ describe('FramePassCameraFrame', function () {
             expect(cameraComponent.jitter).to.equal(0.25);
         });
 
+        it('keeps resolving the scene with a removed TAA until the next update, upscaling included', function () {
+            const { taa } = cameraFrame;
+            taa.upscale = true;
+            cameraFrame.rendering.renderTargetScale = 0.5;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const pass = taa._pass;
+            framePass.frameUpdate();
+
+            // the removal applies at the next update, the frame rendering the TAA until then
+            cameraFrame.removeEffect(taa);
+            expect(taa.cameraFrame).to.equal(null);
+            for (let i = 0; i < 2; i++) {
+                expect(() => framePass.frameUpdate()).to.not.throw();
+                expect(framePass.composePass.sceneTexture).to.equal(pass.historyTexture);
+            }
+
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(pass);
+            expect(cameraFrame.cameraComponent.jitter).to.equal(0);
+        });
+
         it('renders the scene depth for the TAA', function () {
             cameraFrame.dof.enabled = false;
             cameraFrame.update();
@@ -1135,6 +1160,28 @@ describe('FramePassCameraFrame', function () {
         });
     });
 
+    describe('lens flare', function () {
+
+        it('keeps drawing the flares after it is removed, until the next update', function () {
+            const lensFlare = new LensFlareEffect(app.graphicsDevice);
+            lensFlare.add(new LensFlare(null, { position: new Vec3(0, 0, -10) }));
+            cameraFrame.addEffect(lensFlare);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const pass = lensFlare._pass;
+            expect(framePass.beforePasses).to.include(pass);
+            framePass.frameUpdate();
+
+            cameraFrame.removeEffect(lensFlare);
+            expect(lensFlare.cameraFrame).to.equal(null);
+            expect(() => framePass.frameUpdate()).to.not.throw();
+
+            cameraFrame.update();
+            expect(cameraFrame.renderPassCamera.beforePasses).to.not.include(pass);
+            lensFlare.destroy();
+        });
+    });
+
     describe('volumetric fog', function () {
 
         const fogPass = () => cameraFrame.renderPassCamera.beforePasses.find(pass => pass instanceof FramePassVolumetricFog);
@@ -1163,6 +1210,22 @@ describe('FramePassCameraFrame', function () {
             expect(passes.indexOf(ssao)).to.be.below(passes.indexOf(pass));
             expect(passes.indexOf(pass)).to.be.below(passes.indexOf(cameraFrame.taa._pass));
             expect(cameraFrame._activeEffects).to.include(cameraFrame.volumetricFog);
+        });
+
+        it('keeps rendering its passes after it is removed, until the next update', function () {
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const fog = cameraFrame.volumetricFog;
+            const pass = fogPass();
+            framePass.frameUpdate();
+
+            cameraFrame.removeEffect(fog);
+            expect(fog.cameraFrame).to.equal(null);
+            expect(() => framePass.frameUpdate()).to.not.throw();
+            expect(pass.localPass.scenePass).to.equal(framePass.scenePass);
+
+            cameraFrame.update();
+            expect(fogPass()).to.equal(undefined);
         });
 
         it('renders the depth while it is active, and releases its passes once disabled', function () {

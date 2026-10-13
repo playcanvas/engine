@@ -388,7 +388,9 @@ class LensFlareEffect extends CameraFrameEffect {
         const dt = this._lastTime > 0 ? math.clamp((time - this._lastTime) / 1000, 0, 0.1) : 0;
         this._lastTime = time;
 
-        const cameraComponent = this.cameraFrame.cameraComponent;
+        // the camera of the passes, as the effect can be removed from its camera frame while the
+        // frame still renders them, until the camera frame updates
+        const cameraComponent = this._pass.cameraComponent;
         const camera = cameraComponent.camera;
         const view = camera.viewMatrix;
         _viewProj.mul2(camera.projectionMatrix, view);

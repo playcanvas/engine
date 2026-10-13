@@ -129,9 +129,10 @@ class TaaEffect extends CameraFrameEffect {
         scene.texture = pass.update();
 
         // when upscaling, the history has the resolution of the render target the camera renders
-        // to - the back buffer when it has none
+        // to - the back buffer when it has none. The camera is the pass's own, as the effect can
+        // be detached while the frame still renders its passes, until the camera frame updates.
         if (this._upscale) {
-            const target = this.cameraFrame.cameraComponent.renderTarget ?? this.device.backBuffer;
+            const target = pass.cameraComponent.renderTarget ?? pass.device.backBuffer;
             scene.width = target.width;
             scene.height = target.height;
         }
