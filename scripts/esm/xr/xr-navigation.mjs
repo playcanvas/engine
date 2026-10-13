@@ -405,6 +405,22 @@ class XrNavigation extends Script {
     // Time the session was last seen without focus, such as behind the system menu
     _unfocusedTime = -Infinity;
 
+    /**
+     * Height in meters of the floor the rig currently stands on: {@link XrNavigation#groundHeight}
+     * at first, then each teleport's landing point. A teleport keeps the rig's height above it, so
+     * a snap vertical offset carries over to the new floor. Set it when the application places the
+     * rig on another floor itself, such as on a collision mesh when a session starts.
+     *
+     * @type {number}
+     */
+    set currentGroundHeight(value) {
+        this._currentGroundY = value;
+    }
+
+    get currentGroundHeight() {
+        return this._currentGroundY;
+    }
+
     initialize() {
         if (!this.app.xr) {
             console.error('XrNavigation script requires XR to be enabled on the application');
