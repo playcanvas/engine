@@ -34,6 +34,8 @@ const _properties = [
     'castShadows',
     'shadowCascadeMask',
     'receiveShadows',
+    'clippingPlanes',
+    'clipIntersection',
     'castShadowsLightmap',
     'lightmapped',
     'lightmapSizeMultiplier',

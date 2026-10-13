@@ -281,6 +281,12 @@ class LitShaderOptions {
      * Shader outputs the accumulated shadow value, used for shadow catcher materials.
      */
     shadowCatcher = false;
+
+    /**
+     * Discard the fragments the clipping planes of the mesh instance clip. See
+     * {@link MeshInstance#clippingPlanes}.
+     */
+    useClipPlanes = false;
 }
 
 export { LitShaderOptions };

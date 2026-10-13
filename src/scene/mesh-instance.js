@@ -14,6 +14,7 @@ import {
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
     SHADERDEF_INSTANCEINDEX, SHADERDEF_AFFECT_DYNAMIC, SHADERDEF_AFFECT_LIGHTMAPPED, SHADERDEF_BAKE,
     SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7,
+    SHADERDEF_CLIP,
     SHADOW_CASCADE_ALL,
     instanceLightmapUniformNames
 } from './constants.js';
@@ -62,6 +63,7 @@ import { isViewTexture } from './renderer/view-textures.js';
  * @import { TextureView } from '../platform/graphics/texture-view.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @import { Vec3 } from '../core/math/vec3.js'
+ * @import { Plane } from '../core/shape/plane.js'
  * @import { CameraComponent } from '../framework/components/camera/component.js';
  */
 
@@ -73,6 +75,10 @@ const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
 const lookupHashes = new Uint32Array(4);
+
+// the largest number of clipping planes of a mesh instance, matching the size of the uniform array
+// of the clipPlanesPS chunk
+const MAX_CLIP_PLANES = 8;
 
 // the shader define of each texture coordinate set of the mesh, by set index
 const uvShaderDefs = [SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7];
@@ -676,6 +682,39 @@ class MeshInstance {
     _shaderDefs = SHADERDEF_AFFECT_DYNAMIC;
 
     /**
+     * Copies of the planes assigned to {@link MeshInstance#clippingPlanes}, reused by later
+     * assignments.
+     *
+     * @type {Plane[]}
+     * @private
+     */
+    _clippingPlanes = [];
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _clipIntersection = false;
+
+    /**
+     * The clipping planes as the uniform the shader reads, (normal, distance) per plane. Allocated
+     * on first use.
+     *
+     * @type {Float32Array|null}
+     * @private
+     */
+    _clipPlanesData = null;
+
+    /**
+     * The number of clipping planes, and 1 for intersection clipping, as the uniform the shader
+     * reads. Allocated on first use.
+     *
+     * @type {Float32Array|null}
+     * @private
+     */
+    _clipParamsData = null;
+
+    /**
      * @type {CalculateSortDistanceCallback|null}
      * @private
      */
@@ -1239,6 +1278,120 @@ class MeshInstance {
      */
     get mask() {
         return shaderDefsToLightMask(this._shaderDefs);
+    }
+
+    /**
+     * Sets the planes that clip this mesh instance, in world space. The parts of the mesh behind
+     * any of the planes - on the side opposite to the plane normal - are not rendered, which cuts
+     * the mesh open along the planes. Use {@link clipIntersection} to clip only the parts behind
+     * all of the planes instead. Up to 8 planes are supported. Defaults to an empty array.
+     *
+     * The clipped parts are removed from every render pass: they cast no shadows, write no depth
+     * and cannot be picked. The planes are copied, so changing a plane after the assignment has no
+     * effect until the array is assigned again. Only the first plane a mesh instance is given
+     * compiles new shaders - moving the planes or changing their number does not.
+     *
+     * {@link StandardMaterial} is clipped. The shader of a {@link ShaderMaterial} is clipped when
+     * its fragment shader includes the `clipPlanesPS` chunk and calls `applyClipPlanes` with the
+     * world space position of the fragment, both inside a `#ifdef CLIP_PLANES` block.
+     *
+     * Note that a cut through a closed mesh exposes its inside, which consists of the back faces
+     * of the mesh. These are not rendered unless the material renders both sides, see
+     * {@link Material#cull}.
+     *
+     * @type {Plane[]}
+     * @example
+     * // keep only the part of the mesh below a height of 1
+     * meshInstance.clippingPlanes = [
+     *     new Plane().setFromPointNormal(new Vec3(0, 1, 0), Vec3.DOWN)
+     * ];
+     */
+    set clippingPlanes(value) {
+        Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
+            `MeshInstance#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest are ` +
+            'ignored.', this);
+        const count = Math.min(value?.length ?? 0, MAX_CLIP_PLANES);
+
+        // copy the planes into the copies of the previous assignment, which can be the same array
+        const planes = this._clippingPlanes;
+        for (let i = 0; i < count; i++) {
+            if (planes[i]) {
+                planes[i].copy(value[i]);
+            } else {
+                planes[i] = value[i].clone();
+            }
+        }
+        planes.length = count;
+
+        this._updateClipUniforms();
+    }
+
+    /**
+     * Gets the planes that clip this mesh instance, in world space. These are copies of the
+     * assigned planes, and changing them has no effect until the array is assigned again.
+     *
+     * @type {Plane[]}
+     */
+    get clippingPlanes() {
+        return this._clippingPlanes;
+    }
+
+    /**
+     * Sets whether only the parts of the mesh behind all of the {@link clippingPlanes} are clipped,
+     * instead of the parts behind any of them. With two planes this cuts a wedge out of the mesh,
+     * and with three a corner, as a cutaway does. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this._clipIntersection !== value) {
+            this._clipIntersection = value;
+            this._updateClipUniforms();
+        }
+    }
+
+    /**
+     * Gets whether only the parts of the mesh behind all of the {@link clippingPlanes} are
+     * clipped.
+     *
+     * @type {boolean}
+     */
+    get clipIntersection() {
+        return this._clipIntersection;
+    }
+
+    /**
+     * Writes the clipping planes into the uniforms the shader reads, and enables the clipping
+     * shader code when there is any plane.
+     *
+     * @private
+     */
+    _updateClipUniforms() {
+        const planes = this._clippingPlanes;
+        const count = planes.length;
+        if (count > 0) {
+            const data = this._clipPlanesData ??= new Float32Array(MAX_CLIP_PLANES * 4);
+            for (let i = 0; i < count; i++) {
+                const { normal, distance } = planes[i];
+                data[i * 4] = normal.x;
+                data[i * 4 + 1] = normal.y;
+                data[i * 4 + 2] = normal.z;
+                data[i * 4 + 3] = distance;
+            }
+
+            const params = this._clipParamsData ??= new Float32Array(2);
+            params[0] = count;
+            params[1] = this._clipIntersection ? 1 : 0;
+
+            // set again to apply the new contents of the arrays
+            this.setParameter('clipPlanes[0]', data);
+            this.setParameter('clipParams', params);
+            this._updateShaderDefs(this._shaderDefs | SHADERDEF_CLIP);
+        } else {
+            this.deleteParameter('clipPlanes[0]');
+            this.deleteParameter('clipParams');
+            this._updateShaderDefs(this._shaderDefs & ~SHADERDEF_CLIP);
+        }
     }
 
     /**

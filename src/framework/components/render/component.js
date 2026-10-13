@@ -15,6 +15,7 @@ import { Component } from '../component.js';
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Material } from '../../../scene/materials/material.js'
+ * @import { Plane } from '../../../core/shape/plane.js'
  * @import { RenderComponentSystem } from './system.js'
  */
 
@@ -96,6 +97,18 @@ class RenderComponent extends Component {
 
     /** @private */
     _renderStyle = RENDERSTYLE_SOLID;
+
+    /**
+     * Copies of the planes assigned to {@link RenderComponent#clippingPlanes}, reused by later
+     * assignments.
+     *
+     * @type {Plane[]}
+     * @private
+     */
+    _clippingPlanes = [];
+
+    /** @private */
+    _clipIntersection = false;
 
     /**
      * @type {MeshInstance[]}
@@ -354,6 +367,11 @@ class RenderComponent extends Component {
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setCustomAabb(this._customAabb);
+
+                if (this._clippingPlanes.length > 0 || this._clipIntersection) {
+                    mi[i].clipIntersection = this._clipIntersection;
+                    mi[i].clippingPlanes = this._clippingPlanes;
+                }
             }
 
             if (this.enabled && this.entity.enabled) {
@@ -515,6 +533,91 @@ class RenderComponent extends Component {
      */
     get receiveShadows() {
         return this._receiveShadows;
+    }
+
+    /**
+     * Sets the planes that clip the attached meshes, in world space. The parts of the meshes behind
+     * any of the planes - on the side opposite to the plane normal - are not rendered, which cuts
+     * the meshes open along the planes. Use {@link clipIntersection} to clip only the parts behind
+     * all of the planes instead. Up to 8 planes are supported. Defaults to an empty array.
+     *
+     * The planes are copied, so changing a plane after the assignment has no effect until the
+     * array is assigned again. To clip a whole model, such as an entity instantiated from a
+     * {@link ContainerResource}, assign the planes to each of its render components. Meshes with
+     * clipping planes are excluded from batching. See {@link MeshInstance#clippingPlanes} for more
+     * details.
+     *
+     * @type {Plane[]}
+     * @example
+     * // cut away the part of the model where x is positive
+     * const plane = new Plane().setFromPointNormal(Vec3.ZERO, Vec3.LEFT);
+     * for (const render of entity.findComponents('render')) {
+     *     render.clippingPlanes = [plane];
+     * }
+     */
+    set clippingPlanes(value) {
+        const wasClipped = this._clippingPlanes.length > 0;
+
+        // copy the planes into the copies of the previous assignment, which can be the same array
+        const planes = this._clippingPlanes;
+        const count = value?.length ?? 0;
+        for (let i = 0; i < count; i++) {
+            if (planes[i]) {
+                planes[i].copy(value[i]);
+            } else {
+                planes[i] = value[i].clone();
+            }
+        }
+        planes.length = count;
+
+        const mi = this._meshInstances;
+        for (let i = 0; i < mi.length; i++) {
+            mi[i].clippingPlanes = planes;
+        }
+
+        // clipped meshes are excluded from batching, so the batch is rebuilt without them, or with
+        // them once they are no longer clipped
+        if (this._batchGroupId >= 0 && wasClipped !== count > 0) {
+            this.system.app.batcher?.markGroupDirty(this._batchGroupId);
+        }
+    }
+
+    /**
+     * Gets the planes that clip the attached meshes, in world space. These are copies of the
+     * assigned planes, and changing them has no effect until the array is assigned again.
+     *
+     * @type {Plane[]}
+     */
+    get clippingPlanes() {
+        return this._clippingPlanes;
+    }
+
+    /**
+     * Sets whether only the parts of the attached meshes behind all of the {@link clippingPlanes}
+     * are clipped, instead of the parts behind any of them. With two planes this cuts a wedge out
+     * of the meshes, and with three a corner, as a cutaway does. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this._clipIntersection !== value) {
+            this._clipIntersection = value;
+
+            const mi = this._meshInstances;
+            for (let i = 0; i < mi.length; i++) {
+                mi[i].clipIntersection = value;
+            }
+        }
+    }
+
+    /**
+     * Gets whether only the parts of the attached meshes behind all of the {@link clippingPlanes}
+     * are clipped.
+     *
+     * @type {boolean}
+     */
+    get clipIntersection() {
+        return this._clipIntersection;
     }
 
     /**

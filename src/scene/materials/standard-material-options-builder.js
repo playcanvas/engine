@@ -12,7 +12,7 @@ import {
     DITHER_NONE,
     PARALLAX_OCCLUSION,
     PARALLAX_OFFSET,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH, SHADERDEF_CLIP,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
@@ -92,6 +92,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
         options.litOptions.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
         options.litOptions.useMorphTextureBasedInt = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0;
+        options.litOptions.useClipPlanes = objDefs && (objDefs & SHADERDEF_CLIP) !== 0;
 
         options.litOptions.nineSlicedMode = stdMat.nineSlicedMode || 0;
 

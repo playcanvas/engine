@@ -614,6 +614,10 @@ class LitShader {
         this.includes.set('frontendDeclPS', frontendDecl ?? '');
         this.includes.set('frontendCodePS', frontendCode ?? '');
 
+        // clipping applies to all passes, so that what is clipped neither renders, casts shadows,
+        // writes depth nor gets picked
+        this.fDefineSet(options.useClipPlanes, 'CLIP_PLANES');
+
         if (options.pass === SHADER_PICK) {
             // nothing to prepare currently
         } else if (options.pass === SHADER_PREPASS) {
