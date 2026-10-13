@@ -89,7 +89,7 @@ export default /* glsl */`
             float dIridescence;
             float dIridescenceThickness;
 
-            #ifdef STD_IRIDESCENCE_THICKNESS_TEXTURE_ALLOCATE
+            #ifdef STD_IRIDESCENCETHICKNESS_TEXTURE_ALLOCATE
                 uniform sampler2D texture_iridescenceThicknessMap;
             #endif
             #ifdef STD_IRIDESCENCE_TEXTURE_ALLOCATE
