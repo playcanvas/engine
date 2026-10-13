@@ -10,6 +10,7 @@ import { DofEffect } from '../effects/dof/dof-effect.js';
 import { FringingEffect } from '../effects/fringing/fringing-effect.js';
 import { GradingEffect } from '../effects/grading/grading-effect.js';
 import { SsaoEffect } from '../effects/ssao/ssao-effect.js';
+import { TaaEffect } from '../effects/taa/taa-effect.js';
 import { VignetteEffect } from '../effects/vignette/vignette-effect.js';
 import { VolumetricFogEffect } from '../effects/volumetric-fog/volumetric-fog-effect.js';
 import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
@@ -68,22 +69,6 @@ const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
  * the sharpness of the rendered image. Often used to counteract the blurriness of the TAA effect,
  * but also blurriness caused by rendering to a lower resolution render target by using
  * rendering.renderTargetScale property. Defaults to 0.
- */
-
-/**
- * @typedef {Object} Taa
- * Properties related to temporal anti-aliasing (TAA), which is a technique used to reduce aliasing
- * in the rendered image by blending multiple frames together over time.
- * @property {boolean} enabled - Whether TAA is enabled. Defaults to false.
- * @property {number} jitter - The intensity of the camera jitter, 0-1 range. The larger the value,
- * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
- * also makes the image more blurry, and rendering.sharpness parameter can be used to counteract.
- * Defaults to 1.
- * @property {boolean} upscale - Whether TAA accumulates the frames rendered at a lower resolution,
- * see rendering.renderTargetScale, at the full resolution - the jitter placing their samples at
- * different positions within the full resolution pixels, which recovers detail lost to the lower
- * resolution. Moving objects can blur or ghost more than with TAA alone, as the history is relied
- * on for longer while upscaling. Defaults to false.
  */
 
 /**
@@ -214,15 +199,12 @@ class CameraFrame {
     _cas;
 
     /**
-     * Taa settings.
+     * The temporal anti-aliasing effect, registered with this camera frame. Its parameters are
+     * assigned directly.
      *
-     * @type {Taa}
+     * @type {TaaEffect}
      */
-    taa = {
-        enabled: false,
-        jitter: 1,
-        upscale: false
-    };
+    taa;
 
     /**
      * The fringing effect, registered with this camera frame. Its parameters are assigned
@@ -291,6 +273,7 @@ class CameraFrame {
         // the built-in effects, registered in the order they are applied within their slot. The
         // camera frame constructs them and so destroys them, unlike the effects added to it.
         const device = app.graphicsDevice;
+        this.taa = new TaaEffect(device);
         this._cas = new CasEffect(device);
         this.fringing = new FringingEffect(device);
         this.dof = new DofEffect(device);
@@ -301,7 +284,7 @@ class CameraFrame {
         this.grading = new GradingEffect(device);
         this.colorLUT = new ColorLutEffect(device);
         this.vignette = new VignetteEffect(device);
-        this._builtInEffects = [this._cas, this.fringing, this.dof, this.ssao, this.volumetricFog, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
+        this._builtInEffects = [this.taa, this._cas, this.fringing, this.dof, this.ssao, this.volumetricFog, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
 
         // rendering.sharpness is the sharpening effect's parameter, forwarded to it so that the
@@ -380,7 +363,8 @@ class CameraFrame {
 
     /**
      * Registers an effect with this camera frame, applying it before another registered effect
-     * when both share a compose slot. The effect is applied from the next call to
+     * when both share a compose slot, and running its passes before those of the other effect at
+     * the stages of the frame they share. The effect is applied from the next call to
      * {@link CameraFrame#update}.
      *
      * @param {CameraFrameEffect} effect - The effect to add.
@@ -474,13 +458,18 @@ class CameraFrame {
         const active = this._activeEffects;
         active.length = 0;
         const { effects, renderPassCamera } = this;
+        let cameraJitter = 0;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
             if (effect.active && (!effect._ownsPasses || renderPassCamera?.hasEffectPasses(effect))) {
                 active.push(effect);
                 effect.update();
+                cameraJitter = Math.max(cameraJitter, effect.cameraJitter);
             }
         }
+
+        // the camera is jittered for the effects taking part which need it, such as TAA
+        this.cameraComponent.jitter = cameraJitter;
 
         const composePass = this.renderPassCamera?.composePass;
         if (composePass) {
@@ -551,12 +540,10 @@ class CameraFrame {
 
     updateOptions() {
 
-        const { options, rendering, taa } = this;
+        const { options, rendering } = this;
         options.stencil = rendering.stencil;
         options.samples = rendering.samples;
         options.prepassEnabled = rendering.sceneDepthMap;
-        options.taaEnabled = taa.enabled;
-        options.taaUpscale = taa.enabled && taa.upscale;
         options.formats = rendering.renderFormats.slice();
 
         // the scene format, chosen before the effects are asked whether they are active, as an
@@ -618,8 +605,7 @@ class CameraFrame {
 
         if (!this._enabled) return;
 
-        const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, taa } = this;
+        const { options, renderPassCamera, rendering } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
@@ -630,9 +616,6 @@ class CameraFrame {
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
-
-        // enable camera jitter if taa is enabled
-        cameraComponent.jitter = taa.enabled ? taa.jitter : 0;
 
         // the effects apply their parameters, and the frames rendered from now use them
         this._applyEffects();

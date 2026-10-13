@@ -136,7 +136,7 @@ describe('RenderPassCompose shader snapshot', function () {
     // resolution scene texture
     const enableBloom = (pass) => {
         pass.bloom.intensity = 0.05;
-        pass.bloom.createPasses({ [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom }, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.bloom.createPasses({ [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom }, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
         pass.passEffects.push(pass.bloom);
     };
 
@@ -145,7 +145,7 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.ssao.type = type;
         const depth = { texture: textures.ssao, defines: new Map(), key: '' };
         const resources = { [FRAMERESOURCE_DEPTH]: depth, [FRAMERESOURCE_PREPASSDEPTH]: depth };
-        pass.ssao.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.ssao.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
         pass.passEffects.push(pass.ssao);
     };
 
@@ -177,7 +177,7 @@ describe('RenderPassCompose shader snapshot', function () {
             [FRAMERESOURCE_DEPTH]: { texture: textures.ssao, defines: new Map(), key: '' },
             [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom
         };
-        pass.dof.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.dof.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
         pass.passEffects.push(pass.dof);
     };
 

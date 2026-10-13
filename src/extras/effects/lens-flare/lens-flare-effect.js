@@ -226,7 +226,7 @@ class LensFlareEffect extends CameraFrameEffect {
         const cameraFrame = this.cameraFrame;
         this._pass = new FramePassLensFlare(this.device, cameraFrame.cameraComponent, resources.depth.texture,
             cameraFrame.hdrFormat);
-        passes.postTemporal.push(this._pass);
+        passes.postResolve.push(this._pass);
     }
 
     /**

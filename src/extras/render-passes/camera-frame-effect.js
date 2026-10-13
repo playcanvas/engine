@@ -22,11 +22,32 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * the previous frame. Use the sizes in the context instead of the texture's own.
  *
  * @typedef {object} CameraFrameEffectContext
- * @property {Texture} sceneTexture - The scene color the composition reads this frame: the output
- * of the temporal anti-aliasing when it is enabled, which alternates between two textures from
- * frame to frame, and the scene render target's color otherwise.
- * @property {number} sceneWidth - The width of the scene texture this frame, in pixels.
+ * @property {Texture} sceneTexture - The scene color the composition reads this frame, once it is
+ * resolved: the output of the temporal anti-aliasing when it is enabled, which alternates between
+ * two textures from frame to frame, and the scene render target's color otherwise.
+ * @property {number} sceneWidth - The width of the scene texture this frame, in pixels. It is the
+ * width the scene renders at, unless the scene is resolved to another resolution, as the temporal
+ * anti-aliasing does when it upscales.
  * @property {number} sceneHeight - The height of the scene texture this frame, in pixels.
+ * @property {number} renderWidth - The width the scene renders at this frame, in pixels - the size
+ * of the scene render target, which the passes rendering into the scene have.
+ * @property {number} renderHeight - The height the scene renders at this frame, in pixels.
+ */
+
+/**
+ * The scene being resolved, handed to {@link CameraFrameEffect#resolveScene} by the camera frame
+ * every frame, to each effect in turn in the order they are registered: the scene color the
+ * effects before it resolved, which the effect replaces with its own output. One object, reused
+ * from frame to frame.
+ *
+ * @typedef {object} CameraFrameEffectScene
+ * @property {Texture} texture - The scene color. An effect resolving the scene reads this as its
+ * input, and sets it to the texture its passes render to this frame.
+ * @property {number} width - The width of the scene color this frame, in pixels. Its texture can
+ * still have the size of the previous frame - see {@link CameraFrameEffectContext}. An effect
+ * resolving the scene to another resolution sets this, and the height, to that resolution.
+ * @property {number} height - The height of the scene color this frame, in pixels.
+ * @ignore
  */
 
 /**
@@ -75,10 +96,13 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @property {FramePass[]} postOpaque - Passes running after the opaque geometry, the skybox and the
  * copy of the scene color, before the transparent geometry - for passes rendering into the scene
  * which the transparent geometry renders over.
- * @property {FramePass[]} postScene - Passes running after the scene, before its temporal
- * anti-aliasing - for passes rendering into the scene.
- * @property {FramePass[]} postTemporal - Passes running after the temporal anti-aliasing and the
- * half resolution copy of the scene, before the composition.
+ * @property {FramePass[]} postScene - Passes running after the scene, before it is resolved - for
+ * passes rendering into the scene.
+ * @property {FramePass[]} resolve - Passes resolving the scene, such as the temporal anti-aliasing:
+ * they read the scene color and render a new one, which the rest of the frame reads in its place.
+ * The effect hands over the texture they render to in {@link CameraFrameEffect#resolveScene}.
+ * @property {FramePass[]} postResolve - Passes running after the scene is resolved and its half
+ * resolution copy is made, before the composition.
  * @ignore
  */
 
@@ -447,7 +471,7 @@ class CameraFrameEffect {
      * ```javascript
      * createPasses(resources, passes) {
      *     this._pass = new MyPass(this.device, resources.sceneColorHalf);
-     *     passes.postTemporal.push(this._pass);
+     *     passes.postResolve.push(this._pass);
      * }
      * ```
      *
@@ -499,6 +523,44 @@ class CameraFrameEffect {
      */
     buildKey() {
         return '';
+    }
+
+    /**
+     * Resolves the scene, for an effect whose passes run at the resolve stage - see
+     * {@link CameraFrameEffectPasses}. Called every frame while the effect's passes take part in
+     * the frame, before any pass renders and before {@link CameraFrameEffect#frameUpdate} is called
+     * on any effect, in the order the effects are registered. The effect hands its passes the scene
+     * color the effects before it resolved, and replaces it with the texture they render to this
+     * frame, which the effects after it, the half resolution copy of the scene and the composition
+     * then read:
+     *
+     * ```javascript
+     * resolveScene(scene) {
+     *     this._pass.setSourceTexture(scene.texture);
+     *     scene.texture = this._pass.outputTexture;
+     * }
+     * ```
+     *
+     * An effect resolving the scene to another resolution also sets the width and the height. The
+     * default implementation leaves the scene unchanged.
+     *
+     * @param {CameraFrameEffectScene} scene - The scene being resolved.
+     * @ignore
+     */
+    resolveScene(scene) {
+    }
+
+    /**
+     * Gets the intensity of the camera jitter the effect needs while it is active, 0-1 range - the
+     * offset of the projection by a different fraction of a pixel every frame, which effects
+     * accumulating the frames over time rely on. The camera frame applies the largest intensity
+     * any active effect needs. Defaults to 0.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get cameraJitter() {
+        return 0;
     }
 
     /**

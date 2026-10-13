@@ -128,7 +128,7 @@ class BloomEffect extends CameraFrameEffect {
         this._pass = new FramePassBloom(this.device, resources.sceneColorHalf ?? null, this.cameraFrame.hdrFormat, {
             removeInvalid: this._fullResolution
         });
-        passes.postTemporal.push(this._pass);
+        passes.postResolve.push(this._pass);
     }
 
     /**
