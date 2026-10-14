@@ -496,6 +496,7 @@ class CameraFrame {
         cameraComponent.rendering = null;
 
         cameraComponent.jitter = 0;
+        cameraComponent.camera.exposureScale = 1;
 
         // disable SSAO included in the lighting pass
         cameraComponent.shaderParams.ssaoEnabled = false;
