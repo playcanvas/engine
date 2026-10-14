@@ -564,6 +564,17 @@ class CameraFrameEffect {
     }
 
     /**
+     * Gets whether the effect renders the sky for the camera while it is active. The camera then
+     * does not render the sky of the scene, which the effect replaces. Defaults to false.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get rendersSky() {
+        return false;
+    }
+
+    /**
      * Gets the scale the effect applies to the exposure of the camera this frame, multiplying the
      * exposure of the scene, or of the physical camera with physical units - for effects adapting
      * the exposure to what the camera sees. Read every frame while the effect takes part, after

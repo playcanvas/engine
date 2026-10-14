@@ -421,7 +421,10 @@ class MeshInstance {
     id = PickerId.get();
 
     /**
-     * Custom function used to customize culling (e.g. for 2D UI elements).
+     * Custom function used to customize culling (e.g. for 2D UI elements), or to render the mesh
+     * instance for some cameras only. Called with the camera, it returns whether the camera renders
+     * the mesh instance. Only used when {@link MeshInstance#cull} is enabled, but then also for the
+     * cameras which do not frustum cull.
      *
      * @type {Function|null}
      * @ignore

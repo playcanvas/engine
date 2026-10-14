@@ -7,11 +7,20 @@ import { SkyGeometry } from './sky-geometry.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
+ * @import { Camera } from '../camera.js'
  * @import { GraphNode } from '../graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Scene } from '../scene.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
+
+/**
+ * The visibility function of the sky mesh instance: each camera decides whether it renders the sky.
+ *
+ * @param {Camera} camera - The camera.
+ * @returns {boolean} True if the camera renders the sky.
+ */
+const isSkyVisible = camera => camera.skyVisible;
 
 /**
  * A visual representation of the sky.
@@ -75,7 +84,10 @@ class SkyMesh {
             const meshInstance = new MeshInstance(mesh, material, node);
             this.meshInstance = meshInstance;
 
-            meshInstance.cull = false;
+            // the sky is not frustum culled, but a camera can opt out of rendering it - the culler
+            // only evaluates the visibility function of mesh instances with culling enabled
+            meshInstance.cull = true;
+            meshInstance.isVisibleFunc = isSkyVisible;
 
             // disable picker, the material has custom update shader and does not handle picker variant
             meshInstance.pick = false;
