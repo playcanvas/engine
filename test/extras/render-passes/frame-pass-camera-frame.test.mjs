@@ -647,6 +647,62 @@ describe('FramePassCameraFrame', function () {
         });
     });
 
+    describe('time', function () {
+
+        // an effect recording the time of each frame it is handed
+        class TimeEffect extends CameraFrameEffect {
+            /** @type {number[]} */
+            times = [];
+
+            constructor(device) {
+                super(device, 'time');
+            }
+
+            frameUpdate(frame) {
+                this.times.push(frame.dt);
+            }
+        }
+
+        it('hands the effects the time the application advanced by since the camera frame last rendered', function () {
+            const effect = new TimeEffect(app.graphicsDevice);
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+
+            // two updates before the frame, a frame rendered again without an update, a paused
+            // application updating by no time, and an update after it
+            app.update(0.1);
+            app.update(0.05);
+            framePass.frameUpdate();
+            framePass.frameUpdate();
+            app.update(0);
+            framePass.frameUpdate();
+            app.update(0.02);
+            framePass.frameUpdate();
+
+            expect(effect.times).to.have.lengthOf(4);
+            expect(effect.times[0]).to.be.closeTo(0.15, 1e-12);
+            expect(effect.times[1]).to.equal(0);
+            expect(effect.times[2]).to.equal(0);
+            expect(effect.times[3]).to.be.closeTo(0.02, 1e-12);
+            effect.destroy();
+        });
+
+        it('stops following the time of the application once destroyed', function () {
+            const entity = new Entity('Camera2');
+            entity.addComponent('camera');
+            app.root.addChild(entity);
+            const other = new CameraFrame(app, entity.camera);
+            app.update(0.1);
+            expect(other._frameTime).to.be.closeTo(0.1, 1e-12);
+
+            other.destroy();
+            other._frameTime = 0;
+            app.update(0.1);
+            expect(other._frameTime).to.equal(0);
+        });
+    });
+
     describe('sky', function () {
 
         // an effect rendering the sky for its camera, as a sky effect owning passes would

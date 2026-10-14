@@ -191,6 +191,15 @@ class CameraFrame {
     _activeEffects = [];
 
     /**
+     * The time the application advanced by in its updates since the camera frame last rendered, in
+     * seconds, handed to the effects as the time of the frame. See {@link CameraFrameEffectContext}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    _frameTime = 0;
+
+    /**
      * The sharpening effect, whose sharpness is exposed as `rendering.sharpness`.
      *
      * @type {CasEffect}
@@ -304,6 +313,11 @@ class CameraFrame {
         this.cameraLayersChanged = cameraComponent.on('set:layers', () => {
             if (this.renderPassCamera) this.renderPassCamera.layersDirty = true;
         });
+
+        // the time of the frames is the time of the application, so it is scaled and paused with it
+        this._appUpdate = app.on('update', (dt) => {
+            this._frameTime += dt;
+        });
     }
 
     /**
@@ -320,6 +334,7 @@ class CameraFrame {
         this.effects.length = 0;
 
         this.cameraLayersChanged.off();
+        this._appUpdate.off();
     }
 
     /**

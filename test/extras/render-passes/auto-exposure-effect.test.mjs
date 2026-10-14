@@ -257,11 +257,12 @@ describe('AutoExposureEffect', function () {
             framePass.frameUpdate();
             const start = ev();
 
-            // a scene six bins brighter, then the same six bins darker, each after a tenth of a second
+            // a scene six bins brighter, then the same six bins darker, each after the application
+            // advanced by a tenth of a second
             const step = (bin) => {
                 const from = ev();
                 measure({ [bin]: 1000 });
-                autoExposure._lastTime -= 100;
+                app.update(0.1);
                 framePass.frameUpdate();
                 return Math.abs(ev() - from);
             };
@@ -275,9 +276,34 @@ describe('AutoExposureEffect', function () {
             const toDark = step(26);
             expect(ev()).to.be.above(start);
 
-            // about 1 - exp(-0.4) and 1 - exp(-0.1) of the change, the time of the frame aside
-            expect(toLight).to.be.closeTo(change * (1 - Math.exp(-0.4)), change * 0.05);
-            expect(toDark).to.be.closeTo(change * (1 - Math.exp(-0.1)), change * 0.05);
+            // 1 - exp(-0.4) and 1 - exp(-0.1) of the change
+            expect(toLight).to.be.closeTo(change * (1 - Math.exp(-0.4)), change * 1e-6);
+            expect(toDark).to.be.closeTo(change * (1 - Math.exp(-0.1)), change * 1e-6);
+        });
+
+        it('holds the exposure while the application does not advance, as when it is paused', function () {
+            cameraFrame.addEffect(autoExposure);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const ev = () => Math.log2(cameraFrame.cameraComponent.camera.exposureScale);
+            framePass.frameUpdate();
+            measure({ 32: 1000 });
+            framePass.frameUpdate();
+            const start = ev();
+
+            // a brighter scene, rendered without the application updating, and then while it is
+            // paused, updating by no time
+            measure({ 38: 1000 });
+            framePass.frameUpdate();
+            expect(ev()).to.equal(start);
+            app.update(0);
+            framePass.frameUpdate();
+            expect(ev()).to.equal(start);
+
+            // adapted to once the application advances
+            app.update(0.1);
+            framePass.frameUpdate();
+            expect(ev()).to.be.below(start);
         });
 
         it('adapts at once to the view after a reset, once it is measured, ignoring the histograms of the view before', function () {

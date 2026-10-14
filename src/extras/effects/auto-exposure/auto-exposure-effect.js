@@ -1,5 +1,4 @@
 import { math } from '../../../core/math/math.js';
-import { now } from '../../../core/time.js';
 import { TONEMAP_NONE } from '../../../scene/constants.js';
 import { CameraFrameEffect } from '../../render-passes/camera-frame-effect.js';
 import { FRAMERESOURCE_SCENECOLORHALF } from '../../render-passes/constants.js';
@@ -22,10 +21,6 @@ const LOG2_MIDDLE_GREY = Math.log2(0.18);
 // the exposure display as middle grey, in EV, so that the parts of the screen the average leaves
 // out are still counted apart from the parts it includes
 const RANGE_MARGIN = 4;
-
-// the longest time between two frames the adaptation advances by, in seconds, so that it does not
-// jump after the application was paused
-const MAX_FRAME_TIME = 0.25;
 
 /**
  * The auto exposure effect, which adapts the exposure of the camera to the brightness of what it
@@ -177,9 +172,6 @@ class AutoExposureEffect extends CameraFrameEffect {
      * @private
      */
     _measurement = 0;
-
-    /** @private */
-    _lastTime = -1;
 
     /** @private */
     _exposure = 1;
@@ -338,9 +330,8 @@ class AutoExposureEffect extends CameraFrameEffect {
         // the log2 of the brightness the average of the screen is displayed at
         const key = LOG2_MIDDLE_GREY + this._compensation;
 
-        const time = now();
-        const dt = this._lastTime < 0 ? 0 : Math.min((time - this._lastTime) / 1000, MAX_FRAME_TIME);
-        this._lastTime = time;
+        // the adaptation advances by the time of the application, so it stops while it is paused
+        const { dt } = frame;
 
         // adapts towards the exposure displaying the measured average at the key brightness, within
         // the limits - faster as the scene gets brighter than as it gets darker
