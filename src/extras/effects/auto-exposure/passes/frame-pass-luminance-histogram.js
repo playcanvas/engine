@@ -63,10 +63,19 @@ class FramePassLuminanceHistogram extends FramePass {
     centerWeight = 0;
 
     /**
-     * Called with each histogram read back - the weight of each bin, in 16.16 fixed point, valid
-     * during the call only - and the range of brightness it was measured over.
+     * A value handed back with each histogram read back, as it was when the histogram was
+     * measured - to tell the histograms measured before a change from those measured after it.
      *
-     * @type {((histogram: Uint32Array, rangeMin: number, rangeMax: number) => void)|null}
+     * @type {number}
+     */
+    tag = 0;
+
+    /**
+     * Called with each histogram read back - the weight of each bin, in 16.16 fixed point, valid
+     * during the call only - the range of brightness it was measured over, and the tag it was
+     * measured with.
+     *
+     * @type {((histogram: Uint32Array, rangeMin: number, rangeMax: number, tag: number) => void)|null}
      */
     onHistogram = null;
 
@@ -210,8 +219,8 @@ class FramePassLuminanceHistogram extends FramePass {
             return;
         }
 
-        // the range the histogram was measured over, for when it arrives
-        const { rangeMin, rangeMax } = this;
+        // the range the histogram was measured over, and its tag, for when it arrives
+        const { rangeMin, rangeMax, tag } = this;
         const target = this.histogramTarget;
         const promise = target.colorBuffer.read(0, 0, AUTO_EXPOSURE_BINS / 4, 1, {
             renderTarget: target,
@@ -228,7 +237,7 @@ class FramePassLuminanceHistogram extends FramePass {
         promise.then((data) => {
             this._reading = false;
             if (!this._destroyed) {
-                this.onHistogram?.(/** @type {Uint32Array} */ (data), rangeMin, rangeMax);
+                this.onHistogram?.(/** @type {Uint32Array} */ (data), rangeMin, rangeMax, tag);
             }
         }, () => {
             this._reading = false;

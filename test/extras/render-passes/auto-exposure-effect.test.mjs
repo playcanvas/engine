@@ -56,10 +56,11 @@ describe('AutoExposureEffect', function () {
         restore();
     });
 
-    // measures a histogram as if read back, which the effect adapts to on the next frame
-    const measure = (weights) => {
+    // measures a histogram as if read back, of the frame last prepared, which the effect adapts to on
+    // the next frame
+    const measure = (weights, tag = autoExposure._pass.tag) => {
         const pass = autoExposure._pass;
-        pass.onHistogram(histogramOf(weights), pass.rangeMin, pass.rangeMax);
+        pass.onHistogram(histogramOf(weights), pass.rangeMin, pass.rangeMax, tag);
     };
 
     // the log2 luminance the bin of the latest measured range counts
@@ -231,11 +232,13 @@ describe('AutoExposureEffect', function () {
             // a dark screen brightens the image by the highest exposure at most, a bright one darkens
             // it by the lowest
             autoExposure.reset();
+            framePass.frameUpdate();
             measure({ 0: 1000 });
             framePass.frameUpdate();
             expect(Math.log2(cameraFrame.cameraComponent.camera.exposureScale)).to.be.closeTo(6, 1e-9);
 
             autoExposure.reset();
+            framePass.frameUpdate();
             measure({ 63: 1000 });
             framePass.frameUpdate();
             expect(Math.log2(cameraFrame.cameraComponent.camera.exposureScale)).to.be.closeTo(-6, 1e-9);
@@ -266,6 +269,7 @@ describe('AutoExposureEffect', function () {
             const toLight = step(38);
             expect(ev()).to.be.below(start);
             autoExposure.reset();
+            framePass.frameUpdate();
             measure({ 32: 1000 });
             framePass.frameUpdate();
             const toDark = step(26);
@@ -274,6 +278,48 @@ describe('AutoExposureEffect', function () {
             // about 1 - exp(-0.4) and 1 - exp(-0.1) of the change, the time of the frame aside
             expect(toLight).to.be.closeTo(change * (1 - Math.exp(-0.4)), change * 0.05);
             expect(toDark).to.be.closeTo(change * (1 - Math.exp(-0.1)), change * 0.05);
+        });
+
+        it('adapts at once to the view after a reset, once it is measured, ignoring the histograms of the view before', function () {
+            cameraFrame.addEffect(autoExposure);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+            const ev = () => Math.log2(cameraFrame.cameraComponent.camera.exposureScale);
+            framePass.frameUpdate();
+            measure({ 40: 1000 });
+            framePass.frameUpdate();
+            const before = ev();
+            const tagBefore = autoExposure._pass.tag;
+
+            // the cut: the frames rendered until the histogram of the new view arrives keep the
+            // exposure, and so does a histogram of the old view still in flight
+            autoExposure.reset();
+            framePass.frameUpdate();
+            framePass.frameUpdate();
+            expect(ev()).to.equal(before);
+            measure({ 40: 1000 }, tagBefore);
+            framePass.frameUpdate();
+            expect(ev()).to.equal(before);
+
+            // the new view, a darker one, adapted to at once
+            measure({ 20: 1000 });
+            framePass.frameUpdate();
+            const expected = Math.log2(0.18) - binLog2(20);
+            expect(ev()).to.be.closeTo(expected, 1e-9);
+            expect(ev()).to.be.above(before + 1);
+        });
+
+        it('keeps rendering once removed, until the camera frame next updates', function () {
+            cameraFrame.addEffect(autoExposure);
+            cameraFrame.update();
+            app.render();
+
+            cameraFrame.removeEffect(autoExposure);
+            expect(() => app.render()).to.not.throw();
+
+            cameraFrame.update();
+            app.render();
+            expect(cameraFrame.cameraComponent.camera.exposureScale).to.equal(1);
         });
 
         it('stops scaling the exposure once it takes no part', function () {

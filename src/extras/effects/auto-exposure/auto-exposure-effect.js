@@ -9,6 +9,7 @@ import { AUTO_EXPOSURE_BINS, FramePassLuminanceHistogram } from './passes/frame-
 import wgslComposeAutoExposurePS from './wgsl/compose-ps.js';
 
 /**
+ * @import { CameraFrame } from '../../render-passes/camera-frame.js'
  * @import { CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from '../../render-passes/camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
@@ -131,6 +132,15 @@ class AutoExposureEffect extends CameraFrameEffect {
     _pass = null;
 
     /**
+     * The camera frame the passes were created for. They render for it until it next updates, even
+     * once the effect is removed from it.
+     *
+     * @type {CameraFrame|null}
+     * @private
+     */
+    _passesCameraFrame = null;
+
+    /**
      * The latest histogram read back.
      *
      * @private
@@ -159,6 +169,14 @@ class AutoExposureEffect extends CameraFrameEffect {
      * @private
      */
     _snap = true;
+
+    /**
+     * Incremented by {@link AutoExposureEffect#reset}, and tagging each histogram measured, so that
+     * the histograms measured before a reset - the view before a cut - are not adapted to.
+     *
+     * @private
+     */
+    _measurement = 0;
 
     /** @private */
     _lastTime = -1;
@@ -254,6 +272,8 @@ class AutoExposureEffect extends CameraFrameEffect {
      * different view, after which a gradual adaptation would look out of place.
      */
     reset() {
+        this._measurement++;
+        this._averageLog2 = null;
         this._snap = true;
     }
 
@@ -274,7 +294,8 @@ class AutoExposureEffect extends CameraFrameEffect {
      */
     createPasses(resources, passes) {
         this._pass = new FramePassLuminanceHistogram(this.device, resources.sceneColorHalf);
-        this._pass.onHistogram = (histogram, rangeMin, rangeMax) => this._measure(histogram, rangeMin, rangeMax);
+        this._pass.onHistogram = (histogram, rangeMin, rangeMax, tag) => this._measure(histogram, rangeMin, rangeMax, tag);
+        this._passesCameraFrame = this.cameraFrame;
         passes.postResolve.push(this._pass);
     }
 
@@ -284,6 +305,7 @@ class AutoExposureEffect extends CameraFrameEffect {
     destroyPasses() {
         this._pass?.destroy();
         this._pass = null;
+        this._passesCameraFrame = null;
     }
 
     update() {
@@ -305,7 +327,7 @@ class AutoExposureEffect extends CameraFrameEffect {
      * @param {CameraFrameEffectContext} frame - The values of this frame.
      */
     frameUpdate(frame) {
-        const { app, cameraComponent } = this.cameraFrame;
+        const { app, cameraComponent } = this._passesCameraFrame;
         const { scene } = app;
         const camera = cameraComponent.camera;
 
@@ -346,6 +368,7 @@ class AutoExposureEffect extends CameraFrameEffect {
         pass.rangeMin = key - log2Base - maxEv - RANGE_MARGIN;
         pass.rangeMax = key - log2Base - minEv + RANGE_MARGIN;
         pass.centerWeight = this._centerWeight;
+        pass.tag = this._measurement;
 
         // the debug view marks the brightness the camera exposes as middle grey, along the range
         // the displayed histogram was measured over
@@ -359,9 +382,16 @@ class AutoExposureEffect extends CameraFrameEffect {
      * @param {Uint32Array} histogram - The weight of each bin.
      * @param {number} rangeMin - The log2 luminance the first bin counts.
      * @param {number} rangeMax - The log2 luminance the last bin counts.
+     * @param {number} tag - The measurement the histogram belongs to, see the reset.
      * @private
      */
-    _measure(histogram, rangeMin, rangeMax) {
+    _measure(histogram, rangeMin, rangeMax, tag) {
+
+        // measured before a reset, of the view before the cut
+        if (tag !== this._measurement) {
+            return;
+        }
+
         this._histogram.set(histogram);
 
         const lastBin = AUTO_EXPOSURE_BINS - 1;
