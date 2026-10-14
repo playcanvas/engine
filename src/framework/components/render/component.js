@@ -547,12 +547,14 @@ class RenderComponent extends Component {
      * to an empty array.
      *
      * The planes are given to the mesh instances of the component, also ones it gets later, and
-     * replace any planes assigned to them directly. They are copied, so changing a plane after the
-     * assignment has no effect until the array is assigned again. To clip an entity together with
-     * its descendants, such as an entity instantiated from a {@link ContainerResource}, assign the
-     * planes to all of their render components. To clip everything a camera renders, see
-     * {@link CameraComponent#clippingPlanes} instead. Meshes with clipping planes are excluded
-     * from batching. See {@link MeshInstance#clippingPlanes} for more details.
+     * replace any planes assigned to them directly, even when the component has none. To give a
+     * mesh instance planes of its own, assign them to it after it is given to the component. The
+     * planes are copied, so changing a plane after the assignment has no effect until the array is
+     * assigned again. To clip an entity together with its descendants, such as an entity
+     * instantiated from a {@link ContainerResource}, assign the planes to all of their render
+     * components. To clip everything a camera renders, see {@link CameraComponent#clippingPlanes}
+     * instead. Meshes with clipping planes are excluded from batching. See
+     * {@link MeshInstance#clippingPlanes} for more details.
      *
      * @type {Plane[]}
      * @example
