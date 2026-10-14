@@ -206,7 +206,7 @@ const applyEffects = () => {
 };
 
 // section caps: the back faces of the cut parts, drawn flat red, show through the cut where the
-// parts are solid
+// parts are solid. This needs closed meshes, and shows their inner surfaces, not the cut plane
 const capMaterial = new StandardMaterial();
 capMaterial.diffuse = new Color(0, 0, 0);
 capMaterial.emissive = new Color(0.62, 0.05, 0.04);

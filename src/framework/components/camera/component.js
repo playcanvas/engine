@@ -382,14 +382,17 @@ class CameraComponent extends Component {
      * Sets the planes that clip what the camera renders, in world space. The parts of the meshes
      * behind any of the planes - on the side opposite to the plane normal - are not rendered, which
      * cuts the scene open along the planes, as a section view does. Use {@link clipIntersection}
-     * to clip only the parts behind all of the planes instead. Up to 8 planes are supported.
-     * Defaults to an empty array.
+     * to clip only the parts behind all of the planes instead. Up to 8 planes are supported, and
+     * any more are ignored. Defaults to an empty array.
      *
      * The planes clip the meshes the camera renders with a {@link StandardMaterial}, or with a
      * {@link ShaderMaterial} that supports clipping, see {@link MeshInstance#clippingPlanes}. They
-     * apply to all passes of the camera, including picking, but not to shadows, which the meshes
-     * cast whole, nor to screen space elements. To clip only some meshes, or their shadows too,
-     * use {@link RenderComponent#clippingPlanes}. A mesh with planes of its own is clipped by both.
+     * apply to all passes of the camera, including picking with a {@link Picker}, but not to
+     * shadows, which the meshes cast whole, nor to screen space elements. Physics and other queries
+     * on the CPU are not clipped. To clip only some meshes, or their shadows too, use
+     * {@link RenderComponent#clippingPlanes}. A mesh with planes of its own is clipped by both
+     * sets: each clips with its own {@link clipIntersection}, and a part that either set clips is
+     * not rendered.
      *
      * The planes are copied, so changing a plane after the assignment has no effect until the
      * array is assigned again. Giving the camera its first plane compiles new variants of the

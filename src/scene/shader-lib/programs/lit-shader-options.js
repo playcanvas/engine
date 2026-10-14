@@ -284,7 +284,8 @@ class LitShaderOptions {
 
     /**
      * Discard the fragments the clipping planes of the mesh instance clip. See
-     * {@link MeshInstance#clippingPlanes}.
+     * {@link MeshInstance#clippingPlanes}. The clipping planes of the camera are enabled by the
+     * camera, see {@link CameraComponent#clippingPlanes}.
      */
     useClipPlanes = false;
 }

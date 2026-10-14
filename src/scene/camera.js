@@ -585,7 +585,9 @@ class Camera {
     set clipIntersection(value) {
         if (this._clipIntersection !== value) {
             this._clipIntersection = value;
-            this._updateClipUniforms();
+
+            // only the mode changes: the planes stay as they were assigned
+            this.clipParamsData[1] = value ? 1 : 0;
         }
     }
 

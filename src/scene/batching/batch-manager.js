@@ -280,8 +280,7 @@ class BatchManager {
         let hasSupported = false;
         for (let i = 0; i < meshInstances.length; i++) {
             const meshInstance = meshInstances[i];
-            if (meshInstance.skinInstance || meshInstance.morphInstance ||
-                meshInstance.clippingPlanes.length > 0) {
+            if (meshInstance.skinInstance || meshInstance.morphInstance || meshInstance.clipped) {
                 hasUnsupported = true;
             } else {
                 hasSupported = true;

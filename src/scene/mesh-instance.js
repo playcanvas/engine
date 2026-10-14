@@ -1281,13 +1281,20 @@ class MeshInstance {
      * Sets the planes that clip this mesh instance, in world space. The parts of the mesh behind
      * any of the planes - on the side opposite to the plane normal - are not rendered, which cuts
      * the mesh open along the planes. Use {@link clipIntersection} to clip only the parts behind
-     * all of the planes instead. Up to 8 planes are supported. Defaults to an empty array.
+     * all of the planes instead. Up to 8 planes are supported, and any more are ignored. Defaults
+     * to an empty array.
      *
      * The clipped parts are removed from every render pass: they cast no shadows, write no depth
-     * and cannot be picked. The planes are copied, so changing a plane after the assignment has no
-     * effect until the array is assigned again. Only the first plane a mesh instance is given
-     * compiles new shaders - moving the planes or changing their number does not. The planes of
-     * the camera clip the mesh instance as well, see {@link CameraComponent#clippingPlanes}.
+     * and cannot be picked with a {@link Picker}. The planes are copied, so changing a plane after
+     * the assignment has no effect until the array is assigned again. Only the first plane a mesh
+     * instance is given compiles new shaders - moving the planes or changing their number does not.
+     *
+     * The planes of the camera clip the mesh instance as well, see
+     * {@link CameraComponent#clippingPlanes}. Each set of planes clips with its own
+     * {@link clipIntersection}, and a part that either set clips is not rendered. A batched mesh
+     * instance is drawn by its batch, so planes assigned to it apply once its batch group is
+     * rebuilt, see {@link BatchManager#markGroupDirty}. {@link RenderComponent#clippingPlanes}
+     * rebuilds the batch group itself.
      *
      * {@link StandardMaterial} is clipped. The shader of a {@link ShaderMaterial} is clipped when
      * its fragment shader includes the `clipPlanesPS` chunk and calls `applyClipPlanes` with the
@@ -1323,6 +1330,17 @@ class MeshInstance {
     }
 
     /**
+     * Gets whether the mesh instance has clipping planes, as last assigned. Changes to the planes
+     * returned by {@link clippingPlanes} do not count until they are assigned.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get clipped() {
+        return (this._shaderDefs & SHADERDEF_CLIP) !== 0;
+    }
+
+    /**
      * Sets whether only the parts of the mesh behind all of the {@link clippingPlanes} are clipped,
      * instead of the parts behind any of them. With two planes this cuts a wedge out of the mesh,
      * and with three a corner, as a cutaway does. Defaults to false.
@@ -1332,7 +1350,14 @@ class MeshInstance {
     set clipIntersection(value) {
         if (this._clipIntersection !== value) {
             this._clipIntersection = value;
-            this._updateClipUniforms();
+
+            // only the mode changes: the planes stay as they were assigned, also when the planes
+            // returned by the getter have been changed since
+            const params = this._clipParamsData;
+            if (params && this.clipped) {
+                params[1] = value ? 1 : 0;
+                this.setParameter('clipParams', params);
+            }
         }
     }
 

@@ -163,6 +163,29 @@ describe('Clipping planes', function () {
             expect(assert.calledWith(false)).to.equal(true);
         });
 
+        it('keeps the assigned values when given its own planes in another order', function () {
+            const meshInstance = addBox().render.meshInstances[0];
+            meshInstance.clippingPlanes = [new Plane(Vec3.UP, 1), new Plane(Vec3.UP, 2)];
+            const planes = meshInstance.clippingPlanes;
+            meshInstance.clippingPlanes = [planes[1], planes[0]];
+
+            expect(meshInstance.clippingPlanes.map(plane => plane.distance)).to.deep.equal([2, 1]);
+            const data = meshInstance.getParameter('clipPlanes[0]').data;
+            expect([data[3], data[7]]).to.deep.equal([2, 1]);
+        });
+
+        it('changes only the mode when the intersection flag changes', function () {
+            const meshInstance = addBox().render.meshInstances[0];
+            meshInstance.clippingPlanes = [below()];
+
+            // a change to a returned plane, which is not assigned
+            meshInstance.clippingPlanes[0].distance = 9;
+            meshInstance.clipIntersection = true;
+
+            expect(meshInstance.getParameter('clipPlanes[0]').data[3]).to.equal(1);
+            expect(Array.from(meshInstance.getParameter('clipParams').data)).to.deep.equal([1, 1]);
+        });
+
         it('applies its planes to its own draws, in the forward and shadow passes', function () {
             const light = new Entity('light');
             light.addComponent('light', { type: 'directional', castShadows: true });
@@ -412,6 +435,38 @@ describe('Clipping planes', function () {
             expect(meshInstance.clippingPlanes).to.have.lengthOf(0);
             expect(meshInstance._shaderDefs & SHADERDEF_CLIP).to.equal(0);
         });
+
+        it('uses up to 8 planes, as its mesh instances do', function () {
+            const assert = sinon.stub(Debug, 'assert');
+            const entity = addBox();
+            entity.render.clippingPlanes = Array.from({ length: 9 }, below);
+
+            expect(entity.render.clippingPlanes).to.have.lengthOf(8);
+            expect(entity.render.meshInstances[0].clippingPlanes).to.have.lengthOf(8);
+            expect(assert.calledWith(false)).to.equal(true);
+        });
+
+        it('keeps the assigned values when given its own planes in another order', function () {
+            const entity = addBox();
+            entity.render.clippingPlanes = [new Plane(Vec3.UP, 1), new Plane(Vec3.UP, 2)];
+            const planes = entity.render.clippingPlanes;
+            entity.render.clippingPlanes = [planes[1], planes[0]];
+
+            const distances = owner => owner.clippingPlanes.map(plane => plane.distance);
+            expect(distances(entity.render)).to.deep.equal([2, 1]);
+            expect(distances(entity.render.meshInstances[0])).to.deep.equal([2, 1]);
+        });
+
+        it('gives mesh instances created later the planes as they were assigned', function () {
+            const entity = addBox();
+            entity.render.clippingPlanes = [below()];
+
+            // a change to a returned plane, which is not assigned
+            entity.render.clippingPlanes[0].distance = 9;
+            entity.render.type = 'sphere';
+
+            expect(entity.render.meshInstances[0].clippingPlanes[0].distance).to.equal(1);
+        });
     });
 
     describe('CameraComponent', function () {
@@ -482,6 +537,27 @@ describe('Clipping planes', function () {
             expect(camera.clippingPlanes).to.have.lengthOf(8);
             expect(camera.camera.clipParamsData[0]).to.equal(8);
             expect(assert.calledWith(false)).to.equal(true);
+        });
+
+        it('keeps the assigned values when given its own planes in another order', function () {
+            camera.clippingPlanes = [new Plane(Vec3.UP, 1), new Plane(Vec3.UP, 2)];
+            const planes = camera.clippingPlanes;
+            camera.clippingPlanes = [planes[1], planes[0]];
+
+            expect(camera.clippingPlanes.map(plane => plane.distance)).to.deep.equal([2, 1]);
+            const data = camera.camera.clipPlanesData;
+            expect([data[3], data[7]]).to.deep.equal([2, 1]);
+        });
+
+        it('changes only the mode when the intersection flag changes', function () {
+            camera.clippingPlanes = [below()];
+
+            // a change to a returned plane, which is not assigned
+            camera.clippingPlanes[0].distance = 9;
+            camera.clipIntersection = true;
+
+            expect(camera.camera.clipPlanesData[3]).to.equal(1);
+            expect(Array.from(camera.camera.clipParamsData)).to.deep.equal([1, 1]);
         });
 
         it('does not clip shadows', function () {
@@ -590,6 +666,54 @@ describe('Clipping planes', function () {
             sinon.stub(Debug, 'warnOnce');
             app.batcher.generate();
 
+            expect(layerMeshInstances()).to.not.include(entity.render.meshInstances[0]);
+        });
+
+        it('rebuilds the group when planes are pushed into the returned array', function () {
+            const entity = addBatchedBox('entity');
+            app.batcher.generate();
+
+            const planes = entity.render.clippingPlanes;
+            planes.push(below());
+            entity.render.clippingPlanes = planes;
+            expect(app.batcher._dirtyGroups).to.include(group.id);
+        });
+
+        it('rebuilds the group when the returned array is emptied and assigned', function () {
+            const entity = addBatchedBox('entity');
+            entity.render.clippingPlanes = [below()];
+            sinon.stub(Debug, 'warnOnce');
+            app.batcher.generate();
+
+            const planes = entity.render.clippingPlanes;
+            planes.length = 0;
+            entity.render.clippingPlanes = planes;
+            expect(app.batcher._dirtyGroups).to.include(group.id);
+        });
+
+        it('clips a mesh instance given planes once its batch group is rebuilt', function () {
+            const entity = addBatchedBox('entity');
+            addBatchedBox('other');
+            app.batcher.generate();
+
+            // planes given to a batched mesh instance directly apply when its group is rebuilt
+            const meshInstance = entity.render.meshInstances[0];
+            meshInstance.clippingPlanes = [below()];
+            expect(layerMeshInstances()).to.not.include(meshInstance);
+
+            sinon.stub(Debug, 'warnOnce');
+            app.batcher.markGroupDirty(group.id);
+            app.batcher.generate(app.batcher._dirtyGroups);
+            expect(layerMeshInstances()).to.include(meshInstance);
+        });
+
+        it('batches by the assigned planes, not by changes to the returned ones', function () {
+            const entity = addBatchedBox('entity');
+            addBatchedBox('other');
+
+            // a plane added to the returned array, which is not assigned
+            entity.render.meshInstances[0].clippingPlanes.push(below());
+            app.batcher.generate();
             expect(layerMeshInstances()).to.not.include(entity.render.meshInstances[0]);
         });
     });

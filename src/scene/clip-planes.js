@@ -1,14 +1,16 @@
-/**
- * @import { Plane } from '../core/shape/plane.js'
- */
+import { Plane } from '../core/shape/plane.js';
 
 // the largest number of clipping planes of a mesh instance or a camera, matching the size of the
 // uniform arrays of the clipPlanesPS chunk
 const MAX_CLIP_PLANES = 8;
 
+// the values of the assigned planes, read before any copy is written, because the assigned planes
+// can be the copies themselves, in another order
+const _values = [];
+
 /**
- * Copies planes into the copies made by a previous assignment, which can be the same array. Only
- * planes beyond the number of the previous assignment allocate.
+ * Copies planes into the copies made by a previous assignment. The assigned planes can include
+ * those copies, in any order. Only planes beyond the number of the previous assignment allocate.
  *
  * @param {Plane[]} copies - The copies of the previous assignment, updated in place.
  * @param {Plane[]|null|undefined} planes - The assigned planes.
@@ -18,10 +20,13 @@ const MAX_CLIP_PLANES = 8;
 function copyPlanes(copies, planes, maxCount = Infinity) {
     const count = Math.min(planes?.length ?? 0, maxCount);
     for (let i = 0; i < count; i++) {
+        (_values[i] ??= new Plane()).copy(planes[i]);
+    }
+    for (let i = 0; i < count; i++) {
         if (copies[i]) {
-            copies[i].copy(planes[i]);
+            copies[i].copy(_values[i]);
         } else {
-            copies[i] = planes[i].clone();
+            copies[i] = _values[i].clone();
         }
     }
     copies.length = count;
