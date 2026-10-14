@@ -178,6 +178,14 @@ class Camera {
     exposureScale = 1;
 
     /**
+     * Whether the camera renders the sky of the scene. Cleared by the camera frame while one of its
+     * effects renders the sky for the camera in its place.
+     *
+     * @type {boolean}
+     */
+    skyVisible = true;
+
+    /**
      * A unique id of the camera, used where the camera needs to be referenced without retaining
      * it, for example as a key in {@link MeshInstance} draw command maps.
      *

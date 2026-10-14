@@ -647,6 +647,54 @@ describe('FramePassCameraFrame', function () {
         });
     });
 
+    describe('sky', function () {
+
+        // an effect rendering the sky for its camera, as a sky effect owning passes would
+        class SkyEffect extends PassEffect {
+            constructor(device) {
+                super(device, 'sky', []);
+                this.stage = 'preScene';
+            }
+
+            get rendersSky() {
+                return true;
+            }
+        }
+
+        it('hides the sky of the scene from the camera while an effect taking part renders its own', function () {
+            const { camera } = cameraFrame.cameraComponent;
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(true);
+
+            // applied with the effects, on the next update
+            const effect = new SkyEffect(app.graphicsDevice);
+            cameraFrame.addEffect(effect);
+            expect(camera.skyVisible).to.equal(true);
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(false);
+
+            // an effect not taking part does not hide it
+            effect.enabled = false;
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(true);
+            effect.enabled = true;
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(false);
+
+            // disabling the camera frame renders the sky again, and enabling it hides it again
+            cameraFrame.enabled = false;
+            expect(camera.skyVisible).to.equal(true);
+            cameraFrame.enabled = true;
+            expect(camera.skyVisible).to.equal(false);
+
+            cameraFrame.removeEffect(effect);
+            expect(camera.skyVisible).to.equal(false);
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(true);
+            effect.destroy();
+        });
+    });
+
     describe('after the opaque geometry', function () {
 
         // nothing else running between the opaque and the transparent geometry

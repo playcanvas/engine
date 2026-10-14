@@ -459,17 +459,22 @@ class CameraFrame {
         active.length = 0;
         const { effects, renderPassCamera } = this;
         let cameraJitter = 0;
+        let rendersSky = false;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
             if (effect.active && (!effect._ownsPasses || renderPassCamera?.hasEffectPasses(effect))) {
                 active.push(effect);
                 effect.update();
                 cameraJitter = Math.max(cameraJitter, effect.cameraJitter);
+                rendersSky ||= effect.rendersSky;
             }
         }
 
         // the camera is jittered for the effects taking part which need it, such as TAA
         this.cameraComponent.jitter = cameraJitter;
+
+        // the camera renders the sky of the scene unless an effect taking part renders it instead
+        this.cameraComponent.camera.skyVisible = !rendersSky;
 
         const composePass = this.renderPassCamera?.composePass;
         if (composePass) {
@@ -497,6 +502,7 @@ class CameraFrame {
 
         cameraComponent.jitter = 0;
         cameraComponent.camera.exposureScale = 1;
+        cameraComponent.camera.skyVisible = true;
 
         // disable SSAO included in the lighting pass
         cameraComponent.shaderParams.ssaoEnabled = false;
