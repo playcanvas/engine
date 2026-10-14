@@ -543,15 +543,15 @@ class RenderComponent extends Component {
      * all of the planes instead. Up to 8 planes are supported. Defaults to an empty array.
      *
      * The planes are copied, so changing a plane after the assignment has no effect until the
-     * array is assigned again. To clip a whole model, such as an entity instantiated from a
-     * {@link ContainerResource}, assign the planes to each of its render components. To clip
-     * everything a camera renders, see {@link CameraComponent#clippingPlanes} instead. Meshes with
-     * clipping planes are excluded from batching. See {@link MeshInstance#clippingPlanes} for more
-     * details.
+     * array is assigned again. To clip an entity together with its descendants, such as an entity
+     * instantiated from a {@link ContainerResource}, assign the planes to all of their render
+     * components. To clip everything a camera renders, see {@link CameraComponent#clippingPlanes}
+     * instead. Meshes with clipping planes are excluded from batching. See
+     * {@link MeshInstance#clippingPlanes} for more details.
      *
      * @type {Plane[]}
      * @example
-     * // cut away the part of the model where x is positive
+     * // cut away the parts of an entity and its descendants where x is positive
      * const plane = new Plane().setFromPointNormal(Vec3.ZERO, Vec3.LEFT);
      * for (const render of entity.findComponents('render')) {
      *     render.clippingPlanes = [plane];
