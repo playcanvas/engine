@@ -564,6 +564,27 @@ class CameraFrameEffect {
     }
 
     /**
+     * Gets the scale the effect applies to the exposure of the camera this frame, multiplying the
+     * exposure of the scene, or of the physical camera with physical units - for effects adapting
+     * the exposure to what the camera sees. Read every frame while the effect takes part, after
+     * {@link CameraFrameEffect#frameUpdate}; the camera frame applies the product of the scales of
+     * the effects taking part, and the camera renders with its own exposure again once none does.
+     * Defaults to 1.
+     *
+     * ```javascript
+     * // an effect brightening the image by one stop
+     * get cameraExposureScale() {
+     *     return 2;
+     * }
+     * ```
+     *
+     * @type {number}
+     */
+    get cameraExposureScale() {
+        return 1;
+    }
+
+    /**
      * Sets the value of a uniform the effect's shader chunk reads. Like a material parameter, the
      * value is stored by reference, so an array or a texture can be updated in place. Set the
      * values in {@link CameraFrameEffect#update}, or in {@link CameraFrameEffect#frameUpdate} for

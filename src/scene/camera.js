@@ -169,6 +169,15 @@ class Camera {
     jitter = 0;
 
     /**
+     * The scale of the exposure the camera renders with, multiplying the exposure of the scene, or
+     * of the physical camera with physical units. Set every frame by the effects adapting the
+     * exposure, such as the auto exposure of the camera frame.
+     *
+     * @type {number}
+     */
+    exposureScale = 1;
+
+    /**
      * A unique id of the camera, used where the camera needs to be referenced without retaining
      * it, for example as a key in {@link MeshInstance} draw command maps.
      *
@@ -843,6 +852,7 @@ class Camera {
 
         this.shaderPassInfo = other.shaderPassInfo;
         this.jitter = other.jitter;
+        this.exposureScale = other.exposureScale;
 
         this._projMatDirty = true;
 

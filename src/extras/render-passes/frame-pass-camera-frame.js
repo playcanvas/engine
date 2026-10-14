@@ -1074,6 +1074,14 @@ class FramePassCameraFrame extends FramePass {
         for (let i = 0; i < effects.length; i++) {
             effects[i].frameUpdate(context);
         }
+
+        // the camera renders this frame at the exposure the effects taking part scale it to, such
+        // as the auto exposure
+        let exposureScale = 1;
+        for (let i = 0; i < effects.length; i++) {
+            exposureScale *= effects[i].cameraExposureScale;
+        }
+        this.cameraComponent.camera.exposureScale = exposureScale;
     }
 }
 
