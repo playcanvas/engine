@@ -317,6 +317,21 @@ class ComputeRadixSortBase {
     }
 
     /**
+     * Sets `_destructiveKeys` for the next sort. The mode decides whether `_keys1` is owned by the
+     * sorter, so on a change the ping-pong buffers are released under the old mode, and the next
+     * allocation recreates them for the new one.
+     *
+     * @param {boolean} destructiveKeys - Whether the next sort borrows the caller's keys buffer.
+     * @protected
+     */
+    _setDestructiveKeys(destructiveKeys) {
+        if (destructiveKeys !== this._destructiveKeys) {
+            this._destroyPingPongBuffers();
+            this._destructiveKeys = destructiveKeys;
+        }
+    }
+
+    /**
      * Releases resources owned by this backend.
      */
     destroy() {
