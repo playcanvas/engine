@@ -5,31 +5,68 @@ import { Plane } from '../core/shape/plane.js';
 const MAX_CLIP_PLANES = 8;
 
 // the values of the assigned planes, read before any copy is written, because the assigned planes
-// can be the copies themselves, in another order
+// can be the returned ones, in any order
 const _values = [];
 
 /**
- * Copies planes into the copies made by a previous assignment. The assigned planes can include
- * those copies, in any order. Only planes beyond the number of the previous assignment allocate.
+ * The clipping planes of a mesh instance, a camera or a render component. It keeps the planes as
+ * last assigned, which the owner uses, apart from the copies its getter returns, which can be
+ * changed and assigned again. The set owns the planes of both, so the entries of the returned array
+ * are independent copies after each assignment, whatever had been put into the array.
  *
- * @param {Plane[]} copies - The copies of the previous assignment, updated in place.
- * @param {Plane[]|null|undefined} planes - The assigned planes.
- * @param {number} [maxCount] - The largest number of planes to copy.
  * @ignore
  */
-function copyPlanes(copies, planes, maxCount = Infinity) {
-    const count = Math.min(planes?.length ?? 0, maxCount);
-    for (let i = 0; i < count; i++) {
-        (_values[i] ??= new Plane()).copy(planes[i]);
-    }
-    for (let i = 0; i < count; i++) {
-        if (copies[i]) {
-            copies[i].copy(_values[i]);
-        } else {
-            copies[i] = _values[i].clone();
+class ClipPlaneSet {
+    /**
+     * The planes as last assigned. They are not exposed, so only assignments change them.
+     *
+     * @type {Plane[]}
+     */
+    assigned = [];
+
+    /**
+     * Copies of the assigned planes, which the getter of the owner returns.
+     *
+     * @type {Plane[]}
+     */
+    returned = [];
+
+    /**
+     * The planes the set owns for {@link ClipPlaneSet#assigned}, kept when there are fewer planes.
+     *
+     * @type {Plane[]}
+     * @private
+     */
+    _assignedPlanes = [];
+
+    /**
+     * The planes the set owns for {@link ClipPlaneSet#returned}, kept when there are fewer planes.
+     *
+     * @type {Plane[]}
+     * @private
+     */
+    _returnedPlanes = [];
+
+    /**
+     * Assigns planes, which can include planes of the returned array, in any order.
+     *
+     * @param {Plane[]|null|undefined} planes - The planes.
+     * @param {number} maxCount - The largest number of planes to keep.
+     */
+    set(planes, maxCount) {
+        const count = Math.min(planes?.length ?? 0, maxCount);
+        for (let i = 0; i < count; i++) {
+            (_values[i] ??= new Plane()).copy(planes[i]);
         }
+
+        const { assigned, returned, _assignedPlanes, _returnedPlanes } = this;
+        for (let i = 0; i < count; i++) {
+            assigned[i] = (_assignedPlanes[i] ??= new Plane()).copy(_values[i]);
+            returned[i] = (_returnedPlanes[i] ??= new Plane()).copy(_values[i]);
+        }
+        assigned.length = count;
+        returned.length = count;
     }
-    copies.length = count;
 }
 
 /**
@@ -49,4 +86,4 @@ function writeClipPlanes(planes, data) {
     }
 }
 
-export { MAX_CLIP_PLANES, copyPlanes, writeClipPlanes };
+export { ClipPlaneSet, MAX_CLIP_PLANES, writeClipPlanes };

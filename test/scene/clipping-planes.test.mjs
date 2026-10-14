@@ -16,6 +16,7 @@ import { LightList } from '../../src/scene/lighting/light-list.js';
 import { LitMaterial } from '../../src/scene/materials/lit-material.js';
 import { ShaderMaterial } from '../../src/scene/materials/shader-material.js';
 import { StandardMaterial } from '../../src/scene/materials/standard-material.js';
+import { MeshInstance } from '../../src/scene/mesh-instance.js';
 import { ShaderPass } from '../../src/scene/shader-pass.js';
 import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
@@ -77,6 +78,24 @@ describe('Clipping planes', function () {
 
     // keeps the half space where x is negative
     const left = () => new Plane().setFromPointNormal(Vec3.ZERO, Vec3.LEFT);
+
+    // gives an owner a plane twice, and a plane of the caller, through the array its getter
+    // returns, then assigns planes at distances 2 and 3
+    const assignThroughReturnedArray = (owner) => {
+        owner.clippingPlanes = [new Plane(Vec3.UP, 1)];
+        const planes = owner.clippingPlanes;
+        planes.push(planes[0]);
+        const own = new Plane(Vec3.UP, 1);
+        planes.push(own);
+        owner.clippingPlanes = planes;
+
+        const returned = owner.clippingPlanes;
+        expect(new Set(returned).size).to.equal(3);
+        expect(returned).to.not.include(own);
+
+        owner.clippingPlanes = [new Plane(Vec3.UP, 2), new Plane(Vec3.UP, 3)];
+        expect(owner.clippingPlanes.map(plane => plane.distance)).to.deep.equal([2, 3]);
+    };
 
     describe('MeshInstance', function () {
 
@@ -172,6 +191,14 @@ describe('Clipping planes', function () {
             expect(meshInstance.clippingPlanes.map(plane => plane.distance)).to.deep.equal([2, 1]);
             const data = meshInstance.getParameter('clipPlanes[0]').data;
             expect([data[3], data[7]]).to.deep.equal([2, 1]);
+        });
+
+        it('keeps its copies independent, whatever is put into the returned array', function () {
+            const meshInstance = addBox().render.meshInstances[0];
+            assignThroughReturnedArray(meshInstance);
+
+            const data = meshInstance.getParameter('clipPlanes[0]').data;
+            expect([data[3], data[7]]).to.deep.equal([2, 3]);
         });
 
         it('changes only the mode when the intersection flag changes', function () {
@@ -457,6 +484,40 @@ describe('Clipping planes', function () {
             expect(distances(entity.render.meshInstances[0])).to.deep.equal([2, 1]);
         });
 
+        it('keeps its copies independent, whatever is put into the returned array', function () {
+            const entity = addBox();
+            assignThroughReturnedArray(entity.render);
+
+            const data = entity.render.meshInstances[0].getParameter('clipPlanes[0]').data;
+            expect([data[3], data[7]]).to.deep.equal([2, 3]);
+        });
+
+        it('clones the planes as they were assigned', function () {
+            const entity = addBox();
+            entity.render.clippingPlanes = [below()];
+
+            // a change to a returned plane, which is not assigned
+            entity.render.clippingPlanes[0].distance = 9;
+            const clone = entity.clone();
+
+            expect(clone.render.clippingPlanes[0].distance).to.equal(1);
+            const data = clone.render.meshInstances[0].getParameter('clipPlanes[0]').data;
+            expect(data[3]).to.equal(1);
+        });
+
+        it('gives the mesh instances it is given its planes and its mode', function () {
+            const entity = addBox();
+            entity.render.clippingPlanes = [below()];
+
+            const mesh = entity.render.meshInstances[0].mesh;
+            const meshInstance = new MeshInstance(mesh, new StandardMaterial());
+            meshInstance.clipIntersection = true;
+            entity.render.meshInstances = [meshInstance];
+
+            expect(meshInstance.clippingPlanes).to.have.lengthOf(1);
+            expect(meshInstance.clipIntersection).to.equal(false);
+        });
+
         it('gives mesh instances created later the planes as they were assigned', function () {
             const entity = addBox();
             entity.render.clippingPlanes = [below()];
@@ -547,6 +608,24 @@ describe('Clipping planes', function () {
             expect(camera.clippingPlanes.map(plane => plane.distance)).to.deep.equal([2, 1]);
             const data = camera.camera.clipPlanesData;
             expect([data[3], data[7]]).to.deep.equal([2, 1]);
+        });
+
+        it('keeps its copies independent, whatever is put into the returned array', function () {
+            assignThroughReturnedArray(camera);
+
+            const data = camera.camera.clipPlanesData;
+            expect([data[3], data[7]]).to.deep.equal([2, 3]);
+        });
+
+        it('clones the planes as they were assigned', function () {
+            camera.clippingPlanes = [below()];
+
+            // a change to a returned plane, which is not assigned
+            camera.clippingPlanes[0].distance = 9;
+            const clone = camera.entity.clone();
+
+            expect(clone.camera.clippingPlanes[0].distance).to.equal(1);
+            expect(clone.camera.camera.clipPlanesData[3]).to.equal(1);
         });
 
         it('changes only the mode when the intersection flag changes', function () {

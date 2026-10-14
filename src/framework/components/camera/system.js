@@ -151,6 +151,10 @@ class CameraComponentSystem extends ComponentSystem {
             data[property] = c[property];
         }
 
+        // the clipping planes as assigned, without changes to the returned planes that are not
+        // assigned
+        data.clippingPlanes = c._camera._clipPlaneSet.assigned;
+
         const component = this.addComponent(clone, data);
 
         // the clear colors of the other color attachments are not component data

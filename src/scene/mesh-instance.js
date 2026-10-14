@@ -19,7 +19,7 @@ import {
     instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
-import { MAX_CLIP_PLANES, copyPlanes, writeClipPlanes } from './clip-planes.js';
+import { ClipPlaneSet, MAX_CLIP_PLANES, writeClipPlanes } from './clip-planes.js';
 import { lightMaskToShaderDefs, shaderDefsToLightMask } from './light-mask.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
@@ -679,13 +679,13 @@ class MeshInstance {
     _shaderDefs = SHADERDEF_AFFECT_DYNAMIC;
 
     /**
-     * Copies of the planes assigned to {@link MeshInstance#clippingPlanes}, reused by later
-     * assignments.
+     * The clipping planes of the mesh instance, see {@link MeshInstance#clippingPlanes}. Created on
+     * first use.
      *
-     * @type {Plane[]}
+     * @type {ClipPlaneSet|null}
      * @private
      */
-    _clippingPlanes = [];
+    _clipPlaneSet = null;
 
     /**
      * @type {boolean}
@@ -1315,8 +1315,10 @@ class MeshInstance {
         Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
             `MeshInstance#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest are ` +
             'ignored.', this);
-        copyPlanes(this._clippingPlanes, value, MAX_CLIP_PLANES);
-        this._updateClipUniforms();
+        if (this._clipPlaneSet || value?.length) {
+            (this._clipPlaneSet ??= new ClipPlaneSet()).set(value, MAX_CLIP_PLANES);
+            this._updateClipUniforms();
+        }
     }
 
     /**
@@ -1326,7 +1328,7 @@ class MeshInstance {
      * @type {Plane[]}
      */
     get clippingPlanes() {
-        return this._clippingPlanes;
+        return (this._clipPlaneSet ??= new ClipPlaneSet()).returned;
     }
 
     /**
@@ -1378,7 +1380,7 @@ class MeshInstance {
      * @private
      */
     _updateClipUniforms() {
-        const planes = this._clippingPlanes;
+        const planes = this._clipPlaneSet.assigned;
         const count = planes.length;
         if (count > 0) {
             const data = this._clipPlanesData ??= new Float32Array(MAX_CLIP_PLANES * 4);

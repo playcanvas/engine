@@ -15,7 +15,7 @@ import {
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
 import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
-import { MAX_CLIP_PLANES, copyPlanes, writeClipPlanes } from './clip-planes.js';
+import { ClipPlaneSet, MAX_CLIP_PLANES, writeClipPlanes } from './clip-planes.js';
 
 /**
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
@@ -188,12 +188,12 @@ class Camera {
     skyVisible = true;
 
     /**
-     * Copies of the planes assigned to {@link Camera#clippingPlanes}, reused by later assignments.
+     * The clipping planes of the camera, see {@link Camera#clippingPlanes}.
      *
-     * @type {Plane[]}
-     * @private
+     * @type {ClipPlaneSet}
+     * @ignore
      */
-    _clippingPlanes = [];
+    _clipPlaneSet = new ClipPlaneSet();
 
     /**
      * @type {boolean}
@@ -568,12 +568,12 @@ class Camera {
         Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
             `CameraComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
             'are ignored.');
-        copyPlanes(this._clippingPlanes, value, MAX_CLIP_PLANES);
+        this._clipPlaneSet.set(value, MAX_CLIP_PLANES);
         this._updateClipUniforms();
     }
 
     get clippingPlanes() {
-        return this._clippingPlanes;
+        return this._clipPlaneSet.returned;
     }
 
     /**
@@ -602,7 +602,7 @@ class Camera {
      * @private
      */
     _updateClipUniforms() {
-        const planes = this._clippingPlanes;
+        const planes = this._clipPlaneSet.assigned;
         writeClipPlanes(planes, this.clipPlanesData);
         this.clipParamsData[0] = planes.length;
         this.clipParamsData[1] = this._clipIntersection ? 1 : 0;
@@ -943,7 +943,7 @@ class Camera {
         this.sensitivity = other.sensitivity;
 
         this.clipIntersection = other.clipIntersection;
-        this.clippingPlanes = other.clippingPlanes;
+        this.clippingPlanes = other._clipPlaneSet.assigned;
 
         this.shaderPassInfo = other.shaderPassInfo;
         this.jitter = other.jitter;

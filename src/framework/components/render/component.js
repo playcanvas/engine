@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { LAYERID_WORLD, RENDERSTYLE_SOLID, SHADOW_CASCADE_ALL } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
-import { MAX_CLIP_PLANES, copyPlanes } from '../../../scene/clip-planes.js';
+import { ClipPlaneSet, MAX_CLIP_PLANES } from '../../../scene/clip-planes.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { MorphInstance } from '../../../scene/morph-instance.js';
 import { getShapePrimitive } from '../../graphics/primitive-cache.js';
@@ -100,23 +100,14 @@ class RenderComponent extends Component {
     _renderStyle = RENDERSTYLE_SOLID;
 
     /**
-     * Copies of the planes assigned to {@link RenderComponent#clippingPlanes}, which its getter
-     * returns. They can be changed and assigned again.
+     * The clipping planes of the component, see {@link RenderComponent#clippingPlanes}. Its
+     * assigned planes are given to the mesh instances, including those created later. Created on
+     * first use.
      *
-     * @type {Plane[]}
-     * @private
+     * @type {ClipPlaneSet|null}
+     * @ignore
      */
-    _clippingPlanes = [];
-
-    /**
-     * Copies of the planes as last assigned, which the mesh instances are given, including those
-     * created later. They are kept apart from {@link RenderComponent#_clippingPlanes}, so that
-     * changes to the returned planes have no effect until they are assigned.
-     *
-     * @type {Plane[]}
-     * @private
-     */
-    _assignedClippingPlanes = [];
+    _clipPlaneSet = null;
 
     /** @private */
     _clipIntersection = false;
@@ -379,9 +370,13 @@ class RenderComponent extends Component {
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setCustomAabb(this._customAabb);
 
-                if (this._assignedClippingPlanes.length > 0 || this._clipIntersection) {
+                // the clipping planes and mode of the component replace those of the mesh instance
+                const clipPlanes = this._clipPlaneSet?.assigned;
+                if (clipPlanes?.length || this._clipIntersection) {
                     mi[i].clipIntersection = this._clipIntersection;
-                    mi[i].clippingPlanes = this._assignedClippingPlanes;
+                    if (clipPlanes) {
+                        mi[i].clippingPlanes = clipPlanes;
+                    }
                 }
             }
 
@@ -574,12 +569,16 @@ class RenderComponent extends Component {
             `RenderComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
             'are ignored.');
 
-        // the assigned planes can be the ones the getter returned, changed since
-        const assigned = this._assignedClippingPlanes;
-        const wasClipped = assigned.length > 0;
-        copyPlanes(assigned, value, MAX_CLIP_PLANES);
-        copyPlanes(this._clippingPlanes, assigned);
+        if (!this._clipPlaneSet && !value?.length) {
+            return;
+        }
 
+        // the assigned planes can be the ones the getter returned, changed since
+        const set = (this._clipPlaneSet ??= new ClipPlaneSet());
+        const wasClipped = set.assigned.length > 0;
+        set.set(value, MAX_CLIP_PLANES);
+
+        const assigned = set.assigned;
         const mi = this._meshInstances;
         for (let i = 0; i < mi.length; i++) {
             mi[i].clippingPlanes = assigned;
@@ -599,7 +598,7 @@ class RenderComponent extends Component {
      * @type {Plane[]}
      */
     get clippingPlanes() {
-        return this._clippingPlanes;
+        return (this._clipPlaneSet ??= new ClipPlaneSet()).returned;
     }
 
     /**
