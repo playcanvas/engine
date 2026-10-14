@@ -41,13 +41,22 @@ describe('WebgpuXrBridge', function () {
         globalThis.XRGPUBinding = previousBinding;
     });
 
+    // a depth texture of the format, whose views record the descriptor they were created with
+    const createDepthTexture = format => ({
+        format,
+        createView: sinon.stub().callsFake(descriptor => ({ descriptor }))
+    });
+
     const createBridge = () => {
+        const passEncoder = { end: sinon.spy() };
+        const commandEncoder = { beginRenderPass: sinon.stub().returns(passEncoder) };
         const device = {
             wgpu: {},
             xrSubImages: [],
-            resolver: { clearDepth: sinon.spy() },
+            passEncoder,
+            commandEncoder,
             on: () => ({ off() {} }),
-            getCommandEncoder: () => ({}),
+            getCommandEncoder: () => commandEncoder,
             setXrBackBufferFormat() {},
             _clearXrState() {
                 this.xrSubImages.length = 0;
@@ -68,23 +77,57 @@ describe('WebgpuXrBridge', function () {
     });
 
     it('clears the depth of every view to the far plane', function () {
-        depthTexture = { format: 'depth24plus' };
+        depthTexture = createDepthTexture('depth24plus');
         const bridge = createBridge();
         bridge.impl.beginFrame(frame(2), {});
 
-        const { clearDepth } = bridge.device.resolver;
+        const { commandEncoder, passEncoder } = bridge.device;
         expect(bridge.device.xrSubImages).to.have.length(2);
-        expect(clearDepth.calledTwice).to.be.true;
+        expect(depthTexture.createView.calledTwice).to.be.true;
+        expect(commandEncoder.beginRenderPass.calledTwice).to.be.true;
+        expect(passEncoder.end.calledTwice).to.be.true;
+
         for (let view = 0; view < 2; view++) {
-            expect(clearDepth.getCall(view).args[1]).to.equal(depthTexture);
-            expect(clearDepth.getCall(view).args[2].baseArrayLayer).to.equal(view);
+            // the view's own array layer of the depth
+            const viewDescriptor = depthTexture.createView.getCall(view).args[0];
+            expect(viewDescriptor).to.deep.equal({
+                dimension: '2d',
+                baseMipLevel: 0,
+                mipLevelCount: 1,
+                baseArrayLayer: view,
+                arrayLayerCount: 1
+            });
+
+            const descriptor = commandEncoder.beginRenderPass.getCall(view).args[0];
+            expect(descriptor.colorAttachments).to.deep.equal([]);
+            const attachment = descriptor.depthStencilAttachment;
+            expect(attachment.view).to.equal(depthTexture.createView.getCall(view).returnValue);
+            expect(attachment.depthClearValue).to.equal(1);
+            expect(attachment.depthLoadOp).to.equal('clear');
+            expect(attachment.depthStoreOp).to.equal('store');
+
+            // a depth-only format takes no stencil operations
+            expect(attachment).to.not.have.property('stencilLoadOp');
+            expect(attachment).to.not.have.property('stencilStoreOp');
         }
+    });
+
+    it('clears the stencil of a depth-stencil texture along with its depth', function () {
+        depthTexture = createDepthTexture('depth24plus-stencil8');
+        const bridge = createBridge();
+        bridge.impl.beginFrame(frame(1), {});
+
+        const attachment = bridge.device.commandEncoder.beginRenderPass.firstCall.args[0].depthStencilAttachment;
+        expect(attachment.depthLoadOp).to.equal('clear');
+        expect(attachment.depthStoreOp).to.equal('store');
+        expect(attachment.stencilLoadOp).to.equal('clear');
+        expect(attachment.stencilStoreOp).to.equal('store');
     });
 
     it('clears no depth for a view without one', function () {
         const bridge = createBridge();
         bridge.impl.beginFrame(frame(1), {});
         expect(bridge.device.xrSubImages).to.have.length(1);
-        expect(bridge.device.resolver.clearDepth.called).to.be.false;
+        expect(bridge.device.commandEncoder.beginRenderPass.called).to.be.false;
     });
 });

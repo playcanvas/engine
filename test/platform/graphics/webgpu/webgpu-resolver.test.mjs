@@ -1,49 +1,37 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
 
-import { WebgpuResolver } from '../../../../src/platform/graphics/webgpu/webgpu-resolver.js';
+import { Preprocessor } from '../../../../src/core/preprocessor.js';
+import webgpuDepthResolve from '../../../../src/platform/graphics/shader-chunks/frag/webgpu-depth-resolve.js';
 
-describe('WebgpuResolver', function () {
+// mirrors how WebgpuResolver#getShader builds the shader source for a resolve mode, and how the
+// Shader class preprocesses WGSL (stripDefines: true)
+const process = (mode) => {
+    const code = `#define DEPTH_RESOLVE_${mode.toUpperCase()}\n${webgpuDepthResolve}`;
+    return Preprocessor.run(code, new Map(), { stripDefines: true });
+};
 
-    describe('#clearDepth', function () {
+describe('WebgpuResolver depth resolve shader chunk', function () {
 
-        // clears a depth texture of the format, recording the view it creates and the render pass
-        // it encodes, and returns the pass's depth-stencil attachment
-        const clear = (format, viewDescriptor) => {
-            const view = { format };
-            const texture = { format, createView: sinon.stub().returns(view) };
-            const passEncoder = { end: sinon.spy() };
-            const commandEncoder = { beginRenderPass: sinon.stub().returns(passEncoder) };
+    it('loads only sample 0 for the sample0 mode', function () {
+        const code = process('sample0');
+        expect(code).to.contain('textureLoad(img, coord, 0u)');
+        expect(code).to.not.contain('textureNumSamples');
+        expect(code).to.not.contain('#');
+    });
 
-            new WebgpuResolver({}).clearDepth(commandEncoder, texture, viewDescriptor);
+    it('reduces all samples with min for the min mode', function () {
+        const code = process('min');
+        expect(code).to.contain('textureNumSamples(img)');
+        expect(code).to.contain('min(depth, textureLoad(img, coord, i))');
+        expect(code).to.not.contain('max(depth');
+        expect(code).to.not.contain('#');
+    });
 
-            expect(texture.createView.calledOnceWithExactly(viewDescriptor)).to.be.true;
-            expect(commandEncoder.beginRenderPass.calledOnce).to.be.true;
-            expect(passEncoder.end.calledOnce).to.be.true;
-            const descriptor = commandEncoder.beginRenderPass.firstCall.args[0];
-            expect(descriptor.colorAttachments).to.deep.equal([]);
-            expect(descriptor.depthStencilAttachment.view).to.equal(view);
-            return descriptor.depthStencilAttachment;
-        };
-
-        it('clears a slice of a depth texture to the far plane and stores it', function () {
-            const viewDescriptor = { dimension: '2d', baseArrayLayer: 1, arrayLayerCount: 1 };
-            const attachment = clear('depth24plus', viewDescriptor);
-            expect(attachment.depthClearValue).to.equal(1);
-            expect(attachment.depthLoadOp).to.equal('clear');
-            expect(attachment.depthStoreOp).to.equal('store');
-
-            // a depth-only format takes no stencil operations
-            expect(attachment).to.not.have.property('stencilLoadOp');
-            expect(attachment).to.not.have.property('stencilStoreOp');
-        });
-
-        it('clears the stencil of a depth-stencil texture along with its depth', function () {
-            const attachment = clear('depth24plus-stencil8', undefined);
-            expect(attachment.depthLoadOp).to.equal('clear');
-            expect(attachment.depthStoreOp).to.equal('store');
-            expect(attachment.stencilLoadOp).to.equal('clear');
-            expect(attachment.stencilStoreOp).to.equal('store');
-        });
+    it('reduces all samples with max for the max mode', function () {
+        const code = process('max');
+        expect(code).to.contain('textureNumSamples(img)');
+        expect(code).to.contain('max(depth, textureLoad(img, coord, i))');
+        expect(code).to.not.contain('min(depth');
+        expect(code).to.not.contain('#');
     });
 });
