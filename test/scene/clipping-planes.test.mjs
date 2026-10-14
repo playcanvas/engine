@@ -10,7 +10,7 @@ import { VertexFormat } from '../../src/platform/graphics/vertex-format.js';
 import { CameraShaderParams } from '../../src/scene/camera-shader-params.js';
 import {
     LAYERID_WORLD, LIGHTTYPE_DIRECTIONAL, SHADER_FORWARD, SHADER_PICK, SHADER_PREPASS,
-    SHADERDEF_CLIP, SHADOW_PCF3_32F
+    SHADERDEF_CLIP, SHADERDEF_SCREENSPACE, SHADOW_PCF3_32F
 } from '../../src/scene/constants.js';
 import { LightList } from '../../src/scene/lighting/light-list.js';
 import { LitMaterial } from '../../src/scene/materials/lit-material.js';
@@ -26,14 +26,17 @@ describe('Clipping planes', function () {
 
     let app;
 
+    let camera;
+
     beforeEach(function () {
         jsdomSetup();
         app = createApp();
 
-        const camera = new Entity('camera');
-        camera.addComponent('camera');
-        camera.setPosition(0, 1, 10);
-        app.root.addChild(camera);
+        const entity = new Entity('camera');
+        entity.addComponent('camera');
+        entity.setPosition(0, 1, 10);
+        app.root.addChild(entity);
+        camera = entity.camera;
     });
 
     afterEach(function () {
@@ -190,8 +193,10 @@ describe('Clipping planes', function () {
 
     describe('shaders', function () {
 
-        // the fragment shader source of the variant of the material, for the mesh defines
-        const fragmentSource = (material, pass, objDefs) => {
+        // the fragment shader source of the variant of the material, for the mesh defines and the
+        // shader params of the camera
+        const fragmentSource = (material, pass, objDefs,
+            cameraShaderParams = new CameraShaderParams()) => {
             const device = app.graphicsDevice;
             material.update();
             const shader = material.getShaderVariant({
@@ -199,7 +204,7 @@ describe('Clipping planes', function () {
                 scene: app.scene,
                 objDefs,
                 pass,
-                cameraShaderParams: new CameraShaderParams(),
+                cameraShaderParams,
                 viewUniformFormat: app.renderer.getViewUniformFormat(false, new LightList()),
                 vertexFormat: new VertexFormat(device, [
                     { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
@@ -207,6 +212,13 @@ describe('Clipping planes', function () {
             });
             expect(shader.failed).to.equal(false);
             return shader.definition.fshader;
+        };
+
+        // the shader params of a camera with clipping planes
+        const clippingCamera = () => {
+            const params = new CameraShaderParams();
+            params.clipPlanes = true;
+            return params;
         };
 
         const passes = () => {
@@ -238,7 +250,39 @@ describe('Clipping planes', function () {
                     expect(unclipped, passName).to.not.include('applyClipPlanes');
                 }
             });
+
+            it(`clips the camera passes of a ${name} with the camera planes`, function () {
+                // shadows render with the shadow camera, see the CameraComponent tests
+                const cameraPasses = Object.entries(passes())
+                .filter(([passName]) => passName !== 'shadow');
+                for (const [passName, pass] of cameraPasses) {
+                    const clipped = fragmentSource(createMaterial(), pass, 0, clippingCamera());
+                    expect(clipped, passName).to.match(/applyClipPlanes\(\s*vPositionW\s*\);/);
+                    expect(clipped, passName).to.include('camera_clipPlanes');
+                    expect(clipped, passName).to.not.match(/\bclipPlanes\b/);
+                }
+            });
         }
+
+        it('clips with the planes of both the camera and the mesh instance', function () {
+            const clipped = fragmentSource(new StandardMaterial(), SHADER_FORWARD, SHADERDEF_CLIP,
+                clippingCamera());
+            expect(clipped).to.match(/\bclipPlanes\b/);
+            expect(clipped).to.include('camera_clipPlanes');
+        });
+
+        it('does not clip screen space elements with the camera planes', function () {
+            const material = new StandardMaterial();
+            const screenSpace = fragmentSource(material, SHADER_FORWARD, SHADERDEF_SCREENSPACE,
+                clippingCamera());
+            expect(screenSpace).to.not.include('camera_clipPlanes');
+
+            // their own planes still apply
+            const clipped = fragmentSource(material, SHADER_FORWARD,
+                SHADERDEF_SCREENSPACE | SHADERDEF_CLIP, clippingCamera());
+            expect(clipped).to.match(/\bclipPlanes\b/);
+            expect(clipped).to.not.include('camera_clipPlanes');
+        });
 
         it('defines CLIP_PLANES for a ShaderMaterial, which clips with clipPlanesPS', function () {
             const material = new ShaderMaterial({
@@ -299,6 +343,10 @@ describe('Clipping planes', function () {
             const clipped = fragmentSource(material, SHADER_FORWARD, SHADERDEF_CLIP);
             expect(clipped).to.include('applyClipPlanes(');
             expect(fragmentSource(material, SHADER_FORWARD, 0)).to.not.include('applyClipPlanes');
+
+            // the camera planes define CLIP_PLANES as well
+            const cameraClipped = fragmentSource(material, SHADER_FORWARD, 0, clippingCamera());
+            expect(cameraClipped).to.include('camera_clipPlanes');
 
             // and draws with it
             const meshInstance = addBox(material).render.meshInstances[0];
@@ -363,6 +411,120 @@ describe('Clipping planes', function () {
             const meshInstance = entity.render.meshInstances[0];
             expect(meshInstance.clippingPlanes).to.have.lengthOf(0);
             expect(meshInstance._shaderDefs & SHADERDEF_CLIP).to.equal(0);
+        });
+    });
+
+    describe('CameraComponent', function () {
+
+        it('copies the planes, so a later change of a plane does not apply', function () {
+            const plane = below();
+            camera.clippingPlanes = [plane];
+
+            expect(camera.clippingPlanes).to.have.lengthOf(1);
+            expect(camera.clippingPlanes[0]).to.not.equal(plane);
+            expect(camera.clippingPlanes[0].normal).to.deep.equal(Vec3.DOWN);
+
+            plane.distance = 5;
+            expect(camera.camera.clipPlanesData[3]).to.equal(1);
+
+            // assigning the array again applies the change
+            camera.clippingPlanes = [plane];
+            expect(camera.camera.clipPlanesData[3]).to.equal(5);
+        });
+
+        it('sets the planes, their count and the intersection flag as uniforms', function () {
+            camera.clippingPlanes = [below(), left()];
+            camera.clipIntersection = true;
+            addBox();
+
+            // the camera plane uniforms at each draw
+            const scope = app.graphicsDevice.scope;
+            const planesId = scope.resolve('camera_clipPlanes[0]');
+            const paramsId = scope.resolve('camera_clipParams');
+            const draws = [];
+            const draw = app.graphicsDevice.draw;
+            sinon.stub(app.graphicsDevice, 'draw').callsFake(function (...args) {
+                // adding 0 turns the -0 distance of the plane through the origin into 0
+                const planes = Array.from(planesId.value.subarray(0, 8), value => value + 0);
+                draws.push([planes, Array.from(paramsId.value)]);
+                return draw.apply(this, args);
+            });
+            app.render();
+
+            expect(draws).to.deep.equal([[[0, -1, 0, 1, -1, 0, 0, 0], [2, 1]]]);
+        });
+
+        it('enables the clipping shader defines while it has planes', function () {
+            const params = camera.camera.shaderParams;
+            const hash = params.hash;
+            expect(params.defines.has('CLIP_PLANES')).to.equal(false);
+
+            camera.clippingPlanes = [below()];
+            expect(params.defines.has('CLIP_PLANES')).to.equal(true);
+            expect(params.defines.has('CLIP_PLANES_CAMERA')).to.equal(true);
+            const clippedHash = params.hash;
+            expect(clippedHash).to.not.equal(hash);
+
+            // moving the planes or changing their number keeps the shaders
+            camera.clippingPlanes = [left(), below()];
+            camera.clipIntersection = true;
+            expect(params.hash).to.equal(clippedHash);
+
+            camera.clippingPlanes = [];
+            expect(params.defines.has('CLIP_PLANES')).to.equal(false);
+            expect(params.hash).to.equal(hash);
+        });
+
+        it('uses up to 8 planes', function () {
+            const assert = sinon.stub(Debug, 'assert');
+            camera.clippingPlanes = Array.from({ length: 9 }, below);
+
+            expect(camera.clippingPlanes).to.have.lengthOf(8);
+            expect(camera.camera.clipParamsData[0]).to.equal(8);
+            expect(assert.calledWith(false)).to.equal(true);
+        });
+
+        it('does not clip shadows', function () {
+            const light = new Entity('light');
+            light.addComponent('light', { type: 'directional', castShadows: true });
+            light.setEulerAngles(45, 30, 0);
+            app.root.addChild(light);
+            addBox();
+            camera.clippingPlanes = [below()];
+
+            // whether the shader of each draw reads the camera planes
+            const device = app.graphicsDevice;
+            let shader = null;
+            const setShader = device.setShader;
+            sinon.stub(device, 'setShader').callsFake(function (...args) {
+                shader = args[0];
+                return setShader.apply(this, args);
+            });
+            const draws = [];
+            const draw = device.draw;
+            sinon.stub(device, 'draw').callsFake(function (...args) {
+                draws.push(shader.definition.fshader.includes('camera_clipPlanes'));
+                return draw.apply(this, args);
+            });
+            app.render();
+
+            // the box is drawn by the shadow pass, and then by the forward pass
+            expect(draws).to.deep.equal([false, true]);
+        });
+
+        it('takes its planes from the component data, and keeps them when cloned', function () {
+            const entity = new Entity('data camera');
+            entity.addComponent('camera', { clippingPlanes: [below()], clipIntersection: true });
+            app.root.addChild(entity);
+            expect(entity.camera.clippingPlanes).to.have.lengthOf(1);
+            expect(entity.camera.clipIntersection).to.equal(true);
+
+            const clone = entity.clone();
+            expect(clone.camera.clippingPlanes).to.have.lengthOf(1);
+            expect(clone.camera.clippingPlanes[0]).to.not.equal(entity.camera.clippingPlanes[0]);
+            expect(clone.camera.clippingPlanes[0].normal).to.deep.equal(Vec3.DOWN);
+            expect(clone.camera.clipIntersection).to.equal(true);
+            expect(clone.camera.camera.shaderParams.clipPlanes).to.equal(true);
         });
     });
 

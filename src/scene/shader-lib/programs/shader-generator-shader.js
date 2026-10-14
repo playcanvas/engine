@@ -68,7 +68,10 @@ class ShaderGeneratorShader extends ShaderGenerator {
             if (options.useMorphPosition) defines.set('MORPHING_POSITION', true);
             if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
         }
-        if (options.useClipPlanes) defines.set('CLIP_PLANES', true);
+        if (options.useClipPlanes) {
+            defines.set('CLIP_PLANES', true);
+            defines.set('CLIP_PLANES_MESH', true);
+        }
     }
 
     createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl) {

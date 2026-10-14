@@ -36,6 +36,7 @@ import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 import { Culler } from './culler.js';
 import { MeshInstanceSorter } from './mesh-instance-sorter.js';
 import { Camera } from '../camera.js';
+import { MAX_CLIP_PLANES } from '../clip-planes.js';
 
 /**
  * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js'
@@ -396,6 +397,8 @@ class Renderer {
         this.tbnBasis = scope.resolve('tbnBasis');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.cameraClipPlanesId = scope.resolve('camera_clipPlanes[0]');
+        this.cameraClipParamsId = scope.resolve('camera_clipParams');
         this.viewportSize = new Float32Array(4);
         this.viewportSizeId = scope.resolve('viewport_size');
         this.viewIndexId = scope.resolve('view_index');
@@ -584,6 +587,11 @@ class Renderer {
 
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
+
+        // the clipping planes of the camera, see Camera#clippingPlanes. The planes are in world
+        // space, so all views share them
+        this.cameraClipPlanesId.setValue(camera.clipPlanesData);
+        this.cameraClipParamsId.setValue(camera.clipParamsData);
 
         // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
         // which is correct for both side-by-side single-texture and multi-pass per-eye-view
@@ -841,6 +849,10 @@ class Renderer {
                 new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
                 new UniformFormat('projectionFlipY', UNIFORMTYPE_FLOAT),
                 new UniformFormat('tbnBasis', UNIFORMTYPE_FLOAT),
+
+                // the clipping planes of the camera
+                new UniformFormat('camera_clipPlanes', UNIFORMTYPE_VEC4, MAX_CLIP_PLANES),
+                new UniformFormat('camera_clipParams', UNIFORMTYPE_VEC2),
 
                 // the fog of the camera or the scene, set per layer
                 new UniformFormat('fog_color', UNIFORMTYPE_VEC3),

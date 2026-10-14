@@ -614,9 +614,12 @@ class LitShader {
         this.includes.set('frontendDeclPS', frontendDecl ?? '');
         this.includes.set('frontendCodePS', frontendCode ?? '');
 
-        // clipping applies to all passes, so that what is clipped neither renders, casts shadows,
-        // writes depth nor gets picked
+        // the planes of the mesh instance clip all passes, so that what they clip neither renders,
+        // casts shadows, writes depth nor gets picked. The planes of the camera are enabled by
+        // the defines of the camera shader params instead, so they do not clip the shadow passes,
+        // which render with the shadow camera
         this.fDefineSet(options.useClipPlanes, 'CLIP_PLANES');
+        this.fDefineSet(options.useClipPlanes, 'CLIP_PLANES_MESH');
 
         if (options.pass === SHADER_PICK) {
             // nothing to prepare currently

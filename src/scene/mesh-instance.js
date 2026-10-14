@@ -19,6 +19,7 @@ import {
     instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
+import { MAX_CLIP_PLANES, copyPlanes, writeClipPlanes } from './clip-planes.js';
 import { lightMaskToShaderDefs, shaderDefsToLightMask } from './light-mask.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
@@ -75,10 +76,6 @@ const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
 const lookupHashes = new Uint32Array(4);
-
-// the largest number of clipping planes of a mesh instance, matching the size of the uniform array
-// of the clipPlanesPS chunk
-const MAX_CLIP_PLANES = 8;
 
 // the shader define of each texture coordinate set of the mesh, by set index
 const uvShaderDefs = [SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7];
@@ -1289,7 +1286,8 @@ class MeshInstance {
      * The clipped parts are removed from every render pass: they cast no shadows, write no depth
      * and cannot be picked. The planes are copied, so changing a plane after the assignment has no
      * effect until the array is assigned again. Only the first plane a mesh instance is given
-     * compiles new shaders - moving the planes or changing their number does not.
+     * compiles new shaders - moving the planes or changing their number does not. The planes of
+     * the camera clip the mesh instance as well, see {@link CameraComponent#clippingPlanes}.
      *
      * {@link StandardMaterial} is clipped. The shader of a {@link ShaderMaterial} is clipped when
      * its fragment shader includes the `clipPlanesPS` chunk and calls `applyClipPlanes` with the
@@ -1310,19 +1308,7 @@ class MeshInstance {
         Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
             `MeshInstance#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest are ` +
             'ignored.', this);
-        const count = Math.min(value?.length ?? 0, MAX_CLIP_PLANES);
-
-        // copy the planes into the copies of the previous assignment, which can be the same array
-        const planes = this._clippingPlanes;
-        for (let i = 0; i < count; i++) {
-            if (planes[i]) {
-                planes[i].copy(value[i]);
-            } else {
-                planes[i] = value[i].clone();
-            }
-        }
-        planes.length = count;
-
+        copyPlanes(this._clippingPlanes, value, MAX_CLIP_PLANES);
         this._updateClipUniforms();
     }
 
@@ -1371,13 +1357,7 @@ class MeshInstance {
         const count = planes.length;
         if (count > 0) {
             const data = this._clipPlanesData ??= new Float32Array(MAX_CLIP_PLANES * 4);
-            for (let i = 0; i < count; i++) {
-                const { normal, distance } = planes[i];
-                data[i * 4] = normal.x;
-                data[i * 4 + 1] = normal.y;
-                data[i * 4 + 2] = normal.z;
-                data[i * 4 + 3] = distance;
-            }
+            writeClipPlanes(planes, data);
 
             const params = this._clipParamsData ??= new Float32Array(2);
             params[0] = count;

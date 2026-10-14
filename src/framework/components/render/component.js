@@ -1,6 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { LAYERID_WORLD, RENDERSTYLE_SOLID, SHADOW_CASCADE_ALL } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
+import { copyPlanes } from '../../../scene/clip-planes.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { MorphInstance } from '../../../scene/morph-instance.js';
 import { getShapePrimitive } from '../../graphics/primitive-cache.js';
@@ -543,7 +544,8 @@ class RenderComponent extends Component {
      *
      * The planes are copied, so changing a plane after the assignment has no effect until the
      * array is assigned again. To clip a whole model, such as an entity instantiated from a
-     * {@link ContainerResource}, assign the planes to each of its render components. Meshes with
+     * {@link ContainerResource}, assign the planes to each of its render components. To clip
+     * everything a camera renders, see {@link CameraComponent#clippingPlanes} instead. Meshes with
      * clipping planes are excluded from batching. See {@link MeshInstance#clippingPlanes} for more
      * details.
      *
@@ -556,19 +558,9 @@ class RenderComponent extends Component {
      * }
      */
     set clippingPlanes(value) {
-        const wasClipped = this._clippingPlanes.length > 0;
-
-        // copy the planes into the copies of the previous assignment, which can be the same array
         const planes = this._clippingPlanes;
-        const count = value?.length ?? 0;
-        for (let i = 0; i < count; i++) {
-            if (planes[i]) {
-                planes[i].copy(value[i]);
-            } else {
-                planes[i] = value[i].clone();
-            }
-        }
-        planes.length = count;
+        const wasClipped = planes.length > 0;
+        copyPlanes(planes, value);
 
         const mi = this._meshInstances;
         for (let i = 0; i < mi.length; i++) {
@@ -577,7 +569,7 @@ class RenderComponent extends Component {
 
         // clipped meshes are excluded from batching, so the batch is rebuilt without them, or with
         // them once they are no longer clipped
-        if (this._batchGroupId >= 0 && wasClipped !== count > 0) {
+        if (this._batchGroupId >= 0 && wasClipped !== planes.length > 0) {
             this.system.app.batcher?.markGroupDirty(this._batchGroupId);
         }
     }

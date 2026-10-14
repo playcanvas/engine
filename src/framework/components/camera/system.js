@@ -43,6 +43,8 @@ const _properties = [
     'clearDepth',
     'clearDepthBuffer',
     'clearStencilBuffer',
+    'clipIntersection',
+    'clippingPlanes',
     'renderSceneColorMap',
     'renderSceneDepthMap',
     'cullFaces',

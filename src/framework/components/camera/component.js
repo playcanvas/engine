@@ -14,6 +14,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { Mat4 } from '../../../core/math/mat4.js'
+ * @import { Plane } from '../../../core/shape/plane.js'
  * @import { ComputePass } from '../../../platform/graphics/compute-pass.js'
  * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
@@ -375,6 +376,64 @@ class CameraComponent extends Component {
      */
     get fog() {
         return this._camera.fogParams;
+    }
+
+    /**
+     * Sets the planes that clip what the camera renders, in world space. The parts of the meshes
+     * behind any of the planes - on the side opposite to the plane normal - are not rendered, which
+     * cuts the scene open along the planes, as a section view does. Use {@link clipIntersection}
+     * to clip only the parts behind all of the planes instead. Up to 8 planes are supported.
+     * Defaults to an empty array.
+     *
+     * The planes clip the meshes the camera renders with a {@link StandardMaterial}, or with a
+     * {@link ShaderMaterial} that supports clipping, see {@link MeshInstance#clippingPlanes}. They
+     * apply to all passes of the camera, including picking, but not to shadows, which the meshes
+     * cast whole, nor to screen space elements. To clip only some meshes, or their shadows too,
+     * use {@link RenderComponent#clippingPlanes}. A mesh with planes of its own is clipped by both.
+     *
+     * The planes are copied, so changing a plane after the assignment has no effect until the
+     * array is assigned again. Giving the camera its first plane compiles new variants of the
+     * shaders it renders - moving the planes or changing their number does not.
+     *
+     * @type {Plane[]}
+     * @example
+     * // show the floors of a building below a height of 3
+     * entity.camera.clippingPlanes = [
+     *     new Plane().setFromPointNormal(new Vec3(0, 3, 0), Vec3.DOWN)
+     * ];
+     */
+    set clippingPlanes(value) {
+        this._camera.clippingPlanes = value;
+    }
+
+    /**
+     * Gets the planes that clip what the camera renders, in world space. These are copies of the
+     * assigned planes, and changing them has no effect until the array is assigned again.
+     *
+     * @type {Plane[]}
+     */
+    get clippingPlanes() {
+        return this._camera.clippingPlanes;
+    }
+
+    /**
+     * Sets whether only the parts behind all of the {@link clippingPlanes} are clipped, instead of
+     * the parts behind any of them. With two planes this cuts a wedge out of the scene, and with
+     * three a corner. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        this._camera.clipIntersection = value;
+    }
+
+    /**
+     * Gets whether only the parts behind all of the {@link clippingPlanes} are clipped.
+     *
+     * @type {boolean}
+     */
+    get clipIntersection() {
+        return this._camera.clipIntersection;
     }
 
     /**

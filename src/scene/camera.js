@@ -15,10 +15,12 @@ import {
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
 import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
+import { MAX_CLIP_PLANES, copyPlanes, writeClipPlanes } from './clip-planes.js';
 
 /**
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Plane } from '../core/shape/plane.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { FogParams } from './fog-params.js'
@@ -184,6 +186,37 @@ class Camera {
      * @type {boolean}
      */
     skyVisible = true;
+
+    /**
+     * Copies of the planes assigned to {@link Camera#clippingPlanes}, reused by later assignments.
+     *
+     * @type {Plane[]}
+     * @private
+     */
+    _clippingPlanes = [];
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _clipIntersection = false;
+
+    /**
+     * The clipping planes as the uniform the shader reads, (normal, distance) per plane.
+     *
+     * @type {Float32Array}
+     * @ignore
+     */
+    clipPlanesData = new Float32Array(MAX_CLIP_PLANES * 4);
+
+    /**
+     * The number of clipping planes, and 1 for intersection clipping, as the uniform the shader
+     * reads.
+     *
+     * @type {Float32Array}
+     * @ignore
+     */
+    clipParamsData = new Float32Array(2);
 
     /**
      * A unique id of the camera, used where the camera needs to be referenced without retaining
@@ -525,6 +558,55 @@ class Camera {
         return this._clearStencilBuffer;
     }
 
+    /**
+     * Sets the planes that clip what the camera renders, in world space. The planes are copied.
+     * See {@link CameraComponent#clippingPlanes}.
+     *
+     * @type {Plane[]}
+     */
+    set clippingPlanes(value) {
+        Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
+            `CameraComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
+            'are ignored.');
+        copyPlanes(this._clippingPlanes, value, MAX_CLIP_PLANES);
+        this._updateClipUniforms();
+    }
+
+    get clippingPlanes() {
+        return this._clippingPlanes;
+    }
+
+    /**
+     * Sets whether only the parts behind all of the {@link Camera#clippingPlanes} are clipped,
+     * instead of the parts behind any of them.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this._clipIntersection !== value) {
+            this._clipIntersection = value;
+            this._updateClipUniforms();
+        }
+    }
+
+    get clipIntersection() {
+        return this._clipIntersection;
+    }
+
+    /**
+     * Writes the clipping planes into the uniforms the shader reads, which the renderer sets for
+     * each pass of the camera, and enables the clipping shader code when there is any plane.
+     *
+     * @private
+     */
+    _updateClipUniforms() {
+        const planes = this._clippingPlanes;
+        writeClipPlanes(planes, this.clipPlanesData);
+        this.clipParamsData[0] = planes.length;
+        this.clipParamsData[1] = this._clipIntersection ? 1 : 0;
+        this.shaderParams.clipPlanes = planes.length > 0;
+    }
+
     set cullFaces(newValue) {
         this._cullFaces = newValue;
     }
@@ -857,6 +939,9 @@ class Camera {
         this.aperture = other.aperture;
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
+
+        this.clipIntersection = other.clipIntersection;
+        this.clippingPlanes = other.clippingPlanes;
 
         this.shaderPassInfo = other.shaderPassInfo;
         this.jitter = other.jitter;
