@@ -97,6 +97,24 @@ describe('Clipping planes', function () {
         expect(owner.clippingPlanes.map(plane => plane.distance)).to.deep.equal([2, 3]);
     };
 
+    // makes two planes an owner returned share a normal, assigns planes facing up and right, then
+    // assigns the returned planes back
+    const assignAfterSharingNormals = (owner) => {
+        owner.clippingPlanes = [new Plane(Vec3.UP, 1), new Plane(Vec3.RIGHT, 2)];
+        const planes = owner.clippingPlanes;
+        planes[0].normal = planes[1].normal;
+        owner.clippingPlanes = [new Plane(Vec3.UP, 1), new Plane(Vec3.RIGHT, 2)];
+
+        const returned = owner.clippingPlanes;
+        expect(returned[0].normal).to.not.equal(returned[1].normal);
+        const normals = returned.map(({ normal }) => [normal.x, normal.y, normal.z]);
+        expect(normals).to.deep.equal([[0, 1, 0], [1, 0, 0]]);
+        owner.clippingPlanes = returned;
+    };
+
+    // the planes up at distance 1 and right at distance 2 as the uniform data
+    const upAndRight = [0, 1, 0, 1, 1, 0, 0, 2];
+
     describe('MeshInstance', function () {
 
         it('copies the planes, so a later change of a plane does not apply', function () {
@@ -199,6 +217,14 @@ describe('Clipping planes', function () {
 
             const data = meshInstance.getParameter('clipPlanes[0]').data;
             expect([data[3], data[7]]).to.deep.equal([2, 3]);
+        });
+
+        it('keeps the normals of its copies independent', function () {
+            const meshInstance = addBox().render.meshInstances[0];
+            assignAfterSharingNormals(meshInstance);
+
+            const data = meshInstance.getParameter('clipPlanes[0]').data;
+            expect(Array.from(data.subarray(0, 8))).to.deep.equal(upAndRight);
         });
 
         it('changes only the mode when the intersection flag changes', function () {
@@ -492,6 +518,24 @@ describe('Clipping planes', function () {
             expect([data[3], data[7]]).to.deep.equal([2, 3]);
         });
 
+        it('keeps the normals of its copies independent', function () {
+            const entity = addBox();
+            assignAfterSharingNormals(entity.render);
+
+            const data = entity.render.meshInstances[0].getParameter('clipPlanes[0]').data;
+            expect(Array.from(data.subarray(0, 8))).to.deep.equal(upAndRight);
+        });
+
+        it('removes planes assigned to its mesh instances directly when given none', function () {
+            const entity = addBox();
+            const meshInstance = entity.render.meshInstances[0];
+            meshInstance.clippingPlanes = [below()];
+
+            entity.render.clippingPlanes = [];
+            expect(meshInstance.clipped).to.equal(false);
+            expect(meshInstance.clippingPlanes).to.have.lengthOf(0);
+        });
+
         it('clones the planes as they were assigned', function () {
             const entity = addBox();
             entity.render.clippingPlanes = [below()];
@@ -516,6 +560,16 @@ describe('Clipping planes', function () {
 
             expect(meshInstance.clippingPlanes).to.have.lengthOf(1);
             expect(meshInstance.clipIntersection).to.equal(false);
+        });
+
+        it('removes the planes of mesh instances it is given when it has none', function () {
+            const entity = addBox();
+            const mesh = entity.render.meshInstances[0].mesh;
+            const meshInstance = new MeshInstance(mesh, new StandardMaterial());
+            meshInstance.clippingPlanes = [below()];
+            entity.render.meshInstances = [meshInstance];
+
+            expect(meshInstance.clipped).to.equal(false);
         });
 
         it('gives mesh instances created later the planes as they were assigned', function () {
@@ -615,6 +669,13 @@ describe('Clipping planes', function () {
 
             const data = camera.camera.clipPlanesData;
             expect([data[3], data[7]]).to.deep.equal([2, 3]);
+        });
+
+        it('keeps the normals of its copies independent', function () {
+            assignAfterSharingNormals(camera);
+
+            const data = camera.camera.clipPlanesData;
+            expect(Array.from(data.subarray(0, 8))).to.deep.equal(upAndRight);
         });
 
         it('clones the planes as they were assigned', function () {
@@ -784,6 +845,19 @@ describe('Clipping planes', function () {
             app.batcher.markGroupDirty(group.id);
             app.batcher.generate(app.batcher._dirtyGroups);
             expect(layerMeshInstances()).to.include(meshInstance);
+        });
+
+        it('rebuilds the group when the component removes planes of mesh instances', function () {
+            const entity = addBatchedBox('entity');
+            addBatchedBox('other');
+            const meshInstance = entity.render.meshInstances[0];
+            meshInstance.clippingPlanes = [below()];
+            sinon.stub(Debug, 'warnOnce');
+            app.batcher.generate();
+            expect(layerMeshInstances()).to.include(meshInstance);
+
+            entity.render.clippingPlanes = [];
+            expect(app.batcher._dirtyGroups).to.include(group.id);
         });
 
         it('batches by the assigned planes, not by changes to the returned ones', function () {

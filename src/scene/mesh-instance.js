@@ -1294,7 +1294,8 @@ class MeshInstance {
      * {@link clipIntersection}, and a part that either set clips is not rendered. A batched mesh
      * instance is drawn by its batch, so planes assigned to it apply once its batch group is
      * rebuilt, see {@link BatchManager#markGroupDirty}. {@link RenderComponent#clippingPlanes}
-     * rebuilds the batch group itself.
+     * rebuilds the batch group itself. Cloning an entity copies the planes of its render component,
+     * but not planes assigned to its mesh instances directly.
      *
      * {@link StandardMaterial} is clipped. The shader of a {@link ShaderMaterial} is clipped when
      * its fragment shader includes the `clipPlanesPS` chunk and calls `applyClipPlanes` with the

@@ -1,5 +1,9 @@
 import { Plane } from '../core/shape/plane.js';
 
+/**
+ * @import { Vec3 } from '../core/math/vec3.js'
+ */
+
 // the largest number of clipping planes of a mesh instance or a camera, matching the size of the
 // uniform arrays of the clipPlanesPS chunk
 const MAX_CLIP_PLANES = 8;
@@ -11,8 +15,9 @@ const _values = [];
 /**
  * The clipping planes of a mesh instance, a camera or a render component. It keeps the planes as
  * last assigned, which the owner uses, apart from the copies its getter returns, which can be
- * changed and assigned again. The set owns the planes of both, so the entries of the returned array
- * are independent copies after each assignment, whatever had been put into the array.
+ * changed and assigned again. The set owns the planes of both, and their normals, so the entries of
+ * the returned array are independent copies after each assignment, whatever had been put into the
+ * array or its planes.
  *
  * @ignore
  */
@@ -48,6 +53,15 @@ class ClipPlaneSet {
     _returnedPlanes = [];
 
     /**
+     * The normals of {@link ClipPlaneSet#_returnedPlanes}. The normal of a returned plane can be
+     * replaced through the returned array, so each assignment gives the plane its own back.
+     *
+     * @type {Vec3[]}
+     * @private
+     */
+    _returnedNormals = [];
+
+    /**
      * Assigns planes, which can include planes of the returned array, in any order.
      *
      * @param {Plane[]|null|undefined} planes - The planes.
@@ -59,10 +73,17 @@ class ClipPlaneSet {
             (_values[i] ??= new Plane()).copy(planes[i]);
         }
 
-        const { assigned, returned, _assignedPlanes, _returnedPlanes } = this;
+        const { assigned, returned, _assignedPlanes, _returnedPlanes, _returnedNormals } = this;
         for (let i = 0; i < count; i++) {
             assigned[i] = (_assignedPlanes[i] ??= new Plane()).copy(_values[i]);
-            returned[i] = (_returnedPlanes[i] ??= new Plane()).copy(_values[i]);
+
+            let plane = _returnedPlanes[i];
+            if (!plane) {
+                plane = _returnedPlanes[i] = new Plane();
+                _returnedNormals[i] = plane.normal;
+            }
+            plane.normal = _returnedNormals[i];
+            returned[i] = plane.copy(_values[i]);
         }
         assigned.length = count;
         returned.length = count;

@@ -20,6 +20,9 @@ import { Component } from '../component.js';
  * @import { RenderComponentSystem } from './system.js'
  */
 
+// given to the mesh instances of a render component without clipping planes, to remove theirs
+const _noPlanes = [];
+
 /**
  * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link type} property can
  * be set to one of several predefined shapes (such as `box`, `sphere`, `cone` and so on).
@@ -371,13 +374,8 @@ class RenderComponent extends Component {
                 mi[i].setCustomAabb(this._customAabb);
 
                 // the clipping planes and mode of the component replace those of the mesh instance
-                const clipPlanes = this._clipPlaneSet?.assigned;
-                if (clipPlanes?.length || this._clipIntersection) {
-                    mi[i].clipIntersection = this._clipIntersection;
-                    if (clipPlanes) {
-                        mi[i].clippingPlanes = clipPlanes;
-                    }
-                }
+                mi[i].clipIntersection = this._clipIntersection;
+                mi[i].clippingPlanes = this._clipPlaneSet?.assigned ?? _noPlanes;
             }
 
             if (this.enabled && this.entity.enabled) {
@@ -548,11 +546,11 @@ class RenderComponent extends Component {
      * all of the planes instead. Up to 8 planes are supported, and any more are ignored. Defaults
      * to an empty array.
      *
-     * The planes are given to the mesh instances of the component, replacing any planes assigned
-     * to them directly. They are copied, so changing a plane after the assignment has no effect
-     * until the array is assigned again. To clip an entity together with its descendants, such as
-     * an entity instantiated from a {@link ContainerResource}, assign the planes to all of their
-     * render components. To clip everything a camera renders, see
+     * The planes are given to the mesh instances of the component, also ones it gets later, and
+     * replace any planes assigned to them directly. They are copied, so changing a plane after the
+     * assignment has no effect until the array is assigned again. To clip an entity together with
+     * its descendants, such as an entity instantiated from a {@link ContainerResource}, assign the
+     * planes to all of their render components. To clip everything a camera renders, see
      * {@link CameraComponent#clippingPlanes} instead. Meshes with clipping planes are excluded
      * from batching. See {@link MeshInstance#clippingPlanes} for more details.
      *
@@ -569,17 +567,21 @@ class RenderComponent extends Component {
             `RenderComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
             'are ignored.');
 
-        if (!this._clipPlaneSet && !value?.length) {
-            return;
+        // whether the mesh instances are clipped, also by planes assigned to them directly, which
+        // the planes of the component replace
+        const mi = this._meshInstances;
+        let wasClipped = false;
+        for (let i = 0; i < mi.length; i++) {
+            wasClipped ||= mi[i].clipped;
         }
 
-        // the assigned planes can be the ones the getter returned, changed since
-        const set = (this._clipPlaneSet ??= new ClipPlaneSet());
-        const wasClipped = set.assigned.length > 0;
-        set.set(value, MAX_CLIP_PLANES);
+        // the assigned planes can be the ones the getter returned, changed since. Without planes
+        // assigned before or now, the component has none to keep
+        if (this._clipPlaneSet || value?.length) {
+            (this._clipPlaneSet ??= new ClipPlaneSet()).set(value, MAX_CLIP_PLANES);
+        }
 
-        const assigned = set.assigned;
-        const mi = this._meshInstances;
+        const assigned = this._clipPlaneSet?.assigned ?? _noPlanes;
         for (let i = 0; i < mi.length; i++) {
             mi[i].clippingPlanes = assigned;
         }
