@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
+import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { DynamicSkyEffect } from '../../../src/extras/effects/dynamic-sky/dynamic-sky-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
@@ -227,6 +228,7 @@ describe('DynamicSkyEffect', function () {
                 this._bakeDue = false;
                 this._driftSinceBake = 0;
                 this._bakedSkyDir.copy(this._skyDir);
+                this._bakedMoonDir.copy(this._moonWorldDir);
                 this._bakedSettings.set(this._settings);
             });
         });
@@ -316,6 +318,38 @@ describe('DynamicSkyEffect', function () {
             expect(due()).to.equal(false);
 
             sky.lightingCloudThreshold = 0.05;
+            cameraFrame.update();
+            frameUpdate();
+            expect(due()).to.equal(true);
+        });
+
+        it('generates the lighting again when the moon lighting the clouds at night changes', function () {
+            sky.elevation = -25;
+            sky.clouds = true;
+            sky.cloudTechnique = CLOUDTECHNIQUE_VOLUMETRIC;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+            frameUpdate();
+            sky._bakeLighting();
+
+            cameraFrame.update();
+            frameUpdate();
+            expect(due()).to.equal(false);
+
+            sky.moonColor = new Color(1, 0.8, 0.6);
+            cameraFrame.update();
+            frameUpdate();
+            expect(due()).to.equal(true);
+            sky._bakeLighting();
+
+            sky.moonDirection = new Vec3(1.2, 0.9, -0.4);
+            cameraFrame.update();
+            frameUpdate();
+            expect(due()).to.equal(true);
+            sky._bakeLighting();
+
+            // the moon direction is turned by the rotation of the sky
+            sky.rotation = 30;
             cameraFrame.update();
             frameUpdate();
             expect(due()).to.equal(true);

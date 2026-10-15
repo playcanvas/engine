@@ -808,6 +808,17 @@ class DynamicSkyEffect extends CameraFrameEffect {
     _bakedSkyDir = new Vec3(0, -1, 0);
 
     /**
+     * The direction of the moon, which lights the clouds at night, and the one the lighting was
+     * last generated for.
+     *
+     * @private
+     */
+    _moonWorldDir = new Vec3();
+
+    /** @private */
+    _bakedMoonDir = new Vec3(0, -1, 0);
+
+    /**
      * The settings of the sky the lighting was last generated for.
      *
      * @private
@@ -1370,6 +1381,9 @@ class DynamicSkyEffect extends CameraFrameEffect {
         out[21] = this.cloudThickness;
         out[22] = this.cloudQuality;
         out[23] = this.sunIntensity;
+        out[24] = this.moonColor.r;
+        out[25] = this.moonColor.g;
+        out[26] = this.moonColor.b;
     }
 
     /**
@@ -1408,16 +1422,18 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._updateClouds();
         this._updateDefines();
 
-        // the lighting is due when the sun moved enough, or a setting of the sky changed by more
-        // than a small fraction since the lighting was generated - settings animated every frame,
-        // such as the luminance over a day, then generate it as their change adds up
+        // the lighting is due when the sun or the moon moved enough, or a setting of the sky
+        // changed by more than a small fraction since the lighting was generated - settings
+        // animated every frame, such as the luminance over a day, then generate it as their change
+        // adds up
         this._fillSettings(this._settings);
-        const sunCos = this._skyDir.dot(this._bakedSkyDir);
-        const moved = sunCos < Math.cos(this.lightingThreshold * math.DEG_TO_RAD);
+        this._computeMoonDir(this._moonWorldDir);
+        const cos = Math.min(this._skyDir.dot(this._bakedSkyDir), this._moonWorldDir.dot(this._bakedMoonDir));
+        const moved = cos < Math.cos(this.lightingThreshold * math.DEG_TO_RAD);
         this._bakeDue = moved || this._settingsChanged(LIGHTING_SETTINGS_TOLERANCE);
 
         // a change too large to have come from the gradual change of the sky applies at once
-        this._bakeJump = sunCos < Math.cos(this.lightingThreshold * LIGHTING_JUMP_THRESHOLDS * math.DEG_TO_RAD) ||
+        this._bakeJump = cos < Math.cos(this.lightingThreshold * LIGHTING_JUMP_THRESHOLDS * math.DEG_TO_RAD) ||
             this._settingsChanged(LIGHTING_JUMP_TOLERANCE);
 
         // the environment atlas is assigned before the frame renders, so the materials are set up
@@ -1753,6 +1769,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._bakeDue = false;
         this._driftSinceBake = 0;
         this._bakedSkyDir.copy(this._skyDir);
+        this._bakedMoonDir.copy(this._moonWorldDir);
         this._bakedSettings.set(this._settings);
     }
 }
