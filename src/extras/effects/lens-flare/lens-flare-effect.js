@@ -8,6 +8,7 @@ import { now } from '../../../core/time.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../../../scene/constants.js';
+import { Light } from '../../../scene/light.js';
 import glslComposeLensFlarePS from './glsl/compose-ps.js';
 import wgslComposeLensFlarePS from './wgsl/compose-ps.js';
 import { CameraFrameEffect } from '../../render-passes/camera-frame-effect.js';
@@ -397,6 +398,7 @@ class LensFlareEffect extends CameraFrameEffect {
         const cameraPosition = cameraComponent.entity.getPosition();
         const far = camera.farClip;
         const orthographic = camera.projection === PROJECTION_ORTHOGRAPHIC;
+        const physicalUnits = cameraComponent.system.app.scene.physicalUnits;
 
         const flareData = this._flareData;
         const occlusionData = this._occlusionData;
@@ -496,11 +498,22 @@ class LensFlareEffect extends CameraFrameEffect {
                 }
             }
 
-            // the colour, tinted by the light
+            // the colour, tinted by the light and scaled by its intensity
             const color = flare.color;
-            let r = color.r * flare.intensity;
-            let g = color.g * flare.intensity;
-            let b = color.b * flare.intensity;
+            let intensity = flare.intensity;
+            if (light && flare.useLightIntensity) {
+                if (physicalUnits) {
+                    // the luminance, converted to the units the light renders with, as for the lighting
+                    const outer = light.outerConeAngle * math.DEG_TO_RAD;
+                    const inner = light.innerConeAngle * math.DEG_TO_RAD;
+                    intensity *= light.luminance / Light.getLightUnitConversion(light.light.type, outer, inner);
+                } else {
+                    intensity *= light.intensity;
+                }
+            }
+            let r = color.r * intensity;
+            let g = color.g * intensity;
+            let b = color.b * intensity;
             if (light && flare.useLightColor) {
                 _color.linear(light.color);
                 r *= _color.r;
