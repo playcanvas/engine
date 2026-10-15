@@ -776,7 +776,7 @@ class GSplatWorld {
      * @param {boolean} updateBounds - Whether to upload frustum-culling bounds (false for CPU sort).
      * @param {{ rebuilt: boolean, count: number, textureSize: number, sortNeeded: boolean }} result
      * Caller-owned result. When `rebuilt` is true the manager must call `renderer.update(count,
-     * textureSize)`, `renderer.setOrderData()` and `intervalCompaction.invalidateUpload()`. When
+     * textureSize)` and `intervalCompaction.invalidateUpload()`. When
      * `sortNeeded` is true (a splat moved during the incremental update) the manager must re-sort.
      * @returns {{ rebuilt: boolean, count: number, textureSize: number, sortNeeded: boolean }} The populated result.
      */
