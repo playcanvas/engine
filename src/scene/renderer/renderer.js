@@ -600,8 +600,8 @@ class Renderer {
         this.viewportSize[3] = 1 / viewportHeight;
         this.viewportSizeId.setValue(this.viewportSize);
 
-        // exposure
-        this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
+        // exposure, scaled by the effects adapting it to the scene
+        this.exposureId.setValue((this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure) * camera.exposureScale);
 
         return viewList;
     }

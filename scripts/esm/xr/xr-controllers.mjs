@@ -205,6 +205,12 @@ class XrControllers extends Script {
      * @private
      */
     async _onInputSourceAdd(inputSource) {
+        // a transient pointer (looking and pinching on Apple Vision Pro) is neither a hand nor a
+        // device to draw: its profile's model would float at every select
+        if (inputSource.targetRayMode === 'transient-pointer') {
+            return;
+        }
+
         if (!inputSource.profiles?.length) {
             console.warn('XrControllers: No profiles available for input source');
             return;
@@ -274,7 +280,9 @@ class XrControllers extends Script {
 
             const profile = await response.json();
             const layoutPath = profile.layouts[inputSource.handedness]?.assetPath || '';
-            const assetPath = `${this.basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right)/, '')}`;
+            // the layout's file is named for its handedness ('left.glb', 'none.glb'), which leads
+            // the path once
+            const assetPath = `${this.basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right|none)/, '')}`;
 
             // the input source was removed, or the script destroyed, while the profile loaded
             if (!this._pendingInputSources.has(inputSource)) return null;

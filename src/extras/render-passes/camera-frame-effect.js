@@ -32,6 +32,10 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @property {number} renderWidth - The width the scene renders at this frame, in pixels - the size
  * of the scene render target, which the passes rendering into the scene have.
  * @property {number} renderHeight - The height the scene renders at this frame, in pixels.
+ * @property {number} dt - The time since the camera frame last rendered, in seconds - the time the
+ * application advanced by in its updates since, as scripts are updated by: scaled by
+ * {@link AppBase#timeScale} and limited by {@link AppBase#maxDeltaTime} per update. It is 0 for a
+ * frame rendered again without the application updating, and while the application is paused.
  */
 
 /**
@@ -564,6 +568,38 @@ class CameraFrameEffect {
     }
 
     /**
+     * Gets whether the effect renders the sky for the camera while it is active. The camera then
+     * does not render the sky of the scene, which the effect replaces. Defaults to false.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get rendersSky() {
+        return false;
+    }
+
+    /**
+     * Gets the scale the effect applies to the exposure of the camera this frame, multiplying the
+     * exposure of the scene, or of the physical camera with physical units - for effects adapting
+     * the exposure to what the camera sees. Read every frame while the effect takes part, after
+     * {@link CameraFrameEffect#frameUpdate}; the camera frame applies the product of the scales of
+     * the effects taking part, and the camera renders with its own exposure again once none does.
+     * Defaults to 1.
+     *
+     * ```javascript
+     * // an effect brightening the image by one stop
+     * get cameraExposureScale() {
+     *     return 2;
+     * }
+     * ```
+     *
+     * @type {number}
+     */
+    get cameraExposureScale() {
+        return 1;
+    }
+
+    /**
      * Sets the value of a uniform the effect's shader chunk reads. Like a material parameter, the
      * value is stored by reference, so an array or a texture can be updated in place. Set the
      * values in {@link CameraFrameEffect#update}, or in {@link CameraFrameEffect#frameUpdate} for
@@ -607,7 +643,8 @@ class CameraFrameEffect {
      * need it: their configuration belongs in {@link CameraFrameEffect#update}, which runs only
      * when the camera frame is updated. Values derived from the resolution, which can change
      * without an update, are computed here from the sizes in the frame, or in the shader from
-     * `sceneTextureSize`.
+     * `sceneTextureSize`. Anything which changes over time advances here by the time of the frame,
+     * its `dt`.
      *
      * @param {CameraFrameEffectContext} frame - The values of this frame. Read them during this
      * call only.

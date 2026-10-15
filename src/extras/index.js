@@ -32,7 +32,16 @@ export {
     FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENECOLORGRAB,
     FRAMERESOURCE_SCENETARGET
 } from './render-passes/constants.js';
+export { CameraFrame } from './render-passes/camera-frame.js';
 export { CameraFrameEffect } from './render-passes/camera-frame-effect.js';
+export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
+export { RenderPassCompose } from './render-passes/render-pass-compose.js';
+export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
+export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
+export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
+
+// EFFECTS
+export { AutoExposureEffect } from './effects/auto-exposure/auto-exposure-effect.js';
 export { BloomEffect } from './effects/bloom/bloom-effect.js';
 export { CasEffect } from './effects/cas/cas-effect.js';
 export { ColorEnhanceEffect } from './effects/color-enhance/color-enhance-effect.js';
@@ -40,19 +49,13 @@ export { ColorLutEffect } from './effects/color-lut/color-lut-effect.js';
 export { DofEffect } from './effects/dof/dof-effect.js';
 export { FringingEffect } from './effects/fringing/fringing-effect.js';
 export { GradingEffect } from './effects/grading/grading-effect.js';
-export { LensFlareEffect } from './effects/lens-flare/lens-flare-effect.js';
 export { LensFlare } from './effects/lens-flare/lens-flare.js';
+export { LensFlareEffect } from './effects/lens-flare/lens-flare-effect.js';
 export { SmaaEffect } from './effects/smaa/smaa-effect.js';
 export { SsaoEffect } from './effects/ssao/ssao-effect.js';
 export { TaaEffect } from './effects/taa/taa-effect.js';
 export { VignetteEffect } from './effects/vignette/vignette-effect.js';
 export { VolumetricFogEffect } from './effects/volumetric-fog/volumetric-fog-effect.js';
-export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
-export { RenderPassCompose } from './render-passes/render-pass-compose.js';
-export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
-export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
-export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
-export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUT
 export { InputDelta, InputFrame, InputSource, InputConsumer, InputController } from './input/input.js';
