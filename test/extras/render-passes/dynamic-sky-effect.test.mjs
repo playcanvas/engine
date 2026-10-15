@@ -6,7 +6,7 @@ import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { DynamicSkyEffect } from '../../../src/extras/effects/dynamic-sky/dynamic-sky-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
-import { CLOUDTECHNIQUE_FLAT, CLOUDTECHNIQUE_VOLUMETRIC } from '../../../src/extras/render-passes/constants.js';
+import { CLOUDTYPE_FLAT, CLOUDTYPE_NONE, CLOUDTYPE_VOLUMETRIC } from '../../../src/extras/render-passes/constants.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { LAYERID_SKYBOX, PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
 import { createApp } from '../../app.mjs';
@@ -121,9 +121,27 @@ describe('DynamicSkyEffect', function () {
 
     describe('clouds', function () {
 
+        it('has no clouds by default, and removes the volumetric clouds when they are set back to none', function () {
+            expect(sky.cloudType).to.equal(CLOUDTYPE_NONE);
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+            expect(sky._cloudPass).to.equal(null);
+            expect(sky._material.getDefine('DYNSKY_CLOUDS_FLAT')).to.equal(false);
+            expect(sky._material.getDefine('DYNSKY_CLOUDS_VOLUMETRIC')).to.equal(false);
+
+            sky.cloudType = CLOUDTYPE_VOLUMETRIC;
+            cameraFrame.update();
+            expect(sky._cloudPass).to.not.equal(null);
+
+            sky.cloudType = CLOUDTYPE_NONE;
+            cameraFrame.update();
+            expect(sky._cloudPass).to.equal(null);
+            expect(sky._material.getDefine('DYNSKY_CLOUDS_VOLUMETRIC')).to.equal(false);
+            expect(sky._material.getDefine('DYNSKY_CLOUDS_BUFFER')).to.equal(false);
+        });
+
         it('renders the volumetric clouds at a reduced resolution of the scene, before it', function () {
-            sky.clouds = true;
-            sky.cloudTechnique = CLOUDTECHNIQUE_VOLUMETRIC;
+            sky.cloudType = CLOUDTYPE_VOLUMETRIC;
             sky.cloudResolution = 0.5;
             cameraFrame.addEffect(sky);
             cameraFrame.update();
@@ -145,8 +163,7 @@ describe('DynamicSkyEffect', function () {
         });
 
         it('renders the volumetric clouds to their texture at the full resolution too', function () {
-            sky.clouds = true;
-            sky.cloudTechnique = CLOUDTECHNIQUE_VOLUMETRIC;
+            sky.cloudType = CLOUDTYPE_VOLUMETRIC;
             sky.cloudResolution = 1;
             cameraFrame.addEffect(sky);
             cameraFrame.update();
@@ -160,8 +177,7 @@ describe('DynamicSkyEffect', function () {
         });
 
         it('evaluates the volumetric clouds in the sky of an orthographic camera, and the flat clouds always', function () {
-            sky.clouds = true;
-            sky.cloudTechnique = CLOUDTECHNIQUE_VOLUMETRIC;
+            sky.cloudType = CLOUDTYPE_VOLUMETRIC;
             cameraFrame.cameraComponent.projection = PROJECTION_ORTHOGRAPHIC;
             cameraFrame.addEffect(sky);
             cameraFrame.update();
@@ -169,7 +185,7 @@ describe('DynamicSkyEffect', function () {
             expect(sky._material.getDefine('DYNSKY_CLOUDS_VOLUMETRIC')).to.equal(true);
             expect(sky._material.getDefine('DYNSKY_CLOUDS_BUFFER')).to.equal(false);
 
-            sky.cloudTechnique = CLOUDTECHNIQUE_FLAT;
+            sky.cloudType = CLOUDTYPE_FLAT;
             sky.cloudResolution = 0.5;
             cameraFrame.update();
             expect(sky._cloudPass).to.equal(null);
@@ -178,8 +194,7 @@ describe('DynamicSkyEffect', function () {
         });
 
         it('drifts the clouds with the time of the application', function () {
-            sky.clouds = true;
-            sky.cloudTechnique = CLOUDTECHNIQUE_FLAT;
+            sky.cloudType = CLOUDTYPE_FLAT;
             sky.windSpeed = 20;
             sky.windDirection = 0;
             sky.cloudSize = 1000;
@@ -201,13 +216,12 @@ describe('DynamicSkyEffect', function () {
 
     describe('generating the lighting', function () {
 
-        it('renders the sky to the cubemap and prefilters it, for each technique of the clouds', function () {
+        it('renders the sky to the cubemap and prefilters it, for each type of the clouds', function () {
             const effect = sky;
             const bake = () => effect._lightingPass.execute();
             cameraFrame.addEffect(effect);
-            for (const clouds of [false, CLOUDTECHNIQUE_FLAT, CLOUDTECHNIQUE_VOLUMETRIC]) {
-                effect.clouds = !!clouds;
-                effect.cloudTechnique = clouds || CLOUDTECHNIQUE_VOLUMETRIC;
+            for (const type of [CLOUDTYPE_NONE, CLOUDTYPE_FLAT, CLOUDTYPE_VOLUMETRIC]) {
+                effect.cloudType = type;
                 cameraFrame.update();
                 frameUpdate();
                 expect(bake).to.not.throw();
@@ -302,8 +316,7 @@ describe('DynamicSkyEffect', function () {
         });
 
         it('generates the lighting again as the clouds drift only with the cloud threshold set', function () {
-            sky.clouds = true;
-            sky.cloudTechnique = CLOUDTECHNIQUE_FLAT;
+            sky.cloudType = CLOUDTYPE_FLAT;
             sky.windSpeed = 10;
             sky.cloudSize = 1000;
             cameraFrame.addEffect(sky);
@@ -325,8 +338,7 @@ describe('DynamicSkyEffect', function () {
 
         it('generates the lighting again when the moon lighting the clouds at night changes', function () {
             sky.elevation = -25;
-            sky.clouds = true;
-            sky.cloudTechnique = CLOUDTECHNIQUE_VOLUMETRIC;
+            sky.cloudType = CLOUDTYPE_VOLUMETRIC;
             cameraFrame.addEffect(sky);
             cameraFrame.update();
             frameUpdate();

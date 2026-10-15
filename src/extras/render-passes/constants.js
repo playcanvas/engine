@@ -118,12 +118,19 @@ export const FRAMERESOURCE_SCENECOLORGRAB = 'sceneColorGrab';
 export const FRAMERESOURCE_SCENETARGET = 'sceneTarget';
 
 /**
+ * The sky of the {@link DynamicSkyEffect} has no clouds.
+ *
+ * @category Graphics
+ */
+export const CLOUDTYPE_NONE = 'none';
+
+/**
  * The clouds of the {@link DynamicSkyEffect} are a single flat layer of noise with simple shading,
  * reading a single texture per pixel - for low end devices.
  *
  * @category Graphics
  */
-export const CLOUDTECHNIQUE_FLAT = 'flat';
+export const CLOUDTYPE_FLAT = 'flat';
 
 /**
  * The clouds of the {@link DynamicSkyEffect} are ray marched through a layer of 3D noise, each step
@@ -133,4 +140,4 @@ export const CLOUDTECHNIQUE_FLAT = 'flat';
  *
  * @category Graphics
  */
-export const CLOUDTECHNIQUE_VOLUMETRIC = 'volumetric';
+export const CLOUDTYPE_VOLUMETRIC = 'volumetric';

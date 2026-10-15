@@ -27,7 +27,7 @@ export { GltfExporter } from './exporters/gltf-exporter.js';
 
 // RENDER PASSES
 export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/constants.js';
-export { CLOUDTECHNIQUE_FLAT, CLOUDTECHNIQUE_VOLUMETRIC } from './render-passes/constants.js';
+export { CLOUDTYPE_NONE, CLOUDTYPE_FLAT, CLOUDTYPE_VOLUMETRIC } from './render-passes/constants.js';
 export { COMPOSESLOT_SCENE, COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_OUTPUT } from './render-passes/constants.js';
 export {
     FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENECOLORGRAB,
