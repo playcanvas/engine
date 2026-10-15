@@ -315,6 +315,14 @@ class LensFlareScript extends Script {
     useLightColor = true;
 
     /**
+     * Whether the intensity of the light scales the flare, so that the flare dims and brightens
+     * with its light.
+     *
+     * @attribute
+     */
+    useLightIntensity = true;
+
+    /**
      * The radius around the light the visibility is measured in, as a fraction of the screen
      * height.
      *
@@ -442,6 +450,7 @@ class LensFlareScript extends Script {
         flare.color.copy(this.color);
         flare.scale = this.scale;
         flare.useLightColor = this.useLightColor;
+        flare.useLightIntensity = this.useLightIntensity;
         flare.occlusionRadius = this.occlusionRadius;
         flare.occlusionFade = this.occlusionFade;
         flare.occlusionOffset = this.occlusionOffset;
