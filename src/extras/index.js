@@ -27,6 +27,7 @@ export { GltfExporter } from './exporters/gltf-exporter.js';
 
 // RENDER PASSES
 export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/constants.js';
+export { CLOUDTECHNIQUE_FLAT, CLOUDTECHNIQUE_VOLUMETRIC } from './render-passes/constants.js';
 export { COMPOSESLOT_SCENE, COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_OUTPUT } from './render-passes/constants.js';
 export {
     FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENECOLORGRAB,
@@ -47,6 +48,7 @@ export { CasEffect } from './effects/cas/cas-effect.js';
 export { ColorEnhanceEffect } from './effects/color-enhance/color-enhance-effect.js';
 export { ColorLutEffect } from './effects/color-lut/color-lut-effect.js';
 export { DofEffect } from './effects/dof/dof-effect.js';
+export { DynamicSkyEffect } from './effects/dynamic-sky/dynamic-sky-effect.js';
 export { FringingEffect } from './effects/fringing/fringing-effect.js';
 export { GradingEffect } from './effects/grading/grading-effect.js';
 export { LensFlare } from './effects/lens-flare/lens-flare.js';
