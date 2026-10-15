@@ -96,19 +96,20 @@ class AutoExposureEffect extends CameraFrameEffect {
 
     /**
      * The fraction of the screen, 0-1, which is left out of the average as the darkest part of it,
-     * such as deep shadows. Defaults to 0.5.
+     * such as deep shadows. Higher values meter the brighter parts of the screen, darkening the
+     * image. Defaults to 0.1.
      *
      * @type {number}
      */
-    lowPercent = 0.5;
+    lowPercent = 0.1;
 
     /**
      * The fraction of the screen, 0-1, below which the average is taken, the brightest part above
-     * it left out, such as the sun and bright highlights. Defaults to 0.95.
+     * it left out, such as the sun and bright highlights. Defaults to 0.9.
      *
      * @type {number}
      */
-    highPercent = 0.95;
+    highPercent = 0.9;
 
     /**
      * How much the brightness of the center of the screen counts over its edges, 0-1 range. 0
@@ -196,10 +197,10 @@ class AutoExposureEffect extends CameraFrameEffect {
     _speedLightToDark = 1;
 
     /** @private */
-    _lowPercent = 0.5;
+    _lowPercent = 0.1;
 
     /** @private */
-    _highPercent = 0.95;
+    _highPercent = 0.9;
 
     /** @private */
     _centerWeight = 0.5;
