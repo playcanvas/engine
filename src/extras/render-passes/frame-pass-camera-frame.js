@@ -91,7 +91,7 @@ class FramePassCameraFrame extends FramePass {
      * @type {CameraFrameEffectContext}
      * @private
      */
-    _effectContext = { sceneTexture: null, sceneWidth: 0, sceneHeight: 0, renderWidth: 0, renderHeight: 0 };
+    _effectContext = { sceneTexture: null, sceneWidth: 0, sceneHeight: 0, renderWidth: 0, renderHeight: 0, dt: 0 };
 
     /**
      * The scene being resolved, handed to the effects resolving it - one object, refilled every
@@ -1070,10 +1070,23 @@ class FramePassCameraFrame extends FramePass {
         context.renderWidth = renderWidth;
         context.renderHeight = renderHeight;
 
-        const effects = this.cameraFrame._activeEffects;
+        // the time the application advanced by since the camera frame last rendered
+        const { cameraFrame } = this;
+        context.dt = cameraFrame._frameTime;
+        cameraFrame._frameTime = 0;
+
+        const effects = cameraFrame._activeEffects;
         for (let i = 0; i < effects.length; i++) {
             effects[i].frameUpdate(context);
         }
+
+        // the camera renders this frame at the exposure the effects taking part scale it to, such
+        // as the auto exposure
+        let exposureScale = 1;
+        for (let i = 0; i < effects.length; i++) {
+            exposureScale *= effects[i].cameraExposureScale;
+        }
+        this.cameraComponent.camera.exposureScale = exposureScale;
     }
 }
 

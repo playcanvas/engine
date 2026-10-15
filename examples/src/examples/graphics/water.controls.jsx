@@ -135,6 +135,7 @@ export function Controls({ observer }) {
                 <LabelGroup text='Swell Direction'>
                     {slider('swellDirection', 0, 360, 0)}
                 </LabelGroup>
+                <LabelGroup text='Filtering'>{slider('waveFiltering', 0, 4, 2)}</LabelGroup>
             </Panel>
         </>
     );

@@ -400,7 +400,8 @@ const initialData = {
     swellAmplitude: 0.25,
     swellLength: 35,
     swellSpeed: 1,
-    swellDirection: 40
+    swellDirection: 40,
+    waveFiltering: waterScript.waveFiltering
 };
 data.set('data', initialData);
 Object.entries(initialData).forEach(([prop, value]) => applyProp(prop, value));

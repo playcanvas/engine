@@ -279,10 +279,23 @@ const waveFunctionsGLSL = /* glsl */`
             return vec3(dir.x * params.w * amp * cos(th), amp * sin(th), dir.y * params.w * amp * cos(th));
         }
 
-        vec3 gerstnerNormal(vec2 p, vec4 octave, vec4 params, vec2 mainDir, float seed) {
+        // the share of a wave of the given frequency kept at the footprint of a pixel on the water,
+        // in world units - a wave shorter than about two pixels aliases into flicker, so it fades
+        // out from eight pixels per wave length
+        float waveKeep(float freq, float footprint) {
+            return 1.0 - smoothstep(0.125, 0.5, footprint * freq * 0.15915494);
+        }
+
+        // the normal of a wave, faded out by its share kept at the footprint - the mean square of
+        // the slopes faded out is added to the variance
+        vec3 gerstnerNormal(vec2 p, vec4 octave, vec4 params, vec2 mainDir, float seed, float footprint, inout float variance) {
             vec2 dir = waveRotate(mainDir, octave.x);
             float freq = params.y * octave.z;
             float amp = params.x * octave.y * waveEnvelope(p, dir, freq, seed);
+            float keep = waveKeep(freq, footprint);
+            float slope = freq * amp;
+            variance += 0.5 * slope * slope * (1.0 - keep * keep);
+            amp *= keep;
             float th = freq * dot(dir, p) + params.z * octave.w * freq * uTime + seed * 2.3;
             return vec3(-dir.x * freq * amp * cos(th), -params.w * freq * amp * sin(th), -dir.y * freq * amp * cos(th));
         }
@@ -298,13 +311,16 @@ const waveFunctionsGLSL = /* glsl */`
             return d;
         }
 
-        vec3 waveNormal(vec2 p) {
+        // the normal of the waves, with the waves shorter than the footprint of a pixel faded out,
+        // and the variance of their slopes, which roughens the surface instead
+        vec3 waveNormal(vec2 p, float footprint, out float variance) {
+            variance = 0.0;
             vec3 n = vec3(0.0, 1.0, 0.0);
             for (int i = 0; i < CHOP_COUNT; i++) {
-                n += gerstnerNormal(p, CHOP_OCTAVES[i], uWaveParams, uWaveDir, float(i));
+                n += gerstnerNormal(p, CHOP_OCTAVES[i], uWaveParams, uWaveDir, float(i), footprint, variance);
             }
             for (int i = 0; i < SWELL_COUNT; i++) {
-                n += gerstnerNormal(p, SWELL_OCTAVES[i], uSwellParams, uSwellDir, float(i) + 5.0);
+                n += gerstnerNormal(p, SWELL_OCTAVES[i], uSwellParams, uSwellDir, float(i) + 5.0, footprint, variance);
             }
             return n;
         }
@@ -355,10 +371,18 @@ const waveFunctionsWGSL = /* wgsl */`
             return vec3f(dir.x * params.w * amp * cos(th), amp * sin(th), dir.y * params.w * amp * cos(th));
         }
 
-        fn gerstnerNormal(p: vec2f, octave: vec4f, params: vec4f, mainDir: vec2f, seed: f32) -> vec3f {
+        fn waveKeep(freq: f32, footprint: f32) -> f32 {
+            return 1.0 - smoothstep(0.125, 0.5, footprint * freq * 0.15915494);
+        }
+
+        fn gerstnerNormal(p: vec2f, octave: vec4f, params: vec4f, mainDir: vec2f, seed: f32, footprint: f32, variance: ptr<function, f32>) -> vec3f {
             let dir: vec2f = waveRotate(mainDir, octave.x);
             let freq: f32 = params.y * octave.z;
-            let amp: f32 = params.x * octave.y * waveEnvelope(p, dir, freq, seed);
+            let keep: f32 = waveKeep(freq, footprint);
+            let fullAmp: f32 = params.x * octave.y * waveEnvelope(p, dir, freq, seed);
+            let slope: f32 = freq * fullAmp;
+            *variance = *variance + 0.5 * slope * slope * (1.0 - keep * keep);
+            let amp: f32 = fullAmp * keep;
             let th: f32 = freq * dot(dir, p) + params.z * octave.w * freq * uniform.uTime + seed * 2.3;
             return vec3f(-dir.x * freq * amp * cos(th), -params.w * freq * amp * sin(th), -dir.y * freq * amp * cos(th));
         }
@@ -374,13 +398,14 @@ const waveFunctionsWGSL = /* wgsl */`
             return d;
         }
 
-        fn waveNormal(p: vec2f) -> vec3f {
+        fn waveNormal(p: vec2f, footprint: f32, variance: ptr<function, f32>) -> vec3f {
+            *variance = 0.0;
             var n: vec3f = vec3f(0.0, 1.0, 0.0);
             for (var i: i32 = 0; i < CHOP_COUNT; i++) {
-                n += gerstnerNormal(p, CHOP_OCTAVES[i], uniform.uWaveParams, uniform.uWaveDir, f32(i));
+                n += gerstnerNormal(p, CHOP_OCTAVES[i], uniform.uWaveParams, uniform.uWaveDir, f32(i), footprint, variance);
             }
             for (var i: i32 = 0; i < SWELL_COUNT; i++) {
-                n += gerstnerNormal(p, SWELL_OCTAVES[i], uniform.uSwellParams, uniform.uSwellDir, f32(i) + 5.0);
+                n += gerstnerNormal(p, SWELL_OCTAVES[i], uniform.uSwellParams, uniform.uSwellDir, f32(i) + 5.0, footprint, variance);
             }
             return n;
         }
@@ -480,6 +505,7 @@ const fragmentGLSL = /* glsl */`
     uniform float uOpacity;
     uniform float uSpecularPower;
     uniform float uSpecularIntensity;
+    uniform float uWaveFiltering;
     uniform float uDiffuseIntensity;
     uniform float uUnderwaterFogDensity;
     uniform vec3 uUnderwaterFogColor;
@@ -512,11 +538,16 @@ const fragmentGLSL = /* glsl */`
         vec3 nm2 = texture2D(uNormalMap, rotUv * 1.73 + vec2(-st * 0.8, st * 1.1)).xyz * 2.0 - 1.0;
         vec2 detail = (nm1.xy + nm2.xy) * 0.5 * uBumpiness;
 
-        // combine with the geometry wave normal
+        // combine with the geometry wave normal. The waves are filtered by the footprint of the
+        // pixel on the water along its longer axis, which stretches far along the view toward the
+        // horizon
         #ifdef WATER_WAVES
-            vec3 waveN = waveNormal(vWavePos);
+            float footprint = max(length(dFdx(vWavePos)), length(dFdy(vWavePos))) * uWaveFiltering;
+            float slopeVariance;
+            vec3 waveN = waveNormal(vWavePos, footprint, slopeVariance);
         #else
             vec3 waveN = vec3(0.0, 1.0, 0.0);
+            float slopeVariance = 0.0;
         #endif
         vec3 N = normalize(vec3(waveN.x + detail.x, waveN.y, waveN.z + detail.y));
 
@@ -615,9 +646,13 @@ const fragmentGLSL = /* glsl */`
         float fresnel = mix(0.02, 1.0, pow(1.0 - NdotV, uFresnelPower));
         vec3 color = mix(base, refl, hasReflection * clamp(fresnel * uReflectionStrength, 0.0, 1.0));
 
-        // sun specular
+        // sun specular. The slopes of the waves filtered out in the distance roughen the surface:
+        // added to the mean square slope of the highlight (Beckmann m^2 = 2 / (power + 2)), they
+        // widen it into the glitter of the sun on the far waves, with its energy kept
         vec3 H = normalize(L + V);
-        color += uLightColor * pow(max(dot(N, H), 0.0), uSpecularPower) * uSpecularIntensity;
+        float specPower = max(2.0 / (2.0 / (uSpecularPower + 2.0) + slopeVariance) - 2.0, 1.0);
+        float specScale = (specPower + 2.0) / (uSpecularPower + 2.0);
+        color += uLightColor * pow(max(dot(N, H), 0.0), specPower) * uSpecularIntensity * specScale;
 
         // foam along the shoreline, lit by the directional light so it dims at night. The extra
         // light-luminance factor keeps the white foam from glowing against the dark night scene
@@ -751,6 +786,7 @@ const fragmentWGSL = /* wgsl */`
     uniform uOpacity: f32;
     uniform uSpecularPower: f32;
     uniform uSpecularIntensity: f32;
+    uniform uWaveFiltering: f32;
     uniform uDiffuseIntensity: f32;
     uniform uUnderwaterFogDensity: f32;
     uniform uUnderwaterFogColor: vec3f;
@@ -785,9 +821,11 @@ const fragmentWGSL = /* wgsl */`
         let nm2: vec3f = textureSample(uNormalMap, uNormalMapSampler, rotUv * 1.73 + vec2f(-st * 0.8, st * 1.1)).xyz * 2.0 - 1.0;
         let detail: vec2f = (nm1.xy + nm2.xy) * 0.5 * uniform.uBumpiness;
 
-        // combine with the geometry wave normal
+        // combine with the geometry wave normal, filtered by the footprint of the pixel
+        var slopeVariance: f32 = 0.0;
         #ifdef WATER_WAVES
-            let waveN: vec3f = waveNormal(input.vWavePos);
+            let footprint: f32 = max(length(dpdx(input.vWavePos)), length(dpdy(input.vWavePos))) * uniform.uWaveFiltering;
+            let waveN: vec3f = waveNormal(input.vWavePos, footprint, &slopeVariance);
         #else
             let waveN: vec3f = vec3f(0.0, 1.0, 0.0);
         #endif
@@ -888,9 +926,11 @@ const fragmentWGSL = /* wgsl */`
         let fresnel: f32 = mix(0.02, 1.0, pow(1.0 - NdotV, uniform.uFresnelPower));
         var color: vec3f = mix(base, refl, hasReflection * clamp(fresnel * uniform.uReflectionStrength, 0.0, 1.0));
 
-        // sun specular
+        // sun specular, widened by the slopes of the waves filtered out in the distance
         let H: vec3f = normalize(L + V);
-        color += uniform.uLightColor * pow(max(dot(N, H), 0.0), uniform.uSpecularPower) * uniform.uSpecularIntensity;
+        let specPower: f32 = max(2.0 / (2.0 / (uniform.uSpecularPower + 2.0) + slopeVariance) - 2.0, 1.0);
+        let specScale: f32 = (specPower + 2.0) / (uniform.uSpecularPower + 2.0);
+        color += uniform.uLightColor * pow(max(dot(N, H), 0.0), specPower) * uniform.uSpecularIntensity * specScale;
 
         // foam along the shoreline, lit by the directional light so it dims at night. The extra
         // light-luminance factor keeps the white foam from glowing against the dark night scene
@@ -1328,6 +1368,19 @@ class Water extends Script {
      * @step 0.05
      */
     waveSteepness = 0.4;
+
+    /**
+     * How strongly the waves shorter than a pixel are smoothed out in the distance, where they
+     * would flicker. Their slopes widen the sun highlight instead, into the glitter of the sun on
+     * the far waves. 0 disables the smoothing, higher values smooth the waves closer to the
+     * camera.
+     *
+     * @attribute
+     * @range [0, 4]
+     * @precision 2
+     * @step 0.05
+     */
+    waveFiltering = 1;
 
     /**
      * Direction the main wave travels, as an angle in degrees around the up axis.
@@ -1795,6 +1848,7 @@ class Water extends Script {
             this._waveParamsArray[2] = this.waveSpeed;
             this._waveParamsArray[3] = this.waveSteepness;
             material.setParameter('uWaveParams', this._waveParamsArray);
+            material.setParameter('uWaveFiltering', this.waveFiltering);
 
             const angle = (this.waveDirection * Math.PI) / 180;
             this._waveDirArray[0] = Math.cos(angle);
