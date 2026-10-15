@@ -643,8 +643,8 @@ class AssetRegistry extends EventHandler {
         const startLoad = (asset) => {
             // the request's callback runs once: the load and the error listener remove each other,
             // so a failed request's load listener does not run when the asset later loads
-            const onLoad = asset.once('load', (loadedAsset) => {
-                onError.off();
+            const onLoad = (loadedAsset) => {
+                asset.off('error', onError);
                 if (type === 'material') {
                     this._loadTextures(loadedAsset, (err, textures) => {
                         callback(err, loadedAsset);
@@ -652,15 +652,17 @@ class AssetRegistry extends EventHandler {
                 } else {
                     callback(null, loadedAsset);
                 }
-            });
-            const onError = asset.once('error', (err) => {
-                onLoad.off();
+            };
+            function onError(err) {
+                asset.off('load', onLoad);
                 // store the error on the asset in case user requests this asset again
                 if (err) {
                     asset.loadFromUrlError = err;
                 }
                 callback(err, asset);
-            });
+            }
+            asset.once('load', onLoad);
+            asset.once('error', onError);
             this.load(asset);
         };
 
