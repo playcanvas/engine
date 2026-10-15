@@ -61,15 +61,15 @@ export function Controls({ observer }) {
                 <LabelGroup text='Rotation'>{slider('sky.rotation', 0, 360, 0)}</LabelGroup>
             </Panel>
             <Panel headerText='Clouds'>
-                <LabelGroup text='Enabled'>{toggle('clouds.enabled')}</LabelGroup>
-                <LabelGroup text='Technique'>
+                <LabelGroup text='Type'>
                     <SelectInput
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'data.clouds.technique' }}
+                        link={{ observer, path: 'data.clouds.type' }}
                         type='string'
                         options={[
-                            { v: 'volumetric', t: 'Volumetric' },
-                            { v: 'flat', t: 'Flat' }
+                            { v: 'none', t: 'None' },
+                            { v: 'flat', t: 'Flat' },
+                            { v: 'volumetric', t: 'Volumetric' }
                         ]}
                     />
                 </LabelGroup>

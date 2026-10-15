@@ -22,7 +22,7 @@ import {
     Asset,
     AssetListLoader,
     AutoExposureEffect,
-    CLOUDTECHNIQUE_VOLUMETRIC,
+    CLOUDTYPE_VOLUMETRIC,
     CURVE_SMOOTHSTEP,
     CameraComponentSystem,
     CameraFrame,
@@ -200,8 +200,7 @@ const bloomIntensity = 0.02;
 const sky = new DynamicSkyEffect(device);
 sky.light = sun.light;
 sky.moonIntensity = 0.4;
-sky.clouds = true;
-sky.cloudTechnique = CLOUDTECHNIQUE_VOLUMETRIC;
+sky.cloudType = CLOUDTYPE_VOLUMETRIC;
 sky.cloudSize = 9000;
 sky.cloudHeight = 1800;
 
@@ -270,8 +269,7 @@ data.set('data', {
         rotation: sky.rotation
     },
     clouds: {
-        enabled: true,
-        technique: CLOUDTECHNIQUE_VOLUMETRIC,
+        type: CLOUDTYPE_VOLUMETRIC,
         coverage: 0.42,
         softness: sky.cloudSoftness,
         brightness: sky.cloudBrightness,
@@ -310,8 +308,7 @@ app.on('update', (/** @type {number} */ dt) => {
     sky.rayleigh = data.get('data.sky.rayleigh');
     sky.rotation = data.get('data.sky.rotation');
 
-    sky.clouds = data.get('data.clouds.enabled');
-    sky.cloudTechnique = data.get('data.clouds.technique');
+    sky.cloudType = data.get('data.clouds.type');
     sky.cloudCoverage = data.get('data.clouds.coverage');
     sky.cloudSoftness = data.get('data.clouds.softness');
     sky.cloudBrightness = data.get('data.clouds.brightness');

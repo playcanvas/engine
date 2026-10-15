@@ -24,7 +24,7 @@ import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 import { ShaderUtils } from '../../../scene/shader-lib/shader-utils.js';
 import { SkyGeometry } from '../../../scene/skybox/sky-geometry.js';
 import { CameraFrameEffect } from '../../render-passes/camera-frame-effect.js';
-import { CLOUDTECHNIQUE_FLAT, CLOUDTECHNIQUE_VOLUMETRIC } from '../../render-passes/constants.js';
+import { CLOUDTYPE_FLAT, CLOUDTYPE_NONE, CLOUDTYPE_VOLUMETRIC } from '../../render-passes/constants.js';
 import { getDynamicSkyNoise } from './dynamic-sky-noise.js';
 import { FramePassDynamicSkyLighting } from './passes/frame-pass-dynamic-sky-lighting.js';
 import { RenderPassDynamicSkyClouds } from './passes/render-pass-dynamic-sky-clouds.js';
@@ -133,11 +133,12 @@ const UV_MOD = [1, 1, 0, 0];
  * {@link DynamicSkyEffect#azimuth} and {@link DynamicSkyEffect#elevation}, and the effect can
  * keep a directional light in sync with it, see {@link DynamicSkyEffect#light}.
  *
- * The clouds are a single flat layer of noise ({@link CLOUDTECHNIQUE_FLAT}), or volumetric clouds
- * ray marched through a layer of 3D noise ({@link CLOUDTECHNIQUE_VOLUMETRIC}). The volumetric
- * clouds are the expensive part of the sky, and render to a texture of their own, at a reduced
- * resolution by default, see {@link DynamicSkyEffect#cloudResolution}. Their noise is generated on
- * the CPU when the clouds are first used.
+ * The sky has no clouds by default, see {@link DynamicSkyEffect#cloudType}. They are a single flat
+ * layer of noise ({@link CLOUDTYPE_FLAT}), or volumetric clouds ray marched through a layer of 3D
+ * noise ({@link CLOUDTYPE_VOLUMETRIC}). The volumetric clouds are the expensive part of the sky,
+ * and render to a texture of their own, at a reduced resolution by default, see
+ * {@link DynamicSkyEffect#cloudResolution}. Their noise is generated on the CPU when the clouds are
+ * first used.
  *
  * The effect also generates the lighting of the scene from its sky: the environment atlas lighting
  * the materials, assigned to {@link Scene#envAtlas}, see {@link DynamicSkyEffect#lighting}. The
@@ -155,7 +156,7 @@ const UV_MOD = [1, 1, 0, 0];
  * ```javascript
  * const sky = new DynamicSkyEffect(app.graphicsDevice);
  * sky.light = sunEntity.light;
- * sky.clouds = true;
+ * sky.cloudType = CLOUDTYPE_VOLUMETRIC;
  * cameraFrame.addEffect(sky);
  * cameraFrame.update();
  * ```
@@ -336,19 +337,12 @@ class DynamicSkyEffect extends CameraFrameEffect {
     twilightGlow = 0.52;
 
     /**
-     * Whether the sky has clouds. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    clouds = false;
-
-    /**
-     * The technique rendering the clouds, {@link CLOUDTECHNIQUE_FLAT} or
-     * {@link CLOUDTECHNIQUE_VOLUMETRIC}. Defaults to {@link CLOUDTECHNIQUE_VOLUMETRIC}.
+     * The type of the clouds of the sky, {@link CLOUDTYPE_NONE}, {@link CLOUDTYPE_FLAT} or
+     * {@link CLOUDTYPE_VOLUMETRIC}. Defaults to {@link CLOUDTYPE_NONE}.
      *
      * @type {string}
      */
-    cloudTechnique = CLOUDTECHNIQUE_VOLUMETRIC;
+    cloudType = CLOUDTYPE_NONE;
 
     /**
      * The quality of the volumetric clouds, 0-1 range - the number of their steps through the
@@ -917,6 +911,16 @@ class DynamicSkyEffect extends CameraFrameEffect {
     }
 
     /**
+     * Whether the sky has clouds.
+     *
+     * @type {boolean}
+     * @private
+     */
+    get _hasClouds() {
+        return this.cloudType !== CLOUDTYPE_NONE;
+    }
+
+    /**
      * Whether the volumetric clouds render to a texture of their own, which they do for the cameras
      * with a perspective projection.
      *
@@ -924,7 +928,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
      * @private
      */
     get _cloudsBuffered() {
-        return this.clouds && this.cloudTechnique === CLOUDTECHNIQUE_VOLUMETRIC &&
+        return this.cloudType === CLOUDTYPE_VOLUMETRIC &&
             this.cameraFrame?.cameraComponent.projection === PROJECTION_PERSPECTIVE;
     }
 
@@ -1259,7 +1263,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         // below them
         const sunPart = this.sunIntensity * math.clamp(y / 0.1, 0, 1);
         const moonPart = this.moonIntensity * nightFactor;
-        const dimming = this.clouds ? this.cloudCoverage * this.cloudSunDimming : 0;
+        const dimming = this._hasClouds ? this.cloudCoverage * this.cloudSunDimming : 0;
         light.intensity = (sunPart + moonPart) * (1 - dimming);
     }
 
@@ -1300,11 +1304,12 @@ class DynamicSkyEffect extends CameraFrameEffect {
      * @private
      */
     _updateClouds() {
-        const volumetric = this.cloudTechnique === CLOUDTECHNIQUE_VOLUMETRIC;
+        const clouds = this._hasClouds;
+        const volumetric = this.cloudType === CLOUDTYPE_VOLUMETRIC;
         const quality = this.cloudQuality;
 
         const params = this._cloudParams;
-        params[0] = this.clouds ? math.clamp(this.cloudCoverage, 0, 1) : 0;
+        params[0] = clouds ? math.clamp(this.cloudCoverage, 0, 1) : 0;
         params[1] = Math.max(this.cloudSoftness, 0.01);
         params[2] = 1000 / Math.max(this.cloudSize, 1);
         params[3] = this.cloudHeight / 1000;
@@ -1321,7 +1326,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
 
         // the noise is generated on the first use of the clouds, and the 3D noise of the volumetric
         // clouds on their first use
-        if (this.clouds) {
+        if (clouds) {
             const noise = getDynamicSkyNoise(this.device);
             this._setSkyUniform('dynSkyCloudMap', noise.cloudMap);
             if (volumetric) {
@@ -1340,10 +1345,9 @@ class DynamicSkyEffect extends CameraFrameEffect {
     _updateDefines() {
         const material = this._material;
         if (material) {
-            const clouds = this.clouds;
-            const volumetric = clouds && this.cloudTechnique === CLOUDTECHNIQUE_VOLUMETRIC;
+            const volumetric = this.cloudType === CLOUDTYPE_VOLUMETRIC;
             const buffered = !!this._cloudPass;
-            material.setDefine('DYNSKY_CLOUDS_FLAT', clouds && this.cloudTechnique === CLOUDTECHNIQUE_FLAT);
+            material.setDefine('DYNSKY_CLOUDS_FLAT', this.cloudType === CLOUDTYPE_FLAT);
             material.setDefine('DYNSKY_CLOUDS_VOLUMETRIC', volumetric);
             material.setDefine('DYNSKY_CLOUDS_BUFFER', volumetric && buffered);
             material.setDefine('DYNSKY_CLOUDS_ENCODED', volumetric && buffered && this._cloudEncoded);
@@ -1369,8 +1373,8 @@ class DynamicSkyEffect extends CameraFrameEffect {
         out[9] = this.nightColor.b;
         out[10] = this.nightBrightness;
         out[11] = this.twilightGlow;
-        out[12] = this.clouds ? 1 : 0;
-        out[13] = this.cloudTechnique === CLOUDTECHNIQUE_VOLUMETRIC ? 1 : 0;
+        out[12] = this.cloudType === CLOUDTYPE_FLAT ? 1 : 0;
+        out[13] = this.cloudType === CLOUDTYPE_VOLUMETRIC ? 1 : 0;
         out[14] = this.cloudCoverage;
         out[15] = this.cloudSoftness;
         out[16] = this.cloudOpacity;
@@ -1460,7 +1464,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         // shapes wrap after four repeats, the repeat of the weather pattern of the volumetric
         // clouds. Their detail drifts a little faster and in a slightly different direction, so the
         // clouds evolve as they move
-        if (this.clouds && frame.dt > 0) {
+        if (this._hasClouds && frame.dt > 0) {
             const angle = this.windDirection * math.DEG_TO_RAD;
             const step = (this.windSpeed * frame.dt) / Math.max(this.cloudSize, 1);
             const offset = this._cloudOffset;
@@ -1514,7 +1518,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._frameDt = frame.dt;
         const pass = this._lightingPass;
         if (pass) {
-            const drift = this.clouds && this.lightingCloudThreshold > 0 && this._driftSinceBake >= this.lightingCloudThreshold;
+            const drift = this._hasClouds && this.lightingCloudThreshold > 0 && this._driftSinceBake >= this.lightingCloudThreshold;
             this._bakePending = this.lighting && (this._bakeRequested || this._bakeDue || drift);
             pass.executeEnabled = this._bakePending || (this.lighting && this._blendWeight < 1);
         }
@@ -1644,14 +1648,14 @@ class DynamicSkyEffect extends CameraFrameEffect {
      * @private
      */
     _getBakeShader() {
-        const technique = this.clouds ? this.cloudTechnique : 'none';
+        const type = this.cloudType;
         const encodeFunc = ChunkUtils.encodeFunc(this._lightingSource.encoding);
-        const key = `${technique}-${encodeFunc}`;
+        const key = `${type}-${encodeFunc}`;
         let shader = this._bakeShaders.get(key);
         if (!shader) {
             const defines = new Map();
-            if (technique === CLOUDTECHNIQUE_FLAT) defines.set('DYNSKY_CLOUDS_FLAT', '');
-            if (technique === CLOUDTECHNIQUE_VOLUMETRIC) defines.set('DYNSKY_CLOUDS_VOLUMETRIC', '');
+            if (type === CLOUDTYPE_FLAT) defines.set('DYNSKY_CLOUDS_FLAT', '');
+            if (type === CLOUDTYPE_VOLUMETRIC) defines.set('DYNSKY_CLOUDS_VOLUMETRIC', '');
             defines.set('{DYNSKY_ENCODE_FUNC}', encodeFunc);
             shader = ShaderUtils.createShader(this.device, {
                 uniqueName: `DynamicSkyBake-${key}`,
