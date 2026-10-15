@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import { restore, spy, stub } from 'sinon';
 
+import { Debug } from '../../src/core/debug.js';
 import { app as currentApp } from '../../src/framework/app-base.js';
 import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../src/framework/asset/asset.js';
@@ -15,6 +17,8 @@ import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
 import { XrManager } from '../../src/framework/xr/xr-manager.js';
 import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.js';
 import { BatchManager } from '../../src/scene/batching/batch-manager.js';
+import { Mesh } from '../../src/scene/mesh.js';
+import { Render } from '../../src/scene/render.js';
 import { Scene } from '../../src/scene/scene.js';
 import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
@@ -29,6 +33,7 @@ describe('Application', function () {
     });
 
     afterEach(function () {
+        restore();
         app?.destroy();
         app = null;
         jsdomTeardown();
@@ -136,6 +141,62 @@ describe('Application', function () {
             expect(asset.registry).to.be.null;
 
             app = null;
+        });
+
+    });
+
+    describe('#preload', function () {
+
+        function createContainer() {
+            const render = new Render();
+            render.meshes = [new Mesh(app.graphicsDevice)];
+            const asset = new Asset('container', 'container', { url: 'fake/container.glb' });
+            asset.resource = { renders: [{ resource: render }] };
+            asset.loaded = true;
+            return asset;
+        }
+
+        function createRender(container) {
+            const asset = new Asset('render', 'render', null, {
+                containerAsset: container.id,
+                renderIndex: 0
+            });
+            asset.preload = true;
+            return asset;
+        }
+
+        it('completes without warning when a render asset is registered before its container', function () {
+            const warn = stub(Debug, 'warnOnce');
+            const container = createContainer();
+            const render = createRender(container);
+            const done = spy();
+
+            // the Editor launch page registers assets in an arbitrary order before preloading
+            app.assets.add(render);
+            app.assets.add(container);
+            app.preload(done);
+
+            expect(done.calledOnce).to.equal(true);
+            expect(render.resource.meshes).to.equal(container.resource.renders[0].resource.meshes);
+            expect(warn.called).to.equal(false);
+        });
+
+        it('warns about a preloaded render asset whose container is not registered', function () {
+            const warn = stub(Debug, 'warnOnce');
+            const container = createContainer();
+            const render = createRender(container);
+            const done = spy();
+
+            app.assets.add(render);
+            app.preload(done);
+
+            expect(done.called).to.equal(false);
+            expect(warn.calledOnce).to.equal(true);
+            expect(warn.firstCall.args[0]).to.include(`'${render.name}' (${render.id})`);
+            expect(warn.firstCall.args[0]).to.include(`container asset ${container.id}, which is not registered`);
+
+            app.assets.add(container);
+            expect(done.calledOnce).to.equal(true);
         });
 
     });
