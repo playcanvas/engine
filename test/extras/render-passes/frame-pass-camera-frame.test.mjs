@@ -647,6 +647,110 @@ describe('FramePassCameraFrame', function () {
         });
     });
 
+    describe('time', function () {
+
+        // an effect recording the time of each frame it is handed
+        class TimeEffect extends CameraFrameEffect {
+            /** @type {number[]} */
+            times = [];
+
+            constructor(device) {
+                super(device, 'time');
+            }
+
+            frameUpdate(frame) {
+                this.times.push(frame.dt);
+            }
+        }
+
+        it('hands the effects the time the application advanced by since the camera frame last rendered', function () {
+            const effect = new TimeEffect(app.graphicsDevice);
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+
+            // two updates before the frame, a frame rendered again without an update, a paused
+            // application updating by no time, and an update after it
+            app.update(0.1);
+            app.update(0.05);
+            framePass.frameUpdate();
+            framePass.frameUpdate();
+            app.update(0);
+            framePass.frameUpdate();
+            app.update(0.02);
+            framePass.frameUpdate();
+
+            expect(effect.times).to.have.lengthOf(4);
+            expect(effect.times[0]).to.be.closeTo(0.15, 1e-12);
+            expect(effect.times[1]).to.equal(0);
+            expect(effect.times[2]).to.equal(0);
+            expect(effect.times[3]).to.be.closeTo(0.02, 1e-12);
+            effect.destroy();
+        });
+
+        it('stops following the time of the application once destroyed', function () {
+            const entity = new Entity('Camera2');
+            entity.addComponent('camera');
+            app.root.addChild(entity);
+            const other = new CameraFrame(app, entity.camera);
+            app.update(0.1);
+            expect(other._frameTime).to.be.closeTo(0.1, 1e-12);
+
+            other.destroy();
+            other._frameTime = 0;
+            app.update(0.1);
+            expect(other._frameTime).to.equal(0);
+        });
+    });
+
+    describe('sky', function () {
+
+        // an effect rendering the sky for its camera, as a sky effect owning passes would
+        class SkyEffect extends PassEffect {
+            constructor(device) {
+                super(device, 'sky', []);
+                this.stage = 'preScene';
+            }
+
+            get rendersSky() {
+                return true;
+            }
+        }
+
+        it('hides the sky of the scene from the camera while an effect taking part renders its own', function () {
+            const { camera } = cameraFrame.cameraComponent;
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(true);
+
+            // applied with the effects, on the next update
+            const effect = new SkyEffect(app.graphicsDevice);
+            cameraFrame.addEffect(effect);
+            expect(camera.skyVisible).to.equal(true);
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(false);
+
+            // an effect not taking part does not hide it
+            effect.enabled = false;
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(true);
+            effect.enabled = true;
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(false);
+
+            // disabling the camera frame renders the sky again, and enabling it hides it again
+            cameraFrame.enabled = false;
+            expect(camera.skyVisible).to.equal(true);
+            cameraFrame.enabled = true;
+            expect(camera.skyVisible).to.equal(false);
+
+            cameraFrame.removeEffect(effect);
+            expect(camera.skyVisible).to.equal(false);
+            cameraFrame.update();
+            expect(camera.skyVisible).to.equal(true);
+            effect.destroy();
+        });
+    });
+
     describe('after the opaque geometry', function () {
 
         // nothing else running between the opaque and the transparent geometry

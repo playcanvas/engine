@@ -97,7 +97,7 @@ export default /* wgsl */`
             var<private> dIridescence: f32;
             var<private> dIridescenceThickness: f32;
 
-            #ifdef STD_IRIDESCENCE_THICKNESS_TEXTURE_ALLOCATE
+            #ifdef STD_IRIDESCENCETHICKNESS_TEXTURE_ALLOCATE
                 var texture_iridescenceThicknessMap : texture_2d<f32>;
                 var texture_iridescenceThicknessMapSampler : sampler;
             #endif

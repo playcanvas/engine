@@ -191,6 +191,15 @@ class CameraFrame {
     _activeEffects = [];
 
     /**
+     * The time the application advanced by in its updates since the camera frame last rendered, in
+     * seconds, handed to the effects as the time of the frame. See {@link CameraFrameEffectContext}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    _frameTime = 0;
+
+    /**
      * The sharpening effect, whose sharpness is exposed as `rendering.sharpness`.
      *
      * @type {CasEffect}
@@ -304,6 +313,11 @@ class CameraFrame {
         this.cameraLayersChanged = cameraComponent.on('set:layers', () => {
             if (this.renderPassCamera) this.renderPassCamera.layersDirty = true;
         });
+
+        // the time of the frames is the time of the application, so it is scaled and paused with it
+        this._appUpdate = app.on('update', (dt) => {
+            this._frameTime += dt;
+        });
     }
 
     /**
@@ -320,6 +334,7 @@ class CameraFrame {
         this.effects.length = 0;
 
         this.cameraLayersChanged.off();
+        this._appUpdate.off();
     }
 
     /**
@@ -459,17 +474,22 @@ class CameraFrame {
         active.length = 0;
         const { effects, renderPassCamera } = this;
         let cameraJitter = 0;
+        let rendersSky = false;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
             if (effect.active && (!effect._ownsPasses || renderPassCamera?.hasEffectPasses(effect))) {
                 active.push(effect);
                 effect.update();
                 cameraJitter = Math.max(cameraJitter, effect.cameraJitter);
+                rendersSky ||= effect.rendersSky;
             }
         }
 
         // the camera is jittered for the effects taking part which need it, such as TAA
         this.cameraComponent.jitter = cameraJitter;
+
+        // the camera renders the sky of the scene unless an effect taking part renders it instead
+        this.cameraComponent.camera.skyVisible = !rendersSky;
 
         const composePass = this.renderPassCamera?.composePass;
         if (composePass) {
@@ -496,6 +516,8 @@ class CameraFrame {
         cameraComponent.rendering = null;
 
         cameraComponent.jitter = 0;
+        cameraComponent.camera.exposureScale = 1;
+        cameraComponent.camera.skyVisible = true;
 
         // disable SSAO included in the lighting pass
         cameraComponent.shaderParams.ssaoEnabled = false;

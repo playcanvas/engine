@@ -112,7 +112,9 @@ class Culler {
             const drawCall = drawCalls[i];
             if (drawCall.visible) {
 
-                const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
+                // a custom visibility function is evaluated even when the camera does not frustum
+                // cull, as it can decide which cameras render the mesh instance at all
+                const visible = (!doCull && !drawCall.isVisibleFunc) || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
                     drawCall.visibleThisFrame = true;
 

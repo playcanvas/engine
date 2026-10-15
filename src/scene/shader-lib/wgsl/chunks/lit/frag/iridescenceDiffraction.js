@@ -15,9 +15,9 @@ fn iridescence_fresnelToIor(f0: vec3f) -> vec3f {
 }
 
 const XYZ_TO_REC709: mat3x3f = mat3x3f(
-    vec3f(3.2404542, -1.5371385, -0.4985314),
-    vec3f(-0.9692660,  1.8760108,  0.0415560),
-    vec3f(0.0556434, -0.2040259,  1.0572252)
+    vec3f(3.2404542, -0.9692660,  0.0556434),
+    vec3f(-1.5371385,  1.8760108, -0.2040259),
+    vec3f(-0.4985314,  0.0415560,  1.0572252)
 );
 
 fn iridescence_sensitivity(opd: f32, shift: vec3f) -> vec3f {
