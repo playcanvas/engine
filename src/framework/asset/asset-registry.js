@@ -525,6 +525,9 @@ class AssetRegistry extends EventHandler {
                 this.fire(`error:${asset.id}`, err, asset);
                 asset.fire('error', err, asset);
             } else {
+                // however it loaded, an earlier loadFromUrl failure no longer holds
+                asset.loadFromUrlError = null;
+
                 if (asset.type === 'script') {
                     const handler = this._loader.getHandler('script');
                     if (handler._cache[asset.id] && handler._cache[asset.id].parentNode === document.head) {
@@ -638,7 +641,10 @@ class AssetRegistry extends EventHandler {
         }
 
         const startLoad = (asset) => {
-            asset.once('load', (loadedAsset) => {
+            // the request's callback runs once: the load and the error listener remove each other,
+            // so a failed request's load listener does not run when the asset later loads
+            const onLoad = (loadedAsset) => {
+                asset.off('error', onError);
                 if (type === 'material') {
                     this._loadTextures(loadedAsset, (err, textures) => {
                         callback(err, loadedAsset);
@@ -646,14 +652,17 @@ class AssetRegistry extends EventHandler {
                 } else {
                     callback(null, loadedAsset);
                 }
-            });
-            asset.once('error', (err) => {
+            };
+            function onError(err) {
+                asset.off('load', onLoad);
                 // store the error on the asset in case user requests this asset again
                 if (err) {
-                    this.loadFromUrlError = err;
+                    asset.loadFromUrlError = err;
                 }
                 callback(err, asset);
-            });
+            }
+            asset.once('load', onLoad);
+            asset.once('error', onError);
             this.load(asset);
         };
 

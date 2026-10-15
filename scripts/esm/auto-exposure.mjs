@@ -71,7 +71,7 @@ class AutoExposureEffectScript extends CameraFrameEffectScript {
      * @precision 2
      * @step 0.01
      */
-    lowPercent = 0.5;
+    lowPercent = 0.1;
 
     /**
      * The fraction of the screen below which the average is taken, the brightest part above it
@@ -82,7 +82,7 @@ class AutoExposureEffectScript extends CameraFrameEffectScript {
      * @precision 2
      * @step 0.01
      */
-    highPercent = 0.95;
+    highPercent = 0.9;
 
     /**
      * How much the brightness of the center of the screen counts over its edges. 0 meters the
