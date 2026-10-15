@@ -311,6 +311,16 @@ class Asset extends EventHandler {
     loading = false;
 
     /**
+     * The error the asset's last load from a URL failed with, which
+     * {@link AssetRegistry#loadFromUrl} reports again when the URL is requested again, or null.
+     * A successful load, however it was asked for, and unloading clear it.
+     *
+     * @type {*}
+     * @ignore
+     */
+    loadFromUrlError = null;
+
+    /**
      * Optional JSON data that contains the asset handler options.
      *
      * @type {object}
@@ -774,6 +784,7 @@ class Asset extends EventHandler {
         // clear resources on the asset
         this.resources = [];
         this.loaded = false;
+        this.loadFromUrlError = null;
 
         // remove resource from loader cache
         if (this.file) {
