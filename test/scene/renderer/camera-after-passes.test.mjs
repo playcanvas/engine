@@ -248,6 +248,41 @@ describe('Camera passes', function () {
             expect(passes.filter(pass => pass instanceof RenderPassShadowDirectional)).to.have.lengthOf(1);
         });
 
+        it('render the before-passes of a hand-built scene pass every frame, after its shadow and camera passes', function () {
+            second.enabled = false;
+
+            const light = new Entity('Light');
+            light.addComponent('light', { type: 'directional', castShadows: true });
+            app.root.addChild(light);
+
+            const caster = new Entity('Caster');
+            caster.addComponent('render', { type: 'box' });
+            app.root.addChild(caster);
+
+            const cameraBefore = createPass('CameraBefore');
+            first.beforePasses.push(cameraBefore);
+
+            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            scenePass.init(null);
+            scenePass.addLayer(first, app.scene.layers.getLayerByName('World'), false);
+            const own = createPass('Own');
+            scenePass.beforePasses.push(own);
+            first.framePasses = [scenePass];
+
+            for (let i = 0; i < 3; i++) {
+                const passes = renderFrame();
+                expect(passes.filter(pass => pass === own)).to.have.lengthOf(1);
+                expect(passes.filter(pass => pass === cameraBefore)).to.have.lengthOf(1);
+
+                const shadow = passes.findIndex(pass => pass instanceof RenderPassShadowDirectional);
+                expect(shadow).to.be.at.least(0);
+                expect(shadow).to.be.below(passes.indexOf(cameraBefore));
+                expect(passes.indexOf(cameraBefore)).to.be.below(passes.indexOf(own));
+                expect(passes.indexOf(own)).to.be.below(passes.indexOf(scenePass));
+                expect(scenePass.beforePasses).to.deep.equal([own]);
+            }
+        });
+
         it('render the before-passes of the camera and fire its render events once, with the scene split between hand-built passes', function () {
             const before = createPass('Before');
             first.beforePasses.push(before);

@@ -19,10 +19,11 @@ class TestPass extends FramePass {
      */
     onFrameUpdate = null;
 
-    constructor(device, name, { enabled = true, before = [], after = [] } = {}) {
+    constructor(device, name, { enabled = true, internalBefore = [], before = [], after = [] } = {}) {
         super(device);
         this.name = name;
         this.enabled = enabled;
+        this.internalBeforePasses = internalBefore;
         this.beforePasses = before;
         this.afterPasses = after;
     }
@@ -76,6 +77,28 @@ describe('FrameGraph', function () {
 
             expect(frameGraph.renderPasses).to.be.empty;
             expect([before, pass, after].map(p => p.frameUpdateCount)).to.deep.equal([0, 0, 0]);
+        });
+
+        it('schedules the internal before-passes ahead of the before-passes', function () {
+            const frameGraph = new FrameGraph();
+            const internal = new TestPass(device, 'Internal');
+            const before = new TestPass(device, 'Before');
+            const pass = new TestPass(device, 'Pass', { internalBefore: [internal], before: [before] });
+
+            frameGraph.addRenderPass(pass);
+
+            expect(frameGraph.renderPasses).to.deep.equal([internal, before, pass]);
+        });
+
+        it('skips the internal before-passes of a disabled pass', function () {
+            const frameGraph = new FrameGraph();
+            const internal = new TestPass(device, 'Internal');
+            const pass = new TestPass(device, 'Pass', { enabled: false, internalBefore: [internal] });
+
+            frameGraph.addRenderPass(pass);
+
+            expect(frameGraph.renderPasses).to.be.empty;
+            expect(internal.frameUpdateCount).to.equal(0);
         });
 
         it('skips a disabled child together with its own before and after passes', function () {

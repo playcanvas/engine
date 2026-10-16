@@ -43,7 +43,28 @@ describe('RenderPassForward', function () {
             pass.frameUpdate();
             pass.frameUpdate();
 
-            expect(pass.beforePasses).to.deep.equal([before]);
+            expect(pass.internalBeforePasses).to.deep.equal([before]);
+        });
+
+        it('keeps the before-passes set up by the user', function () {
+            const entity = new Entity('Camera');
+            entity.addComponent('camera');
+            app.root.addChild(entity);
+
+            const cameraBefore = new FramePass(app.graphicsDevice);
+            entity.camera.beforePasses.push(cameraBefore);
+
+            const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            pass.init(null);
+            pass.addLayer(entity.camera, app.scene.layers.getLayerByName('World'), false);
+            const own = new FramePass(app.graphicsDevice);
+            pass.beforePasses.push(own);
+
+            pass.frameUpdate();
+            pass.frameUpdate();
+
+            expect(pass.beforePasses).to.deep.equal([own]);
+            expect(pass.internalBeforePasses).to.deep.equal([cameraBefore]);
         });
 
         describe('camera use', function () {
@@ -127,8 +148,8 @@ describe('RenderPassForward', function () {
                 const passB = createPass(first);
                 schedule(passA, passB);
 
-                expect(passA.beforePasses).to.deep.equal([before]);
-                expect(passB.beforePasses).to.deep.equal([]);
+                expect(passA.internalBeforePasses).to.deep.equal([before]);
+                expect(passB.internalBeforePasses).to.deep.equal([]);
             });
 
             it('marks a pass among the before-passes of the camera as its first use, and does not collect them in it', function () {
@@ -142,8 +163,8 @@ describe('RenderPassForward', function () {
                 passB.frameUpdate();
                 app.renderer.updateCameraUse([passB, passA]);
 
-                expect(passA.beforePasses).to.deep.equal([passB]);
-                expect(passB.beforePasses).to.deep.equal([]);
+                expect(passA.internalBeforePasses).to.deep.equal([passB]);
+                expect(passB.internalBeforePasses).to.deep.equal([]);
                 expect(flags(first, passB, passA)).to.deep.equal([[true, false], [false, false], [false, false], [false, true]]);
             });
         });
