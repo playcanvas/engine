@@ -49,7 +49,8 @@ class FramePass {
 
     /**
      * True if the frame pass is enabled and execute function will be called. Note that before and
-     * after functions are called regardless of this flag.
+     * after functions are called regardless of this flag. Set it before the frame renders, at the
+     * latest in frameUpdate, as the frame graph decides which passes to merge from it.
      */
     executeEnabled = true;
 
