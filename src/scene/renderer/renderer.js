@@ -45,6 +45,7 @@ import { MAX_CLIP_PLANES } from '../clip-planes.js';
  * @import { RenderView } from '../render-view.js'
  * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { LayerRenderStep } from './layer-render-step.js'
  * @import { Light } from '../light.js'
  * @import { LightList } from '../lighting/light-list.js'
  * @import { MeshInstance } from '../mesh-instance.js'
@@ -199,6 +200,16 @@ class Renderer {
      * @type {Light[]}
      */
     localLights = [];
+
+    /**
+     * The layer render step which collected the before-passes of each camera in the frame being
+     * built. Filled in by the RenderPassForward instances as they are added to the frame graph, so
+     * that only the first of them rendering a camera collects them.
+     *
+     * @type {Map<Camera, LayerRenderStep>}
+     * @ignore
+     */
+    cameraBeforePassSteps = new Map();
 
     /**
      * Formats of the view uniform buffer, by clustered lighting mode and then by the light layout
@@ -1466,6 +1477,9 @@ class Renderer {
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();
+
+        // no camera before-passes collected yet
+        this.cameraBeforePassSteps.clear();
     }
 }
 

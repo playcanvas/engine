@@ -252,7 +252,9 @@ class CameraComponent extends Component {
 
     /**
      * Gets the frame passes which execute before the camera's main scene rendering, after its
-     * directional shadow passes. When rendering multiple XR views, they execute for each view,
+     * directional shadow passes. When the camera renders using its own frame passes, they execute
+     * before the first of those rendering the camera's layers, and do not execute when none of
+     * them does. When rendering multiple XR views, they execute for each view,
      * apart from a compute pass, which executes once, as selected by
      * {@link ComputePass#xrViewIndex}. Add passes to the array, or remove them from it, to change
      * them.
