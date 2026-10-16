@@ -332,6 +332,26 @@ describe('FrameGraph', function () {
             expect([internal._skipEnd, second._skipStart]).to.deep.equal([false, false]);
         });
 
+        it('does not merge passes with a callback running between them', function () {
+            for (const callback of ['onAfter', 'onBefore']) {
+                const first = createPass('First', true);
+                const second = createPass('Second');
+                (callback === 'onAfter' ? first : second)[callback] = () => {};
+                compile(first, second);
+
+                expect([first._skipEnd, second._skipStart], callback).to.deep.equal([false, false]);
+            }
+
+            // the callbacks which do not run between them do not prevent the merge
+            const first = createPass('First', true);
+            first.onBefore = () => {};
+            const second = createPass('Second');
+            second.onAfter = () => {};
+            compile(first, second);
+
+            expect([first._skipEnd, second._skipStart]).to.deep.equal([true, true]);
+        });
+
         it('requests the store of each attachment the next pass on the target loads', function () {
             // multisampled, so that its color attachments are not stored by default, with two of them
             const target = new RenderTarget({

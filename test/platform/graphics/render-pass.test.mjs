@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
 import { Color } from '../../../src/core/math/color.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
@@ -196,6 +197,53 @@ describe('RenderPass', function () {
             rt.destroy();
         });
 
+    });
+
+    describe('#onBefore and #onAfter', function () {
+
+        afterEach(function () {
+            restore();
+        });
+
+        // records the calls of the render pass and its GPU render pass
+        const record = (calls) => {
+            stub(device, 'startRenderPass').callsFake(() => calls.push('start'));
+            stub(device, 'endRenderPass').callsFake(() => calls.push('end'));
+            renderPass.before = () => calls.push('before');
+            renderPass.execute = () => calls.push('execute');
+            renderPass.after = () => calls.push('after');
+            renderPass.onBefore = pass => calls.push(pass === renderPass ? 'onBefore' : 'onBefore of another pass');
+            renderPass.onAfter = pass => calls.push(pass === renderPass ? 'onAfter' : 'onAfter of another pass');
+        };
+
+        it('are called with the pass, outside of its GPU render pass', function () {
+            const calls = [];
+            record(calls);
+            renderPass.render();
+
+            expect(calls).to.deep.equal(['before', 'onBefore', 'start', 'execute', 'end', 'after', 'onAfter']);
+        });
+
+        it('are called when the pass does not execute, but not when it is disabled', function () {
+            const calls = [];
+            record(calls);
+            renderPass.executeEnabled = false;
+            renderPass.render();
+            expect(calls).to.deep.equal(['before', 'onBefore', 'after', 'onAfter']);
+
+            calls.length = 0;
+            renderPass.enabled = false;
+            renderPass.render();
+            expect(calls).to.deep.equal([]);
+        });
+
+        it('are released when the pass is destroyed', function () {
+            renderPass.onBefore = () => {};
+            renderPass.onAfter = () => {};
+            renderPass.destroy();
+
+            expect([renderPass.onBefore, renderPass.onAfter]).to.deep.equal([null, null]);
+        });
     });
 
 });

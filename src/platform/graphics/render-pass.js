@@ -375,10 +375,11 @@ class RenderPass extends FramePass {
             });
 
             this.before();
+            this.onBefore?.(this);
 
             // the frame graph merged this pass with a neighbouring one, sharing its GPU render pass,
             // only if both execute
-            Debug.assert(this.executeEnabled || !(this._skipStart || this._skipEnd), `The render pass '${this.name}' was merged with a neighbouring pass, but its executeEnabled was set to false after the frame graph was compiled, for example in its before(). Set it before the frame renders, at the latest in its frameUpdate.`, this);
+            Debug.assert(this.executeEnabled || !(this._skipStart || this._skipEnd), `The render pass '${this.name}' was merged with a neighbouring pass, but its executeEnabled was set to false after the frame graph was compiled, for example in its before() or onBefore. Set it before the frame renders, at the latest in its frameUpdate.`, this);
 
             if (this.executeEnabled) {
 
@@ -394,6 +395,7 @@ class RenderPass extends FramePass {
             }
 
             this.after();
+            this.onAfter?.(this);
 
             device.renderPassIndex++;
         }
