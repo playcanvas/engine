@@ -20,11 +20,15 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 class RenderPassShaderQuad extends RenderPass {
     /**
      * @type {Shader|null}
+     * @private
      */
     _shader = null;
 
     /**
+     * The quad rendering the shader, created when the shader is set.
+     *
      * @type {QuadRender|null}
+     * @ignore
      */
     quadRender = null;
 
@@ -83,10 +87,11 @@ class RenderPassShaderQuad extends RenderPass {
     scissor;
 
     /**
-     * Sets the shader used to render the quad.
+     * Sets the shader used to render the quad, or null to render nothing. The vertex shader
+     * receives the quad corners in an attribute using {@link SEMANTIC_POSITION}, and the `quadVS`
+     * shader chunk can be used for it.
      *
-     * @type {Shader}
-     * @ignore
+     * @type {Shader|null}
      */
     set shader(shader) {
 
@@ -101,8 +106,22 @@ class RenderPassShaderQuad extends RenderPass {
         }
     }
 
+    /**
+     * Gets the shader used to render the quad.
+     *
+     * @type {Shader|null}
+     */
     get shader() {
         return this._shader;
+    }
+
+    /**
+     * Releases the resources used to render the quad. The shader is not destroyed, as shaders are
+     * shared, for example between passes created with the same unique name.
+     */
+    destroy() {
+        this.shader = null;
+        super.destroy();
     }
 
     execute() {

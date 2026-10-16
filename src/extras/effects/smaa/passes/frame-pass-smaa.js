@@ -90,8 +90,8 @@ class RenderPassSmaa extends RenderPassShaderQuad {
     }
 
     destroy() {
-        this.shader = null;
         this._textures.length = 0;
+        super.destroy();
     }
 }
 
