@@ -1,5 +1,9 @@
 // @config
 //
+// Replaces the rendering of a camera with its own render passes, assigned to the `framePasses`
+// of the camera. A `RenderPassForward` renders the scene layers into a texture, and a
+// `RenderPassShaderQuad` then renders it to the screen, tinting it.
+//
 // @credit
 // title: Chess Board
 // author: Idmental
