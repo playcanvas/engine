@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import {
-    BLEND_NONE, DITHER_NONE, ditherNames, FRESNEL_SCHLICK,
+    BLEND_NONE, DITHER_NONE, ditherNames,
     PARALLAX_OFFSET,
     SHADER_FORWARD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED,
@@ -363,8 +363,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         // handle fragment shader
         const textureMapping = {};
-
-        options.litOptions.fresnelModel = (options.litOptions.fresnelModel === 0) ? FRESNEL_SCHLICK : options.litOptions.fresnelModel;
 
         // fragment defines
         const fDefines = litShader.fDefines;
