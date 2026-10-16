@@ -240,6 +240,105 @@ describe('FrameGraph', function () {
             expect(first.depthStencilOps.storeDepth).to.equal(true);
         });
 
+        it('does not merge passes on different targets, nor passes without a target', function () {
+            const otherTarget = new RenderTarget({
+                colorBuffer: new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false }),
+                depth: true
+            });
+            const first = createPass('First', true);
+            const other = new RenderPass(device);
+            other.init(otherTarget);
+            const noTarget = new FramePass(device);
+            const noTargetNext = new FramePass(device);
+            compile(first, other, noTarget, noTargetNext);
+
+            expect([first._skipEnd, other._skipStart, other._skipEnd, noTarget._skipStart, noTarget._skipEnd, noTargetNext._skipStart])
+            .to.deep.equal([false, false, false, false, false, false]);
+
+            otherTarget.destroyTextureBuffers();
+            otherTarget.destroy();
+        });
+
+        it('does not merge a pass into one which clears an attachment', function () {
+            const clears = {
+                color: pass => pass.setClearColor(Color.BLACK),
+                depth: pass => pass.setClearDepth(1),
+                stencil: pass => pass.setClearStencil(0)
+            };
+            for (const [attachment, clear] of Object.entries(clears)) {
+                const first = createPass('First', true);
+                const second = createPass('Second');
+                clear(second);
+                compile(first, second);
+
+                expect([first._skipEnd, second._skipStart], attachment).to.deep.equal([false, false]);
+            }
+        });
+
+        it('does not merge a pass with its own after-pass, nor with its own before-pass', function () {
+            const first = createPass('First', true);
+            const after = createPass('After');
+            first.afterPasses = [after];
+            const before = createPass('Before');
+            const second = createPass('Second');
+            second.beforePasses = [before];
+
+            // the passes execute as first, after, before, second, all on the same target and only the
+            // first clearing - the after-pass and the before-pass merge, as neither owns the other
+            compile(first, second);
+
+            expect([first._skipEnd, after._skipStart]).to.deep.equal([false, false]);
+            expect([after._skipEnd, before._skipStart]).to.deep.equal([true, true]);
+            expect([before._skipEnd, second._skipStart]).to.deep.equal([false, false]);
+        });
+
+        it('does not merge a pass with its own internal before-pass', function () {
+            const first = createPass('First', true);
+            const internal = createPass('Internal');
+            const second = createPass('Second');
+            second.internalBeforePasses = [internal];
+
+            // the passes execute as first, internal, second - the internal before-pass merges with the
+            // pass before it, which does not own it
+            compile(first, second);
+
+            expect([first._skipEnd, internal._skipStart]).to.deep.equal([true, true]);
+            expect([internal._skipEnd, second._skipStart]).to.deep.equal([false, false]);
+        });
+
+        it('requests the store of each attachment the next pass on the target loads', function () {
+            // multisampled, so that its color attachments are not stored by default, with two of them
+            const target = new RenderTarget({
+                colorBuffers: [0, 1].map(() => new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false })),
+                depth: true,
+                stencil: true,
+                samples: 4
+            });
+            const first = new RenderPass(device);
+            first.init(target);
+            first.setClearColor(Color.BLACK);
+            first.setClearDepth(1);
+            first.setClearStencil(0);
+
+            // the second pass clears the color attachment 0 and the stencil, and loads the color
+            // attachment 1 and the depth
+            const second = new RenderPass(device);
+            second.init(target);
+            second.setClearColor(Color.BLACK, 0);
+            second.setClearStencil(0);
+
+            expect(first.colorArrayOps.map(ops => ops.store)).to.deep.equal([false, false]);
+            expect([first.depthStencilOps.storeDepth, first.depthStencilOps.storeStencil]).to.deep.equal([false, false]);
+
+            compile(first, second);
+
+            expect(first.colorArrayOps.map(ops => ops.store)).to.deep.equal([false, true]);
+            expect([first.depthStencilOps.storeDepth, first.depthStencilOps.storeStencil]).to.deep.equal([true, false]);
+
+            target.destroyTextureBuffers();
+            target.destroy();
+        });
+
         it('does not merge a pass which does not execute with its neighbour', function () {
             for (const skipped of ['first', 'second']) {
                 const first = createPass('First', true);
