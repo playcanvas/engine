@@ -176,13 +176,6 @@ class RenderPass extends FramePass {
     depthStencilOps;
 
     /**
-     * If true, this pass might use dynamically rendered cubemaps. Use for a case where rendering to cubemap
-     * faces is interleaved with rendering to shadows, to avoid generating cubemap mipmaps. This will likely
-     * be retired when render target dependency tracking gets implemented.
-     */
-    requiresCubemaps = true;
-
-    /**
      * True if the render pass uses the full viewport / scissor for rendering into the render target.
      */
     fullSizeClearRect = true;

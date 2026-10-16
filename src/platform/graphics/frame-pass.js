@@ -54,12 +54,6 @@ class FramePass {
     executeEnabled = true;
 
     /**
-     * If true, this pass might use dynamically rendered cubemaps. Defaults to false for non-render
-     * passes (RenderPass overrides to true).
-     */
-    requiresCubemaps = false;
-
-    /**
      * True if the pass renders once for each view when the frame renders multiple XR views, which
      * is the case for a pass rendering the views. False for a pass which does not depend on the
      * view, such as the shadow pass of a directional light, which then renders once for all views,

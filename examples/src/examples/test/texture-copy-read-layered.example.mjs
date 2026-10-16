@@ -4,8 +4,8 @@
 // array layers and the depth slices of volume textures, including whole volume reads and copies,
 // sub-regions and mip levels. Each texel holds a unique value, and every result is verified by
 // reading it back. Also renders to the depth slices of volume textures using render targets, and
-// verifies the rendered slices and the generated mipmaps of volume textures. Runs on both WebGL2
-// and WebGPU.
+// verifies the rendered slices and the generated mipmaps of volume textures, and the mipmaps
+// generated after rendering to cubemap faces and array layers. Runs on both WebGL2 and WebGPU.
 //
 // @flag HIDDEN
 
@@ -20,6 +20,7 @@ import {
     FILTER_NEAREST,
     PIXELFORMAT_RGBA32F,
     PIXELFORMAT_RGBA8,
+    PIXELFORMAT_SRGBA8,
     RESOLUTION_AUTO,
     RenderTarget,
     SEMANTIC_POSITION,
@@ -217,6 +218,25 @@ const renderColor = (renderTarget, rgba) => {
     device.scope.resolve('uColor').setValue(rgba.map((v) => v / 255));
     drawQuadWithShader(device, renderTarget, colorShader);
 };
+
+// a shader rendering a checkerboard of black and white texels
+const checkerShader = ShaderUtils.createShader(device, {
+    uniqueName: 'CheckerboardShader',
+    attributes: { aPosition: SEMANTIC_POSITION },
+    vertexChunk: 'quadVS',
+    fragmentGLSL: `
+        void main(void) {
+            float c = mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.0);
+            gl_FragColor = vec4(c, c, c, 1.0);
+        }`,
+    fragmentWGSL: `
+        @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+            var output: FragmentOutput;
+            let c = (floor(pcPosition.x) + floor(pcPosition.y)) % 2.0;
+            output.color = vec4f(c, c, c, 1.0);
+            return output;
+        }`
+});
 
 /**
  * Creates the pixels of a layer filled with a flat color.
@@ -524,6 +544,76 @@ const mipSliceColor = (level, slice) => {
         );
         checkClose(`upload mips: mip ${level} generated after upload`, reads[i], expected);
     });
+}
+
+// ----- cubemap face and array layer mipmaps generated after rendering -----
+// each face / layer is rendered by its own render target, which regenerates the mipmaps after it
+// renders
+{
+    const size = 8;
+    const levels = [1, 2, 3];
+
+    // the flat color of a face / layer
+    const layerColor = (layer) => [layer * 40, 255 - layer * 40, 64, 255];
+
+    /**
+     * Verifies the mipmaps generated after rendering to the faces / layers of a texture.
+     *
+     * @param {string} name - The name of the texture type.
+     * @param {string} option - The render target option selecting the face / layer.
+     * @param {number} count - The number of faces / layers.
+     * @param {object} options - The texture options creating the texture type.
+     */
+    const checkLayerMipmaps = async (name, option, count, options) => {
+        const texture = createTexture({
+            name: `render-${name}-mips`,
+            width: size,
+            height: size,
+            mipmaps: true,
+            ...options
+        });
+        const layers = [...Array(count).keys()];
+        const renderTargets = layers.map(
+            (layer) => new RenderTarget({ colorBuffer: texture, [option]: layer, depth: false })
+        );
+        renderTargets.forEach((renderTarget, layer) => renderColor(renderTarget, layerColor(layer)));
+
+        const reads = await Promise.all(
+            layers.flatMap((layer) =>
+                levels.map((level) => read(texture, size >> level, size >> level, { [option]: layer, mipLevel: level }))
+            )
+        );
+        const expected = concat(
+            layers.flatMap((layer) =>
+                levels.map((level) => flatPixels(size >> level, size >> level, layerColor(layer)))
+            )
+        );
+        checkClose(`render ${name} mips: mips ${levels.join(', ')} of each ${option}`, concat(reads), expected);
+
+        renderTargets.forEach((renderTarget) => renderTarget.destroy());
+    };
+
+    await checkLayerMipmaps('cubemap', 'face', 6, { cubemap: true });
+    await checkLayerMipmaps('array', 'layer', 3, { arrayLength: 3 });
+
+    // the mipmaps of an sRGB texture are filtered in linear space: a checkerboard of black and white
+    // texels averages to the linear value 0.5, which is stored as 188 in sRGB
+    const srgbCube = createTexture({
+        name: 'render-srgb-cubemap-mips',
+        width: size,
+        height: size,
+        cubemap: true,
+        format: PIXELFORMAT_SRGBA8,
+        mipmaps: true
+    });
+    const srgbTarget = new RenderTarget({ colorBuffer: srgbCube, face: 2, depth: false });
+    drawQuadWithShader(device, srgbTarget, checkerShader);
+    checkClose(
+        'render cubemap mips: sRGB mips are filtered in linear space',
+        await read(srgbCube, size >> 1, size >> 1, { face: 2, mipLevel: 1 }),
+        flatPixels(size >> 1, size >> 1, [188, 188, 188, 255])
+    );
+    srgbTarget.destroy();
 }
 
 // ----- mipmaps of 32-bit float textures -----

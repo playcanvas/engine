@@ -6,7 +6,6 @@ import { FramePassMultiView } from './renderer/frame-pass-multi-view.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderPass } from '../platform/graphics/render-pass.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
- * @import { Texture } from '../platform/graphics/texture.js'
  */
 
 /**
@@ -153,8 +152,8 @@ class FrameGraph {
     compile() {
         this._compilePasses(this.renderPasses);
 
-        // apply the same pass-merging / cube-mipmap optimizations to each multi-view wrapper's
-        // children so within-eye sequences benefit from the same optimizations as top-level passes
+        // apply the same pass-merging optimizations to each multi-view wrapper's children so
+        // within-eye sequences benefit from the same optimizations as top-level passes
         for (let i = 0; i < this.renderPasses.length; i++) {
             const pass = this.renderPasses[i];
             if (pass instanceof FramePassMultiView) {
@@ -164,8 +163,8 @@ class FrameGraph {
     }
 
     /**
-     * Run the frame-graph compile optimizations (store-on-no-clear, pass merging, cube mipmap
-     * skipping) over a flat list of passes.
+     * Run the frame-graph compile optimizations (store-on-no-clear, pass merging) over a flat list
+     * of passes.
      *
      * @param {FramePass[]} passes - Passes to optimize.
      * @private
@@ -242,40 +241,6 @@ class FrameGraph {
             // merge the passes
             firstPass._skipEnd = true;
             secondPass._skipStart = true;
-        }
-
-        // Walk over render passes to find passes rendering to the same cubemap texture.
-        // If those passes are separated only by passes not requiring cubemap (shadows ..),
-        // we skip the mipmap generation till the last rendering to the cubemap, to avoid
-        // mipmaps being generated after each face.
-        /** @type {Texture} */
-        let lastCubeTexture = null;
-        /** @type {RenderPass|null} */
-        let lastCubeRenderPass = null;
-        for (let i = 0; i < passes.length; i++) {
-            const renderPass = passes[i];
-            const renderTarget = renderPass.renderTarget;
-            const thisTexture = renderTarget?.colorBuffer;
-
-            if (thisTexture?.cubemap) {
-
-                // if previous pass used the same cubemap texture, it does not need mipmaps generated
-                if (lastCubeTexture === thisTexture) {
-                    const count = lastCubeRenderPass.colorArrayOps.length;
-                    for (let j = 0; j < count; j++) {
-                        lastCubeRenderPass.colorArrayOps[j].mipmaps = false;
-                    }
-                }
-
-                lastCubeTexture = renderTarget.colorBuffer;
-                lastCubeRenderPass = renderPass;
-
-            } else if (renderPass.requiresCubemaps) {
-
-                // if the cubemap is required, break the cubemap rendering chain
-                lastCubeTexture = null;
-                lastCubeRenderPass = null;
-            }
         }
 
         renderTargetMap.clear();
