@@ -44,6 +44,7 @@ import { Camera } from '../camera.js';
  * @import { RenderView } from '../render-view.js'
  * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { LayerRenderStep } from './layer-render-step.js'
  * @import { Light } from '../light.js'
  * @import { LightList } from '../lighting/light-list.js'
  * @import { MeshInstance } from '../mesh-instance.js'
@@ -194,6 +195,16 @@ class Renderer {
      * @type {Light[]}
      */
     localLights = [];
+
+    /**
+     * The last layer render step scheduled for each camera in the frame being built. Filled in by
+     * the RenderPassForward instances as they are added to the frame graph, and used by
+     * them to work out the first and last render step of each camera.
+     *
+     * @type {Map<Camera, LayerRenderStep>}
+     * @ignore
+     */
+    cameraLastSteps = new Map();
 
     /**
      * Formats of the view uniform buffer, by clustered lighting mode and then by the light layout
@@ -1446,6 +1457,9 @@ class Renderer {
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();
+
+        // no camera render steps scheduled yet
+        this.cameraLastSteps.clear();
     }
 }
 

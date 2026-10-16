@@ -39,10 +39,12 @@ class LayerRenderStep {
 
     clearStencil = false;
 
-    // true if this is the first render step using its camera
+    // true if this is the first render step using its camera in the frame, set by the
+    // RenderPassForward when it is scheduled
     firstCameraUse = false;
 
-    // true if this is the last render step using its camera
+    // true if this is the last render step using its camera in the frame, set by the
+    // RenderPassForward when it is scheduled
     lastCameraUse = false;
 
     /**

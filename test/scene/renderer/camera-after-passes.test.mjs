@@ -173,7 +173,6 @@ describe('Camera passes', function () {
             const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
             scenePass.init(null);
             scenePass.addLayer(first, app.scene.layers.getLayerByName('World'), false);
-            scenePass.layerRenderSteps[0].firstCameraUse = true;
             scenePass.enabled = false;
             first.framePasses = [scenePass];
 
@@ -191,6 +190,43 @@ describe('Camera passes', function () {
             expect(passes.filter(pass => pass === scenePass)).to.have.lengthOf(1);
             expect(passes.filter(pass => pass === before)).to.have.lengthOf(1);
             expect(passes.filter(pass => pass instanceof RenderPassShadowDirectional)).to.have.lengthOf(1);
+        });
+
+        it('render the before-passes of the camera and fire its render events once, with the scene split between hand-built passes', function () {
+            const before = createPass('Before');
+            first.beforePasses.push(before);
+
+            const world = app.scene.layers.getLayerByName('World');
+            const opaquePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            opaquePass.init(null);
+            opaquePass.addLayer(first, world, false);
+            const transparentPass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            transparentPass.init(null);
+            transparentPass.addLayer(first, world, true, false);
+            first.framePasses = [opaquePass, transparentPass];
+
+            const prerender = sinon.spy();
+            const postrender = sinon.spy();
+            app.scene.on('prerender', prerender);
+            app.scene.on('postrender', postrender);
+
+            // the number of times the event fired for the camera
+            const callCount = spy => spy.getCalls().filter(call => call.args[0] === first).length;
+
+            for (let i = 0; i < 2; i++) {
+                prerender.resetHistory();
+                postrender.resetHistory();
+
+                const passes = renderFrame();
+                expect(passes.filter(pass => pass === before)).to.have.lengthOf(1);
+                expect(passes.indexOf(before)).to.be.below(passes.indexOf(opaquePass));
+                expect(callCount(prerender)).to.equal(1);
+                expect(callCount(postrender)).to.equal(1);
+
+                // the camera starts rendering in the first pass, and finishes in the second one
+                expect(opaquePass.layerRenderSteps[0].firstCameraUse).to.equal(true);
+                expect(transparentPass.layerRenderSteps[0].lastCameraUse).to.equal(true);
+            }
         });
     });
 });

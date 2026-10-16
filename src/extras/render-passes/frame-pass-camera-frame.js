@@ -613,45 +613,6 @@ class FramePassCameraFrame extends FramePass {
 
         const allPasses = this.collectPasses();
         this.beforePasses = allPasses.filter(element => element !== undefined && element !== null);
-
-        this.updateCameraUseFlags();
-    }
-
-    /**
-     * Scan all RenderPassForward instances in the pass chain and mark the first / last
-     * layer render step per camera with firstCameraUse / lastCameraUse. This mirrors what
-     * LayerComposition does for the non-CameraFrame path and ensures that beforePasses
-     * collection and EVENT_PRERENDER / EVENT_POSTRENDER fire exactly once per camera.
-     *
-     * @private
-     */
-    updateCameraUseFlags() {
-        const firstSeen = new Map();
-        const lastSeen = new Map();
-
-        for (let i = 0; i < this.beforePasses.length; i++) {
-            const pass = this.beforePasses[i];
-            if (pass instanceof RenderPassForward) {
-                const steps = pass.layerRenderSteps;
-                for (let j = 0; j < steps.length; j++) {
-                    const step = steps[j];
-                    const cam = step.cameraComponent;
-                    if (cam) {
-                        if (!firstSeen.has(cam)) {
-                            firstSeen.set(cam, step);
-                        }
-                        lastSeen.set(cam, step);
-                    }
-                }
-            }
-        }
-
-        firstSeen.forEach((step) => {
-            step.firstCameraUse = true;
-        });
-        lastSeen.forEach((step) => {
-            step.lastCameraUse = true;
-        });
     }
 
     collectPasses() {

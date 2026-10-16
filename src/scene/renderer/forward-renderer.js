@@ -843,8 +843,6 @@ class ForwardRenderer extends Renderer {
         step.clearColor = renderAction.clearColor;
         step.clearDepth = renderAction.clearDepth;
         step.clearStencil = renderAction.clearStencil;
-        step.firstCameraUse = renderAction.firstCameraUse;
-        step.lastCameraUse = renderAction.lastCameraUse;
         return step;
     }
 

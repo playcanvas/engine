@@ -795,6 +795,34 @@ describe('FramePassCameraFrame', function () {
             expect(cameraFrame.renderPassCamera.scenePassTransparent).to.not.exist;
         });
 
+        it('renders the before-passes of the camera and fires its render events once, with the scene split between passes', function () {
+            cameraFrame.addEffect(createEffect('first'));
+            cameraFrame.update();
+
+            const camera = app.root.findByName('Camera').camera;
+            const before = new FramePass(app.graphicsDevice);
+            camera.beforePasses.push(before);
+
+            const prerender = spy();
+            const postrender = spy();
+            app.scene.on('prerender', prerender);
+            app.scene.on('postrender', postrender);
+
+            for (let i = 0; i < 2; i++) {
+                prerender.resetHistory();
+                postrender.resetHistory();
+                app.render();
+
+                const passes = app.frameGraph.renderPasses;
+                const { scenePass, scenePassTransparent } = cameraFrame.renderPassCamera;
+                expect(scenePassTransparent).to.exist;
+                expect(passes.filter(pass => pass === before)).to.have.lengthOf(1);
+                expect(passes.indexOf(before)).to.be.below(passes.indexOf(scenePass));
+                expect(prerender.getCalls().map(call => call.args[0])).to.deep.equal([camera]);
+                expect(postrender.getCalls().map(call => call.args[0])).to.deep.equal([camera]);
+            }
+        });
+
         it('copies the opaque scene color for an effect requiring it, and hands it the handle of the copy', function () {
             const effect = createEffect('grabber', [FRAMERESOURCE_SCENECOLORGRAB, FRAMERESOURCE_SCENETARGET]);
             cameraFrame.addEffect(effect);
