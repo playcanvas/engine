@@ -26,7 +26,7 @@ flat varying ivec4 vSubDraw;
 
 uniform vec3 uColorMultiply;
 
-#if SH_BANDS > 0
+#if SH_BANDS > 0 || defined(SB_LOBES)
     // 1 for an orthographic camera, whose view rays are all parallel to the camera forward
     uniform uint uCameraOrtho;
 #endif
@@ -49,7 +49,7 @@ void main(void) {
     vec3 worldCenter;
     vec4 worldRotation = vec4(0.0, 0.0, 0.0, 1.0);
     vec3 worldScale = vec3(1.0);
-    #if SH_BANDS > 0
+    #if SH_BANDS > 0 || defined(SB_LOBES)
         vec3 dir;   // model-space view direction
     #endif
 
@@ -61,7 +61,7 @@ void main(void) {
         initWorkBufferGeometry(ivec2(gl_FragCoord.xy));
         worldCenter = workBufferWorldCenter();
 
-        #if SH_BANDS > 0
+        #if SH_BANDS > 0 || defined(SB_LOBES)
             // model-space view direction (matches the source path up to non-uniform model scale).
             // Orthographic uses the world-space camera forward, (0, 0, -1) taken out of view space.
             vec3 viewDir = uCameraOrtho != 0u ? vec3(0.0, 0.0, -1.0) * mat3(matrix_view) : worldCenter - uCameraPosition;
@@ -99,7 +99,7 @@ void main(void) {
         // Apply custom rotation/scale modification
         modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
 
-        #if SH_BANDS > 0
+        #if SH_BANDS > 0 || defined(SB_LOBES)
             // calculate the model-space view direction. Orthographic view rays are all parallel to
             // the camera forward, rather than running from the camera position to the splat.
             vec3 viewDir = uCameraOrtho != 0u ? vec3(0.0, 0.0, -1.0) : center.view;
@@ -120,6 +120,12 @@ void main(void) {
 
         // evaluate
         color.xyz += evalSH(sh, dir) * scale;
+    #endif
+
+    // add the spherical beta lobes. Matching the trainers, the color they are added to is clamped
+    // first, as a negative base would otherwise absorb part of the highlight.
+    #ifdef SB_LOBES
+        color.xyz = max(color.xyz, 0.0) + evalSB(dir);
     #endif
 
     // Apply custom color modification

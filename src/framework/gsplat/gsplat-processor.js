@@ -398,6 +398,7 @@ class GSplatProcessor {
         const defines = new Map();
         this._srcResource.configureMaterialDefines(defines);
         defines.set('SH_BANDS', '0'); // SH processing is currently not supported.
+        defines.delete('SB_LOBES'); // nor is spherical beta processing.
 
         const isWebGPU = device.isWebGPU;
 
