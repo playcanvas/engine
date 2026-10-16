@@ -318,6 +318,8 @@ class FramePassSmaa extends FramePass {
             target.destroy();
         });
         this.sourceTexture = null;
+
+        super.destroy();
     }
 }
 

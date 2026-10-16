@@ -162,6 +162,8 @@ class FramePassLensFlare extends FramePass {
         this._flareTarget.destroy();
         this._flareTarget = null;
         this.flareTexture = null;
+
+        super.destroy();
     }
 
     /**

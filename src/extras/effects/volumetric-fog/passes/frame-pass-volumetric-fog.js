@@ -913,6 +913,8 @@ class FramePassVolumetricFog extends FramePass {
             this.fogRenderTarget = null;
             this.fogTexture = null;
         }
+
+        super.destroy();
     }
 
     /**

@@ -101,6 +101,8 @@ class FramePassBloom extends FramePass {
         this.bloomRenderTarget?.destroy();
         this.bloomRenderTarget = null;
         this.bloomTexture = null;
+
+        super.destroy();
     }
 
     destroyRenderTargets(startIndex = 0) {

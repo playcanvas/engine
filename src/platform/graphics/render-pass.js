@@ -140,6 +140,8 @@ class RenderPass extends FramePass {
      * - `null`: render pass renders to the backbuffer
      * - Otherwise, renders to the provided RT.
      *
+     * The render pass does not own the render target, and does not destroy it.
+     *
      * @type {RenderTarget|null|undefined}
      */
     renderTarget;
@@ -216,7 +218,7 @@ class RenderPass extends FramePass {
      * @param {RenderTarget|null} [renderTarget] - The render target to render into (output). This
      * function should be called only for render passes which use render target, or passes which
      * render directly into the default framebuffer, in which case a null or undefined render
-     * target is expected.
+     * target is expected. The render pass does not own the render target.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {Texture} [options.resizeSource] - A texture to use as a source for the automatic
      * render target resize operation. If not provided, no automatic resizing takes place.

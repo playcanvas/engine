@@ -122,6 +122,9 @@ class FrameGraph {
             return;
         }
 
+        // a destroyed pass is not used again, see FramePass#destroy
+        Debug.assertDestroyed(renderPass);
+
         // can add or remove before and after passes, and enable or disable them, but not disable the
         // pass itself
         renderPass.frameUpdate();

@@ -194,6 +194,32 @@ describe('FrameGraph', function () {
             expect(assertion.getCalls().some(call => !call.args[0])).to.equal(false);
             expect(frameGraph.renderPasses).to.deep.equal([pass]);
         });
+
+        it('reports a destroyed pass added to the frame, once', function () {
+            const pass = new TestPass(device, 'DestroyedPassAddedToFrame');
+            pass.destroy();
+
+            const error = stub(console, 'error');
+            new FrameGraph().addRenderPass(pass);
+            new FrameGraph().addRenderPass(pass);
+
+            expect(error.callCount).to.equal(1);
+            expect(error.firstCall.args.join(' ')).to.include('DestroyedPassAddedToFrame');
+        });
+
+        it('does not report a pass which is not destroyed, nor a destroyed pass which is disabled', function () {
+            const live = new TestPass(device, 'LivePassAddedToFrame');
+            const disabled = new TestPass(device, 'DisabledDestroyedPass', { enabled: false });
+            disabled.destroy();
+
+            const error = stub(console, 'error');
+            const frameGraph = new FrameGraph();
+            frameGraph.addRenderPass(live);
+            frameGraph.addRenderPass(disabled);
+
+            expect(error.called).to.equal(false);
+            expect(frameGraph.renderPasses).to.deep.equal([live]);
+        });
     });
 
     describe('#compile', function () {

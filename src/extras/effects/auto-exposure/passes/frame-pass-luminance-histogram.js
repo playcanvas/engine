@@ -254,6 +254,8 @@ class FramePassLuminanceHistogram extends FramePass {
             target.destroy();
         });
         this.sourceTexture = null;
+
+        super.destroy();
     }
 }
 
