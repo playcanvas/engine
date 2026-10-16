@@ -503,16 +503,23 @@ class CameraFrame {
         // settings can have changed while the camera frame was disabled, which update ignores
         this.updateOptions();
         this.renderPassCamera = this.createRenderPass();
-        this.cameraComponent.framePasses = [this.renderPassCamera];
+
+        // add the pass to the frame passes of the camera, keeping those added by others. The list is
+        // assigned, for the camera to update its rendering
+        const cameraComponent = this.cameraComponent;
+        cameraComponent.framePasses = [...cameraComponent.framePasses, this.renderPassCamera];
         this._applyEffects();
     }
 
     disable() {
         const cameraComponent = this.cameraComponent;
-        cameraComponent.framePasses?.forEach((renderPass) => {
-            renderPass.destroy();
-        });
-        cameraComponent.framePasses = [];
+
+        // remove and destroy only the pass the camera frame added, as other frame passes of the camera
+        // are owned by whoever added them. The list is assigned, for the camera to update its rendering
+        const renderPassCamera = this.renderPassCamera;
+        cameraComponent.framePasses = cameraComponent.framePasses.filter(pass => pass !== renderPassCamera);
+        renderPassCamera?.destroy();
+        this.renderPassCamera = null;
         cameraComponent.rendering = null;
 
         cameraComponent.jitter = 0;
@@ -521,8 +528,6 @@ class CameraFrame {
 
         // disable SSAO included in the lighting pass
         cameraComponent.shaderParams.ssaoEnabled = false;
-
-        this.renderPassCamera = null;
     }
 
     /**
