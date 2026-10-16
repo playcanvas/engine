@@ -2,7 +2,12 @@ import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
 import { Debug } from '../../src/core/debug.js';
+import { Color } from '../../src/core/math/color.js';
+import { PIXELFORMAT_RGBA8 } from '../../src/platform/graphics/constants.js';
 import { FramePass } from '../../src/platform/graphics/frame-pass.js';
+import { RenderPass } from '../../src/platform/graphics/render-pass.js';
+import { RenderTarget } from '../../src/platform/graphics/render-target.js';
+import { Texture } from '../../src/platform/graphics/texture.js';
 import { FrameGraph } from '../../src/scene/frame-graph.js';
 import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
@@ -188,6 +193,89 @@ describe('FrameGraph', function () {
 
             expect(assertion.getCalls().some(call => !call.args[0])).to.equal(false);
             expect(frameGraph.renderPasses).to.deep.equal([pass]);
+        });
+    });
+
+    describe('#compile', function () {
+        /** @type {RenderTarget} */
+        let renderTarget;
+
+        // a pass rendering to the shared render target, clearing its color and depth if requested
+        const createPass = (name, clears = false) => {
+            const pass = new RenderPass(device);
+            pass.name = name;
+            pass.init(renderTarget);
+            if (clears) {
+                pass.setClearColor(Color.BLACK);
+                pass.setClearDepth(1);
+            }
+            return pass;
+        };
+
+        const compile = (...passes) => {
+            const frameGraph = new FrameGraph();
+            passes.forEach(pass => frameGraph.addRenderPass(pass));
+            frameGraph.compile();
+            return frameGraph;
+        };
+
+        beforeEach(function () {
+            renderTarget = new RenderTarget({
+                colorBuffer: new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false }),
+                depth: true
+            });
+        });
+
+        afterEach(function () {
+            renderTarget.destroyTextureBuffers();
+            renderTarget.destroy();
+        });
+
+        it('merges two passes on the same target when the second does not clear', function () {
+            const first = createPass('First', true);
+            const second = createPass('Second');
+            compile(first, second);
+
+            expect([first._skipEnd, second._skipStart]).to.deep.equal([true, true]);
+            expect(first.depthStencilOps.storeDepth).to.equal(true);
+        });
+
+        it('does not merge a pass which does not execute with its neighbour', function () {
+            for (const skipped of ['first', 'second']) {
+                const first = createPass('First', true);
+                const second = createPass('Second');
+                (skipped === 'first' ? first : second).executeEnabled = false;
+                compile(first, second);
+
+                expect([first._skipEnd, second._skipStart], skipped).to.deep.equal([false, false]);
+            }
+        });
+
+        it('requests the store from the last pass writing the target, past a pass which does not execute', function () {
+            const first = createPass('First', true);
+            const skipped = createPass('Skipped', true);
+            skipped.executeEnabled = false;
+            const last = createPass('Last');
+            compile(first, skipped, last);
+
+            // the last pass loads the depth the first one rendered, as the skipped one does not clear it
+            expect(first.depthStencilOps.storeDepth).to.equal(true);
+            expect(skipped.depthStencilOps.storeDepth).to.equal(false);
+            expect([first._skipEnd, skipped._skipStart, skipped._skipEnd, last._skipStart]).to.deep.equal([false, false, false, false]);
+        });
+
+        it('asserts a merged pass whose execution is disabled after the compile', function () {
+            const first = createPass('First', true);
+            const second = createPass('Second');
+            second.before = () => {
+                second.executeEnabled = false;
+            };
+            const frameGraph = compile(first, second);
+
+            const assertion = stub(Debug, 'assert');
+            frameGraph.render(device);
+
+            expect(assertion.getCalls().some(call => !call.args[0])).to.equal(true);
         });
     });
 });

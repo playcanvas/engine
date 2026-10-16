@@ -191,8 +191,10 @@ class FrameGraph {
 
             const renderTarget = renderPass.renderTarget;
 
-            // if using a target, or null which represents the default back-buffer
-            if (renderTarget !== undefined) {
+            // if using a target, or null which represents the default back-buffer. A pass which does
+            // not execute does not touch its target, so the store request of the next pass using it
+            // goes to the last pass which writes it
+            if (renderTarget !== undefined && renderPass.executeEnabled) {
 
                 // previous pass using the same render target
                 const prevPass = renderTargetMap.get(renderTarget);
@@ -229,6 +231,12 @@ class FrameGraph {
             // if the render targets are different, we can't merge the passes
             // also only merge passes that have a render target
             if (firstRT !== secondRT || firstRT === undefined) {
+                continue;
+            }
+
+            // a pass which does not execute does not start or end its GPU render pass either, which
+            // the other merged pass would depend on
+            if (!firstPass.executeEnabled || !secondPass.executeEnabled) {
                 continue;
             }
 
