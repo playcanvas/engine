@@ -125,6 +125,13 @@ class FrameGraph {
         // can add or remove before and after passes, and enable or disable them
         renderPass.frameUpdate();
 
+        // the passes the engine added for the frame execute first, as the passes set up by the user
+        // can depend on them
+        const internalBeforePasses = renderPass.internalBeforePasses;
+        for (let i = 0; i < internalBeforePasses.length; i++) {
+            this.addRenderPass(internalBeforePasses[i]);
+        }
+
         const beforePasses = renderPass.beforePasses;
         for (let i = 0; i < beforePasses.length; i++) {
             this.addRenderPass(beforePasses[i]);
@@ -234,7 +241,7 @@ class FrameGraph {
             }
 
             // second pass cannot contain before passes
-            if (secondPass.beforePasses.length > 0) {
+            if (secondPass.beforePasses.length > 0 || secondPass.internalBeforePasses.length > 0) {
                 continue;
             }
 

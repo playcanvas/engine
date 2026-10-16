@@ -175,7 +175,7 @@ class RenderPassForward extends RenderPass {
                         // render the shadow before this render pass
                         const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, camera);
                         if (shadowPass) {
-                            this.beforePasses.push(shadowPass);
+                            this.internalBeforePasses.push(shadowPass);
                         }
                     }
                 }
@@ -231,7 +231,7 @@ class RenderPassForward extends RenderPass {
                 collectors.set(camera, step);
                 const { beforePasses } = camera;
                 for (let j = 0; j < beforePasses.length; j++) {
-                    this.beforePasses.push(beforePasses[j]);
+                    this.internalBeforePasses.push(beforePasses[j]);
                 }
             }
         }
@@ -269,9 +269,10 @@ class RenderPassForward extends RenderPass {
     frameUpdate() {
         super.frameUpdate();
 
-        // the before-passes (camera before-passes, shadows) are collected again each time the pass is
-        // scheduled, so they do not accumulate when the pass does not render
-        this.beforePasses.length = 0;
+        // the passes this pass depends on in the frame (shadows, camera before-passes) are collected
+        // again each time the pass is scheduled, so they do not accumulate when the pass does not
+        // render. They go to the internal before-passes, so the before-passes set up by the user stay
+        this.internalBeforePasses.length = 0;
 
         this.updateDirectionalShadows();
         this.updateCameraBeforePasses();

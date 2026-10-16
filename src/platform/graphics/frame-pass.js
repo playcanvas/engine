@@ -65,7 +65,19 @@ class FramePass {
     perView = true;
 
     /**
-     * Frame passes which need to be executed before this pass.
+     * Frame passes which the engine adds for the frame, which execute before this pass and its
+     * {@link FramePass#beforePasses}. A pass which depends on other passes in some frames, such as
+     * the shadow passes of a forward pass, fills this in its frameUpdate, keeping the
+     * beforePasses for the passes set up by the user.
+     *
+     * @type {FramePass[]}
+     * @ignore
+     */
+    internalBeforePasses = [];
+
+    /**
+     * Frame passes which need to be executed before this pass. The engine does not change this
+     * list, so the passes in it execute every frame this pass executes.
      *
      * @type {FramePass[]}
      */
