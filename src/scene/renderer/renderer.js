@@ -197,14 +197,14 @@ class Renderer {
     localLights = [];
 
     /**
-     * The last layer render step scheduled for each camera in the frame being built. Filled in by
-     * the RenderPassForward instances as they are added to the frame graph, and used by
-     * them to work out the first and last render step of each camera.
+     * The layer render step which collected the before-passes of each camera in the frame being
+     * built. Filled in by the RenderPassForward instances as they are added to the frame graph, so
+     * that only the first of them rendering a camera collects them.
      *
      * @type {Map<Camera, LayerRenderStep>}
      * @ignore
      */
-    cameraLastSteps = new Map();
+    cameraBeforePassSteps = new Map();
 
     /**
      * Formats of the view uniform buffer, by clustered lighting mode and then by the light layout
@@ -1458,8 +1458,8 @@ class Renderer {
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();
 
-        // no camera render steps scheduled yet
-        this.cameraLastSteps.clear();
+        // no camera before-passes collected yet
+        this.cameraBeforePassSteps.clear();
     }
 }
 

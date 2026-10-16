@@ -73,10 +73,11 @@ describe('RenderPassForward', function () {
                 return pass;
             };
 
-            // schedules the passes in a new frame
+            // schedules the passes in a new frame, which execute in the given order
             const schedule = (...passes) => {
                 app.renderer.frameUpdate();
                 passes.forEach(pass => pass.frameUpdate());
+                app.renderer.updateCameraUse(passes);
             };
 
             // the steps of the passes using the camera, flagged as [firstCameraUse, lastCameraUse]
@@ -100,7 +101,7 @@ describe('RenderPassForward', function () {
                 expect(flags(second, passA, passB)).to.deep.equal([[true, false], [false, true]]);
             });
 
-            it('marks the render steps of each frame in the order the passes are scheduled', function () {
+            it('marks the render steps of each frame in the order the passes execute', function () {
                 const passA = createPass(first);
                 const passB = createPass(first);
                 schedule(passA, passB);
@@ -128,6 +129,22 @@ describe('RenderPassForward', function () {
 
                 expect(passA.beforePasses).to.deep.equal([before]);
                 expect(passB.beforePasses).to.deep.equal([]);
+            });
+
+            it('marks a pass among the before-passes of the camera as its first use, and does not collect them in it', function () {
+                const passA = createPass(first);
+                const passB = createPass(first);
+                first.beforePasses.push(passB);
+
+                // passA collects passB as its before-pass, and so is scheduled first, while passB executes first
+                app.renderer.frameUpdate();
+                passA.frameUpdate();
+                passB.frameUpdate();
+                app.renderer.updateCameraUse([passB, passA]);
+
+                expect(passA.beforePasses).to.deep.equal([passB]);
+                expect(passB.beforePasses).to.deep.equal([]);
+                expect(flags(first, passB, passA)).to.deep.equal([[true, false], [false, false], [false, false], [false, true]]);
             });
         });
     });

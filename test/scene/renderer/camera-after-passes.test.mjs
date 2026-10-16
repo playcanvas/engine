@@ -152,6 +152,62 @@ describe('Camera passes', function () {
             expect(index).to.be.greaterThan(passes.findLastIndex(pass => rendersCamera(pass, first)));
             expect(index).to.be.lessThan(passes.findIndex(pass => rendersCamera(pass, second)));
         });
+
+        describe('with a pass rendering the camera', function () {
+
+            // the passes rendering the first camera and its render events, in the order they run in
+            // a frame, naming the given pass 'before' and the others 'scene'
+            const renderOrder = (before) => {
+                const order = [];
+                const onPrerender = (camera) => {
+                    if (camera === first) order.push('prerender');
+                };
+                const onPostrender = (camera) => {
+                    if (camera === first) order.push('postrender');
+                };
+                app.scene.on('prerender', onPrerender);
+                app.scene.on('postrender', onPostrender);
+                const execute = sinon.stub(RenderPassForward.prototype, 'execute').callsFake(function () {
+                    if (rendersCamera(this, first)) order.push(this === before ? 'before' : 'scene');
+                });
+
+                renderFrame();
+
+                execute.restore();
+                app.scene.off('prerender', onPrerender);
+                app.scene.off('postrender', onPostrender);
+                return order;
+            };
+
+            const createScenePass = (transparent) => {
+                const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+                pass.init(null);
+                pass.addLayer(first, app.scene.layers.getLayerByName('World'), false);
+                if (transparent) {
+                    pass.addLayer(first, app.scene.layers.getLayerByName('World'), true);
+                }
+                return pass;
+            };
+
+            it('fire the render events of the camera around it, when the camera renders the layers', function () {
+                const before = createScenePass(false);
+                first.beforePasses.push(before);
+
+                for (let i = 0; i < 2; i++) {
+                    expect(renderOrder(before)).to.deep.equal(['prerender', 'before', 'scene', 'postrender']);
+                }
+            });
+
+            it('fire the render events of the camera around it, when the camera renders its frame passes', function () {
+                const before = createScenePass(false);
+                first.beforePasses.push(before);
+                first.framePasses = [createScenePass(true)];
+
+                for (let i = 0; i < 2; i++) {
+                    expect(renderOrder(before)).to.deep.equal(['prerender', 'before', 'scene', 'postrender']);
+                }
+            });
+        });
     });
 
     describe('#framePasses', function () {

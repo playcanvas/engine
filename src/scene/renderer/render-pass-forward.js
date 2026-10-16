@@ -183,14 +183,18 @@ class RenderPassForward extends RenderPass {
         }
     }
 
-    // Mark the first and the last render step of each camera in the frame. These are worked out
-    // from the order the passes are scheduled in, as the renderer keeps the last step scheduled for
-    // each camera, so they are correct however the passes were built - by the layer composition,
-    // by a CameraFrame, or by hand and assigned to the framePasses of a camera. All passes are
-    // scheduled before any of them executes, so the flags are final when before() and after() read
-    // them. Scheduling the last step of a camera again leaves its flags as they are.
-    updateCameraUse() {
-        const lastSteps = this.renderer.cameraLastSteps;
+    /**
+     * Marks the first and the last render step of each camera in the frame. The renderer calls this
+     * for the scheduled passes in the order they execute, once all of them are scheduled, so the
+     * flags are correct however the passes were built - by the layer composition, by a CameraFrame,
+     * or by hand and assigned to the frame passes of a camera - and final when before() and after()
+     * read them. A pass executing again leaves the flags of the last step of a camera as they are.
+     *
+     * @param {Map<Camera, LayerRenderStep>} lastSteps - The last step of each camera so far, which
+     * this updates.
+     * @ignore
+     */
+    updateCameraUse(lastSteps) {
         const steps = this.layerRenderSteps;
         for (let i = 0; i < steps.length; i++) {
             const step = steps[i];
@@ -207,22 +211,27 @@ class RenderPassForward extends RenderPass {
         }
     }
 
-    // Collect before-passes from cameras whose first render step lives in this
-    // RenderPassForward, so each camera's before-passes are scheduled exactly once, even when
-    // multiple RenderPassForward instances reference the same camera (e.g. CameraFrame's
-    // scenePass vs afterPass). Called after updateDirectionalShadows, so camera
-    // before-passes execute after the directional shadow passes and can render into the
-    // freshly updated shadow maps.
+    // Collect the before-passes of the cameras this pass is the first to render in the frame being
+    // built, so each camera's before-passes are scheduled exactly once, even when multiple
+    // RenderPassForward instances reference the same camera (e.g. CameraFrame's scenePass vs
+    // afterPass). This goes by the order the passes are scheduled in, not the order they execute
+    // in, so a pass among the before-passes of a camera, which is scheduled after the pass
+    // collecting them, does not collect them again. The step which collected them collects them
+    // again when its pass is scheduled again. Called after updateDirectionalShadows, so camera
+    // before-passes execute after the directional shadow passes and can render into the freshly
+    // updated shadow maps.
     updateCameraBeforePasses() {
-        for (let i = 0; i < this.layerRenderSteps.length; i++) {
-            const step = this.layerRenderSteps[i];
-            if (step.firstCameraUse) {
-                const camera = step.cameraComponent?.camera;
-                if (camera) {
-                    const { beforePasses } = camera;
-                    for (let j = 0; j < beforePasses.length; j++) {
-                        this.beforePasses.push(beforePasses[j]);
-                    }
+        const collectors = this.renderer.cameraBeforePassSteps;
+        const steps = this.layerRenderSteps;
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            const camera = step.cameraComponent.camera;
+            const collector = collectors.get(camera);
+            if (!collector || collector === step) {
+                collectors.set(camera, step);
+                const { beforePasses } = camera;
+                for (let j = 0; j < beforePasses.length; j++) {
+                    this.beforePasses.push(beforePasses[j]);
                 }
             }
         }
@@ -264,7 +273,6 @@ class RenderPassForward extends RenderPass {
         // scheduled, so they do not accumulate when the pass does not render
         this.beforePasses.length = 0;
 
-        this.updateCameraUse();
         this.updateDirectionalShadows();
         this.updateCameraBeforePasses();
         this.updateClears();
