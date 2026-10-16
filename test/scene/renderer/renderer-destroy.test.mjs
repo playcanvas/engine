@@ -93,6 +93,19 @@ describe('Renderer destruction', function () {
         }
     });
 
+    it('destroys both passes of the clustered lighting update', function () {
+        const updatePass = renderer._renderPassUpdateClustered;
+        expect(updatePass).to.exist;
+        const { cookiesRenderPass, shadowRenderPass } = updatePass;
+        const destroys = [cookiesRenderPass, shadowRenderPass].map(pass => spy(pass, 'destroy'));
+
+        renderer.destroy();
+        renderer = null;
+
+        destroys.forEach(destroy => expect(destroy.calledOnce).to.be.true);
+        expect(updatePass.beforePasses).to.have.length(0);
+    });
+
     it('can destroy a renderer before any clusters are allocated', function () {
         const destroyedRenderer = renderer;
         renderer.destroy();

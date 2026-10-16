@@ -230,6 +230,49 @@ describe('FramePassCameraFrame', function () {
         expect(taaExposure.value).to.equal(1);
     });
 
+    it('removes and destroys its own pass when disabled, returning the camera to its own rendering', function () {
+        cameraFrame.update();
+        const ownDestroy = spy(cameraFrame.renderPassCamera, 'destroy');
+
+        cameraFrame.enabled = false;
+
+        expect(ownDestroy.calledOnce).to.equal(true);
+        expect(cameraFrame.renderPassCamera).to.equal(null);
+        expect(cameraFrame.cameraComponent.framePasses).to.have.length(0);
+    });
+
+    it('removes and destroys only its own pass when disabled, leaving other frame passes of the camera', function () {
+        cameraFrame.update();
+        const ownDestroy = spy(cameraFrame.renderPassCamera, 'destroy');
+
+        // a pass added to the frame passes of the camera, which the camera frame does not own
+        const otherPass = new FramePass(app.graphicsDevice);
+        const otherDestroy = spy(otherPass, 'destroy');
+        cameraFrame.cameraComponent.framePasses.push(otherPass);
+
+        cameraFrame.enabled = false;
+
+        expect(ownDestroy.calledOnce).to.equal(true);
+        expect(otherDestroy.called).to.equal(false);
+        expect(cameraFrame.cameraComponent.framePasses).to.have.length(1);
+        expect(cameraFrame.cameraComponent.framePasses[0]).to.equal(otherPass);
+    });
+
+    it('adds its pass to the frame passes of the camera when enabled, keeping the others', function () {
+        cameraFrame.enabled = false;
+
+        // a pass in the frame passes of the camera before the camera frame is enabled
+        const otherPass = new FramePass(app.graphicsDevice);
+        cameraFrame.cameraComponent.framePasses = [otherPass];
+
+        cameraFrame.enabled = true;
+
+        const { framePasses } = cameraFrame.cameraComponent;
+        expect(framePasses).to.have.length(2);
+        expect(framePasses[0]).to.equal(otherPass);
+        expect(framePasses[1]).to.equal(cameraFrame.renderPassCamera);
+    });
+
     describe('effects', function () {
 
         it('applies a change to an effect when updated, rendering until then what the last update applied', function () {
