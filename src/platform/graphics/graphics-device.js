@@ -835,6 +835,8 @@ class GraphicsDevice extends EventHandler {
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
+        this._computeDispatchesPerFrame = 0;
+        this._computePassesPerFrame = 0;
 
         this._primitiveCount = 0;
         this._renderTargetCreationTime = 0;

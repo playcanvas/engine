@@ -6,6 +6,10 @@ export default /* wgsl */`
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
+    #ifdef CLIP_PLANES
+        applyClipPlanes(vPositionW);
+    #endif
+
     #include "litUserMainStartPS"
 
     dReflection = vec4f(0.0);

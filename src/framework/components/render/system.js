@@ -34,6 +34,8 @@ const _properties = [
     'castShadows',
     'shadowCascadeMask',
     'receiveShadows',
+    'clippingPlanes',
+    'clipIntersection',
     'castShadowsLightmap',
     'lightmapped',
     'lightmapSizeMultiplier',
@@ -98,11 +100,16 @@ class RenderComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
 
-        // copy properties
+        // copy properties, and the clipping planes as assigned, without changes to the returned
+        // planes that are not assigned
         const data = {};
         for (let i = 0; i < _properties.length; i++) {
-            data[_properties[i]] = entity.render[_properties[i]];
+            const property = _properties[i];
+            if (property !== 'clippingPlanes') {
+                data[property] = entity.render[property];
+            }
         }
+        data.clippingPlanes = entity.render._clipPlanes?.assigned ?? null;
         data.enabled = entity.render.enabled;
 
         // mesh instances cannot be used this way, remove them and manually clone them later

@@ -165,7 +165,7 @@ await new Promise((resolve) => {
 app.start();
 
 // Custom mini stats showing gsplat counts
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy', 'compute']));
 
 // --- infinite skybox backdrop from the equirectangular LDR image ---
 // The built-in infinite sky samples a cubemap, so the equirect is reprojected once into a

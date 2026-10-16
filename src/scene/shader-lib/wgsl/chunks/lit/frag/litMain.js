@@ -6,6 +6,10 @@ export default /* wgsl */`
 #include "frontendDeclPS"
 #include "outlineDeclarationPS"
 
+#ifdef CLIP_PLANES
+    #include "clipPlanesPS"
+#endif
+
 #if defined(PICK_PASS) || defined(PREPASS_PASS)
 
     #include "frontendCodePS"

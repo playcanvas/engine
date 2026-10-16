@@ -296,46 +296,47 @@ app.root.addChild(cameraEntity);
 
 // The looks: the elements each kind of light places along the axis from the light through the
 // centre of the screen. Offsets of 0 sit on the light, 1 at the centre, 2 mirrored across it.
-// Sizes are fractions of the screen height, and the shapes are the textures loaded above.
+// Sizes are fractions of the screen height, and the shapes are the textures loaded above. The
+// intensities are relative to the light, as a flare is scaled by the intensity of its light.
 const sunLook = {
     elements: [
-        { shape: 'glow_soft', size: 0.4, color: [1, 0.85, 0.65], intensity: 3 },
-        { shape: 'burst_star', size: 0.8, color: [1, 0.95, 0.85], intensity: 3.5 },
-        { shape: 'anamorphic_streak', size: 0.08, aspect: 18, intensity: 1.5 },
-        { shape: 'halo', size: 0.5, color: [1, 0.9, 0.8], intensity: 0.5 },
+        { shape: 'glow_soft', size: 0.4, color: [1, 0.85, 0.65], intensity: 1.2 },
+        { shape: 'burst_star', size: 0.8, color: [1, 0.95, 0.85], intensity: 1.4 },
+        { shape: 'anamorphic_streak', size: 0.08, aspect: 18, intensity: 0.6 },
+        { shape: 'halo', size: 0.5, color: [1, 0.9, 0.8], intensity: 0.2 },
         {
             shape: 'iris_hexagon',
             offset: 0.45,
             size: 0.05,
             color: [0.5, 0.8, 1],
-            intensity: 0.35,
+            intensity: 0.14,
             count: 3,
             spread: 0.35
         },
-        { shape: 'spectrum_arc', offset: 1.1, size: 0.6, rotation: 180, autoRotate: true, intensity: 0.5 },
-        { shape: 'iris_round', offset: 1.35, size: 0.2, color: [1, 0.6, 0.35], intensity: 0.4 },
-        { shape: 'iris_pentagon', offset: 1.75, size: 0.1, color: [0.6, 1, 0.6], intensity: 0.6 },
-        { shape: 'glow_rim', offset: 2.2, size: 0.28, color: [1, 0.5, 0.8], intensity: 0.3 },
-        { shape: 'spectrum_smudge', offset: 2.6, size: 0.1, aspect: 2.5, autoRotate: true, intensity: 0.6 }
+        { shape: 'spectrum_arc', offset: 1.1, size: 0.6, rotation: 180, autoRotate: true, intensity: 0.2 },
+        { shape: 'iris_round', offset: 1.35, size: 0.2, color: [1, 0.6, 0.35], intensity: 0.16 },
+        { shape: 'iris_pentagon', offset: 1.75, size: 0.1, color: [0.6, 1, 0.6], intensity: 0.24 },
+        { shape: 'glow_rim', offset: 2.2, size: 0.28, color: [1, 0.5, 0.8], intensity: 0.12 },
+        { shape: 'spectrum_smudge', offset: 2.6, size: 0.1, aspect: 2.5, autoRotate: true, intensity: 0.24 }
     ]
 };
 
 const lampLook = {
     elements: [
-        { shape: 'glow_disc', size: 0.14, intensity: 0.8 },
-        { shape: 'spike_6', size: 0.4, intensity: 1 },
-        { shape: 'iris_round', offset: 0.65, size: 0.035, intensity: 0.3, count: 2, spread: 0.25 },
-        { shape: 'iris_hexagon', offset: 1.5, size: 0.06, intensity: 0.3 }
+        { shape: 'glow_disc', size: 0.14, intensity: 0.4 },
+        { shape: 'spike_6', size: 0.4, intensity: 0.5 },
+        { shape: 'iris_round', offset: 0.65, size: 0.035, intensity: 0.15, count: 2, spread: 0.25 },
+        { shape: 'iris_hexagon', offset: 1.5, size: 0.06, intensity: 0.15 }
     ]
 };
 
 const spotLook = {
     elements: [
-        { shape: 'anamorphic_glow', size: 0.35, aspect: 2.5, intensity: 1.2 },
-        { shape: 'anamorphic_streak', size: 0.06, aspect: 22, intensity: 1 },
-        { shape: 'anamorphic_streak', size: 0.22, aspect: 7, intensity: 1.5 },
-        { shape: 'glint', size: 0.5, intensity: 0.4 },
-        { shape: 'iris_triangle', offset: 1.6, size: 0.14, intensity: 0.3 }
+        { shape: 'anamorphic_glow', size: 0.35, aspect: 2.5, intensity: 0.2 },
+        { shape: 'anamorphic_streak', size: 0.06, aspect: 22, intensity: 0.17 },
+        { shape: 'anamorphic_streak', size: 0.22, aspect: 7, intensity: 0.25 },
+        { shape: 'glint', size: 0.5, intensity: 0.07 },
+        { shape: 'iris_triangle', offset: 1.6, size: 0.14, intensity: 0.05 }
     ]
 };
 

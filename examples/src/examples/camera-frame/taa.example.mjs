@@ -158,14 +158,22 @@ const applySettings = () => {
     cameraFrame.bloom.intensity = data.get('data.scene.bloom') ? 0.02 : 0;
     cameraFrame.taa.enabled = data.get('data.taa.enabled');
     cameraFrame.taa.jitter = data.get('data.taa.jitter');
+
+    // The mode compares the full resolution with a lower one, set by the resolution slider, at
+    // which the image is upscaled with bilinear filtering, or by TAA accumulating the jittered frames
+    // at the full resolution, and sharpened or not
+    const mode = data.get('data.scene.mode');
+    const sharpen = mode === 'full' || mode === 'sharpen' || mode === 'temporalSharpen';
     cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
-    cameraFrame.rendering.sharpness = data.get('data.scene.sharpness');
+    cameraFrame.taa.upscale = mode === 'temporal' || mode === 'temporalSharpen';
+    cameraFrame.rendering.sharpness = sharpen ? data.get('data.scene.sharpness') : 0;
     cameraFrame.update();
 };
 
 // Set initial values
 data.set('data', {
     scene: {
+        mode: 'full',
         scale: 1,
         bloom: true,
         sharpness: 1
@@ -176,9 +184,23 @@ data.set('data', {
     }
 });
 
+// The resolution of the scaled modes, which the resolution slider shows while one of them is
+// selected - and 1 while the full resolution is
+let scaledResolution = 0.5;
+
 // Apply UI changes. This is registered after the initial values are set, as setting them fires an
 // event for each value while the remaining values are still undefined.
 data.on('*:set', (/** @type {string} */ path, value) => {
+    if (path === 'data.scene.mode') {
+        data.set('data.scene.scale', value === 'full' ? 1 : scaledResolution);
+    } else if (path === 'data.scene.scale' && value < 1) {
+        // lowering the resolution while at the full one switches to the scaled mode
+        scaledResolution = value;
+        if (data.get('data.scene.mode') === 'full') {
+            data.set('data.scene.mode', 'scaled');
+        }
+    }
+
     applySettings();
 
     // TAA has been flipped, setup sharpening appropriately

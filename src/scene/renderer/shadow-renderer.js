@@ -706,9 +706,6 @@ class ShadowRenderer {
             renderPass.colorOps.clear = clearRenderTarget;
             renderPass.depthStencilOps.storeDepth = false;
         }
-
-        // not sampling dynamically generated cubemaps
-        renderPass.requiresCubemaps = false;
     }
 
     // prepares render target / render target settings to allow render pass to be set up

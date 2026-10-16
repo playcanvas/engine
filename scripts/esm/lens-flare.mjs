@@ -182,6 +182,15 @@ class LensFlareEffectScript extends CameraFrameEffectScript {
      */
     shapes = [];
 
+    /**
+     * Whether to display the flares alone, in place of the output of the camera. This and the
+     * debug setting of the `cameraFrame` script override each other, the last one changed is
+     * displayed.
+     *
+     * @attribute
+     */
+    debug = false;
+
     /** @private */
     _bakedShapes = null;
 
@@ -205,6 +214,10 @@ class LensFlareEffectScript extends CameraFrameEffectScript {
             this._bakedResolution = this.resolution;
             effect.shapes = this._buildLibrary();
         }
+    }
+
+    get debugView() {
+        return this.debug ? 'lensflare' : null;
     }
 
     /**
@@ -300,6 +313,14 @@ class LensFlareScript extends Script {
      * @attribute
      */
     useLightColor = true;
+
+    /**
+     * Whether the intensity of the light scales the flare, so that the flare dims and brightens
+     * with its light.
+     *
+     * @attribute
+     */
+    useLightIntensity = true;
 
     /**
      * The radius around the light the visibility is measured in, as a fraction of the screen
@@ -429,6 +450,7 @@ class LensFlareScript extends Script {
         flare.color.copy(this.color);
         flare.scale = this.scale;
         flare.useLightColor = this.useLightColor;
+        flare.useLightIntensity = this.useLightIntensity;
         flare.occlusionRadius = this.occlusionRadius;
         flare.occlusionFade = this.occlusionFade;
         flare.occlusionOffset = this.occlusionOffset;

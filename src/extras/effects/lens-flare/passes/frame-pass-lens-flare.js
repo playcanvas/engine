@@ -57,6 +57,13 @@ class FramePassLensFlare extends FramePass {
      */
     flareTexture;
 
+    /**
+     * The camera the flares are drawn for.
+     *
+     * @type {CameraComponent}
+     */
+    cameraComponent;
+
     /** @type {RenderPassLensFlareOcclusion} */
     occlusionPass;
 
@@ -83,6 +90,7 @@ class FramePassLensFlare extends FramePass {
      */
     constructor(device, cameraComponent, depthTexture, format) {
         super(device);
+        this.cameraComponent = cameraComponent;
 
         // the visibility of the flares, measured into one and read from the other alternately
         for (let i = 0; i < 2; i++) {

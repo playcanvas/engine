@@ -793,10 +793,7 @@ class ForwardRenderer extends Renderer {
     addCameraAfterPasses(frameGraph, camera) {
         const { afterPasses } = camera.camera;
         for (let i = 0; i < afterPasses.length; i++) {
-            const pass = afterPasses[i];
-            if (pass.enabled) {
-                frameGraph.addRenderPass(pass);
-            }
+            frameGraph.addRenderPass(afterPasses[i]);
         }
     }
 
@@ -821,10 +818,11 @@ class ForwardRenderer extends Renderer {
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
-        const renderPass = new RenderPassForward(this.device, layerComposition, this.scene, this);
+        // the render actions of the range use a single camera
+        const renderActions = layerComposition._renderActions;
+        const renderPass = new RenderPassForward(this.device, layerComposition, this.scene, this, renderActions[startIndex].camera);
         renderPass.init(renderTarget);
 
-        const renderActions = layerComposition._renderActions;
         for (let i = startIndex; i <= endIndex; i++) {
             renderPass.addLayerRenderStep(this._layerRenderStepFromRenderAction(renderActions[i]));
         }
@@ -846,8 +844,6 @@ class ForwardRenderer extends Renderer {
         step.clearColor = renderAction.clearColor;
         step.clearDepth = renderAction.clearDepth;
         step.clearStencil = renderAction.clearStencil;
-        step.firstCameraUse = renderAction.firstCameraUse;
-        step.lastCameraUse = renderAction.lastCameraUse;
         return step;
     }
 

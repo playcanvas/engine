@@ -266,19 +266,21 @@ class BatchManager {
     }
 
     /**
-     * Filter out mesh instances that have skin or morph, as these are not supported by batching.
-     * If any mesh instance has skin/morph, the entire set is excluded.
+     * Filter out mesh instances that have skin, morph or clipping planes, as these are not
+     * supported by batching. If any mesh instance has them, the entire set is excluded.
      *
      * @param {MeshInstance[]} meshInstances - The mesh instances to filter.
      * @param {string} nodeName - The node name for warning messages.
-     * @returns {MeshInstance[]|null} The mesh instances if none have skin/morph, or null if any do.
+     * @returns {MeshInstance[]|null} The mesh instances if none have skin, morph or clipping
+     * planes, or null if any do.
      * @private
      */
     _filterBatchableInstances(meshInstances, nodeName) {
         let hasUnsupported = false;
         let hasSupported = false;
         for (let i = 0; i < meshInstances.length; i++) {
-            if (meshInstances[i].skinInstance || meshInstances[i].morphInstance) {
+            const meshInstance = meshInstances[i];
+            if (meshInstance.skinInstance || meshInstance.morphInstance || meshInstance.clipped) {
                 hasUnsupported = true;
             } else {
                 hasSupported = true;
@@ -287,7 +289,7 @@ class BatchManager {
 
         if (hasUnsupported) {
             if (hasSupported) {
-                Debug.warnOnce(`BatchManager: Some mesh instances on entity "${nodeName}" have skin/morph and the whole entity will be excluded from batching.`);
+                Debug.warnOnce(`BatchManager: Some mesh instances on entity "${nodeName}" have skin, morph or clipping planes and the whole entity will be excluded from batching.`);
             }
             return null;
         }
@@ -301,6 +303,9 @@ class BatchManager {
             if (valid) {
                 arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(valid);
                 node.render.removeFromLayers();
+            } else {
+                // an excluded entity renders on its own, also when a previous batch included it
+                node.render.addToLayers();
             }
         }
 
@@ -313,6 +318,9 @@ class BatchManager {
             if (valid) {
                 arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(valid);
                 node.model.removeModelFromLayers();
+            } else {
+                // an excluded entity renders on its own, also when a previous batch included it
+                node.model.addModelToLayers();
             }
         }
 

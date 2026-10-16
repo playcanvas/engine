@@ -54,12 +54,6 @@ class FramePass {
     executeEnabled = true;
 
     /**
-     * If true, this pass might use dynamically rendered cubemaps. Defaults to false for non-render
-     * passes (RenderPass overrides to true).
-     */
-    requiresCubemaps = false;
-
-    /**
      * True if the pass renders once for each view when the frame renders multiple XR views, which
      * is the case for a pass rendering the views. False for a pass which does not depend on the
      * view, such as the shadow pass of a directional light, which then renders once for all views,
@@ -71,7 +65,19 @@ class FramePass {
     perView = true;
 
     /**
-     * Frame passes which need to be executed before this pass.
+     * Frame passes which the engine adds for the frame, which execute before this pass and its
+     * {@link FramePass#beforePasses}. A pass which depends on other passes in some frames, such as
+     * the shadow passes of a forward pass, fills this in its frameUpdate, keeping the
+     * beforePasses for the passes set up by the user.
+     *
+     * @type {FramePass[]}
+     * @ignore
+     */
+    internalBeforePasses = [];
+
+    /**
+     * Frame passes which need to be executed before this pass. The engine does not change this
+     * list, so the passes in it execute every frame this pass executes.
      *
      * @type {FramePass[]}
      */
@@ -105,6 +111,16 @@ class FramePass {
         return this._name;
     }
 
+    /**
+     * Sets whether the frame pass is enabled. A disabled pass is skipped when the frame is built,
+     * together with its {@link FramePass#beforePasses} and {@link FramePass#afterPasses}, and its
+     * frameUpdate is not called. To skip only the execution of the pass, while still updating it
+     * and its before and after passes, use {@link FramePass#executeEnabled} instead. Change it
+     * before the frame is built: the frameUpdate of a pass, or of its before-passes, cannot disable
+     * the pass itself. Defaults to true.
+     *
+     * @type {boolean}
+     */
     set enabled(value) {
         if (this._enabled !== value) {
             this._enabled = value;
@@ -116,6 +132,11 @@ class FramePass {
         }
     }
 
+    /**
+     * Gets whether the frame pass is enabled.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this._enabled;
     }

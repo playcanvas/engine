@@ -10,8 +10,6 @@ class RenderPassShadowLocalNonClustered extends RenderPass {
         super(device);
         DebugHelper.setName(this, `${this.name}-${light._node.name}`);
 
-        this.requiresCubemaps = false;
-
         this.shadowRenderer = shadowRenderer;
         this.light = light;
         this.face = face;

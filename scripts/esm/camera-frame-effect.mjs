@@ -14,7 +14,8 @@ import { CameraFrame as CameraFrameScript } from './camera-frame.mjs';
  * {@link CameraFrameEffectScript#createEffect}, returning the effect, and
  * {@link CameraFrameEffectScript#updateEffect}, copying the attributes into it. The effect is
  * registered with the camera frame as soon as both scripts exist, follows the enabled state of the
- * script, and is destroyed with it.
+ * script, and is destroyed with it. An effect with debug views exposes them by overriding
+ * {@link CameraFrameEffectScript#debugView}.
  *
  * @example
  * class TintEffectScript extends CameraFrameEffectScript {
@@ -41,6 +42,14 @@ class CameraFrameEffectScript extends Script {
      */
     effect = null;
 
+    /**
+     * The debug view last applied to the camera frame.
+     *
+     * @type {string|null}
+     * @private
+     */
+    _debugView = null;
+
     initialize() {
         this.effect = this.createEffect(this.app.graphicsDevice);
         if (!this.effect) return;
@@ -56,6 +65,10 @@ class CameraFrameEffectScript extends Script {
 
         // destroying the effect also removes it from the camera frame
         this.on('destroy', () => {
+            const cameraFrame = this.effect?.cameraFrame;
+            if (cameraFrame && this._debugView && cameraFrame.debug === this._debugView) {
+                cameraFrame.debug = null;
+            }
             this.effect?.destroy();
             this.effect = null;
         });
@@ -71,10 +84,52 @@ class CameraFrameEffectScript extends Script {
             const cameraFrame = this.entity.script?.get(CameraFrameScript)?.engineCameraFrame;
             if (cameraFrame) {
                 this.attachEffect(cameraFrame, effect);
+
+                // a new camera frame starts without a debug view, so the one of this script applies
+                this._debugView = null;
             }
         }
 
         this.updateEffect(effect);
+        this._applyDebugView(effect);
+    }
+
+    /**
+     * Applies the debug view to the camera frame when it changes. The debug setting of the
+     * `cameraFrame` script is applied the same way, so the last change of either is displayed.
+     *
+     * @param {CameraFrameEffect} effect - The effect.
+     * @private
+     */
+    _applyDebugView(effect) {
+        const cameraFrame = effect.cameraFrame;
+        const view = this.debugView;
+        if (!cameraFrame || view === this._debugView) return;
+
+        if (view) {
+            cameraFrame.debug = view;
+        } else if (cameraFrame.debug === this._debugView) {
+            // turning it off only clears the view this script selected
+            cameraFrame.debug = null;
+        }
+        this._debugView = view;
+    }
+
+    /**
+     * The debug view of the effect to display in place of the output of the camera, one of
+     * {@link CameraFrameEffect#debugViews}, or null for none. Override to expose the debug views
+     * of the effect, typically from an attribute:
+     *
+     * ```javascript
+     * get debugView() {
+     *     return this.debug ? 'tint' : null;
+     * }
+     * ```
+     *
+     * @type {string|null}
+     */
+    get debugView() {
+        return null;
     }
 
     /**

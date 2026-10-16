@@ -14,6 +14,7 @@ import blurVSMPS from '../chunks/lit/frag/blurVSM.js';
 import clearCoatPS from '../chunks/standard/frag/clearCoat.js';
 import clearCoatGlossPS from '../chunks/standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from '../chunks/standard/frag/clearCoatNormal.js';
+import clipPlanesPS from '../chunks/common/frag/clipPlanes.js';
 import clusteredLightUtilsPS from '../chunks/lit/frag/clusteredLightUtils.js';
 import clusteredLightCookiesPS from '../chunks/lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from '../chunks/lit/frag/clusteredLightShadows.js';
@@ -113,6 +114,7 @@ import refractionCubePS from '../chunks/lit/frag/refractionCube.js';
 import refractionDynamicPS from '../chunks/lit/frag/refractionDynamic.js';
 import reprojectPS from '../chunks/internal/frag/reproject.js';
 import reprojectVS from '../chunks/internal/vert/reproject.js';
+import reversibleTonemapPS from '../chunks/common/frag/reversibleTonemap.js';
 import screenDepthPS from '../chunks/common/frag/screenDepth.js';
 import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
 import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
@@ -185,6 +187,7 @@ const shaderChunksWGSL = {
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
+    clipPlanesPS,
     clusteredLightCookiesPS,
     clusteredLightShadowsPS,
     clusteredLightUtilsPS,
@@ -294,6 +297,7 @@ const shaderChunksWGSL = {
     refractionDynamicPS,
     reprojectPS,
     reprojectVS,
+    reversibleTonemapPS,
     screenDepthPS,
     shadowCascadesPS,
     shadowCasterPS,

@@ -33,6 +33,7 @@ import {
     FILTER_LINEAR,
     Layer,
     LightComponentSystem,
+    MiniStats,
     Mouse,
     PIXELFORMAT_RGBA16F,
     PIXELFORMAT_RGBA8,
@@ -123,6 +124,9 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Setup skydome
 app.scene.envAtlas = assets.helipad.resource;
@@ -444,4 +448,4 @@ app.on('update', (/** @type {number} */ dt) => {
     });
 });
 
-export { app };
+export { app, miniStats };

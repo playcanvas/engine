@@ -14,6 +14,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { Mat4 } from '../../../core/math/mat4.js'
+ * @import { Plane } from '../../../core/shape/plane.js'
  * @import { ComputePass } from '../../../platform/graphics/compute-pass.js'
  * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
@@ -251,10 +252,12 @@ class CameraComponent extends Component {
 
     /**
      * Gets the frame passes which execute before the camera's main scene rendering, after its
-     * directional shadow passes. When rendering multiple XR views, they execute for each view,
-     * apart from a compute pass, which executes once, as selected by
-     * {@link ComputePass#xrViewIndex}. Add passes to the array, or remove them from it, to change
-     * them.
+     * directional shadow passes. When the camera renders using its own frame passes, they execute
+     * before the first of those rendering the camera's layers, and do not execute when none of
+     * them does. They cannot include a pass rendering the layers of a camera, such as a
+     * RenderPassForward. When rendering multiple XR views, they execute for each view, apart from
+     * a compute pass, which executes once, as selected by {@link ComputePass#xrViewIndex}. Add
+     * passes to the array, or remove them from it, to change them.
      *
      * @type {FramePass[]}
      * @ignore
@@ -375,6 +378,67 @@ class CameraComponent extends Component {
      */
     get fog() {
         return this._camera.fogParams;
+    }
+
+    /**
+     * Sets the planes that clip what the camera renders, in world space. The parts of the meshes
+     * behind any of the planes - on the side opposite to the plane normal - are not rendered, which
+     * cuts the scene open along the planes, as a section view does. Use {@link clipIntersection}
+     * to clip only the parts behind all of the planes instead. Up to 8 planes are supported, and
+     * any more are ignored. Defaults to an empty array.
+     *
+     * The planes clip the meshes the camera renders with a {@link StandardMaterial}, or with a
+     * {@link ShaderMaterial} that supports clipping, see {@link MeshInstance#clippingPlanes}. They
+     * apply to all passes of the camera, including picking with a {@link Picker}, but not to
+     * shadows, which the meshes cast whole, nor to screen space elements. Physics and other queries
+     * on the CPU are not clipped. To clip only some meshes, or their shadows too, use
+     * {@link RenderComponent#clippingPlanes}. A mesh with planes of its own is clipped by both
+     * sets: each clips with its own {@link clipIntersection}, and a part that either set clips is
+     * not rendered.
+     *
+     * The planes are copied, so changing a plane after the assignment has no effect until the
+     * array is assigned again. Giving the camera its first plane compiles new variants of the
+     * shaders it renders - moving the planes or changing their number does not.
+     *
+     * @type {Plane[]}
+     * @example
+     * // show the floors of a building below a height of 3
+     * entity.camera.clippingPlanes = [
+     *     new Plane().setFromPointNormal(new Vec3(0, 3, 0), Vec3.DOWN)
+     * ];
+     */
+    set clippingPlanes(value) {
+        this._camera.clippingPlanes = value;
+    }
+
+    /**
+     * Gets the planes that clip what the camera renders, in world space. These are copies of the
+     * assigned planes, and changing them has no effect until the array is assigned again.
+     *
+     * @type {Plane[]}
+     */
+    get clippingPlanes() {
+        return this._camera.clippingPlanes;
+    }
+
+    /**
+     * Sets whether only the parts behind all of the {@link clippingPlanes} are clipped, instead of
+     * the parts behind any of them. With two planes this cuts a wedge out of the scene, and with
+     * three a corner. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        this._camera.clipIntersection = value;
+    }
+
+    /**
+     * Gets whether only the parts behind all of the {@link clippingPlanes} are clipped.
+     *
+     * @type {boolean}
+     */
+    get clipIntersection() {
+        return this._camera.clipIntersection;
     }
 
     /**

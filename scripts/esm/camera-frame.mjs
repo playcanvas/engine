@@ -146,6 +146,9 @@ class Rendering {
     sharpness = 0.0;
 
     /**
+     * The debug view displayed in place of the output of the camera. The scripts of other effects,
+     * such as the lens flare, offer their own debug views, and the last one selected is displayed.
+     *
      * @attribute
      * @type {DebugType}
      */
@@ -482,6 +485,15 @@ class Taa {
      * @step 0.1
      */
     jitter = 1;
+
+    /**
+     * Whether TAA accumulates the frames rendered at a lower resolution, see
+     * rendering.renderTargetScale, at the full resolution, recovering detail the lower resolution
+     * loses.
+     *
+     * @visibleif {enabled}
+     */
+    upscale = false;
 }
 
 /**
@@ -794,6 +806,14 @@ class CameraFrame extends Script {
      */
     engineCameraFrame;
 
+    /**
+     * The debug setting last applied to the camera frame, which starts without a debug view.
+     *
+     * @type {DebugType}
+     * @private
+     */
+    _debug = DebugType.NONE;
+
     initialize() {
 
         this.engineCameraFrame = new EngineCameraFrame(this.app, this.entity.camera);
@@ -897,6 +917,7 @@ class CameraFrame extends Script {
         dstTaa.enabled = taa.enabled;
         if (taa.enabled) {
             dstTaa.jitter = taa.jitter;
+            dstTaa.upscale = taa.upscale;
         }
 
         // fringing
@@ -950,8 +971,12 @@ class CameraFrame extends Script {
             dstVolumetricFog.scale = volumetricFog.scale;
         }
 
-        // debugging
-        cf.debug = rendering.debug;
+        // debugging - applied only when it changes, as the scripts of effects with debug views
+        // select them the same way, and the last change of either is displayed
+        if (rendering.debug !== this._debug) {
+            this._debug = rendering.debug;
+            cf.debug = rendering.debug === DebugType.NONE ? null : rendering.debug;
+        }
 
         cf.update();
     }

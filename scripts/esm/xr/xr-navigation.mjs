@@ -405,6 +405,22 @@ class XrNavigation extends Script {
     // Time the session was last seen without focus, such as behind the system menu
     _unfocusedTime = -Infinity;
 
+    /**
+     * Height in meters of the floor the rig currently stands on: {@link XrNavigation#groundHeight}
+     * at first, then each teleport's landing point. A teleport keeps the rig's height above it, so
+     * a snap vertical offset carries over to the new floor. Set it when the application places the
+     * rig on another floor itself, such as on a collision mesh when a session starts.
+     *
+     * @type {number}
+     */
+    set currentGroundHeight(value) {
+        this._currentGroundY = value;
+    }
+
+    get currentGroundHeight() {
+        return this._currentGroundY;
+    }
+
     initialize() {
         if (!this.app.xr) {
             console.error('XrNavigation script requires XR to be enabled on the application');
@@ -633,25 +649,22 @@ class XrNavigation extends Script {
             }
         }
 
-        for (let i = 0; i <= segments; i++) {
-            const t = (tFlight * i) / segments;
-            this._arcPoints[i].set(
-                origin.x + vx * t,
-                origin.y + vy * t - 0.5 * g * t * t,
-                origin.z + vz * t
-            );
-        }
+        this._sampleArc(origin, vx, vy, vz, tFlight);
 
         if (this.castRay) {
-            // Custom ground detection: the first segment hit wins and truncates the arc there.
-            // Remaining samples collapse onto the hit so the ribbon's quads become degenerate.
+            // Custom ground detection: the first segment hit wins, and the arc is sampled again
+            // to end there, so the ribbon keeps all its segments and fades out at the hit
             for (let i = 0; i < segments; i++) {
-                const hit = this.castRay(this._arcPoints[i], this._arcPoints[i + 1]);
+                const start = this._arcPoints[i];
+                const end = this._arcPoints[i + 1];
+                const hit = this.castRay(start, end);
                 if (hit) {
                     rec.point.copy(hit);
-                    for (let j = i + 1; j <= segments; j++) {
-                        this._arcPoints[j].copy(rec.point);
-                    }
+                    // the hit's flight time, from where it lies along the segment
+                    const length = start.distance(end);
+                    const along = length > 1e-6 ? Math.min(start.distance(rec.point) / length, 1) : 0;
+                    this._sampleArc(origin, vx, vy, vz, (tFlight * (i + along)) / segments);
+                    this._arcPoints[segments].copy(rec.point);
                     rec.valid = this.isValidTeleportDistance(rec.point);
                     return;
                 }
@@ -660,6 +673,29 @@ class XrNavigation extends Script {
             rec.point.copy(this._arcPoints[segments]);
             rec.point.y = this.groundHeight;
             rec.valid = this.isValidTeleportDistance(rec.point);
+        }
+    }
+
+    /**
+     * Fills {@link _arcPoints} with the ballistic arc's positions at even steps over its first
+     * duration seconds.
+     *
+     * @param {Vec3} origin - World-space launch position.
+     * @param {number} vx - Launch velocity X.
+     * @param {number} vy - Launch velocity Y.
+     * @param {number} vz - Launch velocity Z.
+     * @param {number} duration - Flight time in seconds covered by the samples.
+     * @private
+     */
+    _sampleArc(origin, vx, vy, vz, duration) {
+        const segments = this._arcPoints.length - 1;
+        for (let i = 0; i <= segments; i++) {
+            const t = (duration * i) / segments;
+            this._arcPoints[i].set(
+                origin.x + vx * t,
+                origin.y + vy * t - 0.5 * ARC_GRAVITY * t * t,
+                origin.z + vz * t
+            );
         }
     }
 
@@ -810,17 +846,17 @@ class XrNavigation extends Script {
     }
 
     /**
-     * Yaw-rotates the rig around the camera's local position, so the view pivots in place
-     * rather than orbiting the rig origin.
+     * Yaw-rotates the rig around the camera, so the view pivots in place rather than orbiting
+     * the rig origin. The camera's world position is held, which a scaled rig keeps too, where the
+     * camera's local position is scaled.
      *
      * @param {number} degrees - The rotation angle in degrees.
      * @private
      */
     _rotateRigAroundCamera(degrees) {
-        tmpVec3A.copy(this._cameraEntity.getLocalPosition());
-        this.entity.translateLocal(tmpVec3A);
+        tmpVec3A.copy(this._cameraEntity.getPosition());
         this.entity.rotateLocal(0, degrees, 0);
-        this.entity.translateLocal(tmpVec3A.mulScalar(-1));
+        this.entity.translate(tmpVec3A.sub(this._cameraEntity.getPosition()));
     }
 
     /**

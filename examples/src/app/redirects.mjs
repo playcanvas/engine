@@ -17,7 +17,7 @@ export const exampleRedirects = {
     'graphics/multi-render-targets': 'render-targets/multi-render-targets',
     'graphics/painter': 'render-targets/painter',
     'graphics/post-processing': 'camera-frame/post-processing',
-    'graphics/render-pass': 'render-targets/render-pass',
+    'graphics/render-pass': 'render-targets/render-pass-camera',
     'graphics/render-to-texture': 'render-targets/render-to-texture',
     'graphics/taa': 'camera-frame/taa',
     'graphics/volumetric-fog': 'camera-frame/volumetric-fog',
@@ -25,6 +25,7 @@ export const exampleRedirects = {
     'graphics/volumetric-fog-shafts': 'camera-frame/volumetric-fog-shafts',
     'loaders/loaders-gl': 'integrations/loaders-gl',
     'misc/spineboy': 'integrations/spine',
+    'render-targets/render-pass': 'render-targets/render-pass-camera',
     'shaders/integer-textures': 'render-targets/integer-textures',
     'shaders/paint-mesh': 'render-targets/paint-mesh'
 };

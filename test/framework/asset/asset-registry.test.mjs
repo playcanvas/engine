@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { restore, spy } from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
@@ -292,6 +292,66 @@ describe('AssetRegistry', function () {
                 expect(http.request.callCount).to.equal(3);
                 done();
             });
+        });
+
+        it('reports a failed load again when its url is requested again', async () => {
+            const load = () => new Promise((resolve) => {
+                app.assets.loadFromUrl(`${assetPath}missing.glb`, 'container', (err, asset) => resolve({ err, asset }));
+            });
+            const first = await load();
+            expect(first.err).to.exist;
+            const again = await load();
+            expect(again.err).to.equal(first.err);
+            expect(again.asset.resource).to.not.exist;
+        });
+
+        it('reports a failed load no more once a forced reload succeeds', async () => {
+            // the first load fails, the forced reload after it succeeds
+            const load = stub(app.loader, 'load');
+            load.onFirstCall().callsFake((url, type, callback) => callback(404));
+            load.onSecondCall().callsFake((url, type, callback) => callback(null, 'reloaded'));
+
+            const url = `${assetPath}flaky.txt`;
+            const results = [];
+            const fromUrl = () => new Promise((resolve) => {
+                app.assets.loadFromUrl(url, 'text', (err, asset) => {
+                    results.push(err);
+                    resolve({ err, asset });
+                });
+            });
+            const first = await fromUrl();
+            expect(first.err).to.equal(404);
+
+            await new Promise((resolve) => {
+                first.asset.once('load', resolve);
+                app.assets.load(first.asset, { force: true });
+            });
+            // the failed request's load listener went with its error: its callback ran once
+            expect(results).to.deep.equal([404]);
+
+            const again = await fromUrl();
+            expect(again.err).to.be.null;
+            expect(again.asset.resource).to.equal('reloaded');
+        });
+
+        it('reports a failed load no more once the asset is unloaded', async () => {
+            // the first load fails, the load after unloading succeeds
+            const load = stub(app.loader, 'load');
+            load.onFirstCall().callsFake((url, type, callback) => callback(404));
+            load.onSecondCall().callsFake((url, type, callback) => callback(null, 'reloaded'));
+
+            const url = `${assetPath}flaky.txt`;
+            const fromUrl = () => new Promise((resolve) => {
+                app.assets.loadFromUrl(url, 'text', (err, asset) => resolve({ err, asset }));
+            });
+            const first = await fromUrl();
+            expect(first.err).to.equal(404);
+
+            first.asset.unload();
+            const again = await fromUrl();
+            expect(again.err).to.be.null;
+            expect(again.asset).to.equal(first.asset);
+            expect(again.asset.resource).to.equal('reloaded');
         });
 
         it('loads css assets', (done) => {

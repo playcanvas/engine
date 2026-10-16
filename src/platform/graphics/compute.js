@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { Vec2 } from '../../core/math/vec2.js';
-import { PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F } from './constants.js';
+import { BUFFERUSAGE_INDIRECT, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F } from './constants.js';
 import { SceneColorMapHandle } from './scene-color-map-handle.js';
 import { SceneDepthMapHandle } from './scene-depth-map-handle.js';
 import { Shader } from './shader.js';
@@ -638,6 +638,9 @@ class Compute {
      * device.computeDispatch([processCompute]);
      */
     setupIndirectDispatch(slotIndex, buffer = null) {
+        Debug.call(() => {
+            if (buffer && !(buffer.bufferUsage & BUFFERUSAGE_INDIRECT)) Debug.errorOnce(`Compute ${this.name}: dispatching indirectly from StorageBuffer ${buffer.name ?? buffer.id} requires the buffer to be created with BUFFERUSAGE_INDIRECT.`, this);
+        });
         this.indirectSlotIndex = slotIndex;
         this.indirectBuffer = buffer;
         this.indirectFrameStamp = this.device.renderVersion;

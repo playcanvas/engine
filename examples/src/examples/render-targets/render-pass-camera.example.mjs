@@ -1,5 +1,9 @@
 // @config
 //
+// Replaces the rendering of a camera with its own render passes, assigned to the `framePasses`
+// of the camera. A `RenderPassForward` renders the scene layers into a texture, and a
+// `RenderPassShaderQuad` then renders it to the screen, tinting it.
+//
 // @credit
 // title: Chess Board
 // author: Idmental
@@ -186,15 +190,21 @@ const rt = new RenderTarget({
 const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
 
-// Use the render pass to render the world and ui layers to the created texture
-const renderPass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+// Use the render pass to render the world and ui layers with the camera to the created texture
+const renderPass = new RenderPassForward(
+    app.graphicsDevice,
+    app.scene.layers,
+    app.scene,
+    app.renderer,
+    cameraEntity.camera
+);
 
 // This render pass resizes the texture to match the size of are on the scene we render to
 renderPass.init(rt, {
     resizeSource: null
 });
-renderPass.addLayer(cameraEntity.camera, worldLayer, false);
-renderPass.addLayer(cameraEntity.camera, uiLayer, true);
+renderPass.addLayer(worldLayer, false);
+renderPass.addLayer(uiLayer, true);
 
 // Tint pass uses the scene rendered to a texture, and applies a tint to it
 const tintPass = new RenderPassTint(app.graphicsDevice, texture);
