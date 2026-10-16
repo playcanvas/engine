@@ -111,22 +111,27 @@ class FrameGraph {
     }
 
     /**
-     * Add a frame pass to the frame.
+     * Add a frame pass to the frame, together with its before and after passes. A disabled pass
+     * is skipped with all of them, and its {@link FramePass#frameUpdate} is not called.
      *
      * @param {FramePass} renderPass - The frame pass to add.
      */
     addRenderPass(renderPass) {
         Debug.assert(renderPass);
+
+        if (!renderPass.enabled) {
+            return;
+        }
+
+        // can add or remove before and after passes, and enable or disable them
         renderPass.frameUpdate();
 
         const beforePasses = renderPass.beforePasses;
         for (let i = 0; i < beforePasses.length; i++) {
-            const pass = beforePasses[i];
-            if (pass.enabled) {
-                this.addRenderPass(pass);
-            }
+            this.addRenderPass(beforePasses[i]);
         }
 
+        // frameUpdate can disable the pass, which then stays out of the compile step
         if (renderPass.enabled) {
             if (this.multiview) {
                 this.multiview.addChild(renderPass);
@@ -137,10 +142,7 @@ class FrameGraph {
 
         const afterPasses = renderPass.afterPasses;
         for (let i = 0; i < afterPasses.length; i++) {
-            const pass = afterPasses[i];
-            if (pass.enabled) {
-                this.addRenderPass(pass);
-            }
+            this.addRenderPass(afterPasses[i]);
         }
     }
 
