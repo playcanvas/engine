@@ -236,6 +236,11 @@ class RenderPassForward extends RenderPass {
 
     frameUpdate() {
         super.frameUpdate();
+
+        // the before-passes (camera before-passes, shadows) are collected again each time the pass is
+        // scheduled, so they do not accumulate when the pass does not render
+        this.beforePasses.length = 0;
+
         this.updateDirectionalShadows();
         this.updateCameraBeforePasses();
         this.updateClears();
@@ -345,9 +350,6 @@ class RenderPassForward extends RenderPass {
                 this.scene.fire(EVENT_POSTRENDER, step.cameraComponent);
             }
         }
-
-        // remove dynamically added before-passes (camera before-passes, shadows)
-        this.beforePasses.length = 0;
     }
 
     /**

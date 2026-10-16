@@ -793,10 +793,7 @@ class ForwardRenderer extends Renderer {
     addCameraAfterPasses(frameGraph, camera) {
         const { afterPasses } = camera.camera;
         for (let i = 0; i < afterPasses.length; i++) {
-            const pass = afterPasses[i];
-            if (pass.enabled) {
-                frameGraph.addRenderPass(pass);
-            }
+            frameGraph.addRenderPass(afterPasses[i]);
         }
     }
 
