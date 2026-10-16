@@ -287,10 +287,9 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * @param {number} numBits - Number of bits to sort.
      * @param {boolean} hasInitialValues - Whether pass 0 reads caller-supplied initial values.
      * @param {boolean} skipLastPassKeyWrite - Whether the last pass skips writing keys.
-     * @param {boolean} [forceRealloc] - Force buffer reallocation even if sizes match.
      * @private
      */
-    _allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite, forceRealloc = false) {
+    _allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite) {
         // Buffer sizing is driven by `capacity` (the high-water mark) to avoid
         // realloc churn when the workload shrinks. Dispatch and scan sizes
         // must track the CURRENT sort's elementCount - otherwise a 1M sort
@@ -305,7 +304,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
         // effective count must reallocate, even within the same workgroup partition. Shrinking only
         // reallocates when a lowered capacity drops the workgroup count, which releases memory
         // without churning on frame-to-frame count changes.
-        const buffersNeedRealloc = forceRealloc || !this._keys0 ||
+        const buffersNeedRealloc = !this._keys0 ||
             effectiveCount > this._allocatedElementCount ||
             allocWorkgroupCount < this._allocatedWorkgroupCount;
 
@@ -456,12 +455,10 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
         this._elementCount = elementCount;
         const hasInitialValues = !!initialValues;
 
-        // Trigger realloc when the destructiveKeys mode changes (affects which buffers are owned).
-        const prevDestructiveKeys = this._destructiveKeys;
-        this._destructiveKeys = destructiveKeys;
+        this._setDestructiveKeys(destructiveKeys);
 
         // Allocate buffers and create passes if needed
-        this._allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite, destructiveKeys !== prevDestructiveKeys);
+        this._allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite);
 
         // When destructiveKeys, borrow keysBuffer as _keys1 (not owned; not destroyed on realloc).
         if (destructiveKeys) {

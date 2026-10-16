@@ -22,6 +22,9 @@ class Sky {
      */
     _type = SKYTYPE_INFINITE;
 
+    /** @private */
+    _enabled = true;
+
     /**
      * The center of the sky.
      *
@@ -92,6 +95,40 @@ class Sky {
         if (render.skyCenter) {
             this._center = new Vec3(render.skyCenter);
         }
+    }
+
+    /**
+     * Sets whether the sky is rendered. When disabled, the sky is not rendered and its mesh and
+     * shader are not created, while the environment lighting of the scene, such as
+     * {@link Scene#envAtlas}, still lights the scene. Defaults to true.
+     *
+     * @type {boolean}
+     * @example
+     * // light the scene with the environment atlas, without rendering it as the sky
+     * app.scene.envAtlas = envAtlas;
+     * app.scene.sky.enabled = false;
+     */
+    set enabled(value) {
+        if (this._enabled !== value) {
+            this._enabled = value;
+
+            // the sky mesh is created and destroyed without updating the shaders of the materials,
+            // as the lighting they use does not change
+            if (value) {
+                this.updateSkyMesh();
+            } else {
+                this.resetSkyMesh();
+            }
+        }
+    }
+
+    /**
+     * Gets whether the sky is rendered.
+     *
+     * @type {boolean}
+     */
+    get enabled() {
+        return this._enabled;
     }
 
     /**
@@ -208,7 +245,7 @@ class Sky {
     }
 
     updateSkyMesh() {
-        const texture = this.scene._getSkyboxTex();
+        const texture = this._enabled ? this.scene._getSkyboxTex() : null;
         if (texture) {
             this.resetSkyMesh();
             this.skyMesh = new SkyMesh(this.device, this.scene, this.node, texture, this.type);

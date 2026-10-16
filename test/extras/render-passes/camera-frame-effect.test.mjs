@@ -46,7 +46,7 @@ describe('CameraFrameEffect', function () {
     const createCameraFrame = () => {
         const cameraFrame = Object.create(CameraFrame.prototype);
         cameraFrame.app = { graphicsDevice: device };
-        cameraFrame.cameraComponent = { jitter: 0 };
+        cameraFrame.cameraComponent = { jitter: 0, camera: { skyVisible: true } };
         cameraFrame.effects = [];
         cameraFrame._activeEffects = [];
         cameraFrame.renderPassCamera = null;

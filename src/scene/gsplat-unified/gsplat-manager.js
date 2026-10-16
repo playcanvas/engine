@@ -691,9 +691,6 @@ class GSplatManager {
         if (this._bakeResult.rebuilt) {
             this.renderer.update(this._bakeResult.count, this._bakeResult.textureSize);
 
-            // rebuildWorkBuffer may resize, which destroys/recreates orderBuffer — rebind it
-            this.renderer.setOrderData();
-
             // boundsBaseIndex may have changed — force interval metadata re-upload
             this.renderer.invalidateCullUpload();
         }

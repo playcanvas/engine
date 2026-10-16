@@ -105,6 +105,15 @@ class FramePass {
         return this._name;
     }
 
+    /**
+     * Sets whether the frame pass is enabled. A disabled pass is skipped when the frame is built,
+     * together with its {@link FramePass#beforePasses} and {@link FramePass#afterPasses}, and its
+     * frameUpdate is not called. To skip only the execution of the pass, while still updating it
+     * and its before and after passes, use {@link FramePass#executeEnabled} instead. Defaults to
+     * true.
+     *
+     * @type {boolean}
+     */
     set enabled(value) {
         if (this._enabled !== value) {
             this._enabled = value;
@@ -116,6 +125,11 @@ class FramePass {
         }
     }
 
+    /**
+     * Gets whether the frame pass is enabled.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this._enabled;
     }

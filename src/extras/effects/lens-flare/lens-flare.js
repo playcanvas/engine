@@ -46,8 +46,8 @@ import { Color } from '../../../core/math/color.js';
  * @typedef {object} LensFlareOptions
  * @property {LightComponent} [light] - The light the flare belongs to. A directional light gives
  * the direction of the source, an omni or spot light its position, and a spot light also limits
- * the flare to its cone. The colour of the light tints the flare when
- * {@link LensFlare#useLightColor} is set.
+ * the flare to its cone. The colour of the light tints the flare, and its intensity scales it, see
+ * {@link LensFlare#useLightColor} and {@link LensFlare#useLightIntensity}.
  * @property {GraphNode} [node] - The node whose position is the source, when the flare has no
  * light.
  * @property {Vec3} [position] - The world position of the source, when the flare has neither a
@@ -108,6 +108,16 @@ class LensFlare {
      * @type {boolean}
      */
     useLightColor = true;
+
+    /**
+     * Whether the intensity of the light the flare belongs to scales the flare, so that the flare
+     * dims and brightens with its light, and disappears at an intensity of 0. With
+     * {@link Scene#physicalUnits}, the luminance of the light scales the flare instead, as it
+     * scales the lighting. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    useLightIntensity = true;
 
     /**
      * The radius around the source the scene depth is tested in to measure how much of the source

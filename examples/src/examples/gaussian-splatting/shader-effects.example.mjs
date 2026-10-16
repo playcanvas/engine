@@ -192,9 +192,16 @@ data.on('renderer:set', () => {
     }
 });
 
+// Order in which the Prev / Next buttons and auto cycling step through the effects
+const effects = ['hide', 'reveal', 'tint', 'untint', 'roomHide', 'roomReveal', 'roomTint', 'roomUntint'];
+
+// Seconds to hold the result of an effect before auto cycling moves on to the next one
+const autoCycleHold = 1;
+
 // Default to enabled
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('enabled', true);
+data.set('autoCycle', true);
 data.set('effect', 'hide');
 
 // Create hotel gsplat
@@ -267,7 +274,6 @@ data.on('restart', () => {
 
 // Prev button - cycle to previous effect
 data.on('prev', () => {
-    const effects = ['hide', 'reveal', 'tint', 'untint', 'roomHide', 'roomReveal', 'roomTint', 'roomUntint'];
     const currentEffect = data.get('effect');
     const currentIndex = effects.indexOf(currentEffect);
     const prevIndex = (currentIndex - 1 + effects.length) % effects.length;
@@ -276,7 +282,6 @@ data.on('prev', () => {
 
 // Next button - cycle to next effect
 data.on('next', () => {
-    const effects = ['hide', 'reveal', 'tint', 'untint', 'roomHide', 'roomReveal', 'roomTint', 'roomUntint'];
     const currentEffect = data.get('effect');
     const currentIndex = effects.indexOf(currentEffect);
     const nextIndex = (currentIndex + 1) % effects.length;
@@ -288,6 +293,16 @@ data.on('enabled:set', () => {
     const enabled = data.get('enabled');
     if (boxScript) {
         boxScript.enabled = enabled;
+    }
+});
+
+// Auto cycle - move to the next effect once the current one has finished and been held
+app.on('update', () => {
+    if (!data.get('autoCycle') || !boxScript?.enabled) return;
+
+    const config = effectConfigs[/** @type {keyof typeof effectConfigs} */ (data.get('effect'))];
+    if (boxScript.effectTime >= config.duration + 2 * config.interval + autoCycleHold) {
+        data.emit('next');
     }
 });
 
