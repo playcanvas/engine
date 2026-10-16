@@ -138,6 +138,47 @@ describe('BatchManager', function () {
         expect(app.batcher._dirtyGroups.length).to.equal(0);
     });
 
+    ['render', 'model'].forEach((type) => {
+        it(`batchGroupId: batches a disabled ${type} component once it is enabled`, function () {
+            const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
+
+            // the layer draws only the batch of the group, made from these mesh instances
+            const expectBatchOf = (meshInstances) => {
+                const batches = app.batcher.getBatches(this.bg.id);
+                expect(batches.length).to.equal(1);
+                expect(batches[0].origMeshInstances).to.have.members(meshInstances);
+                expect(layer.meshInstances).to.have.members([batches[0].meshInstance]);
+            };
+
+            const e1 = new Entity('e1');
+            e1.addComponent(type, { type: 'box', batchGroupId: this.bg.id });
+            app.root.addChild(e1);
+
+            const e2 = new Entity('e2');
+            e2.addComponent(type, { type: 'box', enabled: false });
+            app.root.addChild(e2);
+
+            const mi1 = e1[type].meshInstances[0];
+            const mi2 = e2[type].meshInstances[0];
+
+            // the group of a disabled component is stored, but the component is not batched
+            e2[type].batchGroupId = this.bg.id;
+            expect(e2[type].batchGroupId).to.equal(this.bg.id);
+            app.batcher.updateAll();
+            expectBatchOf([mi1]);
+
+            // enabling the component re-batches the group, which then draws it once
+            e2[type].enabled = true;
+            app.batcher.updateAll();
+            expectBatchOf([mi1, mi2]);
+
+            // disabling it re-batches the group without it
+            e2[type].enabled = false;
+            app.batcher.updateAll();
+            expectBatchOf([mi1]);
+        });
+    });
+
 
     it('prepare: splits batches when castShadow differs', function () {
         const e1 = new Entity();

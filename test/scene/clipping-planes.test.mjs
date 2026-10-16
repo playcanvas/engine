@@ -820,7 +820,7 @@ describe('Clipping planes', function () {
             entity.addComponent('render', { type: 'box', enabled: false });
             app.root.addChild(entity);
 
-            // a disabled render component of an enabled entity joins the group it is given
+            // a disabled render component of an enabled entity stays out of the group it is given
             entity.render.batchGroupId = group.id;
             entity.render.clippingPlanes = [below()];
 

@@ -719,10 +719,11 @@ class RenderComponent extends Component {
     set batchGroupId(value) {
         if (this._batchGroupId !== value) {
 
-            if (this.entity.enabled && this._batchGroupId >= 0) {
+            // a disabled component is not in its batch group, onEnable inserts it
+            if (this.enabled && this.entity.enabled && this._batchGroupId >= 0) {
                 this.system.app.batcher?.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
             }
-            if (this.entity.enabled && value >= 0) {
+            if (this.enabled && this.entity.enabled && value >= 0) {
                 this.system.app.batcher?.insert(BatchGroup.RENDER, value, this.entity);
             }
 
