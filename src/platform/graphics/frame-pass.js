@@ -94,6 +94,31 @@ class FramePass {
     afterPasses = [];
 
     /**
+     * Called when the pass renders, right before it executes: after {@link FramePass#before}, and
+     * for a render pass before its GPU render pass starts. Work recorded here, such as setting the
+     * parameters of the pass, or clearing a buffer it writes to, executes right before the pass.
+     * Like before, it is called even if {@link FramePass#executeEnabled} is false, but not when the
+     * pass is disabled. A render pass with this callback is not merged with the pass before it into
+     * a single GPU render pass, so the callback runs outside of one.
+     *
+     * @type {((pass: this) => void)|null}
+     */
+    onBefore = null;
+
+    /**
+     * Called when the pass renders, right after it executes: for a render pass once its GPU render
+     * pass has ended, and after {@link FramePass#after}. The results the pass writes can be read
+     * back here, as a read records its copy when it is requested, and so right after the pass.
+     * Reads should not be immediate, as that submits the work of the frame recorded so far. Like
+     * after, it is called even if {@link FramePass#executeEnabled} is false, but not when the pass
+     * is disabled. A render pass with this callback is not merged with the pass after it into a
+     * single GPU render pass, so the callback runs outside of one.
+     *
+     * @type {((pass: this) => void)|null}
+     */
+    onAfter = null;
+
+    /**
      * Creates an instance of the FramePass.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
@@ -178,6 +203,8 @@ class FramePass {
      * error. Subclasses releasing their own resources call `super.destroy()`.
      */
     destroy() {
+        this.onBefore = null;
+        this.onAfter = null;
         DebugHelper.setDestroyed(this);
     }
 
@@ -189,10 +216,12 @@ class FramePass {
             });
 
             this.before();
+            this.onBefore?.(this);
             if (this.executeEnabled) {
                 this.execute();
             }
             this.after();
+            this.onAfter?.(this);
             this.device.renderPassIndex++;
         }
     }

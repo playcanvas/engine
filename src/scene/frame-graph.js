@@ -260,6 +260,12 @@ class FrameGraph {
                 continue;
             }
 
+            // the callbacks running between the passes run outside of a GPU render pass, for example
+            // to read back what the first pass rendered
+            if (firstPass.onAfter || secondPass.onBefore) {
+                continue;
+            }
+
             // merge the passes
             firstPass._skipEnd = true;
             secondPass._skipStart = true;
