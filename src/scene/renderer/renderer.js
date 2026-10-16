@@ -98,6 +98,10 @@ const _tempSet = new Set();
 const _tempMeshInstances = [];
 const _tempMeshInstancesSkinned = [];
 
+// the clipping uniforms of a camera that has not had clipping planes
+const _noClipPlanes = new Float32Array(MAX_CLIP_PLANES * 4);
+const _noClipParams = new Float32Array(2);
+
 /**
  * A view bind group holding textures, see {@link Renderer#setupViewBindGroup}.
  *
@@ -590,8 +594,9 @@ class Renderer {
 
         // the clipping planes of the camera, see Camera#clippingPlanes. The planes are in world
         // space, so all views share them
-        this.cameraClipPlanesId.setValue(camera.clipPlanesData);
-        this.cameraClipParamsId.setValue(camera.clipParamsData);
+        const clipPlanes = camera._clipPlanes;
+        this.cameraClipPlanesId.setValue(clipPlanes.planesData ?? _noClipPlanes);
+        this.cameraClipParamsId.setValue(clipPlanes.paramsData ?? _noClipParams);
 
         // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
         // which is correct for both side-by-side single-texture and multi-pass per-eye-view

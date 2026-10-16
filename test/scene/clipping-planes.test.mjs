@@ -549,6 +549,27 @@ describe('Clipping planes', function () {
             expect(data[3]).to.equal(1);
         });
 
+        it('gives its mesh instances its planes and mode together, replacing theirs', function () {
+            const entity = addBox();
+            const meshInstance = entity.render.meshInstances[0];
+            meshInstance.clippingPlanes = [below(), left()];
+            meshInstance.clipIntersection = true;
+
+            // the mode of a component without planes removes the planes of the mesh instance too
+            entity.render.clipIntersection = false;
+            expect(meshInstance.clipped).to.equal(false);
+            expect(meshInstance.clipIntersection).to.equal(false);
+
+            // and the mode of a component with planes gives the mesh instance those planes
+            entity.render.clippingPlanes = [below()];
+            meshInstance.clippingPlanes = [below(), left()];
+            entity.render.clipIntersection = true;
+            expect(meshInstance.clippingPlanes).to.have.lengthOf(1);
+            expect(meshInstance.clipIntersection).to.equal(true);
+            const params = meshInstance.getParameter('clipParams').data;
+            expect(Array.from(params)).to.deep.equal([1, 1]);
+        });
+
         it('gives the mesh instances it is given its planes and its mode', function () {
             const entity = addBox();
             entity.render.clippingPlanes = [below()];
@@ -595,11 +616,11 @@ describe('Clipping planes', function () {
             expect(camera.clippingPlanes[0].normal).to.deep.equal(Vec3.DOWN);
 
             plane.distance = 5;
-            expect(camera.camera.clipPlanesData[3]).to.equal(1);
+            expect(camera.camera._clipPlanes.planesData[3]).to.equal(1);
 
             // assigning the array again applies the change
             camera.clippingPlanes = [plane];
-            expect(camera.camera.clipPlanesData[3]).to.equal(5);
+            expect(camera.camera._clipPlanes.planesData[3]).to.equal(5);
         });
 
         it('sets the planes, their count and the intersection flag as uniforms', function () {
@@ -650,7 +671,7 @@ describe('Clipping planes', function () {
             camera.clippingPlanes = Array.from({ length: 9 }, below);
 
             expect(camera.clippingPlanes).to.have.lengthOf(8);
-            expect(camera.camera.clipParamsData[0]).to.equal(8);
+            expect(camera.camera._clipPlanes.paramsData[0]).to.equal(8);
             expect(assert.calledWith(false)).to.equal(true);
         });
 
@@ -660,21 +681,21 @@ describe('Clipping planes', function () {
             camera.clippingPlanes = [planes[1], planes[0]];
 
             expect(camera.clippingPlanes.map(plane => plane.distance)).to.deep.equal([2, 1]);
-            const data = camera.camera.clipPlanesData;
+            const data = camera.camera._clipPlanes.planesData;
             expect([data[3], data[7]]).to.deep.equal([2, 1]);
         });
 
         it('keeps its copies independent, whatever is put into the returned array', function () {
             assignThroughReturnedArray(camera);
 
-            const data = camera.camera.clipPlanesData;
+            const data = camera.camera._clipPlanes.planesData;
             expect([data[3], data[7]]).to.deep.equal([2, 3]);
         });
 
         it('keeps the normals of its copies independent', function () {
             assignAfterSharingNormals(camera);
 
-            const data = camera.camera.clipPlanesData;
+            const data = camera.camera._clipPlanes.planesData;
             expect(Array.from(data.subarray(0, 8))).to.deep.equal(upAndRight);
         });
 
@@ -686,7 +707,7 @@ describe('Clipping planes', function () {
             const clone = camera.entity.clone();
 
             expect(clone.camera.clippingPlanes[0].distance).to.equal(1);
-            expect(clone.camera.camera.clipPlanesData[3]).to.equal(1);
+            expect(clone.camera.camera._clipPlanes.planesData[3]).to.equal(1);
         });
 
         it('changes only the mode when the intersection flag changes', function () {
@@ -696,8 +717,8 @@ describe('Clipping planes', function () {
             camera.clippingPlanes[0].distance = 9;
             camera.clipIntersection = true;
 
-            expect(camera.camera.clipPlanesData[3]).to.equal(1);
-            expect(Array.from(camera.camera.clipParamsData)).to.deep.equal([1, 1]);
+            expect(camera.camera._clipPlanes.planesData[3]).to.equal(1);
+            expect(Array.from(camera.camera._clipPlanes.paramsData)).to.deep.equal([1, 1]);
         });
 
         it('does not clip shadows', function () {

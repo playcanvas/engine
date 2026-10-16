@@ -19,7 +19,7 @@ import {
     instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
-import { ClipPlaneSet, MAX_CLIP_PLANES, writeClipPlanes } from './clip-planes.js';
+import { ClipPlanes, MAX_CLIP_PLANES } from './clip-planes.js';
 import { lightMaskToShaderDefs, shaderDefsToLightMask } from './light-mask.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
@@ -679,37 +679,13 @@ class MeshInstance {
     _shaderDefs = SHADERDEF_AFFECT_DYNAMIC;
 
     /**
-     * The clipping planes of the mesh instance, see {@link MeshInstance#clippingPlanes}. Created on
-     * first use.
+     * The clipping of the mesh instance, see {@link MeshInstance#clippingPlanes}. Created on first
+     * use.
      *
-     * @type {ClipPlaneSet|null}
+     * @type {ClipPlanes|null}
      * @private
      */
-    _clipPlaneSet = null;
-
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _clipIntersection = false;
-
-    /**
-     * The clipping planes as the uniform the shader reads, (normal, distance) per plane. Allocated
-     * on first use.
-     *
-     * @type {Float32Array|null}
-     * @private
-     */
-    _clipPlanesData = null;
-
-    /**
-     * The number of clipping planes, and 1 for intersection clipping, as the uniform the shader
-     * reads. Allocated on first use.
-     *
-     * @type {Float32Array|null}
-     * @private
-     */
-    _clipParamsData = null;
+    _clipPlanes = null;
 
     /**
      * @type {CalculateSortDistanceCallback|null}
@@ -1291,12 +1267,16 @@ class MeshInstance {
      *
      * The planes of the camera clip the mesh instance as well, see
      * {@link CameraComponent#clippingPlanes}. Each set of planes clips with its own
-     * {@link clipIntersection}, and a part that either set clips is not rendered. A render
-     * component gives its planes to its mesh instances, replacing planes assigned to them directly,
-     * see {@link RenderComponent#clippingPlanes}. A batched mesh instance is drawn by its batch, so
-     * planes assigned to it apply once its batch group is rebuilt, see
+     * {@link clipIntersection}, and a part that either set clips is not rendered.
+     *
+     * A {@link RenderComponent} writes the clipping of its mesh instances, its planes and mode
+     * together, also when it has no planes: when its {@link RenderComponent#clippingPlanes} or
+     * {@link RenderComponent#clipIntersection} are assigned, and when it gets new mesh instances,
+     * such as when its asset loads or its type changes. Planes assigned to one of its mesh
+     * instances directly last until the component next writes its clipping. A batched mesh instance
+     * is drawn by its batch, so planes assigned to it apply once its batch group is rebuilt, see
      * {@link BatchManager#markGroupDirty}. {@link RenderComponent#clippingPlanes} rebuilds the
-     * batch group itself. Cloning an entity copies the planes of its render component, but not
+     * batch group itself. Cloning an entity copies the clipping of its render component, but not
      * planes assigned to its mesh instances directly.
      *
      * {@link StandardMaterial} is clipped. The shader of a {@link ShaderMaterial} is clipped when
@@ -1318,9 +1298,9 @@ class MeshInstance {
         Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
             `MeshInstance#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest are ` +
             'ignored.', this);
-        if (this._clipPlaneSet || value?.length) {
-            (this._clipPlaneSet ??= new ClipPlaneSet()).set(value, MAX_CLIP_PLANES);
-            this._updateClipUniforms();
+        if (this._clipPlanes || value?.length) {
+            (this._clipPlanes ??= new ClipPlanes()).set(value);
+            this._updateClipPlanes();
         }
     }
 
@@ -1331,7 +1311,7 @@ class MeshInstance {
      * @type {Plane[]}
      */
     get clippingPlanes() {
-        return (this._clipPlaneSet ??= new ClipPlaneSet()).returned;
+        return (this._clipPlanes ??= new ClipPlanes()).returned;
     }
 
     /**
@@ -1353,16 +1333,12 @@ class MeshInstance {
      * @type {boolean}
      */
     set clipIntersection(value) {
-        if (this._clipIntersection !== value) {
-            this._clipIntersection = value;
+        if (this.clipIntersection !== value) {
+            (this._clipPlanes ??= new ClipPlanes()).intersection = value;
 
-            // only the mode changes: the planes stay as they were assigned, also when the planes
-            // returned by the getter have been changed since
-            const params = this._clipParamsData;
-            if (params && this.clipped) {
-                params[1] = value ? 1 : 0;
-                this.setParameter('clipParams', params);
-            }
+            // the uniforms are written from the planes as they were assigned, so changes to the
+            // returned planes stay unapplied
+            this._updateClipPlanes();
         }
     }
 
@@ -1373,29 +1349,37 @@ class MeshInstance {
      * @type {boolean}
      */
     get clipIntersection() {
-        return this._clipIntersection;
+        return this._clipPlanes?.intersection ?? false;
     }
 
     /**
-     * Writes the clipping planes into the uniforms the shader reads, and enables the clipping
-     * shader code when there is any plane.
+     * Gives the mesh instance the clipping of its render component, the planes as assigned and the
+     * mode together, replacing its own. Null removes its clipping.
+     *
+     * @param {ClipPlanes|null} clipPlanes - The clipping of the render component.
+     * @ignore
+     */
+    _setClipPlanes(clipPlanes) {
+        if (this._clipPlanes || clipPlanes) {
+            (this._clipPlanes ??= new ClipPlanes()).copy(clipPlanes);
+            this._updateClipPlanes();
+        }
+    }
+
+    /**
+     * Writes the clipping into the uniforms the shader reads, and enables the clipping shader code
+     * when there is any plane.
      *
      * @private
      */
-    _updateClipUniforms() {
-        const planes = this._clipPlaneSet.assigned;
-        const count = planes.length;
-        if (count > 0) {
-            const data = this._clipPlanesData ??= new Float32Array(MAX_CLIP_PLANES * 4);
-            writeClipPlanes(planes, data);
-
-            const params = this._clipParamsData ??= new Float32Array(2);
-            params[0] = count;
-            params[1] = this._clipIntersection ? 1 : 0;
+    _updateClipPlanes() {
+        const clipPlanes = this._clipPlanes;
+        if (clipPlanes.assigned.length > 0) {
+            clipPlanes.updateUniforms();
 
             // set again to apply the new contents of the arrays
-            this.setParameter('clipPlanes[0]', data);
-            this.setParameter('clipParams', params);
+            this.setParameter('clipPlanes[0]', clipPlanes.planesData);
+            this.setParameter('clipParams', clipPlanes.paramsData);
             this._updateShaderDefs(this._shaderDefs | SHADERDEF_CLIP);
         } else {
             this.deleteParameter('clipPlanes[0]');

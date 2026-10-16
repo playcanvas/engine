@@ -15,7 +15,7 @@ import {
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
 import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
-import { ClipPlaneSet, MAX_CLIP_PLANES, writeClipPlanes } from './clip-planes.js';
+import { ClipPlanes, MAX_CLIP_PLANES } from './clip-planes.js';
 
 /**
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
@@ -188,35 +188,13 @@ class Camera {
     skyVisible = true;
 
     /**
-     * The clipping planes of the camera, see {@link Camera#clippingPlanes}.
+     * The clipping of the camera, see {@link Camera#clippingPlanes}. The renderer sets its uniforms
+     * for each pass of the camera.
      *
-     * @type {ClipPlaneSet}
+     * @type {ClipPlanes}
      * @ignore
      */
-    _clipPlaneSet = new ClipPlaneSet();
-
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _clipIntersection = false;
-
-    /**
-     * The clipping planes as the uniform the shader reads, (normal, distance) per plane.
-     *
-     * @type {Float32Array}
-     * @ignore
-     */
-    clipPlanesData = new Float32Array(MAX_CLIP_PLANES * 4);
-
-    /**
-     * The number of clipping planes, and 1 for intersection clipping, as the uniform the shader
-     * reads.
-     *
-     * @type {Float32Array}
-     * @ignore
-     */
-    clipParamsData = new Float32Array(2);
+    _clipPlanes = new ClipPlanes();
 
     /**
      * A unique id of the camera, used where the camera needs to be referenced without retaining
@@ -568,12 +546,12 @@ class Camera {
         Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
             `CameraComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
             'are ignored.');
-        this._clipPlaneSet.set(value, MAX_CLIP_PLANES);
-        this._updateClipUniforms();
+        this._clipPlanes.set(value);
+        this._updateClipPlanes();
     }
 
     get clippingPlanes() {
-        return this._clipPlaneSet.returned;
+        return this._clipPlanes.returned;
     }
 
     /**
@@ -583,30 +561,26 @@ class Camera {
      * @type {boolean}
      */
     set clipIntersection(value) {
-        if (this._clipIntersection !== value) {
-            this._clipIntersection = value;
-
-            // only the mode changes: the planes stay as they were assigned
-            this.clipParamsData[1] = value ? 1 : 0;
+        if (this._clipPlanes.intersection !== value) {
+            this._clipPlanes.intersection = value;
+            this._updateClipPlanes();
         }
     }
 
     get clipIntersection() {
-        return this._clipIntersection;
+        return this._clipPlanes.intersection;
     }
 
     /**
-     * Writes the clipping planes into the uniforms the shader reads, which the renderer sets for
-     * each pass of the camera, and enables the clipping shader code when there is any plane.
+     * Writes the clipping into the uniforms the shader reads, from the planes as they were
+     * assigned, and enables the clipping shader code when there is any plane.
      *
      * @private
      */
-    _updateClipUniforms() {
-        const planes = this._clipPlaneSet.assigned;
-        writeClipPlanes(planes, this.clipPlanesData);
-        this.clipParamsData[0] = planes.length;
-        this.clipParamsData[1] = this._clipIntersection ? 1 : 0;
-        this.shaderParams.clipPlanes = planes.length > 0;
+    _updateClipPlanes() {
+        const clipPlanes = this._clipPlanes;
+        clipPlanes.updateUniforms();
+        this.shaderParams.clipPlanes = clipPlanes.assigned.length > 0;
     }
 
     set cullFaces(newValue) {
@@ -942,8 +916,8 @@ class Camera {
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
 
-        this.clipIntersection = other.clipIntersection;
-        this.clippingPlanes = other._clipPlaneSet.assigned;
+        this._clipPlanes.copy(other._clipPlanes);
+        this._updateClipPlanes();
 
         this.shaderPassInfo = other.shaderPassInfo;
         this.jitter = other.jitter;

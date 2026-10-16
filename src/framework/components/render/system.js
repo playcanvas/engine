@@ -109,7 +109,7 @@ class RenderComponentSystem extends ComponentSystem {
                 data[property] = entity.render[property];
             }
         }
-        data.clippingPlanes = entity.render._clipPlaneSet?.assigned ?? null;
+        data.clippingPlanes = entity.render._clipPlanes?.assigned ?? null;
         data.enabled = entity.render.enabled;
 
         // mesh instances cannot be used this way, remove them and manually clone them later

@@ -153,7 +153,7 @@ class CameraComponentSystem extends ComponentSystem {
 
         // the clipping planes as assigned, without changes to the returned planes that are not
         // assigned
-        data.clippingPlanes = c._camera._clipPlaneSet.assigned;
+        data.clippingPlanes = c._camera._clipPlanes.assigned;
 
         const component = this.addComponent(clone, data);
 

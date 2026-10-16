@@ -13,15 +13,17 @@ const MAX_CLIP_PLANES = 8;
 const _values = [];
 
 /**
- * The clipping planes of a mesh instance, a camera or a render component. It keeps the planes as
- * last assigned, which the owner uses, apart from the copies its getter returns, which can be
- * changed and assigned again. The set owns the planes of both, and their normals, so the entries of
- * the returned array are independent copies after each assignment, whatever had been put into the
- * array or its planes.
+ * The clipping of a mesh instance, a camera or a render component: its planes, whether they clip
+ * by intersection, and the uniforms the clipPlanesPS chunk reads.
+ *
+ * It keeps the planes as last assigned, which the owner uses, apart from the copies the getter of
+ * the owner returns, which can be changed and assigned again. It owns the planes of both, and
+ * their normals, so the entries of the returned array are independent copies after each
+ * assignment, whatever had been put into the array or its planes.
  *
  * @ignore
  */
-class ClipPlaneSet {
+class ClipPlanes {
     /**
      * The planes as last assigned. They are not exposed, so only assignments change them.
      *
@@ -37,7 +39,31 @@ class ClipPlaneSet {
     returned = [];
 
     /**
-     * The planes the set owns for {@link ClipPlaneSet#assigned}, kept when there are fewer planes.
+     * Whether only the parts behind all of the planes are clipped, instead of the parts behind any
+     * of them.
+     *
+     * @type {boolean}
+     */
+    intersection = false;
+
+    /**
+     * The assigned planes as the uniform the shader reads, (normal, distance) per plane. Allocated
+     * by the first {@link ClipPlanes#updateUniforms}.
+     *
+     * @type {Float32Array|null}
+     */
+    planesData = null;
+
+    /**
+     * The number of assigned planes, and 1 for intersection clipping, as the uniform the shader
+     * reads. Allocated by the first {@link ClipPlanes#updateUniforms}.
+     *
+     * @type {Float32Array|null}
+     */
+    paramsData = null;
+
+    /**
+     * The planes owned for {@link ClipPlanes#assigned}, kept when there are fewer planes.
      *
      * @type {Plane[]}
      * @private
@@ -45,7 +71,7 @@ class ClipPlaneSet {
     _assignedPlanes = [];
 
     /**
-     * The planes the set owns for {@link ClipPlaneSet#returned}, kept when there are fewer planes.
+     * The planes owned for {@link ClipPlanes#returned}, kept when there are fewer planes.
      *
      * @type {Plane[]}
      * @private
@@ -53,7 +79,7 @@ class ClipPlaneSet {
     _returnedPlanes = [];
 
     /**
-     * The normals of {@link ClipPlaneSet#_returnedPlanes}. The normal of a returned plane can be
+     * The normals of {@link ClipPlanes#_returnedPlanes}. The normal of a returned plane can be
      * replaced through the returned array, so each assignment gives the plane its own back.
      *
      * @type {Vec3[]}
@@ -65,9 +91,9 @@ class ClipPlaneSet {
      * Assigns planes, which can include planes of the returned array, in any order.
      *
      * @param {Plane[]|null|undefined} planes - The planes.
-     * @param {number} maxCount - The largest number of planes to keep.
+     * @param {number} [maxCount] - The largest number of planes to keep.
      */
-    set(planes, maxCount) {
+    set(planes, maxCount = MAX_CLIP_PLANES) {
         const count = Math.min(planes?.length ?? 0, maxCount);
         for (let i = 0; i < count; i++) {
             (_values[i] ??= new Plane()).copy(planes[i]);
@@ -88,23 +114,38 @@ class ClipPlaneSet {
         assigned.length = count;
         returned.length = count;
     }
-}
 
-/**
- * Writes planes into the uniform the clipPlanesPS chunk reads, as (normal, distance) per plane.
- *
- * @param {Plane[]} planes - The planes, at most MAX_CLIP_PLANES of them.
- * @param {Float32Array} data - The uniform data, with room for MAX_CLIP_PLANES planes.
- * @ignore
- */
-function writeClipPlanes(planes, data) {
-    for (let i = 0; i < planes.length; i++) {
-        const { normal, distance } = planes[i];
-        data[i * 4] = normal.x;
-        data[i * 4 + 1] = normal.y;
-        data[i * 4 + 2] = normal.z;
-        data[i * 4 + 3] = distance;
+    /**
+     * Copies the assigned planes and the mode of other clipping, or removes the planes and resets
+     * the mode when there is none.
+     *
+     * @param {ClipPlanes|null} other - The clipping to copy, or null for none.
+     * @returns {ClipPlanes} Self for chaining.
+     */
+    copy(other) {
+        this.set(other?.assigned);
+        this.intersection = other?.intersection ?? false;
+        return this;
+    }
+
+    /**
+     * Writes the assigned planes and the mode into the uniform data, allocating it on first use.
+     */
+    updateUniforms() {
+        const planes = this.assigned;
+        const data = (this.planesData ??= new Float32Array(MAX_CLIP_PLANES * 4));
+        for (let i = 0; i < planes.length; i++) {
+            const { normal, distance } = planes[i];
+            data[i * 4] = normal.x;
+            data[i * 4 + 1] = normal.y;
+            data[i * 4 + 2] = normal.z;
+            data[i * 4 + 3] = distance;
+        }
+
+        const params = (this.paramsData ??= new Float32Array(2));
+        params[0] = planes.length;
+        params[1] = this.intersection ? 1 : 0;
     }
 }
 
-export { ClipPlaneSet, MAX_CLIP_PLANES, writeClipPlanes };
+export { ClipPlanes, MAX_CLIP_PLANES };
