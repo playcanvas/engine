@@ -786,6 +786,9 @@ export const SHADERDEF_UV5 = 4194304;
 export const SHADERDEF_UV6 = 8388608;
 export const SHADERDEF_UV7 = 16777216;
 
+// the mesh instance has clipping planes, see MeshInstance#clippingPlanes
+export const SHADERDEF_CLIP = 33554432;
+
 /**
  * The shadow map is not to be updated.
  *

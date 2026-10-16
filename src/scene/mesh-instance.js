@@ -14,10 +14,12 @@ import {
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
     SHADERDEF_INSTANCEINDEX, SHADERDEF_AFFECT_DYNAMIC, SHADERDEF_AFFECT_LIGHTMAPPED, SHADERDEF_BAKE,
     SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7,
+    SHADERDEF_CLIP,
     SHADOW_CASCADE_ALL,
     instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
+import { ClipPlanes, MAX_CLIP_PLANES } from './clip-planes.js';
 import { lightMaskToShaderDefs, shaderDefsToLightMask } from './light-mask.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
@@ -62,6 +64,7 @@ import { isViewTexture } from './renderer/view-textures.js';
  * @import { TextureView } from '../platform/graphics/texture-view.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @import { Vec3 } from '../core/math/vec3.js'
+ * @import { Plane } from '../core/shape/plane.js'
  * @import { CameraComponent } from '../framework/components/camera/component.js';
  */
 
@@ -676,6 +679,15 @@ class MeshInstance {
     _shaderDefs = SHADERDEF_AFFECT_DYNAMIC;
 
     /**
+     * The clipping of the mesh instance, see {@link MeshInstance#clippingPlanes}. Created on first
+     * use.
+     *
+     * @type {ClipPlanes|null}
+     * @private
+     */
+    _clipPlanes = null;
+
+    /**
      * @type {CalculateSortDistanceCallback|null}
      * @private
      */
@@ -1239,6 +1251,141 @@ class MeshInstance {
      */
     get mask() {
         return shaderDefsToLightMask(this._shaderDefs);
+    }
+
+    /**
+     * Sets the planes that clip this mesh instance, in world space. The parts of the mesh behind
+     * any of the planes - on the side opposite to the plane normal - are not rendered, which cuts
+     * the mesh open along the planes. Use {@link clipIntersection} to clip only the parts behind
+     * all of the planes instead. Up to 8 planes are supported, and any more are ignored. Defaults
+     * to an empty array.
+     *
+     * The clipped parts are removed from every render pass: they cast no shadows, write no depth
+     * and cannot be picked with a {@link Picker}. The planes are copied, so changing a plane after
+     * the assignment has no effect until the array is assigned again. Only the first plane a mesh
+     * instance is given compiles new shaders - moving the planes or changing their number does not.
+     *
+     * The planes of the camera clip the mesh instance as well, see
+     * {@link CameraComponent#clippingPlanes}. Each set of planes clips with its own
+     * {@link clipIntersection}, and a part that either set clips is not rendered.
+     *
+     * A {@link RenderComponent} writes the clipping of its mesh instances, its planes and mode
+     * together, also when it has no planes: when its {@link RenderComponent#clippingPlanes} or
+     * {@link RenderComponent#clipIntersection} are assigned, and when it gets new mesh instances,
+     * such as when its asset loads or its type changes. Planes assigned to one of its mesh
+     * instances directly last until the component next writes its clipping. A batched mesh instance
+     * is drawn by its batch, so planes assigned to it apply once its batch group is rebuilt, see
+     * {@link BatchManager#markGroupDirty}. {@link RenderComponent#clippingPlanes} rebuilds the
+     * batch group itself. Cloning an entity copies the clipping of its render component, but not
+     * planes assigned to its mesh instances directly.
+     *
+     * {@link StandardMaterial} is clipped. The shader of a {@link ShaderMaterial} is clipped when
+     * its fragment shader includes the `clipPlanesPS` chunk and calls `applyClipPlanes` with the
+     * world space position of the fragment, both inside a `#ifdef CLIP_PLANES` block.
+     *
+     * Note that a cut through a closed mesh exposes its inside, which consists of the back faces
+     * of the mesh. These are not rendered unless the material renders both sides, see
+     * {@link Material#cull}.
+     *
+     * @type {Plane[]}
+     * @example
+     * // keep only the part of the mesh below a height of 1
+     * meshInstance.clippingPlanes = [
+     *     new Plane().setFromPointNormal(new Vec3(0, 1, 0), Vec3.DOWN)
+     * ];
+     */
+    set clippingPlanes(value) {
+        Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
+            `MeshInstance#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest are ` +
+            'ignored.', this);
+        if (this._clipPlanes || value?.length) {
+            (this._clipPlanes ??= new ClipPlanes()).set(value);
+            this._updateClipPlanes();
+        }
+    }
+
+    /**
+     * Gets the planes that clip this mesh instance, in world space. These are copies of the
+     * assigned planes, and changing them has no effect until the array is assigned again.
+     *
+     * @type {Plane[]}
+     */
+    get clippingPlanes() {
+        return (this._clipPlanes ??= new ClipPlanes()).returned;
+    }
+
+    /**
+     * Gets whether the mesh instance has clipping planes, as last assigned. Changes to the planes
+     * returned by {@link clippingPlanes} do not count until they are assigned.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get clipped() {
+        return (this._shaderDefs & SHADERDEF_CLIP) !== 0;
+    }
+
+    /**
+     * Sets whether only the parts of the mesh behind all of the {@link clippingPlanes} are clipped,
+     * instead of the parts behind any of them. With two planes this cuts a wedge out of the mesh,
+     * and with three a corner, as a cutaway does. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this.clipIntersection !== value) {
+            (this._clipPlanes ??= new ClipPlanes()).intersection = value;
+
+            // the uniforms are written from the planes as they were assigned, so changes to the
+            // returned planes stay unapplied
+            this._updateClipPlanes();
+        }
+    }
+
+    /**
+     * Gets whether only the parts of the mesh behind all of the {@link clippingPlanes} are
+     * clipped.
+     *
+     * @type {boolean}
+     */
+    get clipIntersection() {
+        return this._clipPlanes?.intersection ?? false;
+    }
+
+    /**
+     * Gives the mesh instance the clipping of its render component, the planes as assigned and the
+     * mode together, replacing its own. Null removes its clipping.
+     *
+     * @param {ClipPlanes|null} clipPlanes - The clipping of the render component.
+     * @ignore
+     */
+    _setClipPlanes(clipPlanes) {
+        if (this._clipPlanes || clipPlanes) {
+            (this._clipPlanes ??= new ClipPlanes()).copy(clipPlanes);
+            this._updateClipPlanes();
+        }
+    }
+
+    /**
+     * Writes the clipping into the uniforms the shader reads, and enables the clipping shader code
+     * when there is any plane.
+     *
+     * @private
+     */
+    _updateClipPlanes() {
+        const clipPlanes = this._clipPlanes;
+        if (clipPlanes.assigned.length > 0) {
+            clipPlanes.updateUniforms();
+
+            // set again to apply the new contents of the arrays
+            this.setParameter('clipPlanes[0]', clipPlanes.planesData);
+            this.setParameter('clipParams', clipPlanes.paramsData);
+            this._updateShaderDefs(this._shaderDefs | SHADERDEF_CLIP);
+        } else {
+            this.deleteParameter('clipPlanes[0]');
+            this.deleteParameter('clipParams');
+            this._updateShaderDefs(this._shaderDefs & ~SHADERDEF_CLIP);
+        }
     }
 
     /**

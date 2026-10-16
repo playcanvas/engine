@@ -14,6 +14,7 @@ import blurVSMPS from '../chunks/lit/frag/blurVSM.js';
 import clearCoatPS from '../chunks/standard/frag/clearCoat.js';
 import clearCoatGlossPS from '../chunks/standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from '../chunks/standard/frag/clearCoatNormal.js';
+import clipPlanesPS from '../chunks/common/frag/clipPlanes.js';
 import clusteredLightUtilsPS from '../chunks/lit/frag/clusteredLightUtils.js';
 import clusteredLightCookiesPS from '../chunks/lit/frag/clusteredLightCookies.js';
 import clusteredLightShadowsPS from '../chunks/lit/frag/clusteredLightShadows.js';
@@ -184,6 +185,7 @@ const shaderChunksGLSL = {
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
+    clipPlanesPS,
     clusteredLightCookiesPS,
     clusteredLightShadowsPS,
     clusteredLightUtilsPS,
