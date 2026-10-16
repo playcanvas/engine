@@ -3,6 +3,8 @@ import sinon from 'sinon';
 
 import { Entity } from '../../../src/framework/entity.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
+import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { Camera } from '../../../src/scene/camera.js';
 import { FramePassMultiView } from '../../../src/scene/renderer/frame-pass-multi-view.js';
 import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
@@ -152,62 +154,6 @@ describe('Camera passes', function () {
             expect(index).to.be.greaterThan(passes.findLastIndex(pass => rendersCamera(pass, first)));
             expect(index).to.be.lessThan(passes.findIndex(pass => rendersCamera(pass, second)));
         });
-
-        describe('with a pass rendering the camera', function () {
-
-            // the passes rendering the first camera and its render events, in the order they run in
-            // a frame, naming the given pass 'before' and the others 'scene'
-            const renderOrder = (before) => {
-                const order = [];
-                const onPrerender = (camera) => {
-                    if (camera === first) order.push('prerender');
-                };
-                const onPostrender = (camera) => {
-                    if (camera === first) order.push('postrender');
-                };
-                app.scene.on('prerender', onPrerender);
-                app.scene.on('postrender', onPostrender);
-                const execute = sinon.stub(RenderPassForward.prototype, 'execute').callsFake(function () {
-                    if (rendersCamera(this, first)) order.push(this === before ? 'before' : 'scene');
-                });
-
-                renderFrame();
-
-                execute.restore();
-                app.scene.off('prerender', onPrerender);
-                app.scene.off('postrender', onPostrender);
-                return order;
-            };
-
-            const createScenePass = (transparent) => {
-                const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
-                pass.init(null);
-                pass.addLayer(first, app.scene.layers.getLayerByName('World'), false);
-                if (transparent) {
-                    pass.addLayer(first, app.scene.layers.getLayerByName('World'), true);
-                }
-                return pass;
-            };
-
-            it('fire the render events of the camera around it, when the camera renders the layers', function () {
-                const before = createScenePass(false);
-                first.beforePasses.push(before);
-
-                for (let i = 0; i < 2; i++) {
-                    expect(renderOrder(before)).to.deep.equal(['prerender', 'before', 'scene', 'postrender']);
-                }
-            });
-
-            it('fire the render events of the camera around it, when the camera renders its frame passes', function () {
-                const before = createScenePass(false);
-                first.beforePasses.push(before);
-                first.framePasses = [createScenePass(true)];
-
-                for (let i = 0; i < 2; i++) {
-                    expect(renderOrder(before)).to.deep.equal(['prerender', 'before', 'scene', 'postrender']);
-                }
-            });
-        });
     });
 
     describe('#framePasses', function () {
@@ -226,9 +172,9 @@ describe('Camera passes', function () {
             const before = createPass('Before');
             first.beforePasses.push(before);
 
-            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
             scenePass.init(null);
-            scenePass.addLayer(first, app.scene.layers.getLayerByName('World'), false);
+            scenePass.addLayer(app.scene.layers.getLayerByName('World'), false);
             scenePass.enabled = false;
             first.framePasses = [scenePass];
 
@@ -262,9 +208,9 @@ describe('Camera passes', function () {
             const cameraBefore = createPass('CameraBefore');
             first.beforePasses.push(cameraBefore);
 
-            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
             scenePass.init(null);
-            scenePass.addLayer(first, app.scene.layers.getLayerByName('World'), false);
+            scenePass.addLayer(app.scene.layers.getLayerByName('World'), false);
             const own = createPass('Own');
             scenePass.beforePasses.push(own);
             first.framePasses = [scenePass];
@@ -288,12 +234,12 @@ describe('Camera passes', function () {
             first.beforePasses.push(before);
 
             const world = app.scene.layers.getLayerByName('World');
-            const opaquePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            const opaquePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
             opaquePass.init(null);
-            opaquePass.addLayer(first, world, false);
-            const transparentPass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            opaquePass.addLayer(world, false);
+            const transparentPass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
             transparentPass.init(null);
-            transparentPass.addLayer(first, world, true, false);
+            transparentPass.addLayer(world, true, false);
             first.framePasses = [opaquePass, transparentPass];
 
             const prerender = sinon.spy();
@@ -315,9 +261,41 @@ describe('Camera passes', function () {
                 expect(callCount(postrender)).to.equal(1);
 
                 // the camera starts rendering in the first pass, and finishes in the second one
-                expect(opaquePass.layerRenderSteps[0].firstCameraUse).to.equal(true);
-                expect(transparentPass.layerRenderSteps[0].lastCameraUse).to.equal(true);
+                expect([opaquePass.firstCameraUse, opaquePass.lastCameraUse]).to.deep.equal([true, false]);
+                expect([transparentPass.firstCameraUse, transparentPass.lastCameraUse]).to.deep.equal([false, true]);
             }
+        });
+
+        it('render the shadows of each camera before its own pass, with the passes of two cameras one after the other', function () {
+            const light = new Entity('Light');
+            light.addComponent('light', { type: 'directional', castShadows: true });
+            app.root.addChild(light);
+
+            const caster = new Entity('Caster');
+            caster.addComponent('render', { type: 'box' });
+            app.root.addChild(caster);
+
+            // the second camera renders into a texture the first one could use, before it, sharing
+            // the shadow map of the light
+            const createScenePass = (camera, renderTarget) => {
+                const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, camera);
+                pass.init(renderTarget);
+                pass.addLayer(app.scene.layers.getLayerByName('World'), false);
+                return pass;
+            };
+            const texture = new Texture(app.graphicsDevice, { width: 4, height: 4 });
+            const secondPass = createScenePass(second, new RenderTarget({ colorBuffer: texture, depth: true }));
+            const firstPass = createScenePass(first, null);
+            const container = createPass('Container');
+            container.beforePasses.push(secondPass, firstPass);
+            first.framePasses = [container];
+
+            const passes = renderFrame();
+            const shadowOf = camera => passes.findIndex(pass => pass instanceof RenderPassShadowDirectional && pass.camera === camera.camera);
+            expect(shadowOf(second)).to.be.below(passes.indexOf(secondPass));
+            expect(passes.indexOf(secondPass)).to.be.below(shadowOf(first));
+            expect(shadowOf(first)).to.be.below(passes.indexOf(firstPass));
+            texture.destroy();
         });
     });
 });

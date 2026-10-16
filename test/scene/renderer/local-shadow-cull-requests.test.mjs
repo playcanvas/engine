@@ -5,6 +5,7 @@ import { Entity } from '../../../src/framework/entity.js';
 import { Lightmapper } from '../../../src/framework/lightmapper/lightmapper.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME } from '../../../src/scene/constants.js';
+import { FrameGraph } from '../../../src/scene/frame-graph.js';
 import { RenderPassShadowLocalClustered } from '../../../src/scene/renderer/render-pass-shadow-local-clustered.js';
 import { RenderPassShadowLocalNonClustered } from '../../../src/scene/renderer/render-pass-shadow-local-non-clustered.js';
 import { createApp } from '../../app.mjs';
@@ -102,11 +103,14 @@ describe('Local shadow cull requests', function () {
 
                 ['enabled', 'executeEnabled'].forEach((property) => {
                     it(`keeps THISFRAME pending when the shadow pass has ${property} disabled`, function () {
-                        const prototype = clustered ? RenderPassShadowLocalClustered.prototype : RenderPassShadowLocalNonClustered.prototype;
-                        const frameUpdate = prototype.frameUpdate;
-                        sinon.stub(prototype, 'frameUpdate').callsFake(function () {
-                            this[property] = false;
-                            frameUpdate.call(this);
+                        // disable the shadow pass as it is added to the frame, before its frameUpdate
+                        const ShadowPass = clustered ? RenderPassShadowLocalClustered : RenderPassShadowLocalNonClustered;
+                        const addRenderPass = FrameGraph.prototype.addRenderPass;
+                        sinon.stub(FrameGraph.prototype, 'addRenderPass').callsFake(function (pass) {
+                            if (pass instanceof ShadowPass) {
+                                pass[property] = false;
+                            }
+                            addRenderPass.call(this, pass);
                         });
                         light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                         app.render();

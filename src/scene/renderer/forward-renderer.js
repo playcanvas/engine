@@ -11,7 +11,6 @@ import { Renderer } from './renderer.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
-import { FramePassMultiView } from './frame-pass-multi-view.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
 import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
@@ -20,7 +19,6 @@ import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameter
  * @import { Camera } from '../camera.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { FrameGraph } from '../frame-graph.js'
- * @import { FramePass } from '../../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { RenderAction } from '../composition/render-action.js'
@@ -34,13 +32,6 @@ import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameter
 
 const _noLights = new LightList();
 const tmpColor = new Color();
-
-/**
- * The last render step of each camera, while marking the camera use of the frame.
- *
- * @type {Map<Camera, LayerRenderStep>}
- */
-const _cameraLastSteps = new Map();
 
 const _drawCallList = {
     drawCalls: [],
@@ -788,39 +779,6 @@ class ForwardRenderer extends Renderer {
                 }
             }
         }
-
-        // with all passes scheduled, mark the first and the last render step of each camera
-        this.updateCameraUse(frameGraph.renderPasses);
-    }
-
-    /**
-     * Marks the first and the last render step of each camera in the frame, which fire the
-     * {@link Scene.EVENT_PRERENDER} and {@link Scene.EVENT_POSTRENDER} events. This walks the
-     * scheduled passes in the order they execute, which differs from the order they are scheduled
-     * in when a pass rendering a camera is among the before-passes of another one rendering it, as
-     * a pass is scheduled before its before-passes, but executes after them.
-     *
-     * @param {FramePass[]} passes - The scheduled passes of the frame, in the order they execute.
-     * @ignore
-     */
-    updateCameraUse(passes) {
-        this._updateCameraUse(passes);
-        _cameraLastSteps.clear();
-    }
-
-    /**
-     * @param {FramePass[]} passes - The passes, in the order they execute.
-     * @private
-     */
-    _updateCameraUse(passes) {
-        for (let i = 0; i < passes.length; i++) {
-            const pass = passes[i];
-            if (pass instanceof FramePassMultiView) {
-                this._updateCameraUse(pass.children);
-            } else if (pass instanceof RenderPassForward) {
-                pass.updateCameraUse(_cameraLastSteps);
-            }
-        }
     }
 
     /**
@@ -860,10 +818,11 @@ class ForwardRenderer extends Renderer {
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
-        const renderPass = new RenderPassForward(this.device, layerComposition, this.scene, this);
+        // the render actions of the range use a single camera
+        const renderActions = layerComposition._renderActions;
+        const renderPass = new RenderPassForward(this.device, layerComposition, this.scene, this, renderActions[startIndex].camera);
         renderPass.init(renderTarget);
 
-        const renderActions = layerComposition._renderActions;
         for (let i = startIndex; i <= endIndex; i++) {
             renderPass.addLayerRenderStep(this._layerRenderStepFromRenderAction(renderActions[i]));
         }
