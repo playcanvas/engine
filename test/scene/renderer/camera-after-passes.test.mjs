@@ -6,6 +6,7 @@ import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
 import { Camera } from '../../../src/scene/camera.js';
 import { FramePassMultiView } from '../../../src/scene/renderer/frame-pass-multi-view.js';
 import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
+import { RenderPassShadowDirectional } from '../../../src/scene/renderer/render-pass-shadow-directional.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -150,6 +151,46 @@ describe('Camera passes', function () {
             const index = passes.indexOf(before);
             expect(index).to.be.greaterThan(passes.findLastIndex(pass => rendersCamera(pass, first)));
             expect(index).to.be.lessThan(passes.findIndex(pass => rendersCamera(pass, second)));
+        });
+    });
+
+    describe('#framePasses', function () {
+
+        it('skip a disabled scene pass, with the shadow and camera passes it renders before', function () {
+            second.enabled = false;
+
+            const light = new Entity('Light');
+            light.addComponent('light', { type: 'directional', castShadows: true });
+            app.root.addChild(light);
+
+            const caster = new Entity('Caster');
+            caster.addComponent('render', { type: 'box' });
+            app.root.addChild(caster);
+
+            const before = createPass('Before');
+            first.beforePasses.push(before);
+
+            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            scenePass.init(null);
+            scenePass.addLayer(first, app.scene.layers.getLayerByName('World'), false);
+            scenePass.layerRenderSteps[0].firstCameraUse = true;
+            scenePass.enabled = false;
+            first.framePasses = [scenePass];
+
+            // frames rendered while the pass is disabled schedule none of them
+            for (let i = 0; i < 3; i++) {
+                const passes = renderFrame();
+                expect(passes).to.not.include(scenePass);
+                expect(passes).to.not.include(before);
+                expect(passes.some(pass => pass instanceof RenderPassShadowDirectional)).to.equal(false);
+            }
+
+            // once enabled, each of them renders once in the frame
+            scenePass.enabled = true;
+            const passes = renderFrame();
+            expect(passes.filter(pass => pass === scenePass)).to.have.lengthOf(1);
+            expect(passes.filter(pass => pass === before)).to.have.lengthOf(1);
+            expect(passes.filter(pass => pass instanceof RenderPassShadowDirectional)).to.have.lengthOf(1);
         });
     });
 });

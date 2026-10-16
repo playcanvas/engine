@@ -4,7 +4,7 @@
  * @import { Texture } from '../texture.js'
  */
 
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 
 /**
@@ -97,6 +97,19 @@ class WebgpuXrBridge {
                 }
             }
 
+            // Workaround for Safari on visionOS (https://bugs.webkit.org/show_bug.cgi?id=327533):
+            // the layer is created without a depthStencilFormat, so per the WebXR/WebGPU binding
+            // spec it should have no depth texture and ignoreDepthValues should be true, and any
+            // depth texture should be cleared to 1.0 every frame by the user agent. Safari hands
+            // out a depth texture it does not clear, and its compositor reads it to reproject a
+            // frame that misses its display time, so the engine clears it to the far plane. A
+            // runtime that follows the spec provides no depth texture, so this does nothing there.
+            // Remove once Safari is fixed.
+            const depthTexture = sub.depthStencilTexture;
+            if (depthTexture) {
+                this._clearDepth(depthTexture, viewDescriptor?.baseArrayLayer ?? 0);
+            }
+
             // Prefer the view descriptor's format when present: WebXR runtimes may use it to
             // declare a per-eye view-format (e.g. bgra8unorm-srgb over a bgra8unorm texture) so
             // shader writes are gamma-encoded for the compositor. Falling back to the texture's
@@ -122,6 +135,41 @@ class WebgpuXrBridge {
             device.setXrBackBufferFormat(first.viewFormat);
             this._cachedFramebufferSize.set(first.colorTexture.width, first.colorTexture.height);
         }
+    }
+
+    /**
+     * Clears an array layer of a view's depth texture to the far plane, along with its stencil if
+     * it has one.
+     *
+     * @param {GPUTexture} texture - The view's depth texture.
+     * @param {number} baseArrayLayer - The array layer of the view.
+     * @private
+     */
+    _clearDepth(texture, baseArrayLayer) {
+        /** @type {GPURenderPassDepthStencilAttachment} */
+        const attachment = {
+            view: texture.createView({
+                dimension: '2d',
+                baseMipLevel: 0,
+                mipLevelCount: 1,
+                baseArrayLayer,
+                arrayLayerCount: 1
+            }),
+            depthClearValue: 1,
+            depthLoadOp: 'clear',
+            depthStoreOp: 'store'
+        };
+        if (texture.format.includes('stencil')) {
+            attachment.stencilLoadOp = 'clear';
+            attachment.stencilStoreOp = 'store';
+        }
+
+        const passEncoder = this.xrBridge.device.getCommandEncoder().beginRenderPass({
+            colorAttachments: [],
+            depthStencilAttachment: attachment
+        });
+        DebugHelper.setLabel(passEncoder, 'XrDepthClear-PassEncoder');
+        passEncoder.end();
     }
 
     endFrame() {

@@ -485,8 +485,11 @@ class Renderer {
         // flipping proj matrix
         const flipY = target?.flipY;
 
+        // a session's views arrive with its first XR frame, so the camera can be in a session with
+        // none yet, which renders as a single view (as renderForwardInternal treats it): an empty
+        // list would bind no view bind group at all
         let viewList = null;
-        if (camera.xrActive) {
+        if (camera.xrActive && camera.xrViews.length) {
             viewList = camera.xrViews;
 
             // refresh the derived per-view matrices for all views
