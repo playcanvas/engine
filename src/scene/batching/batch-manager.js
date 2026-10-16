@@ -303,9 +303,8 @@ class BatchManager {
             if (valid) {
                 arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(valid);
                 node.render.removeFromLayers();
-            } else if (node.render.enabled && node.enabled) {
-                // an excluded entity renders on its own, also when a previous batch included it.
-                // A disabled render component can be in the group, and stays hidden.
+            } else {
+                // an excluded entity renders on its own, also when a previous batch included it
                 node.render.addToLayers();
             }
         }
@@ -319,9 +318,8 @@ class BatchManager {
             if (valid) {
                 arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(valid);
                 node.model.removeModelFromLayers();
-            } else if (node.model.enabled && node.enabled) {
-                // an excluded entity renders on its own, also when a previous batch included it.
-                // A disabled model component can be in the group, and stays hidden.
+            } else {
+                // an excluded entity renders on its own, also when a previous batch included it
                 node.model.addModelToLayers();
             }
         }
