@@ -115,8 +115,9 @@ class FramePass {
      * Sets whether the frame pass is enabled. A disabled pass is skipped when the frame is built,
      * together with its {@link FramePass#beforePasses} and {@link FramePass#afterPasses}, and its
      * frameUpdate is not called. To skip only the execution of the pass, while still updating it
-     * and its before and after passes, use {@link FramePass#executeEnabled} instead. Defaults to
-     * true.
+     * and its before and after passes, use {@link FramePass#executeEnabled} instead. Change it
+     * before the frame is built: the frameUpdate of a pass, or of its before-passes, cannot disable
+     * the pass itself. Defaults to true.
      *
      * @type {boolean}
      */

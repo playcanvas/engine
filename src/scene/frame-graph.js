@@ -122,7 +122,8 @@ class FrameGraph {
             return;
         }
 
-        // can add or remove before and after passes, and enable or disable them
+        // can add or remove before and after passes, and enable or disable them, but not disable the
+        // pass itself
         renderPass.frameUpdate();
 
         // the passes the engine added for the frame execute first, as the passes set up by the user
@@ -137,7 +138,10 @@ class FrameGraph {
             this.addRenderPass(beforePasses[i]);
         }
 
-        // frameUpdate can disable the pass, which then stays out of the compile step
+        // a pass disabled while it is scheduled, by its frameUpdate or by its before-passes, is not
+        // supported, as it has already set itself up for the frame, for example as the first or the
+        // last pass rendering a camera. It stays out of the compile step
+        Debug.assert(renderPass.enabled, `The frame pass '${renderPass.name}' was disabled while it was added to the frame, by its frameUpdate or by its before-passes, which is not supported. Disable it before the frame is built, or set its executeEnabled to false instead.`, renderPass);
         if (renderPass.enabled) {
             if (this.multiview) {
                 this.multiview.addChild(renderPass);

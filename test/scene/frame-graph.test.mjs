@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
+import { Debug } from '../../src/core/debug.js';
 import { FramePass } from '../../src/platform/graphics/frame-pass.js';
 import { FrameGraph } from '../../src/scene/frame-graph.js';
 import { createApp } from '../app.mjs';
@@ -48,6 +50,7 @@ describe('FrameGraph', function () {
     });
 
     afterEach(function () {
+        restore();
         app?.destroy();
         app = null;
         jsdomTeardown();
@@ -142,17 +145,49 @@ describe('FrameGraph', function () {
             expect(child.frameUpdateCount).to.equal(0);
         });
 
-        it('does not schedule a pass which disables itself in its frameUpdate', function () {
+        it('asserts a pass which disables itself in its frameUpdate, and does not schedule it', function () {
             const frameGraph = new FrameGraph();
             const pass = new TestPass(device, 'Pass');
             pass.onFrameUpdate = () => {
                 pass.enabled = false;
             };
 
+            const assertion = stub(Debug, 'assert');
             frameGraph.addRenderPass(pass);
 
+            expect(assertion.getCalls().some(call => !call.args[0])).to.equal(true);
             expect(frameGraph.renderPasses).to.be.empty;
             expect(pass.frameUpdateCount).to.equal(1);
+        });
+
+        it('asserts a pass disabled by its before-passes while it is scheduled', function () {
+            const frameGraph = new FrameGraph();
+            const before = new TestPass(device, 'Before');
+            const pass = new TestPass(device, 'Pass', { before: [before] });
+            before.onFrameUpdate = () => {
+                pass.enabled = false;
+            };
+
+            const assertion = stub(Debug, 'assert');
+            frameGraph.addRenderPass(pass);
+
+            expect(assertion.getCalls().some(call => !call.args[0])).to.equal(true);
+            expect(frameGraph.renderPasses).to.deep.equal([before]);
+        });
+
+        it('does not assert a pass whose frameUpdate disables its before-passes', function () {
+            const frameGraph = new FrameGraph();
+            const before = new TestPass(device, 'Before');
+            const pass = new TestPass(device, 'Pass', { before: [before] });
+            pass.onFrameUpdate = () => {
+                before.enabled = false;
+            };
+
+            const assertion = stub(Debug, 'assert');
+            frameGraph.addRenderPass(pass);
+
+            expect(assertion.getCalls().some(call => !call.args[0])).to.equal(false);
+            expect(frameGraph.renderPasses).to.deep.equal([pass]);
         });
     });
 });
