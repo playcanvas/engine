@@ -692,7 +692,7 @@ class FramePassCameraFrame extends FramePass {
      */
     addCameraLayers(renderPass, startIndex, firstLayerClears, lastLayerId, lastLayerIsTransparent = true) {
 
-        const cameraComponent = this.cameraComponent;
+        const camera = this.cameraComponent.camera;
         const { layerList, subLayerList } = renderPass.layerComposition;
         let clearRenderTarget = firstLayerClears;
 
@@ -703,8 +703,8 @@ class FramePassCameraFrame extends FramePass {
             const isTransparent = subLayerList[index];
 
             // add it for rendering if the camera renders it
-            if (cameraComponent.camera.layersSet.has(layer.id)) {
-                renderPass.addLayer(cameraComponent, layer, isTransparent, clearRenderTarget);
+            if (camera.layersSet.has(layer.id)) {
+                renderPass.addLayer(layer, isTransparent, clearRenderTarget);
                 clearRenderTarget = false;
             }
 
@@ -728,7 +728,7 @@ class FramePassCameraFrame extends FramePass {
         // render pass that renders the scene to the render target. Render target size automatically
         // matches the back-buffer size with the optional scale. Note that the scale parameters
         // allow us to render the 3d scene at lower resolution, improving performance.
-        this.scenePass = new RenderPassForward(device, composition, scene, renderer);
+        this.scenePass = new RenderPassForward(device, composition, scene, renderer, this.cameraComponent);
         this.setupScenePassSettings(this.scenePass);
         this.scenePass.init(this.rt, this.sceneOptions);
 
@@ -762,7 +762,7 @@ class FramePassCameraFrame extends FramePass {
             }
 
             // render the remaining layers after the split (otherwise they were already rendered)
-            this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
+            this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer, this.cameraComponent);
             this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.addCameraLayers(this.scenePassTransparent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
@@ -936,7 +936,7 @@ class FramePassCameraFrame extends FramePass {
         const targetRenderTarget = cameraComponent.renderTarget;
 
         // final pass renders directly to the target renderTarget on top of the bloomed scene, and it renders a transparent UI layer
-        this.afterPass = new RenderPassForward(this.device, composition, scene, renderer);
+        this.afterPass = new RenderPassForward(this.device, composition, scene, renderer, this.cameraComponent);
         this.afterPass.init(targetRenderTarget);
 
         // add all remaining layers the camera renders
