@@ -201,6 +201,7 @@ class FramePassCameraFrame extends FramePass {
 
     destroy() {
         this.reset();
+        super.destroy();
     }
 
     reset() {

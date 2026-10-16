@@ -118,6 +118,8 @@ class ComputePass extends FramePass {
         this.computes = [];
         this.onBefore = null;
         this.onAfter = null;
+
+        super.destroy();
     }
 }
 

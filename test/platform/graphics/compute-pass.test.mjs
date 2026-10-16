@@ -339,5 +339,15 @@ describe('ComputePass', function () {
             pass.destroy();
             expect(pass.computes).to.have.lengthOf(0);
         });
+
+        it('is reported when added to a frame after it is destroyed', function () {
+            const pass = new ComputePass(device, [createCompute('A')]);
+            pass.name = 'DestroyedComputePass';
+            pass.destroy();
+
+            const error = sinon.stub(console, 'error');
+            new FrameGraph().addRenderPass(pass);
+            expect(error.callCount).to.equal(1);
+        });
     });
 });

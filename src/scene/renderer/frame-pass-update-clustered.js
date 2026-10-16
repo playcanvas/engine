@@ -54,6 +54,8 @@ class FramePassUpdateClustered extends FramePass {
         this.shadowRenderPass = null;
 
         this.beforePasses.length = 0;
+
+        super.destroy();
     }
 
     execute() {

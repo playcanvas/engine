@@ -229,7 +229,8 @@ class CameraComponent extends Component {
 
     /**
      * Sets the frame passes the camera uses for rendering, instead of its default rendering.
-     * Set this to null to return to the default behavior.
+     * Set this to null to return to the default behavior. The camera does not destroy the passes:
+     * whoever adds a pass removes it from the list, and destroys it.
      *
      * @type {FramePass[]|null}
      * @ignore
@@ -257,7 +258,8 @@ class CameraComponent extends Component {
      * them does. They cannot include a pass rendering the layers of a camera, such as a
      * RenderPassForward. When rendering multiple XR views, they execute for each view, apart from
      * a compute pass, which executes once, as selected by {@link ComputePass#xrViewIndex}. Add
-     * passes to the array, or remove them from it, to change them.
+     * passes to the array, or remove them from it, to change them. The camera does not destroy
+     * them: whoever adds a pass destroys it.
      *
      * @type {FramePass[]}
      * @ignore
@@ -270,7 +272,8 @@ class CameraComponent extends Component {
      * Gets the frame passes which execute after everything the camera renders in the frame,
      * including its frame passes when it uses those, and before the cameras rendering after it.
      * When rendering multiple XR views, they execute once, after all the views. Add passes to the
-     * array, or remove them from it, to change them.
+     * array, or remove them from it, to change them. The camera does not destroy them: whoever
+     * adds a pass destroys it.
      *
      * @type {FramePass[]}
      * @ignore

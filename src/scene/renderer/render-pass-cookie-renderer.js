@@ -61,6 +61,8 @@ class RenderPassCookieRenderer extends RenderPass {
 
         this._evtDeviceRestored?.off();
         this._evtDeviceRestored = null;
+
+        super.destroy();
     }
 
     static create(renderTarget, cubeSlotsOffsets) {
