@@ -490,8 +490,8 @@ class LitShader {
                 if (light._normalOffsetBias && !light._isVsm) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_NORMAL_OFFSET`, true);
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_ORTHO`, true);
-                    if (light.cascadeBlend > 0) fDefines.set(`LIGHT${i}_SHADOW_CASCADE_BLEND`, true);
-                    if (light.numCascades > 1) fDefines.set(`LIGHT${i}_SHADOW_CASCADES`, true);
+                    if (light.usesCascadeBlend) fDefines.set(`LIGHT${i}_SHADOW_CASCADE_BLEND`, true);
+                    if (light.shadowCascadeCount > 1) fDefines.set(`LIGHT${i}_SHADOW_CASCADES`, true);
                 }
                 if (shadowInfo.pcf || shadowInfo.pcss || this.device.isWebGPU) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_SOURCE_ZBUFFER`, true);
                 if (lightType === LIGHTTYPE_OMNI) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_POINT`, true);

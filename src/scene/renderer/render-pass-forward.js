@@ -206,12 +206,16 @@ class RenderPassForward extends RenderPass {
             for (let l = 0; l < shadowDirLights.length; l++) {
                 const light = shadowDirLights[l];
 
+                // a light with shadow bounds renders one shadow for all cameras, before the first
+                // pass using it in the frame
+                const shadowCamera = light._shadowBounds ? null : camera;
+
                 // the shadow map is not already rendered for this light
-                if (renderer.culler.dirLightShadows.get(light) !== camera) {
-                    renderer.culler.dirLightShadows.set(light, camera);
+                if (renderer.culler.dirLightShadows.get(light) !== shadowCamera) {
+                    renderer.culler.dirLightShadows.set(light, shadowCamera);
 
                     // render the shadow before this render pass
-                    const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, camera);
+                    const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, shadowCamera);
                     if (shadowPass) {
                         this.internalBeforePasses.push(shadowPass);
                     }
