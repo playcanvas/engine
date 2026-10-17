@@ -400,7 +400,7 @@ class GSplatShadowRenderer {
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
             if (!light.enabled || !light.castShadows) continue;
-            if (light.numCascades !== 1) {
+            if (light.shadowCascadeCount !== 1) {
                 Debug.warnOnce('GSplatShadowRenderer: cascaded directional shadows are not supported for gsplats; the light will not cast a gsplat shadow.');
                 continue;
             }
@@ -457,7 +457,8 @@ class GSplatShadowRenderer {
 
             // The scheduled mask includes mandatory refreshes after shadow-map recreation,
             // even when the application's per-cascade override still requests a cached shadow.
-            const renderData = light.getRenderData(camera, 0);
+            // A light with shadow bounds renders one shadow for all cameras.
+            const renderData = light.getRenderData(light.shadowBounds ? null : camera, 0);
             if (!renderData.shadowCullRequested || !(renderData.shadowCascadeMask & 1)) {
                 return;
             }
@@ -550,7 +551,8 @@ class GSplatShadowRenderer {
         // resolve the light's shadow camera (fitted during cullComposition) and the shared camera-
         // independent cull bounds (populated by the forward renderer's frustum culler).
         const sceneCamera = this.cameraNode.camera?.camera;
-        const shadowCamera = sceneCamera && entry.light.getRenderData(sceneCamera, 0).shadowCamera;
+        const light = entry.light;
+        const shadowCamera = sceneCamera && light.getRenderData(light.shadowBounds ? null : sceneCamera, 0).shadowCamera;
         const frustum = shadowCamera && shadowCamera.frustum;
         const frustumCuller = this.world.workBuffer.frustumCuller;
         if (!frustum || !frustumCuller?.boundsBuffer || !frustumCuller?.transformsBuffer) {
@@ -844,7 +846,7 @@ class GSplatShadowRenderer {
         meshInstance.isVisibleFunc = (camera) => {
             const sceneCamera = cameraNode.camera?.camera;
             if (!sceneCamera) return false;
-            return camera === light.getRenderData(sceneCamera, 0).shadowCamera;
+            return camera === light.getRenderData(light.shadowBounds ? null : sceneCamera, 0).shadowCamera;
         };
 
         return meshInstance;

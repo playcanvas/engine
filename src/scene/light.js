@@ -254,6 +254,14 @@ class Light {
         this._cascadeBlend = 0;
         this.cascadeDistribution = 0.5;
 
+        /**
+         * The world space bounds the directional shadow covers, or null for cascades fitted to
+         * each camera.
+         *
+         * @type {BoundingBox|null}
+         */
+        this._shadowBounds = null;
+
         // Light source shape properties
         this._shape = LIGHTSHAPE_PUNCTUAL;
 
@@ -409,6 +417,69 @@ class Light {
         return this._cascadeBlend;
     }
 
+    /**
+     * Sets the world space bounds enclosing the shadow casters of a directional light. When set,
+     * the light renders a single shadow map fitted to the bounds, used by all cameras, instead of
+     * cascades fitted to each camera. The bounds are copied. Null to render the cascades.
+     *
+     * @type {BoundingBox|null}
+     */
+    set shadowBounds(value) {
+        if (value) {
+            if (!this._shadowBounds) {
+                this._shadowBounds = value.clone();
+                this._destroyShadowMap();
+                this.updateKey();
+
+            // the bounds returned by the getter could have been modified before they are set again,
+            // so setting them is a change too
+            } else if (value === this._shadowBounds || !this._shadowBounds.equals(value)) {
+                this._shadowBounds.copy(value);
+
+                // a cached shadow renders once for the new bounds, including a cascade cached by
+                // shadowUpdateOverrides
+                this._shadowCascadesInvalidated = true;
+                if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                    this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                }
+            }
+        } else if (this._shadowBounds) {
+            this._shadowBounds = null;
+            this._destroyShadowMap();
+            this.updateKey();
+        }
+    }
+
+    /**
+     * Gets the world space bounds enclosing the shadow casters of a directional light.
+     *
+     * @type {BoundingBox|null}
+     */
+    get shadowBounds() {
+        return this._shadowBounds;
+    }
+
+    /**
+     * The number of cascades the shadow of a directional light renders: one with shadow bounds,
+     * which render a single shadow map, else {@link Light#numCascades}.
+     *
+     * @type {number}
+     */
+    get shadowCascadeCount() {
+        return this._shadowBounds ? 1 : this.numCascades;
+    }
+
+    /**
+     * True if the shadow of a directional light blends between its cascades and fades out at the
+     * shadow distance. A shadow with shadow bounds does neither, as it covers the bounds at any
+     * distance.
+     *
+     * @type {boolean}
+     */
+    get usesCascadeBlend() {
+        return this._cascadeBlend > 0 && !this._shadowBounds;
+    }
+
     set shadowMap(shadowMap) {
         if (this._shadowMap !== shadowMap) {
             this._destroyShadowMap();
@@ -443,7 +514,7 @@ class Light {
     get numShadowFaces() {
         const type = this._type;
         if (type === LIGHTTYPE_DIRECTIONAL) {
-            return this.numCascades;
+            return this.shadowCascadeCount;
         } else if (type === LIGHTTYPE_OMNI) {
             return 6;
         }
@@ -939,6 +1010,7 @@ class Light {
         clone.numCascades = this.numCascades;
         clone.cascadeDistribution = this.cascadeDistribution;
         clone.cascadeBlend = this._cascadeBlend;
+        clone.shadowBounds = this._shadowBounds;
 
         // shape properties
         clone.shape = this._shape;
@@ -1161,8 +1233,8 @@ class Light {
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
         // 10 - 11 : light source shape
-        //  9      : use cascades
-        //  8      : cascade blend
+        //  9      : use cascades (never with shadow bounds, which render a single shadow map)
+        //  8      : cascade blend (never with shadow bounds, as it fades at the shadow distance)
         //  7      : disable specular
         //  6 -  4 : mask
         //  3      : cast shadows
@@ -1176,8 +1248,8 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               ((this.numCascades > 1 ? 1 : 0)            <<  9) |
-               ((this._cascadeBlend > 0 ? 1 : 0)          <<  8) |
+               ((this.shadowCascadeCount > 1 ? 1 : 0)     <<  9) |
+               ((this.usesCascadeBlend ? 1 : 0)           <<  8) |
                ((this.affectSpecularity ? 1 : 0)          <<  7) |
                ((this.mask)                               <<  6) |
                ((this._castShadows ? 1 : 0)               <<  3);

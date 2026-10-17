@@ -840,10 +840,10 @@ class ShadowRenderer {
         pixelOffset[1] = pixelOffset[0];
         pixelOffset[0] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
-        if (light._type === LIGHTTYPE_DIRECTIONAL && cascadeMask !== (1 << light.numCascades) - 1) {
+        if (light._type === LIGHTTYPE_DIRECTIONAL && cascadeMask !== (1 << light.shadowCascadeCount) - 1) {
             // Cached cascades already contain filtered moments. Blurring them again would
             // progressively soften their shadows until their next scheduled update.
-            for (let cascade = 0; cascade < light.numCascades; cascade++) {
+            for (let cascade = 0; cascade < light.shadowCascadeCount; cascade++) {
                 if (!(cascadeMask & (1 << cascade))) continue;
 
                 const viewport = light.cascades[cascade];
