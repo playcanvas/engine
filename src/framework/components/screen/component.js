@@ -126,7 +126,8 @@ class ScreenComponent extends Component {
 
         // child particle system inside 2D screen sub-hierarchy gets sorted along other 2D elements
         if (e.particlesystem) {
-            e.particlesystem.drawOrder = i++;
+            // like an element, store the screen priority in the top 8 bits of the draw order
+            e.particlesystem.drawOrder = (this._priority << 24) + Math.min(i++, 0xFFFFFF);
         }
 
         const children = e.children;
