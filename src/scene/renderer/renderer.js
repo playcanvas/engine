@@ -672,7 +672,8 @@ class Renderer {
 
     setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
-        const flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
+        const node = drawCall.skinInstance?.rootBone ?? drawCall.node;
+        const flipFaces = flipFactor * drawCall.flipFacesFactor * node.worldScaleSign;
 
         let frontFace = material.frontFace;
         if (flipFaces < 0) {
@@ -702,7 +703,7 @@ class Renderer {
         for (let i = 0; i < drawCallsCount; i++) {
             const si = drawCalls[i].skinInstance;
             if (si) {
-                si.updateMatrices(drawCalls[i].node, _skinUpdateIndex);
+                si.updateMatrices(si.rootBone ?? drawCalls[i].node, _skinUpdateIndex);
                 si._dirty = true;
             }
         }
@@ -727,7 +728,7 @@ class Renderer {
             const skin = drawCall.skinInstance;
 
             if (skin && skin._dirty) {
-                skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
+                skin.updateMatrixPalette(skin.rootBone ?? drawCall.node, _skinUpdateIndex);
                 skin._dirty = false;
             }
         }
@@ -1257,8 +1258,9 @@ class Renderer {
 
         // a node marked dirty after the transforms were updated this frame is written again the next
         // frame, once its transform is updated
-        const node = meshInstance.node;
-        if (meshInstance.storageSlotVersion !== node._aabbVer) {
+        const node = meshInstance.skinInstance?.rootBone ?? meshInstance.node;
+        if (meshInstance._storageSlotNode !== node || meshInstance.storageSlotVersion !== node._aabbVer) {
+            meshInstance._storageSlotNode = node;
             meshInstance.storageSlotVersion = node._dirtyWorld ? -1 : node._aabbVer;
             meshInstanceStorage.write(slot, node.worldTransform.data, node.normalMatrix.data);
         }
@@ -1267,10 +1269,12 @@ class Renderer {
     }
 
     setMeshInstanceMatrices(meshInstance, setNormalMatrix = false) {
-        const modelMatrix = meshInstance.node.worldTransform;
+        // A shared skin palette is relative to its root bone, independent of each mesh node.
+        const node = meshInstance.skinInstance?.rootBone ?? meshInstance.node;
+        const modelMatrix = node.worldTransform;
         this.modelMatrixId.setValue(modelMatrix.data);
         if (setNormalMatrix) {
-            this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
+            this.normalMatrixId.setValue(node.normalMatrix.data);
         }
     }
 

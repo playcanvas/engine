@@ -35,7 +35,7 @@ class SkinInstance {
     constructor(skin) {
         this._dirty = true;
 
-        // optional root bone - used for cache lookup, not used for skinning
+        // optional root bone - the cache key and coordinate frame for shared skin rendering
         this._rootBone = null;
 
         // sequential index of when the bone update was performed the last time
