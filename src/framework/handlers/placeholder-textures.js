@@ -21,6 +21,8 @@ const PLACEHOLDER_MAP = {
     glossMap: 'gray',
     sheenMap: 'black',
     sheenGlossMap: 'gray',
+    diffuseTransmissionMap: 'white',
+    diffuseTransmissionColorMap: 'white',
     clearCoatMap: 'black',
     clearCoatGlossMap: 'gray',
     clearCoatNormalMap: 'normal',
@@ -42,7 +44,8 @@ const PLACEHOLDER_MAP = {
 // the texture parameters a shader samples as a color, decoding it by the encoding of the texture,
 // where the other parameters use the sampled value as it is
 const COLOR_PARAMETERS = new Set([
-    'diffuseMap', 'diffuseDetailMap', 'emissiveMap', 'lightMap', 'specularMap', 'sheenMap', 'sphereMap', 'envAtlas'
+    'diffuseMap', 'diffuseDetailMap', 'emissiveMap', 'lightMap', 'specularMap', 'sheenMap',
+    'sphereMap', 'envAtlas', 'diffuseTransmissionColorMap'
 ]);
 
 // the texel of each color, in a texture of the default type

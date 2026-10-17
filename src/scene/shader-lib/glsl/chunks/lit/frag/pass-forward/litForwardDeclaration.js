@@ -25,6 +25,11 @@ vec3 ccSpecularLight;
 float ccSpecularityNoFres;
 vec3 sSpecularLight;
 
+#ifdef LIT_DIFFUSE_TRANSMISSION
+    // the light arriving at the back of the surface, which the diffuse transmission lets through
+    vec3 dDiffuseTransmissionLight = vec3(0.0);
+#endif
+
 // FRAGMENT SHADER INPUTS: UNIFORMS
 
 #ifndef LIT_OPACITY_FADES_SPECULAR

@@ -238,6 +238,12 @@ void evaluateLight(
     float diffuseAttenuation = 1.0;
     float falloffAttenuation = 1.0;
 
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        // the whole attenuation of the light arriving at the back of the surface, which the diffuse
+        // transmission lets through
+        float transmissionAttenuation = 0.0;
+    #endif
+
     // evaluate omni part of the light
     vec3 lightDirW = evalOmniLight(light.position);
     vec3 lightDirNormW = normalize(lightDirW);
@@ -282,29 +288,58 @@ void evaluateLight(
             // handle light shape
             if (light.shape == {LIGHTSHAPE_RECT}) {
                 diffuseAttenuation = getRectLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #ifdef LIT_DIFFUSE_TRANSMISSION
+                    transmissionAttenuation = getRectLightDiffuse(-worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #endif
             } else if (light.shape == {LIGHTSHAPE_DISK}) {
                 diffuseAttenuation = getDiskLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #ifdef LIT_DIFFUSE_TRANSMISSION
+                    transmissionAttenuation = getDiskLightDiffuse(-worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #endif
             } else { // sphere
                 diffuseAttenuation = getSphereLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #ifdef LIT_DIFFUSE_TRANSMISSION
+                    transmissionAttenuation = getSphereLightDiffuse(-worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #endif
             }
+
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                transmissionAttenuation *= falloffAttenuation;
+            #endif
 
         } else
 
         #endif
 
         {
-            falloffAttenuation *= getLightDiffuse(worldNormal, viewDir, lightDirNormW); 
+            // diffuse transmission, evaluated before the diffuse lighting multiplies into the
+            // falloff
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                transmissionAttenuation = falloffAttenuation * getLightDiffuse(-worldNormal, viewDir, lightDirNormW);
+            #endif
+
+            falloffAttenuation *= getLightDiffuse(worldNormal, viewDir, lightDirNormW);
         }
 
         // spot light falloff
         if (light.isSpot) {
             ClusterLightSpotData spotData = decodeClusterLightSpot();
-            falloffAttenuation *= getSpotEffect(light.direction, spotData.innerConeAngleCos, spotData.outerConeAngleCos, lightDirNormW);
+            float spotEffect = getSpotEffect(light.direction, spotData.innerConeAngleCos, spotData.outerConeAngleCos, lightDirNormW);
+            falloffAttenuation *= spotEffect;
+
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                transmissionAttenuation *= spotEffect;
+            #endif
         }
 
         #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
 
+        // with diffuse transmission, the light can also reach the surface from behind
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+        if (max(falloffAttenuation, transmissionAttenuation) > 0.00001) {
+        #else
         if (falloffAttenuation > 0.00001) {
+        #endif
 
             // shadow / cookie
             if (light.shadowIntensity > 0.0 || light.cookieIntensity > 0.0) {
@@ -344,11 +379,20 @@ void evaluateLight(
 
                     vec4 shadowParams = vec4(shadowTextureResolution, shadowData.shadowNormalBias, shadowData.shadowBias, 1.0 / light.range);
 
+                    // The normal offset moves the sample off the surface, towards the light. A
+                    // surface with diffuse transmission is also lit from behind, so the side
+                    // facing the light is used
+                    #ifdef LIT_DIFFUSE_TRANSMISSION
+                        vec3 shadowNormal = faceforward(geometricNormal, lightDirNormW, geometricNormal);
+                    #else
+                        vec3 shadowNormal = geometricNormal;
+                    #endif
+
                     if (light.isSpot) {
 
                         // spot shadow
-                        vec3 shadowCoord = getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, geometricNormal);
-                        
+                        vec3 shadowCoord = getShadowCoordPerspZbufferNormalOffset(lightProjectionMatrix, shadowParams, shadowNormal);
+
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowSpotClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowCoord, shadowParams);
                         #elif defined(CLUSTER_SHADOW_TYPE_PCF3)
@@ -360,10 +404,14 @@ void evaluateLight(
                         #endif
                         falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
 
+                        #ifdef LIT_DIFFUSE_TRANSMISSION
+                            transmissionAttenuation *= mix(1.0, shadow, light.shadowIntensity);
+                        #endif
+
                     } else {
 
                         // omni shadow
-                        vec3 dir = normalOffsetPointShadow(shadowParams, light.position, lightDirW, lightDirNormW, geometricNormal);  // normalBias adjusted for distance
+                        vec3 dir = normalOffsetPointShadow(shadowParams, light.position, lightDirW, lightDirNormW, shadowNormal);  // normalBias adjusted for distance
 
                         #if defined(CLUSTER_SHADOW_TYPE_PCF1)
                             float shadow = getShadowOmniClusteredPCF1(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
@@ -373,6 +421,10 @@ void evaluateLight(
                             float shadow = getShadowOmniClusteredPCF5(SHADOWMAP_PASS(shadowAtlasTexture), shadowParams, omniAtlasViewport, shadowEdgePixels, dir);
                         #endif
                         falloffAttenuation *= mix(1.0, shadow, light.shadowIntensity);
+
+                        #ifdef LIT_DIFFUSE_TRANSMISSION
+                            transmissionAttenuation *= mix(1.0, shadow, light.shadowIntensity);
+                        #endif
                     }
                 }
 
@@ -397,6 +449,16 @@ void evaluateLight(
 
                 // area light diffuse - it does not mix diffuse lighting into specular attenuation
                 dDiffuseLight += areaDiffuse;
+
+                #ifdef LIT_DIFFUSE_TRANSMISSION
+                    vec3 areaTransmission = transmissionAttenuation * light.color * cookieAttenuation;
+
+                    #if defined(LIT_SPECULAR)
+                        areaTransmission = mix(areaTransmission, vec3(0), dLTCSpecFres);
+                    #endif
+
+                    dDiffuseTransmissionLight += areaTransmission;
+                #endif
             }
 
             // specular and clear coat are material settings and get included by a define based on the material
@@ -451,6 +513,18 @@ void evaluateLight(
                 #endif
 
                 dDiffuseLight += punctualDiffuse;
+
+                #ifdef LIT_DIFFUSE_TRANSMISSION
+                    vec3 punctualTransmission = transmissionAttenuation * light.color * cookieAttenuation;
+
+                    #if defined(CLUSTER_AREALIGHTS)
+                    #if defined(LIT_SPECULAR)
+                        punctualTransmission = mix(punctualTransmission, vec3(0), specularity);
+                    #endif
+                    #endif
+
+                    dDiffuseTransmissionLight += punctualTransmission;
+                #endif
             }
    
             // specular and clear coat are material settings and get included by a define based on the material

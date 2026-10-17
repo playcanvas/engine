@@ -1,5 +1,6 @@
 import { KHR_materials_anisotropy } from './khr-materials-anisotropy.js';
 import { KHR_materials_clearcoat } from './khr-materials-clearcoat.js';
+import { KHR_materials_diffuse_transmission } from './khr-materials-diffuse-transmission.js';
 import { KHR_materials_dispersion } from './khr-materials-dispersion.js';
 import { KHR_materials_emissive_strength } from './khr-materials-emissive-strength.js';
 import { KHR_materials_ior } from './khr-materials-ior.js';
@@ -27,6 +28,7 @@ import { KHR_materials_volume } from './khr-materials-volume.js';
 const glbMaterialExtensions = {
     KHR_materials_anisotropy,
     KHR_materials_clearcoat,
+    KHR_materials_diffuse_transmission,
     KHR_materials_dispersion,
     KHR_materials_emissive_strength,
     KHR_materials_ior,

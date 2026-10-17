@@ -63,11 +63,19 @@ export default /* glsl */`
             }
         #endif
 
+        // The normal offset moves the sample off the surface, towards the light. A surface with
+        // diffuse transmission is also lit from behind, so the side facing the light is used
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            vec3 shadowNormal = faceforward(dVertexNormalW, dLightDirNormW, dVertexNormalW);
+        #else
+            vec3 shadowNormal = dVertexNormalW;
+        #endif
+
         // directional shadow cascades
         #if LIGHT{i}TYPE == OMNI
 
             // omni shadows use cubemap and sample by direction
-            vec3 shadowCoord = getShadowSampleCoordOmni{i}(light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, dVertexNormalW);
+            vec3 shadowCoord = getShadowSampleCoordOmni{i}(light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, shadowNormal);
 
         #else
 
@@ -83,9 +91,9 @@ export default /* glsl */`
             #endif
 
             #if LIGHT{i}TYPE == DIRECTIONAL
-                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, vec3(0.0), lightDirW, dLightDirNormW, dVertexNormalW);
+                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, vec3(0.0), lightDirW, dLightDirNormW, shadowNormal);
             #else
-                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, dVertexNormalW);
+                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, shadowNormal);
             #endif
 
         #endif
