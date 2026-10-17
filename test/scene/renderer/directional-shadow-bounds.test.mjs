@@ -190,6 +190,40 @@ describe('Directional shadow bounds', function () {
         expect(project(moved.center).x).to.be.within(0, 1);
     });
 
+    it('renders a cascade cached by shadowUpdateOverrides again when the bounds change', function () {
+        lightEntity.light.shadowBounds = bounds;
+        app.render();
+        expect(renderFace.callCount).to.equal(1);
+
+        // the rendered shadow is cached
+        light.shadowUpdateOverrides = [SHADOWUPDATE_NONE];
+        app.render();
+        expect(renderFace.callCount).to.equal(1);
+
+        const moved = bounds.clone();
+        moved.center.x += 1;
+        lightEntity.light.shadowBounds = moved;
+        app.render();
+        app.render();
+        expect(renderFace.callCount).to.equal(2);
+        expect(project(moved.center).x).to.be.within(0, 1);
+    });
+
+    it('renders a cached shadow again when the bounds from the getter are modified and set again', function () {
+        lightEntity.light.shadowUpdateMode = SHADOWUPDATE_NONE;
+        lightEntity.light.shadowBounds = bounds;
+        app.render();
+        expect(renderFace.callCount).to.equal(1);
+
+        const current = lightEntity.light.shadowBounds;
+        current.center.x += 1;
+        lightEntity.light.shadowBounds = current;
+        app.render();
+        app.render();
+        expect(renderFace.callCount).to.equal(2);
+        expect(project(current.center).x).to.be.within(0, 1);
+    });
+
     it('copies the bounds, and clones them with the entity', function () {
         const source = bounds.clone();
         lightEntity.light.shadowBounds = source;

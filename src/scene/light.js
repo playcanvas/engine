@@ -430,10 +430,15 @@ class Light {
                 this._shadowBounds = value.clone();
                 this._destroyShadowMap();
                 this.updateKey();
-            } else if (!this._shadowBounds.equals(value)) {
+
+            // the bounds returned by the getter could have been modified before they are set again,
+            // so setting them is a change too
+            } else if (value === this._shadowBounds || !this._shadowBounds.equals(value)) {
                 this._shadowBounds.copy(value);
 
-                // a cached shadow renders once for the new bounds
+                // a cached shadow renders once for the new bounds, including a cascade cached by
+                // shadowUpdateOverrides
+                this._shadowCascadesInvalidated = true;
                 if (this.shadowUpdateMode === SHADOWUPDATE_NONE) {
                     this.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                 }
