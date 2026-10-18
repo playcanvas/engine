@@ -229,6 +229,9 @@ data.set('data', {
     skydome: false,
     compact: false,
     antialias: false,
+    // re-evaluate spherical harmonics every frame the camera moves, as with higher SH bands
+    // even a degree of stale view direction is visible
+    colorUpdateAngle: 0,
     orientation: 180,
     tonemapping: TONEMAP_LINEAR,
     grading: {
@@ -254,6 +257,8 @@ applySkydome();
 
 // Apply settings function
 const applySettings = () => {
+    app.scene.gsplat.colorUpdateAngle = data.get('data.colorUpdateAngle');
+
     cameraFrame.rendering.toneMapping = data.get('data.tonemapping');
 
     // Convert exposure EV (F-stops) to brightness multiplier
