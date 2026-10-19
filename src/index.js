@@ -361,6 +361,7 @@ export { SceneDepthReader } from './framework/graphics/scene-depth-reader.js';
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';
 export { dracoInitialize, dracoDecode } from './framework/parsers/draco-decoder.js';
+export { meshoptInitialize } from './framework/parsers/meshopt-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';
