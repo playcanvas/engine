@@ -78,9 +78,6 @@ class ArcShape extends Shape {
             this._createTorusMesh(360)
         ]);
         this.show('sector');
-
-        // update transform
-        this._update();
     }
 
     /**
@@ -184,9 +181,15 @@ class ArcShape extends Shape {
         this._triDataCache[0].fromGeometry(this._createTorusGeometry(this._sectorAngle));
         this._triDataCache[1].fromGeometry(this._createTorusGeometry(360));
 
-        // render
-        this.meshInstances[0].mesh = this._createTorusMesh(this._sectorAngle);
-        this.meshInstances[1].mesh = this._createTorusMesh(360);
+        // render, destroying the replaced meshes
+        const angles = [this._sectorAngle, 360];
+        for (let i = 0; i < angles.length; i++) {
+            const mesh = this.meshInstances[i].mesh;
+            this.meshInstances[i].mesh = this._createTorusMesh(angles[i]);
+            if (mesh && mesh.refCount < 1) {
+                mesh.destroy();
+            }
+        }
     }
 
     /**
