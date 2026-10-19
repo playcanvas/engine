@@ -241,6 +241,27 @@ class Gizmo extends EventHandler {
     _renderUpdate = false;
 
     /**
+     * Internal enabled state requested by the user.
+     *
+     * @private
+     */
+    _enabled = true;
+
+    /**
+     * Internal id of the pointer interacting with the gizmo.
+     *
+     * @private
+     */
+    _pointerId = -1;
+
+    /**
+     * Internal flag to track if the gizmo has been destroyed.
+     *
+     * @private
+     */
+    _destroyed = false;
+
+    /**
      * The graph nodes attached to the gizmo.
      *
      * @type {GraphNode[]}
@@ -289,9 +310,9 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer. This can be provided by the user or will be created
-     * and added to the scene and camera if not provided. Successive gizmos will share the same layer
-     * and will be removed from the camera and scene when the last gizmo is destroyed.
+     * @param {Layer} layer - The render layer. The layer is added to the camera, and gizmos can share
+     * the same layer. It is removed from the camera when the last gizmo using it on that camera is
+     * destroyed or moved to another camera.
      * @param {string} [name] - The name of the gizmo. Defaults to 'gizmo'.
      * @example
      * const gizmo = new Gizmo(camera, layer);
@@ -331,6 +352,7 @@ class Gizmo extends EventHandler {
      * @type {boolean}
      */
     set enabled(state) {
+        this._enabled = state;
         const cameraDist = this.root.getLocalPosition().distance(this.camera.entity.getPosition());
         const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
         if (enabled !== this.root.enabled) {
@@ -373,11 +395,20 @@ class Gizmo extends EventHandler {
         if (this._layer === layer) {
             return;
         }
-        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._releaseCameraLayer();
         this._layer = layer;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
 
-        this.enabled = true;
+        // move the gizmo meshes to the new layer
+        const ids = [layer.id];
+        this.root.forEach((node) => {
+            const { render } = /** @type {Entity} */ (node);
+            if (render) {
+                render.layers = ids;
+            }
+        });
+
+        this.enabled = this._enabled;
     }
 
     /**
@@ -398,11 +429,11 @@ class Gizmo extends EventHandler {
         if (this._camera === camera) {
             return;
         }
-        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
+        this._releaseCameraLayer();
         this._camera = camera;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
 
-        this.enabled = true;
+        this.enabled = this._enabled;
     }
 
     /**
@@ -486,6 +517,12 @@ class Gizmo extends EventHandler {
         if (!this.mouseButtons[e.button]) {
             return;
         }
+
+        // ignore other pointers while one is pressed
+        const { canvas } = this._device;
+        if (e.pointerId !== this._pointerId && canvas.hasPointerCapture(this._pointerId)) {
+            return;
+        }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
             if (this.preventDefault) {
@@ -495,7 +532,7 @@ class Gizmo extends EventHandler {
         }
 
         // capture the pointer during drag
-        const { canvas } = this._device;
+        this._pointerId = e.pointerId;
         canvas.setPointerCapture(e.pointerId);
 
         this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
@@ -507,6 +544,9 @@ class Gizmo extends EventHandler {
      */
     _onPointerMove(e) {
         if (!this.enabled || document.pointerLockElement) {
+            return;
+        }
+        if (e.pointerId !== this._pointerId && this._device.canvas.hasPointerCapture(this._pointerId)) {
             return;
         }
         const selection = this._getSelection(e.offsetX, e.offsetY);
@@ -524,7 +564,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerUp(e) {
-        if (!this.mouseButtons[e.button]) {
+        if (!this.mouseButtons[e.button] || e.pointerId !== this._pointerId) {
             return;
         }
 
@@ -542,6 +582,21 @@ class Gizmo extends EventHandler {
         canvas.releasePointerCapture(e.pointerId);
 
         this.fire(Gizmo.EVENT_POINTERUP, e.offsetX, e.offsetY, selection[0]);
+    }
+
+    /**
+     * Removes a single reference to the gizmo layer from the camera, as other gizmos may share the
+     * layer with the same camera.
+     *
+     * @private
+     */
+    _releaseCameraLayer() {
+        const ids = this._camera.layers.slice();
+        const index = ids.indexOf(this._layer.id);
+        if (index !== -1) {
+            ids.splice(index, 1);
+        }
+        this._camera.layers = ids;
     }
 
     /** @protected */
@@ -617,7 +672,10 @@ class Gizmo extends EventHandler {
         const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
         const dir = v.copy(end).sub(start).normalize();
 
-        const selection = [];
+        /** @type {MeshInstance[] | null} */
+        let best = null;
+        let bestDist = 0;
+        let bestPriority = 0;
         for (let i = 0; i < this.intersectShapes.length; i++) {
             const shape = this.intersectShapes[i];
             if (shape.disabled || !shape.entity.enabled) {
@@ -638,27 +696,22 @@ class Gizmo extends EventHandler {
 
                 for (let k = 0; k < tris.length; k++) {
                     if (tris[k].intersectsRay(ray, hit)) {
-                        selection.push({
-                            dist: triWTM.transformPoint(hit).sub(start).length(),
-                            meshInstances: shape.meshInstances,
-                            priority: priority
-                        });
+                        const dist = triWTM.transformPoint(hit).sub(start).length();
+
+                        // priority decides between prioritized hits, otherwise distance
+                        const wins = !best || (bestPriority !== 0 && priority !== 0 ?
+                            priority > bestPriority : dist < bestDist);
+                        if (wins) {
+                            best = shape.meshInstances;
+                            bestDist = dist;
+                            bestPriority = priority;
+                        }
                     }
                 }
             }
         }
 
-        if (selection.length) {
-            selection.sort((s0, s1) => {
-                if (s0.priority !== 0 && s1.priority !== 0) {
-                    return s1.priority - s0.priority;
-                }
-                return s0.dist - s1.dist;
-            });
-            return selection[0].meshInstances;
-        }
-
-        return [];
+        return best ?? [];
     }
 
     /**
@@ -747,7 +800,15 @@ class Gizmo extends EventHandler {
      * gizmo.destroy();
      */
     destroy() {
+        // destroy can be called again, e.g. by the app destroy event after the user
+        if (this._destroyed) {
+            return;
+        }
+        this._destroyed = true;
+
         this.detach();
+
+        this._releaseCameraLayer();
 
         this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
         this._device.canvas.removeEventListener('pointermove', this._onPointerMove);

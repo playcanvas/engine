@@ -577,7 +577,7 @@ class ScaleGizmo extends TransformGizmo {
             // project to diagonal line
             v1.set(1, 1, 1);
             v1[axis] = 0;
-            point.copy(v1.mulScalar(v1.dot(point)));
+            point.copy(v1.mulScalar(v1.dot(point) / v1.lengthSq()));
             point[axis] = 0;
         }
 

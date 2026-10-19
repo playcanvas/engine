@@ -768,7 +768,7 @@ class TransformGizmo extends Gizmo {
 
         // update shapes
         for (const name in this._shapes) {
-            this._shapes[name].hover(!!this._hoverAxis);
+            this._shapes[name].hover(this._hovering.has(/** @type {GizmoAxis} */ (name)));
         }
     }
 
