@@ -23,6 +23,7 @@ import { Layer } from '../../scene/layer.js';
 const v = new Vec3();
 const position = new Vec3();
 const dir = new Vec3();
+const hit = new Vec3();
 const rotation = new Quat();
 const m1 = new Mat4();
 const m2 = new Mat4();
@@ -523,13 +524,13 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerUp(e) {
-        if (!this.enabled || document.pointerLockElement) {
-            return;
-        }
         if (!this.mouseButtons[e.button]) {
             return;
         }
-        const selection = this._getSelection(e.offsetX, e.offsetY);
+
+        // always end the drag, even if disabled or pointer locked mid-drag
+        const active = this.enabled && !document.pointerLockElement;
+        const selection = active ? this._getSelection(e.offsetX, e.offsetY) : [];
         if (selection[0]) {
             if (this.preventDefault) {
                 e.preventDefault();
@@ -636,9 +637,9 @@ class Gizmo extends EventHandler {
                 ray.direction.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    if (tris[k].intersectsRay(ray, v)) {
+                    if (tris[k].intersectsRay(ray, hit)) {
                         selection.push({
-                            dist: triWTM.transformPoint(v).sub(start).length(),
+                            dist: triWTM.transformPoint(hit).sub(start).length(),
                             meshInstances: shape.meshInstances,
                             priority: priority
                         });

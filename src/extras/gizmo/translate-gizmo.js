@@ -513,6 +513,7 @@ class TranslateGizmo extends TransformGizmo {
                     continue;
                 }
                 v1.copy(translateDelta);
+                v2.set(1, 1, 1);
                 node.parent?.getWorldTransform().getScale(v2);
                 v2.x = 1 / v2.x;
                 v2.y = 1 / v2.y;

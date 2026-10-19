@@ -212,9 +212,9 @@ class ViewCube extends EventHandler {
     set colorNeg(value) {
         this._colorNeg.copy(value);
 
-        this._shapes.px.children[0].setAttribute('fill', this._colorNeg.toString(false));
-        this._shapes.py.children[0].setAttribute('fill', this._colorNeg.toString(false));
-        this._shapes.pz.children[0].setAttribute('fill', this._colorNeg.toString(false));
+        this._shapes.nx.children[0].setAttribute('fill', this._colorNeg.toString(false));
+        this._shapes.ny.children[0].setAttribute('fill', this._colorNeg.toString(false));
+        this._shapes.nz.children[0].setAttribute('fill', this._colorNeg.toString(false));
     }
 
     get colorNeg() {

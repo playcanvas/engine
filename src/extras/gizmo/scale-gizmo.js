@@ -177,13 +177,12 @@ class ScaleGizmo extends TransformGizmo {
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
             // calculate scale delta and update node scales
-            const scaleDelta = delta.copy(point).sub(this._selectionStartPoint);
+            const scaleDelta = delta.copy(point).sub(this._selectionStartPoint).mulScalar(1 / this._scale);
             if (this.snap) {
                 scaleDelta.mulScalar(1 / this.snapIncrement);
                 scaleDelta.round();
                 scaleDelta.mulScalar(this.snapIncrement);
             }
-            scaleDelta.mulScalar(1 / this._scale);
             this._setNodeScales(scaleDelta.add(Vec3.ONE));
         });
 
