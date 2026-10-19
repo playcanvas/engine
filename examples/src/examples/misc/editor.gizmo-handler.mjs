@@ -70,6 +70,16 @@ class GizmoHandler {
         return this.gizmo.size;
     }
 
+    set readout(value) {
+        for (const type in this._gizmos) {
+            this._gizmos[type].readout = value;
+        }
+    }
+
+    get readout() {
+        return this.gizmo.readout;
+    }
+
     /**
      * Adds single node to active gizmo.
      *

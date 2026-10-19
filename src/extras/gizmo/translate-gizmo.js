@@ -164,6 +164,10 @@ class TranslateGizmo extends TransformGizmo {
 
             // hide shapes that are not selected
             this._drag(true);
+
+            if (this._readout) {
+                this._showReadout(this._readoutAxes(Vec3.ZERO));
+            }
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
@@ -175,6 +179,10 @@ class TranslateGizmo extends TransformGizmo {
                 translateDelta.mulScalar(this.snapIncrement);
             }
             this._setNodePositions(translateDelta);
+
+            if (this._readout) {
+                this._showReadout(this._readoutAxes(translateDelta));
+            }
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
