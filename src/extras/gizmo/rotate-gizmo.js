@@ -431,6 +431,33 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
+     * Sets the gizmo render layer.
+     *
+     * @type {Layer}
+     */
+    set layer(layer) {
+        super.layer = layer;
+
+        // the guide lines are not children of the gizmo root
+        const ids = [layer.id];
+        for (let i = 0; i < this._guideAngleLines.length; i++) {
+            const { render } = this._guideAngleLines[i].entity;
+            if (render) {
+                render.layers = ids;
+            }
+        }
+    }
+
+    /**
+     * Gets the gizmo render layer.
+     *
+     * @type {Layer}
+     */
+    get layer() {
+        return super.layer;
+    }
+
+    /**
      * @type {boolean}
      * @deprecated Use {@link rotationMode} instead.
      * @ignore

@@ -255,6 +255,13 @@ class Gizmo extends EventHandler {
     _pointerId = -1;
 
     /**
+     * Internal flag to track if the gizmo has been destroyed.
+     *
+     * @private
+     */
+    _destroyed = false;
+
+    /**
      * The graph nodes attached to the gizmo.
      *
      * @type {GraphNode[]}
@@ -391,6 +398,15 @@ class Gizmo extends EventHandler {
         this._releaseCameraLayer();
         this._layer = layer;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
+
+        // move the gizmo meshes to the new layer
+        const ids = [layer.id];
+        this.root.forEach((node) => {
+            const { render } = /** @type {Entity} */ (node);
+            if (render) {
+                render.layers = ids;
+            }
+        });
 
         this.enabled = this._enabled;
     }
@@ -784,6 +800,12 @@ class Gizmo extends EventHandler {
      * gizmo.destroy();
      */
     destroy() {
+        // destroy can be called again, e.g. by the app destroy event after the user
+        if (this._destroyed) {
+            return;
+        }
+        this._destroyed = true;
+
         this.detach();
 
         this._releaseCameraLayer();
