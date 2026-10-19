@@ -158,7 +158,7 @@ class FramePassLuminanceHistogram extends FramePass {
         sumPass.setTexture('aeRowsTexture', this.rowsTarget.colorBuffer);
 
         // the histogram is read back once the pass rendering it has ended
-        sumPass.after = () => this.readHistogram();
+        sumPass.onAfter = () => this.readHistogram();
 
         this.beforePasses = [meterPass, rowsPass, sumPass];
     }
@@ -254,6 +254,8 @@ class FramePassLuminanceHistogram extends FramePass {
             target.destroy();
         });
         this.sourceTexture = null;
+
+        super.destroy();
     }
 }
 

@@ -122,6 +122,9 @@ class FrameGraph {
             return;
         }
 
+        // a destroyed pass is not used again, see FramePass#destroy
+        Debug.assertDestroyed(renderPass);
+
         // can add or remove before and after passes, and enable or disable them, but not disable the
         // pass itself
         renderPass.frameUpdate();
@@ -191,8 +194,10 @@ class FrameGraph {
 
             const renderTarget = renderPass.renderTarget;
 
-            // if using a target, or null which represents the default back-buffer
-            if (renderTarget !== undefined) {
+            // if using a target, or null which represents the default back-buffer. A pass which does
+            // not execute does not touch its target, so the store request of the next pass using it
+            // goes to the last pass which writes it
+            if (renderTarget !== undefined && renderPass.executeEnabled) {
 
                 // previous pass using the same render target
                 const prevPass = renderTargetMap.get(renderTarget);
@@ -232,6 +237,12 @@ class FrameGraph {
                 continue;
             }
 
+            // a pass which does not execute does not start or end its GPU render pass either, which
+            // the other merged pass would depend on
+            if (!firstPass.executeEnabled || !secondPass.executeEnabled) {
+                continue;
+            }
+
             // do not merge if the second pass clears any of the attachments
             if (secondPass.depthStencilOps.clearDepth ||
                 secondPass.depthStencilOps.clearStencil ||
@@ -246,6 +257,12 @@ class FrameGraph {
 
             // second pass cannot contain before passes
             if (secondPass.beforePasses.length > 0 || secondPass.internalBeforePasses.length > 0) {
+                continue;
+            }
+
+            // the callbacks running between the passes run outside of a GPU render pass, for example
+            // to read back what the first pass rendered
+            if (firstPass.onAfter || secondPass.onBefore) {
                 continue;
             }
 

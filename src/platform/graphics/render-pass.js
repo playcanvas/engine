@@ -140,6 +140,8 @@ class RenderPass extends FramePass {
      * - `null`: render pass renders to the backbuffer
      * - Otherwise, renders to the provided RT.
      *
+     * The render pass does not own the render target, and does not destroy it.
+     *
      * @type {RenderTarget|null|undefined}
      */
     renderTarget;
@@ -216,7 +218,7 @@ class RenderPass extends FramePass {
      * @param {RenderTarget|null} [renderTarget] - The render target to render into (output). This
      * function should be called only for render passes which use render target, or passes which
      * render directly into the default framebuffer, in which case a null or undefined render
-     * target is expected.
+     * target is expected. The render pass does not own the render target.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {Texture} [options.resizeSource] - A texture to use as a source for the automatic
      * render target resize operation. If not provided, no automatic resizing takes place.
@@ -373,6 +375,11 @@ class RenderPass extends FramePass {
             });
 
             this.before();
+            this.onBefore?.(this);
+
+            // the frame graph merged this pass with a neighbouring one, sharing its GPU render pass,
+            // only if both execute
+            Debug.assert(this.executeEnabled || !(this._skipStart || this._skipEnd), `The render pass '${this.name}' was merged with a neighbouring pass, but its executeEnabled was set to false after the frame graph was compiled, for example in its before() or onBefore. Set it before the frame renders, at the latest in its frameUpdate.`, this);
 
             if (this.executeEnabled) {
 
@@ -388,6 +395,7 @@ class RenderPass extends FramePass {
             }
 
             this.after();
+            this.onAfter?.(this);
 
             device.renderPassIndex++;
         }

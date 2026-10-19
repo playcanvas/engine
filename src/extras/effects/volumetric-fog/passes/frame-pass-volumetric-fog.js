@@ -52,6 +52,10 @@ const _cookieChannelMasks = {
 // mask assigned for a light which does not use a cookie, as the uniform is still declared
 const _cookieChannelMaskNone = [0, 0, 0, 0];
 
+// the cascade distances of a directional shadow with shadow bounds, which covers the bounds at any
+// distance from the camera
+const _boundsCascadeDistances = new Float32Array([1e30, 1e30, 1e30, 1e30]);
+
 /**
  * Render pass implementing the volumetric fog raymarch. Renders in-scattered light (rgb) and
  * transmittance (a) into a reduced resolution texture, sampling the directional light's cascaded
@@ -217,14 +221,17 @@ class RenderPassVolumetricFog extends RenderPassShaderQuad {
             const lightRenderData = this.lightRenderData;
             const biases = light._getUniformBiasValues(lightRenderData);
 
+            // a shadow with shadow bounds covers the bounds at any distance from the camera
+            const bounds = light.shadowBounds;
+
             this.shadowMapId.setValue(lightRenderData.shadowBuffer);
             this.shadowMatrixPaletteId.setValue(light._shadowMatrixPalette);
-            this.shadowCascadeDistancesId.setValue(light._shadowCascadeDistances);
+            this.shadowCascadeDistancesId.setValue(bounds ? _boundsCascadeDistances : light._shadowCascadeDistances);
 
-            this._shadowParams[0] = light.numCascades;
+            this._shadowParams[0] = light.shadowCascadeCount;
             this._shadowParams[1] = biases.bias;
             this._shadowParams[2] = 0;
-            this._shadowParams[3] = light.shadowDistance;
+            this._shadowParams[3] = bounds ? 1e30 : light.shadowDistance;
             this.shadowParamsId.setValue(this._shadowParams);
         }
 
@@ -913,6 +920,8 @@ class FramePassVolumetricFog extends FramePass {
             this.fogRenderTarget = null;
             this.fogTexture = null;
         }
+
+        super.destroy();
     }
 
     /**
@@ -948,7 +957,8 @@ class FramePassVolumetricFog extends FramePass {
         let pcf = false;
         let lightRenderData = null;
         if (light && light.castShadows && light.shadowIntensity > 0) {
-            lightRenderData = light.getRenderData(camera, 0);
+            // a light with shadow bounds renders one shadow for all cameras
+            lightRenderData = light.getRenderData(light.shadowBounds ? null : camera, 0);
             if (lightRenderData.shadowBuffer) {
                 shadows = true;
                 pcf = !!shadowTypeInfo.get(light._shadowType)?.pcf;

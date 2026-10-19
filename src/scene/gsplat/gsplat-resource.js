@@ -22,7 +22,7 @@ const getSHData = (gsplatData, numCoeffs) => {
 
 /** @ignore */
 class GSplatResource extends GSplatResourceBase {
-    /** @type {0 | 1 | 2 | 3} */
+    /** @type {0 | 1 | 2 | 3 | 4} */
     shBands;
 
     /**
@@ -53,6 +53,11 @@ class GSplatResource extends GSplatResourceBase {
                 if (this.shBands > 2) {
                     streams.push({ name: 'splatSH_8to11', format: PIXELFORMAT_RGBA32U });
                     streams.push({ name: 'splatSH_12to15', format: PIXELFORMAT_RGBA32U });
+                    if (this.shBands > 3) {
+                        streams.push({ name: 'splatSH_16to19', format: PIXELFORMAT_RGBA32U });
+                        streams.push({ name: 'splatSH_20to23', format: PIXELFORMAT_RGBA32U });
+                        streams.push({ name: 'splatSH_24', format: PIXELFORMAT_R32U });
+                    }
                 } else {
                     streams.push({ name: 'splatSH_8to11', format: PIXELFORMAT_R32U });
                 }
@@ -172,16 +177,23 @@ class GSplatResource extends GSplatResourceBase {
         const sh4to7Texture = this.streams.getTexture('splatSH_4to7');
         const sh8to11Texture = this.streams.getTexture('splatSH_8to11');
         const sh12to15Texture = this.streams.getTexture('splatSH_12to15');
+        const sh16to19Texture = this.streams.getTexture('splatSH_16to19');
+        const sh20to23Texture = this.streams.getTexture('splatSH_20to23');
+        const sh24Texture = this.streams.getTexture('splatSH_24');
 
         const sh1to3Data = sh1to3Texture.lock();
         const sh4to7Data = sh4to7Texture?.lock();
         const sh8to11Data = sh8to11Texture?.lock();
         const sh12to15Data = sh12to15Texture?.lock();
+        const sh16to19Data = sh16to19Texture?.lock();
+        const sh20to23Data = sh20to23Texture?.lock();
+        const sh24Data = sh24Texture?.lock();
 
         const numCoeffs = {
             1: 3,
             2: 8,
-            3: 15
+            3: 15,
+            4: 24
         }[this.shBands];
 
         const src = getSHData(gsplatData, numCoeffs * 3);
@@ -244,6 +256,20 @@ class GSplatResource extends GSplatResourceBase {
                     sh12to15Data[i * 4 + 1] = c[36] << 21 | c[37] << 11 | c[38];
                     sh12to15Data[i * 4 + 2] = c[39] << 21 | c[40] << 11 | c[41];
                     sh12to15Data[i * 4 + 3] = c[42] << 21 | c[43] << 11 | c[44];
+
+                    if (this.shBands > 3) {
+                        sh16to19Data[i * 4 + 0] = c[45] << 21 | c[46] << 11 | c[47];
+                        sh16to19Data[i * 4 + 1] = c[48] << 21 | c[49] << 11 | c[50];
+                        sh16to19Data[i * 4 + 2] = c[51] << 21 | c[52] << 11 | c[53];
+                        sh16to19Data[i * 4 + 3] = c[54] << 21 | c[55] << 11 | c[56];
+
+                        sh20to23Data[i * 4 + 0] = c[57] << 21 | c[58] << 11 | c[59];
+                        sh20to23Data[i * 4 + 1] = c[60] << 21 | c[61] << 11 | c[62];
+                        sh20to23Data[i * 4 + 2] = c[63] << 21 | c[64] << 11 | c[65];
+                        sh20to23Data[i * 4 + 3] = c[66] << 21 | c[67] << 11 | c[68];
+
+                        sh24Data[i] = c[69] << 21 | c[70] << 11 | c[71];
+                    }
                 } else {
                     sh8to11Data[i] = c[21] << 21 | c[22] << 11 | c[23];
                 }
@@ -254,6 +280,9 @@ class GSplatResource extends GSplatResourceBase {
         sh4to7Texture?.unlock();
         sh8to11Texture?.unlock();
         sh12to15Texture?.unlock();
+        sh16to19Texture?.unlock();
+        sh20to23Texture?.unlock();
+        sh24Texture?.unlock();
     }
 }
 

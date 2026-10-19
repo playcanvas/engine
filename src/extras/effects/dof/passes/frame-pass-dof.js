@@ -93,6 +93,8 @@ class FramePassDof extends FramePass {
         this.cocRT = null;
         this.farRt = null;
         this.blurRt = null;
+
+        super.destroy();
     }
 
     destroyRenderPasses() {

@@ -362,20 +362,21 @@ class GSplatData {
         return false;
     }
 
-    // return the number of spherical harmonic bands present. value will be between 0 and 3 inclusive.
+    // return the number of spherical harmonic bands present. value will be between 0 and 4 inclusive.
     get shBands() {
         const numProps = () => {
-            for (let i = 0; i < 45; ++i) {
+            for (let i = 0; i < 72; ++i) {
                 if (!this.getProp(`f_rest_${i}`)) {
                     return i;
                 }
             }
-            return 45;
+            return 72;
         };
         const sizes = {
             9: 1,
             24: 2,
-            45: 3
+            45: 3,
+            72: 4
         };
         return sizes[numProps()] ?? 0;
     }

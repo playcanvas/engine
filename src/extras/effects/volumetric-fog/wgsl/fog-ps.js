@@ -39,7 +39,9 @@ export default /* wgsl */`
             let cascadeIndex: i32 = i32(min(dot(comparisons, vec4f(1.0)), uniform.uFogShadowParams.x - 1.0));
 
             let shadowCoord: vec3f = (uniform.uFogShadowMatrixPalette[cascadeIndex] * vec4f(worldPos, 1.0)).xyz;
-            let z: f32 = shadowCoord.z - uniform.uFogShadowParams.y;
+            // the biased depth beyond the far plane of the shadow stays below the cleared depth of the
+            // shadow map, so only the casters in the shadow map shadow it
+            let z: f32 = min(shadowCoord.z - uniform.uFogShadowParams.y, 0.9999);
 
             #ifdef FOG_SHADOW_PCF
                 // hardware comparison on the depth format shadow map

@@ -11,7 +11,7 @@ import { FramePass } from './frame-pass.js';
  * process its scene depth and color maps in the same frame.
  *
  * Each compute instance is dispatched with the dispatch size and parameters set on it, typically
- * set before the frame renders, or in {@link ComputePass#onBefore}. The pass executes at most once
+ * set before the frame renders, or in {@link FramePass#onBefore}. The pass executes at most once
  * in a frame. When the frame renders multiple XR views, {@link ComputePass#xrViewIndex} selects
  * the view it executes in. As a compute instance is dispatched at most once in a frame, dispatching
  * for several views needs a compute pass for each, with separate compute instances.
@@ -26,24 +26,6 @@ class ComputePass extends FramePass {
      * @type {Compute[]}
      */
     computes;
-
-    /**
-     * Called when the pass executes, before it dispatches its computes. Work recorded here, such
-     * as clearing a storage buffer the computes write to, executes right before the dispatch.
-     *
-     * @type {((pass: ComputePass) => void)|null}
-     */
-    onBefore = null;
-
-    /**
-     * Called when the pass executes, after it dispatches its computes. The results the computes
-     * write can be read back here, as a read records its copy when it is requested, and so right
-     * after the dispatch. Reads should not be immediate, as that submits the work of the frame
-     * recorded so far.
-     *
-     * @type {((pass: ComputePass) => void)|null}
-     */
-    onAfter = null;
 
     /**
      * @type {number}
@@ -99,10 +81,6 @@ class ComputePass extends FramePass {
         }
     }
 
-    before() {
-        this.onBefore?.(this);
-    }
-
     execute() {
         const { computes } = this;
         if (computes.length) {
@@ -110,14 +88,10 @@ class ComputePass extends FramePass {
         }
     }
 
-    after() {
-        this.onAfter?.(this);
-    }
-
     destroy() {
         this.computes = [];
-        this.onBefore = null;
-        this.onAfter = null;
+
+        super.destroy();
     }
 }
 

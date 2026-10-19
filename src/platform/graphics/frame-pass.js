@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { TRACEID_RENDER_PASS } from '../../core/constants.js';
 
@@ -49,7 +49,8 @@ class FramePass {
 
     /**
      * True if the frame pass is enabled and execute function will be called. Note that before and
-     * after functions are called regardless of this flag.
+     * after functions are called regardless of this flag. Set it before the frame renders, at the
+     * latest in frameUpdate, as the frame graph decides which passes to merge from it.
      */
     executeEnabled = true;
 
@@ -77,18 +78,45 @@ class FramePass {
 
     /**
      * Frame passes which need to be executed before this pass. The engine does not change this
-     * list, so the passes in it execute every frame this pass executes.
+     * list, so the passes in it execute every frame this pass executes. This pass does not own
+     * them, and does not destroy them: whoever adds a pass to the list destroys it.
      *
      * @type {FramePass[]}
      */
     beforePasses = [];
 
     /**
-     * Frame passes which need to be executed after this pass.
+     * Frame passes which need to be executed after this pass. This pass does not own them, and
+     * does not destroy them: whoever adds a pass to the list destroys it.
      *
      * @type {FramePass[]}
      */
     afterPasses = [];
+
+    /**
+     * Called when the pass renders, right before it executes: after {@link FramePass#before}, and
+     * for a render pass before its GPU render pass starts. Work recorded here, such as setting the
+     * parameters of the pass, or clearing a buffer it writes to, executes right before the pass.
+     * Like before, it is called even if {@link FramePass#executeEnabled} is false, but not when the
+     * pass is disabled. A render pass with this callback is not merged with the pass before it into
+     * a single GPU render pass, so the callback runs outside of one.
+     *
+     * @type {((pass: this) => void)|null}
+     */
+    onBefore = null;
+
+    /**
+     * Called when the pass renders, right after it executes: for a render pass once its GPU render
+     * pass has ended, and after {@link FramePass#after}. The results the pass writes can be read
+     * back here, as a read records its copy when it is requested, and so right after the pass.
+     * Reads should not be immediate, as that submits the work of the frame recorded so far. Like
+     * after, it is called even if {@link FramePass#executeEnabled} is false, but not when the pass
+     * is disabled. A render pass with this callback is not merged with the pass after it into a
+     * single GPU render pass, so the callback runs outside of one.
+     *
+     * @type {((pass: this) => void)|null}
+     */
+    onAfter = null;
 
     /**
      * Creates an instance of the FramePass.
@@ -167,7 +195,17 @@ class FramePass {
     after() {
     }
 
+    /**
+     * Releases the resources the pass created. A pass owns only what it creates: it does not
+     * destroy its {@link FramePass#beforePasses} and {@link FramePass#afterPasses}, which are
+     * destroyed by whoever added them. The code which creates a pass destroys it, once, and the
+     * pass is not used after that - in debug builds, adding a destroyed pass to a frame reports an
+     * error. Subclasses releasing their own resources call `super.destroy()`.
+     */
     destroy() {
+        this.onBefore = null;
+        this.onAfter = null;
+        DebugHelper.setDestroyed(this);
     }
 
     render() {
@@ -178,10 +216,12 @@ class FramePass {
             });
 
             this.before();
+            this.onBefore?.(this);
             if (this.executeEnabled) {
                 this.execute();
             }
             this.after();
+            this.onAfter?.(this);
             this.device.renderPassIndex++;
         }
     }
