@@ -177,7 +177,6 @@ light.setEulerAngles(0, 0, -60);
 // Gizmos
 let skipObserverFire = false;
 const gizmoHandler = new GizmoHandler(camera.camera);
-gizmoHandler.readout = true;
 const setGizmoControls = () => {
     skipObserverFire = true;
     data.set('gizmo', {

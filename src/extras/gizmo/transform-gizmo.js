@@ -246,6 +246,8 @@ class TransformGizmo extends Gizmo {
     constructor(camera, layer, name = 'gizmo:transform') {
         super(camera, layer, name);
 
+        this.readout = true;
+
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             const shape = this._shapeMap.get(meshInstance);
             if (shape?.disabled) {
@@ -334,7 +336,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Sets whether to show the transform delta in a text readout just below the gizmo while
      * dragging. The readout is a `div` with the class `gizmo-readout`, added to the document body.
-     * Defaults to false.
+     * Defaults to true.
      *
      * @type {boolean}
      */
