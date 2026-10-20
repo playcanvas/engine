@@ -2,6 +2,7 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
@@ -14,6 +15,7 @@ import {
     color4from3
 } from './color.js';
 import { Gizmo } from './gizmo.js';
+import { Readout } from './readout.js';
 import { Debug } from '../../core/debug.js';
 
 /**
@@ -40,6 +42,7 @@ const point = new Vec3();
 const ray = new Ray();
 const plane = new Plane();
 const color = new Color();
+const bounds = new BoundingBox();
 
 // constants
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
@@ -72,16 +75,35 @@ class TransformGizmo extends Gizmo {
     static EVENT_TRANSFORMSTART = 'transform:start';
 
     /**
-     * Fired during the transformation.
+     * Fired during the transformation, with the dragged point on the selected axis or plane and
+     * the screen position of the pointer.
      *
      * @event
      * @example
      * const gizmo = new TransformGizmo(camera, layer);
-     * gizmo.on('transform:move', (pointDelta, angleDelta) => {
-     *     console.log(`Transformation moved by ${pointDelta} (angle: ${angleDelta})`);
+     * gizmo.on('transform:move', (point, x, y) => {
+     *     console.log(`Transformation moved to ${point} (screen: ${x}, ${y})`);
      * });
      */
     static EVENT_TRANSFORMMOVE = 'transform:move';
+
+    /**
+     * Fired with the value shown in the readout when the transformation starts and on each step of
+     * it, whether or not {@link TransformGizmo#readout} is enabled, to show the value in a custom
+     * UI. The handler is passed the selected axis, whether it is a plane, which moves along the
+     * other two axes, and the value: the translation as a `Vec3` for a translate gizmo, the scale
+     * factor as a `Vec3` for a scale gizmo, or the angle in degrees for a rotate gizmo. The `Vec3`
+     * is reused, so copy it to keep it.
+     *
+     * @event
+     * @example
+     * const gizmo = new TranslateGizmo(camera, layer);
+     * gizmo.readout = false;
+     * gizmo.on('transform:readout', (axis, isPlane, value) => {
+     *     console.log(`Transformation ${axis}: ${value}`);
+     * });
+     */
+    static EVENT_TRANSFORMREADOUT = 'transform:readout';
 
     /**
      * Fired when the transformation has ended.
@@ -201,6 +223,14 @@ class TransformGizmo extends Gizmo {
     _selectionStartPoint = new Vec3();
 
     /**
+     * Internal readout showing the transform delta while dragging.
+     *
+     * @type {Readout | null}
+     * @protected
+     */
+    _readout = null;
+
+    /**
      * Whether snapping is enabled. Defaults to false.
      */
     snap = false;
@@ -228,6 +258,8 @@ class TransformGizmo extends Gizmo {
      */
     constructor(camera, layer, name = 'gizmo:transform') {
         super(camera, layer, name);
+
+        this.readout = true;
 
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             const shape = this._shapeMap.get(meshInstance);
@@ -291,6 +323,10 @@ class TransformGizmo extends Gizmo {
             this.fire(TransformGizmo.EVENT_TRANSFORMEND);
         });
 
+        this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+            this._readout?.hide();
+        });
+
         this.on(Gizmo.EVENT_NODESDETACH, () => {
             this._hoverAxis = '';
             this._hoverIsPlane = false;
@@ -306,6 +342,36 @@ class TransformGizmo extends Gizmo {
      */
     get theme() {
         return this._theme;
+    }
+
+    /**
+     * Sets whether to show the transform delta in a text readout just below the gizmo while
+     * dragging. The readout is a `div` with the class `gizmo-readout`, added to the document body.
+     * To show the value in a custom UI instead, turn this off and listen to
+     * {@link TransformGizmo.EVENT_TRANSFORMREADOUT}. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set readout(value) {
+        if (value === !!this._readout) {
+            return;
+        }
+        if (!value) {
+            this._readout?.destroy();
+            this._readout = null;
+            return;
+        }
+        this._readout = new Readout(this._camera);
+    }
+
+    /**
+     * Gets whether to show the transform delta in a text readout just below the gizmo while
+     * dragging.
+     *
+     * @type {boolean}
+     */
+    get readout() {
+        return !!this._readout;
     }
 
     /**
@@ -457,6 +523,97 @@ class TransformGizmo extends Gizmo {
             return false;
         }
         return meshInstance.node.name.indexOf('plane') !== -1;
+    }
+
+    /**
+     * Formats an axis letter in the axis color.
+     *
+     * @param {GizmoAxis} axis - The axis.
+     * @returns {string} The label markup.
+     * @protected
+     */
+    _readoutLabel(axis) {
+        return `<b style="color: ${this._theme.shapeBase[axis].toString(false)}">${axis.toUpperCase()}</b>`;
+    }
+
+    /**
+     * Formats a delta with an explicit sign, so it does not read as an absolute value. A value
+     * that rounds to zero is shown as positive.
+     *
+     * @param {number} value - The value.
+     * @param {number} digits - The number of digits after the decimal point.
+     * @returns {string} The signed value.
+     * @protected
+     */
+    _readoutDelta(value, digits) {
+        const abs = Math.abs(value).toFixed(digits);
+        return `${value < 0 && +abs ? '-' : '+'}${abs}`;
+    }
+
+    /**
+     * Formats a value for each of the axes being dragged.
+     *
+     * @param {Vec3} values - The value for each axis.
+     * @param {boolean} [factor] - Whether the values are factors rather than deltas. Defaults to
+     * false.
+     * @returns {string} The readout markup.
+     * @protected
+     */
+    _readoutAxes(values, factor = false) {
+        const axis = this._selectedAxis;
+        const parts = [];
+        for (let i = 0; i < AXES.length; i++) {
+            const a = AXES[i];
+            if (axis === 'xyz' || (this._selectedIsPlane ? a !== axis : a === axis)) {
+                const value = factor ? `×${values[a].toFixed(2)}` : this._readoutDelta(values[a], 2);
+                parts.push(`${this._readoutLabel(a)} ${value}`);
+            }
+        }
+        return parts.join('  ');
+    }
+
+    /**
+     * Shows the readout centered below the visible gizmo shapes, which while dragging is the
+     * dragged handle, or below a sphere around the gizmo when given its radius.
+     *
+     * @param {string} html - The readout markup.
+     * @param {number} [radius] - The world radius of a sphere around the gizmo to sit below, for
+     * shapes that turn while dragging. Defaults to 0, using the visible shapes.
+     * @protected
+     */
+    _showReadout(html, radius = 0) {
+        if (radius > 0) {
+            this._readout?.showBelowSphere(html, this.root.getPosition(), radius);
+            return;
+        }
+
+        let found = false;
+        for (const key in this._shapes) {
+            const shape = this._shapes[key];
+            if (!shape.entity.enabled) {
+                continue;
+            }
+            for (let i = 0; i < shape.meshInstances.length; i++) {
+                const instance = shape.meshInstances[i];
+                if (!instance.visible) {
+                    continue;
+                }
+                if (found) {
+                    bounds.add(instance.aabb);
+                    continue;
+                }
+                bounds.copy(instance.aabb);
+                found = true;
+            }
+        }
+
+        // with every shape hidden while dragging, sit below the gizmo center
+        if (!found) {
+            bounds.center.copy(this.root.getPosition());
+            bounds.halfExtents.set(0, 0, 0);
+        }
+
+        this._readout?.showBelowBox(html, bounds);
     }
 
     /**
@@ -790,6 +947,8 @@ class TransformGizmo extends Gizmo {
     /** @override */
     destroy() {
         super.destroy();
+
+        this.readout = false;
 
         for (const key in this._shapes) {
             this._shapes[key].destroy();

@@ -164,6 +164,8 @@ class TranslateGizmo extends TransformGizmo {
 
             // hide shapes that are not selected
             this._drag(true);
+
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, Vec3.ZERO);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
@@ -175,6 +177,15 @@ class TranslateGizmo extends TransformGizmo {
                 translateDelta.mulScalar(this.snapIncrement);
             }
             this._setNodePositions(translateDelta);
+
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, translateDelta);
+        });
+
+        this.on(TransformGizmo.EVENT_TRANSFORMREADOUT, (_axis, _isPlane, value) => {
+            if (!this._readout) {
+                return;
+            }
+            this._showReadout(this._readoutAxes(value));
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {

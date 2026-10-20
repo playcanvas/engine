@@ -173,6 +173,8 @@ class ScaleGizmo extends TransformGizmo {
 
             // hide shapes that are not selected
             this._drag(true);
+
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, Vec3.ONE);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
@@ -184,6 +186,15 @@ class ScaleGizmo extends TransformGizmo {
                 scaleDelta.mulScalar(this.snapIncrement);
             }
             this._setNodeScales(scaleDelta.add(Vec3.ONE));
+
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, scaleDelta);
+        });
+
+        this.on(TransformGizmo.EVENT_TRANSFORMREADOUT, (_axis, _isPlane, value) => {
+            if (!this._readout) {
+                return;
+            }
+            this._showReadout(this._readoutAxes(value, true));
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
