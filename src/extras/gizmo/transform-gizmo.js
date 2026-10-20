@@ -49,8 +49,6 @@ const down = new Vec3();
 
 // constants
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
-
-// pixels between the readout and the gizmo shapes above it
 const READOUT_GAP = 6;
 
 /**

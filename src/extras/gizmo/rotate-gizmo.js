@@ -29,8 +29,6 @@ const color = new Color();
 
 // constants
 const RING_FACING_EPSILON = 1e-4;
-
-// opacity of the swept angle sector, multiplied by the number of turns it covers
 const SECTOR_ALPHA = 0.4;
 const UPDATE_EPSILON = 1e-6;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
@@ -602,8 +600,8 @@ class RotateGizmo extends TransformGizmo {
             this._guideAngleLines[0].entity.enabled = true;
             this._guideAngleLines[1].entity.enabled = true;
 
-            // as in Blender, at most one turn is filled: each full turn adds a step of opacity to
-            // the whole circle, and the swept part one step more
+            // at most one turn is filled: each full turn adds a step of opacity to the whole
+            // circle, and the swept part one step more
             const angle = this._guideAngle;
             const turns = Math.floor(Math.abs(angle) / 360);
             const swept = angle % 360;
