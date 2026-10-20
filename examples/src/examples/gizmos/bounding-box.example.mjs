@@ -119,8 +119,10 @@ app.scene.layers.push(layer);
 const gizmo = new BoundingBoxGizmo(camera.camera, layer);
 gizmo.attach(box);
 data.set('gizmo', {
-    color: gizmo.color.toArray(),
-    occludedColor: gizmo.occludedColor.toArray(),
+    theme: {
+        base: gizmo.theme.base.toArray(),
+        occluded: gizmo.theme.occluded.toArray()
+    },
     armLength: gizmo.armLength,
     armThickness: gizmo.armThickness,
     padding: gizmo.padding
@@ -134,8 +136,9 @@ gridEntity.addComponent('script');
 gridEntity.script.create(Grid);
 
 // Controls hook
+const tmpC = new Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-    const [category, key] = path.split('.');
+    const [category, key, part] = path.split('.');
     switch (category) {
         case 'camera': {
             switch (key) {
@@ -149,8 +152,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             break;
         }
         case 'gizmo': {
-            if (key === 'color' || key === 'occludedColor') {
-                gizmo[key].fromArray(value);
+            if (key === 'theme') {
+                if (part) {
+                    gizmo.setTheme({ [part]: tmpC.fromArray(value) });
+                }
                 return;
             }
             // @ts-ignore

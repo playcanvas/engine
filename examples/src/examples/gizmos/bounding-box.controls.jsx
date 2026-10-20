@@ -25,18 +25,18 @@ export function Controls({ observer }) {
     return (
         <>
             <Panel headerText='Theme'>
-                <LabelGroup text='Color'>
+                <LabelGroup text='Base'>
                     <ColorPicker
                         channels={4}
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.color' }}
+                        link={{ observer, path: 'gizmo.theme.base' }}
                     />
                 </LabelGroup>
-                <LabelGroup text='Occluded Color'>
+                <LabelGroup text='Occluded'>
                     <ColorPicker
                         channels={4}
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.occludedColor' }}
+                        link={{ observer, path: 'gizmo.theme.occluded' }}
                     />
                 </LabelGroup>
             </Panel>

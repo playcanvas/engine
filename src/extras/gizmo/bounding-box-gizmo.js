@@ -17,6 +17,13 @@ import { unlitShader } from './shaders.js';
  * @import { Layer } from '../../scene/layer.js'
  */
 
+/**
+ * @typedef {object} BoundingBoxGizmoTheme
+ * @property {Color} base - The color of the parts of the box that are in view.
+ * @property {Color} occluded - The color of the box drawn with no depth test, which shows where
+ * the scene hides it.
+ */
+
 // temporary variables
 const tmpBox = new BoundingBox();
 const tmpV1 = new Vec3();
@@ -33,11 +40,12 @@ const AXES = /** @type {const} */ (['x', 'y', 'z']);
  * Nothing is drawn while none of them has anything to bound.
  *
  * The arms of the brackets are {@link armLength} long and {@link armThickness} pixels thick. They
- * are drawn twice: in {@link occludedColor} with no depth test, then in {@link color} depth
- * tested against what was rendered before the gizmo's layer, so the parts hidden behind the
+ * are drawn twice: in the theme's `occluded` color with no depth test, then in its `base` color
+ * depth tested against what was rendered before the gizmo's layer, so the parts hidden behind the
  * scene show faintly. That needs a layer which keeps the scene's depth, unlike
  * the one made by {@link Gizmo.createLayer}, which clears it so transform handles are never
- * hidden; in such a layer the whole box shows in {@link color}.
+ * hidden; in such a layer the whole box shows in the `base` color. The colors are set with
+ * {@link setTheme}.
  *
  * ```javascript
  * // Create a layer drawn after the scene, keeping its depth
@@ -58,19 +66,15 @@ const AXES = /** @type {const} */ (['x', 'y', 'z']);
  */
 class BoundingBoxGizmo extends Gizmo {
     /**
-     * The color of the parts of the box that are in view. Defaults to white.
+     * Internal theme.
      *
-     * @type {Color}
+     * @type {BoundingBoxGizmoTheme}
+     * @private
      */
-    color = new Color(1, 1, 1, 1);
-
-    /**
-     * The color of the box drawn with no depth test, which shows where the scene hides it.
-     * Defaults to white at 0.2 alpha.
-     *
-     * @type {Color}
-     */
-    occludedColor = new Color(1, 1, 1, 0.2);
+    _theme = {
+        base: Color.WHITE.clone(),
+        occluded: new Color(1, 1, 1, 0.2)
+    };
 
     /**
      * The length of each corner bracket arm, as a fraction of half the edge it runs along, so 1
@@ -195,6 +199,31 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
+     * Gets the current theme for the gizmo.
+     *
+     * @type {BoundingBoxGizmoTheme}
+     */
+    get theme() {
+        return this._theme;
+    }
+
+    /**
+     * Sets the theme or partial theme for the gizmo.
+     *
+     * @param {Partial<BoundingBoxGizmoTheme>} partial - The partial theme to set.
+     * @example
+     * gizmo.setTheme({ occluded: new Color(1, 1, 1, 0.5) });
+     */
+    setTheme(partial) {
+        if (partial?.base instanceof Color) {
+            this._theme.base.copy(partial.base);
+        }
+        if (partial?.occluded instanceof Color) {
+            this._theme.occluded.copy(partial.occluded);
+        }
+    }
+
+    /**
      * @param {boolean} depthTest - Whether the material is depth tested.
      * @returns {ShaderMaterial} The material.
      * @private
@@ -292,8 +321,8 @@ class BoundingBoxGizmo extends Gizmo {
         const { center: c, halfExtents: h } = this._bounds;
         h.addScalar(this.padding);
 
-        this._occludedMaterial.setParameter('uColor', this.occludedColor.toArray(this._occludedColorData));
-        this._material.setParameter('uColor', this.color.toArray(this._colorData));
+        this._occludedMaterial.setParameter('uColor', this._theme.occluded.toArray(this._occludedColorData));
+        this._material.setParameter('uColor', this._theme.base.toArray(this._colorData));
 
         // world size of a pixel, per unit of view depth when in perspective
         const camera = this._camera;
