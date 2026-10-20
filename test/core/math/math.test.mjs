@@ -324,6 +324,25 @@ describe('math', function () {
             expect(math.smootherstep(0, 10, 10)).to.equal(1);
         });
 
+        it('clamps x outside the range', function () {
+            expect(math.smootherstep(0, 10, -5)).to.equal(0);
+            expect(math.smootherstep(0, 10, 15)).to.equal(1);
+        });
+
+        it('returns a falling ramp when min is greater than max', function () {
+            expect(math.smootherstep(10, 0, 15)).to.equal(0);
+            expect(math.smootherstep(10, 0, 5)).to.equal(0.5);
+            expect(math.smootherstep(10, 0, -5)).to.equal(1);
+            expect(math.smootherstep(-0.3, -0.6, -0.2)).to.equal(0);
+            expect(math.smootherstep(-0.3, -0.6, -0.7)).to.equal(1);
+        });
+
+        it('returns a step when min equals max', function () {
+            expect(math.smootherstep(5, 5, 4)).to.equal(0);
+            expect(math.smootherstep(5, 5, 5)).to.equal(0);
+            expect(math.smootherstep(5, 5, 6)).to.equal(1);
+        });
+
     });
 
     describe('#smoothstep', function () {
@@ -338,6 +357,25 @@ describe('math', function () {
 
         it('returns 1 when x equals b', function () {
             expect(math.smoothstep(0, 10, 10)).to.equal(1);
+        });
+
+        it('clamps x outside the range', function () {
+            expect(math.smoothstep(0, 10, -5)).to.equal(0);
+            expect(math.smoothstep(0, 10, 15)).to.equal(1);
+        });
+
+        it('returns a falling ramp when min is greater than max', function () {
+            expect(math.smoothstep(10, 0, 15)).to.equal(0);
+            expect(math.smoothstep(10, 0, 5)).to.equal(0.5);
+            expect(math.smoothstep(10, 0, -5)).to.equal(1);
+            expect(math.smoothstep(-0.3, -0.6, -0.2)).to.equal(0);
+            expect(math.smoothstep(-0.3, -0.6, -0.7)).to.equal(1);
+        });
+
+        it('returns a step when min equals max', function () {
+            expect(math.smoothstep(5, 5, 4)).to.equal(0);
+            expect(math.smoothstep(5, 5, 5)).to.equal(0);
+            expect(math.smoothstep(5, 5, 6)).to.equal(1);
         });
 
     });
