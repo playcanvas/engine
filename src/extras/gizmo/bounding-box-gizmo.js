@@ -51,6 +51,8 @@ const AXES = /** @type {const} */ (['x', 'y', 'z']);
  */
 class BoundingBoxGizmo extends Gizmo {
     /**
+     * Internal theme.
+     *
      * @type {BoundingBoxGizmoTheme}
      * @private
      */
@@ -80,10 +82,20 @@ class BoundingBoxGizmo extends Gizmo {
      */
     armThickness = 2;
 
-    /** @private */
+    /**
+     * The bounds gathered this frame.
+     *
+     * @type {BoundingBox}
+     * @private
+     */
     _bounds = new BoundingBox();
 
-    /** @private */
+    /**
+     * Whether no bounds were gathered this frame.
+     *
+     * @type {boolean}
+     * @private
+     */
     _empty = true;
 
     /**
@@ -95,27 +107,43 @@ class BoundingBoxGizmo extends Gizmo {
     _box = new Entity('box');
 
     /**
+     * The arm entities, three per corner.
+     *
      * @type {Entity[]}
      * @private
      */
     _arms = [];
 
     /**
+     * Material of the occluded pass, drawn without depth test.
+     *
      * @type {ShaderMaterial}
      * @private
      */
     _occludedMaterial;
 
     /**
+     * Material of the depth tested pass.
+     *
      * @type {ShaderMaterial}
      * @private
      */
     _material;
 
-    /** @private */
+    /**
+     * Uniform storage for the base color.
+     *
+     * @type {number[]}
+     * @private
+     */
     _colorData = [0, 0, 0, 0];
 
-    /** @private */
+    /**
+     * Uniform storage for the occluded color.
+     *
+     * @type {number[]}
+     * @private
+     */
     _occludedColorData = [0, 0, 0, 0];
 
     /**
@@ -182,6 +210,8 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
+     * Creates an arm material.
+     *
      * @param {boolean} depthTest - Whether the material is depth tested.
      * @returns {ShaderMaterial} The material.
      * @private
@@ -214,6 +244,8 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
+     * Adds a box to the bounds.
+     *
      * @param {BoundingBox} aabb - The box to add.
      * @private
      */
@@ -227,6 +259,8 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
+     * Adds the bounds of the visible mesh instances.
+     *
      * @param {readonly MeshInstance[]} meshInstances - The mesh instances to add.
      * @private
      */
@@ -240,6 +274,8 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
+     * Adds the bounds of an enabled node's render, model and gsplat components.
+     *
      * @param {GraphNode} node - The node to add the bounds of.
      * @private
      */
@@ -261,7 +297,11 @@ class BoundingBoxGizmo extends Gizmo {
         }
     }
 
-    /** @override */
+    /**
+     * Gathers the bounds of the attached nodes and places the arms around them.
+     *
+     * @override
+     */
     prerender() {
         if (!this.enabled) {
             return;
@@ -318,7 +358,11 @@ class BoundingBoxGizmo extends Gizmo {
         }
     }
 
-    /** @override */
+    /**
+     * Destroys the gizmo and its materials.
+     *
+     * @override
+     */
     destroy() {
         super.destroy();
 
