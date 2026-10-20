@@ -1,4 +1,4 @@
-import { Gizmo, RotateGizmo, ScaleGizmo, TranslateGizmo } from 'playcanvas';
+import { BoundingBoxGizmo, Gizmo, Layer, RotateGizmo, SORTMODE_NONE, ScaleGizmo, TranslateGizmo } from 'playcanvas';
 
 /**
  * @import { CameraComponent, GraphNode, MeshInstance, TransformGizmo } from 'playcanvas'
@@ -22,6 +22,21 @@ class GizmoHandler {
     _gizmos;
 
     /**
+     * Gizmo outlining the bounds of the nodes, shown alongside the active gizmo.
+     *
+     * @type {BoundingBoxGizmo}
+     * @private
+     */
+    _bounds;
+
+    /**
+     * Whether the bounding box is shown.
+     *
+     * @private
+     */
+    _boundsEnabled = true;
+
+    /**
      * Nodes to attach to active gizmo.
      *
      * @type {GraphNode[]}
@@ -34,6 +49,16 @@ class GizmoHandler {
      */
     constructor(camera) {
         const app = camera.system.app;
+
+        // the bounds draw before the gizmo layer clears the depth, so the scene can hide them
+        const boundsLayer = new Layer({
+            name: 'Bounds',
+            opaqueSortMode: SORTMODE_NONE,
+            transparentSortMode: SORTMODE_NONE
+        });
+        app.scene.layers.push(boundsLayer);
+        this._bounds = new BoundingBoxGizmo(camera, boundsLayer);
+
         const layer = Gizmo.createLayer(app);
         this._gizmos = {
             translate: new TranslateGizmo(camera, layer),
@@ -80,6 +105,15 @@ class GizmoHandler {
         return this.gizmo.readout;
     }
 
+    set bounds(value) {
+        this._boundsEnabled = value;
+        this._bounds.enabled = value;
+    }
+
+    get bounds() {
+        return this._boundsEnabled;
+    }
+
     /**
      * Adds single node to active gizmo.
      *
@@ -94,6 +128,8 @@ class GizmoHandler {
             this._nodes.push(node);
         }
         this.gizmo.attach(this._nodes);
+        this._bounds.attach(this._nodes);
+        this._bounds.enabled = this._boundsEnabled;
     }
 
     /**
@@ -102,6 +138,7 @@ class GizmoHandler {
     clear() {
         this._nodes.length = 0;
         this.gizmo.detach();
+        this._bounds.detach();
     }
 
     /**
@@ -121,6 +158,7 @@ class GizmoHandler {
         for (const type in this._gizmos) {
             this._gizmos[type].destroy();
         }
+        this._bounds.destroy();
     }
 }
 
