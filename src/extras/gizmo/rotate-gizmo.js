@@ -326,9 +326,10 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMREADOUT, (_axis, _isPlane, angle) => {
-            if (this._readout) {
-                this._showAngleReadout(angle);
+            if (!this._readout) {
+                return;
             }
+            this._showAngleReadout(angle);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {

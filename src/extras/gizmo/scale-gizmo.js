@@ -191,9 +191,10 @@ class ScaleGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMREADOUT, (_axis, _isPlane, value) => {
-            if (this._readout) {
-                this._showReadout(this._readoutAxes(value, true));
+            if (!this._readout) {
+                return;
             }
+            this._showReadout(this._readoutAxes(value, true));
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {

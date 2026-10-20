@@ -91,15 +91,16 @@ class Readout {
         const up = this._camera.entity.up;
         const eye = this._camera.entity.getPosition();
         const dist = view.sub2(center, eye).length();
-        if (this._camera.projection === PROJECTION_PERSPECTIVE && dist > radius) {
-            view.mulScalar(1 / dist);
-            down.copy(view).mulScalar(up.dot(view)).sub(up).normalize();
-            const sin = radius / dist;
-            const cos = Math.sqrt(1 - sin * sin);
-            corner.copy(view).mulScalar(cos).add(down.mulScalar(sin)).mulScalar(dist * cos).add(eye);
-        } else {
+        if (this._camera.projection !== PROJECTION_PERSPECTIVE || dist <= radius) {
             corner.copy(up).mulScalar(-radius).add(center);
+            this._show(html, x, this._camera.worldToScreen(corner, screen).y);
+            return;
         }
+        view.mulScalar(1 / dist);
+        down.copy(view).mulScalar(up.dot(view)).sub(up).normalize();
+        const sin = radius / dist;
+        const cos = Math.sqrt(1 - sin * sin);
+        corner.copy(view).mulScalar(cos).add(down.mulScalar(sin)).mulScalar(dist * cos).add(eye);
         this._show(html, x, this._camera.worldToScreen(corner, screen).y);
     }
 

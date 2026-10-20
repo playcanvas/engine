@@ -356,12 +356,12 @@ class TransformGizmo extends Gizmo {
         if (value === !!this._readout) {
             return;
         }
-        if (value) {
-            this._readout = new Readout(this._camera);
-        } else {
+        if (!value) {
             this._readout?.destroy();
             this._readout = null;
+            return;
         }
+        this._readout = new Readout(this._camera);
     }
 
     /**
@@ -600,10 +600,10 @@ class TransformGizmo extends Gizmo {
                 }
                 if (found) {
                     bounds.add(instance.aabb);
-                } else {
-                    bounds.copy(instance.aabb);
-                    found = true;
+                    continue;
                 }
+                bounds.copy(instance.aabb);
+                found = true;
             }
         }
 
