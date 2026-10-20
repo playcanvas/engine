@@ -540,19 +540,36 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
+     * Formats a delta with an explicit sign, so it does not read as an absolute value. A value
+     * that rounds to zero is shown as positive.
+     *
+     * @param {number} value - The value.
+     * @param {number} digits - The number of digits after the decimal point.
+     * @returns {string} The signed value.
+     * @protected
+     */
+    _readoutDelta(value, digits) {
+        const abs = Math.abs(value).toFixed(digits);
+        return `${value < 0 && +abs ? '-' : '+'}${abs}`;
+    }
+
+    /**
      * Formats a value for each of the axes being dragged.
      *
      * @param {Vec3} values - The value for each axis.
+     * @param {boolean} [factor] - Whether the values are factors rather than deltas. Defaults to
+     * false.
      * @returns {string} The readout markup.
      * @protected
      */
-    _readoutAxes(values) {
+    _readoutAxes(values, factor = false) {
         const axis = this._selectedAxis;
         const parts = [];
         for (let i = 0; i < AXES.length; i++) {
             const a = AXES[i];
             if (axis === 'xyz' || (this._selectedIsPlane ? a !== axis : a === axis)) {
-                parts.push(`${this._readoutLabel(a)} ${values[a].toFixed(2)}`);
+                const value = factor ? `×${values[a].toFixed(2)}` : this._readoutDelta(values[a], 2);
+                parts.push(`${this._readoutLabel(a)} ${value}`);
             }
         }
         return parts.join('  ');

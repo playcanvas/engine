@@ -544,7 +544,7 @@ class RotateGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
         const label = axis === 'f' || axis === 'xyz' ? '' : `${this._readoutLabel(axis)} `;
         const radius = Math.max(this.xyzRingRadius + this.xyzTubeRadius, this.faceRingRadius + this.faceTubeRadius);
-        this._showReadout(`${label}${angle.toFixed(1)}°`, radius * this._scale);
+        this._showReadout(`${label}${this._readoutDelta(angle, 1)}°`, radius * this._scale);
     }
 
     /** @private */

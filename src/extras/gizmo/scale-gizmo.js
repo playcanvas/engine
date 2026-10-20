@@ -175,7 +175,7 @@ class ScaleGizmo extends TransformGizmo {
             this._drag(true);
 
             if (this._readout) {
-                this._showReadout(this._readoutAxes(Vec3.ONE));
+                this._showReadout(this._readoutAxes(Vec3.ONE, true));
             }
         });
 
@@ -190,7 +190,7 @@ class ScaleGizmo extends TransformGizmo {
             this._setNodeScales(scaleDelta.add(Vec3.ONE));
 
             if (this._readout) {
-                this._showReadout(this._readoutAxes(scaleDelta));
+                this._showReadout(this._readoutAxes(scaleDelta, true));
             }
         });
 
