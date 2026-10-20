@@ -185,7 +185,8 @@ const setGizmoControls = () => {
         snapIncrement: gizmoHandler.gizmo.snapIncrement,
         colorAlpha: gizmoHandler.gizmo.colorAlpha,
         coordSpace: gizmoHandler.gizmo.coordSpace,
-        readout: gizmoHandler.readout
+        readout: gizmoHandler.readout,
+        bounds: gizmoHandler.bounds
     });
     skipObserverFire = false;
 };
@@ -324,6 +325,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             }
             if (key === 'readout') {
                 gizmoHandler.readout = value;
+                return;
+            }
+            if (key === 'bounds') {
+                gizmoHandler.bounds = value;
                 return;
             }
             gizmoHandler.gizmo[key] = value;

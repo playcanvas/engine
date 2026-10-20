@@ -98,6 +98,13 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'gizmo.readout' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Bounding Box'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.bounds' }}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Camera'>
                 <LabelGroup text='Projection'>

@@ -93,4 +93,5 @@ export { TransformGizmo } from './gizmo/transform-gizmo.js';
 export { TranslateGizmo } from './gizmo/translate-gizmo.js';
 export { RotateGizmo } from './gizmo/rotate-gizmo.js';
 export { ScaleGizmo } from './gizmo/scale-gizmo.js';
+export { BoundingBoxGizmo } from './gizmo/bounding-box-gizmo.js';
 export { ViewCube } from './gizmo/view-cube.js';
