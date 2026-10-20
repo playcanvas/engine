@@ -43,6 +43,8 @@ const ray = new Ray();
 const plane = new Plane();
 const color = new Color();
 const bounds = new BoundingBox();
+const corner = new Vec3();
+const screen = new Vec3();
 
 // constants
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
@@ -361,7 +363,7 @@ class TransformGizmo extends Gizmo {
             this._readout = null;
             return;
         }
-        this._readout = new Readout(this._camera);
+        this._readout = new Readout(this._device.canvas);
     }
 
     /**
@@ -574,19 +576,12 @@ class TransformGizmo extends Gizmo {
 
     /**
      * Shows the readout centered below the visible gizmo shapes, which while dragging is the
-     * dragged handle, or below a sphere around the gizmo when given its radius.
+     * dragged handle.
      *
      * @param {string} html - The readout markup.
-     * @param {number} [radius] - The world radius of a sphere around the gizmo to sit below, for
-     * shapes that turn while dragging. Defaults to 0, using the visible shapes.
      * @protected
      */
-    _showReadout(html, radius = 0) {
-        if (radius > 0) {
-            this._readout?.showBelowSphere(html, this.root.getPosition(), radius);
-            return;
-        }
-
+    _showReadout(html) {
         let found = false;
         for (const key in this._shapes) {
             const shape = this._shapes[key];
@@ -613,7 +608,22 @@ class TransformGizmo extends Gizmo {
             bounds.halfExtents.set(0, 0, 0);
         }
 
-        this._readout?.showBelowBox(html, bounds);
+        const { center, halfExtents: half } = bounds;
+        let left = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+        for (let i = 0; i < 8; i++) {
+            corner.set(
+                center.x + (i & 1 ? half.x : -half.x),
+                center.y + (i & 2 ? half.y : -half.y),
+                center.z + (i & 4 ? half.z : -half.z)
+            );
+            this._camera.worldToScreen(corner, screen);
+            left = Math.min(left, screen.x);
+            right = Math.max(right, screen.x);
+            bottom = Math.max(bottom, screen.y);
+        }
+        this._readout?.show(html, 0.5 * (left + right), bottom);
     }
 
     /**

@@ -534,7 +534,8 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * Shows the angle in the readout, labelled with the axis unless rotating freely or facing. It
-     * sits below a sphere around all the rings, since the ring shapes turn while dragging.
+     * sits below the outline of a sphere around all the rings, since the ring shapes turn while
+     * dragging.
      *
      * @param {number} angle - The angle in degrees.
      * @private
@@ -542,8 +543,30 @@ class RotateGizmo extends TransformGizmo {
     _showAngleReadout(angle) {
         const axis = this._selectedAxis;
         const label = axis === 'f' || axis === 'xyz' ? '' : `${this._readoutLabel(axis)} `;
-        const radius = Math.max(this.xyzRingRadius + this.xyzTubeRadius, this.faceRingRadius + this.faceTubeRadius);
-        this._showReadout(`${label}${this._readoutDelta(angle, 1)}°`, radius * this._scale);
+        const html = `${label}${this._readoutDelta(angle, 1)}°`;
+        const radius = this._scale *
+            Math.max(this.xyzRingRadius + this.xyzTubeRadius, this.faceRingRadius + this.faceTubeRadius);
+
+        const center = this.root.getPosition();
+        const x = this._camera.worldToScreen(center, v3).x;
+
+        // the lowest point of the outline: in perspective its tangent from the camera, which
+        // reaches further than the radius straight down once the sphere is close
+        const up = this._camera.entity.up;
+        const eye = this._camera.entity.getPosition();
+        const view = v1.sub2(center, eye);
+        const dist = view.length();
+        if (this._camera.projection !== PROJECTION_PERSPECTIVE || dist <= radius) {
+            v3.copy(up).mulScalar(-radius).add(center);
+            this._readout?.show(html, x, this._camera.worldToScreen(v3, point).y);
+            return;
+        }
+        view.mulScalar(1 / dist);
+        const down = v2.copy(view).mulScalar(up.dot(view)).sub(up).normalize();
+        const sin = radius / dist;
+        const cos = Math.sqrt(1 - sin * sin);
+        v3.copy(view).mulScalar(cos).add(down.mulScalar(sin)).mulScalar(dist * cos).add(eye);
+        this._readout?.show(html, x, this._camera.worldToScreen(v3, point).y);
     }
 
     /** @private */
