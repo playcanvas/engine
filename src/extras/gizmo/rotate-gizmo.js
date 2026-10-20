@@ -286,9 +286,7 @@ class RotateGizmo extends TransformGizmo {
             // angle guide lines
             this._angleGuide(true);
 
-            if (this._readout) {
-                this._showAngleReadout(0);
-            }
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, 0);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point, x, y) => {
@@ -308,9 +306,7 @@ class RotateGizmo extends TransformGizmo {
                 const angleDelta = this._screenPos.distance(this._screenStartPos);
                 this._setNodeRotations(axis, angleAxis, angleDelta);
 
-                if (this._readout) {
-                    this._showAngleReadout(angleDelta);
-                }
+                this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, angleDelta);
             } else {
                 // calculate angle axis and delta and update node rotations
                 let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
@@ -325,9 +321,13 @@ class RotateGizmo extends TransformGizmo {
                 this._updateGuidePoints(angleDelta);
                 this._angleGuide(true);
 
-                if (this._readout) {
-                    this._showAngleReadout(angleDelta);
-                }
+                this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, angleDelta);
+            }
+        });
+
+        this.on(TransformGizmo.EVENT_TRANSFORMREADOUT, (_axis, _isPlane, angle) => {
+            if (this._readout) {
+                this._showAngleReadout(angle);
             }
         });
 

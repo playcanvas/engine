@@ -15,6 +15,7 @@ import {
     color4from3
 } from './color.js';
 import { Gizmo } from './gizmo.js';
+import { Readout } from './readout.js';
 import { Debug } from '../../core/debug.js';
 
 /**
@@ -42,14 +43,9 @@ const ray = new Ray();
 const plane = new Plane();
 const color = new Color();
 const bounds = new BoundingBox();
-const corner = new Vec3();
-const screen = new Vec3();
-const view = new Vec3();
-const down = new Vec3();
 
 // constants
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
-const READOUT_GAP = 6;
 
 /**
  * The base class for all transform gizmos.
@@ -79,16 +75,35 @@ class TransformGizmo extends Gizmo {
     static EVENT_TRANSFORMSTART = 'transform:start';
 
     /**
-     * Fired during the transformation.
+     * Fired during the transformation, with the dragged point on the selected axis or plane and
+     * the screen position of the pointer.
      *
      * @event
      * @example
      * const gizmo = new TransformGizmo(camera, layer);
-     * gizmo.on('transform:move', (pointDelta, angleDelta) => {
-     *     console.log(`Transformation moved by ${pointDelta} (angle: ${angleDelta})`);
+     * gizmo.on('transform:move', (point, x, y) => {
+     *     console.log(`Transformation moved to ${point} (screen: ${x}, ${y})`);
      * });
      */
     static EVENT_TRANSFORMMOVE = 'transform:move';
+
+    /**
+     * Fired with the value shown in the readout when the transformation starts and on each step of
+     * it, whether or not {@link TransformGizmo#readout} is enabled, to show the value in a custom
+     * UI. The handler is passed the selected axis, whether it is a plane, which moves along the
+     * other two axes, and the value: the translation as a `Vec3` for a translate gizmo, the scale
+     * factor as a `Vec3` for a scale gizmo, or the angle in degrees for a rotate gizmo. The `Vec3`
+     * is reused, so copy it to keep it.
+     *
+     * @event
+     * @example
+     * const gizmo = new TranslateGizmo(camera, layer);
+     * gizmo.readout = false;
+     * gizmo.on('transform:readout', (axis, isPlane, value) => {
+     *     console.log(`Transformation ${axis}: ${value}`);
+     * });
+     */
+    static EVENT_TRANSFORMREADOUT = 'transform:readout';
 
     /**
      * Fired when the transformation has ended.
@@ -208,10 +223,10 @@ class TransformGizmo extends Gizmo {
     _selectionStartPoint = new Vec3();
 
     /**
-     * Internal element showing the transform delta while dragging.
+     * Internal readout showing the transform delta while dragging.
      *
-     * @type {HTMLDivElement | null}
-     * @private
+     * @type {Readout | null}
+     * @protected
      */
     _readout = null;
 
@@ -309,9 +324,7 @@ class TransformGizmo extends Gizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
-            if (this._readout) {
-                this._readout.style.display = 'none';
-            }
+            this._readout?.hide();
         });
 
         this.on(Gizmo.EVENT_NODESDETACH, () => {
@@ -334,7 +347,8 @@ class TransformGizmo extends Gizmo {
     /**
      * Sets whether to show the transform delta in a text readout just below the gizmo while
      * dragging. The readout is a `div` with the class `gizmo-readout`, added to the document body.
-     * Defaults to true.
+     * To show the value in a custom UI instead, turn this off and listen to
+     * {@link TransformGizmo.EVENT_TRANSFORMREADOUT}. Defaults to true.
      *
      * @type {boolean}
      */
@@ -343,24 +357,9 @@ class TransformGizmo extends Gizmo {
             return;
         }
         if (value) {
-            const el = document.createElement('div');
-            el.className = 'gizmo-readout';
-            el.style.cssText = [
-                'position: fixed',
-                'display: none',
-                'transform: translateX(-50%)',
-                'padding: 2px 6px',
-                'border-radius: 3px',
-                'background: rgba(0, 0, 0, 0.9)',
-                'color: #fff',
-                'font: 12px monospace',
-                'white-space: pre',
-                'pointer-events: none'
-            ].join(';');
-            document.body.appendChild(el);
-            this._readout = el;
+            this._readout = new Readout(this._camera);
         } else {
-            this._readout.remove();
+            this._readout?.destroy();
             this._readout = null;
         }
     }
@@ -583,77 +582,38 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _showReadout(html, radius = 0) {
-        const el = this._readout;
-        el.innerHTML = html;
-
-        let left = Infinity;
-        let right = -Infinity;
-        let bottom = -Infinity;
         if (radius > 0) {
-            const pos = this.root.getPosition();
-            this._camera.worldToScreen(pos, screen);
-            left = right = screen.x;
+            this._readout?.showBelowSphere(html, this.root.getPosition(), radius);
+            return;
+        }
 
-            // the lowest point of the sphere's outline: in perspective its tangent from the camera,
-            // which reaches further than the radius straight down once the sphere is close
-            const up = this._camera.entity.up;
-            const eye = this._camera.entity.getPosition();
-            const dist = view.sub2(pos, eye).length();
-            if (this._camera.projection === PROJECTION_PERSPECTIVE && dist > radius) {
-                view.mulScalar(1 / dist);
-                down.copy(view).mulScalar(up.dot(view)).sub(up).normalize();
-                const sin = radius / dist;
-                const cos = Math.sqrt(1 - sin * sin);
-                corner.copy(view).mulScalar(cos).add(down.mulScalar(sin)).mulScalar(dist * cos).add(eye);
-            } else {
-                corner.copy(up).mulScalar(-radius).add(pos);
+        let found = false;
+        for (const key in this._shapes) {
+            const shape = this._shapes[key];
+            if (!shape.entity.enabled) {
+                continue;
             }
-            bottom = this._camera.worldToScreen(corner, screen).y;
-        } else {
-            let found = false;
-            for (const key in this._shapes) {
-                const shape = this._shapes[key];
-                if (!shape.entity.enabled) {
+            for (let i = 0; i < shape.meshInstances.length; i++) {
+                const instance = shape.meshInstances[i];
+                if (!instance.visible) {
                     continue;
                 }
-                for (let i = 0; i < shape.meshInstances.length; i++) {
-                    const instance = shape.meshInstances[i];
-                    if (!instance.visible) {
-                        continue;
-                    }
-                    if (found) {
-                        bounds.add(instance.aabb);
-                    } else {
-                        bounds.copy(instance.aabb);
-                        found = true;
-                    }
+                if (found) {
+                    bounds.add(instance.aabb);
+                } else {
+                    bounds.copy(instance.aabb);
+                    found = true;
                 }
-            }
-
-            // with every shape hidden while dragging, sit below the gizmo center
-            if (!found) {
-                bounds.center.copy(this.root.getPosition());
-                bounds.halfExtents.set(0, 0, 0);
-            }
-
-            const { center, halfExtents: half } = bounds;
-            for (let i = 0; i < 8; i++) {
-                corner.set(
-                    center.x + (i & 1 ? half.x : -half.x),
-                    center.y + (i & 2 ? half.y : -half.y),
-                    center.z + (i & 4 ? half.z : -half.z)
-                );
-                this._camera.worldToScreen(corner, screen);
-                left = Math.min(left, screen.x);
-                right = Math.max(right, screen.x);
-                bottom = Math.max(bottom, screen.y);
             }
         }
 
-        const rect = this._device.canvas.getBoundingClientRect();
-        el.style.left = `${rect.left + 0.5 * (left + right)}px`;
-        el.style.top = `${rect.top + bottom + READOUT_GAP}px`;
-        el.style.display = 'block';
+        // with every shape hidden while dragging, sit below the gizmo center
+        if (!found) {
+            bounds.center.copy(this.root.getPosition());
+            bounds.halfExtents.set(0, 0, 0);
+        }
+
+        this._readout?.showBelowBox(html, bounds);
     }
 
     /**

@@ -174,9 +174,7 @@ class ScaleGizmo extends TransformGizmo {
             // hide shapes that are not selected
             this._drag(true);
 
-            if (this._readout) {
-                this._showReadout(this._readoutAxes(Vec3.ONE, true));
-            }
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, Vec3.ONE);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
@@ -189,8 +187,12 @@ class ScaleGizmo extends TransformGizmo {
             }
             this._setNodeScales(scaleDelta.add(Vec3.ONE));
 
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, scaleDelta);
+        });
+
+        this.on(TransformGizmo.EVENT_TRANSFORMREADOUT, (_axis, _isPlane, value) => {
             if (this._readout) {
-                this._showReadout(this._readoutAxes(scaleDelta, true));
+                this._showReadout(this._readoutAxes(value, true));
             }
         });
 
