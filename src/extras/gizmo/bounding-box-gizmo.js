@@ -19,9 +19,8 @@ import { unlitShader } from './shaders.js';
 
 /**
  * @typedef {object} BoundingBoxGizmoTheme
- * @property {Color} base - The color of the parts of the box that are in view.
- * @property {Color} occluded - The color of the box drawn with no depth test, which shows where
- * the scene hides it.
+ * @property {Color} base - The color where the box is visible.
+ * @property {Color} occluded - The color where the scene hides the box.
  */
 
 // temporary variables
@@ -29,30 +28,16 @@ const tmpBox = new BoundingBox();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 
-// axes of the three arms at each corner
 const AXES = /** @type {const} */ (['x', 'y', 'z']);
 
 /**
- * A gizmo that outlines the world-space bounding box of the attached {@link GraphNode}s with
- * brackets at its corners, as an editor marks a selection. The box encloses the visible mesh
- * instances of the render and model components and the bounds of the gsplat components of the
- * attached nodes and their descendants, and refits every frame as they move, animate or change.
- * Nothing is drawn while none of them has anything to bound.
- *
- * The arms of the brackets are {@link armLength} long and {@link armThickness} pixels thick. They
- * are drawn twice: in the theme's `occluded` color with no depth test, then in its `base` color
- * depth tested against what was rendered before the gizmo's layer, so the parts hidden behind the
- * scene show faintly. That needs a layer which keeps the scene's depth, unlike
- * the one made by {@link Gizmo.createLayer}, which clears it so transform handles are never
- * hidden; in such a layer the whole box shows in the `base` color. The colors are set with
- * {@link setTheme}.
+ * Draws corner brackets around the world-space bounds of the attached nodes and their
+ * descendants. Use a layer that keeps the scene depth so occluded parts draw in the theme's
+ * `occluded` color; a {@link Gizmo.createLayer} layer clears depth.
  *
  * ```javascript
- * // Create a layer drawn after the scene, keeping its depth
  * const layer = new Layer({ name: 'Bounds', transparentSortMode: SORTMODE_NONE });
  * app.scene.layers.push(layer);
- *
- * // Create the gizmo and outline an entity with it
  * const gizmo = new BoundingBoxGizmo(cameraComponent, layer);
  * gizmo.attach([entity]);
  * ```
@@ -66,8 +51,6 @@ const AXES = /** @type {const} */ (['x', 'y', 'z']);
  */
 class BoundingBoxGizmo extends Gizmo {
     /**
-     * Internal theme.
-     *
      * @type {BoundingBoxGizmoTheme}
      * @private
      */
@@ -77,44 +60,34 @@ class BoundingBoxGizmo extends Gizmo {
     };
 
     /**
-     * The length of each corner bracket arm, as a fraction of half the edge it runs along, so 1
-     * draws the complete edges. Defaults to 0.3.
+     * The arm length as a fraction of the half edge; 1 draws full edges. Defaults to 0.3.
      *
      * @type {number}
      */
     armLength = 0.3;
 
     /**
-     * The world-space distance the box is grown by on each side, which also keeps flat nodes
-     * outlined. Defaults to 0.01.
+     * The world-space padding on each side. Defaults to 0.01.
      *
      * @type {number}
      */
     padding = 0.01;
 
     /**
-     * The thickness of the arms in CSS pixels. Defaults to 2.
+     * The arm thickness in CSS pixels. Defaults to 2.
      *
      * @type {number}
      */
     armThickness = 2;
 
-    /**
-     * The bounds gathered this frame.
-     *
-     * @private
-     */
+    /** @private */
     _bounds = new BoundingBox();
 
-    /**
-     * Whether nothing has been added to the bounds this frame.
-     *
-     * @private
-     */
+    /** @private */
     _empty = true;
 
     /**
-     * The parent of the arms, disabled while there are no bounds.
+     * Parent of the arms, disabled when there are no bounds.
      *
      * @type {Entity}
      * @private
@@ -122,49 +95,34 @@ class BoundingBoxGizmo extends Gizmo {
     _box = new Entity('box');
 
     /**
-     * The arm entities, three per corner.
-     *
      * @type {Entity[]}
      * @private
      */
     _arms = [];
 
     /**
-     * The material of the arms drawn with no depth test.
-     *
      * @type {ShaderMaterial}
      * @private
      */
     _occludedMaterial;
 
     /**
-     * The material of the depth tested arms.
-     *
      * @type {ShaderMaterial}
      * @private
      */
     _material;
 
-    /**
-     * Storage for the color uniforms.
-     *
-     * @private
-     */
+    /** @private */
     _colorData = [0, 0, 0, 0];
 
-    /**
-     * Storage for the occluded color uniforms.
-     *
-     * @private
-     */
+    /** @private */
     _occludedColorData = [0, 0, 0, 0];
 
     /**
      * Creates a new BoundingBoxGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer. Use one which keeps the scene's depth to see the
-     * brackets fade behind the scene.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new BoundingBoxGizmo(camera, layer);
      */
@@ -176,7 +134,7 @@ class BoundingBoxGizmo extends Gizmo {
         this._occludedMaterial = this._createMaterial(false);
         this._material = this._createMaterial(true);
 
-        // each arm draws faintly everywhere, then brightly where the scene does not hide it
+        // occluded pass first, then the depth tested pass over it
         const mesh = Mesh.fromGeometry(this._device, new BoxGeometry());
         for (let i = 0; i < 24; i++) {
             const arm = new Entity(`arm:${i}`);
@@ -240,7 +198,7 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
-     * The box is world aligned, so the root is never rotated.
+     * The box is world aligned.
      *
      * @override
      */
@@ -248,7 +206,7 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
-     * The box is sized in world units, so the root is never scaled.
+     * The box is sized in world units.
      *
      * @override
      */
@@ -260,12 +218,12 @@ class BoundingBoxGizmo extends Gizmo {
      * @private
      */
     _add(aabb) {
-        if (this._empty) {
-            this._bounds.copy(aabb);
-            this._empty = false;
-        } else {
+        if (!this._empty) {
             this._bounds.add(aabb);
+            return;
         }
+        this._bounds.copy(aabb);
+        this._empty = false;
     }
 
     /**
@@ -324,7 +282,7 @@ class BoundingBoxGizmo extends Gizmo {
         this._occludedMaterial.setParameter('uColor', this._theme.occluded.toArray(this._occludedColorData));
         this._material.setParameter('uColor', this._theme.base.toArray(this._colorData));
 
-        // world size of a pixel, per unit of view depth when in perspective
+        // world size of a pixel, per unit depth in perspective
         const camera = this._camera;
         const perspective = camera.projection === PROJECTION_PERSPECTIVE;
         const { width, height } = this._device.clientRect;
@@ -334,8 +292,7 @@ class BoundingBoxGizmo extends Gizmo {
         const forward = camera.entity.forward;
         const rootPos = this.root.getPosition();
 
-        // three arms from each corner, running back along its edges, each overhanging the corner
-        // by half its thickness so the arms meet
+        // three arms per corner, overhanging it by half a thickness so they meet
         let i = 0;
         for (let x = -1; x <= 1; x += 2) {
             for (let y = -1; y <= 1; y += 2) {

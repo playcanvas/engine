@@ -109,7 +109,7 @@ light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// Create gizmo, in a layer after the scene which keeps its depth so the hidden corners can fade
+// Create gizmo in a layer that keeps the scene depth
 const layer = new Layer({
     name: 'Bounds',
     opaqueSortMode: SORTMODE_NONE,

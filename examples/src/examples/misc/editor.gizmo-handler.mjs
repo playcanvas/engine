@@ -22,7 +22,7 @@ class GizmoHandler {
     _gizmos;
 
     /**
-     * Gizmo outlining the bounds of the nodes, shown alongside the active gizmo.
+     * Bounding box gizmo for the nodes.
      *
      * @type {BoundingBoxGizmo}
      * @private
@@ -50,7 +50,7 @@ class GizmoHandler {
     constructor(camera) {
         const app = camera.system.app;
 
-        // the bounds draw before the gizmo layer clears the depth, so the scene can hide them
+        // bounds layer goes before the gizmo layer, which clears depth
         const boundsLayer = new Layer({
             name: 'Bounds',
             opaqueSortMode: SORTMODE_NONE,
