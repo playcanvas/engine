@@ -2,6 +2,7 @@ import {
     BoundingBoxGizmo,
     CameraGizmo,
     Gizmo,
+    IconGizmo,
     Layer,
     LightGizmo,
     RotateGizmo,
@@ -57,20 +58,12 @@ class GizmoHandler {
     _cameras;
 
     /**
-     * Gizmo drawing the icons of the other lights.
+     * Gizmo drawing the icons of the other lights and cameras.
      *
-     * @type {LightGizmo}
+     * @type {IconGizmo}
      * @private
      */
-    _lightIcons;
-
-    /**
-     * Gizmo drawing the icons of the other cameras.
-     *
-     * @type {CameraGizmo}
-     * @private
-     */
-    _cameraIcons;
+    _icons;
 
     /**
      * The light and camera entities of the scene.
@@ -114,10 +107,7 @@ class GizmoHandler {
         this._cameras = new CameraGizmo(camera, helperLayer);
 
         // lights and cameras that are not selected show only their icons
-        this._lightIcons = new LightGizmo(camera, helperLayer);
-        this._lightIcons.iconOnly = true;
-        this._cameraIcons = new CameraGizmo(camera, helperLayer);
-        this._cameraIcons.iconOnly = true;
+        this._icons = new IconGizmo(camera, helperLayer);
 
         // the camera stops orbiting while any gizmo is dragged, and clicking an icon selects its node
         const gizmos = [
@@ -125,8 +115,7 @@ class GizmoHandler {
             this._bounds,
             this._lights,
             this._cameras,
-            this._lightIcons,
-            this._cameraIcons
+            this._icons
         ];
         for (const gizmo of gizmos) {
             gizmo.on('pointer:down', (_x, _y, /** @type {MeshInstance} */ meshInstance) => {
@@ -179,8 +168,7 @@ class GizmoHandler {
         const others = this._helperNodes.filter(node => !selected(node));
         this._attach(this._lights, this._nodes.filter(node => has(node, 'light')));
         this._attach(this._cameras, this._nodes.filter(node => has(node, 'camera')));
-        this._attach(this._lightIcons, others.filter(node => has(node, 'light')));
-        this._attach(this._cameraIcons, others.filter(node => has(node, 'camera')));
+        this._attach(this._icons, others);
 
         // only nodes that render have bounds
         this._attach(this._bounds, this._nodes.filter(node => has(node, 'render')));
@@ -251,8 +239,7 @@ class GizmoHandler {
         this._bounds.destroy();
         this._lights.destroy();
         this._cameras.destroy();
-        this._lightIcons.destroy();
-        this._cameraIcons.destroy();
+        this._icons.destroy();
     }
 }
 

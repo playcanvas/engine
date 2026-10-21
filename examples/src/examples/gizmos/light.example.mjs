@@ -122,6 +122,7 @@ Object.assign(cc, {
 const light = new Entity('light');
 light.addComponent('light', {
     type: 'spot',
+    color: new Color(1, 0.85, 0.6),
     range: 4,
     innerConeAngle: 25,
     outerConeAngle: 40
@@ -170,13 +171,16 @@ data.set('gizmo', {
     handles: gizmo.handles,
     readout: gizmo.readout,
     icon: gizmo.icon,
+    snap: gizmo.snap,
+    snapIncrement: gizmo.snapIncrement,
+    snapAngleIncrement: gizmo.snapAngleIncrement,
     groundLine: gizmo.groundLine,
     useLightColor: gizmo.useLightColor
 });
 data.set('light', {
     type: light.light.type,
     shape: LIGHTSHAPE_PUNCTUAL,
-    color: [1, 0.85, 0.6],
+    color: [light.light.color.r, light.light.color.g, light.light.color.b],
     range: light.light.range,
     innerConeAngle: light.light.innerConeAngle,
     outerConeAngle: light.light.outerConeAngle

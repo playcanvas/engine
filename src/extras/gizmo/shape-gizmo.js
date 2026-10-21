@@ -1,6 +1,6 @@
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { HelperGizmo } from './helper-gizmo.js';
+import { HandleGizmo } from './handle-gizmo.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -10,13 +10,13 @@ import { HelperGizmo } from './helper-gizmo.js';
 /**
  * The base class of gizmos that draw a shape of their own, a box, sphere, capsule or cone, with
  * handles that edit its size. They attach to no nodes: an app sets the shape's {@link position},
- * {@link rotation} and size, and listens to {@link HelperGizmo.EVENT_HANDLEMOVE} to apply edits
+ * {@link rotation} and size, and listens to {@link HandleGizmo.EVENT_HANDLEMOVE} to apply edits
  * however it needs, such as to a collision shape or a trigger volume. The handle events pass a
  * null node.
  *
  * @category Gizmo
  */
-class ShapeGizmo extends HelperGizmo {
+class ShapeGizmo extends HandleGizmo {
     /**
      * The world position of the center of the shape.
      *

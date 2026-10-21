@@ -54,7 +54,7 @@ export function Controls({ observer }) {
                 <LabelGroup text='Snap Increment'>
                     <SliderInput
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.snapIncrement' }}
+                        link={{ observer, path: 'gizmo.snapAngleIncrement' }}
                         min={1}
                         max={10}
                         precision={0}

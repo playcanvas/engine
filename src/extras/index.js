@@ -92,11 +92,12 @@ export {
     GIZMOAXIS_FACE
 } from './gizmo/constants.js';
 export { Gizmo } from './gizmo/gizmo.js';
+export { DragGizmo } from './gizmo/drag-gizmo.js';
 export { TransformGizmo } from './gizmo/transform-gizmo.js';
 export { TranslateGizmo } from './gizmo/translate-gizmo.js';
 export { RotateGizmo } from './gizmo/rotate-gizmo.js';
 export { ScaleGizmo } from './gizmo/scale-gizmo.js';
-export { HelperGizmo } from './gizmo/helper-gizmo.js';
+export { HandleGizmo } from './gizmo/handle-gizmo.js';
 export { ShapeGizmo } from './gizmo/shape-gizmo.js';
 export { BoxGizmo } from './gizmo/box-gizmo.js';
 export { SphereGizmo } from './gizmo/sphere-gizmo.js';
@@ -105,4 +106,5 @@ export { ConeGizmo } from './gizmo/cone-gizmo.js';
 export { BoundingBoxGizmo } from './gizmo/bounding-box-gizmo.js';
 export { CameraGizmo } from './gizmo/camera-gizmo.js';
 export { LightGizmo } from './gizmo/light-gizmo.js';
+export { IconGizmo } from './gizmo/icon-gizmo.js';
 export { ViewCube } from './gizmo/view-cube.js';

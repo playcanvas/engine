@@ -4,7 +4,7 @@ import { ShapeGizmo } from './shape-gizmo.js';
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
- * @import { HelperHandle } from './helper-gizmo.js'
+ * @import { GizmoHandle } from './handle-gizmo.js'
  */
 
 const tmpV1 = new Vec3();
@@ -120,7 +120,7 @@ class BoxGizmo extends ShapeGizmo {
     /**
      * Keeps the box at the start of a resize.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @protected
      * @override
      */
@@ -132,13 +132,13 @@ class BoxGizmo extends ShapeGizmo {
     /**
      * Resizes the box from where its face or corner is dragged to.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
      * @protected
      * @override
      */
     _moveHandle(handle, point) {
-        this._resizeBox(handle, point, this.rotation, this._startPosition, this._startHalfExtents, this, this.position, this.halfExtents);
+        this._resizeBox(handle, point, this.rotation, this._startPosition, this._startHalfExtents, this, 0, this.position, this.halfExtents);
     }
 }
 

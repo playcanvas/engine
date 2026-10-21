@@ -216,7 +216,7 @@ const setGizmoControls = () => {
     data.set('gizmo', {
         type: gizmoHandler.type,
         size: gizmoHandler.gizmo.size,
-        snapIncrement: gizmoHandler.gizmo.snapIncrement,
+        snapIncrement: gizmoHandler.type === 'rotate' ? gizmoHandler.gizmo.snapAngleIncrement : gizmoHandler.gizmo.snapIncrement,
         colorAlpha: gizmoHandler.gizmo.colorAlpha,
         coordSpace: gizmoHandler.gizmo.coordSpace
     });
@@ -359,7 +359,8 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 setGizmoControls();
                 return;
             }
-            gizmoHandler.gizmo[key] = value;
+            // the rotate gizmo snaps angles, which its own increment sets
+            gizmoHandler.gizmo[key === 'snapIncrement' && gizmoHandler.type === 'rotate' ? 'snapAngleIncrement' : key] = value;
             break;
         }
         case 'grid': {

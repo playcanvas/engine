@@ -4,13 +4,13 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from './color.js';
-import { HelperGizmo } from './helper-gizmo.js';
+import { HandleGizmo } from './handle-gizmo.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Entity } from '../../framework/entity.js'
  * @import { Layer } from '../../scene/layer.js'
- * @import { HelperHandle } from './helper-gizmo.js'
+ * @import { GizmoHandle } from './handle-gizmo.js'
  */
 
 const tmpM = new Mat4();
@@ -44,7 +44,7 @@ const MIN_CLIP = 1e-3;
  * viewing the gizmo.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_MANUAL });
+ * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
  * app.scene.layers.push(layer);
  * const gizmo = new CameraGizmo(cameraComponent, layer);
  * gizmo.attach([otherCameraEntity]);
@@ -56,7 +56,7 @@ const MIN_CLIP = 1e-3;
  *
  * @category Gizmo
  */
-class CameraGizmo extends HelperGizmo {
+class CameraGizmo extends HandleGizmo {
     /**
      * Creates a new CameraGizmo object.
      *
@@ -81,10 +81,6 @@ class CameraGizmo extends HelperGizmo {
         const { nearClip: near, farClip: far } = camera;
         const perspective = camera.projection === PROJECTION_PERSPECTIVE;
         const position = entity.getPosition();
-        if (this.iconOnly) {
-            this._icon('camera', position, entity);
-            return;
-        }
 
         // the corners are in the camera's space, which ignores the entity scale
         const rotation = entity.getRotation();
@@ -175,7 +171,7 @@ class CameraGizmo extends HelperGizmo {
     /**
      * Edits the clip range, field of view or orthographic height of the dragged handle's camera.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
      * @protected
      * @override
@@ -185,19 +181,19 @@ class CameraGizmo extends HelperGizmo {
         const dist = tmpV1.sub2(point, handle.origin).dot(handle.dir);
         switch (handle.name) {
             case 'nearClip': {
-                camera.nearClip = math.clamp(dist, MIN_CLIP, camera.farClip - MIN_CLIP);
+                camera.nearClip = math.clamp(this._snapLength(dist), MIN_CLIP, camera.farClip - MIN_CLIP);
                 break;
             }
             case 'farClip': {
-                camera.farClip = Math.max(dist, camera.nearClip + MIN_CLIP);
+                camera.farClip = Math.max(this._snapLength(dist), camera.nearClip + MIN_CLIP);
                 break;
             }
             case 'fov': {
-                camera.fov = math.clamp(2 * Math.atan2(dist, camera.farClip) * math.RAD_TO_DEG, 1, 179);
+                camera.fov = math.clamp(this._snapAngle(2 * Math.atan2(dist, camera.farClip) * math.RAD_TO_DEG), 1, 179);
                 break;
             }
             case 'orthoHeight': {
-                camera.orthoHeight = Math.max(dist, MIN_CLIP);
+                camera.orthoHeight = Math.max(this._snapLength(dist), MIN_CLIP);
                 break;
             }
         }

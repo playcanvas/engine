@@ -1,7 +1,7 @@
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { HelperGizmo } from './helper-gizmo.js';
+import { HandleGizmo } from './handle-gizmo.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -9,11 +9,11 @@ import { HelperGizmo } from './helper-gizmo.js';
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { HelperGizmoTheme, HelperHandle } from './helper-gizmo.js'
+ * @import { HandleGizmoTheme, GizmoHandle } from './handle-gizmo.js'
  */
 
 /**
- * @typedef {HelperGizmoTheme} BoundingBoxGizmoTheme
+ * @typedef {HandleGizmoTheme} BoundingBoxGizmoTheme
  */
 
 // temporary variables
@@ -61,7 +61,7 @@ const nearest = (dir) => {
  *
  * @category Gizmo
  */
-class BoundingBoxGizmo extends HelperGizmo {
+class BoundingBoxGizmo extends HandleGizmo {
     /**
      * Whether to show handles at the center of each face. Defaults to true.
      *
@@ -260,7 +260,7 @@ class BoundingBoxGizmo extends HelperGizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].forEach(this._addNode);
         }
-        if (!this._empty && !this.iconOnly) {
+        if (!this._empty) {
             // the box follows the bounds, which a resize changes through the nodes
             const c = this._center.copy(this._bounds.center);
             const h = this._halfExtents.copy(this._bounds.halfExtents).addScalar(this.padding);
@@ -323,7 +323,7 @@ class BoundingBoxGizmo extends HelperGizmo {
     /**
      * Keeps the bounds and the transforms of the attached nodes at the start of a resize.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @protected
      * @override
      */
@@ -341,14 +341,14 @@ class BoundingBoxGizmo extends HelperGizmo {
      * Resizes the box, then the attached nodes to fit it. Each node keeps its place within the
      * box and scales along its local axes nearest the world axes.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
      * @protected
      * @override
      */
     _moveHandle(handle, point) {
         const half = this._halfExtents;
-        this._resizeBox(handle, point, Quat.IDENTITY, this._startCenter, this._startHalfExtents, this, this._center, half);
+        this._resizeBox(handle, point, Quat.IDENTITY, this._startCenter, this._startHalfExtents, this, this.padding, this._center, half);
 
         const pad = this.padding;
         const start = this._startHalfExtents;

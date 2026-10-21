@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
@@ -210,9 +211,6 @@ class RotateGizmo extends TransformGizmo {
      */
     _facingDir = new Vec3();
 
-    /** @override */
-    snapIncrement = 5;
-
     /**
      * The rotation mode of the gizmo. This can be either:
      *
@@ -311,9 +309,7 @@ class RotateGizmo extends TransformGizmo {
                 // calculate angle axis and delta and update node rotations
                 let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
 
-                if (this.snap) {
-                    angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
-                }
+                angleDelta = this._snapAngle(angleDelta);
                 const angleAxis = this._dirFromAxis(axis, v1);
                 this._setNodeRotations(axis, angleAxis, angleDelta);
 
@@ -935,5 +931,17 @@ class RotateGizmo extends TransformGizmo {
         super.destroy();
     }
 }
+
+// snapIncrement was the angle increment of the rotate gizmo, now the snapAngleIncrement of every drag gizmo
+Object.defineProperty(RotateGizmo.prototype, 'snapIncrement', {
+    get: function () {
+        Debug.deprecated('RotateGizmo#snapIncrement is deprecated. Use RotateGizmo#snapAngleIncrement instead.');
+        return this.snapAngleIncrement;
+    },
+    set: function (value) {
+        Debug.deprecated('RotateGizmo#snapIncrement is deprecated. Use RotateGizmo#snapAngleIncrement instead.');
+        this.snapAngleIncrement = value;
+    }
+});
 
 export { RotateGizmo };

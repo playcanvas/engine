@@ -135,9 +135,6 @@ class TranslateGizmo extends TransformGizmo {
      */
     _nodePositions = new Map();
 
-    /** @override */
-    snapIncrement = 1;
-
     /**
      * Flips the planes to face the camera.
      */
@@ -170,11 +167,7 @@ class TranslateGizmo extends TransformGizmo {
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
             // calculate translate delta and update node positions
             const translateDelta = delta.copy(point).sub(this._selectionStartPoint);
-            if (this.snap) {
-                translateDelta.mulScalar(1 / this.snapIncrement);
-                translateDelta.round();
-                translateDelta.mulScalar(this.snapIncrement);
-            }
+            this._snapVector(translateDelta, this.snapIncrement);
             this._setNodePositions(translateDelta);
 
             this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, translateDelta);

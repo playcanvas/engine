@@ -7,7 +7,7 @@ import { ShapeGizmo } from './shape-gizmo.js';
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
- * @import { HelperHandle } from './helper-gizmo.js'
+ * @import { GizmoHandle } from './handle-gizmo.js'
  */
 
 const tmpV1 = new Vec3();
@@ -233,7 +233,7 @@ class CapsuleGizmo extends ShapeGizmo {
     /**
      * Sets the radius or height from how far the handle is dragged from the center.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
      * @protected
      * @override
@@ -241,10 +241,10 @@ class CapsuleGizmo extends ShapeGizmo {
     _moveHandle(handle, point) {
         const dist = Math.max(tmpV1.sub2(point, handle.origin).dot(handle.dir), MIN_SIZE);
         if (handle.name === 'radius') {
-            this.radius = dist;
-            this.height = Math.max(this.height, 2 * dist);
+            this.radius = this._snapLength(dist);
+            this.height = Math.max(this.height, 2 * this.radius);
         } else {
-            this.height = Math.max(2 * dist, 2 * this.radius);
+            this.height = Math.max(this._snapLength(2 * dist), 2 * this.radius);
         }
     }
 }

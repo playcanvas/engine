@@ -139,9 +139,6 @@ class ScaleGizmo extends TransformGizmo {
      */
     _uniform = false;
 
-    /** @override */
-    snapIncrement = 1;
-
     /**
      * Flips the planes to face the camera.
      */
@@ -179,11 +176,7 @@ class ScaleGizmo extends TransformGizmo {
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
             // calculate scale delta and update node scales
             const scaleDelta = delta.copy(point).sub(this._selectionStartPoint).mulScalar(1 / this._scale);
-            if (this.snap) {
-                scaleDelta.mulScalar(1 / this.snapIncrement);
-                scaleDelta.round();
-                scaleDelta.mulScalar(this.snapIncrement);
-            }
+            this._snapVector(scaleDelta, this.snapIncrement);
             this._setNodeScales(scaleDelta.add(Vec3.ONE));
 
             this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, scaleDelta);

@@ -155,7 +155,9 @@ data.set('gizmo', {
     lineThickness: settings.lineThickness,
     handleSize: settings.handleSize,
     handles: settings.handles,
-    readout: settings.readout
+    readout: settings.readout,
+    snap: settings.snap,
+    snapIncrement: settings.snapIncrement
 });
 data.set('box', {
     faceHandles: true,

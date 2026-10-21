@@ -52,7 +52,8 @@ const DIST_EPSILON = 1e-4;
  * `pointer:up` events, node changes through `nodes:attach` and `nodes:detach`, and the
  * resulting transforms through `position:update`, `rotation:update` and `scale:update`. Where
  * gizmos overlap, a press goes only to the first gizmo created that it hits, so create the gizmos
- * that should win, such as transform gizmos, first. {@link TransformGizmo} builds the translate, rotate and scale gizmos on this base.
+ * that should win, such as transform gizmos, first. {@link DragGizmo} builds the gizmos that are
+ * dragged on this base, and {@link IconGizmo} the icons of entities.
  *
  * @category Gizmo
  */

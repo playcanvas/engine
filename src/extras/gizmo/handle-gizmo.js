@@ -4,9 +4,10 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { DragGizmo } from './drag-gizmo.js';
 import { Gizmo } from './gizmo.js';
 import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW } from './color.js';
-import { HelperShapes } from './helper-shapes.js';
+import { OverlayShapes } from './overlay-shapes.js';
 import { Pool } from './pool.js';
 
 /**
@@ -15,10 +16,11 @@ import { Pool } from './pool.js';
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { Shape } from './shape/shape.js'
+ * @import { OverlayIcon } from './overlay-shapes.js'
  */
 
 /**
- * @typedef {object} HelperGizmoTheme
+ * @typedef {object} HandleGizmoTheme
  * @property {Color} base - The color where the shapes are visible.
  * @property {Color} occluded - The color where the scene hides the shapes.
  * @property {Color} fill - The color of filled volumes. An alpha of 0 skips the volumes.
@@ -27,7 +29,7 @@ import { Pool } from './pool.js';
 /**
  * A handle placed this frame, or the one being dragged.
  *
- * @typedef {object} HelperHandle
+ * @typedef {object} GizmoHandle
  * @property {Shape|null} shape - The handle shape.
  * @property {GraphNode|null} node - The node the handle edits, or null for a shape gizmo.
  * @property {string} name - The value the handle edits.
@@ -43,7 +45,7 @@ import { Pool } from './pool.js';
 /**
  * The handles of a box and how they resize it.
  *
- * @typedef {object} HelperBoxOptions
+ * @typedef {object} BoxHandleOptions
  * @property {boolean} faceHandles - Whether to show handles at the center of each face.
  * @property {boolean} cornerHandles - Whether to show handles at the corners.
  * @property {boolean} centered - Whether a resize keeps the center in place.
@@ -87,8 +89,6 @@ const RINGS_SIZE = 40;
 const DETAIL_FADE_START = 60;
 const DETAIL_FADE_END = 100;
 
-const THEME_KEYS = /** @type {const} */ (['base', 'occluded', 'fill']);
-
 
 /**
  * @param {number} corner - The corner index.
@@ -98,7 +98,7 @@ const THEME_KEYS = /** @type {const} */ (['base', 'occluded', 'fill']);
 const boxSide = (corner, axis) => (corner & (1 << axis) ? 1 : -1);
 
 /**
- * @returns {HelperHandle} A new handle record.
+ * @returns {GizmoHandle} A new handle record.
  */
 const createHandle = () => ({
     shape: null,
@@ -111,7 +111,7 @@ const createHandle = () => ({
 });
 
 /**
- * The base class of gizmos that draw helper shapes, such as the frustum of a camera or the shape
+ * The base class of gizmos that draw overlay shapes, such as the frustum of a camera or the shape
  * of a light, around world-sized geometry. Lines and rings keep a constant thickness on screen,
  * and once a shape is large enough on screen, handles that drag to edit its values and a readout
  * of those values show.
@@ -121,13 +121,13 @@ const createHandle = () => ({
  * ({@link SORTMODE_MANUAL}), so filled volumes draw before the lines and handles they hide.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_MANUAL });
+ * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
  * app.scene.layers.push(layer);
  * ```
  *
  * @category Gizmo
  */
-class HelperGizmo extends Gizmo {
+class HandleGizmo extends DragGizmo {
     /**
      * Fired when a handle starts being dragged.
      *
@@ -179,7 +179,7 @@ class HelperGizmo extends Gizmo {
     /**
      * Internal theme.
      *
-     * @type {HelperGizmoTheme}
+     * @type {HandleGizmoTheme}
      * @protected
      */
     _theme = {
@@ -213,25 +213,9 @@ class HelperGizmo extends Gizmo {
     icon = true;
 
     /**
-     * Whether to draw only the icon of each node, as for nodes that are not selected. Defaults to
-     * false.
+     * The overlay shapes.
      *
-     * @type {boolean}
-     */
-    iconOnly = false;
-
-    /**
-     * The icons placed this frame, with the nodes they mark.
-     *
-     * @type {Pool<{ shape: Shape|null, node: GraphNode|null }>}
-     * @private
-     */
-    _icons = new Pool(() => ({ shape: null, node: null }));
-
-    /**
-     * The helper shapes.
-     *
-     * @type {HelperShapes}
+     * @type {OverlayShapes}
      * @protected
      */
     _shapes;
@@ -239,7 +223,7 @@ class HelperGizmo extends Gizmo {
     /**
      * The handles placed this frame.
      *
-     * @type {Pool<HelperHandle>}
+     * @type {Pool<GizmoHandle>}
      * @private
      */
     _placed = new Pool(createHandle);
@@ -247,7 +231,7 @@ class HelperGizmo extends Gizmo {
     /**
      * The hovered handle, matched by what it edits.
      *
-     * @type {HelperHandle}
+     * @type {GizmoHandle}
      * @private
      */
     _hovered = createHandle();
@@ -255,7 +239,7 @@ class HelperGizmo extends Gizmo {
     /**
      * The dragged handle, its origin and direction kept from the start of the drag.
      *
-     * @type {HelperHandle}
+     * @type {GizmoHandle}
      * @protected
      */
     _drag = createHandle();
@@ -268,7 +252,7 @@ class HelperGizmo extends Gizmo {
     _dragging = false;
 
     /**
-     * The fade of the handles of the shape being drawn, as set by {@link HelperGizmo#_detailed}.
+     * The fade of the handles of the shape being drawn, as set by {@link HandleGizmo#_detailed}.
      *
      * @private
      */
@@ -282,16 +266,16 @@ class HelperGizmo extends Gizmo {
     _dragOffset = new Vec3();
 
     /**
-     * Creates a new HelperGizmo object.
+     * Creates a new HandleGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @param {string} [name] - The name of the gizmo.
      */
-    constructor(camera, layer, name = 'gizmo:helper') {
+    constructor(camera, layer, name = 'gizmo:handle') {
         super(camera, layer, name);
 
-        this._shapes = new HelperShapes(this, this._theme);
+        this._shapes = new OverlayShapes(this, this._theme);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             if (this._dragging || !meshInstance) {
@@ -299,12 +283,9 @@ class HelperGizmo extends Gizmo {
             }
             const handle = this._find(meshInstance);
             if (!handle) {
-                const icons = this._icons;
-                for (let i = 0; i < icons.count; i++) {
-                    if (icons.items[i].shape?.meshInstances[0] === meshInstance) {
-                        this.fire(HelperGizmo.EVENT_ICONSELECT, icons.items[i].node);
-                        return;
-                    }
+                const node = this._shapes.pickIcon(meshInstance);
+                if (node) {
+                    this.fire(HandleGizmo.EVENT_ICONSELECT, node);
                 }
                 return;
             }
@@ -316,7 +297,7 @@ class HelperGizmo extends Gizmo {
             this._dragOffset.sub2(/** @type {Shape} */ (handle.shape).entity.getPosition(), point);
             this._dragging = true;
             this._startHandle(this._drag);
-            this.fire(HelperGizmo.EVENT_HANDLESTART, this._drag.node, this._drag.name);
+            this.fire(HandleGizmo.EVENT_HANDLESTART, this._drag.node, this._drag.name);
         });
 
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
@@ -332,7 +313,7 @@ class HelperGizmo extends Gizmo {
             const point = this._pointerPoint(x, y);
             if (point) {
                 this._moveHandle(this._drag, point.add(this._dragOffset));
-                this.fire(HelperGizmo.EVENT_HANDLEMOVE, this._drag.node, this._drag.name);
+                this.fire(HandleGizmo.EVENT_HANDLEMOVE, this._drag.node, this._drag.name);
             }
         });
 
@@ -385,7 +366,7 @@ class HelperGizmo extends Gizmo {
     /**
      * Gets the current theme for the gizmo.
      *
-     * @type {HelperGizmoTheme}
+     * @type {HandleGizmoTheme}
      */
     get theme() {
         return this._theme;
@@ -394,18 +375,12 @@ class HelperGizmo extends Gizmo {
     /**
      * Sets the theme or partial theme for the gizmo.
      *
-     * @param {Partial<HelperGizmoTheme>} partial - The partial theme to set.
+     * @param {Partial<HandleGizmoTheme>} partial - The partial theme to set.
      * @example
      * gizmo.setTheme({ occluded: new Color(1, 1, 1, 0.5) });
      */
     setTheme(partial) {
-        for (let i = 0; i < THEME_KEYS.length; i++) {
-            const key = THEME_KEYS[i];
-            const color = partial?.[key];
-            if (color instanceof Color) {
-                this._theme[key].copy(color);
-            }
-        }
+        this._shapes.applyTheme(partial);
     }
 
     /**
@@ -425,8 +400,8 @@ class HelperGizmo extends Gizmo {
     }
 
     /**
-     * @param {HelperHandle} from - The handle to copy.
-     * @param {HelperHandle} to - The handle to copy into.
+     * @param {GizmoHandle} from - The handle to copy.
+     * @param {GizmoHandle} to - The handle to copy into.
      * @private
      */
     _copy(from, to) {
@@ -440,7 +415,7 @@ class HelperGizmo extends Gizmo {
     }
 
     /**
-     * @param {HelperHandle} a - A handle.
+     * @param {GizmoHandle} a - A handle.
      * @param {GraphNode} node - The node the other handle edits.
      * @param {string} name - The value the other handle edits.
      * @param {number} index - The index of the other handle.
@@ -453,7 +428,7 @@ class HelperGizmo extends Gizmo {
 
     /**
      * @param {MeshInstance} [meshInstance] - The picked mesh instance.
-     * @returns {HelperHandle|null} The handle placed this frame that was picked.
+     * @returns {GizmoHandle|null} The handle placed this frame that was picked.
      * @private
      */
     _find(meshInstance) {
@@ -490,11 +465,10 @@ class HelperGizmo extends Gizmo {
         const facing = camera.projection === PROJECTION_PERSPECTIVE ?
             tmpV2.sub2(camera.entity.getPosition(), origin).normalize() :
             tmpV2.copy(camera.entity.forward).mulScalar(-1);
-        const side = tmpV3.cross(dir, facing);
-        if (side.lengthSq() < 1e-8) {
+        const normal = tmpV3;
+        if (!this._lineNormal(dir, facing, normal)) {
             return null;
         }
-        const normal = side.cross(side, dir).normalize();
         if (!plane.setFromPointNormal(origin, normal).intersectsRay(ray, tmpV1)) {
             return null;
         }
@@ -508,7 +482,7 @@ class HelperGizmo extends Gizmo {
             return;
         }
         this._dragging = false;
-        this.fire(HelperGizmo.EVENT_HANDLEEND, this._drag.node, this._drag.name);
+        this.fire(HandleGizmo.EVENT_HANDLEEND, this._drag.node, this._drag.name);
         this._drag.name = '';
     }
 
@@ -544,7 +518,7 @@ class HelperGizmo extends Gizmo {
      * @param {boolean} [inPlane] - Whether the handle moves in a plane.
      * @param {boolean} [guide] - Whether to show the dashed line. Defaults to true for a line.
      * @returns {boolean} Whether the handle is hovered or dragged, when the subclass shows the
-     * value it edits with {@link HelperGizmo#_readoutAt}.
+     * value it edits with {@link HandleGizmo#_readoutAt}.
      * @protected
      */
     _handle(position, color, node, name, index, origin, dir, inPlane = false, guide = !inPlane) {
@@ -587,7 +561,7 @@ class HelperGizmo extends Gizmo {
      * Shows readout markup below a hovered or dragged handle.
      *
      * @param {Vec3} position - The handle position.
-     * @param {string} html - The markup, as {@link HelperGizmo#_readoutValue} formats it.
+     * @param {string} html - The markup, as {@link HandleGizmo#_readoutValue} formats it.
      * @protected
      */
     _readoutHtmlAt(position, html) {
@@ -716,14 +690,14 @@ class HelperGizmo extends Gizmo {
     }
 
     /**
-     * Places the handles of the box last passed to {@link HelperGizmo#_boxCorners}, once it is
+     * Places the handles of the box last passed to {@link HandleGizmo#_boxCorners}, once it is
      * large enough on screen. A face handle moves its face along its axis, and a corner handle
      * moves its corner across the view, or along the diagonal for a uniform box. The readouts show
      * the extents.
      *
      * @param {Vec3} center - The center of the box.
      * @param {Vec3} halfExtents - The half extents.
-     * @param {HelperBoxOptions} options - The handles to show.
+     * @param {BoxHandleOptions} options - The handles to show.
      * @param {number} [pad] - The padding on each side, left out of the readout extents.
      * @protected
      */
@@ -765,37 +739,52 @@ class HelperGizmo extends Gizmo {
      * @param {Vec3} local - The dragged point relative to the start position, along the box axes.
      * @param {Vec3} start - The half extents at the start of the resize.
      * @param {boolean} centered - Whether the resize keeps the center in place.
+     * @param {number} pad - The padding on each side, left out of the snapped extent.
      * @param {Vec3} half - The half extents to set.
      * @param {Vec3} mid - The offset of the center to set, along the box axes.
      * @private
      */
-    _resizeBoxAxis(axis, sign, local, start, centered, half, mid) {
+    _resizeBoxAxis(axis, sign, local, start, centered, pad, half, mid) {
         const a = BOX_AXES[axis];
         if (centered) {
-            half[a] = Math.max(sign * local[a], BOX_MIN_HALF);
+            half[a] = this._snapBoxHalf(Math.max(sign * local[a], BOX_MIN_HALF), pad);
             mid[a] = 0;
             return;
         }
         const anchor = -sign * start[a];
-        half[a] = 0.5 * Math.max(sign * (local[a] - anchor), 2 * BOX_MIN_HALF);
+        half[a] = this._snapBoxHalf(0.5 * Math.max(sign * (local[a] - anchor), 2 * BOX_MIN_HALF), pad);
         mid[a] = anchor + sign * half[a];
     }
 
     /**
-     * Resizes a box from where one of the handles of {@link HelperGizmo#_boxHandles} is dragged
+     * Snaps a half extent so the extent the readout shows, without the padding, is a multiple of
+     * {@link DragGizmo#snapIncrement}.
+     *
+     * @param {number} half - The half extent, padding included.
+     * @param {number} pad - The padding on each side.
+     * @returns {number} The half extent.
+     * @private
+     */
+    _snapBoxHalf(half, pad) {
+        return this.snap ? 0.5 * this._snapLength(2 * (half - pad)) + pad : half;
+    }
+
+    /**
+     * Resizes a box from where one of the handles of {@link HandleGizmo#_boxHandles} is dragged
      * to. The opposite face or corner stays in place, or the center does for a centered box.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
      * @param {Quat} rotation - The rotation of the box.
      * @param {Vec3} startPosition - The center at the start of the resize.
      * @param {Vec3} startHalfExtents - The half extents at the start of the resize.
-     * @param {HelperBoxOptions} options - How the handles resize the box.
+     * @param {BoxHandleOptions} options - How the handles resize the box.
+     * @param {number} pad - The padding on each side, left out of the snapped extents.
      * @param {Vec3} position - Receives the center.
      * @param {Vec3} halfExtents - Receives the half extents.
      * @protected
      */
-    _resizeBox(handle, point, rotation, startPosition, startHalfExtents, options, position, halfExtents) {
+    _resizeBox(handle, point, rotation, startPosition, startHalfExtents, options, pad, position, halfExtents) {
         const local = tmpBoxQ.copy(rotation).invert().transformVector(tmpLocal.sub2(point, startPosition), tmpLocal);
         const start = startHalfExtents;
         const half = tmpHalf.copy(start);
@@ -803,7 +792,7 @@ class HelperGizmo extends Gizmo {
         const { centered } = options;
 
         if (handle.index < BOX_FACES) {
-            this._resizeBoxAxis(handle.index >> 1, handle.index & 1 ? -1 : 1, local, start, centered, half, mid);
+            this._resizeBoxAxis(handle.index >> 1, handle.index & 1 ? -1 : 1, local, start, centered, pad, half, mid);
         } else if (options.uniform) {
             // the box scales evenly about the opposite corner, or the center
             const corner = handle.index - BOX_FACES;
@@ -812,13 +801,18 @@ class HelperGizmo extends Gizmo {
                 anchor.set(0, 0, 0);
             }
             const from = Math.hypot(boxSide(corner, 0) * start.x - anchor.x, boxSide(corner, 1) * start.y - anchor.y, boxSide(corner, 2) * start.z - anchor.z);
-            const factor = Math.max(local.distance(anchor) / from, BOX_MIN_FACTOR);
+            let factor = Math.max(local.distance(anchor) / from, BOX_MIN_FACTOR);
+            if (this.snap) {
+                // the largest extent snaps, and the others keep their proportions
+                const largest = Math.max(start.x, start.y, start.z);
+                factor = this._snapBoxHalf(largest * factor, pad) / largest;
+            }
             half.mulScalar(factor);
             mid.copy(anchor).mulScalar(1 - factor);
         } else {
             const corner = handle.index - BOX_FACES;
             for (let k = 0; k < 3; k++) {
-                this._resizeBoxAxis(k, boxSide(corner, k), local, start, centered, half, mid);
+                this._resizeBoxAxis(k, boxSide(corner, k), local, start, centered, pad, half, mid);
             }
         }
 
@@ -827,20 +821,17 @@ class HelperGizmo extends Gizmo {
     }
 
     /**
-     * Places the icon of a node, which fires {@link HelperGizmo.EVENT_ICONSELECT} when clicked.
+     * Places the icon of a node, which fires {@link HandleGizmo.EVENT_ICONSELECT} when clicked.
      *
-     * @param {'light' | 'camera'} kind - The icon.
+     * @param {OverlayIcon} kind - The icon.
      * @param {Vec3} position - The world position.
      * @param {GraphNode} node - The node the icon marks.
      * @protected
      */
     _icon(kind, position, node) {
-        if (!this.icon) {
-            return;
+        if (this.icon) {
+            this._shapes.icon(kind, position, node);
         }
-        const icon = this._icons.next();
-        icon.shape = this._shapes.icon(kind, position);
-        icon.node = node;
     }
 
     /**
@@ -855,7 +846,7 @@ class HelperGizmo extends Gizmo {
      * @protected
      */
     _readoutValue(label, color, value, unit = '') {
-        return `<b style="color: ${color.toString(false)}">${label}</b> ${value.toFixed(2)}${unit}`;
+        return `${this._labelMarkup(label, color)} ${value.toFixed(2)}${unit}`;
     }
 
     /**
@@ -870,7 +861,7 @@ class HelperGizmo extends Gizmo {
      * Called when a handle starts being dragged, to keep the values it edits from. Implemented by
      * the subclass.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @protected
      */
     _startHandle(handle) {
@@ -879,7 +870,7 @@ class HelperGizmo extends Gizmo {
     /**
      * Edits the value of the dragged handle. Implemented by the subclass.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to, on its line.
      * @protected
      */
@@ -894,7 +885,6 @@ class HelperGizmo extends Gizmo {
     prerender() {
         const shapes = this._shapes;
         this._placed.count = 0;
-        this._icons.count = 0;
         if (!this.enabled) {
             shapes.clear();
             return;
@@ -917,4 +907,4 @@ class HelperGizmo extends Gizmo {
     }
 }
 
-export { HelperGizmo };
+export { HandleGizmo };

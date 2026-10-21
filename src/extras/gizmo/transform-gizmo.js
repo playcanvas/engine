@@ -14,8 +14,9 @@ import {
     color4from3
 } from './color.js';
 import { LAYERID_IMMEDIATE } from '../../scene/constants.js';
+import { DragGizmo } from './drag-gizmo.js';
 import { Gizmo } from './gizmo.js';
-import { HelperShapes } from './helper-shapes.js';
+import { OverlayShapes } from './overlay-shapes.js';
 import { Readout } from './readout.js';
 import { Debug } from '../../core/debug.js';
 
@@ -65,7 +66,7 @@ const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
  *
  * @category Gizmo
  */
-class TransformGizmo extends Gizmo {
+class TransformGizmo extends DragGizmo {
     /**
      * Fired when the transformation has started.
      *
@@ -203,7 +204,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal guide lines, a constant thickness on screen.
      *
-     * @type {HelperShapes}
+     * @type {OverlayShapes}
      * @private
      */
     _guides;
@@ -270,16 +271,6 @@ class TransformGizmo extends Gizmo {
     _readout = null;
 
     /**
-     * Whether snapping is enabled. Defaults to false.
-     */
-    snap = false;
-
-    /**
-     * Snapping increment. Defaults to 1.
-     */
-    snapIncrement = 1;
-
-    /**
      * Whether to hide the shapes when dragging. Defaults to 'selected'.
      *
      * @type {GizmoDragMode}
@@ -303,7 +294,7 @@ class TransformGizmo extends Gizmo {
         this._guideRoot = new Entity('guides');
         this._app.root.addChild(this._guideRoot);
         const guideLayer = this._app.scene.layers.getLayerById(LAYERID_IMMEDIATE) ?? layer;
-        this._guides = new HelperShapes(this, this._guideTheme, this._guideRoot, guideLayer);
+        this._guides = new OverlayShapes(this, this._guideTheme, this._guideRoot, guideLayer);
         this._guides.lineThickness = 1;
 
         this.readout = true;
@@ -598,7 +589,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _readoutLabel(axis) {
-        return `<b style="color: ${this._theme.shapeBase[axis].toString(false)}">${axis.toUpperCase()}</b>`;
+        return this._labelMarkup(axis.toUpperCase(), this._theme.shapeBase[axis]);
     }
 
     /**
@@ -778,8 +769,7 @@ class TransformGizmo extends Gizmo {
 
             if (isLine) {
                 // set plane normal to face camera but keep normal perpendicular to axis
-                v2.cross(normal, facingDir).normalize();
-                normal.cross(v2, normal).normalize();
+                this._lineNormal(normal, facingDir, normal);
             }
         }
 

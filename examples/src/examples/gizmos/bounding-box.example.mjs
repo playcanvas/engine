@@ -144,7 +144,9 @@ data.set('gizmo', {
     edges: gizmo.edges,
     handles: gizmo.handles,
     readout: gizmo.readout,
-    icon: gizmo.icon
+    icon: gizmo.icon,
+    snap: gizmo.snap,
+    snapIncrement: gizmo.snapIncrement
 });
 
 // Create grid

@@ -124,7 +124,7 @@ gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snap: gizmo.snap,
-    snapIncrement: gizmo.snapIncrement,
+    snapAngleIncrement: gizmo.snapAngleIncrement,
     dragMode: gizmo.dragMode,
     rotationMode: gizmo.rotationMode,
     theme: {

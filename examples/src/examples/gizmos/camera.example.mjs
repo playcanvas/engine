@@ -176,7 +176,10 @@ data.set('gizmo', {
     handleSize: gizmo.handleSize,
     handles: gizmo.handles,
     readout: gizmo.readout,
-    icon: gizmo.icon
+    icon: gizmo.icon,
+    snap: gizmo.snap,
+    snapIncrement: gizmo.snapIncrement,
+    snapAngleIncrement: gizmo.snapAngleIncrement
 });
 data.set('subject', {
     proj: PROJECTION_PERSPECTIVE + 1,

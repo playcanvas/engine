@@ -17,7 +17,9 @@ import { SphereShape } from './shape/sphere-shape.js';
 /**
  * @import { Entity } from '../../framework/entity.js'
  * @import { Gizmo } from './gizmo.js'
+ * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { Shape } from './shape/shape.js'
  */
 
@@ -71,10 +73,16 @@ const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 
 
 /**
- * @typedef {object} HelperShapesTheme
+ * @typedef {object} OverlayShapesTheme
  * @property {Color} base - The color where the shapes are visible.
  * @property {Color} occluded - The color where the scene hides the shapes.
- * @property {Color} fill - The color of filled volumes.
+ * @property {Color} [fill] - The color of filled volumes, needed only to place them.
+ */
+
+/**
+ * The glyph of an icon, named for the component it marks.
+ *
+ * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem'} OverlayIcon
  */
 
 /**
@@ -135,14 +143,14 @@ class ShapePool extends Pool {
 }
 
 /**
- * Pools of the gizmo shapes drawn by helper gizmos around world-sized geometry, with lines and
+ * Pools of the gizmo shapes drawn by handle and icon gizmos around world-sized geometry, with lines and
  * rings of a constant thickness on screen, handles of a constant size and text labels. Shapes are
  * placed each frame between {@link begin} and {@link end}, in world space, under the root of the
  * gizmo, which must not be rotated or scaled.
  *
  * @ignore
  */
-class HelperShapes {
+class OverlayShapes {
     /**
      * The line thickness in CSS pixels.
      *
@@ -171,7 +179,7 @@ class HelperShapes {
     _gizmo;
 
     /**
-     * @type {HelperShapesTheme}
+     * @type {OverlayShapesTheme}
      * @private
      */
     _theme;
@@ -215,7 +223,7 @@ class HelperShapes {
 
     /**
      * @param {Gizmo} gizmo - The gizmo owning the shapes.
-     * @param {HelperShapesTheme} theme - The theme, whose colors the shapes follow.
+     * @param {OverlayShapesTheme} theme - The theme, whose colors the shapes follow.
      * @param {Entity} [parent] - The parent of the shapes, which must not be rotated or scaled.
      * Defaults to the root of the gizmo.
      * @param {Layer} [layer] - The layer of the shapes, which must keep the scene depth for the
@@ -230,6 +238,14 @@ class HelperShapes {
         const device = app.graphicsDevice;
         const layers = [layer.id];
         this._labels = new Pool(() => new Readout(device.canvas));
+
+        /**
+         * The icons placed this frame, with the nodes they mark.
+         *
+         * @type {Pool<{ shape: Shape|null, node: GraphNode|null }>}
+         * @private
+         */
+        this._icons = new Pool(() => ({ shape: null, node: null }));
         // in a manually sorted layer the filled shapes draw first, so their depth hides the lines
         // and handles behind them
         const pool = (/** @type {(base: Color, occluded: Color) => Shape} */ create, drawOrder = SHAPE_DRAW_ORDER) => {
@@ -312,6 +328,7 @@ class HelperShapes {
         }
         this._lines.begin();
         this._labels.count = 0;
+        this._icons.count = 0;
     }
 
     /**
@@ -337,6 +354,7 @@ class HelperShapes {
         }
         this._lines.begin();
         this._labels.count = 0;
+        this._icons.count = 0;
         this.end();
     }
 
@@ -378,7 +396,8 @@ class HelperShapes {
      * @private
      */
     _colors(alpha, volume = false, color = null) {
-        const { base, occluded, fill } = this._theme;
+        const { base, occluded } = this._theme;
+        const fill = /** @type {Color} */ (this._theme.fill);
         const source = volume ? fill : base;
         tmpBase.copy(source);
         tmpBase.a *= alpha;
@@ -867,14 +886,51 @@ class HelperShapes {
     }
 
     /**
-     * Adds an icon at a point, a glyph of a constant size on screen facing the camera over a
-     * faint dark backdrop: a sun for a light and a camera body with a lens for a camera.
+     * Copies the colors of a partial theme into the theme the shapes follow, for the colors the
+     * theme has.
      *
-     * @param {'light' | 'camera'} kind - The icon.
-     * @param {Vec3} position - The world position.
-     * @returns {Shape} The backdrop of the icon, which the gizmo picks.
+     * @param {Partial<OverlayShapesTheme>} [partial] - The partial theme.
      */
-    icon(kind, position) {
+    applyTheme(partial) {
+        const theme = this._theme;
+        for (const key of /** @type {(keyof OverlayShapesTheme)[]} */ (Object.keys(theme))) {
+            const color = partial?.[key];
+            if (color instanceof Color) {
+                theme[key]?.copy(color);
+            }
+        }
+    }
+
+    /**
+     * Gets the node whose icon, placed this frame, was picked.
+     *
+     * @param {MeshInstance} [meshInstance] - The picked mesh instance.
+     * @returns {GraphNode|null} The node, or null when no icon was picked.
+     */
+    pickIcon(meshInstance) {
+        if (!meshInstance) {
+            return null;
+        }
+        const icons = this._icons;
+        for (let i = 0; i < icons.count; i++) {
+            if (icons.items[i].shape?.meshInstances[0] === meshInstance) {
+                return icons.items[i].node;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Adds an icon at a point, a glyph of a constant size on screen facing the camera over a
+     * faint dark backdrop, which {@link OverlayShapes#pickIcon} picks: a sun for a light, a
+     * camera body with a lens for a camera, a microphone for an audio listener, a speaker for a
+     * sound and a cluster of dots for a particle system.
+     *
+     * @param {OverlayIcon} kind - The icon.
+     * @param {Vec3} position - The world position.
+     * @param {GraphNode} node - The node the icon marks.
+     */
+    icon(kind, position, node) {
         const camera = this._gizmo.camera.entity;
         const icon = this._icon;
         icon.center.copy(position);
@@ -927,8 +983,63 @@ class HelperShapes {
                 this.cone('triangle', lens, tmpIconQ.setFromMat4(tmpM), tmpIconB.set(8 / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, length * pixel), 1, false);
                 break;
             }
+            case 'audiolistener': {
+                // a microphone, its rounded head held in a cradle on a stand
+                this._iconLine(-3, 1, -3, 5);
+                this._iconLine(3, 1, 3, 5);
+                this._iconArc(0, 5, 3, 0, Math.PI, 6);
+                this._iconArc(0, 1, 3, Math.PI, 2 * Math.PI, 6);
+                this._iconArc(0, 1, 6, Math.PI, 2 * Math.PI, 8);
+                this._iconLine(0, -5, 0, -8.5);
+                this._iconLine(-4, -8.5, 4, -8.5);
+                break;
+            }
+            case 'sound': {
+                // a speaker, a box and its cone, with two sound waves
+                this._iconLine(-7.5, -3, -4, -3);
+                this._iconLine(-4, -3, -4, 3);
+                this._iconLine(-4, 3, -7.5, 3);
+                this._iconLine(-7.5, 3, -7.5, -3);
+                this._iconLine(-4, -3, 0.5, -7.5);
+                this._iconLine(0.5, -7.5, 0.5, 7.5);
+                this._iconLine(0.5, 7.5, -4, 3);
+                this._iconArc(0.5, 0, 4, -0.3 * Math.PI, 0.3 * Math.PI, 4);
+                this._iconArc(0.5, 0, 8, -0.3 * Math.PI, 0.3 * Math.PI, 6);
+                break;
+            }
+            case 'particlesystem': {
+                // a cluster of dots around a larger one
+                this._iconDisc(3.2, null, 1);
+                for (let i = 0; i < 6; i++) {
+                    const angle = (0.5 + i / 3) * Math.PI;
+                    this._iconDisc(i & 1 ? 1.6 : 2.2, null, 1, 0, this._iconDots, 7.5 * Math.cos(angle), 7.5 * Math.sin(angle));
+                }
+                break;
+            }
         }
-        return backdrop;
+        const record = this._icons.next();
+        record.shape = backdrop;
+        record.node = node;
+    }
+
+    /**
+     * Places an arc of an icon, as straight segments, in CSS pixels from its center.
+     *
+     * @param {number} x - The x of the arc center.
+     * @param {number} y - The y of the arc center, up the screen.
+     * @param {number} radius - The radius.
+     * @param {number} from - The start angle in radians, from the x axis towards the y axis.
+     * @param {number} to - The end angle in radians.
+     * @param {number} segments - The number of segments.
+     * @private
+     */
+    _iconArc(x, y, radius, from, to, segments) {
+        const step = (to - from) / segments;
+        for (let i = 0; i < segments; i++) {
+            const a0 = from + i * step;
+            const a1 = a0 + step;
+            this._iconLine(x + radius * Math.cos(a0), y + radius * Math.sin(a0), x + radius * Math.cos(a1), y + radius * Math.sin(a1));
+        }
     }
 
     /**
@@ -959,4 +1070,4 @@ class HelperShapes {
     }
 }
 
-export { HelperShapes };
+export { OverlayShapes };

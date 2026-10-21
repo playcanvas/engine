@@ -3,14 +3,14 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../scene/constants.js';
 import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from './color.js';
-import { HelperGizmo } from './helper-gizmo.js';
+import { HandleGizmo } from './handle-gizmo.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Entity } from '../../framework/entity.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { LightComponent } from '../../framework/components/light/component.js'
- * @import { HelperHandle } from './helper-gizmo.js'
+ * @import { GizmoHandle } from './handle-gizmo.js'
  */
 
 const tmpV1 = new Vec3();
@@ -44,7 +44,7 @@ const MIN_SIZE = 0.01;
  *
  * - A directional light is a solid arrow through a disc of parallel rays, a constant size on
  * screen like the arrows of a {@link TranslateGizmo}, sized by {@link Gizmo#size} rather than
- * {@link HelperGizmo#lineThickness}.
+ * {@link HandleGizmo#lineThickness}.
  * - An omni light is the outline of its range over three faint great circles, which become
  * solid when the camera is inside the range.
  * - A spot light is its outer cone, capped by arcs of its range, with a dashed inner cone ring, a
@@ -57,7 +57,7 @@ const MIN_SIZE = 0.01;
  * which matches its world size when its parent is not scaled.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_MANUAL });
+ * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
  * app.scene.layers.push(layer);
  * const gizmo = new LightGizmo(cameraComponent, layer);
  * gizmo.attach([lightEntity]);
@@ -69,7 +69,7 @@ const MIN_SIZE = 0.01;
  *
  * @category Gizmo
  */
-class LightGizmo extends HelperGizmo {
+class LightGizmo extends HandleGizmo {
     /**
      * Whether to draw a dashed line from each omni, spot and area light down to the ground, taken
      * as the plane y = 0, which places the light in depth. Defaults to false.
@@ -399,10 +399,6 @@ class LightGizmo extends HelperGizmo {
                 continue;
             }
             this._shapes.tint = this.useLightColor ? light.color : null;
-            if (this.iconOnly) {
-                this._icon('light', entity.getPosition(), entity);
-                continue;
-            }
             if (this._drawArea(light)) {
                 continue;
             }
@@ -428,7 +424,7 @@ class LightGizmo extends HelperGizmo {
     /**
      * Keeps the scale of the dragged light's entity, which area light handles edit.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @protected
      * @override
      */
@@ -441,7 +437,7 @@ class LightGizmo extends HelperGizmo {
     /**
      * Edits the range, cone angle or area size of the dragged handle's light.
      *
-     * @param {HelperHandle} handle - The dragged handle.
+     * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
      * @protected
      * @override
@@ -456,7 +452,7 @@ class LightGizmo extends HelperGizmo {
 
         switch (handle.name) {
             case 'range': {
-                light.range = Math.max(dist, MIN_SIZE);
+                light.range = Math.max(this._snapLength(dist), MIN_SIZE);
                 break;
             }
             case 'outerConeAngle':
@@ -464,7 +460,7 @@ class LightGizmo extends HelperGizmo {
                 const dir = tmpV2.copy(entity.up).mulScalar(-1);
                 const along = offset.dot(dir);
                 const across = tmpV3.copy(dir).mulScalar(-along).add(offset).length();
-                const angle = Math.atan2(across, along) * math.RAD_TO_DEG;
+                const angle = this._snapAngle(Math.atan2(across, along) * math.RAD_TO_DEG);
                 if (handle.name === 'outerConeAngle') {
                     light.outerConeAngle = math.clamp(angle, 1, 89);
                     light.innerConeAngle = Math.min(light.innerConeAngle, light.outerConeAngle);
@@ -474,18 +470,20 @@ class LightGizmo extends HelperGizmo {
                 break;
             }
             case 'width': {
-                entity.setLocalScale(start.x * Math.max(2 * dist, MIN_SIZE) / world.x, start.y, start.z);
+                entity.setLocalScale(start.x * Math.max(this._snapLength(2 * dist), MIN_SIZE) / world.x, start.y, start.z);
                 break;
             }
             case 'depth': {
-                entity.setLocalScale(start.x, start.y, start.z * Math.max(2 * dist, MIN_SIZE) / world.z);
+                entity.setLocalScale(start.x, start.y, start.z * Math.max(this._snapLength(2 * dist), MIN_SIZE) / world.z);
                 break;
             }
             case 'radius': {
-                // the radius of a disk is a quarter of its width and depth, of a sphere half its largest size
+                // the radius of a disk is a quarter of its width and depth, of a sphere half its largest
+                // size, and a disk snaps the diameter its readout shows
                 const disk = light.shape === LIGHTSHAPE_DISK;
                 const radius = disk ? 0.25 * (world.x + world.z) : 0.5 * Math.max(world.x, world.y, world.z);
-                const factor = Math.max(dist, MIN_SIZE) / radius;
+                const snapped = disk ? 0.5 * this._snapLength(2 * dist) : this._snapLength(dist);
+                const factor = Math.max(snapped, MIN_SIZE) / radius;
                 entity.setLocalScale(start.x * factor, disk ? start.y : start.y * factor, start.z * factor);
                 break;
             }

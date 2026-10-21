@@ -132,6 +132,24 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
             </Panel>
+            <Panel headerText='Snap'>
+                <LabelGroup text='Snap'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.snap' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Increment'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.snapIncrement' }}
+                        min={0.05}
+                        max={2}
+                        precision={2}
+                    />
+                </LabelGroup>
+            </Panel>
             <Panel headerText='Camera'>
                 <LabelGroup text='Projection'>
                     <SelectInput
