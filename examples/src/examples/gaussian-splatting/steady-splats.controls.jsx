@@ -1,4 +1,11 @@
-import { BindingTwoWay, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    Panel,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -24,6 +31,14 @@ export function Controls({ observer }) {
                         { v: 'gpu-sort', t: 'Raster (GPU Sort)' },
                         { v: 'cpu-sort', t: 'Raster (CPU Sort)' }
                     ]}
+                />
+            </LabelGroup>
+            <LabelGroup text='Animate Samples'>
+                <BooleanInput
+                    type='toggle'
+                    binding={new BindingTwoWay()}
+                    link={{ observer, path: 'animateSamples' }}
+                    value={observer.get('animateSamples') ?? true}
                 />
             </LabelGroup>
             <LabelGroup text='History Weight'>

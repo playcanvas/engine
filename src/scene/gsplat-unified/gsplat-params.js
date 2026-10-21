@@ -152,7 +152,12 @@ class GSplatParams {
     /**
      * Fraction of reprojected history retained by {@link GSPLAT_RENDERER_STEADY}, in [0, 1).
      * Larger values reduce sampling noise but take longer to respond to changes. Zero disables
-     * temporal reuse while retaining spatial resampling. Defaults to 0.7.
+     * temporal color reuse and its history allocation while retaining spatial resampling and
+     * the occluder cache. Defaults to 0.7.
+     *
+     * Like native stochastic rendering, {@link CameraComponent#jitter} controls sample animation:
+     * zero repeats a fixed pattern, and a positive value changes samples each rendered frame.
+     * Sampling animation and this history weight are independent.
      *
      * @type {number}
      * @beta
@@ -245,6 +250,9 @@ class GSplatParams {
      * perspective cameras, standard fragment coverage and scenes without opaque mesh occluders.
      * Other views use GPU sorting.
      * Inference uses independent per-primitive hash samples; training and STBN are not included.
+     * {@link CameraComponent#jitter} controls whether those samples animate, independently of
+     * {@link steadyHistoryWeight}. The native {@link dither} patterns apply to the GPU-sort
+     * renderer; SteadySplats retains uniform alpha sampling so its PDF ratios remain consistent.
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used

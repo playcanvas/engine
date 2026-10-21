@@ -2,6 +2,7 @@
 //
 // Compare SteadySplats importance resampling with native stochastic and sorted GSplat rendering.
 // Native stochastic uses the engine's default blue-noise dither without temporal filtering.
+// Both stochastic paths use camera.jitter to switch between fixed and animated samples.
 // SteadySplats temporal retention trades response for stability.
 // The minimal resampling path supports splat-only, full-viewport mono perspective views;
 // unsupported views and WebGL retain sorted rendering.
@@ -91,20 +92,29 @@ const renderers = {
     'gpu-sort': GSPLAT_RENDERER_RASTER_GPU_SORT,
     'cpu-sort': GSPLAT_RENDERER_RASTER_CPU_SORT
 };
+const updateSampling = () => {
+    const mode = data.get('mode');
+    const stochastic = mode === 'steady' || mode === 'stochastic';
+    camera.camera.jitter = stochastic && data.get('animateSamples') ? 1 : 0;
+    app.scene.gsplat.resetHistory();
+};
 data.on('mode:set', () => {
     const mode = data.get('mode');
     app.scene.gsplat.stochastic = mode === 'stochastic' && device.isWebGPU;
     app.scene.gsplat.renderer = renderers[mode];
+    updateSampling();
     // Show the resolved WebGL fallback for both WebGPU-only modes.
     const current = app.scene.gsplat.currentRenderer;
     if (current !== renderers[mode]) {
         setTimeout(() => data.set('mode', 'cpu-sort'), 0);
     }
 });
+data.on('animateSamples:set', updateSampling);
 data.on('historyWeight:set', () => {
     app.scene.gsplat.steadyHistoryWeight = data.get('historyWeight');
     app.scene.gsplat.resetHistory();
 });
+data.set('animateSamples', true);
 data.set('mode', 'steady');
 data.set('historyWeight', 0.7);
 

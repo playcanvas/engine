@@ -12,8 +12,7 @@ import { StorageBuffer } from '../../../src/platform/graphics/storage-buffer.js'
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { Camera } from '../../../src/scene/camera.js';
 import historySource from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-history.js';
-import spatialSource from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-spatial.js';
-import temporalSource from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-temporal.js';
+import resolveSource from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-resolve.js';
 import commonSource from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/gsplat-steady-common.js';
 import { createGraphicsDevice } from '../../device.mjs';
 
@@ -54,8 +53,8 @@ describe('GSplat SteadySplats GPU probability ratios', function () {
         target.unlock();
     };
 
-    const createCompute = (name, source) => {
-        const shader = new Shader(device, { name, shaderLanguage: SHADERLANGUAGE_WGSL, cshader: source });
+    const createCompute = (name, source, defines) => {
+        const shader = new Shader(device, { name, shaderLanguage: SHADERLANGUAGE_WGSL, cshader: source, cdefines: defines });
         const result = new Compute(device, shader, name);
         result.setupDispatch(1, 1, 1);
         shaders.push(shader);
@@ -211,11 +210,11 @@ describe('GSplat SteadySplats GPU probability ratios', function () {
         ratios[(CENTER + WIDTH) * 4 + 3] = 5;
         upload(raw, pixels);
         upload(weights, ratios);
-        const spatialCompute = createCompute('SteadySpatialOracle', spatialSource);
+        const spatialCompute = createCompute('SteadySpatialOracle', resolveSource);
         spatialCompute.setParameter('steadySize', [WIDTH, HEIGHT]);
         spatialCompute.setParameter('steadyRaw', raw);
         spatialCompute.setParameter('steadyWeights', weights);
-        spatialCompute.setParameter('steadySpatial', spatial);
+        spatialCompute.setParameter('steadyOutput', spatial);
         device.computeDispatch([spatialCompute]);
         device.submit();
         const actual = await spatial.read(0, 0, WIDTH, HEIGHT, { immediate: true });
@@ -242,7 +241,6 @@ describe('GSplat SteadySplats GPU probability ratios', function () {
     it('attenuates an outlier history by weight instead of clamping its RGB', async function () {
         requireExecution.call(this);
         const raw = texture(PIXELFORMAT_RGBA16F);
-        const spatial = texture(PIXELFORMAT_RGBA16F);
         const previous = texture(PIXELFORMAT_RGBA16F);
         const output = texture(PIXELFORMAT_RGBA16F, true);
         const currentPixels = new Uint16Array(PIXELS * 4);
@@ -252,12 +250,11 @@ describe('GSplat SteadySplats GPU probability ratios', function () {
             previousPixels.set([2, 0, 0, 1].map(FloatPacking.float2Half), p * 4);
         }
         upload(raw, currentPixels);
-        upload(spatial, currentPixels);
         upload(previous, previousPixels);
         await samplePixels(1, 7, 2);
         const projection = new Mat4().setPerspective(60, 1, 0.1, 100);
         Camera.applyShaderProjectionTransform(projection, projection, false, true);
-        const temporal = createCompute('SteadyTemporalOracle', temporalSource);
+        const temporal = createCompute('SteadyTemporalOracle', resolveSource, new Map([['STEADY_TEMPORAL', '']]));
         temporal.setParameter('steadySize', [WIDTH, HEIGHT]);
         temporal.setParameter('steadyValid', 1);
         temporal.setParameter('steadyRetention', 0.7);
@@ -266,7 +263,7 @@ describe('GSplat SteadySplats GPU probability ratios', function () {
         temporal.setParameter('steadyPreviousViewProjection', projection.data);
         temporal.setParameter('steadyRaw', raw);
         temporal.setParameter('steadySamples', samples);
-        temporal.setParameter('steadySpatial', spatial);
+        temporal.setParameter('steadyWeights', weights);
         temporal.setParameter('steadyPrevious', previous);
         temporal.setParameter('steadyOutput', output);
         device.computeDispatch([temporal]);

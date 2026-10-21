@@ -1,16 +1,12 @@
 // SteadySplats Eq. 20 / Algorithm 3. Reject history by reducing its weight, not clipping RGB.
 export default /* wgsl */`
-uniform steadySize: vec2f;
 uniform steadyValid: u32;
 uniform steadyRetention: f32;
 uniform steadyInverseProjection: mat4x4f;
 uniform steadyInverseView: mat4x4f;
 uniform steadyPreviousViewProjection: mat4x4f;
-var steadyRaw: texture_2d<f32>;
 var steadySamples: texture_2d<u32>;
-var steadySpatial: texture_2d<f32>;
 var steadyPrevious: texture_2d<f32>;
-var steadyOutput: texture_storage_2d<rgba16float, write>;
 
 fn steadyYCoCg(c: vec3f) -> vec3f {
     return vec3f(dot(c, vec3f(0.25, 0.5, 0.25)), (c.r - c.b) * 0.5, dot(c, vec3f(-0.25, 0.5, -0.25)));
@@ -38,13 +34,7 @@ fn steadyHistoryAt(pixel: vec2f) -> vec4f {
     return color;
 }
 
-@compute @workgroup_size(8, 8, 1)
-fn main(@builtin(global_invocation_id) globalId: vec3u) {
-    let p = vec2i(globalId.xy);
-    if (any(p >= vec2i(uniform.steadySize))) {
-        return;
-    }
-    let current = textureLoad(steadySpatial, p, 0);
+fn steadyTemporalAt(p: vec2i, current: vec4f) -> vec4f {
     var color = current;
     if (uniform.steadyValid != 0u && uniform.steadyRetention > 0.0) {
         let pixel = vec2f(p) + 0.5;
@@ -80,9 +70,6 @@ fn main(@builtin(global_invocation_id) globalId: vec3u) {
             color = mix(current, historical, uniform.steadyRetention / max(1.0, rejection));
         }
     }
-    // Cubic reconstruction can overshoot coverage; preserve premultiplication when bounding it.
-    let alpha = clamp(color.a, 0.0, 1.0);
-    let rgb = color.rgb * select(0.0, alpha / max(color.a, 1e-8), color.a > 0.0);
-    textureStore(steadyOutput, p, vec4f(rgb, alpha));
+    return color;
 }
 `;

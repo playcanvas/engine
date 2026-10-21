@@ -13,6 +13,11 @@ import samplePS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSteady.js';
 import resolveVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatSteadyResolve.js';
 import resolvePS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSteadyResolve.js';
 
+// Projection modifiers run in the shared projector; output modifiers run before resampling.
+const supportedChunks = new Set([
+    'gsplatModifyVS', 'gsplatOutputVS', 'decodePS', 'gammaPS', 'fogPS', 'fogMathPS', 'tonemappingPS'
+]);
+
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { GraphNode } from '../graph-node.js'
@@ -60,6 +65,15 @@ class GSplatSteadyRenderer extends GSplatHybridRenderer {
     _steadyActive = false;
 
     _worldVersion = -1;
+
+    /** @type {Set<string>} */
+    _sampleUserDefines = new Set();
+
+    _sampleChunksKey = '';
+
+    _coverageChunksKey;
+
+    _coverageSupported = true;
 
     /**
      * @param {GraphicsDevice} device - Graphics device.
@@ -125,9 +139,22 @@ class GSplatSteadyRenderer extends GSplatHybridRenderer {
         const camera = params.cameraNode.camera.camera;
         const rect = camera.rect;
         const chunks = params.material.hasShaderChunks ? params.material.getShaderChunks(SHADERLANGUAGE_WGSL) : null;
-        return !camera.xrActive && camera.projection === PROJECTION_PERSPECTIVE && !params.fisheye &&
+        const chunksKey = chunks?.key;
+        if (chunksKey !== this._coverageChunksKey) {
+            this._coverageChunksKey = chunksKey;
+            this._coverageSupported = true;
+            if (chunks) {
+                for (const name of chunks.keys()) {
+                    if (!supportedChunks.has(name)) {
+                        this._coverageSupported = false;
+                        break;
+                    }
+                }
+            }
+        }
+        return this._coverageSupported && (!params.material.hasShaderChunks || params.material.shaderChunks.useWGSL) &&
+            !camera.xrActive && camera.projection === PROJECTION_PERSPECTIVE && !params.fisheye &&
             rect.x === 0 && rect.y === 0 && rect.z === 1 && rect.w === 1 &&
-            !chunks?.has('gsplatModifyPS') && !chunks?.has('gsplatPS') && !chunks?.has('gsplatHybridVS') &&
             !params.varyings.words && !this._material.getDefine('GSPLAT_OVERDRAW') &&
             !camera.clippingPlanes?.length && !this._hasDepthGeometry(camera);
     }
@@ -230,17 +257,39 @@ class GSplatSteadyRenderer extends GSplatHybridRenderer {
             this._viewParams.steadyHistoryWeight = params.steadyHistoryWeight;
             this._viewParams.historyVersion = params.historyVersion;
             this._viewParams.material = params.material;
-            this.steadyPass?.update(this._viewParams, this._worldVersion);
             this.resolveMaterial.sceneTexturesWrite = params.sceneDepthWrite;
             const noFog = !params.useFog;
             const noTonemap = !params.useTonemap;
-            if (this.resolveMaterial.getDefine('GSPLAT_NO_FOG') !== noFog ||
-                this.resolveMaterial.getDefine('GSPLAT_NO_TONEMAP') !== noTonemap) {
-                this.resolveMaterial.setDefine('GSPLAT_NO_FOG', noFog);
-                this.resolveMaterial.setDefine('GSPLAT_NO_TONEMAP', noTonemap);
-                this.resolveMaterial.update();
+            if (this.sampleMaterial.getDefine('GSPLAT_NO_FOG') !== noFog ||
+                this.sampleMaterial.getDefine('GSPLAT_NO_TONEMAP') !== noTonemap) {
+                this.sampleMaterial.setDefine('GSPLAT_NO_FOG', noFog);
+                this.sampleMaterial.setDefine('GSPLAT_NO_TONEMAP', noTonemap);
+                this.sampleMaterial.update();
             }
+            this.steadyPass?.update(this._viewParams, this._worldVersion);
         }
+    }
+
+    copyMaterialSettings(sourceMaterial) {
+        super.copyMaterialSettings(sourceMaterial);
+        const material = this.sampleMaterial;
+        for (const key of this._sampleUserDefines) {
+            if (!sourceMaterial.defines.has(key)) material.setDefine(key, undefined);
+        }
+        this._sampleUserDefines.clear();
+        sourceMaterial.defines.forEach((value, key) => {
+            material.setDefine(key, value);
+            this._sampleUserDefines.add(key);
+        });
+        const parameters = sourceMaterial.parameters;
+        for (const name in parameters) {
+            if (Object.hasOwn(parameters, name)) material.setParameter(name, parameters[name].data);
+        }
+        if (sourceMaterial.hasShaderChunks && this._sampleChunksKey !== sourceMaterial.shaderChunks.key) {
+            material.shaderChunks.copy(sourceMaterial.shaderChunks);
+            this._sampleChunksKey = sourceMaterial.shaderChunks.key;
+        }
+        material.update();
     }
 
     destroy() {

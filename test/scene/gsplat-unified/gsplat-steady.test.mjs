@@ -80,6 +80,7 @@ describe('GSplat SteadySplats view admission', function () {
         renderer = Object.create(GSplatSteadyRenderer.prototype);
         renderer._material = new ShaderMaterial();
         renderer._forwardRenderer = app.renderer;
+        renderer._coverageSupported = true;
         params = { cameraNode: camera, material, varyings: { words: 0 }, fisheye: 0 };
     });
 
@@ -108,6 +109,16 @@ describe('GSplat SteadySplats view admission', function () {
     it('never evaluates a Gaussian PDF for custom fragment coverage', function () {
         material.getShaderChunks(SHADERLANGUAGE_WGSL).set('gsplatModifyPS', 'fn modifySplatColor() {}');
         expect(renderer.supportsView(params)).to.equal(false);
+    });
+
+    it('preserves output modifiers while rejecting unsupported render chunks', function () {
+        const chunks = material.getShaderChunks(SHADERLANGUAGE_WGSL);
+        chunks.set('gsplatOutputVS', 'fn prepareOutputFromGamma(c: vec3f, d: f32) -> vec3f { return c; }');
+        expect(renderer.supportsView(params)).to.equal(true);
+        chunks.set('opacityDitherPS', '');
+        expect(renderer.supportsView(params)).to.equal(false);
+        chunks.delete('opacityDitherPS');
+        expect(renderer.supportsView(params)).to.equal(true);
     });
 
     it('preserves custom varying and overdraw behavior through sorted fallback', function () {
@@ -271,6 +282,52 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
         expect(Array.from(image).some(value => value > 0)).to.equal(true);
         expect(Array.from(image).some(value => (value & 0x7c00) === 0x7c00)).to.equal(false);
         expect(pass.temporalCompute.getParameter('steadyValid')).to.equal(1);
+    });
+
+    it('uses camera jitter to control fixed and animated samples independently of accumulation', async function () {
+        if (process.env.PC_WEBGPU_BACKEND === 'null' || !process.env.PC_WEBGPU_BACKEND) this.skip();
+        app.scene.gsplat.steadyHistoryWeight = 0;
+        const ids = async () => {
+            const pass = getRenderer().steadyPass;
+            const samples = await pass.samples.read(0, 0, pass.width, pass.height, { immediate: true });
+            return Array.from(samples).filter((value, index) => index % 4 === 1);
+        };
+        renderFrame();
+        const renderer = getRenderer();
+        const fixed = await ids();
+        renderFrame();
+        expect(await ids()).to.deep.equal(fixed);
+        expect(renderer.sampleMaterial.getParameter('steadyFrame').data).to.equal(0);
+        camera.camera.jitter = 1;
+        renderFrame();
+        const animated = await ids();
+        expect(animated).to.not.deep.equal(fixed);
+        renderFrame();
+        expect(await ids()).to.not.deep.equal(animated);
+        camera.camera.jitter = 0;
+        renderFrame();
+        expect(await ids()).to.deep.equal(fixed);
+    });
+
+    it('removes temporal bindings and its spare texture when temporal reuse is disabled', function () {
+        renderFrame();
+        const pass = getRenderer().steadyPass;
+        const history = pass.historyBuffers[0];
+        const count = pass.textures.length;
+        app.scene.gsplat.steadyHistoryWeight = 0;
+        renderFrame();
+        expect(pass.colors).to.have.length(1);
+        expect(pass.textures).to.have.length(count - 1);
+        expect(pass.resolvePass.computes[0]).to.equal(pass.spatialCompute);
+        expect(pass.spatialCompute.getParameter('steadyPrevious')).to.equal(undefined);
+        expect(pass.beforePasses).to.have.length(3);
+        expect(pass.historyBuffers[0]).to.equal(history);
+        app.scene.gsplat.steadyHistoryWeight = 0.7;
+        renderFrame();
+        expect(pass.colors).to.have.length(2);
+        expect(pass.resolvePass.computes[0]).to.equal(pass.temporalCompute);
+        expect(pass.temporalCompute.getParameter('steadyValid')).to.equal(0);
+        expect(pass.historyBuffers[0]).to.equal(history);
     });
 
     it('keeps histories independent for two cameras sharing the same splat layer', function () {

@@ -16,8 +16,7 @@ import { SHADER_FORWARD } from '../constants.js';
 import { Camera } from '../camera.js';
 import commonSource from '../shader-lib/wgsl/chunks/gsplat/gsplat-steady-common.js';
 import historySource from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-history.js';
-import spatialSource from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-spatial.js';
-import temporalSource from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-temporal.js';
+import resolveSource from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-steady-resolve.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -61,7 +60,7 @@ class GSplatSteadySamplePass extends RenderPass {
 }
 
 /**
- * Per-camera/layer resources and ordered visibility, history, spatial and temporal passes.
+ * Per-camera/layer resources and ordered visibility, history and reconstruction passes.
  * The resolved image is composited by the renderer's forward mesh at the original layer position.
  *
  * @ignore
@@ -103,9 +102,6 @@ class GSplatSteadyPass extends FramePass {
     /** @type {Texture} */
     weights;
 
-    /** @type {Texture} */
-    spatial;
-
     width = 0;
 
     height = 0;
@@ -139,6 +135,14 @@ class GSplatSteadyPass extends FramePass {
 
     _alphaClipForward = -1;
 
+    _temporal = false;
+
+    _animated = false;
+
+    _sampleMaterialVersion = -1;
+
+    _cameraShaderKey = -1;
+
     /**
      * @param {GraphicsDevice} device - Graphics device.
      * @param {GSplatSteadyRenderer} owner - Renderer owning these resources.
@@ -152,28 +156,62 @@ class GSplatSteadyPass extends FramePass {
         this.forwardRenderer = forwardRenderer;
         this.samplePass = new GSplatSteadySamplePass(device, this, sampleMesh);
         this.historyShader = this._createShader('GSplatSteadyHistory', commonSource + historySource);
-        this.spatialCompute = new Compute(device, this._createShader('GSplatSteadySpatial', spatialSource));
-        this.temporalCompute = new Compute(device, this._createShader('GSplatSteadyTemporal', temporalSource));
+        this.spatialCompute = new Compute(device, this._createShader('GSplatSteadySpatial', resolveSource));
+        this.temporalCompute = new Compute(device, this._createShader('GSplatSteadyTemporal', resolveSource,
+            new Map([['STEADY_TEMPORAL', '']])));
         this.historyPass = new ComputePass(device, this.historyComputes);
         this.historyPass.name = 'GSplatSteadyHistory';
-        this.spatialPass = new ComputePass(device, [this.spatialCompute]);
-        this.spatialPass.name = 'GSplatSteadySpatial';
-        this.temporalPass = new ComputePass(device, [this.temporalCompute]);
-        this.temporalPass.name = 'GSplatSteadyTemporal';
-        this.beforePasses.push(this.samplePass, this.historyPass, this.spatialPass, this.temporalPass);
+        this.resolvePass = new ComputePass(device, [this.spatialCompute]);
+        this.resolvePass.name = 'GSplatSteadyResolve';
+        this.beforePasses.push(this.samplePass, this.historyPass, this.resolvePass);
         device.on('devicelost', this.resetHistory, this);
         device.on('devicerestored', this.resetHistory, this);
     }
 
     /** @private */
-    _createShader(name, source) {
-        const shader = new Shader(this.device, { name, shaderLanguage: SHADERLANGUAGE_WGSL, cshader: source });
+    _createShader(name, source, defines) {
+        const shader = new Shader(this.device, { name, shaderLanguage: SHADERLANGUAGE_WGSL, cshader: source, cdefines: defines });
         this.shaders.push(shader);
         return shader;
     }
 
     resetHistory() {
         this.valid = false;
+    }
+
+    /** @private */
+    _createTexture(name, format, storage = false) {
+        const result = new Texture(this.device, {
+            name,
+            width: this.width,
+            height: this.height,
+            format,
+            storage,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+        this.textures.push(result);
+        return result;
+    }
+
+    /** @private */
+    _setTemporalEnabled(enabled) {
+        if (enabled && this.colors.length === 1) {
+            this.colors.push(this._createTexture('GSplatSteadyHistory1', PIXELFORMAT_RGBA16F, true));
+        } else if (!enabled && this.colors.length === 2) {
+            const texture = this.colors.pop();
+            this.textures.splice(this.textures.indexOf(texture), 1);
+            texture.destroy();
+        }
+        if (this._temporal !== enabled) {
+            this._temporal = enabled;
+            this.writeIndex = 0;
+            this.resetHistory();
+        }
+        this.resolvePass.computes[0] = enabled ? this.temporalCompute : this.spatialCompute;
     }
 
     /**
@@ -189,28 +227,11 @@ class GSplatSteadyPass extends FramePass {
         this.height = height;
         this._size[0] = width;
         this._size[1] = height;
-        const texture = (name, format, storage = false) => {
-            const result = new Texture(this.device, {
-                name,
-                width,
-                height,
-                format,
-                storage,
-                mipmaps: false,
-                minFilter: FILTER_NEAREST,
-                magFilter: FILTER_NEAREST,
-                addressU: ADDRESS_CLAMP_TO_EDGE,
-                addressV: ADDRESS_CLAMP_TO_EDGE
-            });
-            this.textures.push(result);
-            return result;
-        };
-        this.raw = texture('GSplatSteadyRaw', PIXELFORMAT_RGBA16F);
-        this.samples = texture('GSplatSteadySamples', PIXELFORMAT_RGBA32U);
-        this.weights = texture('GSplatSteadyWeights', PIXELFORMAT_RGBA32F, true);
-        this.spatial = texture('GSplatSteadySpatial', PIXELFORMAT_RGBA16F, true);
-        this.colors = [texture('GSplatSteadyHistory0', PIXELFORMAT_RGBA16F, true),
-            texture('GSplatSteadyHistory1', PIXELFORMAT_RGBA16F, true)];
+        this.raw = this._createTexture('GSplatSteadyRaw', PIXELFORMAT_RGBA16F);
+        this.samples = this._createTexture('GSplatSteadySamples', PIXELFORMAT_RGBA32U);
+        this.weights = this._createTexture('GSplatSteadyWeights', PIXELFORMAT_RGBA32F, true);
+        this.colors.push(this._createTexture('GSplatSteadyHistory0', PIXELFORMAT_RGBA16F, true));
+        this._setTemporalEnabled(this._temporal);
         this.target = new RenderTarget({ name: 'GSplatSteadySamples',
             colorBuffers: [this.raw, this.samples],
             depth: true,
@@ -239,18 +260,19 @@ class GSplatSteadyPass extends FramePass {
             compute.setupDispatch(Math.ceil(width / 8), Math.ceil(rows / 8), 1);
             this.historyComputes.push(compute);
         }
-        this.spatialCompute.setParameter('steadySize', this._size);
-        this.spatialCompute.setParameter('steadyRaw', this.raw);
-        this.spatialCompute.setParameter('steadyWeights', this.weights);
-        this.spatialCompute.setParameter('steadySpatial', this.spatial);
-        this.spatialCompute.setupDispatch(Math.ceil(width / 8), Math.ceil(height / 8), 1);
-        this.temporalCompute.setParameter('steadySize', this._size);
-        this.temporalCompute.setParameter('steadyRaw', this.raw);
+        this._bindResolve(this.spatialCompute);
+        this._bindResolve(this.temporalCompute);
         this.temporalCompute.setParameter('steadySamples', this.samples);
-        this.temporalCompute.setParameter('steadySpatial', this.spatial);
-        this.temporalCompute.setupDispatch(Math.ceil(width / 8), Math.ceil(height / 8), 1);
         this.writeIndex = 0;
         this.resetHistory();
+    }
+
+    /** @private */
+    _bindResolve(compute) {
+        compute.setParameter('steadySize', this._size);
+        compute.setParameter('steadyRaw', this.raw);
+        compute.setParameter('steadyWeights', this.weights);
+        compute.setupDispatch(Math.ceil(this.width / 8), Math.ceil(this.height / 8), 1);
     }
 
     /**
@@ -262,10 +284,16 @@ class GSplatSteadyPass extends FramePass {
         Camera.applyShaderProjectionTransform(camera.projectionMatrix, this._projection, false, true);
         this._inverseProjection.invert(this._projection);
         this._viewProjection.mul2(this._projection, camera.viewMatrix);
+        const animated = camera.jitter > 0;
+        const retention = Number.isFinite(params.steadyHistoryWeight) ? Math.max(0, Math.min(0.9999999, params.steadyHistoryWeight)) : 0.7;
+        this._setTemporalEnabled(retention > 0);
         const lensChanged = !this._projection.equals(this._previousProjection);
-        const materialChanged = this._materialVersion !== params.material.updateVersion;
+        const materialChanged = this._materialVersion !== params.material.updateVersion ||
+            this._sampleMaterialVersion !== this.owner.sampleMaterial.updateVersion;
         const missedFrame = this.lastRenderVersion !== this.device.renderVersion - 1;
-        if (lensChanged || materialChanged || missedFrame || params.alphaClipForward !== this._alphaClipForward || worldVersion !== this.worldVersion ||
+        if (lensChanged || materialChanged || missedFrame || animated !== this._animated ||
+            camera.shaderParams.hash !== this._cameraShaderKey ||
+            params.alphaClipForward !== this._alphaClipForward || worldVersion !== this.worldVersion ||
             params.historyVersion !== this.historyVersion) {
             this.resetHistory();
         }
@@ -273,7 +301,8 @@ class GSplatSteadyPass extends FramePass {
         owner.sampleMaterial.setParameter('steadySize', this._size);
         owner.sampleMaterial.setParameter('steadyCacheStride', owner._cacheStride);
         owner.sampleMaterial.setParameter('alphaClipForward', params.alphaClipForward);
-        owner.sampleMaterial.setParameter('steadyFrame', this.frame >>> 0);
+        // Match native stochastic coverage: a non-jittered camera repeats the same sample pattern.
+        owner.sampleMaterial.setParameter('steadyFrame', animated ? this.frame >>> 0 : 0);
         for (let i = 0; i < this.historyComputes.length; i++) {
             const compute = this.historyComputes[i];
             compute.setParameter('steadySize', this._size);
@@ -282,26 +311,31 @@ class GSplatSteadyPass extends FramePass {
             compute.setParameter('steadyValid', this.valid ? 1 : 0);
             compute.setParameter('projCache', owner.projector.projCache);
         }
-        const retention = Number.isFinite(params.steadyHistoryWeight) ? Math.max(0, Math.min(0.9999999, params.steadyHistoryWeight)) : 0.7;
-        this.temporalCompute.setParameter('steadyValid', this.valid ? 1 : 0);
-        this.temporalCompute.setParameter('steadyRetention', retention);
-        this.temporalCompute.setParameter('steadyInverseProjection', this._inverseProjection.data);
-        this.temporalCompute.setParameter('steadyInverseView', this.owner.cameraNode.getWorldTransform().data);
-        this.temporalCompute.setParameter('steadyPreviousViewProjection', this._previousViewProjection.data);
-        this.temporalCompute.setParameter('steadyPrevious', this.colors[1 - this.writeIndex]);
-        this.temporalCompute.setParameter('steadyOutput', this.colors[this.writeIndex]);
+        const compute = this._temporal ? this.temporalCompute : this.spatialCompute;
+        if (this._temporal) {
+            compute.setParameter('steadyValid', this.valid ? 1 : 0);
+            compute.setParameter('steadyRetention', retention);
+            compute.setParameter('steadyInverseProjection', this._inverseProjection.data);
+            compute.setParameter('steadyInverseView', this.owner.cameraNode.getWorldTransform().data);
+            compute.setParameter('steadyPreviousViewProjection', this._previousViewProjection.data);
+            compute.setParameter('steadyPrevious', this.colors[1 - this.writeIndex]);
+        }
+        compute.setParameter('steadyOutput', this.colors[this.writeIndex]);
         owner.resolveMaterial.setParameter('steadyImage', this.colors[this.writeIndex]);
         owner.resolveMaterial.setParameter('steadySamples', this.samples);
         this.historyVersion = params.historyVersion;
         this.worldVersion = worldVersion;
         this._materialVersion = params.material.updateVersion;
+        this._sampleMaterialVersion = owner.sampleMaterial.updateVersion;
+        this._animated = animated;
+        this._cameraShaderKey = camera.shaderParams.hash;
         this._alphaClipForward = params.alphaClipForward;
     }
 
     execute() {
         this.valid = true;
         this.frame++;
-        this.writeIndex = 1 - this.writeIndex;
+        if (this._temporal) this.writeIndex = 1 - this.writeIndex;
         this._previousViewProjection.copy(this._viewProjection);
         this._previousProjection.copy(this._projection);
         this.lastRenderVersion = this.device.renderVersion;
@@ -326,8 +360,7 @@ class GSplatSteadyPass extends FramePass {
         this._destroyFrameResources();
         this.samplePass.destroy();
         this.historyPass.destroy();
-        this.spatialPass.destroy();
-        this.temporalPass.destroy();
+        this.resolvePass.destroy();
         this.spatialCompute.destroy();
         this.temporalCompute.destroy();
         for (let i = 0; i < this.shaders.length; i++) this.shaders[i].destroy();

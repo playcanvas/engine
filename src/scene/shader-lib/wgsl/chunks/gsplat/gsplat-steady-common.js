@@ -17,18 +17,43 @@ fn steadyClip(index: u32) -> vec4f {
     return bitcast<vec4f>(vec4u(projCache[base], projCache[base + 1u], projCache[base + 2u], projCache[base + 3u]));
 }
 
-fn steadyAlpha(index: u32, pixel: vec2f) -> f32 {
+struct SteadyGaussian {
+    center: vec2f,
+    inverseX: vec2f,
+    inverseY: vec2f,
+    opacity: f32
+}
+
+fn steadyGaussian(index: u32) -> SteadyGaussian {
     let base = index * uniform.steadyCacheStride;
     let clip = steadyClip(index);
     let center = (clip.xy / clip.w * vec2f(0.5, -0.5) + 0.5) * uniform.steadySize;
-    let delta = (pixel - center) * vec2f(1.0, -1.0);
     let a = unpack2x16float(projCache[base + 4u]) * 0.5;
     let b = unpack2x16float(projCache[base + 5u]) * 0.5;
-    let uv = vec2f(dot(delta, a) / max(dot(a, a), 1e-20), dot(delta, b) / max(dot(b, b), 1e-20));
+    // Invert the packed axes, whose half-float rounding need not preserve orthogonality.
+    let determinant = a.x * b.y - a.y * b.x;
+    let inverse = select(0.0, 1.0 / determinant, abs(determinant) > 1e-20);
+    return SteadyGaussian(center, vec2f(b.y, -b.x) * inverse,
+        vec2f(-a.y, a.x) * inverse, unpack2x16float(projCache[base + 7u]).y);
+}
+
+fn steadyAlphaFromUV(opacity: f32, uv: vec2f) -> f32 {
     let radius = dot(uv, uv);
-    let opacity = unpack2x16float(projCache[base + 7u]).y;
     let tail = exp(-4.0);
     let alpha = clamp(opacity * (exp(-4.0 * radius) - tail) / (1.0 - tail), 0.0, 0.999);
     return select(0.0, alpha, radius <= 1.0 && alpha >= uniform.alphaClipForward);
+}
+
+fn steadyAlpha(gaussian: SteadyGaussian, pixel: vec2f) -> f32 {
+    let delta = (pixel - gaussian.center) * vec2f(1.0, -1.0);
+    let uv = vec2f(dot(delta, gaussian.inverseX), dot(delta, gaussian.inverseY));
+    return steadyAlphaFromUV(gaussian.opacity, uv);
+}
+
+fn steadyHash(value: u32) -> u32 {
+    var h = value;
+    h = (h ^ (h >> 16u)) * 0x7feb352du;
+    h = (h ^ (h >> 15u)) * 0x846ca68bu;
+    return h ^ (h >> 16u);
 }
 `;

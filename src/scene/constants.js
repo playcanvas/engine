@@ -1336,8 +1336,10 @@ export const GSPLAT_RENDERER_COMPUTE = 3;
  * per-pixel history storage and sampling noise for removing the depth sort.
  *
  * The initial implementation uses independent per-primitive hash samples, four cached
- * occluders and four spatial neighbors. History and frame targets use approximately 164 bytes
- * per render pixel, in addition to the shared GSplat work buffer and projection cache.
+ * occluders and four spatial neighbors. History and frame targets use approximately 156 bytes
+ * per render pixel, or 148 with temporal color reuse disabled, in addition to the shared GSplat
+ * work buffer and projection cache. Camera jitter controls fixed or animated sampling, as on
+ * the native stochastic renderer.
  * See {@link GSplatParams#renderer} for supported views and fallback behavior, and
  * {@link GSplatParams#resetHistory} for camera cuts. Training and STBN are not included.
  *

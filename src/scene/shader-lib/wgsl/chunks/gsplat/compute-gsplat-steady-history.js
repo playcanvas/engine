@@ -30,9 +30,10 @@ fn main(@builtin(global_invocation_id) globalId: vec3u) {
     var neighbors = vec4f(1.0);
     if (id != 0u) {
         depth = bitcast<f32>(sample.z);
-        alpha = steadyAlpha(sample.x - 1u, vec2f(p) + 0.5);
+        let gaussian = steadyGaussian(sample.x - 1u);
+        alpha = steadyAlpha(gaussian, vec2f(p) + 0.5);
         for (var n = 0u; n < 4u; n++) {
-            neighbors[n] = steadyAlpha(sample.x - 1u, vec2f(p + STEADY_NEIGHBORS[n]) + 0.5);
+            neighbors[n] = steadyAlpha(gaussian, vec2f(p + STEADY_NEIGHBORS[n]) + 0.5);
         }
     }
     var ratio = neighbors / max(alpha, 1e-20);

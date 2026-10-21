@@ -1,5 +1,7 @@
 export default /* wgsl */`
+#include "gsplatOutputVS"
 attribute vertex_position: vec3f;
+uniform steadyFrame: u32;
 uniform viewport_size: vec4f;
 uniform clipToViewZ: vec4f;
 var<storage, read> sortedIndices: array<u32>;
@@ -9,6 +11,9 @@ varying @interpolate(flat, either) steadyIndex: u32;
 varying @interpolate(flat, either) steadyId: u32;
 varying @interpolate(flat, either) steadyDepth: f32;
 varying @interpolate(flat, either) steadyColor: vec3f;
+varying @interpolate(flat, either) steadySeed: u32;
+varying @interpolate(flat, either) steadyOpacity: f32;
+varying steadyUV: vec2f;
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
@@ -28,7 +33,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     output.steadyId = sortedIndices[index] + 1u;
     output.steadyDepth = dot(uniform.clipToViewZ, clip);
     let rg = unpack2x16float(projCache[base + 6u]);
-    output.steadyColor = vec3f(rg, unpack2x16float(projCache[base + 7u]).x);
+    let ba = unpack2x16float(projCache[base + 7u]);
+    // Match the native renderer's color domain before spatial or temporal averaging.
+    output.steadyColor = prepareOutputFromGamma(max(vec3f(rg, ba.x), vec3f(0.0)), output.steadyDepth);
+    output.steadyOpacity = ba.y;
+    output.steadyUV = vertex_position.xy;
+    output.steadySeed = steadyHash(output.steadyId) ^ steadyHash(uniform.steadyFrame + 1u);
     return output;
 }
 `;
