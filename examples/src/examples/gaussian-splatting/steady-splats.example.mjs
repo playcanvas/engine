@@ -1,7 +1,8 @@
 // @config
 //
-// Unsorted stochastic GSplat rendering with SteadySplats importance resampling. Switch to the
-// sorted renderer to compare noise and detail. Temporal retention trades response for stability.
+// Compare SteadySplats importance resampling with native stochastic and sorted GSplat rendering.
+// Native stochastic uses the engine's default blue-noise dither without temporal filtering.
+// SteadySplats temporal retention trades response for stability.
 // The minimal resampling path supports splat-only, full-viewport mono perspective views;
 // unsupported views and WebGL retain sorted rendering.
 
@@ -14,6 +15,8 @@ import {
     Color,
     Entity,
     FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_RENDERER_STEADY,
     GSplatComponentSystem,
     GSplatHandler,
@@ -82,19 +85,27 @@ orbit.reset(32, -10, 5);
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 
-data.on('renderer:set', () => {
-    app.scene.gsplat.renderer = data.get('renderer');
-    // Show the resolved WebGL fallback rather than claiming that resampling is active.
+const renderers = {
+    steady: GSPLAT_RENDERER_STEADY,
+    stochastic: GSPLAT_RENDERER_RASTER_GPU_SORT,
+    'gpu-sort': GSPLAT_RENDERER_RASTER_GPU_SORT,
+    'cpu-sort': GSPLAT_RENDERER_RASTER_CPU_SORT
+};
+data.on('mode:set', () => {
+    const mode = data.get('mode');
+    app.scene.gsplat.stochastic = mode === 'stochastic' && device.isWebGPU;
+    app.scene.gsplat.renderer = renderers[mode];
+    // Show the resolved WebGL fallback for both WebGPU-only modes.
     const current = app.scene.gsplat.currentRenderer;
-    if (current !== data.get('renderer')) {
-        setTimeout(() => data.set('renderer', current), 0);
+    if (current !== renderers[mode]) {
+        setTimeout(() => data.set('mode', 'cpu-sort'), 0);
     }
 });
 data.on('historyWeight:set', () => {
     app.scene.gsplat.steadyHistoryWeight = data.get('historyWeight');
     app.scene.gsplat.resetHistory();
 });
-data.set('renderer', GSPLAT_RENDERER_STEADY);
+data.set('mode', 'steady');
 data.set('historyWeight', 0.7);
 
 // SteadySplats inference does not change model training. Four cached occluders approximate

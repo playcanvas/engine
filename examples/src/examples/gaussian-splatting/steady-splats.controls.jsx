@@ -14,14 +14,15 @@ export function Controls({ observer }) {
         <Panel headerText='Rendering'>
             <LabelGroup text='Renderer'>
                 <SelectInput
-                    type='number'
+                    type='string'
                     binding={new BindingTwoWay()}
-                    link={{ observer, path: 'renderer' }}
-                    value={observer.get('renderer') ?? 4}
+                    link={{ observer, path: 'mode' }}
+                    value={observer.get('mode') ?? 'steady'}
                     options={[
-                        { v: 4, t: 'SteadySplats' },
-                        { v: 2, t: 'Raster (GPU Sort)' },
-                        { v: 1, t: 'Raster (CPU Sort)' }
+                        { v: 'steady', t: 'SteadySplats' },
+                        { v: 'stochastic', t: 'Stochastic (Native)' },
+                        { v: 'gpu-sort', t: 'Raster (GPU Sort)' },
+                        { v: 'cpu-sort', t: 'Raster (CPU Sort)' }
                     ]}
                 />
             </LabelGroup>
