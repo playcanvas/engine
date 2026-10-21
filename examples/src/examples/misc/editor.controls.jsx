@@ -130,17 +130,6 @@ export function Controls({ observer }) {
                 )}
             </Panel>
             <Panel headerText='Grid'>
-                <LabelGroup text='Resolution'>
-                    <SelectInput
-                        options={[
-                            { v: 3, t: 'High' },
-                            { v: 2, t: 'Medium' },
-                            { v: 1, t: 'Low' }
-                        ]}
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'grid.resolution' }}
-                    />
-                </LabelGroup>
                 <LabelGroup text='Color X'>
                     <ColorPicker
                         binding={new BindingTwoWay()}

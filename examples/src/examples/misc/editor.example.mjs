@@ -156,14 +156,12 @@ app.on('update', () => {
 
 // Grid
 const gridEntity = new Entity('grid');
-gridEntity.setLocalScale(8, 1, 8);
 app.root.addChild(gridEntity);
 gridEntity.addComponent('script');
 const grid = /** @type {Grid} */ (gridEntity.script.create(Grid));
 data.set('grid', {
     colorX: Object.values(grid.colorX),
-    colorZ: Object.values(grid.colorZ),
-    resolution: grid.resolution + 1
+    colorZ: Object.values(grid.colorZ)
 });
 
 // Create light entity
@@ -341,9 +339,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     break;
                 case 'colorZ':
                     grid.colorZ = tmpC1.set(value[0], value[1], value[2]);
-                    break;
-                case 'resolution':
-                    grid.resolution = value - 1;
                     break;
             }
             break;

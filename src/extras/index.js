@@ -21,6 +21,9 @@ export {
 export { LINEWIDTH_SCREEN, LINEWIDTH_WORLD, WideLineRenderer } from './renderers/wide-line-renderer.js';
 export { WireRenderer } from './renderers/wire-renderer.js';
 
+// GRID
+export { Grid } from './grid/grid.js';
+
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';
