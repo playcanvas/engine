@@ -1331,6 +1331,25 @@ export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 export const GSPLAT_RENDERER_COMPUTE = 3;
 
 /**
+ * Unsorted stochastic rasterization with SteadySplats spatial importance resampling and
+ * temporal reuse. WebGPU only; falls back to CPU sorting on WebGL. This renderer trades
+ * per-pixel history storage and sampling noise for removing the depth sort.
+ *
+ * The initial implementation uses independent per-primitive hash samples, four cached
+ * occluders and four spatial neighbors. History and frame targets use approximately 164 bytes
+ * per render pixel, in addition to the shared GSplat work buffer and projection cache.
+ * See {@link GSplatParams#renderer} for supported views and fallback behavior, and
+ * {@link GSplatParams#resetHistory} for camera cuts. Training and STBN are not included.
+ *
+ * @see https://arxiv.org/abs/2610.05576 SteadySplats, Windisch et al.
+ *
+ * @type {number}
+ * @category Graphics
+ * @beta
+ */
+export const GSPLAT_RENDERER_STEADY = 4;
+
+/**
  * The splat budget is a target: LOD detail is raised until {@link GSplatParams#splatBudget} is
  * used up, wherever the camera is. The LOD distances of each GSplat still shape how detail falls
  * off with distance and how it divides between GSplats, but not how much of it there is. The

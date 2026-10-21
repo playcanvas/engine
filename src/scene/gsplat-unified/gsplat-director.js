@@ -242,6 +242,27 @@ class GSplatDirector {
     }
 
     /**
+     * Collects forward-renderer dependencies once, before the camera's first forward pass.
+     * Keeping these in the frame graph also covers cameras rendered by CameraFrame.
+     *
+     * @param {Camera} camera - The camera about to render.
+     * @param {import('../../platform/graphics/frame-pass.js').FramePass[]} passes - Destination.
+     */
+    collectRenderPasses(camera, passes) {
+        const cameraData = this.camerasMap.get(camera);
+        if (cameraData) {
+            for (const layerData of cameraData.layersMap.values()) {
+                const dependencies = layerData.gsplatManager?.renderer.renderPasses;
+                if (dependencies) {
+                    for (let i = 0; i < dependencies.length; i++) {
+                        passes.push(dependencies[i]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Dispatches pick compute for the given camera and layer, returning a ready-to-render
      * pick mesh instance (or null if no gsplat data exists for this camera/layer pair).
      *

@@ -5,12 +5,14 @@ import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorld } from './gsplat-world.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
 import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js';
+import { GSplatSteadyRenderer } from './gsplat-steady-renderer.js';
 import { GSplatHybridRendererScratch } from './gsplat-hybrid-renderer-scratch.js';
 import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSPLAT_RENDERER_STEADY,
     GSPLAT_FORWARD,
     GSPLAT_SHADOW,
     GSPLAT_DEBUG_AABBS
@@ -361,6 +363,8 @@ class GSplatManager {
         p.radialSorting = gsplat.radialSorting;
         p.stochastic = gsplat.stochastic;
         p.dither = gsplat.dither;
+        p.steadyHistoryWeight = gsplat.steadyHistoryWeight;
+        p.historyVersion = gsplat.historyVersion;
         p.alphaClip = gsplat.alphaClip;
         p.alphaClipForward = gsplat.alphaClipForward;
         p.minPixelSize = gsplat.minPixelSize;
@@ -467,13 +471,16 @@ class GSplatManager {
      */
     _createRenderer(mode) {
         const workBuffer = this.world.workBuffer;
-        if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+        if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT || mode === GSPLAT_RENDERER_STEADY) {
             // The GPU-sort path shares one scratch (compaction candidate buffer) across the forward
             // renderer and the shadow cull; create it here so it exists for both constructors. Freed
             // in _syncShadowRenderer once no GPU-sort renderer remains (and in destroy()).
             this._hybridScratch ??= new GSplatHybridRendererScratch(this.device);
             // The hybrid renderer creates its own GPU sort resources (radix sorter, projector).
-            this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch);
+            this.renderer = mode === GSPLAT_RENDERER_STEADY ?
+                new GSplatSteadyRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch,
+                    /** @type {import('../renderer/forward-renderer.js').ForwardRenderer} */ (this.director.renderer)) :
+                new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch);
         } else {
             this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
             this.initCpuSorting();

@@ -24,6 +24,8 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @property {GraphNode} cameraNode - The camera node for this view.
  * @property {boolean} stochastic - Whether the forward view uses unsorted stochastic alpha.
  * @property {string} dither - The noise pattern stochastic coverage is dithered against.
+ * @property {number} steadyHistoryWeight - Nominal SteadySplats temporal retention.
+ * @property {number} historyVersion - Explicit history invalidation version.
  * @property {boolean} radialSorting - Whether radial (vs linear) depth sorting is used.
  * @property {number} alphaClip - Alpha threshold for shadow/pick/prepass rendering.
  * @property {number} alphaClipForward - Alpha floor for the forward pass.
@@ -162,6 +164,15 @@ class GSplatRenderer {
      * @type {ShaderMaterial|null}
      */
     get material() {
+        return null;
+    }
+
+    /**
+     * Passes which must execute before this renderer's forward mesh is drawn.
+     *
+     * @type {import('../../platform/graphics/frame-pass.js').FramePass[]|null}
+     */
+    get renderPasses() {
         return null;
     }
 

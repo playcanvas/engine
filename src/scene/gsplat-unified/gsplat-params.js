@@ -11,7 +11,7 @@ import {
     DITHER_BLUENOISE,
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
-    GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_STEADY,
     GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
     GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS,
     GSPLAT_LODMODE_DISTANCE,
@@ -150,6 +150,35 @@ class GSplatParams {
     stochastic = false;
 
     /**
+     * Fraction of reprojected history retained by {@link GSPLAT_RENDERER_STEADY}, in [0, 1).
+     * Larger values reduce sampling noise but take longer to respond to changes. Zero disables
+     * temporal reuse while retaining spatial resampling. Defaults to 0.7.
+     *
+     * @type {number}
+     * @beta
+     */
+    steadyHistoryWeight = 0.7;
+
+    /** @private */
+    _historyVersion = 0;
+
+    /**
+     * Invalidates SteadySplats occluder and temporal histories on the next rendered frame for
+     * every camera and layer. Call after a camera cut or an abrupt change to splat data. Smooth camera motion is reprojected
+     * automatically. This does not reset the stochastic sample sequence or affect other renderers.
+     *
+     * @beta
+     */
+    resetHistory() {
+        this._historyVersion++;
+    }
+
+    /** @type {number} @ignore */
+    get historyVersion() {
+        return this._historyVersion;
+    }
+
+    /**
      * The noise pattern the coverage of a {@link GSplatParams#stochastic} splat is dithered
      * against, ignored when `stochastic` is false. Can be:
      *
@@ -197,7 +226,7 @@ class GSplatParams {
                 GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
         }
         // GPU sort requires WebGPU; fall back to CPU sort on WebGL.
-        if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
+        if ((value === GSPLAT_RENDERER_RASTER_GPU_SORT || value === GSPLAT_RENDERER_STEADY) && !this._device.isWebGPU) {
             return GSPLAT_RENDERER_RASTER_CPU_SORT;
         }
         return value;
@@ -211,6 +240,11 @@ class GSplatParams {
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
      * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only).
+     * - {@link GSPLAT_RENDERER_STEADY}: Unsorted stochastic rasterization with spatial importance
+     * resampling and temporal reuse (WebGPU only). Currently supports full-viewport, mono,
+     * perspective cameras, standard fragment coverage and scenes without opaque mesh occluders.
+     * Other views use GPU sorting.
+     * Inference uses independent per-primitive hash samples; training and STBN are not included.
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
@@ -244,6 +278,8 @@ class GSplatParams {
      * The current rendering pipeline in effect after platform-based fallback resolution. When
      * {@link renderer} is set to a mode requiring WebGPU on a WebGL device, this returns the
      * fallback mode actually being used.
+     * This is the device-level selection; {@link GSPLAT_RENDERER_STEADY} additionally uses GPU
+     * sorting for views outside its supported camera and material configuration.
      *
      * @type {number}
      */
