@@ -27,17 +27,22 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     let clip = steadyClip(index);
     let a = unpack2x16float(projCache[base + 4u]);
     let b = unpack2x16float(projCache[base + 5u]);
-    let offset = vertex_position.x * a + vertex_position.y * b;
+    let rg = unpack2x16float(projCache[base + 6u]);
+    let ba = unpack2x16float(projCache[base + 7u]);
+    // The unnormalized Gaussian bounds the truncated profile from above. Keep a small
+    // margin so a sample exactly on the alpha cutoff remains inside the rasterized quad.
+    let cutoff = max(uniform.alphaClipForward, 1e-20);
+    let extent = min(1.0, 0.5 * sqrt(max(0.0, log(max(ba.y / cutoff, 1.0)))) + 1e-3);
+    let corner = vertex_position.xy * extent;
+    let offset = corner.x * a + corner.y * b;
     output.position = clip + vec4f(offset * clip.w * uniform.viewport_size.zw, 0.0, 0.0);
     output.steadyIndex = index;
     output.steadyId = sortedIndices[index] + 1u;
     output.steadyDepth = dot(uniform.clipToViewZ, clip);
-    let rg = unpack2x16float(projCache[base + 6u]);
-    let ba = unpack2x16float(projCache[base + 7u]);
     // Match the native renderer's color domain before spatial or temporal averaging.
     output.steadyColor = prepareOutputFromGamma(max(vec3f(rg, ba.x), vec3f(0.0)), output.steadyDepth);
     output.steadyOpacity = ba.y;
-    output.steadyUV = vertex_position.xy;
+    output.steadyUV = corner;
     output.steadySeed = steadyHash(output.steadyId) ^ steadyHash(uniform.steadyFrame + 1u);
     return output;
 }

@@ -309,6 +309,110 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
         expect(await ids()).to.deep.equal(fixed);
     });
 
+    it('preserves full-quad coverage within raster precision when clipping rotated splats', async function () {
+        if (process.env.PC_WEBGPU_BACKEND === 'null' || !process.env.PC_WEBGPU_BACKEND) this.skip();
+        splat.setEulerAngles(0, 0, 37);
+        splat.setLocalScale(1.5, 0.4, 1);
+        splat.setPosition(0.35, 0.1, 0);
+        camera.camera.jitter = 1;
+        app.scene.gsplat.steadyHistoryWeight = 0;
+        renderFrame();
+        const renderer = getRenderer();
+        const material = renderer.sampleMaterial;
+        const original = material.shaderDesc;
+        // Restore the full quad independently of the optimized corner calculation, retaining
+        // the same projected data, output processing and per-splat sampling seed.
+        const reference = {
+            ...original,
+            uniqueName: 'GSplatSteadyUnclipped',
+            vertexWGSL: `${original.vertexWGSL.replace('@vertex\nfn vertexMain', 'fn clippedVertexMain')}
+                @vertex
+                fn vertexMain(input: VertexInput) -> VertexOutput {
+                    var output = clippedVertexMain(input);
+                    let index = pcInstanceIndex * {GSPLAT_INSTANCE_SIZE}u + u32(vertex_position.z);
+                    if (index >= numSplatsStorage[0]) {
+                        return output;
+                    }
+                    let base = index * uniform.steadyCacheStride;
+                    let clip = steadyClip(index);
+                    let a = unpack2x16float(projCache[base + 4u]);
+                    let b = unpack2x16float(projCache[base + 5u]);
+                    let offset = vertex_position.x * a + vertex_position.y * b;
+                    output.position = clip + vec4f(offset * clip.w * uniform.viewport_size.zw, 0.0, 0.0);
+                    output.steadyUV = vertex_position.xy;
+                    return output;
+                }
+            `,
+            // The reference uses the original acceptance test without early rejection.
+            fragmentWGSL: `${original.fragmentWGSL.slice(0, original.fragmentWGSL.indexOf('@fragment'))}
+                @fragment
+                fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+                    var output: FragmentOutput;
+                    let p = vec2u(input.position.xy);
+                    let pixel = p.x + p.y * u32(uniform.steadySize.x);
+                    let key = steadySeed ^ steadyHash(pixel);
+                    let threshold = f32(steadyHash(key) >> 8u) * (1.0 / 16777216.0);
+                    let alpha = steadyAlphaFromUV(steadyOpacity, steadyUV);
+                    if (alpha <= threshold) {
+                        discard;
+                    }
+                    output.color = vec4f(steadyColor, 1.0);
+                    output.color1 = vec4u(steadyIndex + 1u, steadyId,
+                        bitcast<u32>(steadyDepth), bitcast<u32>(input.position.z));
+                    return output;
+                }
+            `
+        };
+        const setSampleShader = (desc) => {
+            material.shaderDesc = desc;
+            material.update();
+        };
+        const sample = async (desc, frame) => {
+            // Capture the acceptance values in the two depth channels for boundary diagnostics.
+            setSampleShader({
+                ...desc,
+                uniqueName: `${desc.uniqueName}Coverage`,
+                fragmentWGSL: desc.fragmentWGSL.replace('bitcast<u32>(steadyDepth)', 'bitcast<u32>(alpha)')
+                .replace('bitcast<u32>(input.position.z)', 'bitcast<u32>(threshold)')
+            });
+            renderer.steadyPass.frame = frame;
+            renderFrame();
+            const pass = renderer.steadyPass;
+            const pixels = await pass.samples.read(0, 0, pass.width, pass.height, { immediate: true });
+            return { ids: Array.from(pixels).filter((value, index) => index % 4 === 1),
+                values: new Float32Array(pixels.buffer) };
+        };
+        try {
+            // Include a disabled cutoff, the default, a tighter bound, and opacity equality.
+            const cases = [0, 1 / 255, 0.1, 0.49, 0.5].flatMap(cutoff => (
+                Array.from({ length: 16 }, (_, frame) => ({ cutoff, frame }))));
+            // Read each frame before the next draw overwrites the same sample texture.
+            await cases.reduce(async (previous, { cutoff, frame }) => {
+                await previous;
+                app.scene.gsplat.alphaClipForward = cutoff;
+                const unclipped = await sample(reference, frame);
+                const clipped = await sample(original, frame);
+                const changed = clipped.ids.flatMap((id, pixel) => (id === unclipped.ids[pixel] ? [] : [pixel]));
+                // Different quad edges can slightly change interpolants at rasterizer subpixel
+                // precision. Permit only rare decisions within 1e-4 of an acceptance boundary.
+                expect(changed.length).to.be.at.most(clipped.ids.length / 1000);
+                const nearBoundary = (capture, pixel) => {
+                    const alpha = capture.values[pixel * 4 + 2];
+                    const threshold = capture.values[pixel * 4 + 3];
+                    return capture.ids[pixel] > 0 &&
+                        Math.min(Math.abs(alpha - cutoff), Math.abs(alpha - threshold)) < 1e-4;
+                };
+                for (const pixel of changed) {
+                    expect(nearBoundary(clipped, pixel) || nearBoundary(unclipped, pixel),
+                        `cutoff ${cutoff}, frame ${frame}, pixel ${pixel}`).to.equal(true);
+                }
+                if (cutoff < 0.49) expect(unclipped.ids.some(id => id > 0)).to.equal(true);
+            }, Promise.resolve());
+        } finally {
+            setSampleShader(original);
+        }
+    });
+
     it('removes temporal bindings and its spare texture when temporal reuse is disabled', function () {
         renderFrame();
         const pass = getRenderer().steadyPass;

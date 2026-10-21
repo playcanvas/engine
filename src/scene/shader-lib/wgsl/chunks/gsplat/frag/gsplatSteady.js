@@ -10,11 +10,20 @@ varying steadyUV: vec2f;
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
+    if (dot(steadyUV, steadyUV) > 1.0) {
+        discard;
+        return output;
+    }
+    let alpha = steadyAlphaFromUV(steadyOpacity, steadyUV);
+    if (alpha <= 0.0) {
+        discard;
+        return output;
+    }
     let p = vec2u(input.position.xy);
     let pixel = p.x + p.y * u32(uniform.steadySize.x);
     let key = steadySeed ^ steadyHash(pixel);
     let threshold = f32(steadyHash(key) >> 8u) * (1.0 / 16777216.0);
-    if (steadyAlphaFromUV(steadyOpacity, steadyUV) <= threshold) {
+    if (alpha <= threshold) {
         discard;
     }
     output.color = vec4f(steadyColor, 1.0);
