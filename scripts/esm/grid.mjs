@@ -7,13 +7,6 @@ let resolutionWarned = false;
  * @import { AppBase, Entity } from 'playcanvas'
  */
 
-/** @enum {string} */
-const GridPlane = {
-    XZ: 'xz',
-    XY: 'xy',
-    YZ: 'yz'
-};
-
 /**
  * Renders an anti-aliased reference grid with the engine's {@link EngineGrid | Grid}. Lines
  * through the origin are drawn in {@link Grid#colorX}, {@link Grid#colorY} and
@@ -103,9 +96,9 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Plane
-     * @description The plane the grid lies on, in the entity's local space.
-     * @type {GridPlane}
-     * @default 'xz'
+     * @description The plane the grid lies on, in the entity's local space: 'xz', 'xy' or 'yz'.
+     * @type {string}
+     * @default xz
      */
     set plane(value) {
         this.grid.plane = value;
@@ -424,4 +417,4 @@ class Grid extends Script {
     }
 }
 
-export { Grid, GridPlane };
+export { Grid };
