@@ -28,6 +28,7 @@ const rotation = new Quat();
 const m1 = new Mat4();
 const m2 = new Mat4();
 const ray = new Ray();
+const claimed = new WeakSet();
 
 // constants
 const MIN_SCALE = 1e-4;
@@ -523,8 +524,13 @@ class Gizmo extends EventHandler {
         if (e.pointerId !== this._pointerId && canvas.hasPointerCapture(this._pointerId)) {
             return;
         }
+        // a press goes to the first gizmo it hits, so overlapping gizmos do not drag together
+        if (claimed.has(e)) {
+            return;
+        }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
+            claimed.add(e);
             if (this.preventDefault) {
                 e.preventDefault();
             }

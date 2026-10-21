@@ -45,8 +45,8 @@ const fmt = value => `${+value.toFixed(2)}`;
  * Draws the view frustum of each attached camera entity: a bold near plane with a filled triangle
  * on its top edge that shows the camera's up direction, lighter sides and far plane, a faint
  * volume and a dashed view axis. Once the frustum is large enough on screen, handles drag the
- * near and far clip planes and the field of view, or the orthographic height, and a readout shows
- * their values. Entities without an enabled camera component are skipped, as is the camera
+ * near and far clip planes and the field of view, or the orthographic height, each showing its
+ * value while hovered. Entities without an enabled camera component are skipped, as is the camera
  * viewing the gizmo.
  *
  * ```javascript
@@ -86,9 +86,13 @@ class CameraGizmo extends HelperGizmo {
         const camera = /** @type {CameraComponent} */ (entity.camera);
         const { nearClip: near, farClip: far } = camera;
         const perspective = camera.projection === PROJECTION_PERSPECTIVE;
+        const position = entity.getPosition();
+        if (this.iconOnly) {
+            this._icon('camera', position, entity);
+            return;
+        }
 
         // the corners are in the camera's space, which ignores the entity scale
-        const position = entity.getPosition();
         const rotation = entity.getRotation();
         tmpM.setTRS(position, rotation, Vec3.ONE);
         const points = camera.camera.getFrustumCorners();
@@ -133,9 +137,7 @@ class CameraGizmo extends HelperGizmo {
         const axis = this._active(entity, 'nearClip', 0) ? COLOR_CYAN :
             this._active(entity, 'farClip', 0) ? COLOR_AMBER : null;
         shapes.dashed(nearCenter, farCenter, axis ? 1 : 0.55, axis ? 1 : 0.6, axis);
-        if (this.icon) {
-            shapes.icon('camera', position);
-        }
+        this._icon('camera', position, entity);
 
         if (!this._detailed(farCenter, farY)) {
             return;
@@ -143,17 +145,20 @@ class CameraGizmo extends HelperGizmo {
 
         // the view handle sits on the far edge the field of view is measured across
         const forward = entity.forward;
-        this._handle(nearCenter, COLOR_CYAN, entity, 'nearClip', 0, position, forward, false, false);
-        this._handle(farCenter, COLOR_AMBER, entity, 'farClip', 0, position, forward, false, false);
+        if (this._handle(nearCenter, COLOR_CYAN, entity, 'nearClip', 0, position, forward, false, false)) {
+            this._readoutAt(nearCenter, 'N', COLOR_CYAN, fmt(near));
+        }
+        if (this._handle(farCenter, COLOR_AMBER, entity, 'farClip', 0, position, forward, false, false)) {
+            this._readoutAt(farCenter, 'F', COLOR_AMBER, fmt(far));
+        }
         const horizontal = perspective && camera.horizontalFov;
         const edge = horizontal ? tmpV5.lerp(corners[4], corners[5], 0.5) : tmpV5.lerp(corners[5], corners[6], 0.5);
-        this._handle(edge, COLOR_MAGENTA, entity, perspective ? 'fov' : 'orthoHeight', 0, farCenter, horizontal ? entity.right : entity.up);
-
-        if (this.readout) {
-            const view = perspective ?
-                `${this._readoutLabel('θ', COLOR_MAGENTA)} ${fmt(camera.fov)}°` :
-                `${this._readoutLabel('h', COLOR_MAGENTA)} ${fmt(camera.orthoHeight)}`;
-            shapes.label(farCenter, `${view}  ${this._readoutLabel('N', COLOR_CYAN)} ${fmt(near)}  ${this._readoutLabel('F', COLOR_AMBER)} ${fmt(far)}`);
+        if (this._handle(edge, COLOR_MAGENTA, entity, perspective ? 'fov' : 'orthoHeight', 0, farCenter, horizontal ? entity.right : entity.up)) {
+            if (perspective) {
+                this._readoutAt(edge, 'θ', COLOR_MAGENTA, `${fmt(camera.fov)}°`);
+            } else {
+                this._readoutAt(edge, 'h', COLOR_MAGENTA, fmt(camera.orthoHeight));
+            }
         }
     }
 

@@ -1,6 +1,5 @@
 import {
     BindingTwoWay,
-    BooleanInput,
     LabelGroup,
     Panel,
     SliderInput,
@@ -89,20 +88,6 @@ export function Controls({ observer }) {
                         min={1}
                         max={10}
                         precision={0}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Readout'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.readout' }}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Bounding Box'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.bounds' }}
                     />
                 </LabelGroup>
             </Panel>

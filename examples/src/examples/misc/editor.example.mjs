@@ -164,13 +164,49 @@ data.set('grid', {
     colorZ: Object.values(grid.colorZ)
 });
 
-// Create light entity
+// Create light entities
 const light = new Entity('light');
 light.addComponent('light', {
     intensity: 1
 });
 app.root.addChild(light);
+light.setPosition(-1.5, 3.5, -3);
 light.setEulerAngles(0, 0, -60);
+
+const spotLight = new Entity('spot light');
+spotLight.addComponent('light', {
+    type: 'spot',
+    color: new Color(1, 0.9, 0.7),
+    intensity: 2,
+    range: 6,
+    innerConeAngle: 20,
+    outerConeAngle: 35
+});
+spotLight.setPosition(-3, 3, 2);
+spotLight.lookAt(Vec3.ZERO);
+spotLight.rotateLocal(90, 0, 0);
+app.root.addChild(spotLight);
+
+const omniLight = new Entity('omni light');
+omniLight.addComponent('light', {
+    type: 'omni',
+    color: new Color(0.7, 0.8, 1),
+    range: 3
+});
+omniLight.setPosition(2.5, 2, -2.5);
+app.root.addChild(omniLight);
+
+// A second camera, shown by its frustum, which renders no layers
+const shotCamera = new Entity('shot camera');
+shotCamera.addComponent('camera', {
+    layers: [],
+    fov: 40,
+    nearClip: 0.5,
+    farClip: 5
+});
+shotCamera.setPosition(-3, 1.5, -3.5);
+shotCamera.lookAt(Vec3.ZERO);
+app.root.addChild(shotCamera);
 
 // Gizmos
 let skipObserverFire = false;
@@ -182,13 +218,12 @@ const setGizmoControls = () => {
         size: gizmoHandler.gizmo.size,
         snapIncrement: gizmoHandler.gizmo.snapIncrement,
         colorAlpha: gizmoHandler.gizmo.colorAlpha,
-        coordSpace: gizmoHandler.gizmo.coordSpace,
-        readout: gizmoHandler.readout,
-        bounds: gizmoHandler.bounds
+        coordSpace: gizmoHandler.gizmo.coordSpace
     });
     skipObserverFire = false;
 };
 gizmoHandler.switch('translate');
+gizmoHandler.helpers([light, spotLight, omniLight, shotCamera]);
 setGizmoControls();
 
 // View cube
@@ -226,6 +261,9 @@ selector.on('select', (/** @type {Entity} */ node, /** @type {boolean} */ clear)
         outlineRenderer.removeAllEntities();
     }
     outlineRenderer.addEntity(node, Color.WHITE);
+});
+app.on('gizmo:select', (/** @type {Entity} */ node) => {
+    selector.fire('select', node, true);
 });
 selector.on('deselect', () => {
     // Do not deselect when view cube has just aligned the camera
@@ -319,14 +357,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             if (key === 'type') {
                 gizmoHandler.switch(value);
                 setGizmoControls();
-                return;
-            }
-            if (key === 'readout') {
-                gizmoHandler.readout = value;
-                return;
-            }
-            if (key === 'bounds') {
-                gizmoHandler.bounds = value;
                 return;
             }
             gizmoHandler.gizmo[key] = value;

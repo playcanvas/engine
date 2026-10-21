@@ -1,4 +1,5 @@
 import { Color } from '../../core/math/color.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
@@ -41,7 +42,8 @@ const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
 const plane = new Plane();
 
-const DETAIL_SIZE = 80;
+const DETAIL_FADE_START = 60;
+const DETAIL_FADE_END = 100;
 
 const THEME_KEYS = /** @type {const} */ (['base', 'occluded', 'fill']);
 
@@ -108,6 +110,18 @@ class HelperGizmo extends Gizmo {
     static EVENT_HANDLEEND = 'handle:end';
 
     /**
+     * Fired when the icon of a node is clicked, so an app can select the node.
+     *
+     * @event
+     * @example
+     * const gizmo = new pc.LightGizmo(camera, layer);
+     * gizmo.on('icon:select', (node) => {
+     *     console.log(`Clicked the icon of ${node.name}`);
+     * });
+     */
+    static EVENT_ICONSELECT = 'icon:select';
+
+    /**
      * Internal theme.
      *
      * @type {HelperGizmoTheme}
@@ -128,8 +142,8 @@ class HelperGizmo extends Gizmo {
     handles = true;
 
     /**
-     * Whether to show the values of the shapes in a readout, once a shape is large enough on
-     * screen. Defaults to true.
+     * Whether to show the value a handle edits just below it, while the handle is hovered or
+     * dragged. Defaults to true.
      *
      * @type {boolean}
      */
@@ -142,6 +156,25 @@ class HelperGizmo extends Gizmo {
      * @type {boolean}
      */
     icon = true;
+
+    /**
+     * Whether to draw only the icon of each node, as for nodes that are not selected. Defaults to
+     * false.
+     *
+     * @type {boolean}
+     */
+    iconOnly = false;
+
+    /**
+     * The icons placed this frame, with the nodes they mark.
+     *
+     * @type {{ shape: Shape, node: GraphNode }[]}
+     * @private
+     */
+    _icons = [];
+
+    /** @private */
+    _iconCount = 0;
 
     /**
      * The helper shapes.
@@ -186,6 +219,13 @@ class HelperGizmo extends Gizmo {
     _dragging = false;
 
     /**
+     * The fade of the handles of the shape being drawn, as set by {@link HelperGizmo#_detailed}.
+     *
+     * @private
+     */
+    _detailFade = 1;
+
+    /**
      * The offset from the pointer to the dragged handle, so it does not jump when grabbed.
      *
      * @private
@@ -205,8 +245,17 @@ class HelperGizmo extends Gizmo {
         this._shapes = new HelperShapes(this, this._theme);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
+            if (this._dragging || !meshInstance) {
+                return;
+            }
             const handle = this._find(meshInstance);
-            if (this._dragging || !handle) {
+            if (!handle) {
+                for (let i = 0; i < this._iconCount; i++) {
+                    if (this._icons[i].shape.meshInstances[0] === meshInstance) {
+                        this.fire(HelperGizmo.EVENT_ICONSELECT, this._icons[i].node);
+                        return;
+                    }
+                }
                 return;
             }
             this._copy(handle, this._drag);
@@ -413,8 +462,8 @@ class HelperGizmo extends Gizmo {
     }
 
     /**
-     * Gets whether a shape is large enough on screen to show its handles and readout, which a
-     * drag keeps shown.
+     * Gets whether a shape is large enough on screen to show its handles, which fade in as it grows
+     * and which a drag keeps shown in full.
      *
      * @param {Vec3} center - The center of the shape.
      * @param {number} radius - The radius of the shape.
@@ -422,7 +471,11 @@ class HelperGizmo extends Gizmo {
      * @protected
      */
     _detailed(center, radius) {
-        return this._dragging || this._shapes.screenSize(center, radius) >= DETAIL_SIZE;
+        // the handles fade in as the shape grows on screen, rather than appearing at a size
+        const size = this._shapes.screenSize(center, radius);
+        this._detailFade = this._dragging ? 1 :
+            math.clamp((size - DETAIL_FADE_START) / (DETAIL_FADE_END - DETAIL_FADE_START), 0, 1);
+        return this._detailFade > 0;
     }
 
     /**
@@ -442,11 +495,13 @@ class HelperGizmo extends Gizmo {
      * @param {Vec3} dir - The unit direction of the line, or the normal of the plane.
      * @param {boolean} [inPlane] - Whether the handle moves in a plane.
      * @param {boolean} [guide] - Whether to show the dashed line. Defaults to true for a line.
+     * @returns {boolean} Whether the handle is hovered or dragged, when the subclass shows the
+     * value it edits with {@link HelperGizmo#_readoutAt}.
      * @protected
      */
     _handle(position, color, node, name, index, origin, dir, inPlane = false, guide = !inPlane) {
         if (!this.handles) {
-            return;
+            return false;
         }
         const hovered = this._active(node, name, index);
 
@@ -457,6 +512,7 @@ class HelperGizmo extends Gizmo {
         }
         this._placedCount++;
         handle.shape = this._shapes.handle(position, hovered ? color : null);
+        handle.shape.fade = hovered ? 1 : this._detailFade;
 
         if (hovered && guide) {
             this._shapes.dashed(origin, position, 1, 1, color);
@@ -467,6 +523,23 @@ class HelperGizmo extends Gizmo {
         handle.origin.copy(origin);
         handle.dir.copy(dir);
         handle.plane = inPlane;
+        return hovered;
+    }
+
+    /**
+     * Shows the value a hovered or dragged handle edits, below the handle.
+     *
+     * @param {Vec3} position - The handle position.
+     * @param {string} label - The value label, as {@link HelperGizmo#_readoutLabel} formats it.
+     * @param {Color} color - The label color.
+     * @param {string} value - The value.
+     * @protected
+     */
+    _readoutAt(position, label, color, value) {
+        if (this.readout) {
+            const shapes = this._shapes;
+            shapes.label(position, `${this._readoutLabel(label, color)} ${value}`, shapes.handleSize);
+        }
     }
 
     /**
@@ -480,6 +553,28 @@ class HelperGizmo extends Gizmo {
      */
     _active(node, name, index) {
         return this._matches(this._dragging ? this._drag : this._hovered, node, name, index);
+    }
+
+    /**
+     * Places the icon of a node, which fires {@link HelperGizmo.EVENT_ICONSELECT} when clicked.
+     *
+     * @param {'light' | 'camera'} kind - The icon.
+     * @param {Vec3} position - The world position.
+     * @param {GraphNode} node - The node the icon marks.
+     * @protected
+     */
+    _icon(kind, position, node) {
+        if (!this.icon) {
+            return;
+        }
+        let icon = this._icons[this._iconCount];
+        if (!icon) {
+            icon = { shape: /** @type {Shape} */ (/** @type {unknown} */ (null)), node };
+            this._icons.push(icon);
+        }
+        this._iconCount++;
+        icon.shape = this._shapes.icon(kind, position);
+        icon.node = node;
     }
 
     /**
@@ -531,6 +626,7 @@ class HelperGizmo extends Gizmo {
     prerender() {
         const shapes = this._shapes;
         this._placedCount = 0;
+        this._iconCount = 0;
         if (!this.enabled) {
             shapes.clear();
             return;

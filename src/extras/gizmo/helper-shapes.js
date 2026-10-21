@@ -209,6 +209,7 @@ class HelperShapes {
         up: new Vec3(),
         forward: new Vec3(),
         rotation: new Quat(),
+        away: new Vec3(),
         pixel: 0
     };
 
@@ -257,6 +258,11 @@ class HelperShapes {
             const box = new BoxShape(device, args(base, occluded));
             gizmo.intersectShapes.push(box);
             return box;
+        });
+        this._iconDiscs = pool((base, occluded) => {
+            const disc = new ConeShape(device, { ...args(base, occluded), ...CONES.disk });
+            gizmo.intersectShapes.push(disc);
+            return disc;
         });
         this._spheres = pool((base, occluded) => new SphereShape(device, args(base, occluded)));
 
@@ -769,60 +775,52 @@ class HelperShapes {
      * @param {Color|null} color - The color replacing the rgb of the theme color.
      * @param {number} alpha - The alpha factor.
      * @param {number} [back] - How far behind the icon to place the disc, in CSS pixels.
+     * @param {Pool} [pool] - The pool of the disc.
+     * @param {number} [x] - The x of the disc center, in CSS pixels from the icon center.
+     * @param {number} [y] - The y of the disc center, up the screen.
+     * @returns {Shape} The disc.
      * @private
      */
-    _iconDisc(radius, color, alpha, back = 0) {
-        const { center, forward, pixel, rotation } = this._icon;
+    _iconDisc(radius, color, alpha, back = 0, pool = this._cones.disk, x = 0, y = 0) {
+        const { center, away, right, up, pixel, rotation } = this._icon;
         const size = 2 * radius * pixel;
         this._colors(alpha, false, color);
-        const disc = this._next(this._cones.disk);
-        disc.entity.setLocalPosition(this._local(tmpIconA.copy(forward).mulScalar(back * pixel).add(center), tmpIconA));
+        const disc = this._next(pool);
+        const pos = tmpIconA.copy(away).mulScalar(back * pixel).add(center)
+        .add(tmpIconB.copy(up).mulScalar(y * pixel)).add(tmpIconB.copy(right).mulScalar(x * pixel));
+        disc.entity.setLocalPosition(this._local(pos, tmpIconA));
         disc.entity.setLocalRotation(rotation);
         disc.entity.setLocalScale(size, 1e-3 * size, size);
+        return disc;
     }
 
     /**
-     * Adds an icon at a point, a glyph of a constant size on screen facing the camera over a faint
-     * dark backdrop, as Blender draws at the origin of a light.
+     * Adds an icon at a point, a glyph of a constant size on screen facing the camera over a
+     * faint dark backdrop: a sun for a light and a camera body with a lens for a camera.
      *
-     * - `omni` is a ring around a dot.
-     * - `spot` adds a tick to the ring, pointing the way the light shines.
-     * - `sun` is a dot with eight spokes.
-     * - `area` is a square around a dot.
-     * - `camera` is a camera body with a lens.
-     *
-     * @param {'omni' | 'spot' | 'sun' | 'area' | 'camera'} kind - The icon.
+     * @param {'light' | 'camera'} kind - The icon.
      * @param {Vec3} position - The world position.
-     * @param {Vec3} [dir] - The direction a spot light shines.
+     * @returns {Shape} The backdrop of the icon, which the gizmo picks.
      */
-    icon(kind, position, dir) {
+    icon(kind, position) {
         const camera = this._gizmo.camera.entity;
         const icon = this._icon;
         icon.center.copy(position);
         icon.right.copy(camera.right);
         icon.up.copy(camera.up);
         icon.forward.copy(camera.forward);
+        if (this._perspective) {
+            icon.away.sub2(position, camera.getPosition()).normalize();
+        } else {
+            icon.away.copy(camera.forward);
+        }
         icon.pixel = this.pixels(position, 1);
         icon.rotation.setFromDirections(Vec3.UP, camera.forward);
 
-        this._iconDisc(ICON_BACKDROP_RADIUS, ICON_BACKDROP, ICON_BACKDROP.a, 1);
+        const backdrop = this._iconDisc(ICON_BACKDROP_RADIUS, ICON_BACKDROP, ICON_BACKDROP.a, 1, this._iconDiscs);
         switch (kind) {
-            case 'omni':
-            case 'spot': {
-                this.circle(position, camera.forward, 8 * icon.pixel, ICON_WEIGHT);
-                this._iconDisc(3.5, null, 1);
-                if (kind === 'spot' && dir) {
-                    // the tick points the way the light shines on screen
-                    const x = dir.dot(icon.right);
-                    const y = dir.dot(icon.up);
-                    const length = Math.hypot(x, y);
-                    if (length > 1e-3) {
-                        this._iconLine(8 * x / length, 8 * y / length, 13 * x / length, 13 * y / length);
-                    }
-                }
-                break;
-            }
-            case 'sun': {
+            case 'light': {
+                // a sun, a dot with eight spokes
                 this._iconDisc(4.5, null, 1);
                 for (let i = 0; i < 8; i++) {
                     const angle = i * Math.PI / 4;
@@ -832,21 +830,14 @@ class HelperShapes {
                 }
                 break;
             }
-            case 'area': {
-                this._iconLine(-7, -7, 7, -7);
-                this._iconLine(7, -7, 7, 7);
-                this._iconLine(7, 7, -7, 7);
-                this._iconLine(-7, 7, -7, -7);
-                this._iconDisc(2.5, null, 1);
-                break;
-            }
             case 'camera': {
+                // an outlined body with a lens widening to the right
                 this._iconLine(-8, -5, 3, -5);
                 this._iconLine(3, -5, 3, 5);
                 this._iconLine(3, 5, -8, 5);
                 this._iconLine(-8, 5, -8, -5);
 
-                // the lens, a triangle widening to the right, flattened onto the screen
+                // the lens is a three sided cone flattened onto the screen, its apex to the left
                 const { right, up, forward, pixel } = icon;
                 const d = tmpM.setIdentity().data;
                 const back = tmpIconC.copy(forward).mulScalar(-1);
@@ -859,12 +850,13 @@ class HelperShapes {
                 d[8] = right.x;
                 d[9] = right.y;
                 d[10] = right.z;
-                const height = 5 / 0.75;
-                const lens = tmpIconA.copy(right).mulScalar((9 - 0.25 * height) * pixel).add(position);
-                this.cone('triangle', lens, tmpIconQ.setFromMat4(tmpM), tmpIconB.set(8 / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, height * pixel), 1, false);
+                const length = 5 / 0.75;
+                const lens = tmpIconA.copy(right).mulScalar((9 - 0.25 * length) * pixel).add(position);
+                this.cone('triangle', lens, tmpIconQ.setFromMat4(tmpM), tmpIconB.set(8 / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, length * pixel), 1, false);
                 break;
             }
         }
+        return backdrop;
     }
 
     /**
@@ -872,8 +864,10 @@ class HelperShapes {
      *
      * @param {Vec3} position - The world position.
      * @param {string} html - The label markup.
+     * @param {number} [below] - How much further below the point to place the label, in CSS
+     * pixels.
      */
-    label(position, html) {
+    label(position, html, below = 0) {
         if (this._perspective && this._viewDepth(position) < this._gizmo.camera.nearClip) {
             return;
         }
@@ -884,7 +878,7 @@ class HelperShapes {
         }
         this._labelCount++;
         const screen = this._gizmo.camera.worldToScreen(position, tmpV1);
-        label.show(html, screen.x, screen.y);
+        label.show(html, screen.x, screen.y + below);
     }
 
     /**

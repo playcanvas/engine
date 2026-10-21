@@ -34,6 +34,7 @@ const AXES = /** @type {const} */ (['x', 'y', 'z']);
 
 const FACES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.FORWARD];
 const FACE_COLORS = [COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA];
+const FACE_LABELS = ['W', 'H', 'D'];
 
 const ORIGIN_DOT = 3;
 const ORIGIN_RING = 7;
@@ -50,7 +51,7 @@ const fmt = value => value.toFixed(2);
  * descendants, joined by dashed edges over a faint volume, with a dot at the origin of each
  * attached node. Once the box is large enough on screen, a handle at the center of each face
  * drags to resize the attached nodes, keeping the opposite face in place, and labels show the
- * width, height and depth. A resize scales each node along its local axis nearest the dragged
+ * width, height or depth while hovered. A resize scales each node along its local axis nearest the dragged
  * axis, which is exact for nodes aligned with the world axes.
  *
  * ```javascript
@@ -304,8 +305,8 @@ class BoundingBoxGizmo extends HelperGizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].forEach(this._addNode);
         }
-        this._box.enabled = !this._empty;
-        if (!this._empty) {
+        this._box.enabled = !this._empty && !this.iconOnly;
+        if (this._box.enabled) {
             this._drawBox();
         }
         if (this.icon) {
@@ -397,18 +398,11 @@ class BoundingBoxGizmo extends HelperGizmo {
         const node = this.nodes[0];
         for (let i = 0; i < FACES.length; i++) {
             const face = FACES[i];
-            this._handle(tmpV1.set(c.x + face.x * h.x, c.y + face.y * h.y, c.z + face.z * h.z), FACE_COLORS[i >> 1], node, 'size', i, c, face);
-        }
-        if (this.readout) {
-            // each label on the middle of the edge along its axis that is nearest the camera
-            const side = tmpV2.sub2(cameraPos, c);
-            const sx = side.x < 0 ? -h.x : h.x;
-            const sy = side.y < 0 ? -h.y : h.y;
-            const sz = side.z < 0 ? -h.z : h.z;
-            const pad = this.padding;
-            shapes.label(tmpV1.set(c.x, c.y + sy, c.z + sz), `${this._readoutLabel('W', COLOR_AMBER)} ${fmt(2 * (h.x - pad))}`);
-            shapes.label(tmpV1.set(c.x + sx, c.y, c.z + sz), `${this._readoutLabel('H', COLOR_CYAN)} ${fmt(2 * (h.y - pad))}`);
-            shapes.label(tmpV1.set(c.x + sx, c.y + sy, c.z), `${this._readoutLabel('D', COLOR_MAGENTA)} ${fmt(2 * (h.z - pad))}`);
+            const axis = i >> 1;
+            const pos = tmpV1.set(c.x + face.x * h.x, c.y + face.y * h.y, c.z + face.z * h.z);
+            if (this._handle(pos, FACE_COLORS[axis], node, 'size', i, c, face)) {
+                this._readoutAt(pos, FACE_LABELS[axis], FACE_COLORS[axis], fmt(2 * (h[AXES[axis]] - this.padding)));
+            }
         }
     }
 

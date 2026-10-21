@@ -1,6 +1,7 @@
 import { Entity } from '../../../framework/entity.js';
 import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
+import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
 /** @import { ShapeArgs } from './shape.js' */
@@ -54,11 +55,30 @@ class ConeShape extends Shape {
         this._peakRadius = args.peakRadius ?? this._peakRadius;
         this._segments = args.segments ?? this._segments;
 
+        // intersect, for a cone that keeps its peak radius
+        this.triData = [new TriData(this._createGeometry())];
+
         // render
         this._body = new Entity(`body:${this.axis}`);
         this._body.setLocalEulerAngles(0, args.twist ?? 0, 0);
         this.entity.addChild(this._body);
         this._createRenderComponent(this._body, [this._createMesh()]);
+    }
+
+    /**
+     * Create the cone geometry.
+     *
+     * @returns {ConeGeometry} The cone geometry.
+     * @private
+     */
+    _createGeometry() {
+        return new ConeGeometry({
+            baseRadius: 0.5,
+            peakRadius: 0.5 * this._peakRadius,
+            height: 1,
+            heightSegments: 1,
+            capSegments: this._segments
+        });
     }
 
     /**
@@ -68,13 +88,7 @@ class ConeShape extends Shape {
      * @private
      */
     _createMesh() {
-        return Mesh.fromGeometry(this.device, new ConeGeometry({
-            baseRadius: 0.5,
-            peakRadius: 0.5 * this._peakRadius,
-            height: 1,
-            heightSegments: 1,
-            capSegments: this._segments
-        }));
+        return Mesh.fromGeometry(this.device, this._createGeometry());
     }
 
     /**

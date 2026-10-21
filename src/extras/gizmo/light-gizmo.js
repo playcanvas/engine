@@ -66,8 +66,8 @@ const fmt = value => `${+value.toFixed(2)}`;
  * - An area light is its rectangle, disk or sphere, sized by the entity scale, with a filled
  * emitting face, and rays and an arrow along the direction it shines.
  *
- * Once a shape is large enough on screen, handles drag its range, cone angles or size, and a
- * readout shows their values. Dragging the size of an area light sets the entity's local scale,
+ * Once a shape is large enough on screen, handles drag its range, cone angles or size, each
+ * showing its value while hovered. Dragging the size of an area light sets the entity's local scale,
  * which matches its world size when its parent is not scaled.
  *
  * ```javascript
@@ -244,6 +244,20 @@ class LightGizmo extends HelperGizmo {
     }
 
     /**
+     * Gets whether a light renders with an area shape.
+     *
+     * @param {LightComponent} light - The light.
+     * @returns {boolean} Whether the light has an area shape.
+     * @private
+     */
+    _isArea(light) {
+        // clustered lighting treats local area lights as punctual unless area lights are enabled
+        const { scene } = this._app;
+        return light.shape !== LIGHTSHAPE_PUNCTUAL &&
+            (!scene.clusteredLightingEnabled || light.type === 'directional' || scene.lighting.areaLightsEnabled);
+    }
+
+    /**
      * Places the area shape of a light, sized by the entity scale.
      *
      * @param {LightComponent} light - The light to draw.
@@ -251,14 +265,10 @@ class LightGizmo extends HelperGizmo {
      * @private
      */
     _drawArea(light) {
-        const { scene } = this._app;
-
-        // clustered lighting treats local area lights as punctual unless area lights are enabled
-        const { shape } = light;
-        if (shape === LIGHTSHAPE_PUNCTUAL ||
-            (scene.clusteredLightingEnabled && light.type !== 'directional' && !scene.lighting.areaLightsEnabled)) {
+        if (!this._isArea(light)) {
             return false;
         }
+        const { shape } = light;
 
         const shapes = this._shapes;
         const { entity } = light;
@@ -270,7 +280,6 @@ class LightGizmo extends HelperGizmo {
         const radius = shape === LIGHTSHAPE_RECT ? 0.5 * Math.max(sx, sz) :
             shape === LIGHTSHAPE_DISK ? 0.25 * (sx + sz) : 0.5 * Math.max(sx, sy, sz);
         const detailed = this._detailed(pos, radius);
-        let html = '';
 
         switch (shape) {
             case LIGHTSHAPE_RECT: {
@@ -290,10 +299,12 @@ class LightGizmo extends HelperGizmo {
                     for (let i = 0; i < rect.length; i++) {
                         const mid = tmpV2.lerp(rect[i], rect[(i + 1) % rect.length], 0.5);
                         const dir = tmpV3.sub2(mid, pos).normalize();
-                        this._handle(mid, i & 1 ? COLOR_AMBER : COLOR_MAGENTA, entity, i & 1 ? 'width' : 'depth', i, pos, dir);
+                        const color = i & 1 ? COLOR_AMBER : COLOR_MAGENTA;
+                        if (this._handle(mid, color, entity, i & 1 ? 'width' : 'depth', i, pos, dir)) {
+                            this._readoutAt(mid, i & 1 ? 'W' : 'D', color, fmt(i & 1 ? sx : sz));
+                        }
                     }
                 }
-                html = `${this._readoutLabel('W', COLOR_AMBER)} ${fmt(sx)}  ${this._readoutLabel('D', COLOR_MAGENTA)} ${fmt(sz)}`;
                 break;
             }
             case LIGHTSHAPE_DISK: {
@@ -308,10 +319,11 @@ class LightGizmo extends HelperGizmo {
                 if (detailed) {
                     for (let i = 0; i < 4; i++) {
                         const rim = this._circlePoint(entity, pos, radius, 0.5 * Math.PI * i, tmpV2);
-                        this._handle(rim, COLOR_AMBER, entity, 'radius', i, pos, tmpV3.sub2(rim, pos).normalize());
+                        if (this._handle(rim, COLOR_AMBER, entity, 'radius', i, pos, tmpV3.sub2(rim, pos).normalize())) {
+                            this._readoutAt(rim, '⌀', COLOR_AMBER, fmt(2 * radius));
+                        }
                     }
                 }
-                html = `${this._readoutLabel('⌀', COLOR_AMBER)} ${fmt(2 * radius)}`;
                 break;
             }
             case LIGHTSHAPE_SPHERE: {
@@ -322,10 +334,12 @@ class LightGizmo extends HelperGizmo {
                 if (detailed) {
                     for (let i = 0; i < AXES.length; i++) {
                         const dir = rot.transformVector(AXES[i], tmpV3);
-                        this._handle(tmpV2.copy(dir).mulScalar(radius).add(pos), COLOR_AMBER, entity, 'radius', i, pos, dir);
+                        const edge = tmpV2.copy(dir).mulScalar(radius).add(pos);
+                        if (this._handle(edge, COLOR_AMBER, entity, 'radius', i, pos, dir)) {
+                            this._readoutAt(edge, 'r', COLOR_AMBER, fmt(radius));
+                        }
                     }
                 }
-                html = `${this._readoutLabel('r', COLOR_AMBER)} ${fmt(radius)}`;
                 break;
             }
             default: {
@@ -340,12 +354,7 @@ class LightGizmo extends HelperGizmo {
         if (light.type !== 'directional') {
             this._ground(pos);
         }
-        if (this.icon) {
-            shapes.icon('area', pos);
-        }
-        if (detailed && this.readout) {
-            shapes.label(tmpV2.copy(this._camera.entity.up).mulScalar(-radius).add(pos), html);
-        }
+        this._icon('light', pos, entity);
         return true;
     }
 
@@ -393,9 +402,7 @@ class LightGizmo extends HelperGizmo {
         const tip = tmpV4.copy(dir).mulScalar(range).add(apex);
         const ranging = this._active(entity, 'range', 0);
         shapes.dashed(apex, tip, ranging ? 1 : 0.55, ranging ? 1 : 0.6, ranging ? COLOR_AMBER : null);
-        if (this.icon) {
-            shapes.icon('spot', apex, dir);
-        }
+        this._icon('light', apex, entity);
         this._ground(apex);
 
         if (!this._detailed(center, radius)) {
@@ -403,21 +410,23 @@ class LightGizmo extends HelperGizmo {
         }
 
         // the angle handles swing along the range cap arcs, in the plane of the axis and their edge
-        this._handle(tip, COLOR_AMBER, entity, 'range', 0, apex, dir, false, false);
+        if (this._handle(tip, COLOR_AMBER, entity, 'range', 0, apex, dir, false, false)) {
+            this._readoutAt(tip, 'r', COLOR_AMBER, fmt(range));
+        }
         for (let i = 0; i < 4; i++) {
             const angle = 0.5 * Math.PI * i;
             const radial = this._circlePoint(entity, Vec3.ZERO, 1, angle, tmpV5);
             const normal = tmpV6.cross(radial, dir).normalize();
-            this._handle(this._circlePoint(entity, center, radius, angle, tmpV4), COLOR_MAGENTA, entity, 'outerConeAngle', i, apex, normal, true);
-            if (innerConeAngle > 0) {
-                this._handle(this._circlePoint(entity, innerCenter, innerRadius, angle, tmpV4), COLOR_CYAN, entity, 'innerConeAngle', i, apex, normal, true);
+            const rim = this._circlePoint(entity, center, radius, angle, tmpV4);
+            if (this._handle(rim, COLOR_MAGENTA, entity, 'outerConeAngle', i, apex, normal, true)) {
+                this._readoutAt(rim, 'θ<sub>o</sub>', COLOR_MAGENTA, `${fmt(outerConeAngle)}°`);
             }
-        }
-        if (this.readout) {
-            shapes.label(tmpV4.copy(this._camera.entity.up).mulScalar(-radius).add(center),
-                `${this._readoutLabel('r', COLOR_AMBER)} ${fmt(range)}  ` +
-                `${this._readoutLabel('θ<sub>o</sub>', COLOR_MAGENTA)} ${fmt(outerConeAngle)}°  ` +
-                `${this._readoutLabel('θ<sub>i</sub>', COLOR_CYAN)} ${fmt(innerConeAngle)}°`);
+            if (innerConeAngle > 0) {
+                const ring = this._circlePoint(entity, innerCenter, innerRadius, angle, tmpV4);
+                if (this._handle(ring, COLOR_CYAN, entity, 'innerConeAngle', i, apex, normal, true)) {
+                    this._readoutAt(ring, 'θ<sub>i</sub>', COLOR_CYAN, `${fmt(innerConeAngle)}°`);
+                }
+            }
         }
     }
 
@@ -443,15 +452,8 @@ class LightGizmo extends HelperGizmo {
         shapes.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
 
         // the sun sits just behind the bundle, clear of the arrow
-        if (this.icon) {
-            shapes.icon('sun', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos));
-        }
+        this._icon('light', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
 
-        // the angle the light shines down from the horizon
-        if (this.readout) {
-            const pitch = Math.asin(math.clamp(entity.up.y, -1, 1)) * math.RAD_TO_DEG;
-            shapes.label(tmpV3.copy(entity.up).mulScalar(-0.7 * scale).add(pos), `${this._readoutLabel('φ', COLOR_MAGENTA)} ${Math.round(pitch)}°`);
-        }
     }
 
     /**
@@ -465,17 +467,15 @@ class LightGizmo extends HelperGizmo {
         const pos = entity.getPosition();
         this._outline(pos, Quat.IDENTITY, range);
         this._ground(pos);
-        if (this.icon) {
-            this._shapes.icon('omni', pos);
-        }
+        this._icon('light', pos, entity);
         if (!this._detailed(pos, range)) {
             return;
         }
         for (let i = 0; i < AXES.length; i++) {
-            this._handle(tmpV2.copy(AXES[i]).mulScalar(range).add(pos), COLOR_AMBER, entity, 'range', i, pos, AXES[i]);
-        }
-        if (this.readout) {
-            this._shapes.label(tmpV2.copy(this._camera.entity.up).mulScalar(-range).add(pos), `${this._readoutLabel('r', COLOR_AMBER)} ${fmt(range)}`);
+            const edge = tmpV2.copy(AXES[i]).mulScalar(range).add(pos);
+            if (this._handle(edge, COLOR_AMBER, entity, 'range', i, pos, AXES[i])) {
+                this._readoutAt(edge, 'r', COLOR_AMBER, fmt(range));
+            }
         }
     }
 
@@ -493,6 +493,10 @@ class LightGizmo extends HelperGizmo {
                 continue;
             }
             this._shapes.tint = this.useLightColor ? light.color : null;
+            if (this.iconOnly) {
+                this._icon('light', entity.getPosition(), entity);
+                continue;
+            }
             if (this._drawArea(light)) {
                 continue;
             }
