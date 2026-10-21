@@ -1,251 +1,31 @@
-import {
-    ShaderMaterial,
-    SEMANTIC_POSITION,
-    SEMANTIC_TEXCOORD0,
-    BLEND_NORMAL,
-    CULLFACE_NONE,
-    PlaneGeometry,
-    Mesh,
-    MeshInstance,
-    Color,
-    Script,
-    Vec2
-} from 'playcanvas';
-
-const tmpVa = new Vec2();
-
-const EPSILON = 1e-3;
-
-const vertexGLSL = /* glsl */ `
-    attribute vec3 vertex_position;
-    attribute vec2 aUv0;
-
-    uniform mat4 matrix_model;
-    uniform mat4 matrix_viewProjection;
-
-    varying vec2 uv0;
-
-    void main(void) {
-        gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
-        uv0 = aUv0;
-    }
-`;
-
-const fragmentGLSL = /* glsl */ `
-    uniform vec2 uHalfExtents;
-    uniform vec3 uColorX;
-    uniform vec3 uColorZ;
-    uniform int uResolution;
-
-    varying vec2 uv0;
-
-    // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c
-    float pristineGrid(in vec2 uv, in vec2 ddx, in vec2 ddy, vec2 lineWidth) {
-        vec2 uvDeriv = vec2(length(vec2(ddx.x, ddy.x)), length(vec2(ddx.y, ddy.y)));
-        bvec2 invertLine = bvec2(lineWidth.x > 0.5, lineWidth.y > 0.5);
-        vec2 targetWidth = vec2(
-            invertLine.x ? 1.0 - lineWidth.x : lineWidth.x,
-            invertLine.y ? 1.0 - lineWidth.y : lineWidth.y
-        );
-        vec2 drawWidth = clamp(targetWidth, uvDeriv, vec2(0.5));
-        vec2 lineAA = uvDeriv * 1.5;
-        vec2 gridUV = abs(fract(uv) * 2.0 - 1.0);
-        gridUV.x = invertLine.x ? gridUV.x : 1.0 - gridUV.x;
-        gridUV.y = invertLine.y ? gridUV.y : 1.0 - gridUV.y;
-        vec2 grid2 = smoothstep(drawWidth + lineAA, drawWidth - lineAA, gridUV);
-
-        grid2 *= clamp(targetWidth / drawWidth, 0.0, 1.0);
-        grid2 = mix(grid2, targetWidth, clamp(uvDeriv * 2.0 - 1.0, 0.0, 1.0));
-        grid2.x = invertLine.x ? 1.0 - grid2.x : grid2.x;
-        grid2.y = invertLine.y ? 1.0 - grid2.y : grid2.y;
-
-        return mix(grid2.x, 1.0, grid2.y);
-    }
-
-    void main(void) {
-        vec2 uv = uv0;
-
-        vec2 pos = (uv * 2.0 - 1.0) * uHalfExtents;
-        vec2 ddx = dFdx(pos);
-        vec2 ddy = dFdy(pos);
-
-        float epsilon = 1.0 / 255.0;
-
-        vec2 levelPos;
-        float levelSize;
-        float levelAlpha;
-
-        levelPos = pos * 0.1;
-        levelSize = 2.0 / 1000.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 0.1, ddy * 0.1, vec2(levelSize));
-        if (levelAlpha > epsilon) {
-            vec3 color;
-            if (abs(levelPos.x) < levelSize) {
-                if (abs(levelPos.y) < levelSize) {
-                    color = vec3(1.0);
-                } else {
-                    color = uColorZ;
-                }
-            } else if (abs(levelPos.y) < levelSize) {
-                color = uColorX;
-            } else {
-                color = vec3(0.9);
-            }
-            gl_FragColor = vec4(color, levelAlpha);
-            return;
-        }
-
-        levelPos = pos;
-        levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx, ddy, vec2(levelSize));
-        if (levelAlpha > epsilon) {
-            if (uResolution < 1) {
-                discard;
-            }
-            gl_FragColor = vec4(vec3(0.7), levelAlpha);
-            return;
-        }
-
-        levelPos = pos * 10.0;
-        levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 10.0, ddy * 10.0, vec2(levelSize));
-        if (levelAlpha > epsilon) {
-            if (uResolution < 2) {
-                discard;
-            }
-            gl_FragColor = vec4(vec3(0.7), levelAlpha);
-            return;
-        }
-
-        discard;
-    }
-`;
-
-const vertexWGSL = /* wgsl */ `
-    attribute vertex_position: vec3f;
-    attribute aUv0: vec2f;
-
-    uniform matrix_model: mat4x4f;
-    uniform matrix_viewProjection: mat4x4f;
-
-    varying uv0: vec2f;
-
-    @vertex
-    fn vertexMain(input: VertexInput) -> VertexOutput {
-        var output: VertexOutput;
-        output.position = uniform.matrix_viewProjection * uniform.matrix_model * vec4f(input.vertex_position, 1.0);
-        output.uv0 = input.aUv0;
-        return output;
-    }
-`;
-
-const fragmentWGSL = /* wgsl */ `
-    uniform uHalfExtents: vec2f;
-    uniform uColorX: vec3f;
-    uniform uColorZ: vec3f;
-    uniform uResolution: u32;
-
-    varying uv0: vec2f;
-
-    // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c
-    fn pristineGrid(uv: vec2f, ddx: vec2f, ddy: vec2f, lineWidth: vec2f) -> f32 {
-        let uvDeriv = vec2f(length(vec2f(ddx.x, ddy.x)), length(vec2f(ddx.y, ddy.y)));
-        let invertLine = vec2<bool>(lineWidth.x > 0.5, lineWidth.y > 0.5);
-        let targetWidth = vec2f(
-            select(lineWidth.x, 1.0 - lineWidth.x, invertLine.x),
-            select(lineWidth.y, 1.0 - lineWidth.y, invertLine.y)
-        );
-        let drawWidth = clamp(targetWidth, uvDeriv, vec2f(0.5));
-        let lineAA = uvDeriv * 1.5;
-        var gridUV = abs(fract(uv) * 2.0 - 1.0);
-        gridUV.x = select(1.0 - gridUV.x, gridUV.x, invertLine.x);
-        gridUV.y = select(1.0 - gridUV.y, gridUV.y, invertLine.y);
-        var grid2 = smoothstep(drawWidth + lineAA, drawWidth - lineAA, gridUV);
-
-        grid2 *= clamp(targetWidth / drawWidth, vec2f(0.0), vec2f(1.0));
-        grid2 = mix(grid2, targetWidth, clamp(uvDeriv * 2.0 - 1.0, vec2f(0.0), vec2f(1.0)));
-        grid2.x = select(grid2.x, 1.0 - grid2.x, invertLine.x);
-        grid2.y = select(grid2.y, 1.0 - grid2.y, invertLine.y);
-
-        return mix(grid2.x, 1.0, grid2.y);
-    }
-
-    @fragment
-    fn fragmentMain(input: FragmentInput) -> FragmentOutput {
-        var output: FragmentOutput;
-        let uv: vec2f = input.uv0;
-
-        let pos: vec2f = (uv * 2.0 - 1.0) * uniform.uHalfExtents;
-        let ddx: vec2f = dpdx(pos);
-        let ddy: vec2f = dpdy(pos);
-
-        let epsilon: f32 = 1.0 / 255.0;
-
-        var levelPos: vec2f;
-        var levelSize: f32;
-        var levelAlpha: f32;
-
-        levelPos = pos * 0.1;
-        levelSize = 2.0 / 1000.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 0.1, ddy * 0.1, vec2f(levelSize));
-        if (levelAlpha > epsilon) {
-            var color: vec3f;
-            if (abs(levelPos.x) < levelSize) {
-                if (abs(levelPos.y) < levelSize) {
-                    color = vec3f(1.0);
-                } else {
-                    color = uniform.uColorZ;
-                }
-            } else if (abs(levelPos.y) < levelSize) {
-                color = uniform.uColorX;
-            } else {
-                color = vec3f(0.9);
-            }
-            output.color = vec4f(color, levelAlpha);
-            return output;
-        }
-
-        levelPos = pos;
-        levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx, ddy, vec2f(levelSize));
-        if (levelAlpha > epsilon) {
-            if (uniform.uResolution < 1) {
-                discard;
-            }
-            output.color = vec4f(vec3f(0.7), levelAlpha);
-            return output;
-        }
-
-        levelPos = pos * 10.0;
-        levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 10.0, ddy * 10.0, vec2f(levelSize));
-        if (levelAlpha > epsilon) {
-            if (uniform.uResolution < 2) {
-                discard;
-            }
-            output.color = vec4f(vec3f(0.7), levelAlpha);
-            return output;
-        }
-
-        discard;
-        return output;
-    }
-`;
+import { Color, Grid as EngineGrid, Script, Vec2 } from 'playcanvas';
 
 /**
- * Renders an anti-aliased reference grid on the XZ plane, using the "pristine grid" shader
- * technique. Lines along the X and Z axes are tinted with {@link Grid#colorX} and
- * {@link Grid#colorZ}, and {@link Grid#resolution} selects how many grid levels are shown.
+ * @import { AppBase, Entity } from 'playcanvas'
+ */
+
+/** @enum {string} */
+const GridPlane = {
+    XZ: 'xz',
+    XY: 'xy',
+    YZ: 'yz'
+};
+
+/**
+ * Renders an anti-aliased reference grid with the engine's {@link EngineGrid | Grid}. Lines
+ * through the origin are drawn in {@link Grid#colorX}, {@link Grid#colorY} and
+ * {@link Grid#colorZ}. The levels of lines follow the zoom, as in Blender, and the grid follows
+ * each camera that renders it and fades out with distance, unless {@link Grid#infinite} is cleared
+ * to give it a fixed {@link Grid#size}.
  *
- * The script creates a render component on its entity, with the grid plane sized by the
- * entity's local scale.
+ * The script creates a render component on its entity. The grid lies at the entity's position and
+ * rotation; its scale is ignored, so use {@link Grid#spacing} to size the cells.
  *
  * @example
- * gridEntity.setLocalScale(8, 1, 8);
  * gridEntity.addComponent('script');
  * gridEntity.script.create(Grid, {
  *     properties: {
- *         resolution: Grid.RESOLUTION_HIGH
+ *         spacing: 1
  *     }
  * });
  * @category Rendering
@@ -254,55 +34,26 @@ class Grid extends Script {
     static scriptName = 'grid';
 
     /**
-     * @type {number}
+     * The engine grid this script drives.
+     *
+     * @type {EngineGrid}
      */
-    static RESOLUTION_LOW = 0;
+    grid = new EngineGrid(this.app.graphicsDevice);
 
     /**
-     * @type {number}
+     * @param {{ app: AppBase, entity: Entity }} args - The script arguments.
      */
-    static RESOLUTION_MEDIUM = 1;
+    constructor(args) {
+        super(args);
 
-    /**
-     * @type {number}
-     */
-    static RESOLUTION_HIGH = 2;
-
-    /**
-     * @type {ShaderMaterial}
-     * @private
-     */
-    _material;
-
-    /**
-     * @type {MeshInstance}
-     * @private
-     */
-    _meshInstance;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _halfExtents = new Vec2();
-
-    /**
-     * @type {Color}
-     * @private
-     */
-    _colorX = new Color(1, 0.3, 0.3);
-
-    /**
-     * @type {Color}
-     * @private
-     */
-    _colorZ = new Color(0.3, 0.3, 1);
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _resolution = Grid.RESOLUTION_HIGH;
+        // the grid exists from construction, so it is released even if the script never initializes
+        this.on('destroy', () => {
+            if (this.entity.render?.meshInstances === this.grid.meshInstances) {
+                this.entity.removeComponent('render');
+            }
+            this.grid.destroy();
+        });
+    }
 
     initialize() {
         // check if the entity already has a render component
@@ -311,157 +62,343 @@ class Grid extends Script {
             return;
         }
 
-        // create render component
         this.entity.addComponent('render', {
+            meshInstances: this.grid.meshInstances,
             castShadows: false
         });
 
-        // create shader material
-        this._material = new ShaderMaterial({
-            uniqueName: 'grid-shader',
-            vertexGLSL: vertexGLSL,
-            fragmentGLSL: fragmentGLSL,
-            vertexWGSL: vertexWGSL,
-            fragmentWGSL: fragmentWGSL,
-            attributes: {
-                vertex_position: SEMANTIC_POSITION,
-                aUv0: SEMANTIC_TEXCOORD0
-            }
-        });
-        this._material.blendType = BLEND_NORMAL;
-        this._material.cull = CULLFACE_NONE;
-        this._material.update();
-
-        // create mesh
-        const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
-        this._meshInstance = new MeshInstance(mesh, this._material);
-        this._meshInstance.pick = false;
-        this.entity.render.meshInstances = [this._meshInstance];
-
-        // set the initial values
-        this.colorX = this._colorX;
-        this.colorZ = this._colorZ;
-        this.resolution = this._resolution;
-
-        // calculate half extents
-        this._set('uHalfExtents', this._calcHalfExtents(tmpVa));
-
-        // update the half extents when the entity scale changes
-        this.app.on('prerender', () => {
-            if (!this.enabled) {
-                return;
-            }
-            const halfExtents = this._calcHalfExtents(tmpVa);
-            if (this._halfExtents.distance(halfExtents) > EPSILON) {
-                this._set('uHalfExtents', halfExtents);
-            }
-        });
-
-        // enable/disable the mesh instance
         this.on('enable', () => {
-            this._meshInstance.visible = true;
+            this.grid.visible = true;
         });
         this.on('disable', () => {
-            this._meshInstance.visible = false;
+            this.grid.visible = false;
         });
-
-        this.on('destroy', this.destroy, this);
-    }
-
-    /**
-     * @param {Vec2} vec - The vector to copy the half extents to.
-     * @returns {Vec2} - The half extents.
-     * @private
-     */
-    _calcHalfExtents(vec) {
-        const scale = this.entity.getLocalScale();
-        return vec.set(scale.x / 2, scale.z / 2);
-    }
-
-    /**
-     * @param {string} name - The name of the parameter.
-     * @param {Color|Vec2|number} value - The value of the parameter.
-     * @private
-     */
-    _set(name, value) {
-        if (!this._material) {
-            return;
-        }
-
-        if (value instanceof Color) {
-            this._material.setParameter(name, [value.r, value.g, value.b]);
-        }
-
-        if (value instanceof Vec2) {
-            this._material.setParameter(name, [value.x, value.y]);
-        }
-
-        if (typeof value === 'number') {
-            this._material.setParameter(name, value);
-        }
-
-        this._material.update();
-
-        this._meshInstance.material = this._material;
     }
 
     /**
      * @attribute
-     * @title Grid Color X
-     * @description The color of the grid lines along the X axis.
+     * @title Plane
+     * @description The plane the grid lies on, in the entity's local space.
+     * @type {GridPlane}
+     * @default 'xz'
+     */
+    set plane(value) {
+        this.grid.plane = value;
+    }
+
+    get plane() {
+        return this.grid.plane;
+    }
+
+    /**
+     * @attribute
+     * @title Spacing
+     * @description The cell size in world units the levels of lines are scaled from.
+     * @type {number}
+     * @default 10
+     */
+    set spacing(value) {
+        this.grid.spacing = value;
+    }
+
+    get spacing() {
+        return this.grid.spacing;
+    }
+
+    /**
+     * @attribute
+     * @title Subdivisions
+     * @description How many cells of each level span a cell of the level above, or 1 for a single
+     * fixed level of cells of the spacing.
+     * @type {number}
+     * @default 10
+     */
+    set subdivisions(value) {
+        this.grid.subdivisions = value;
+    }
+
+    get subdivisions() {
+        return this.grid.subdivisions;
+    }
+
+    /**
+     * @attribute
+     * @title Infinite
+     * @description Whether the grid has no edge, following the camera. When false, the grid is
+     * the size of Size, centered on the entity.
+     * @type {boolean}
+     * @default true
+     */
+    set infinite(value) {
+        this.grid.infinite = value;
+    }
+
+    get infinite() {
+        return this.grid.infinite;
+    }
+
+    /**
+     * @attribute
+     * @title Size
+     * @description The size of the grid in world units along the two axes of its plane, when it
+     * isn't infinite.
+     * @type {Vec2}
+     * @default [20, 20]
+     */
+    set size(value) {
+        if (value instanceof Vec2) {
+            this.grid.size = value;
+        }
+    }
+
+    get size() {
+        return this.grid.size;
+    }
+
+    /**
+     * @attribute
+     * @title Show Axes
+     * @description Whether the lines through the origin are drawn in the colors of their axes.
+     * @type {boolean}
+     * @default true
+     */
+    set showAxes(value) {
+        this.grid.showAxes = value;
+    }
+
+    get showAxes() {
+        return this.grid.showAxes;
+    }
+
+    /**
+     * @attribute
+     * @title Axis Line Thickness
+     * @description The thickness of the lines through the origin in CSS pixels.
+     * @type {number}
+     * @default 2
+     */
+    set axisLineThickness(value) {
+        this.grid.axisLineThickness = value;
+    }
+
+    get axisLineThickness() {
+        return this.grid.axisLineThickness;
+    }
+
+    /**
+     * @attribute
+     * @title Major Line Thickness
+     * @description The thickness of the major lines in CSS pixels.
+     * @type {number}
+     * @default 1.5
+     */
+    set majorLineThickness(value) {
+        this.grid.majorLineThickness = value;
+    }
+
+    get majorLineThickness() {
+        return this.grid.majorLineThickness;
+    }
+
+    /**
+     * @attribute
+     * @title Minor Line Thickness
+     * @description The thickness of the minor lines in CSS pixels.
+     * @type {number}
+     * @default 1
+     */
+    set minorLineThickness(value) {
+        this.grid.minorLineThickness = value;
+    }
+
+    get minorLineThickness() {
+        return this.grid.minorLineThickness;
+    }
+
+    /**
+     * @attribute
+     * @title Fade Range
+     * @description The distances from the camera where the grid starts to fade out and where it
+     * has faded out completely, the far one held inside 90% of the camera's far clip. A larger gap
+     * fades the grid more softly.
+     * @type {Vec2}
+     * @default [400, 1000]
+     */
+    set fadeRange(value) {
+        if (value instanceof Vec2) {
+            this.grid.fadeRange = value;
+        }
+    }
+
+    get fadeRange() {
+        return this.grid.fadeRange;
+    }
+
+    /**
+     * @attribute
+     * @title Contrast
+     * @description Whether the lines are black over a light part of the scene and white over a
+     * dark one, instead of their colors, so they read against anything. The camera must capture
+     * the scene color (CameraComponent#renderSceneColorMap).
+     * @type {boolean}
+     * @default false
+     */
+    set contrast(value) {
+        this.grid.contrast = value;
+    }
+
+    get contrast() {
+        return this.grid.contrast;
+    }
+
+    /**
+     * @attribute
+     * @title Axis Color X
+     * @description The color of the line through the origin along the X axis.
      * @type {Color}
      * @default [1, 0.3, 0.3, 1]
      */
     set colorX(value) {
-        if (!(value instanceof Color)) {
-            return;
+        if (value instanceof Color) {
+            this.grid.setTheme({ axis: { x: value } });
         }
-        this._colorX.copy(value);
-        this._set('uColorX', this._colorX);
     }
 
     get colorX() {
-        return this._colorX;
+        return this.grid.theme.axis.x;
     }
 
     /**
      * @attribute
-     * @title Grid Color Z
-     * @description The color of the grid lines along the Z axis.
+     * @title Axis Color Y
+     * @description The color of the line through the origin along the Y axis, on the XY and YZ
+     * planes.
+     * @type {Color}
+     * @default [0.3, 1, 0.3, 1]
+     */
+    set colorY(value) {
+        if (value instanceof Color) {
+            this.grid.setTheme({ axis: { y: value } });
+        }
+    }
+
+    get colorY() {
+        return this.grid.theme.axis.y;
+    }
+
+    /**
+     * @attribute
+     * @title Axis Color Z
+     * @description The color of the line through the origin along the Z axis.
      * @type {Color}
      * @default [0.3, 0.3, 1, 1]
      */
     set colorZ(value) {
-        if (!(value instanceof Color)) {
-            return;
+        if (value instanceof Color) {
+            this.grid.setTheme({ axis: { z: value } });
         }
-        this._colorZ.copy(value);
-        this._set('uColorZ', this._colorZ);
     }
 
     get colorZ() {
-        return this._colorZ;
+        return this.grid.theme.axis.z;
     }
 
     /**
      * @attribute
-     * @title Grid Resolution
-     * @description The resolution of the grid.
-     * @type {number}
-     * @default 2
+     * @title Major Line Color
+     * @description The color of the major lines. The alpha scales their opacity.
+     * @type {Color}
+     * @default [0.8, 0.8, 0.8, 0.6]
      */
-    set resolution(value) {
-        this._resolution = value;
-        this._set('uResolution', this._resolution);
+    set majorLineColor(value) {
+        if (value instanceof Color) {
+            this.grid.setTheme({ major: value });
+        }
     }
 
-    get resolution() {
-        return this._resolution;
+    get majorLineColor() {
+        return this.grid.theme.major;
     }
 
-    destroy() {
-        this.entity.removeComponent('render');
+    /**
+     * @attribute
+     * @title Minor Line Color
+     * @description The color of the minor lines. The alpha scales their opacity.
+     * @type {Color}
+     * @default [0.6, 0.6, 0.6, 0.4]
+     */
+    set minorLineColor(value) {
+        if (value instanceof Color) {
+            this.grid.setTheme({ minor: value });
+        }
+    }
+
+    get minorLineColor() {
+        return this.grid.theme.minor;
+    }
+
+    /**
+     * @attribute
+     * @title Depth Offset
+     * @description The fraction of the distance to the camera the depth of the grid moves toward it
+     * by, so a surface on the grid's plane, such as a floor, doesn't hide it.
+     * @type {number}
+     * @default 0.001
+     */
+    set depthOffset(value) {
+        this.grid.depthOffset = value;
+    }
+
+    get depthOffset() {
+        return this.grid.depthOffset;
+    }
+
+    /**
+     * @attribute
+     * @title Depth Test
+     * @description Whether the scene hides the grid where it is in front of it.
+     * @type {boolean}
+     * @default true
+     */
+    set depthTest(value) {
+        this.grid.depthTest = value;
+    }
+
+    get depthTest() {
+        return this.grid.depthTest;
+    }
+
+    /**
+     * @attribute
+     * @title Depth Write
+     * @description Whether the grid writes the depth of its visible lines, so it
+     * hides the transparent meshes and gaussian splats behind it, which draw after it.
+     * @type {boolean}
+     * @default false
+     */
+    set depthWrite(value) {
+        this.grid.depthWrite = value;
+    }
+
+    get depthWrite() {
+        return this.grid.depthWrite;
+    }
+
+    /**
+     * @attribute
+     * @title Depth Dither
+     * @description Whether the depth the grid writes is dithered by how much of each pixel its
+     * lines cover, so faint lines hide a share of the gaussian splats behind them.
+     * @type {boolean}
+     * @default false
+     */
+    set depthDither(value) {
+        this.grid.depthDither = value;
+    }
+
+    get depthDither() {
+        return this.grid.depthDither;
     }
 }
 
-export { Grid };
+export { Grid, GridPlane };

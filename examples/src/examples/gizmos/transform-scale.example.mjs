@@ -164,7 +164,6 @@ data.set('gizmo', {
 
 // Create grid
 const gridEntity = new Entity('grid');
-gridEntity.setLocalScale(4, 1, 4);
 app.root.addChild(gridEntity);
 gridEntity.addComponent('script');
 gridEntity.script.create(Grid);
