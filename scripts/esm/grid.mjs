@@ -55,8 +55,9 @@ class Grid extends Script {
      * The engine grid this script drives.
      *
      * @type {EngineGrid}
+     * @private
      */
-    grid = new EngineGrid(this.app.graphicsDevice);
+    _grid = new EngineGrid(this.app.graphicsDevice);
 
     /**
      * @param {{ app: AppBase, entity: Entity }} args - The script arguments.
@@ -66,10 +67,10 @@ class Grid extends Script {
 
         // the grid exists from construction, so it is released even if the script never initializes
         this.on('destroy', () => {
-            if (this.entity.render?.meshInstances === this.grid.meshInstances) {
+            if (this.entity.render?.meshInstances === this._grid.meshInstances) {
                 this.entity.removeComponent('render');
             }
-            this.grid.destroy();
+            this._grid.destroy();
         });
     }
 
@@ -81,15 +82,15 @@ class Grid extends Script {
         }
 
         this.entity.addComponent('render', {
-            meshInstances: this.grid.meshInstances,
+            meshInstances: this._grid.meshInstances,
             castShadows: false
         });
 
         this.on('enable', () => {
-            this.grid.visible = true;
+            this._grid.visible = true;
         });
         this.on('disable', () => {
-            this.grid.visible = false;
+            this._grid.visible = false;
         });
     }
 
@@ -101,11 +102,11 @@ class Grid extends Script {
      * @default xz
      */
     set plane(value) {
-        this.grid.plane = value;
+        this._grid.plane = value;
     }
 
     get plane() {
-        return this.grid.plane;
+        return this._grid.plane;
     }
 
     /**
@@ -116,11 +117,11 @@ class Grid extends Script {
      * @default 10
      */
     set spacing(value) {
-        this.grid.spacing = value;
+        this._grid.spacing = value;
     }
 
     get spacing() {
-        return this.grid.spacing;
+        return this._grid.spacing;
     }
 
     /**
@@ -132,11 +133,11 @@ class Grid extends Script {
      * @default 10
      */
     set subdivisions(value) {
-        this.grid.subdivisions = value;
+        this._grid.subdivisions = value;
     }
 
     get subdivisions() {
-        return this.grid.subdivisions;
+        return this._grid.subdivisions;
     }
 
     /**
@@ -148,11 +149,11 @@ class Grid extends Script {
      * @default true
      */
     set infinite(value) {
-        this.grid.infinite = value;
+        this._grid.infinite = value;
     }
 
     get infinite() {
-        return this.grid.infinite;
+        return this._grid.infinite;
     }
 
     /**
@@ -163,11 +164,11 @@ class Grid extends Script {
      * @default true
      */
     set showAxes(value) {
-        this.grid.showAxes = value;
+        this._grid.showAxes = value;
     }
 
     get showAxes() {
-        return this.grid.showAxes;
+        return this._grid.showAxes;
     }
 
     /**
@@ -178,11 +179,11 @@ class Grid extends Script {
      * @default 2
      */
     set axisLineThickness(value) {
-        this.grid.axisLineThickness = value;
+        this._grid.axisLineThickness = value;
     }
 
     get axisLineThickness() {
-        return this.grid.axisLineThickness;
+        return this._grid.axisLineThickness;
     }
 
     /**
@@ -193,11 +194,11 @@ class Grid extends Script {
      * @default 1.5
      */
     set majorLineThickness(value) {
-        this.grid.majorLineThickness = value;
+        this._grid.majorLineThickness = value;
     }
 
     get majorLineThickness() {
-        return this.grid.majorLineThickness;
+        return this._grid.majorLineThickness;
     }
 
     /**
@@ -208,11 +209,11 @@ class Grid extends Script {
      * @default 1
      */
     set minorLineThickness(value) {
-        this.grid.minorLineThickness = value;
+        this._grid.minorLineThickness = value;
     }
 
     get minorLineThickness() {
-        return this.grid.minorLineThickness;
+        return this._grid.minorLineThickness;
     }
 
     /**
@@ -226,12 +227,12 @@ class Grid extends Script {
      */
     set fadeRange(value) {
         if (value instanceof Vec2) {
-            this.grid.fadeRange = value;
+            this._grid.fadeRange = value;
         }
     }
 
     get fadeRange() {
-        return this.grid.fadeRange;
+        return this._grid.fadeRange;
     }
 
     /**
@@ -244,11 +245,11 @@ class Grid extends Script {
      * @default false
      */
     set contrast(value) {
-        this.grid.contrast = value;
+        this._grid.contrast = value;
     }
 
     get contrast() {
-        return this.grid.contrast;
+        return this._grid.contrast;
     }
 
     /**
@@ -260,12 +261,12 @@ class Grid extends Script {
      */
     set colorX(value) {
         if (value instanceof Color) {
-            this.grid.setTheme({ axis: { x: value } });
+            this._grid.setTheme({ axis: { x: value } });
         }
     }
 
     get colorX() {
-        return this.grid.theme.axis.x;
+        return this._grid.theme.axis.x;
     }
 
     /**
@@ -278,12 +279,12 @@ class Grid extends Script {
      */
     set colorY(value) {
         if (value instanceof Color) {
-            this.grid.setTheme({ axis: { y: value } });
+            this._grid.setTheme({ axis: { y: value } });
         }
     }
 
     get colorY() {
-        return this.grid.theme.axis.y;
+        return this._grid.theme.axis.y;
     }
 
     /**
@@ -295,12 +296,12 @@ class Grid extends Script {
      */
     set colorZ(value) {
         if (value instanceof Color) {
-            this.grid.setTheme({ axis: { z: value } });
+            this._grid.setTheme({ axis: { z: value } });
         }
     }
 
     get colorZ() {
-        return this.grid.theme.axis.z;
+        return this._grid.theme.axis.z;
     }
 
     /**
@@ -312,12 +313,12 @@ class Grid extends Script {
      */
     set majorLineColor(value) {
         if (value instanceof Color) {
-            this.grid.setTheme({ major: value });
+            this._grid.setTheme({ major: value });
         }
     }
 
     get majorLineColor() {
-        return this.grid.theme.major;
+        return this._grid.theme.major;
     }
 
     /**
@@ -329,12 +330,12 @@ class Grid extends Script {
      */
     set minorLineColor(value) {
         if (value instanceof Color) {
-            this.grid.setTheme({ minor: value });
+            this._grid.setTheme({ minor: value });
         }
     }
 
     get minorLineColor() {
-        return this.grid.theme.minor;
+        return this._grid.theme.minor;
     }
 
     /**
@@ -346,11 +347,11 @@ class Grid extends Script {
      * @default 0.001
      */
     set depthOffset(value) {
-        this.grid.depthOffset = value;
+        this._grid.depthOffset = value;
     }
 
     get depthOffset() {
-        return this.grid.depthOffset;
+        return this._grid.depthOffset;
     }
 
     /**
@@ -361,11 +362,11 @@ class Grid extends Script {
      * @default true
      */
     set depthTest(value) {
-        this.grid.depthTest = value;
+        this._grid.depthTest = value;
     }
 
     get depthTest() {
-        return this.grid.depthTest;
+        return this._grid.depthTest;
     }
 
     /**
@@ -377,11 +378,11 @@ class Grid extends Script {
      * @default false
      */
     set depthWrite(value) {
-        this.grid.depthWrite = value;
+        this._grid.depthWrite = value;
     }
 
     get depthWrite() {
-        return this.grid.depthWrite;
+        return this._grid.depthWrite;
     }
 
     /**
@@ -393,11 +394,11 @@ class Grid extends Script {
      * @default false
      */
     set depthDither(value) {
-        this.grid.depthDither = value;
+        this._grid.depthDither = value;
     }
 
     get depthDither() {
-        return this.grid.depthDither;
+        return this._grid.depthDither;
     }
 
     /**
