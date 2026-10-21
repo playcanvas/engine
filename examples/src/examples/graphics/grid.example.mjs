@@ -228,7 +228,29 @@ data.set('grid', {
 });
 // Presets, applied through the panel so its controls follow
 const PRESETS = {
-    default: { ...data.get('grid') },
+    default: {
+        plane: 'xz',
+        spacing: 10,
+        subdivisions: 10,
+        infinite: true,
+        size: [20, 20],
+        fadeStart: 400,
+        fadeEnd: 1000,
+        showAxes: true,
+        axisLineThickness: 2,
+        majorLineThickness: 1.5,
+        minorLineThickness: 1,
+        contrast: false,
+        colorX: [1, 0.3, 0.3, 1],
+        colorY: [0.3, 1, 0.3, 1],
+        colorZ: [0.3, 0.3, 1, 1],
+        majorLineColor: [0.8, 0.8, 0.8, 0.6],
+        minorLineColor: [0.6, 0.6, 0.6, 0.4],
+        depthOffset: 0.001,
+        depthTest: true,
+        depthWrite: false,
+        depthDither: false
+    },
     editor: {
         plane: 'xz',
         spacing: 1,
@@ -276,7 +298,6 @@ const PRESETS = {
         depthDither: true
     }
 };
-delete PRESETS.default.enabled;
 data.set('preset', 'default');
 
 data.set('camera', {
@@ -331,12 +352,14 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         }
         case 'camera': {
             switch (key) {
-                case 'proj':
+                case 'proj': {
                     camera.camera.projection = value - 1;
                     break;
-                case 'farClip':
+                }
+                case 'farClip': {
                     camera.camera.farClip = value;
                     break;
+                }
             }
             break;
         }

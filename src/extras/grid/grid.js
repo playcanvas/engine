@@ -636,7 +636,9 @@ class Grid {
         this._setParameter(name, [color.r, color.g, color.b, color.a]);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _updatePlane() {
         const plane = this._plane;
         const { axis } = this._theme;
@@ -647,12 +649,16 @@ class Grid {
         this._updateColor('uColorV', plane === 'xy' ? axis.y : axis.z);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _updateLevels() {
         this._setParameter('uSubdivisions', this._subdivisions);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _updatePixelRatio() {
         const device = this._device;
         device.updateClientRect();
@@ -662,7 +668,9 @@ class Grid {
         this._updateThickness();
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _updateThickness() {
         const ratio = this._pixelRatio;
         this._setParameter('uThickness', [
@@ -672,17 +680,23 @@ class Grid {
         ]);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _updateFade() {
         this._setParameter('uFade', [this._fadeRange.x, this._fadeRange.y]);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _updateInfinite() {
         this._setParameter('uInfinite', this._infinite ? 1 : 0);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _updateVisible() {
         this._meshInstances[0].visible = this._visible;
         this._meshInstances[1].visible = this._visible && this._depthWrite;
