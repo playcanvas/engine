@@ -1,5 +1,8 @@
 import { Color, Grid as EngineGrid, Script, Vec2 } from 'playcanvas';
 
+// whether the deprecated resolution has been warned about
+let resolutionWarned = false;
+
 /**
  * @import { AppBase, Entity } from 'playcanvas'
  */
@@ -16,10 +19,11 @@ const GridPlane = {
  * through the origin are drawn in {@link Grid#colorX}, {@link Grid#colorY} and
  * {@link Grid#colorZ}. The levels of lines follow the zoom, as in Blender, and the grid follows
  * each camera that renders it and fades out with distance, unless {@link Grid#infinite} is cleared
- * to give it a fixed {@link Grid#size}.
+ * to make it as large as the entity's scale.
  *
  * The script creates a render component on its entity. The grid lies at the entity's position and
- * rotation; its scale is ignored, so use {@link Grid#spacing} to size the cells.
+ * rotation. Its scale sizes a grid that isn't infinite, but never its cells, so use
+ * {@link Grid#spacing} for those.
  *
  * @example
  * gridEntity.addComponent('script');
@@ -32,6 +36,27 @@ const GridPlane = {
  */
 class Grid extends Script {
     static scriptName = 'grid';
+
+    /**
+     * @type {number}
+     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @ignore
+     */
+    static RESOLUTION_LOW = 0;
+
+    /**
+     * @type {number}
+     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @ignore
+     */
+    static RESOLUTION_MEDIUM = 1;
+
+    /**
+     * @type {number}
+     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @ignore
+     */
+    static RESOLUTION_HIGH = 2;
 
     /**
      * The engine grid this script drives.
@@ -125,7 +150,7 @@ class Grid extends Script {
      * @attribute
      * @title Infinite
      * @description Whether the grid has no edge, following the camera. When false, the grid is
-     * the size of Size, centered on the entity.
+     * as large as the entity's scale along the two axes of its plane, centered on the entity.
      * @type {boolean}
      * @default true
      */
@@ -135,24 +160,6 @@ class Grid extends Script {
 
     get infinite() {
         return this.grid.infinite;
-    }
-
-    /**
-     * @attribute
-     * @title Size
-     * @description The size of the grid in world units along the two axes of its plane, when it
-     * isn't infinite.
-     * @type {Vec2}
-     * @default [20, 20]
-     */
-    set size(value) {
-        if (value instanceof Vec2) {
-            this.grid.size = value;
-        }
-    }
-
-    get size() {
-        return this.grid.size;
     }
 
     /**
@@ -398,6 +405,22 @@ class Grid extends Script {
 
     get depthDither() {
         return this.grid.depthDither;
+    }
+
+    /**
+     * @type {number}
+     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @ignore
+     */
+    set resolution(value) {
+        if (!resolutionWarned) {
+            resolutionWarned = true;
+            console.warn('Grid#resolution is deprecated and has no effect: the levels of lines now follow the zoom. Set Grid#subdivisions instead.');
+        }
+    }
+
+    get resolution() {
+        return Grid.RESOLUTION_HIGH;
     }
 }
 

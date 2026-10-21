@@ -21,7 +21,7 @@ export const vertexGLSL = /* glsl */`
 
     uniform vec3 uAxisU;
     uniform vec3 uAxisV;
-    uniform vec2 uExtent;
+    uniform float uInfinite;
     uniform vec2 uFade;
     uniform float uDepthOffset;
 
@@ -33,16 +33,17 @@ export const vertexGLSL = /* glsl */`
 
     void main(void) {
 
-        // the plane in world space, ignoring the scale of the node
+        // the plane in world space; the node's scale sizes a fixed grid, but never its cells
         vec3 origin = matrix_model[3].xyz;
-        vec3 u = normalize(mat3(matrix_model) * uAxisU);
-        vec3 v = normalize(mat3(matrix_model) * uAxisV);
+        vec3 axisU = mat3(matrix_model) * uAxisU;
+        vec3 axisV = mat3(matrix_model) * uAxisV;
+        vec3 u = normalize(axisU);
+        vec3 v = normalize(axisV);
 
-        // an infinite axis follows the camera, spanning the faded distance either side of it
+        // an infinite grid follows the camera, spanning the faded distance either side of it
         float reach = 2.0 * min(uFade.y, camera_params.y * ${FAR_FRACTION});
-        vec2 infinite = step(uExtent, vec2(0.0));
-        vec2 center = vec2(dot(view_position - origin, u), dot(view_position - origin, v)) * infinite;
-        vGridPos = center + vertex_position.xz * mix(uExtent, vec2(reach), infinite);
+        vec2 center = vec2(dot(view_position - origin, u), dot(view_position - origin, v)) * uInfinite;
+        vGridPos = center + vertex_position.xz * mix(vec2(length(axisU), length(axisV)), vec2(reach), uInfinite);
         vWorldPos = origin + u * vGridPos.x + v * vGridPos.y;
 
         // moving along the view ray changes the depth alone
@@ -201,7 +202,7 @@ export const vertexWGSL = /* wgsl */`
 
     uniform uAxisU: vec3f;
     uniform uAxisV: vec3f;
-    uniform uExtent: vec2f;
+    uniform uInfinite: f32;
     uniform uFade: vec2f;
     uniform uDepthOffset: f32;
 
@@ -215,17 +216,18 @@ export const vertexWGSL = /* wgsl */`
     fn vertexMain(input: VertexInput) -> VertexOutput {
         var output: VertexOutput;
 
-        // the plane in world space, ignoring the scale of the node
+        // the plane in world space; the node's scale sizes a fixed grid, but never its cells
         let model = uniform.matrix_model;
         let origin = model[3].xyz;
-        let u = normalize((model * vec4f(uniform.uAxisU, 0.0)).xyz);
-        let v = normalize((model * vec4f(uniform.uAxisV, 0.0)).xyz);
+        let axisU = (model * vec4f(uniform.uAxisU, 0.0)).xyz;
+        let axisV = (model * vec4f(uniform.uAxisV, 0.0)).xyz;
+        let u = normalize(axisU);
+        let v = normalize(axisV);
 
-        // an infinite axis follows the camera, spanning the faded distance either side of it
+        // an infinite grid follows the camera, spanning the faded distance either side of it
         let reach = 2.0 * min(uniform.uFade.y, uniform.camera_params.y * ${FAR_FRACTION});
-        let infinite = step(uniform.uExtent, vec2f(0.0));
-        let center = vec2f(dot(uniform.view_position - origin, u), dot(uniform.view_position - origin, v)) * infinite;
-        let gridPos = center + input.vertex_position.xz * mix(uniform.uExtent, vec2f(reach), infinite);
+        let center = vec2f(dot(uniform.view_position - origin, u), dot(uniform.view_position - origin, v)) * uniform.uInfinite;
+        let gridPos = center + input.vertex_position.xz * mix(vec2f(length(axisU), length(axisV)), vec2f(reach), uniform.uInfinite);
         let worldPos = origin + u * gridPos.x + v * gridPos.y;
         output.vGridPos = gridPos;
         output.vWorldPos = worldPos;

@@ -1,9 +1,9 @@
 // @config
 //
 // A reference grid with every setting of the Grid script in the panel. The grid follows the camera
-// and fades out with distance, or turn Infinite off to give it a fixed size. The cube and capsule
-// sit half through the grid, so it shows where the scene hides it and where it draws over the
-// scene. The dark plane lies on the grid, so lower Depth Offset to 0 to see it hide the grid, and
+// and fades out with distance, or turn Infinite off to size it with the entity's scale. The cube
+// and capsule sit half through the grid, so it shows where the scene hides it and where it draws
+// over the scene. The dark plane lies on the grid, so lower Depth Offset to 0 to see it hide the grid, and
 // the SuperSplat preset swaps the sphere for gaussian splats, which the grid hides with Depth Write.
 //
 // `LMB` Orbit · `RMB` Pan · `Wheel` / `Pinch` Zoom
@@ -201,7 +201,9 @@ app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
 // Grid
+// the grid's scale sizes it when it isn't infinite
 const gridEntity = new Entity('grid');
+gridEntity.setLocalScale(20, 1, 20);
 gridEntity.addComponent('script');
 app.root.addChild(gridEntity);
 const grid = /** @type {Grid} */ (gridEntity.script.create(Grid));
@@ -212,7 +214,7 @@ data.set('grid', {
     spacing: grid.spacing,
     subdivisions: grid.subdivisions,
     infinite: grid.infinite,
-    size: [grid.size.x, grid.size.y],
+    size: [20, 20],
     majorLineThickness: grid.majorLineThickness,
     minorLineThickness: grid.minorLineThickness,
     axisLineThickness: grid.axisLineThickness,
@@ -298,8 +300,16 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         case 'grid': {
             // a vector input sets one component at a time, so read the whole value back
             const v = data.get(`grid.${key}`);
-            if (key === 'size') {
-                grid.size = new Vec2(v[0], v[1]);
+            if (key === 'size' || key === 'plane') {
+                // the size is the entity's scale along the two axes of the plane
+                const [w, d] = data.get('grid.size');
+                const plane = data.get('grid.plane');
+                grid.plane = plane;
+                gridEntity.setLocalScale(
+                    plane === 'yz' ? 1 : w,
+                    plane === 'xz' ? 1 : plane === 'xy' ? d : w,
+                    plane === 'xy' ? 1 : d
+                );
             } else if (key === 'fadeStart' || key === 'fadeEnd') {
                 // the two sliders set the ends of the one range
                 grid.fadeRange = new Vec2(data.get('grid.fadeStart'), data.get('grid.fadeEnd'));

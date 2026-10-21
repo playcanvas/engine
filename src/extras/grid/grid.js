@@ -45,12 +45,12 @@ const PLANES = {
  * power of {@link Grid#subdivisions}, the finest fades in as its cells grow on screen and
  * the coarser ones turn major, so the grid keeps the same density at any distance. The lines
  * through the origin are drawn in the color of their axis, and lines keep their thickness in
- * pixels. By default the grid has no edge: the
- * plane follows each camera that renders it and fades out with the distance from that camera.
- * Clear {@link Grid#infinite} for a grid of {@link Grid#size}.
+ * pixels. By default the grid has no edge: the plane follows each camera that renders it and
+ * fades out with the distance from that camera. Clear {@link Grid#infinite} for a grid the size of
+ * its node's scale.
  *
- * The grid lies at the position and rotation of the node of its mesh instances; the node's scale
- * is ignored, so use {@link Grid#spacing} to size the cells.
+ * The grid lies at the position and rotation of the node of its mesh instances. The node's scale
+ * sizes a grid that isn't infinite, but never its cells, so use {@link Grid#spacing} for those.
  *
  * ```javascript
  * const grid = new Grid(app.graphicsDevice);
@@ -176,11 +176,6 @@ class Grid {
      */
     _infinite = true;
 
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _size = new Vec2(20, 20);
 
     /**
      * @type {number}
@@ -247,7 +242,7 @@ class Grid {
         this._updateLevels();
         this._updatePixelRatio();
         this._updateFade();
-        this._updateSize();
+        this._updateInfinite();
         this._setParameter('uShowAxes', 1);
         this._setParameter('uDepthOffset', this._depthOffset);
         this._updateVisible();
@@ -492,14 +487,15 @@ class Grid {
     }
 
     /**
-     * Sets whether the grid has no edge, following the camera. When false, the grid is
-     * {@link Grid#size} and centered on its node. Defaults to true.
+     * Sets whether the grid has no edge, following the camera. When false, the grid is as large as
+     * its node's scale along the two axes of its plane (x and z on the 'xz' plane), centered on the
+     * node. Defaults to true.
      *
      * @type {boolean}
      */
     set infinite(value) {
         this._infinite = !!value;
-        this._updateSize();
+        this._updateInfinite();
     }
 
     /**
@@ -509,26 +505,6 @@ class Grid {
      */
     get infinite() {
         return this._infinite;
-    }
-
-    /**
-     * Sets the size of the grid in world units along the two axes of its plane (x and z on the
-     * 'xz' plane), used when {@link Grid#infinite} is false. Defaults to [20, 20].
-     *
-     * @type {Vec2}
-     */
-    set size(value) {
-        this._size.copy(value);
-        this._updateSize();
-    }
-
-    /**
-     * Gets the size of the grid in world units along the two axes of its plane.
-     *
-     * @type {Vec2}
-     */
-    get size() {
-        return this._size;
     }
 
     /**
@@ -741,9 +717,8 @@ class Grid {
     }
 
     /** @private */
-    _updateSize() {
-        const size = this._infinite ? Vec2.ZERO : this._size;
-        this._setParameter('uExtent', [size.x, size.y]);
+    _updateInfinite() {
+        this._setParameter('uInfinite', this._infinite ? 1 : 0);
     }
 
     /** @private */
