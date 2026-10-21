@@ -206,4 +206,3 @@ resize();
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
-

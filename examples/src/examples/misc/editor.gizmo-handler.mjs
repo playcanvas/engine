@@ -110,13 +110,7 @@ class GizmoHandler {
         this._icons = new IconGizmo(camera, helperLayer);
 
         // the camera stops orbiting while any gizmo is dragged, and clicking an icon selects its node
-        const gizmos = [
-            ...Object.values(this._gizmos),
-            this._bounds,
-            this._lights,
-            this._cameras,
-            this._icons
-        ];
+        const gizmos = [...Object.values(this._gizmos), this._bounds, this._lights, this._cameras, this._icons];
         for (const gizmo of gizmos) {
             gizmo.on('pointer:down', (_x, _y, /** @type {MeshInstance} */ meshInstance) => {
                 if (meshInstance) {
@@ -163,15 +157,25 @@ class GizmoHandler {
      * @private
      */
     _updateHelpers() {
-        const has = (/** @type {GraphNode} */ node, /** @type {string} */ component) => !!(/** @type {any} */ (node))[component];
-        const selected = node => this._nodes.includes(node);
-        const others = this._helperNodes.filter(node => !selected(node));
-        this._attach(this._lights, this._nodes.filter(node => has(node, 'light')));
-        this._attach(this._cameras, this._nodes.filter(node => has(node, 'camera')));
+        const has = (/** @type {GraphNode} */ node, /** @type {string} */ component) =>
+            !!(/** @type {any} */ (node)[component]);
+        const selected = (node) => this._nodes.includes(node);
+        const others = this._helperNodes.filter((node) => !selected(node));
+        this._attach(
+            this._lights,
+            this._nodes.filter((node) => has(node, 'light'))
+        );
+        this._attach(
+            this._cameras,
+            this._nodes.filter((node) => has(node, 'camera'))
+        );
         this._attach(this._icons, others);
 
         // only nodes that render have bounds
-        this._attach(this._bounds, this._nodes.filter(node => has(node, 'render')));
+        this._attach(
+            this._bounds,
+            this._nodes.filter((node) => has(node, 'render'))
+        );
     }
 
     get type() {
@@ -191,7 +195,6 @@ class GizmoHandler {
     get size() {
         return this.gizmo.size;
     }
-
 
     /**
      * Adds single node to active gizmo.
