@@ -347,7 +347,7 @@ class Grid {
      * theme color: black over a light part of the scene and white over a dark one, so they read
      * against anything. The lines through the origin keep their axis colors, and the theme alpha
      * still sets the opacity. The camera must capture the scene color, see
-     * {@link CameraComponent#renderSceneColorMap}. Defaults to false.
+     * {@link CameraComponent#requestSceneColorMap}. Defaults to false.
      *
      * @type {boolean}
      */

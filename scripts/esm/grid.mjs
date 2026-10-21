@@ -246,7 +246,7 @@ class Grid extends Script {
      * @title Contrast
      * @description Whether the lines are black over a light part of the scene and white over a
      * dark one, instead of their colors, so they read against anything. The camera must capture
-     * the scene color (CameraComponent#renderSceneColorMap).
+     * the scene color (CameraComponent#requestSceneColorMap).
      * @type {boolean}
      * @default false
      */
