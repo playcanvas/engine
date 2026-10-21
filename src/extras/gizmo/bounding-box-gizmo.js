@@ -8,8 +8,7 @@ import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Mesh } from '../../scene/mesh.js';
-import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from './color.js';
-import { HelperGizmo } from './helper-gizmo.js';
+import { BoxGizmo } from './box-gizmo.js';
 import { unlitShader } from './shaders.js';
 
 /**
@@ -28,34 +27,34 @@ const tmpBox = new BoundingBox();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
-const tmpV4 = new Vec3();
 
 const AXES = /** @type {const} */ (['x', 'y', 'z']);
-
-const FACES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.FORWARD];
-const FACE_COLORS = [COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA];
-const FACE_LABELS = ['W', 'H', 'D'];
 
 const ORIGIN_DOT = 3;
 const ORIGIN_RING = 7;
 const MIN_FACTOR = 0.01;
 
 /**
- * @param {number} value - The value.
- * @returns {string} The value with two decimals.
+ * @param {Vec3} dir - A unit direction.
+ * @returns {'x' | 'y' | 'z'} The world axis nearest the direction.
  */
-const fmt = value => value.toFixed(2);
+const nearest = (dir) => {
+    const x = Math.abs(dir.x);
+    const y = Math.abs(dir.y);
+    const z = Math.abs(dir.z);
+    return x >= y && x >= z ? 'x' : y >= z ? 'y' : 'z';
+};
 
 /**
  * Draws corner brackets around the world-space bounds of the attached nodes and their
  * descendants, joined by dashed edges over a faint volume, with a dot at the origin of each
- * attached node. Once the box is large enough on screen, a handle at the center of each face
- * drags to resize the attached nodes, keeping the opposite face in place, and labels show the
- * width, height or depth while hovered. A resize scales each node along its local axis nearest the dragged
- * axis, which is exact for nodes aligned with the world axes.
+ * attached node. It is a {@link BoxGizmo} that follows the bounds: once the box is large enough
+ * on screen, its face and corner handles resize the attached nodes, showing the width, height or
+ * depth while hovered. A resize scales each node along its local axes nearest the world axes,
+ * which is exact for nodes aligned with them.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Bounds', transparentSortMode: SORTMODE_NONE });
+ * const layer = new Layer({ name: 'Bounds', transparentSortMode: SORTMODE_MANUAL });
  * app.scene.layers.push(layer);
  * const gizmo = new BoundingBoxGizmo(cameraComponent, layer);
  * gizmo.attach([entity]);
@@ -68,7 +67,7 @@ const fmt = value => value.toFixed(2);
  *
  * @category Gizmo
  */
-class BoundingBoxGizmo extends HelperGizmo {
+class BoundingBoxGizmo extends BoxGizmo {
     /**
      * Whether to join the brackets with dashed edges. Defaults to true.
      *
@@ -185,6 +184,13 @@ class BoundingBoxGizmo extends HelperGizmo {
     _startScales = [];
 
     /**
+     * The bounds follow attached nodes.
+     *
+     * @protected
+     */
+    _requiresNodes = true;
+
+    /**
      * Creates a new BoundingBoxGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -210,6 +216,7 @@ class BoundingBoxGizmo extends HelperGizmo {
             ];
             for (let j = 0; j < meshInstances.length; j++) {
                 meshInstances[j].cull = false;
+                meshInstances[j].drawOrder = 1;
             }
             arm.addComponent('render', {
                 meshInstances,
@@ -220,6 +227,9 @@ class BoundingBoxGizmo extends HelperGizmo {
             this._arms.push(arm);
         }
         this.root.addChild(this._box);
+
+        // hidden until nodes are attached, which the shape gizmo it extends does not need
+        this.enabled = true;
     }
 
     /**
@@ -307,6 +317,11 @@ class BoundingBoxGizmo extends HelperGizmo {
         }
         this._box.enabled = !this._empty && !this.iconOnly;
         if (this._box.enabled) {
+            // the box follows the bounds, which a resize changes through the nodes
+            const { center, halfExtents } = this._bounds;
+            this.position.copy(center);
+            this.rotation.copy(Quat.IDENTITY);
+            this.halfExtents.copy(halfExtents).addScalar(this.padding);
             this._drawBox();
         }
         if (this.icon) {
@@ -324,13 +339,27 @@ class BoundingBoxGizmo extends HelperGizmo {
     }
 
     /**
-     * Places the arms, edges, volume, handles and labels around the gathered bounds.
+     * Gets the extent of the bounds along an axis, without the padding.
      *
-     * @private
+     * @param {number} axis - The axis index.
+     * @returns {number} The extent.
+     * @protected
+     * @override
      */
-    _drawBox() {
-        const { center: c, halfExtents: h } = this._bounds;
-        h.addScalar(this.padding);
+    _extent(axis) {
+        return super._extent(axis) - 2 * this.padding;
+    }
+
+    /**
+     * Places the corner brackets and the dashed edges joining them.
+     *
+     * @param {Vec3[]} points - The world corners, the bits of each index giving its x, y and z
+     * sides.
+     * @protected
+     * @override
+     */
+    _drawEdges(points) {
+        const { position: c, halfExtents: h } = this;
 
         this._occludedMaterial.setParameter('uColor', this._theme.occluded.toArray(this._occludedColorData));
         this._material.setParameter('uColor', this._theme.base.toArray(this._colorData));
@@ -370,38 +399,13 @@ class BoundingBoxGizmo extends HelperGizmo {
             }
         }
 
-        const shapes = this._shapes;
-        if (this._theme.fill.a > 0) {
-            shapes.box(c, Quat.IDENTITY, tmpV1.copy(h).mulScalar(2));
-        }
         if (this.edges) {
-            // the four edges along each axis, at each sign of the other two
-            for (let k = 0; k < 3; k++) {
-                const axis = AXES[k];
-                const u = AXES[(k + 1) % 3];
-                const v = AXES[(k + 2) % 3];
-                for (let i = 0; i < 4; i++) {
-                    const a = tmpV3.copy(c);
-                    a[u] += i & 1 ? h[u] : -h[u];
-                    a[v] += i & 2 ? h[v] : -h[v];
-                    const b = tmpV4.copy(a);
-                    a[axis] -= h[axis];
-                    b[axis] += h[axis];
-                    shapes.dashed(a, b, 0.5, 0.45);
+            for (let j = 0; j < points.length; j++) {
+                for (let bit = 1; bit < points.length; bit <<= 1) {
+                    if (!(j & bit)) {
+                        this._shapes.dashed(points[j], points[j | bit], 0.5, 0.45);
+                    }
                 }
-            }
-        }
-
-        if (!this._detailed(c, Math.max(h.x, h.y, h.z))) {
-            return;
-        }
-        const node = this.nodes[0];
-        for (let i = 0; i < FACES.length; i++) {
-            const face = FACES[i];
-            const axis = i >> 1;
-            const pos = tmpV1.set(c.x + face.x * h.x, c.y + face.y * h.y, c.z + face.z * h.z);
-            if (this._handle(pos, FACE_COLORS[axis], node, 'size', i, c, face)) {
-                this._readoutAt(pos, FACE_LABELS[axis], FACE_COLORS[axis], fmt(2 * (h[AXES[axis]] - this.padding)));
             }
         }
     }
@@ -414,8 +418,7 @@ class BoundingBoxGizmo extends HelperGizmo {
      * @override
      */
     _startHandle(handle) {
-        this._startBounds.copy(this._bounds);
-        this._startBounds.halfExtents.addScalar(-this.padding);
+        super._startHandle(handle);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             (this._startPositions[i] ??= new Vec3()).copy(node.getPosition());
@@ -424,36 +427,35 @@ class BoundingBoxGizmo extends HelperGizmo {
     }
 
     /**
-     * Resizes the attached nodes along the axis of the dragged face, keeping the opposite face in
-     * place.
+     * Resizes the box, then the attached nodes to fit it. Each node keeps its place within the
+     * box and scales along its local axes nearest the world axes.
      *
      * @param {HelperHandle} handle - The dragged handle.
-     * @param {Vec3} point - Where the face is dragged to.
+     * @param {Vec3} point - Where the handle is dragged to.
      * @protected
      * @override
      */
     _moveHandle(handle, point) {
-        const axis = AXES[handle.index >> 1];
-        const sign = handle.index & 1 ? -1 : 1;
-        const { center, halfExtents } = this._startBounds;
-        const anchor = center[axis] - sign * halfExtents[axis];
-        const face = point[axis] - sign * this.padding;
-        const factor = Math.max((face - anchor) / (2 * sign * halfExtents[axis]), MIN_FACTOR);
+        super._moveHandle(handle, point);
+
+        const pad = this.padding;
+        const start = this._startHalfExtents;
+        const factor = tmpV3.set(
+            Math.max((this.halfExtents.x - pad) / Math.max(start.x - pad, 1e-6), MIN_FACTOR),
+            Math.max((this.halfExtents.y - pad) / Math.max(start.y - pad, 1e-6), MIN_FACTOR),
+            Math.max((this.halfExtents.z - pad) / Math.max(start.z - pad, 1e-6), MIN_FACTOR)
+        );
 
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const start = this._startPositions[i];
-            const pos = tmpV1.copy(start);
-            pos[axis] = anchor + (start[axis] - anchor) * factor;
+            const pos = tmpV1.sub2(this._startPositions[i], this._startPosition).mul(factor).add(this.position);
             node.setPosition(pos);
 
-            // the local axis nearest the world axis takes the scale
-            const right = Math.abs(node.right[axis]);
-            const up = Math.abs(node.up[axis]);
-            const forward = Math.abs(node.forward[axis]);
-            const local = right >= up && right >= forward ? 'x' : up >= forward ? 'y' : 'z';
+            // each local axis takes the factor of the world axis it is nearest
             const scale = tmpV2.copy(this._startScales[i]);
-            scale[local] *= factor;
+            scale.x *= factor[nearest(node.right)];
+            scale.y *= factor[nearest(node.up)];
+            scale.z *= factor[nearest(node.forward)];
             node.setLocalScale(scale);
         }
     }

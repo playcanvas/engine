@@ -5,6 +5,7 @@ import {
     Layer,
     LightGizmo,
     RotateGizmo,
+    SORTMODE_MANUAL,
     SORTMODE_NONE,
     ScaleGizmo,
     TranslateGizmo
@@ -97,7 +98,7 @@ class GizmoHandler {
         const helperLayer = new Layer({
             name: 'Helpers',
             opaqueSortMode: SORTMODE_NONE,
-            transparentSortMode: SORTMODE_NONE
+            transparentSortMode: SORTMODE_MANUAL
         });
         app.scene.layers.push(helperLayer);
         const layer = Gizmo.createLayer(app);

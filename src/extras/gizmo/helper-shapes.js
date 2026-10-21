@@ -9,6 +9,7 @@ import { Readout } from './readout.js';
 import { ArcShape } from './shape/arc-shape.js';
 import { ArrowShape } from './shape/arrow-shape.js';
 import { BoxShape } from './shape/box-shape.js';
+import { CapsuleShape } from './shape/capsule-shape.js';
 import { ConeShape } from './shape/cone-shape.js';
 import { SphereShape } from './shape/sphere-shape.js';
 
@@ -59,6 +60,9 @@ const CONES = {
 };
 
 const PEAK_TOLERANCE = 1e-3;
+const FILL_DEPTH_BIAS = 2;
+const FILL_DRAW_ORDER = 0;
+const SHAPE_DRAW_ORDER = 1;
 
 const ICON_WEIGHT = 0.8;
 const ICON_BACKDROP_RADIUS = 14;
@@ -95,10 +99,12 @@ class Pool {
      * @param {(base: Color, occluded: Color) => MeshLine | Shape} create - Creates a shape in the
      * supplied colors.
      * @param {Entity} parent - The parent of the shapes.
+     * @param {number} drawOrder - The draw order of the shapes in a manually sorted layer.
      */
-    constructor(create, parent) {
+    constructor(create, parent, drawOrder) {
         this._create = create;
         this._parent = parent;
+        this._drawOrder = drawOrder;
     }
 
     /**
@@ -110,6 +116,11 @@ class Pool {
             const base = new Color();
             const occluded = new Color();
             const shape = this._create(base, occluded);
+            shape.entity.forEach((node) => {
+                /** @type {Entity} */ (node).render?.meshInstances.forEach((meshInstance) => {
+                    meshInstance.drawOrder = this._drawOrder;
+                });
+            });
             this._parent.addChild(shape.entity);
             item = { entity: shape.entity, shape, base, occluded };
             this.items.push(item);
@@ -229,8 +240,10 @@ class HelperShapes {
         const { app } = gizmo.camera.system;
         const device = app.graphicsDevice;
         const layers = [layer.id];
-        const pool = (/** @type {(base: Color, occluded: Color) => MeshLine | Shape} */ create) => {
-            const p = new Pool(create, parent);
+        // in a manually sorted layer the filled shapes draw first, so their depth hides the lines
+        // and handles behind them
+        const pool = (/** @type {(base: Color, occluded: Color) => MeshLine | Shape} */ create, drawOrder = SHAPE_DRAW_ORDER) => {
+            const p = new Pool(create, parent, drawOrder);
             this._pools.push(p);
             return p;
         };
@@ -253,7 +266,13 @@ class HelperShapes {
             return arc;
         });
         this._arrows = pool((base, occluded) => new ArrowShape(device, args(base, occluded)));
-        this._boxes = pool((base, occluded) => new BoxShape(device, args(base, occluded)));
+        // filled shapes sit just behind a surface they lie on, so the lines drawn on them and a mesh
+        // matching a shape gizmo do not fight them
+        const filled = (/** @type {Shape} */ shape) => {
+            shape.depthBias = FILL_DEPTH_BIAS;
+            return shape;
+        };
+        this._boxes = pool((base, occluded) => filled(new BoxShape(device, args(base, occluded))), FILL_DRAW_ORDER);
         this._handles = pool((base, occluded) => {
             const box = new BoxShape(device, args(base, occluded));
             gizmo.intersectShapes.push(box);
@@ -264,12 +283,14 @@ class HelperShapes {
             gizmo.intersectShapes.push(disc);
             return disc;
         });
-        this._spheres = pool((base, occluded) => new SphereShape(device, args(base, occluded)));
+        this._iconDots = pool((base, occluded) => new ConeShape(device, { ...args(base, occluded), ...CONES.disk }));
+        this._spheres = pool((base, occluded) => filled(new SphereShape(device, args(base, occluded))), FILL_DRAW_ORDER);
+        this._capsules = pool((base, occluded) => filled(new CapsuleShape(device, args(base, occluded))), FILL_DRAW_ORDER);
 
         /** @type {{ [K in keyof CONES]: Pool }} */
         this._cones = /** @type {any} */ ({});
         for (const kind of /** @type {(keyof CONES)[]} */ (Object.keys(CONES))) {
-            this._cones[kind] = pool((base, occluded) => new ConeShape(device, { ...args(base, occluded), ...CONES[kind] }));
+            this._cones[kind] = pool((base, occluded) => filled(new ConeShape(device, { ...args(base, occluded), ...CONES[kind] })), FILL_DRAW_ORDER);
         }
     }
 
@@ -728,6 +749,27 @@ class HelperShapes {
     }
 
     /**
+     * Adds a filled capsule along the y axis of the rotation.
+     *
+     * @param {Vec3} center - The world center.
+     * @param {Quat} rotation - The world rotation.
+     * @param {number} radius - The radius.
+     * @param {number} height - The height, caps included.
+     * @param {number} [alpha] - The alpha factor.
+     */
+    capsule(center, rotation, radius, height, alpha = 1) {
+        this._colors(alpha, true);
+        const capsule = /** @type {CapsuleShape} */ (this._next(this._capsules));
+        const ratio = height / Math.max(radius, 1e-6);
+        if (Math.abs(capsule.height - ratio) > PEAK_TOLERANCE * ratio) {
+            capsule.height = ratio;
+        }
+        capsule.entity.setLocalPosition(this._local(center, tmpV1));
+        capsule.entity.setLocalRotation(rotation);
+        capsule.entity.setLocalScale(radius, radius, radius);
+    }
+
+    /**
      * Adds a filled unit cone along the y axis of the rotation, its base at y = -0.5. A disk is a
      * cylinder and a triangle a three sided pyramid, both meant to be flattened by the size, and a
      * frustum a four sided pyramid with square sides along the x and z axes.
@@ -781,7 +823,7 @@ class HelperShapes {
      * @returns {Shape} The disc.
      * @private
      */
-    _iconDisc(radius, color, alpha, back = 0, pool = this._cones.disk, x = 0, y = 0) {
+    _iconDisc(radius, color, alpha, back = 0, pool = this._iconDots, x = 0, y = 0) {
         const { center, away, right, up, pixel, rotation } = this._icon;
         const size = 2 * radius * pixel;
         this._colors(alpha, false, color);

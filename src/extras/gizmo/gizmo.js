@@ -249,6 +249,14 @@ class Gizmo extends EventHandler {
     _enabled = true;
 
     /**
+     * Whether the gizmo shows only with attached nodes. Gizmos that edit values of their own, such
+     * as the shape gizmos, show without them.
+     *
+     * @protected
+     */
+    _requiresNodes = true;
+
+    /**
      * Internal id of the pointer interacting with the gizmo.
      *
      * @private
@@ -355,7 +363,7 @@ class Gizmo extends EventHandler {
     set enabled(state) {
         this._enabled = state;
         const cameraDist = this.root.getLocalPosition().distance(this.camera.entity.getPosition());
-        const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
+        const enabled = state ? (!this._requiresNodes || this.nodes.length > 0) && cameraDist > DIST_EPSILON : false;
         if (enabled !== this.root.enabled) {
             this.root.enabled = enabled;
             this._renderUpdate = true;

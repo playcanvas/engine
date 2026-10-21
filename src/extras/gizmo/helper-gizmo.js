@@ -1,5 +1,6 @@
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
@@ -26,7 +27,7 @@ import { HelperShapes } from './helper-shapes.js';
  *
  * @typedef {object} HelperHandle
  * @property {Shape|null} shape - The handle shape.
- * @property {GraphNode|null} node - The node the handle edits.
+ * @property {GraphNode|null} node - The node the handle edits, or null for a shape gizmo.
  * @property {string} name - The value the handle edits.
  * @property {number} index - The index of the handle among those editing the value.
  * @property {Vec3} origin - A point the edit is measured from, on the line or plane the handle
@@ -40,7 +41,18 @@ import { HelperShapes } from './helper-shapes.js';
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
+const tmpV4 = new Vec3();
+const tmpV5 = new Vec3();
+const tmpQ1 = new Quat();
 const plane = new Plane();
+
+const SPHERE_RINGS = [
+    new Quat(),
+    new Quat().setFromEulerAngles(90, 0, 0),
+    new Quat().setFromEulerAngles(0, 0, 90)
+];
+
+const RINGS_SIZE = 40;
 
 const DETAIL_FADE_START = 60;
 const DETAIL_FADE_END = 100;
@@ -68,7 +80,13 @@ const createHandle = () => ({
  * of those values show.
  *
  * Use a layer that keeps the scene depth so occluded parts draw in the theme's `occluded` color;
- * a {@link Gizmo.createLayer} layer clears depth.
+ * a {@link Gizmo.createLayer} layer clears depth. Sort its transparent mesh instances manually
+ * ({@link SORTMODE_MANUAL}), so filled volumes draw before the lines and handles they hide.
+ *
+ * ```javascript
+ * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_MANUAL });
+ * app.scene.layers.push(layer);
+ * ```
  *
  * @category Gizmo
  */
@@ -275,7 +293,7 @@ class HelperGizmo extends Gizmo {
                 if (handle) {
                     this._copy(handle, this._hovered);
                 } else {
-                    this._hovered.node = null;
+                    this._hovered.name = '';
                 }
                 return;
             }
@@ -291,7 +309,7 @@ class HelperGizmo extends Gizmo {
         });
 
         this.on(Gizmo.EVENT_NODESDETACH, () => {
-            this._hovered.node = null;
+            this._hovered.name = '';
             this._endDrag();
         });
     }
@@ -398,7 +416,7 @@ class HelperGizmo extends Gizmo {
      * @private
      */
     _matches(a, node, name, index) {
-        return a.node === node && a.name === name && a.index === index;
+        return a.name !== '' && a.node === node && a.name === name && a.index === index;
     }
 
     /**
@@ -458,7 +476,7 @@ class HelperGizmo extends Gizmo {
         }
         this._dragging = false;
         this.fire(HelperGizmo.EVENT_HANDLEEND, this._drag.node, this._drag.name);
-        this._drag.node = null;
+        this._drag.name = '';
     }
 
     /**
@@ -484,11 +502,8 @@ class HelperGizmo extends Gizmo {
      * the path, which the subclass colors instead.
      *
      * @param {Vec3} position - The world position.
-     * @param {GraphNode} node - The node the handle edits.
-     * @param {string} name - The value the handle edits.
-     * @param {number} index - The index of the handle among those editing the value.
      * @param {Color} color - The color of the handle when hovered or dragged, and of its guide.
-     * @param {GraphNode} node - The node the handle edits.
+     * @param {GraphNode|null} node - The node the handle edits, or null for a shape gizmo.
      * @param {string} name - The value the handle edits.
      * @param {number} index - The index of the handle among those editing the value.
      * @param {Vec3} origin - A point the edit is measured from, on the line or plane.
@@ -545,7 +560,7 @@ class HelperGizmo extends Gizmo {
     /**
      * Gets whether the handle editing a value is hovered, or dragged.
      *
-     * @param {GraphNode} node - The node the handle edits.
+     * @param {GraphNode|null} node - The node the handle edits, or null for a shape gizmo.
      * @param {string} name - The value the handle edits.
      * @param {number} index - The index of the handle among those editing the value.
      * @returns {boolean} Whether the handle is active.
@@ -553,6 +568,54 @@ class HelperGizmo extends Gizmo {
      */
     _active(node, name, index) {
         return this._matches(this._dragging ? this._drag : this._hovered, node, name, index);
+    }
+
+    /**
+     * Places three great circles of a sphere.
+     *
+     * @param {Vec3} center - The center of the sphere.
+     * @param {Quat} rotation - The rotation of the sphere.
+     * @param {number} radius - The radius of the sphere.
+     * @param {number} [weight] - The thickness as a factor of the line thickness.
+     * @param {number} [alpha] - The alpha factor.
+     * @protected
+     */
+    _sphereRings(center, rotation, radius, weight = 1, alpha = 1) {
+        for (let i = 0; i < SPHERE_RINGS.length; i++) {
+            this._shapes.ring(center, tmpQ1.copy(rotation).mul(SPHERE_RINGS[i]), radius, weight, alpha);
+        }
+    }
+
+    /**
+     * Places the outline of a sphere over three faint great circles, shown once it is large enough
+     * on screen, or three solid rings when the camera is inside it.
+     *
+     * @param {Vec3} center - The center of the sphere.
+     * @param {Quat} rotation - The rotation of the great circles.
+     * @param {number} radius - The radius of the sphere.
+     * @protected
+     */
+    _sphereOutline(center, rotation, radius) {
+        const camera = this._camera;
+        const toCamera = tmpV4.sub2(camera.entity.getPosition(), center);
+        const dist = toCamera.length();
+        const perspective = camera.projection === PROJECTION_PERSPECTIVE;
+        if (perspective && dist <= radius) {
+            this._sphereRings(center, rotation, radius);
+            return;
+        }
+        if (this._shapes.screenSize(center, radius) > RINGS_SIZE) {
+            this._sphereRings(center, rotation, radius, 0.5, 0.35);
+        }
+        if (!perspective) {
+            this._shapes.circle(center, camera.entity.forward, radius, 1.1);
+            return;
+        }
+
+        // the outline is a circle nearer the camera and smaller than the sphere
+        const ratio = radius / dist;
+        const outline = tmpV5.copy(toCamera).mulScalar(ratio * ratio).add(center);
+        this._shapes.circle(outline, toCamera, radius * Math.sqrt(1 - ratio * ratio), 1.1);
     }
 
     /**

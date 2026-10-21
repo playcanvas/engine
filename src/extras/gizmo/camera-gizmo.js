@@ -50,7 +50,7 @@ const fmt = value => `${+value.toFixed(2)}`;
  * viewing the gizmo.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_NONE });
+ * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_MANUAL });
  * app.scene.layers.push(layer);
  * const gizmo = new CameraGizmo(cameraComponent, layer);
  * gizmo.attach([otherCameraEntity]);

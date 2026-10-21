@@ -1,0 +1,142 @@
+import {
+    BindingTwoWay,
+    BooleanInput,
+    ColorPicker,
+    LabelGroup,
+    Panel,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
+import { useState } from 'react';
+
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from 'playcanvas';
+
+/**
+ * @import { Observer } from '@playcanvas/observer'
+ * @import { ReactElement } from 'react'
+ */
+
+/**
+ * @param {{ observer: Observer }} props - The control panel props.
+ * @returns {ReactElement} The control panel.
+ */
+export function Controls({ observer }) {
+    const [proj, setProj] = useState(PROJECTION_PERSPECTIVE);
+
+    return (
+        <>
+            <Panel headerText='Box'>
+                    <LabelGroup text='Face Handles'>
+                        <BooleanInput
+                            type='toggle'
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'box.faceHandles' }}
+                        />
+                    </LabelGroup>
+                    <LabelGroup text='Corner Handles'>
+                        <BooleanInput
+                            type='toggle'
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'box.cornerHandles' }}
+                        />
+                    </LabelGroup>
+                    <LabelGroup text='Centered'>
+                        <BooleanInput
+                            type='toggle'
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'box.centered' }}
+                        />
+                    </LabelGroup>
+                    <LabelGroup text='Uniform Corners'>
+                        <BooleanInput
+                            type='toggle'
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'box.uniform' }}
+                        />
+                    </LabelGroup>
+                </Panel>
+            <Panel headerText='Theme'>
+                <LabelGroup text='Base'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.base' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Occluded'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.occluded' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Fill'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.fill' }}
+                    />
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Layers'>
+                <LabelGroup text='Handles'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.handles' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Readout'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.readout' }}
+                    />
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Render'>
+                <LabelGroup text='Line Thickness'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.lineThickness' }}
+                        min={1}
+                        max={10}
+                        precision={1}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Handle Size'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.handleSize' }}
+                        min={2}
+                        max={20}
+                        precision={1}
+                    />
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Camera'>
+                <LabelGroup text='Projection'>
+                    <SelectInput
+                        options={[
+                            { v: PROJECTION_PERSPECTIVE + 1, t: 'Perspective' },
+                            { v: PROJECTION_ORTHOGRAPHIC + 1, t: 'Orthographic' }
+                        ]}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'camera.proj' }}
+                        onSelect={(value) => setProj((parseInt(value, 10) || 1) - 1)}
+                    />
+                </LabelGroup>
+                {proj === PROJECTION_PERSPECTIVE && (
+                    <LabelGroup text='FOV'>
+                        <SliderInput
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'camera.fov' }}
+                            min={30}
+                            max={100}
+                        />
+                    </LabelGroup>
+                )}
+            </Panel>
+        </>
+    );
+}

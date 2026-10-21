@@ -1,7 +1,7 @@
 import { math } from '../../core/math/math.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE, PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../scene/constants.js';
 import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from './color.js';
 import { HelperGizmo } from './helper-gizmo.js';
 
@@ -31,17 +31,10 @@ const RECT = [
 const rect = RECT.map(() => new Vec3());
 const rays = Array.from({ length: 8 }, () => new Vec3());
 
-const SPHERE_RINGS = [
-    new Quat(),
-    new Quat().setFromEulerAngles(90, 0, 0),
-    new Quat().setFromEulerAngles(0, 0, 90)
-];
-
 const AXES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.FORWARD];
 
 const FLIP = new Quat().setFromEulerAngles(180, 0, 0);
 
-const RINGS_SIZE = 40;
 const RAYS = 8;
 const GROUND_RADIUS = 0.12;
 const FACE_OPACITY = 3;
@@ -71,7 +64,7 @@ const fmt = value => `${+value.toFixed(2)}`;
  * which matches its world size when its parent is not scaled.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_NONE });
+ * const layer = new Layer({ name: 'Helpers', transparentSortMode: SORTMODE_MANUAL });
  * app.scene.layers.push(layer);
  * const gizmo = new LightGizmo(cameraComponent, layer);
  * gizmo.attach([lightEntity]);
@@ -143,54 +136,6 @@ class LightGizmo extends HelperGizmo {
      */
     get lineThickness() {
         return super.lineThickness;
-    }
-
-    /**
-     * Places three rings of a sphere.
-     *
-     * @param {Vec3} center - The center of the sphere.
-     * @param {Quat} rotation - The rotation of the sphere.
-     * @param {number} radius - The radius of the sphere.
-     * @param {number} [weight] - The thickness as a factor of the line thickness.
-     * @param {number} [alpha] - The alpha factor.
-     * @private
-     */
-    _sphere(center, rotation, radius, weight = 1, alpha = 1) {
-        for (let i = 0; i < SPHERE_RINGS.length; i++) {
-            this._shapes.ring(center, tmpQ1.copy(rotation).mul(SPHERE_RINGS[i]), radius, weight, alpha);
-        }
-    }
-
-    /**
-     * Places the outline of a sphere over three faint great circles, shown once it is large enough
-     * on screen, or three solid rings when the camera is inside it.
-     *
-     * @param {Vec3} center - The center of the sphere.
-     * @param {Quat} rotation - The rotation of the great circles.
-     * @param {number} radius - The radius of the sphere.
-     * @private
-     */
-    _outline(center, rotation, radius) {
-        const camera = this._camera;
-        const toCamera = tmpV5.sub2(camera.entity.getPosition(), center);
-        const dist = toCamera.length();
-        const perspective = camera.projection === PROJECTION_PERSPECTIVE;
-        if (perspective && dist <= radius) {
-            this._sphere(center, rotation, radius);
-            return;
-        }
-        if (this._shapes.screenSize(center, radius) > RINGS_SIZE) {
-            this._sphere(center, rotation, radius, 0.5, 0.35);
-        }
-        if (!perspective) {
-            this._shapes.circle(center, camera.entity.forward, radius, 1.1);
-            return;
-        }
-
-        // the outline is a circle nearer the camera and smaller than the sphere
-        const ratio = radius / dist;
-        const outline = tmpV6.copy(toCamera).mulScalar(ratio * ratio).add(center);
-        this._shapes.circle(outline, toCamera, radius * Math.sqrt(1 - ratio * ratio), 1.1);
     }
 
     /**
@@ -330,7 +275,7 @@ class LightGizmo extends HelperGizmo {
                 if (volume) {
                     shapes.sphere(pos, radius, FACE_OPACITY);
                 }
-                this._outline(pos, rot, radius);
+                this._sphereOutline(pos, rot, radius);
                 if (detailed) {
                     for (let i = 0; i < AXES.length; i++) {
                         const dir = rot.transformVector(AXES[i], tmpV3);
@@ -465,7 +410,7 @@ class LightGizmo extends HelperGizmo {
     _drawOmni(light) {
         const { entity, range } = light;
         const pos = entity.getPosition();
-        this._outline(pos, Quat.IDENTITY, range);
+        this._sphereOutline(pos, Quat.IDENTITY, range);
         this._ground(pos);
         this._icon('light', pos, entity);
         if (!this._detailed(pos, range)) {

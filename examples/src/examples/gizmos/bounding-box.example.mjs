@@ -18,6 +18,7 @@ import {
     PROJECTION_PERSPECTIVE,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    SORTMODE_MANUAL,
     SORTMODE_NONE,
     ScriptComponentSystem,
     ScriptHandler,
@@ -117,7 +118,7 @@ light.setEulerAngles(0, 0, -60);
 const layer = new Layer({
     name: 'Bounds',
     opaqueSortMode: SORTMODE_NONE,
-    transparentSortMode: SORTMODE_NONE
+    transparentSortMode: SORTMODE_MANUAL
 });
 app.scene.layers.push(layer);
 const gizmo = new BoundingBoxGizmo(camera.camera, layer);

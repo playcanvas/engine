@@ -353,6 +353,26 @@ class Shape {
     }
 
     /**
+     * Set the depth bias of the shape, which offsets its depth so it does not fight a surface it
+     * lies on. Positive values push it away from the camera.
+     *
+     * @type {number}
+     */
+    set depthBias(value) {
+        this._material.depthBias = value;
+        this._material.slopeDepthBias = value;
+    }
+
+    /**
+     * Get the depth bias of the shape.
+     *
+     * @type {number}
+     */
+    get depthBias() {
+        return this._material.depthBias;
+    }
+
+    /**
      * Create a render component for an entity.
      *
      * @param {Entity} entity - The entity to create the render component for.

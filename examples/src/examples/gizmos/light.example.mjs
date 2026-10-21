@@ -21,6 +21,7 @@ import {
     PROJECTION_PERSPECTIVE,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    SORTMODE_MANUAL,
     SORTMODE_NONE,
     ScriptComponentSystem,
     ScriptHandler,
@@ -137,7 +138,7 @@ app.root.addChild(light);
 const layer = new Layer({
     name: 'Helpers',
     opaqueSortMode: SORTMODE_NONE,
-    transparentSortMode: SORTMODE_NONE
+    transparentSortMode: SORTMODE_MANUAL
 });
 app.scene.layers.push(layer);
 const gizmo = new LightGizmo(camera.camera, layer);
