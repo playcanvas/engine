@@ -32,13 +32,6 @@ class ShapeGizmo extends HelperGizmo {
     rotation = new Quat();
 
     /**
-     * Shape gizmos show without attached nodes.
-     *
-     * @protected
-     */
-    _requiresNodes = false;
-
-    /**
      * Creates a new ShapeGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -49,6 +42,17 @@ class ShapeGizmo extends HelperGizmo {
         super(camera, layer, name);
 
         this.enabled = true;
+    }
+
+    /**
+     * Shape gizmos show without attached nodes.
+     *
+     * @type {boolean}
+     * @protected
+     * @override
+     */
+    get _requiresNodes() {
+        return false;
     }
 }
 

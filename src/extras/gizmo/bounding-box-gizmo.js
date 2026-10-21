@@ -1,20 +1,14 @@
-import { math } from '../../core/math/math.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { Entity } from '../../framework/entity.js';
-import { BLEND_NORMAL, PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
-import { ShaderMaterial } from '../../scene/materials/shader-material.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { Mesh } from '../../scene/mesh.js';
-import { BoxGizmo } from './box-gizmo.js';
-import { unlitShader } from './shaders.js';
+import { HelperGizmo } from './helper-gizmo.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Entity } from '../../framework/entity.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { HelperGizmoTheme, HelperHandle } from './helper-gizmo.js'
  */
 
@@ -48,8 +42,8 @@ const nearest = (dir) => {
 /**
  * Draws corner brackets around the world-space bounds of the attached nodes and their
  * descendants, joined by dashed edges over a faint volume, with a dot at the origin of each
- * attached node. It is a {@link BoxGizmo} that follows the bounds: once the box is large enough
- * on screen, its face and corner handles resize the attached nodes, showing the width, height or
+ * attached node. Like a {@link BoxGizmo}, once the box is large enough on screen, its face and
+ * corner handles resize it, which resizes the attached nodes, showing the width, height or
  * depth while hovered. A resize scales each node along its local axes nearest the world axes,
  * which is exact for nodes aligned with them.
  *
@@ -67,7 +61,37 @@ const nearest = (dir) => {
  *
  * @category Gizmo
  */
-class BoundingBoxGizmo extends BoxGizmo {
+class BoundingBoxGizmo extends HelperGizmo {
+    /**
+     * Whether to show handles at the center of each face. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    faceHandles = true;
+
+    /**
+     * Whether to show handles at the corners. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    cornerHandles = true;
+
+    /**
+     * Whether a resize keeps the center of the bounds in place, moving the opposite face or corner
+     * too, rather than keeping the opposite face or corner in place. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    centered = false;
+
+    /**
+     * Whether a corner handle scales the bounds evenly, along the diagonal through the corner,
+     * rather than resizing each axis. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    uniform = false;
+
     /**
      * Whether to join the brackets with dashed edges. Defaults to true.
      *
@@ -113,59 +137,32 @@ class BoundingBoxGizmo extends BoxGizmo {
     _empty = true;
 
     /**
-     * Parent of the arms, disabled when there are no bounds.
+     * The center of the box drawn this frame, or resized by a drag.
      *
-     * @type {Entity}
      * @private
      */
-    _box = new Entity('box');
+    _center = new Vec3();
 
     /**
-     * The arm entities, three per corner.
+     * The half extents of the box drawn this frame, padding included.
      *
-     * @type {Entity[]}
      * @private
      */
-    _arms = [];
+    _halfExtents = new Vec3();
 
     /**
-     * Material of the occluded pass, drawn without depth test.
+     * The center at the start of a resize.
      *
-     * @type {ShaderMaterial}
      * @private
      */
-    _occludedMaterial;
+    _startCenter = new Vec3();
 
     /**
-     * Material of the depth tested pass.
-     *
-     * @type {ShaderMaterial}
-     * @private
-     */
-    _material;
-
-    /**
-     * Uniform storage for the base color.
-     *
-     * @type {number[]}
-     * @private
-     */
-    _colorData = [0, 0, 0, 0];
-
-    /**
-     * Uniform storage for the occluded color.
-     *
-     * @type {number[]}
-     * @private
-     */
-    _occludedColorData = [0, 0, 0, 0];
-
-    /**
-     * The bounds at the start of a resize, without padding.
+     * The half extents at the start of a resize, padding included.
      *
      * @private
      */
-    _startBounds = new BoundingBox();
+    _startHalfExtents = new Vec3();
 
     /**
      * The positions of the attached nodes at the start of a resize.
@@ -184,13 +181,6 @@ class BoundingBoxGizmo extends BoxGizmo {
     _startScales = [];
 
     /**
-     * The bounds follow attached nodes.
-     *
-     * @protected
-     */
-    _requiresNodes = true;
-
-    /**
      * Creates a new BoundingBoxGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -202,52 +192,6 @@ class BoundingBoxGizmo extends BoxGizmo {
         super(camera, layer, 'gizmo:bounding-box');
 
         this._addNode = this._addNode.bind(this);
-
-        this._occludedMaterial = this._createMaterial(false);
-        this._material = this._createMaterial(true);
-
-        // occluded pass first, then the depth tested pass over it
-        const mesh = Mesh.fromGeometry(this._device, new BoxGeometry());
-        for (let i = 0; i < 24; i++) {
-            const arm = new Entity(`arm:${i}`);
-            const meshInstances = [
-                new MeshInstance(mesh, this._occludedMaterial),
-                new MeshInstance(mesh, this._material)
-            ];
-            for (let j = 0; j < meshInstances.length; j++) {
-                meshInstances[j].cull = false;
-                meshInstances[j].drawOrder = 1;
-            }
-            arm.addComponent('render', {
-                meshInstances,
-                layers: [layer.id],
-                castShadows: false
-            });
-            this._box.addChild(arm);
-            this._arms.push(arm);
-        }
-        this.root.addChild(this._box);
-
-        // hidden until nodes are attached, which the shape gizmo it extends does not need
-        this.enabled = true;
-    }
-
-    /**
-     * Creates an arm material.
-     *
-     * @param {boolean} depthTest - Whether the material is depth tested.
-     * @returns {ShaderMaterial} The material.
-     * @private
-     */
-    _createMaterial(depthTest) {
-        const material = new ShaderMaterial(unlitShader);
-        material.setDefine('DEPTH_WRITE', '0');
-        material.setParameter('uDepth', 0);
-        material.blendType = BLEND_NORMAL;
-        material.depthTest = depthTest;
-        material.depthWrite = false;
-        material.update();
-        return material;
     }
 
     /**
@@ -311,21 +255,23 @@ class BoundingBoxGizmo extends BoxGizmo {
      * @override
      */
     _drawShapes() {
+        const shapes = this._shapes;
         this._empty = true;
         for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].forEach(this._addNode);
         }
-        this._box.enabled = !this._empty && !this.iconOnly;
-        if (this._box.enabled) {
+        if (!this._empty && !this.iconOnly) {
             // the box follows the bounds, which a resize changes through the nodes
-            const { center, halfExtents } = this._bounds;
-            this.position.copy(center);
-            this.rotation.copy(Quat.IDENTITY);
-            this.halfExtents.copy(halfExtents).addScalar(this.padding);
-            this._drawBox();
+            const c = this._center.copy(this._bounds.center);
+            const h = this._halfExtents.copy(this._bounds.halfExtents).addScalar(this.padding);
+            const corners = this._boxCorners(c, Quat.IDENTITY, h);
+            this._drawBrackets(corners);
+            if (this._theme.fill.a > 0) {
+                shapes.box(c, Quat.IDENTITY, tmpV1.copy(h).mulScalar(2));
+            }
+            this._boxHandles(c, h, this, this.padding);
         }
         if (this.icon) {
-            const shapes = this._shapes;
             const camera = this._camera.entity;
             for (let i = 0; i < this.nodes.length; i++) {
                 const node = this.nodes[i];
@@ -339,71 +285,35 @@ class BoundingBoxGizmo extends BoxGizmo {
     }
 
     /**
-     * Gets the extent of the bounds along an axis, without the padding.
-     *
-     * @param {number} axis - The axis index.
-     * @returns {number} The extent.
-     * @protected
-     * @override
-     */
-    _extent(axis) {
-        return super._extent(axis) - 2 * this.padding;
-    }
-
-    /**
      * Places the corner brackets and the dashed edges joining them.
      *
-     * @param {Vec3[]} points - The world corners, the bits of each index giving its x, y and z
+     * @param {Vec3[]} corners - The world corners, the bits of each index giving its x, y and z
      * sides.
-     * @protected
-     * @override
+     * @private
      */
-    _drawEdges(points) {
-        const { position: c, halfExtents: h } = this;
+    _drawBrackets(corners) {
+        const shapes = this._shapes;
+        const { _center: c, _halfExtents: h } = this;
 
-        this._occludedMaterial.setParameter('uColor', this._theme.occluded.toArray(this._occludedColorData));
-        this._material.setParameter('uColor', this._theme.base.toArray(this._colorData));
-
-        // world size of a pixel, per unit depth in perspective
-        const camera = this._camera;
-        const perspective = camera.projection === PROJECTION_PERSPECTIVE;
-        const { width, height } = this._device.clientRect;
-        const span = perspective ? 2 * Math.tan(0.5 * camera.fov * math.DEG_TO_RAD) : 2 * camera.orthoHeight;
-        const pixel = span / Math.max(camera.horizontalFov ? width : height, 1);
-        const cameraPos = camera.entity.getPosition();
-        const forward = camera.entity.forward;
-        const rootPos = this.root.getPosition();
-
-        // three arms per corner, overhanging it by half a thickness so they meet
-        let i = 0;
+        // three arms per corner
         for (let x = -1; x <= 1; x += 2) {
             for (let y = -1; y <= 1; y += 2) {
                 for (let z = -1; z <= 1; z += 2) {
                     const corner = tmpV1.set(c.x + h.x * x, c.y + h.y * y, c.z + h.z * z);
-                    const depth = perspective ? Math.max(tmpV2.sub2(corner, cameraPos).dot(forward), camera.nearClip) : 1;
-                    const thickness = this.armThickness * pixel * depth;
                     for (let k = 0; k < 3; k++) {
                         const axis = AXES[k];
                         const sign = k === 0 ? x : k === 1 ? y : z;
-                        const length = h[axis] * this.armLength;
-
-                        const pos = tmpV2.copy(corner).sub(rootPos);
-                        pos[axis] -= sign * 0.5 * (length - 0.5 * thickness);
-
-                        const along = length + 0.5 * thickness;
-                        const arm = this._arms[i++];
-                        arm.setLocalPosition(pos);
-                        arm.setLocalScale(k === 0 ? along : thickness, k === 1 ? along : thickness, k === 2 ? along : thickness);
+                        shapes.arm(corner, axis, sign, h[axis] * this.armLength, this.armThickness);
                     }
                 }
             }
         }
 
         if (this.edges) {
-            for (let j = 0; j < points.length; j++) {
-                for (let bit = 1; bit < points.length; bit <<= 1) {
-                    if (!(j & bit)) {
-                        this._shapes.dashed(points[j], points[j | bit], 0.5, 0.45);
+            for (let i = 0; i < corners.length; i++) {
+                for (let bit = 1; bit < corners.length; bit <<= 1) {
+                    if (!(i & bit)) {
+                        shapes.dashed(corners[i], corners[i | bit], 0.5, 0.45);
                     }
                 }
             }
@@ -418,7 +328,8 @@ class BoundingBoxGizmo extends BoxGizmo {
      * @override
      */
     _startHandle(handle) {
-        super._startHandle(handle);
+        this._startCenter.copy(this._center);
+        this._startHalfExtents.copy(this._halfExtents);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             (this._startPositions[i] ??= new Vec3()).copy(node.getPosition());
@@ -436,19 +347,20 @@ class BoundingBoxGizmo extends BoxGizmo {
      * @override
      */
     _moveHandle(handle, point) {
-        super._moveHandle(handle, point);
+        const half = this._halfExtents;
+        this._resizeBox(handle, point, Quat.IDENTITY, this._startCenter, this._startHalfExtents, this, this._center, half);
 
         const pad = this.padding;
         const start = this._startHalfExtents;
         const factor = tmpV3.set(
-            Math.max((this.halfExtents.x - pad) / Math.max(start.x - pad, 1e-6), MIN_FACTOR),
-            Math.max((this.halfExtents.y - pad) / Math.max(start.y - pad, 1e-6), MIN_FACTOR),
-            Math.max((this.halfExtents.z - pad) / Math.max(start.z - pad, 1e-6), MIN_FACTOR)
+            Math.max((half.x - pad) / Math.max(start.x - pad, 1e-6), MIN_FACTOR),
+            Math.max((half.y - pad) / Math.max(start.y - pad, 1e-6), MIN_FACTOR),
+            Math.max((half.z - pad) / Math.max(start.z - pad, 1e-6), MIN_FACTOR)
         );
 
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const pos = tmpV1.sub2(this._startPositions[i], this._startPosition).mul(factor).add(this.position);
+            const pos = tmpV1.sub2(this._startPositions[i], this._startCenter).mul(factor).add(this._center);
             node.setPosition(pos);
 
             // each local axis takes the factor of the world axis it is nearest
@@ -458,18 +370,6 @@ class BoundingBoxGizmo extends BoxGizmo {
             scale.z *= factor[nearest(node.forward)];
             node.setLocalScale(scale);
         }
-    }
-
-    /**
-     * Destroys the gizmo and its materials.
-     *
-     * @override
-     */
-    destroy() {
-        super.destroy();
-
-        this._occludedMaterial.destroy();
-        this._material.destroy();
     }
 }
 

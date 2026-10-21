@@ -5,7 +5,9 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { Gizmo } from './gizmo.js';
+import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW } from './color.js';
 import { HelperShapes } from './helper-shapes.js';
+import { Pool } from './pool.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -38,19 +40,47 @@ import { HelperShapes } from './helper-shapes.js';
  * @ignore
  */
 
+/**
+ * The handles of a box and how they resize it.
+ *
+ * @typedef {object} HelperBoxOptions
+ * @property {boolean} faceHandles - Whether to show handles at the center of each face.
+ * @property {boolean} cornerHandles - Whether to show handles at the corners.
+ * @property {boolean} centered - Whether a resize keeps the center in place.
+ * @property {boolean} uniform - Whether a corner handle scales the box evenly.
+ * @ignore
+ */
+
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
 const tmpV4 = new Vec3();
 const tmpV5 = new Vec3();
 const tmpQ1 = new Quat();
+const tmpLocal = new Vec3();
+const tmpHalf = new Vec3();
+const tmpMid = new Vec3();
+const tmpAnchor = new Vec3();
+const tmpBoxQ = new Quat();
 const plane = new Plane();
+const boxAxes = [new Vec3(), new Vec3(), new Vec3()];
+const boxCorners = Array.from({ length: 8 }, () => new Vec3());
 
 const SPHERE_RINGS = [
     new Quat(),
     new Quat().setFromEulerAngles(90, 0, 0),
     new Quat().setFromEulerAngles(0, 0, 90)
 ];
+
+const SPHERE_AXES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.FORWARD];
+
+const BOX_AXES = /** @type {const} */ (['x', 'y', 'z']);
+const BOX_UNITS = [Vec3.RIGHT, Vec3.UP, Vec3.BACK];
+const BOX_FACE_COLORS = [COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA];
+const BOX_FACE_LABELS = ['W', 'H', 'D'];
+const BOX_FACES = 6;
+const BOX_MIN_HALF = 0.005;
+const BOX_MIN_FACTOR = 0.01;
 
 const RINGS_SIZE = 40;
 
@@ -59,6 +89,13 @@ const DETAIL_FADE_END = 100;
 
 const THEME_KEYS = /** @type {const} */ (['base', 'occluded', 'fill']);
 
+
+/**
+ * @param {number} corner - The corner index.
+ * @param {number} axis - The axis index.
+ * @returns {number} The side of the corner along the axis, -1 or 1.
+ */
+const boxSide = (corner, axis) => (corner & (1 << axis) ? 1 : -1);
 
 /**
  * @returns {HelperHandle} A new handle record.
@@ -186,13 +223,10 @@ class HelperGizmo extends Gizmo {
     /**
      * The icons placed this frame, with the nodes they mark.
      *
-     * @type {{ shape: Shape, node: GraphNode }[]}
+     * @type {Pool<{ shape: Shape|null, node: GraphNode|null }>}
      * @private
      */
-    _icons = [];
-
-    /** @private */
-    _iconCount = 0;
+    _icons = new Pool(() => ({ shape: null, node: null }));
 
     /**
      * The helper shapes.
@@ -205,13 +239,10 @@ class HelperGizmo extends Gizmo {
     /**
      * The handles placed this frame.
      *
-     * @type {HelperHandle[]}
+     * @type {Pool<HelperHandle>}
      * @private
      */
-    _placed = [];
-
-    /** @private */
-    _placedCount = 0;
+    _placed = new Pool(createHandle);
 
     /**
      * The hovered handle, matched by what it edits.
@@ -268,9 +299,10 @@ class HelperGizmo extends Gizmo {
             }
             const handle = this._find(meshInstance);
             if (!handle) {
-                for (let i = 0; i < this._iconCount; i++) {
-                    if (this._icons[i].shape.meshInstances[0] === meshInstance) {
-                        this.fire(HelperGizmo.EVENT_ICONSELECT, this._icons[i].node);
+                const icons = this._icons;
+                for (let i = 0; i < icons.count; i++) {
+                    if (icons.items[i].shape?.meshInstances[0] === meshInstance) {
+                        this.fire(HelperGizmo.EVENT_ICONSELECT, icons.items[i].node);
                         return;
                     }
                 }
@@ -428,9 +460,10 @@ class HelperGizmo extends Gizmo {
         if (!meshInstance) {
             return null;
         }
-        for (let i = 0; i < this._placedCount; i++) {
-            if (this._placed[i].shape?.meshInstances[0] === meshInstance) {
-                return this._placed[i];
+        const placed = this._placed;
+        for (let i = 0; i < placed.count; i++) {
+            if (placed.items[i].shape?.meshInstances[0] === meshInstance) {
+                return placed.items[i];
             }
         }
         return null;
@@ -520,12 +553,7 @@ class HelperGizmo extends Gizmo {
         }
         const hovered = this._active(node, name, index);
 
-        let handle = this._placed[this._placedCount];
-        if (!handle) {
-            handle = createHandle();
-            this._placed.push(handle);
-        }
-        this._placedCount++;
+        const handle = this._placed.next();
         handle.shape = this._shapes.handle(position, hovered ? color : null);
         handle.shape.fade = hovered ? 1 : this._detailFade;
 
@@ -545,15 +573,27 @@ class HelperGizmo extends Gizmo {
      * Shows the value a hovered or dragged handle edits, below the handle.
      *
      * @param {Vec3} position - The handle position.
-     * @param {string} label - The value label, as {@link HelperGizmo#_readoutLabel} formats it.
+     * @param {string} label - The value label.
      * @param {Color} color - The label color.
-     * @param {string} value - The value.
+     * @param {number} value - The value.
+     * @param {string} [unit] - The unit after the value.
      * @protected
      */
-    _readoutAt(position, label, color, value) {
+    _readoutAt(position, label, color, value, unit = '') {
+        this._readoutHtmlAt(position, this._readoutValue(label, color, value, unit));
+    }
+
+    /**
+     * Shows readout markup below a hovered or dragged handle.
+     *
+     * @param {Vec3} position - The handle position.
+     * @param {string} html - The markup, as {@link HelperGizmo#_readoutValue} formats it.
+     * @protected
+     */
+    _readoutHtmlAt(position, html) {
         if (this.readout) {
             const shapes = this._shapes;
-            shapes.label(position, `${this._readoutLabel(label, color)} ${value}`, shapes.handleSize);
+            shapes.label(position, html, shapes.handleSize);
         }
     }
 
@@ -607,15 +647,183 @@ class HelperGizmo extends Gizmo {
         if (this._shapes.screenSize(center, radius) > RINGS_SIZE) {
             this._sphereRings(center, rotation, radius, 0.5, 0.35);
         }
-        if (!perspective) {
-            this._shapes.circle(center, camera.entity.forward, radius, 1.1);
+        const size = this._sphereSilhouette(center, radius, tmpV5);
+        this._shapes.circle(tmpV5, perspective ? toCamera : camera.entity.forward, size, 1.1);
+    }
+
+    /**
+     * Gets the outline of a sphere as the camera sees it, a circle nearer the camera and smaller
+     * than the sphere in perspective, or the great circle facing the view in orthographic.
+     *
+     * @param {Vec3} center - The center of the sphere.
+     * @param {number} radius - The radius of the sphere.
+     * @param {Vec3} out - Receives the center of the outline.
+     * @returns {number} The radius of the outline.
+     * @protected
+     */
+    _sphereSilhouette(center, radius, out) {
+        const camera = this._camera;
+        if (camera.projection !== PROJECTION_PERSPECTIVE) {
+            out.copy(center);
+            return radius;
+        }
+        const toCamera = tmpV3.sub2(camera.entity.getPosition(), center);
+        const ratio = radius / toCamera.length();
+        out.copy(toCamera).mulScalar(ratio * ratio).add(center);
+        return radius * Math.sqrt(1 - ratio * ratio);
+    }
+
+    /**
+     * Places handles at the ends of the axes of a sphere, which drag its radius.
+     *
+     * @param {Vec3} center - The center of the sphere.
+     * @param {Quat} rotation - The rotation of the axes.
+     * @param {number} radius - The radius of the sphere.
+     * @param {GraphNode|null} node - The node the handles edit, or null for a shape gizmo.
+     * @param {string} name - The value the handles edit.
+     * @protected
+     */
+    _sphereHandles(center, rotation, radius, node, name) {
+        for (let i = 0; i < SPHERE_AXES.length; i++) {
+            const dir = rotation.transformVector(SPHERE_AXES[i], tmpV1);
+            const pos = tmpV2.copy(dir).mulScalar(radius).add(center);
+            if (this._handle(pos, COLOR_AMBER, node, name, i, center, dir)) {
+                this._readoutAt(pos, 'r', COLOR_AMBER, radius);
+            }
+        }
+    }
+
+    /**
+     * Gets the corners of a box, the bits of each index giving its x, y and z sides.
+     *
+     * @param {Vec3} center - The center of the box.
+     * @param {Quat} rotation - The rotation of the box.
+     * @param {Vec3} halfExtents - The half extents along the axes of the rotation.
+     * @returns {Vec3[]} The world corners, valid until the next call.
+     * @protected
+     */
+    _boxCorners(center, rotation, halfExtents) {
+        for (let k = 0; k < 3; k++) {
+            rotation.transformVector(BOX_UNITS[k], boxAxes[k]);
+        }
+        for (let i = 0; i < boxCorners.length; i++) {
+            const corner = boxCorners[i].copy(center);
+            for (let k = 0; k < 3; k++) {
+                corner.add(tmpV1.copy(boxAxes[k]).mulScalar(boxSide(i, k) * halfExtents[BOX_AXES[k]]));
+            }
+        }
+        return boxCorners;
+    }
+
+    /**
+     * Places the handles of the box last passed to {@link HelperGizmo#_boxCorners}, once it is
+     * large enough on screen. A face handle moves its face along its axis, and a corner handle
+     * moves its corner across the view, or along the diagonal for a uniform box. The readouts show
+     * the extents.
+     *
+     * @param {Vec3} center - The center of the box.
+     * @param {Vec3} halfExtents - The half extents.
+     * @param {HelperBoxOptions} options - The handles to show.
+     * @param {number} [pad] - The padding on each side, left out of the readout extents.
+     * @protected
+     */
+    _boxHandles(center, halfExtents, options, pad = 0) {
+        if (!this._detailed(center, Math.max(halfExtents.x, halfExtents.y, halfExtents.z))) {
             return;
         }
+        const extent = (/** @type {number} */ k) => 2 * halfExtents[BOX_AXES[k]] - 2 * pad;
+        if (options.faceHandles) {
+            for (let i = 0; i < BOX_FACES; i++) {
+                const k = i >> 1;
+                const dir = tmpV2.copy(boxAxes[k]).mulScalar(i & 1 ? -1 : 1);
+                const pos = tmpV1.copy(dir).mulScalar(halfExtents[BOX_AXES[k]]).add(center);
+                if (this._handle(pos, BOX_FACE_COLORS[k], null, 'size', i, center, dir)) {
+                    this._readoutAt(pos, BOX_FACE_LABELS[k], BOX_FACE_COLORS[k], extent(k));
+                }
+            }
+        }
+        if (options.cornerHandles) {
+            const forward = this._camera.entity.forward;
+            for (let i = 0; i < boxCorners.length; i++) {
+                const pos = boxCorners[i];
+                const hovered = options.uniform ?
+                    this._handle(pos, COLOR_YELLOW, null, 'size', BOX_FACES + i, center, tmpV2.sub2(pos, center).normalize()) :
+                    this._handle(pos, COLOR_YELLOW, null, 'size', BOX_FACES + i, pos, forward, true);
+                if (hovered) {
+                    const html = BOX_FACE_LABELS.map((label, k) => this._readoutValue(label, BOX_FACE_COLORS[k], extent(k)));
+                    this._readoutHtmlAt(pos, html.join('  '));
+                }
+            }
+        }
+    }
 
-        // the outline is a circle nearer the camera and smaller than the sphere
-        const ratio = radius / dist;
-        const outline = tmpV5.copy(toCamera).mulScalar(ratio * ratio).add(center);
-        this._shapes.circle(outline, toCamera, radius * Math.sqrt(1 - ratio * ratio), 1.1);
+    /**
+     * Resizes one axis of a box from where its face or corner is dragged to.
+     *
+     * @param {number} axis - The axis index.
+     * @param {number} sign - The side of the dragged face or corner, -1 or 1.
+     * @param {Vec3} local - The dragged point relative to the start position, along the box axes.
+     * @param {Vec3} start - The half extents at the start of the resize.
+     * @param {boolean} centered - Whether the resize keeps the center in place.
+     * @param {Vec3} half - The half extents to set.
+     * @param {Vec3} mid - The offset of the center to set, along the box axes.
+     * @private
+     */
+    _resizeBoxAxis(axis, sign, local, start, centered, half, mid) {
+        const a = BOX_AXES[axis];
+        if (centered) {
+            half[a] = Math.max(sign * local[a], BOX_MIN_HALF);
+            mid[a] = 0;
+            return;
+        }
+        const anchor = -sign * start[a];
+        half[a] = 0.5 * Math.max(sign * (local[a] - anchor), 2 * BOX_MIN_HALF);
+        mid[a] = anchor + sign * half[a];
+    }
+
+    /**
+     * Resizes a box from where one of the handles of {@link HelperGizmo#_boxHandles} is dragged
+     * to. The opposite face or corner stays in place, or the center does for a centered box.
+     *
+     * @param {HelperHandle} handle - The dragged handle.
+     * @param {Vec3} point - Where the handle is dragged to.
+     * @param {Quat} rotation - The rotation of the box.
+     * @param {Vec3} startPosition - The center at the start of the resize.
+     * @param {Vec3} startHalfExtents - The half extents at the start of the resize.
+     * @param {HelperBoxOptions} options - How the handles resize the box.
+     * @param {Vec3} position - Receives the center.
+     * @param {Vec3} halfExtents - Receives the half extents.
+     * @protected
+     */
+    _resizeBox(handle, point, rotation, startPosition, startHalfExtents, options, position, halfExtents) {
+        const local = tmpBoxQ.copy(rotation).invert().transformVector(tmpLocal.sub2(point, startPosition), tmpLocal);
+        const start = startHalfExtents;
+        const half = tmpHalf.copy(start);
+        const mid = tmpMid.set(0, 0, 0);
+        const { centered } = options;
+
+        if (handle.index < BOX_FACES) {
+            this._resizeBoxAxis(handle.index >> 1, handle.index & 1 ? -1 : 1, local, start, centered, half, mid);
+        } else if (options.uniform) {
+            // the box scales evenly about the opposite corner, or the center
+            const corner = handle.index - BOX_FACES;
+            const anchor = tmpAnchor.set(-boxSide(corner, 0) * start.x, -boxSide(corner, 1) * start.y, -boxSide(corner, 2) * start.z);
+            if (centered) {
+                anchor.set(0, 0, 0);
+            }
+            const from = Math.hypot(boxSide(corner, 0) * start.x - anchor.x, boxSide(corner, 1) * start.y - anchor.y, boxSide(corner, 2) * start.z - anchor.z);
+            const factor = Math.max(local.distance(anchor) / from, BOX_MIN_FACTOR);
+            half.mulScalar(factor);
+            mid.copy(anchor).mulScalar(1 - factor);
+        } else {
+            const corner = handle.index - BOX_FACES;
+            for (let k = 0; k < 3; k++) {
+                this._resizeBoxAxis(k, boxSide(corner, k), local, start, centered, half, mid);
+            }
+        }
+
+        halfExtents.copy(half);
+        position.copy(rotation.transformVector(mid, mid)).add(startPosition);
     }
 
     /**
@@ -630,27 +838,24 @@ class HelperGizmo extends Gizmo {
         if (!this.icon) {
             return;
         }
-        let icon = this._icons[this._iconCount];
-        if (!icon) {
-            icon = { shape: /** @type {Shape} */ (/** @type {unknown} */ (null)), node };
-            this._icons.push(icon);
-        }
-        this._iconCount++;
+        const icon = this._icons.next();
         icon.shape = this._shapes.icon(kind, position);
         icon.node = node;
     }
 
     /**
-     * Wraps a readout label in the markup of a colored label, as the transform readout does for
+     * Formats a value with two decimals after a colored label, as the transform readout does for
      * its axes.
      *
-     * @param {string} text - The label.
+     * @param {string} label - The label.
      * @param {Color} color - The label color.
+     * @param {number} value - The value.
+     * @param {string} [unit] - The unit after the value.
      * @returns {string} The markup.
      * @protected
      */
-    _readoutLabel(text, color) {
-        return `<b style="color: ${color.toString(false)}">${text}</b>`;
+    _readoutValue(label, color, value, unit = '') {
+        return `<b style="color: ${color.toString(false)}">${label}</b> ${value.toFixed(2)}${unit}`;
     }
 
     /**
@@ -688,8 +893,8 @@ class HelperGizmo extends Gizmo {
      */
     prerender() {
         const shapes = this._shapes;
-        this._placedCount = 0;
-        this._iconCount = 0;
+        this._placed.count = 0;
+        this._icons.count = 0;
         if (!this.enabled) {
             shapes.clear();
             return;

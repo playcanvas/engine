@@ -29,15 +29,9 @@ const sides = Array.from({ length: 4 }, () => new Vec3());
 const MIN_SIZE = 0.005;
 
 /**
- * @param {number} value - The value.
- * @returns {string} The value with at most two decimals.
- */
-const fmt = value => `${+value.toFixed(2)}`;
-
-/**
  * Draws a capsule along its y-axis, its outline over faint rings where its caps meet its body, cap
- * arcs and lines along its sides, with handles around its middle that drag its radius and at its ends that drag its
- * height. The height spans the whole capsule, caps included, and keeps the center in place.
+ * arcs and lines along its sides, with handles around its middle that drag its radius and at its
+ * ends that drag its height. The height spans the whole capsule, caps included, and keeps the center in place.
  *
  * ```javascript
  * const gizmo = new CapsuleGizmo(cameraComponent, layer);
@@ -67,6 +61,20 @@ class CapsuleGizmo extends ShapeGizmo {
      * @type {number}
      */
     height = 2;
+
+    /**
+     * The first result of {@link CapsuleGizmo#_offset}.
+     *
+     * @private
+     */
+    _a = new Vec3();
+
+    /**
+     * The second result of {@link CapsuleGizmo#_offset}.
+     *
+     * @private
+     */
+    _b = new Vec3();
 
     /**
      * Creates a new CapsuleGizmo object.
@@ -123,14 +131,14 @@ class CapsuleGizmo extends ShapeGizmo {
         for (let i = 0; i < 4; i++) {
             const pos = this._offset(c, sides[i], radius, 0);
             if (this._handle(pos, COLOR_AMBER, null, 'radius', i, c, sides[i])) {
-                this._readoutAt(pos, 'r', COLOR_AMBER, fmt(radius));
+                this._readoutAt(pos, 'r', COLOR_AMBER, radius);
             }
         }
         for (let i = 0; i < 2; i++) {
             const dir = i ? up.mulScalar(-1) : up;
             const pos = this._offset(c, dir, half, 0);
             if (this._handle(pos, COLOR_CYAN, null, 'height', i, c, dir)) {
-                this._readoutAt(pos, 'h', COLOR_CYAN, fmt(2 * half));
+                this._readoutAt(pos, 'h', COLOR_CYAN, 2 * half);
             }
         }
     }
@@ -195,11 +203,8 @@ class CapsuleGizmo extends ShapeGizmo {
         const camera = this._camera;
         const perspective = camera.projection === PROJECTION_PERSPECTIVE;
         const view = perspective ? tmpV11.sub2(camera.entity.getPosition(), center) : tmpV11.copy(camera.entity.forward).mulScalar(-1);
-        const ratio = perspective ? radius / view.length() : 0;
-
-        // the outline of a sphere is a circle nearer the camera and smaller than the sphere
-        const outline = tmpV12.copy(view).mulScalar(ratio * ratio).add(center);
-        const size = radius * Math.sqrt(1 - ratio * ratio);
+        const outline = tmpV12;
+        const size = this._sphereSilhouette(center, radius, outline);
         if (!across) {
             this._shapes.circle(outline, view, size, 1.1);
             return;
@@ -224,12 +229,6 @@ class CapsuleGizmo extends ShapeGizmo {
     _offset(point, dir, distance, slot) {
         return (slot ? this._b : this._a).copy(dir).mulScalar(distance).add(point);
     }
-
-    /** @private */
-    _a = new Vec3();
-
-    /** @private */
-    _b = new Vec3();
 
     /**
      * Sets the radius or height from how far the handle is dragged from the center.

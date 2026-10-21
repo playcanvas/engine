@@ -373,6 +373,24 @@ class Shape {
     }
 
     /**
+     * Set whether the shape writes the depth buffer where it is visible.
+     *
+     * @type {boolean}
+     */
+    set depthWrite(value) {
+        this._material.depthWrite = value;
+    }
+
+    /**
+     * Get whether the shape writes the depth buffer where it is visible.
+     *
+     * @type {boolean}
+     */
+    get depthWrite() {
+        return this._material.depthWrite;
+    }
+
+    /**
      * Create a render component for an entity.
      *
      * @param {Entity} entity - The entity to create the render component for.

@@ -22,12 +22,6 @@ const tmpV9 = new Vec3();
 const MIN_SIZE = 0.005;
 
 /**
- * @param {number} value - The value.
- * @returns {string} The value with at most two decimals.
- */
-const fmt = value => `${+value.toFixed(2)}`;
-
-/**
  * Draws a cone along its y-axis, its base ring and outline over faint lines from the base to its
  * apex, with handles on the base that drag its radius and at the apex that drags its height. The
  * height keeps the center in place.
@@ -103,11 +97,11 @@ class ConeGizmo extends ShapeGizmo {
             const dir = r.transformVector(i & 1 ? Vec3.FORWARD : Vec3.RIGHT, tmpV5).mulScalar(i < 2 ? 1 : -1);
             const pos = tmpV6.copy(dir).mulScalar(radius).add(base);
             if (this._handle(pos, COLOR_AMBER, null, 'radius', i, base, dir)) {
-                this._readoutAt(pos, 'r', COLOR_AMBER, fmt(radius));
+                this._readoutAt(pos, 'r', COLOR_AMBER, radius);
             }
         }
         if (this._handle(apex, COLOR_CYAN, null, 'height', 0, c, up)) {
-            this._readoutAt(apex, 'h', COLOR_CYAN, fmt(height));
+            this._readoutAt(apex, 'h', COLOR_CYAN, height);
         }
     }
 

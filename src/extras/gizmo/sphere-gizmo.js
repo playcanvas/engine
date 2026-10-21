@@ -1,5 +1,4 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import { COLOR_AMBER } from './color.js';
 import { ShapeGizmo } from './shape-gizmo.js';
 
 /**
@@ -9,16 +8,8 @@ import { ShapeGizmo } from './shape-gizmo.js';
  */
 
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
 
-const AXES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.FORWARD];
 const MIN_RADIUS = 0.005;
-
-/**
- * @param {number} value - The value.
- * @returns {string} The value with at most two decimals.
- */
-const fmt = value => `${+value.toFixed(2)}`;
 
 /**
  * Draws a sphere, its outline over three faint great circles, with handles at the ends of its
@@ -73,13 +64,7 @@ class SphereGizmo extends ShapeGizmo {
         if (!this._detailed(c, radius)) {
             return;
         }
-        for (let i = 0; i < AXES.length; i++) {
-            const dir = r.transformVector(AXES[i], tmpV1);
-            const pos = tmpV2.copy(dir).mulScalar(radius).add(c);
-            if (this._handle(pos, COLOR_AMBER, null, 'radius', i, c, dir)) {
-                this._readoutAt(pos, 'r', COLOR_AMBER, fmt(radius));
-            }
-        }
+        this._sphereHandles(c, r, radius, null, 'radius');
     }
 
     /**

@@ -4,7 +4,8 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { MeshLine } from './mesh-line.js';
+import { MeshLineBatch } from './mesh-line-batch.js';
+import { Pool } from './pool.js';
 import { Readout } from './readout.js';
 import { ArcShape } from './shape/arc-shape.js';
 import { ArrowShape } from './shape/arrow-shape.js';
@@ -79,7 +80,7 @@ const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 /**
  * @typedef {object} Item
  * @property {Entity} entity - The entity placed each frame.
- * @property {MeshLine | Shape} shape - The pooled shape.
+ * @property {Shape} shape - The pooled shape.
  * @property {Color} base - The color the shape was created with, updated in place.
  * @property {Color} occluded - The occluded color the shape was created with, updated in place.
  */
@@ -87,45 +88,36 @@ const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 /**
  * A pool of shapes, placed in order each frame and hidden when unused.
  *
+ * @augments {Pool<Item>}
  * @ignore
  */
-class Pool {
-    /** @type {Item[]} */
-    items = [];
-
-    count = 0;
-
+class ShapePool extends Pool {
     /**
-     * @param {(base: Color, occluded: Color) => MeshLine | Shape} create - Creates a shape in the
+     * @param {(base: Color, occluded: Color) => Shape} create - Creates a shape in the
      * supplied colors.
      * @param {Entity} parent - The parent of the shapes.
      * @param {number} drawOrder - The draw order of the shapes in a manually sorted layer.
      */
     constructor(create, parent, drawOrder) {
-        this._create = create;
-        this._parent = parent;
-        this._drawOrder = drawOrder;
+        super(() => {
+            const base = new Color();
+            const occluded = new Color();
+            const shape = create(base, occluded);
+            shape.entity.forEach((node) => {
+                /** @type {Entity} */ (node).render?.meshInstances.forEach((meshInstance) => {
+                    meshInstance.drawOrder = drawOrder;
+                });
+            });
+            parent.addChild(shape.entity);
+            return { entity: shape.entity, shape, base, occluded };
+        });
     }
 
     /**
      * @returns {Item} The next shape, enabled.
      */
     next() {
-        let item = this.items[this.count];
-        if (!item) {
-            const base = new Color();
-            const occluded = new Color();
-            const shape = this._create(base, occluded);
-            shape.entity.forEach((node) => {
-                /** @type {Entity} */ (node).render?.meshInstances.forEach((meshInstance) => {
-                    meshInstance.drawOrder = this._drawOrder;
-                });
-            });
-            this._parent.addChild(shape.entity);
-            item = { entity: shape.entity, shape, base, occluded };
-            this.items.push(item);
-        }
-        this.count++;
+        const item = super.next();
         item.entity.enabled = true;
         return item;
     }
@@ -185,19 +177,16 @@ class HelperShapes {
     _theme;
 
     /**
-     * @type {Pool[]}
+     * @type {ShapePool[]}
      * @private
      */
     _pools = [];
 
     /**
-     * @type {Readout[]}
+     * @type {Pool<Readout>}
      * @private
      */
-    _labels = [];
-
-    /** @private */
-    _labelCount = 0;
+    _labels;
 
     /**
      * The world size of a pixel at unit depth in perspective, or at any depth in orthographic.
@@ -240,10 +229,11 @@ class HelperShapes {
         const { app } = gizmo.camera.system;
         const device = app.graphicsDevice;
         const layers = [layer.id];
+        this._labels = new Pool(() => new Readout(device.canvas));
         // in a manually sorted layer the filled shapes draw first, so their depth hides the lines
         // and handles behind them
-        const pool = (/** @type {(base: Color, occluded: Color) => MeshLine | Shape} */ create, drawOrder = SHAPE_DRAW_ORDER) => {
-            const p = new Pool(create, parent, drawOrder);
+        const pool = (/** @type {(base: Color, occluded: Color) => Shape} */ create, drawOrder = SHAPE_DRAW_ORDER) => {
+            const p = new ShapePool(create, parent, drawOrder);
             this._pools.push(p);
             return p;
         };
@@ -254,7 +244,7 @@ class HelperShapes {
             occludedColor: occluded
         });
 
-        this._lines = pool(() => new MeshLine(app, layer, { occluded: true }));
+        this._lines = new MeshLineBatch(app, layer, parent, SHAPE_DRAW_ORDER);
         this._rings = pool((base, occluded) => {
             const ring = new ArcShape(device, { ...args(base, occluded), ringRadius: 1 });
             ring.show('ring');
@@ -273,6 +263,12 @@ class HelperShapes {
             return shape;
         };
         this._boxes = pool((base, occluded) => filled(new BoxShape(device, args(base, occluded))), FILL_DRAW_ORDER);
+        // bracket arms draw over the shapes behind them, rather than hiding them
+        this._arms = pool((base, occluded) => {
+            const arm = new BoxShape(device, args(base, occluded));
+            arm.depthWrite = false;
+            return arm;
+        });
         this._handles = pool((base, occluded) => {
             const box = new BoxShape(device, args(base, occluded));
             gizmo.intersectShapes.push(box);
@@ -287,11 +283,18 @@ class HelperShapes {
         this._spheres = pool((base, occluded) => filled(new SphereShape(device, args(base, occluded))), FILL_DRAW_ORDER);
         this._capsules = pool((base, occluded) => filled(new CapsuleShape(device, args(base, occluded))), FILL_DRAW_ORDER);
 
-        /** @type {{ [K in keyof CONES]: Pool }} */
-        this._cones = /** @type {any} */ ({});
-        for (const kind of /** @type {(keyof CONES)[]} */ (Object.keys(CONES))) {
-            this._cones[kind] = pool((base, occluded) => filled(new ConeShape(device, { ...args(base, occluded), ...CONES[kind] })), FILL_DRAW_ORDER);
-        }
+        const cone = (/** @type {keyof CONES} */ kind) => pool((base, occluded) => filled(new ConeShape(device, { ...args(base, occluded), ...CONES[kind] })), FILL_DRAW_ORDER);
+        /**
+         * The pools of each kind of cone.
+         *
+         * @type {{ [K in keyof CONES]: ShapePool }}
+         */
+        this._cones = {
+            cone: cone('cone'),
+            disk: cone('disk'),
+            triangle: cone('triangle'),
+            frustum: cone('frustum')
+        };
     }
 
     /**
@@ -307,7 +310,8 @@ class HelperShapes {
         for (let i = 0; i < this._pools.length; i++) {
             this._pools[i].count = 0;
         }
-        this._labelCount = 0;
+        this._lines.begin();
+        this._labels.count = 0;
     }
 
     /**
@@ -317,8 +321,10 @@ class HelperShapes {
         for (let i = 0; i < this._pools.length; i++) {
             this._pools[i].hide();
         }
-        for (let i = this._labelCount; i < this._labels.length; i++) {
-            this._labels[i].hide();
+        this._lines.end();
+        const labels = this._labels;
+        for (let i = labels.count; i < labels.items.length; i++) {
+            labels.items[i].hide();
         }
     }
 
@@ -329,7 +335,8 @@ class HelperShapes {
         for (let i = 0; i < this._pools.length; i++) {
             this._pools[i].count = 0;
         }
-        this._labelCount = 0;
+        this._lines.begin();
+        this._labels.count = 0;
         this.end();
     }
 
@@ -388,13 +395,15 @@ class HelperShapes {
     /**
      * Places the next shape of a pool in the temporary colors, recoloring it only on change.
      *
-     * @param {Pool} pool - The pool.
+     * @param {ShapePool} pool - The pool.
      * @returns {Shape} The shape.
      * @private
      */
     _next(pool) {
+        // the next line starts a new run, drawn over this shape as a pooled line would be
+        this._lines.split();
         const item = pool.next();
-        const shape = /** @type {Shape} */ (item.shape);
+        const shape = item.shape;
         if (!item.base.equals(tmpBase) || !item.occluded.equals(tmpOccluded)) {
             item.base.copy(tmpBase);
             item.occluded.copy(tmpOccluded);
@@ -413,9 +422,8 @@ class HelperShapes {
      */
     _piece(from, to, weight) {
         const mid = tmpV3.lerp(from, to, 0.5);
-        const line = /** @type {MeshLine} */ (this._lines.next().shape);
-        line.thickness = weight * this.lineThickness * this._pixel * this._depth(mid);
-        line.draw(this._local(from, tmpV4), this._local(to, tmpV5), 1, tmpBase, tmpOccluded);
+        const thickness = weight * this.lineThickness * this._pixel * this._depth(mid);
+        this._lines.add(this._local(from, tmpV4), this._local(to, tmpV5), thickness, tmpBase, tmpOccluded);
     }
 
     /**
@@ -705,6 +713,28 @@ class HelperShapes {
     }
 
     /**
+     * Adds an arm of a corner bracket, a box running back from a corner along a world axis, which
+     * overhangs the corner by half its thickness so the arms at a corner meet.
+     *
+     * @param {Vec3} corner - The world corner.
+     * @param {'x' | 'y' | 'z'} axis - The world axis the arm runs along.
+     * @param {number} sign - The side of the corner along the axis, -1 or 1.
+     * @param {number} length - The arm length from the corner.
+     * @param {number} thickness - The thickness in CSS pixels.
+     */
+    arm(corner, axis, sign, length, thickness) {
+        const t = this.pixels(corner, thickness);
+        this._colors(1);
+        const arm = this._next(this._arms);
+        const pos = this._local(corner, tmpV1);
+        pos[axis] -= sign * 0.5 * (length - 0.5 * t);
+        const along = length + 0.5 * t;
+        arm.entity.setLocalPosition(pos);
+        arm.entity.setLocalRotation(Quat.IDENTITY);
+        arm.entity.setLocalScale(axis === 'x' ? along : t, axis === 'y' ? along : t, axis === 'z' ? along : t);
+    }
+
+    /**
      * Adds a dot, a sphere of a constant size on screen.
      *
      * @param {Vec3} position - The world position.
@@ -817,7 +847,7 @@ class HelperShapes {
      * @param {Color|null} color - The color replacing the rgb of the theme color.
      * @param {number} alpha - The alpha factor.
      * @param {number} [back] - How far behind the icon to place the disc, in CSS pixels.
-     * @param {Pool} [pool] - The pool of the disc.
+     * @param {ShapePool} [pool] - The pool of the disc.
      * @param {number} [x] - The x of the disc center, in CSS pixels from the icon center.
      * @param {number} [y] - The y of the disc center, up the screen.
      * @returns {Shape} The disc.
@@ -913,12 +943,7 @@ class HelperShapes {
         if (this._perspective && this._viewDepth(position) < this._gizmo.camera.nearClip) {
             return;
         }
-        let label = this._labels[this._labelCount];
-        if (!label) {
-            label = new Readout(this._gizmo.camera.system.app.graphicsDevice.canvas);
-            this._labels.push(label);
-        }
-        this._labelCount++;
+        const label = this._labels.next();
         const screen = this._gizmo.camera.worldToScreen(position, tmpV1);
         label.show(html, screen.x, screen.y + below);
     }
@@ -928,8 +953,9 @@ class HelperShapes {
      */
     destroy() {
         this._pools.forEach(pool => pool.destroy());
-        this._labels.forEach(label => label.destroy());
-        this._labels.length = 0;
+        this._lines.destroy();
+        this._labels.items.forEach(label => label.destroy());
+        this._labels.items.length = 0;
     }
 }
 

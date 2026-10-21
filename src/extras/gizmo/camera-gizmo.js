@@ -36,12 +36,6 @@ const TRIANGLE_HEIGHT = 0.75;
 const MIN_CLIP = 1e-3;
 
 /**
- * @param {number} value - The value.
- * @returns {string} The value with at most two decimals.
- */
-const fmt = value => `${+value.toFixed(2)}`;
-
-/**
  * Draws the view frustum of each attached camera entity: a bold near plane with a filled triangle
  * on its top edge that shows the camera's up direction, lighter sides and far plane, a faint
  * volume and a dashed view axis. Once the frustum is large enough on screen, handles drag the
@@ -146,18 +140,18 @@ class CameraGizmo extends HelperGizmo {
         // the view handle sits on the far edge the field of view is measured across
         const forward = entity.forward;
         if (this._handle(nearCenter, COLOR_CYAN, entity, 'nearClip', 0, position, forward, false, false)) {
-            this._readoutAt(nearCenter, 'N', COLOR_CYAN, fmt(near));
+            this._readoutAt(nearCenter, 'N', COLOR_CYAN, near);
         }
         if (this._handle(farCenter, COLOR_AMBER, entity, 'farClip', 0, position, forward, false, false)) {
-            this._readoutAt(farCenter, 'F', COLOR_AMBER, fmt(far));
+            this._readoutAt(farCenter, 'F', COLOR_AMBER, far);
         }
         const horizontal = perspective && camera.horizontalFov;
         const edge = horizontal ? tmpV5.lerp(corners[4], corners[5], 0.5) : tmpV5.lerp(corners[5], corners[6], 0.5);
         if (this._handle(edge, COLOR_MAGENTA, entity, perspective ? 'fov' : 'orthoHeight', 0, farCenter, horizontal ? entity.right : entity.up)) {
             if (perspective) {
-                this._readoutAt(edge, 'θ', COLOR_MAGENTA, `${fmt(camera.fov)}°`);
+                this._readoutAt(edge, 'θ', COLOR_MAGENTA, camera.fov, '°');
             } else {
-                this._readoutAt(edge, 'h', COLOR_MAGENTA, fmt(camera.orthoHeight));
+                this._readoutAt(edge, 'h', COLOR_MAGENTA, camera.orthoHeight);
             }
         }
     }

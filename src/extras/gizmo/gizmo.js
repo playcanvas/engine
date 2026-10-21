@@ -50,8 +50,9 @@ const DIST_EPSILON = 1e-4;
  * {@link enabled} hides it without detaching; and {@link mouseButtons} chooses which buttons
  * interact. Pointer interaction is reported through the `pointer:down`, `pointer:move` and
  * `pointer:up` events, node changes through `nodes:attach` and `nodes:detach`, and the
- * resulting transforms through `position:update`, `rotation:update` and `scale:update`.
- * {@link TransformGizmo} builds the translate, rotate and scale gizmos on this base.
+ * resulting transforms through `position:update`, `rotation:update` and `scale:update`. Where
+ * gizmos overlap, a press goes only to the first gizmo created that it hits, so create the gizmos
+ * that should win, such as transform gizmos, first. {@link TransformGizmo} builds the translate, rotate and scale gizmos on this base.
  *
  * @category Gizmo
  */
@@ -249,14 +250,6 @@ class Gizmo extends EventHandler {
     _enabled = true;
 
     /**
-     * Whether the gizmo shows only with attached nodes. Gizmos that edit values of their own, such
-     * as the shape gizmos, show without them.
-     *
-     * @protected
-     */
-    _requiresNodes = true;
-
-    /**
      * Internal id of the pointer interacting with the gizmo.
      *
      * @private
@@ -353,6 +346,18 @@ class Gizmo extends EventHandler {
         this._handles.push(this._app.on('prerender', () => this.prerender()));
         this._handles.push(this._app.on('update', () => this.update()));
         this._handles.push(this._app.on('destroy', () => this.destroy()));
+    }
+
+    /**
+     * Gets whether the gizmo shows only with attached nodes. Gizmos that edit values of their own,
+     * such as the shape gizmos, show without them. A getter rather than a field, so a subclass's
+     * value applies while the base class constructor runs.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    get _requiresNodes() {
+        return true;
     }
 
     /**

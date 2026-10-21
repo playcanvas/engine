@@ -31,8 +31,6 @@ const RECT = [
 const rect = RECT.map(() => new Vec3());
 const rays = Array.from({ length: 8 }, () => new Vec3());
 
-const AXES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.FORWARD];
-
 const FLIP = new Quat().setFromEulerAngles(180, 0, 0);
 
 const RAYS = 8;
@@ -41,17 +39,12 @@ const FACE_OPACITY = 3;
 const MIN_SIZE = 0.01;
 
 /**
- * @param {number} value - The value.
- * @returns {string} The value with at most two decimals.
- */
-const fmt = value => `${+value.toFixed(2)}`;
-
-/**
  * Draws the shape of each attached light entity. A light shines along the negative y-axis of its
  * entity. Entities without an enabled light component are skipped.
  *
  * - A directional light is a solid arrow through a disc of parallel rays, a constant size on
- * screen like the arrows of a {@link TranslateGizmo}.
+ * screen like the arrows of a {@link TranslateGizmo}, sized by {@link Gizmo#size} rather than
+ * {@link HelperGizmo#lineThickness}.
  * - An omni light is the outline of its range over three faint great circles, which become
  * solid when the camera is inside the range.
  * - A spot light is its outer cone, capped by arcs of its range, with a dashed inner cone ring, a
@@ -117,25 +110,6 @@ class LightGizmo extends HelperGizmo {
      */
     constructor(camera, layer) {
         super(camera, layer, 'gizmo:light');
-    }
-
-    /**
-     * Sets the line thickness in CSS pixels. Defaults to 2. A directional light is sized by
-     * {@link Gizmo#size} instead, like the arrows of a {@link TranslateGizmo}.
-     *
-     * @type {number}
-     */
-    set lineThickness(value) {
-        super.lineThickness = value;
-    }
-
-    /**
-     * Gets the line thickness in CSS pixels.
-     *
-     * @type {number}
-     */
-    get lineThickness() {
-        return super.lineThickness;
     }
 
     /**
@@ -246,7 +220,7 @@ class LightGizmo extends HelperGizmo {
                         const dir = tmpV3.sub2(mid, pos).normalize();
                         const color = i & 1 ? COLOR_AMBER : COLOR_MAGENTA;
                         if (this._handle(mid, color, entity, i & 1 ? 'width' : 'depth', i, pos, dir)) {
-                            this._readoutAt(mid, i & 1 ? 'W' : 'D', color, fmt(i & 1 ? sx : sz));
+                            this._readoutAt(mid, i & 1 ? 'W' : 'D', color, i & 1 ? sx : sz);
                         }
                     }
                 }
@@ -265,7 +239,7 @@ class LightGizmo extends HelperGizmo {
                     for (let i = 0; i < 4; i++) {
                         const rim = this._circlePoint(entity, pos, radius, 0.5 * Math.PI * i, tmpV2);
                         if (this._handle(rim, COLOR_AMBER, entity, 'radius', i, pos, tmpV3.sub2(rim, pos).normalize())) {
-                            this._readoutAt(rim, '⌀', COLOR_AMBER, fmt(2 * radius));
+                            this._readoutAt(rim, '⌀', COLOR_AMBER, 2 * radius);
                         }
                     }
                 }
@@ -277,13 +251,7 @@ class LightGizmo extends HelperGizmo {
                 }
                 this._sphereOutline(pos, rot, radius);
                 if (detailed) {
-                    for (let i = 0; i < AXES.length; i++) {
-                        const dir = rot.transformVector(AXES[i], tmpV3);
-                        const edge = tmpV2.copy(dir).mulScalar(radius).add(pos);
-                        if (this._handle(edge, COLOR_AMBER, entity, 'radius', i, pos, dir)) {
-                            this._readoutAt(edge, 'r', COLOR_AMBER, fmt(radius));
-                        }
-                    }
+                    this._sphereHandles(pos, rot, radius, entity, 'radius');
                 }
                 break;
             }
@@ -356,7 +324,7 @@ class LightGizmo extends HelperGizmo {
 
         // the angle handles swing along the range cap arcs, in the plane of the axis and their edge
         if (this._handle(tip, COLOR_AMBER, entity, 'range', 0, apex, dir, false, false)) {
-            this._readoutAt(tip, 'r', COLOR_AMBER, fmt(range));
+            this._readoutAt(tip, 'r', COLOR_AMBER, range);
         }
         for (let i = 0; i < 4; i++) {
             const angle = 0.5 * Math.PI * i;
@@ -364,12 +332,12 @@ class LightGizmo extends HelperGizmo {
             const normal = tmpV6.cross(radial, dir).normalize();
             const rim = this._circlePoint(entity, center, radius, angle, tmpV4);
             if (this._handle(rim, COLOR_MAGENTA, entity, 'outerConeAngle', i, apex, normal, true)) {
-                this._readoutAt(rim, 'θ<sub>o</sub>', COLOR_MAGENTA, `${fmt(outerConeAngle)}°`);
+                this._readoutAt(rim, 'θ<sub>o</sub>', COLOR_MAGENTA, outerConeAngle, '°');
             }
             if (innerConeAngle > 0) {
                 const ring = this._circlePoint(entity, innerCenter, innerRadius, angle, tmpV4);
                 if (this._handle(ring, COLOR_CYAN, entity, 'innerConeAngle', i, apex, normal, true)) {
-                    this._readoutAt(ring, 'θ<sub>i</sub>', COLOR_CYAN, `${fmt(innerConeAngle)}°`);
+                    this._readoutAt(ring, 'θ<sub>i</sub>', COLOR_CYAN, innerConeAngle, '°');
                 }
             }
         }
@@ -398,7 +366,6 @@ class LightGizmo extends HelperGizmo {
 
         // the sun sits just behind the bundle, clear of the arrow
         this._icon('light', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
-
     }
 
     /**
@@ -413,14 +380,8 @@ class LightGizmo extends HelperGizmo {
         this._sphereOutline(pos, Quat.IDENTITY, range);
         this._ground(pos);
         this._icon('light', pos, entity);
-        if (!this._detailed(pos, range)) {
-            return;
-        }
-        for (let i = 0; i < AXES.length; i++) {
-            const edge = tmpV2.copy(AXES[i]).mulScalar(range).add(pos);
-            if (this._handle(edge, COLOR_AMBER, entity, 'range', i, pos, AXES[i])) {
-                this._readoutAt(edge, 'r', COLOR_AMBER, fmt(range));
-            }
+        if (this._detailed(pos, range)) {
+            this._sphereHandles(pos, Quat.IDENTITY, range, entity, 'range');
         }
     }
 
