@@ -22,10 +22,27 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from 'playcanvas';
  */
 export function Controls({ observer }) {
     const [proj, setProj] = useState(PROJECTION_PERSPECTIVE);
+    const [type, setType] = useState('box');
 
     return (
         <>
-            <Panel headerText='Box'>
+            <Panel headerText='Shape'>
+                <LabelGroup text='Type'>
+                    <SelectInput
+                        options={[
+                            { v: 'box', t: 'Box' },
+                            { v: 'sphere', t: 'Sphere' },
+                            { v: 'capsule', t: 'Capsule' },
+                            { v: 'cone', t: 'Cone' }
+                        ]}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'shape.type' }}
+                        onSelect={setType}
+                    />
+                </LabelGroup>
+            </Panel>
+            {type === 'box' && (
+                <Panel headerText='Box'>
                     <LabelGroup text='Face Handles'>
                         <BooleanInput
                             type='toggle'
@@ -55,6 +72,7 @@ export function Controls({ observer }) {
                         />
                     </LabelGroup>
                 </Panel>
+            )}
             <Panel headerText='Theme'>
                 <LabelGroup text='Base'>
                     <ColorPicker

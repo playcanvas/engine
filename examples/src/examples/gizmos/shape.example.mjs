@@ -1,6 +1,6 @@
 // @config
 //
-// Shape gizmos edit a shape of their own, such as a volume to select within: a box, sphere, capsule and cone
+// Shape gizmos edit a shape of their own, such as a volume to select within: a box, sphere, capsule or cone
 
 import {
     AppBase,
@@ -122,15 +122,13 @@ const gizmos = {
     capsule: new CapsuleGizmo(camera.camera, layer)
 };
 
-// the shapes of the editor example, in the same places
-/** @type {BoxGizmo} */ (gizmos.box).halfExtents.set(0.5, 0.5, 0.5);
-gizmos.box.position.set(1, 0, 1);
-/** @type {SphereGizmo} */ (gizmos.sphere).radius = 0.5;
-gizmos.sphere.position.set(-1, 0, 1);
-Object.assign(gizmos.cone, { radius: 0.75, height: 2.25 });
-gizmos.cone.position.set(-1, 0, -1);
-Object.assign(gizmos.capsule, { radius: 0.5, height: 2 });
-gizmos.capsule.position.set(1, 0, -1);
+// show one shape at a time
+const show = (/** @type {string} */ type) => {
+    for (const name in gizmos) {
+        gizmos[name].enabled = name === type;
+    }
+};
+show('box');
 
 for (const key in gizmos) {
     const gizmo = gizmos[key];
@@ -145,6 +143,9 @@ for (const key in gizmos) {
 }
 
 const settings = gizmos.box;
+data.set('shape', {
+    type: 'box'
+});
 data.set('gizmo', {
     theme: {
         base: settings.theme.base.toArray(),
@@ -185,6 +186,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     break;
                 }
             }
+            break;
+        }
+        case 'shape': {
+            show(value);
             break;
         }
         case 'box': {
