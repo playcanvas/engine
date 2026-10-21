@@ -3,9 +3,8 @@ import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { Entity } from '../../framework/entity.js';
 
 import {
     COLOR_RED,
@@ -14,7 +13,9 @@ import {
     COLOR_GRAY,
     color4from3
 } from './color.js';
+import { LAYERID_IMMEDIATE } from '../../scene/constants.js';
 import { Gizmo } from './gizmo.js';
+import { HelperShapes } from './helper-shapes.js';
 import { Readout } from './readout.js';
 import { Debug } from '../../core/debug.js';
 
@@ -25,6 +26,9 @@ import { Debug } from '../../core/debug.js';
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { GizmoAxis, GizmoDragMode } from './constants.js'
  */
+
+const GLANCE_EPSILON = 0.01;
+const GLANCE_ANGLE = Math.acos(1 - GLANCE_EPSILON);
 
 /**
  * @typedef {object} GizmoTheme
@@ -39,9 +43,7 @@ import { Debug } from '../../core/debug.js';
 const v1 = new Vec3();
 const v2 = new Vec3();
 const point = new Vec3();
-const ray = new Ray();
 const plane = new Plane();
-const color = new Color();
 const bounds = new BoundingBox();
 const corner = new Vec3();
 const screen = new Vec3();
@@ -180,6 +182,41 @@ class TransformGizmo extends Gizmo {
     _shapeMap = new Map();
 
     /**
+     * Internal colors of the guide lines, whose rgb each guide replaces with its axis color.
+     *
+     * @private
+     */
+    _guideTheme = {
+        base: Color.WHITE.clone(),
+        occluded: Color.WHITE.clone(),
+        fill: new Color(1, 1, 1, 0)
+    };
+
+    /**
+     * Internal parent of the guide lines.
+     *
+     * @type {Entity}
+     * @private
+     */
+    _guideRoot;
+
+    /**
+     * Internal guide lines, a constant thickness on screen.
+     *
+     * @type {HelperShapes}
+     * @private
+     */
+    _guides;
+
+    /**
+     * Internal angle in degrees between the view and an axis, or the view and a plane, below
+     * which the shape fades out.
+     *
+     * @protected
+     */
+    _fadeAngle = 25;
+
+    /**
      * Internal currently hovered axes
      *
      * @type {Set<GizmoAxis>}
@@ -260,6 +297,14 @@ class TransformGizmo extends Gizmo {
      */
     constructor(camera, layer, name = 'gizmo:transform') {
         super(camera, layer, name);
+
+        // the guides sit under an entity that is not rotated or scaled with the gizmo, in the
+        // immediate layer, which keeps the scene depth so the scene hides them, unlike the gizmo layer
+        this._guideRoot = new Entity('guides');
+        this._app.root.addChild(this._guideRoot);
+        const guideLayer = this._app.scene.layers.getLayerById(LAYERID_IMMEDIATE) ?? layer;
+        this._guides = new HelperShapes(this, this._guideTheme, this._guideRoot, guideLayer);
+        this._guides.lineThickness = 1;
 
         this.readout = true;
 
@@ -344,6 +389,24 @@ class TransformGizmo extends Gizmo {
      */
     get theme() {
         return this._theme;
+    }
+
+    /**
+     * Sets the thickness of the guide lines in CSS pixels. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set guideThickness(value) {
+        this._guides.lineThickness = value;
+    }
+
+    /**
+     * Gets the thickness of the guide lines in CSS pixels.
+     *
+     * @type {number}
+     */
+    get guideThickness() {
+        return this._guides.lineThickness;
     }
 
     /**
@@ -695,23 +758,6 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @param {Vec3} mouseWPos - The mouse world position.
-     * @returns {Ray} - The ray.
-     * @protected
-     */
-    _createRay(mouseWPos) {
-        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            ray.origin.copy(this._camera.entity.getPosition());
-            ray.direction.sub2(mouseWPos, ray.origin).normalize();
-            return ray;
-        }
-        const orthoDepth = this._camera.farClip - this._camera.nearClip;
-        ray.origin.sub2(mouseWPos, v1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
-        ray.direction.copy(this._camera.entity.forward);
-        return ray;
-    }
-
-    /**
      * @param {string} axis - The axis to create the plane for.
      * @param {boolean} isFacing - Whether the axis is facing the camera.
      * @param {boolean} isLine - Whether the axis is a line.
@@ -833,14 +879,28 @@ class TransformGizmo extends Gizmo {
         const to = v2.copy(from).mulScalar(-1);
         rot.transformVector(from, from).add(pos);
         rot.transformVector(to, to).add(pos);
-        if (this._theme.guideOcclusion < 1) {
-            const occluded = color.copy(base);
-            occluded.a *= (1 - this._theme.guideOcclusion);
-            this._app.drawLine(from, to, occluded, false, this._layer);
+        this._guides.line(from, to, 1, base.a, base);
+    }
+
+    /**
+     * Shows a shape unless the view looks along the direction it hides at, fading it out over
+     * the fade angle before that.
+     *
+     * @param {Shape} shape - The shape.
+     * @param {number} cos - The absolute cosine of the angle between the view and the direction.
+     * @returns {boolean} Whether the shape was shown or hidden.
+     * @protected
+     */
+    _glance(shape, cos) {
+        const enabled = 1 - cos > GLANCE_EPSILON;
+        const range = this._fadeAngle * math.DEG_TO_RAD - GLANCE_ANGLE;
+        shape.fade = enabled && range > 0 ?
+            math.clamp((Math.acos(Math.min(cos, 1)) - GLANCE_ANGLE) / range, 0, 1) : 1;
+        if (shape.entity.enabled === enabled) {
+            return false;
         }
-        if (base.a !== 0) {
-            this._app.drawLine(from, to, base, true);
-        }
+        shape.entity.enabled = enabled;
+        return true;
     }
 
     /** @protected */
@@ -943,20 +1003,28 @@ class TransformGizmo extends Gizmo {
     prerender() {
         super.prerender();
 
+        const guides = this._guides;
         if (!this.enabled) {
+            guides.clear();
             return;
         }
 
+        this._guideTheme.occluded.a = 1 - this._theme.guideOcclusion;
+        guides.begin();
         const gizmoPos = this.root.getLocalPosition();
         const gizmoRot = this.root.getRotation();
         const activeAxis = this._hoverAxis || this._selectedAxis;
         const activeIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         this._drawGuideLines(gizmoPos, gizmoRot, activeAxis, activeIsPlane);
+        guides.end();
     }
 
     /** @override */
     destroy() {
         super.destroy();
+
+        this._guides.destroy();
+        this._guideRoot.destroy();
 
         this.readout = false;
 

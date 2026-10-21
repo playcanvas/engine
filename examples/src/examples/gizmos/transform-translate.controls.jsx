@@ -200,6 +200,15 @@ export function Controls({ observer }) {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Render'>
+                <LabelGroup text='Guide Thickness'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.guideThickness' }}
+                        min={0.5}
+                        max={8}
+                        precision={1}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Gap'>
                     <SliderInput
                         binding={new BindingTwoWay()}
@@ -240,6 +249,33 @@ export function Controls({ observer }) {
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'gizmo.axisPlaneGap' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Plane Opacity'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.axisPlaneOpacity' }}
+                        min={0}
+                        max={1}
+                        precision={2}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Plane Outline'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.axisPlaneOutlineThickness' }}
+                        min={0}
+                        max={0.05}
+                        precision={3}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Fade Angle'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.axisFadeAngle' }}
+                        min={0}
+                        max={60}
+                        precision={0}
                     />
                 </LabelGroup>
                 <LabelGroup text='Center Size'>

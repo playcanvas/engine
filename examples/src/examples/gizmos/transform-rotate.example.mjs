@@ -151,6 +151,7 @@ data.set('gizmo', {
         disabled: gizmo.theme.disabled.toArray()
     },
     coordSpace: gizmo.coordSpace,
+    guideThickness: gizmo.guideThickness,
     ringTolerance: gizmo.ringTolerance,
     xyzTubeRadius: gizmo.xyzTubeRadius,
     xyzRingRadius: gizmo.xyzRingRadius,

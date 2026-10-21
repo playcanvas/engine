@@ -16,6 +16,8 @@ import { unlitShader } from '../shaders.js';
  * @import { TriData } from '../tri-data.js';
  */
 
+const tmpC1 = new Color();
+
 const tmpG = new Geometry();
 tmpG.positions = [];
 tmpG.normals = [];
@@ -32,6 +34,8 @@ tmpG.normals = [];
  * @property {Color} [defaultColor] - The default color of the shape.
  * @property {Color} [hoverColor] - The hover color of the shape.
  * @property {Color} [disabledColor] - The disabled color of the shape.
+ * @property {Color} [occludedColor] - The color where the scene hides the shape. When set, the
+ * shape is drawn first in this color without depth test, then as usual over it.
  * @property {number} [cull] - The culling mode of the shape.
  * @property {number} [depth] - The depth of the shape. -1 = interpolated depth.
  */
@@ -114,6 +118,52 @@ class Shape {
     _disabledColor = COLOR_GRAY;
 
     /**
+     * The internal occluded color of the shape, or null for no occluded pass.
+     *
+     * @type {Color|null}
+     * @protected
+     */
+    _occludedColor = null;
+
+    /**
+     * The internal material of the occluded pass.
+     *
+     * @type {ShaderMaterial|null}
+     * @protected
+     */
+    _occludedMaterial = null;
+
+    /**
+     * The internal hover state of the shape.
+     *
+     * @protected
+     */
+    _hovered = false;
+
+    /**
+     * The internal fade of the shape, a factor of the alpha of its colors.
+     *
+     * @protected
+     */
+    _fade = 1;
+
+    /**
+     * Uniform storage for the color.
+     *
+     * @type {number[]}
+     * @protected
+     */
+    _colorData = [0, 0, 0, 0];
+
+    /**
+     * Uniform storage for the occluded color.
+     *
+     * @type {number[]}
+     * @protected
+     */
+    _occludedColorData = [0, 0, 0, 0];
+
+    /**
      * The internal culling state of the shape.
      *
      * @type {number}
@@ -164,6 +214,13 @@ class Shape {
     meshInstances = [];
 
     /**
+     * The mesh instances of the occluded pass, one per entry of {@link Shape#meshInstances}.
+     *
+     * @type {MeshInstance[]}
+     */
+    occludedMeshInstances = [];
+
+    /**
      * Create a shape.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -197,6 +254,9 @@ class Shape {
         }
         if (args.disabledColor instanceof Color) {
             this._disabledColor = args.disabledColor;
+        }
+        if (args.occludedColor instanceof Color) {
+            this._occludedColor = args.occludedColor;
         }
 
         this._cull = args.cull ?? this._cull;
@@ -240,6 +300,9 @@ class Shape {
         for (let i = 0; i < this.meshInstances.length; i++) {
             this.meshInstances[i].visible = value;
         }
+        for (let i = 0; i < this.occludedMeshInstances.length; i++) {
+            this.occludedMeshInstances[i].visible = value;
+        }
         this._visible = value;
     }
 
@@ -250,6 +313,43 @@ class Shape {
      */
     get visible() {
         return this._visible;
+    }
+
+    /**
+     * Set the fade of the shape, a factor of the alpha of its colors.
+     *
+     * @type {number}
+     */
+    set fade(value) {
+        if (value === this._fade) {
+            return;
+        }
+        this._fade = value;
+        this.hover(this._hovered);
+    }
+
+    /**
+     * Get the fade of the shape.
+     *
+     * @type {number}
+     */
+    get fade() {
+        return this._fade;
+    }
+
+    /**
+     * Gets the color for the current state, its alpha scaled by the fade and a factor.
+     *
+     * @param {number[]} out - The array to receive the color.
+     * @param {number} [factor] - A further factor of the alpha.
+     * @returns {number[]} The color array.
+     * @protected
+     */
+    _stateColor(out, factor = 1) {
+        const color = this._disabled ?
+            this._disabledColor : this._hovered ? this._hoverColor : this._defaultColor;
+        tmpC1.copy(color).a *= this._fade * factor;
+        return tmpC1.toArray(out);
     }
 
     /**
@@ -268,8 +368,28 @@ class Shape {
         this._material.blendType = BLEND_NORMAL;
         this._material.update();
 
+        if (this._occludedColor && !this._occludedMaterial) {
+            const material = new ShaderMaterial(unlitShader);
+            material.setDefine('DEPTH_WRITE', '0');
+            material.setParameter('uDepth', this._depth);
+            material.setParameter('uColor', this._occludedColor.toArray());
+            material.cull = this._cull;
+            material.blendType = BLEND_NORMAL;
+            material.depthTest = false;
+            material.depthWrite = false;
+            material.update();
+            this._occludedMaterial = material;
+        }
+
+        // each occluded instance draws before the instance over it
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
+            if (this._occludedMaterial) {
+                const occluded = new MeshInstance(meshes[i], this._occludedMaterial);
+                occluded.cull = false;
+                meshInstances.push(occluded);
+                this.occludedMeshInstances.push(occluded);
+            }
             const mi = new MeshInstance(meshes[i], this._material);
             mi.cull = false;
             meshInstances.push(mi);
@@ -300,9 +420,12 @@ class Shape {
      * @returns {void}
      */
     hover(state) {
-        const color = this._disabled ?
-            this._disabledColor : state ? this._hoverColor : this._defaultColor;
-        this._material.setParameter('uColor', color.toArray());
+        this._hovered = state;
+        this._material.setParameter('uColor', this._stateColor(this._colorData));
+        if (this._occludedColor) {
+            tmpC1.copy(this._occludedColor).a *= this._fade;
+            this._occludedMaterial?.setParameter('uColor', tmpC1.toArray(this._occludedColorData));
+        }
     }
 
     /**
@@ -312,6 +435,7 @@ class Shape {
      */
     destroy() {
         this.entity.destroy();
+        this._occludedMaterial?.destroy();
     }
 }
 

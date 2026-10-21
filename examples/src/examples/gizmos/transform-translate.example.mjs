@@ -151,6 +151,7 @@ data.set('gizmo', {
         disabled: gizmo.theme.disabled.toArray()
     },
     coordSpace: gizmo.coordSpace,
+    guideThickness: gizmo.guideThickness,
     axisLineTolerance: gizmo.axisLineTolerance,
     axisGap: gizmo.axisGap,
     axisLineThickness: gizmo.axisLineThickness,
@@ -159,6 +160,9 @@ data.set('gizmo', {
     axisArrowLength: gizmo.axisArrowLength,
     axisPlaneSize: gizmo.axisPlaneSize,
     axisPlaneGap: gizmo.axisPlaneGap,
+    axisPlaneOpacity: gizmo.axisPlaneOpacity,
+    axisPlaneOutlineThickness: gizmo.axisPlaneOutlineThickness,
+    axisFadeAngle: gizmo.axisFadeAngle,
     axisCenterSize: gizmo.axisCenterSize
 });
 

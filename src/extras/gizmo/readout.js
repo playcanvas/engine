@@ -18,6 +18,13 @@ class Readout {
     _dom = document.createElement('div');
 
     /**
+     * The markup shown, kept to skip rewriting an unchanged readout.
+     *
+     * @private
+     */
+    _html = '';
+
+    /**
      * @param {HTMLCanvasElement} canvas - The canvas the readout is placed over.
      */
     constructor(canvas) {
@@ -48,7 +55,10 @@ class Readout {
      */
     show(html, x, y) {
         const rect = this._canvas.getBoundingClientRect();
-        this._dom.innerHTML = html;
+        if (html !== this._html) {
+            this._html = html;
+            this._dom.innerHTML = html;
+        }
         this._dom.style.left = `${rect.left + x}px`;
         this._dom.style.top = `${rect.top + y + GAP}px`;
         this._dom.style.display = 'block';

@@ -639,17 +639,28 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
+    /**
+     * Gets the scale that keeps gizmo geometry at a world position a constant size on screen.
+     *
+     * @param {Vec3} pos - The world position.
+     * @returns {number} The scale.
+     * @protected
+     */
+    _getScreenScale(pos) {
+        let scale;
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
+            const cameraPos = this._camera.entity.getPosition();
+            const dist = v.sub2(pos, cameraPos).dot(this._camera.entity.forward);
+            scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
+        } else {
+            scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
+        }
+        return Math.max(scale * this._size, MIN_SCALE);
+    }
+
     /** @protected */
     _updateScale() {
-        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            const gizmoPos = this.root.getLocalPosition();
-            const cameraPos = this._camera.entity.getPosition();
-            const dist = v.sub2(gizmoPos, cameraPos).dot(this._camera.entity.forward);
-            this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
-        } else {
-            this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
-        }
-        this._scale = Math.max(this._scale * this._size, MIN_SCALE);
+        this._scale = this._getScreenScale(this.root.getLocalPosition());
 
         if (Math.abs(this._scale - this.root.getLocalScale().x) < UPDATE_EPSILON) {
             return;
@@ -659,6 +670,23 @@ class Gizmo extends EventHandler {
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
 
         this._renderUpdate = true;
+    }
+
+    /**
+     * @param {Vec3} mouseWPos - The mouse world position.
+     * @returns {Ray} - The ray.
+     * @protected
+     */
+    _createRay(mouseWPos) {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
+            ray.origin.copy(this._camera.entity.getPosition());
+            ray.direction.sub2(mouseWPos, ray.origin).normalize();
+            return ray;
+        }
+        const orthoDepth = this._camera.farClip - this._camera.nearClip;
+        ray.origin.sub2(mouseWPos, v.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        ray.direction.copy(this._camera.entity.forward);
+        return ray;
     }
 
     /**

@@ -21,7 +21,6 @@ const delta = new Vec3();
 const q = new Quat();
 
 // constants
-const GLANCE_EPSILON = 0.01;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
@@ -345,6 +344,65 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
+     * Sets the opacity of the plane fill, as a factor of the theme color alpha. The plane outline
+     * keeps the full color. Defaults to 0.35.
+     *
+     * @type {number}
+     */
+    set axisPlaneOpacity(value) {
+        this._setPlaneProp('opacity', value);
+    }
+
+    /**
+     * Gets the opacity of the plane fill.
+     *
+     * @type {number}
+     */
+    get axisPlaneOpacity() {
+        return this._shapes.yz.opacity;
+    }
+
+    /**
+     * Sets the thickness of the outline on the outer edges of the planes. A thickness of 0 hides
+     * the outline. Defaults to 0.01.
+     *
+     * @type {number}
+     */
+    set axisPlaneOutlineThickness(value) {
+        this._setPlaneProp('outlineThickness', value);
+    }
+
+    /**
+     * Gets the thickness of the outline on the outer edges of the planes.
+     *
+     * @type {number}
+     */
+    get axisPlaneOutlineThickness() {
+        return this._shapes.yz.outlineThickness;
+    }
+
+    /**
+     * Sets the angle in degrees between the view and an axis, or the view and a plane, below
+     * which the shape fades out, until it hides at about 8 degrees. A value of 8 or less hides
+     * the shape without fading. Defaults to 25.
+     *
+     * @type {number}
+     */
+    set axisFadeAngle(value) {
+        this._fadeAngle = value ?? this._fadeAngle;
+        this._shapesLookAtCamera();
+    }
+
+    /**
+     * Gets the angle in degrees below which an axis or plane fades out.
+     *
+     * @type {number}
+     */
+    get axisFadeAngle() {
+        return this._fadeAngle;
+    }
+
+    /**
      * Sets the axis center size.
      *
      * @type {number}
@@ -406,58 +464,29 @@ class TranslateGizmo extends TransformGizmo {
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
-        // axes
-        let changed = false;
-        let dot, enabled;
-        dot = cameraDir.dot(this.root.right);
-        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this._shapes.x.entity.enabled !== enabled) {
-            this._shapes.x.entity.enabled = enabled;
-            changed = true;
-        }
-        dot = cameraDir.dot(this.root.up);
-        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this._shapes.y.entity.enabled !== enabled) {
-            this._shapes.y.entity.enabled = enabled;
-            changed = true;
-        }
-        dot = cameraDir.dot(this.root.forward);
-        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this._shapes.z.entity.enabled !== enabled) {
-            this._shapes.z.entity.enabled = enabled;
-            changed = true;
-        }
+        // axes fade out as the view looks along them
+        let changed = this._glance(this._shapes.x, Math.abs(cameraDir.dot(this.root.right)));
+        changed = this._glance(this._shapes.y, Math.abs(cameraDir.dot(this.root.up))) || changed;
+        changed = this._glance(this._shapes.z, Math.abs(cameraDir.dot(this.root.forward))) || changed;
 
-        // planes
+        // planes fade out as the view looks along them
         let flipped;
         v1.cross(cameraDir, this.root.right);
-        enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this._shapes.yz.entity.enabled !== enabled) {
-            this._shapes.yz.entity.enabled = enabled;
-            changed = true;
-        }
+        changed = this._glance(this._shapes.yz, v1.length()) || changed;
         flipped = this.flipPlanes ? v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0)) : Vec3.ZERO;
         if (!this._shapes.yz.flipped.equals(flipped)) {
             this._shapes.yz.flipped = flipped;
             changed = true;
         }
         v1.cross(cameraDir, this.root.forward);
-        enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this._shapes.xy.entity.enabled !== enabled) {
-            this._shapes.xy.entity.enabled = enabled;
-            changed = true;
-        }
+        changed = this._glance(this._shapes.xy, v1.length()) || changed;
         flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0) : Vec3.ZERO;
         if (!this._shapes.xy.flipped.equals(flipped)) {
             this._shapes.xy.flipped = flipped;
             changed = true;
         }
         v1.cross(cameraDir, this.root.up);
-        enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this._shapes.xz.entity.enabled !== enabled) {
-            this._shapes.xz.entity.enabled = enabled;
-            changed = true;
-        }
+        changed = this._glance(this._shapes.xz, v1.length()) || changed;
         flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0)) : Vec3.ZERO;
         if (!this._shapes.xz.flipped.equals(flipped)) {
             this._shapes.xz.flipped = flipped;

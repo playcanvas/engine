@@ -1,5 +1,6 @@
 import {
     BindingTwoWay,
+    BooleanInput,
     ColorPicker,
     LabelGroup,
     Panel,
@@ -39,6 +40,43 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'gizmo.theme.occluded' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Fill'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.fill' }}
+                    />
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Layers'>
+                <LabelGroup text='Edges'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.edges' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Handles'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.handles' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Readout'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.readout' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Icon'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.icon' }}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Render'>
                 <LabelGroup text='Arm Length'>
@@ -66,6 +104,15 @@ export function Controls({ observer }) {
                         min={0}
                         max={0.5}
                         precision={2}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Handle Size'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.handleSize' }}
+                        min={2}
+                        max={20}
+                        precision={1}
                     />
                 </LabelGroup>
             </Panel>

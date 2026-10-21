@@ -152,6 +152,25 @@ class ArcShape extends Shape {
     }
 
     /**
+     * Set the sector angle in degrees.
+     *
+     * @type {number}
+     */
+    set sectorAngle(value) {
+        this._sectorAngle = value ?? this._sectorAngle;
+        this._update();
+    }
+
+    /**
+     * Get the sector angle in degrees.
+     *
+     * @type {number}
+     */
+    get sectorAngle() {
+        return this._sectorAngle;
+    }
+
+    /**
      * Set the intersection tolerance.
      *
      * @type {number}
@@ -186,6 +205,9 @@ class ArcShape extends Shape {
         for (let i = 0; i < angles.length; i++) {
             const mesh = this.meshInstances[i].mesh;
             this.meshInstances[i].mesh = this._createTorusMesh(angles[i]);
+            if (this.occludedMeshInstances[i]) {
+                this.occludedMeshInstances[i].mesh = this.meshInstances[i].mesh;
+            }
             if (mesh && mesh.refCount < 1) {
                 mesh.destroy();
             }
@@ -214,6 +236,9 @@ class ArcShape extends Shape {
                 this.meshInstances[1].visible = false;
                 break;
             }
+        }
+        for (let i = 0; i < this.occludedMeshInstances.length; i++) {
+            this.occludedMeshInstances[i].visible = this.meshInstances[i].visible;
         }
     }
 }

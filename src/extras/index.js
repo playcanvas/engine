@@ -96,5 +96,8 @@ export { TransformGizmo } from './gizmo/transform-gizmo.js';
 export { TranslateGizmo } from './gizmo/translate-gizmo.js';
 export { RotateGizmo } from './gizmo/rotate-gizmo.js';
 export { ScaleGizmo } from './gizmo/scale-gizmo.js';
+export { HelperGizmo } from './gizmo/helper-gizmo.js';
 export { BoundingBoxGizmo } from './gizmo/bounding-box-gizmo.js';
+export { CameraGizmo } from './gizmo/camera-gizmo.js';
+export { LightGizmo } from './gizmo/light-gizmo.js';
 export { ViewCube } from './gizmo/view-cube.js';

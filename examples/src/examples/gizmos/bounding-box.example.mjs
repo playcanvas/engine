@@ -31,6 +31,10 @@ import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { MeshInstance } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -118,14 +122,28 @@ const layer = new Layer({
 app.scene.layers.push(layer);
 const gizmo = new BoundingBoxGizmo(camera.camera, layer);
 gizmo.attach(box);
+
+// Stop the camera orbiting while a handle is dragged
+gizmo.on('pointer:down', (_x, _y, /** @type {MeshInstance} */ meshInstance) => {
+    cc.enabled = !meshInstance;
+});
+gizmo.on('pointer:up', () => {
+    cc.enabled = true;
+});
 data.set('gizmo', {
     theme: {
         base: gizmo.theme.base.toArray(),
-        occluded: gizmo.theme.occluded.toArray()
+        occluded: gizmo.theme.occluded.toArray(),
+        fill: gizmo.theme.fill.toArray()
     },
     armLength: gizmo.armLength,
     armThickness: gizmo.armThickness,
-    padding: gizmo.padding
+    padding: gizmo.padding,
+    handleSize: gizmo.handleSize,
+    edges: gizmo.edges,
+    handles: gizmo.handles,
+    readout: gizmo.readout,
+    icon: gizmo.icon
 });
 
 // Create grid

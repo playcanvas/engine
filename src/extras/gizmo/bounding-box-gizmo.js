@@ -1,5 +1,5 @@
-import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Entity } from '../../framework/entity.js';
@@ -8,32 +8,50 @@ import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Mesh } from '../../scene/mesh.js';
-import { Gizmo } from './gizmo.js';
+import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from './color.js';
+import { HelperGizmo } from './helper-gizmo.js';
 import { unlitShader } from './shaders.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
+ * @import { HelperGizmoTheme, HelperHandle } from './helper-gizmo.js'
  */
 
 /**
- * @typedef {object} BoundingBoxGizmoTheme
- * @property {Color} base - The color where the box is visible.
- * @property {Color} occluded - The color where the scene hides the box.
+ * @typedef {HelperGizmoTheme} BoundingBoxGizmoTheme
  */
 
 // temporary variables
 const tmpBox = new BoundingBox();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
+const tmpV4 = new Vec3();
 
 const AXES = /** @type {const} */ (['x', 'y', 'z']);
 
+const FACES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.FORWARD];
+const FACE_COLORS = [COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA];
+
+const ORIGIN_DOT = 3;
+const ORIGIN_RING = 7;
+const MIN_FACTOR = 0.01;
+
+/**
+ * @param {number} value - The value.
+ * @returns {string} The value with two decimals.
+ */
+const fmt = value => value.toFixed(2);
+
 /**
  * Draws corner brackets around the world-space bounds of the attached nodes and their
- * descendants. Use a layer that keeps the scene depth so occluded parts draw in the theme's
- * `occluded` color; a {@link Gizmo.createLayer} layer clears depth.
+ * descendants, joined by dashed edges over a faint volume, with a dot at the origin of each
+ * attached node. Once the box is large enough on screen, a handle at the center of each face
+ * drags to resize the attached nodes, keeping the opposite face in place, and labels show the
+ * width, height and depth. A resize scales each node along its local axis nearest the dragged
+ * axis, which is exact for nodes aligned with the world axes.
  *
  * ```javascript
  * const layer = new Layer({ name: 'Bounds', transparentSortMode: SORTMODE_NONE });
@@ -49,17 +67,13 @@ const AXES = /** @type {const} */ (['x', 'y', 'z']);
  *
  * @category Gizmo
  */
-class BoundingBoxGizmo extends Gizmo {
+class BoundingBoxGizmo extends HelperGizmo {
     /**
-     * Internal theme.
+     * Whether to join the brackets with dashed edges. Defaults to true.
      *
-     * @type {BoundingBoxGizmoTheme}
-     * @private
+     * @type {boolean}
      */
-    _theme = {
-        base: Color.WHITE.clone(),
-        occluded: new Color(1, 1, 1, 0.2)
-    };
+    edges = true;
 
     /**
      * The arm length as a fraction of the half edge; 1 draws full edges. Defaults to 0.3.
@@ -147,6 +161,29 @@ class BoundingBoxGizmo extends Gizmo {
     _occludedColorData = [0, 0, 0, 0];
 
     /**
+     * The bounds at the start of a resize, without padding.
+     *
+     * @private
+     */
+    _startBounds = new BoundingBox();
+
+    /**
+     * The positions of the attached nodes at the start of a resize.
+     *
+     * @type {Vec3[]}
+     * @private
+     */
+    _startPositions = [];
+
+    /**
+     * The local scales of the attached nodes at the start of a resize.
+     *
+     * @type {Vec3[]}
+     * @private
+     */
+    _startScales = [];
+
+    /**
      * Creates a new BoundingBoxGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -185,31 +222,6 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
-     * Gets the current theme for the gizmo.
-     *
-     * @type {BoundingBoxGizmoTheme}
-     */
-    get theme() {
-        return this._theme;
-    }
-
-    /**
-     * Sets the theme or partial theme for the gizmo.
-     *
-     * @param {Partial<BoundingBoxGizmoTheme>} partial - The partial theme to set.
-     * @example
-     * gizmo.setTheme({ occluded: new Color(1, 1, 1, 0.5) });
-     */
-    setTheme(partial) {
-        if (partial?.base instanceof Color) {
-            this._theme.base.copy(partial.base);
-        }
-        if (partial?.occluded instanceof Color) {
-            this._theme.occluded.copy(partial.occluded);
-        }
-    }
-
-    /**
      * Creates an arm material.
      *
      * @param {boolean} depthTest - Whether the material is depth tested.
@@ -225,22 +237,6 @@ class BoundingBoxGizmo extends Gizmo {
         material.depthWrite = false;
         material.update();
         return material;
-    }
-
-    /**
-     * The box is world aligned.
-     *
-     * @override
-     */
-    _updateRotation() {
-    }
-
-    /**
-     * The box is sized in world units.
-     *
-     * @override
-     */
-    _updateScale() {
     }
 
     /**
@@ -298,24 +294,40 @@ class BoundingBoxGizmo extends Gizmo {
     }
 
     /**
-     * Gathers the bounds of the attached nodes and places the arms around them.
+     * Gathers the bounds of the attached nodes and places the box around them.
      *
+     * @protected
      * @override
      */
-    prerender() {
-        if (!this.enabled) {
-            return;
-        }
-
+    _drawShapes() {
         this._empty = true;
         for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].forEach(this._addNode);
         }
         this._box.enabled = !this._empty;
-        if (this._empty) {
-            return;
+        if (!this._empty) {
+            this._drawBox();
         }
+        if (this.icon) {
+            const shapes = this._shapes;
+            const camera = this._camera.entity;
+            for (let i = 0; i < this.nodes.length; i++) {
+                const node = this.nodes[i];
+                if (node.enabled) {
+                    const pos = node.getPosition();
+                    shapes.dot(pos, ORIGIN_DOT);
+                    shapes.circle(pos, camera.forward, shapes.pixels(pos, ORIGIN_RING), 0.6);
+                }
+            }
+        }
+    }
 
+    /**
+     * Places the arms, edges, volume, handles and labels around the gathered bounds.
+     *
+     * @private
+     */
+    _drawBox() {
         const { center: c, halfExtents: h } = this._bounds;
         h.addScalar(this.padding);
 
@@ -355,6 +367,100 @@ class BoundingBoxGizmo extends Gizmo {
                     }
                 }
             }
+        }
+
+        const shapes = this._shapes;
+        if (this._theme.fill.a > 0) {
+            shapes.box(c, Quat.IDENTITY, tmpV1.copy(h).mulScalar(2));
+        }
+        if (this.edges) {
+            // the four edges along each axis, at each sign of the other two
+            for (let k = 0; k < 3; k++) {
+                const axis = AXES[k];
+                const u = AXES[(k + 1) % 3];
+                const v = AXES[(k + 2) % 3];
+                for (let i = 0; i < 4; i++) {
+                    const a = tmpV3.copy(c);
+                    a[u] += i & 1 ? h[u] : -h[u];
+                    a[v] += i & 2 ? h[v] : -h[v];
+                    const b = tmpV4.copy(a);
+                    a[axis] -= h[axis];
+                    b[axis] += h[axis];
+                    shapes.dashed(a, b, 0.5, 0.45);
+                }
+            }
+        }
+
+        if (!this._detailed(c, Math.max(h.x, h.y, h.z))) {
+            return;
+        }
+        const node = this.nodes[0];
+        for (let i = 0; i < FACES.length; i++) {
+            const face = FACES[i];
+            this._handle(tmpV1.set(c.x + face.x * h.x, c.y + face.y * h.y, c.z + face.z * h.z), FACE_COLORS[i >> 1], node, 'size', i, c, face);
+        }
+        if (this.readout) {
+            // each label on the middle of the edge along its axis that is nearest the camera
+            const side = tmpV2.sub2(cameraPos, c);
+            const sx = side.x < 0 ? -h.x : h.x;
+            const sy = side.y < 0 ? -h.y : h.y;
+            const sz = side.z < 0 ? -h.z : h.z;
+            const pad = this.padding;
+            shapes.label(tmpV1.set(c.x, c.y + sy, c.z + sz), `${this._readoutLabel('W', COLOR_AMBER)} ${fmt(2 * (h.x - pad))}`);
+            shapes.label(tmpV1.set(c.x + sx, c.y, c.z + sz), `${this._readoutLabel('H', COLOR_CYAN)} ${fmt(2 * (h.y - pad))}`);
+            shapes.label(tmpV1.set(c.x + sx, c.y + sy, c.z), `${this._readoutLabel('D', COLOR_MAGENTA)} ${fmt(2 * (h.z - pad))}`);
+        }
+    }
+
+    /**
+     * Keeps the bounds and the transforms of the attached nodes at the start of a resize.
+     *
+     * @param {HelperHandle} handle - The dragged handle.
+     * @protected
+     * @override
+     */
+    _startHandle(handle) {
+        this._startBounds.copy(this._bounds);
+        this._startBounds.halfExtents.addScalar(-this.padding);
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            (this._startPositions[i] ??= new Vec3()).copy(node.getPosition());
+            (this._startScales[i] ??= new Vec3()).copy(node.getLocalScale());
+        }
+    }
+
+    /**
+     * Resizes the attached nodes along the axis of the dragged face, keeping the opposite face in
+     * place.
+     *
+     * @param {HelperHandle} handle - The dragged handle.
+     * @param {Vec3} point - Where the face is dragged to.
+     * @protected
+     * @override
+     */
+    _moveHandle(handle, point) {
+        const axis = AXES[handle.index >> 1];
+        const sign = handle.index & 1 ? -1 : 1;
+        const { center, halfExtents } = this._startBounds;
+        const anchor = center[axis] - sign * halfExtents[axis];
+        const face = point[axis] - sign * this.padding;
+        const factor = Math.max((face - anchor) / (2 * sign * halfExtents[axis]), MIN_FACTOR);
+
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            const start = this._startPositions[i];
+            const pos = tmpV1.copy(start);
+            pos[axis] = anchor + (start[axis] - anchor) * factor;
+            node.setPosition(pos);
+
+            // the local axis nearest the world axis takes the scale
+            const right = Math.abs(node.right[axis]);
+            const up = Math.abs(node.up[axis]);
+            const forward = Math.abs(node.forward[axis]);
+            const local = right >= up && right >= forward ? 'x' : up >= forward ? 'y' : 'z';
+            const scale = tmpV2.copy(this._startScales[i]);
+            scale[local] *= factor;
+            node.setLocalScale(scale);
         }
     }
 
