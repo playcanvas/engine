@@ -165,7 +165,6 @@ data.set('box', {
 
 // Create grid
 const gridEntity = new Entity('grid');
-gridEntity.setLocalScale(8, 1, 8);
 app.root.addChild(gridEntity);
 gridEntity.addComponent('script');
 gridEntity.script.create(Grid);
