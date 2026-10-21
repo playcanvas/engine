@@ -1,10 +1,7 @@
 // @config
 //
-// A reference grid with every setting of the Grid script in the panel. The grid follows the camera
-// and fades out with distance, or turn Infinite off to size it with the entity's scale. The cube
-// and capsule sit half through the grid, so it shows where the scene hides it and where it draws
-// over the scene. The dark plane lies on the grid, so lower Depth Offset to 0 to see it hide the grid, and
-// the SuperSplat preset swaps the sphere for gaussian splats, which the grid hides with Depth Write.
+// A reference grid with every setting of the Grid script. Lower Depth Offset to see the dark plane
+// hide it, and pick the SuperSplat preset to see it hide gaussian splats with Depth Write.
 //
 // `LMB` Orbit · `RMB` Pan · `Wheel` / `Pinch` Zoom
 
@@ -47,7 +44,7 @@ window.focus();
 const gfxOptions = {
     deviceTypes: [deviceType],
 
-    // gaussian splats are expensive to render multisampled, and the grid antialiases itself
+    // splats are expensive multisampled, and the grid antialiases itself
     antialias: false
 };
 
@@ -90,7 +87,7 @@ const createColorMaterial = (color) => {
 // Scene settings
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 
-// Create entities, the solid ones half through the grid so it shows where the scene hides it
+// Create entities, half through the grid
 const box = new Entity('box');
 box.addComponent('render', {
     type: 'box',
@@ -99,9 +96,7 @@ box.addComponent('render', {
 box.setPosition(1, 0, 1);
 app.root.addChild(box);
 
-// A sphere half through the grid: a mesh, or with the SuperSplat preset gaussian splats, which draw
-// after the grid, so Depth Write lets the grid hide their lower half. Each side of the splats has
-// its own color, shaded by a light, so the lines read against it
+// A splat sphere for the SuperSplat preset, colored by direction and shaded
 const SPLAT_COUNT = 6000;
 const SPLAT_SIZE = 0.025;
 const splatFormat = GSplatFormat.createSimpleFormat(device);
@@ -113,13 +108,13 @@ const colorData = colorTex.lock();
 const lightDir = new Vec3(0.5, 0.8, 0.3).normalize();
 const n = new Vec3();
 for (let i = 0; i < SPLAT_COUNT; i++) {
-    // evenly spread over the sphere on a fibonacci spiral
+    // fibonacci spiral
     const y = 1 - (2 * (i + 0.5)) / SPLAT_COUNT;
     const r = Math.sqrt(1 - y * y);
     const a = i * Math.PI * (3 - Math.sqrt(5));
     n.set(Math.cos(a) * r, y, Math.sin(a) * r);
 
-    // a different color on each side, from the direction the splat faces, lit from one side
+    // color by direction, lit from one side
     const shade = 0.15 + 0.35 * Math.max(n.dot(lightDir), 0);
     const rgb = [0.55 + 0.45 * n.x, 0.55 + 0.45 * n.y, 0.55 + 0.45 * n.z].map((c) => c * shade);
 
@@ -152,7 +147,7 @@ sphere.addComponent('render', {
 sphere.setPosition(-1, 0, 1);
 app.root.addChild(sphere);
 
-// A plane on the grid's plane, across two of its lines, which hides them without a Depth Offset
+// A plane on the grid, hiding it without a Depth Offset
 const plane = new Entity('plane');
 plane.addComponent('render', {
     type: 'plane',
@@ -200,8 +195,7 @@ light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// Grid
-// the grid's scale sizes it when it isn't infinite
+// Grid, sized by its scale when not infinite
 const gridEntity = new Entity('grid');
 gridEntity.setLocalScale(20, 1, 20);
 gridEntity.addComponent('script');
@@ -232,9 +226,7 @@ data.set('grid', {
     depthWrite: grid.depthWrite,
     depthDither: grid.depthDither
 });
-// Presets of the whole grid, applied through the panel so its controls follow. Default is the
-// engine's defaults, Editor the editor's fixed grid of 8 cells of 1, and SuperSplat its grid over
-// gaussian splats
+// Presets, applied through the panel so its controls follow
 const PRESETS = {
     default: { ...data.get('grid') },
     editor: {
@@ -298,10 +290,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
     switch (category) {
         case 'grid': {
-            // a vector input sets one component at a time, so read the whole value back
+            // vector inputs set one component at a time
             const v = data.get(`grid.${key}`);
             if (key === 'size' || key === 'plane') {
-                // the size is the entity's scale along the two axes of the plane
+                // size is the entity's scale on the plane's axes
                 const [w, d] = data.get('grid.size');
                 const plane = data.get('grid.plane');
                 grid.plane = plane;
@@ -311,10 +303,10 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     plane === 'xy' ? 1 : d
                 );
             } else if (key === 'fadeStart' || key === 'fadeEnd') {
-                // the two sliders set the ends of the one range
+                // the sliders set the range's ends
                 grid.fadeRange = new Vec2(data.get('grid.fadeStart'), data.get('grid.fadeEnd'));
             } else if (key === 'contrast') {
-                // the lines read the scene color, which the camera captures only when asked
+                // contrast needs the scene color map
                 camera.camera.renderSceneColorMap = v;
                 grid.contrast = v;
             } else if (COLORS.includes(key)) {
@@ -332,7 +324,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 data.set(`grid.${name}`, v);
             }
 
-            // the splats only with the grid made for them
+            // splats only with the SuperSplat preset
             splatSphere.enabled = value === 'supersplat';
             sphere.enabled = !splatSphere.enabled;
             break;

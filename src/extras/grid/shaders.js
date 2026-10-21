@@ -1,12 +1,10 @@
-// the fraction of the camera's far clip the fade ends inside, so the plane never shows the clip's edge
+// fraction of the far clip the fade must end within
 const FAR_FRACTION = '0.9';
 
-// the cell size in CSS pixels below which lines narrow with their cells instead of keeping their
-// thickness, so they fade with distance and close up into a faint haze rather than a solid fill
+// cell size in CSS pixels below which lines thin with their cells, so distant lines fade
 const LINE_FADE_CELL = '64.0';
 
-// the cell size in CSS pixels where a level of lines starts to fade in, reaching full opacity as
-// its cells grow by the subdivisions; the levels drawn above it, which hold every coarser line
+// cell size in CSS pixels where a level starts to fade in, and the levels drawn above it
 const LEVEL_FADE_CELL = '4.0';
 const LEVELS_ABOVE = 2;
 
@@ -33,20 +31,20 @@ export const vertexGLSL = /* glsl */`
 
     void main(void) {
 
-        // the plane in world space; the node's scale sizes a fixed grid, but never its cells
+        // the node's scale sizes a fixed grid, never its cells
         vec3 origin = matrix_model[3].xyz;
         vec3 axisU = mat3(matrix_model) * uAxisU;
         vec3 axisV = mat3(matrix_model) * uAxisV;
         vec3 u = normalize(axisU);
         vec3 v = normalize(axisV);
 
-        // an infinite grid follows the camera, spanning the faded distance either side of it
+        // an infinite grid follows the camera and spans the fade distance
         float reach = 2.0 * min(uFade.y, camera_params.y * ${FAR_FRACTION});
         vec2 center = vec2(dot(view_position - origin, u), dot(view_position - origin, v)) * uInfinite;
         vGridPos = center + vertex_position.xz * mix(vec2(length(axisU), length(axisV)), vec2(reach), uInfinite);
         vWorldPos = origin + u * vGridPos.x + v * vGridPos.y;
 
-        // moving along the view ray changes the depth alone
+        // offset along the view ray, so only depth changes
         vec3 back = vec3(matrix_view[0][2], matrix_view[1][2], matrix_view[2][2]);
         vec3 toEye = view_position - vWorldPos;
         if (camera_params.w > 0.5) {
@@ -90,8 +88,7 @@ export const fragmentGLSL = /* glsl */`
     varying vec3 vToEye;
     varying vec3 vNormal;
 
-    // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c, with lines a number
-    // of pixels wide where its cells are large on screen, each axis of lines scaled by its fade
+    // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c, with lines in pixels
     float pristineGrid(vec2 uv, vec2 uvDeriv, float pixels, vec2 fade) {
         vec2 targetWidth = min(pixels * uvDeriv, vec2(min(pixels / (${LINE_FADE_CELL} * uPixelRatio), 0.5)));
         vec2 drawWidth = clamp(targetWidth, uvDeriv, vec2(0.5));
@@ -104,7 +101,7 @@ export const fragmentGLSL = /* glsl */`
         return mix(grid2.x, 1.0, grid2.y);
     }
 
-    // each axis of lines, without its line through the origin while the axes replace it
+    // drops the origin line when the axes draw it
     vec2 offAxis(vec2 uv) {
         return uShowAxes > 0.5 ? step(0.5, abs(uv)) : vec2(1.0);
     }
@@ -116,16 +113,13 @@ export const fragmentGLSL = /* glsl */`
         vec2 uvDeriv = vec2(length(vec2(ddx.x, ddy.x)), length(vec2(ddx.y, ddy.y)));
         float epsilon = 1.0 / 255.0;
 
-        // the levels follow the zoom, as in Blender: the level of lines fading in is where the cells
-        // are LEVEL_FADE_CELL pixels, so the grid keeps the same density at any distance
-        // with no subdivisions, every level is the spacing, drawn as one fixed level of major lines
+        // the level fading in, by cell size on screen; one fixed level without subdivisions
         float lod = uSubdivisions > 1.0 ?
             log(${LEVEL_FADE_CELL} * uPixelRatio * max(uvDeriv.x, uvDeriv.y)) / log(uSubdivisions) :
             -1.0;
         float finest = ceil(lod);
 
-        // from the coarsest level down, as each finer level's lines include the coarser ones; the
-        // finest level fades in, the next turns from minor to major, and the one above is major
+        // coarsest level first; the finest fades in and the coarser turn major
         vec4 color = uMinorColor;
         float line = 0.0;
         for (int i = ${LEVELS_ABOVE}; i >= 0; i--) {
@@ -142,7 +136,7 @@ export const fragmentGLSL = /* glsl */`
             }
         }
 
-        // the line through the origin along each axis, found on the coarsest level
+        // axis lines, from the coarsest level
         float topScale = pow(uSubdivisions, -(finest + ${LEVELS_ABOVE}.0));
         vec2 top = pos * topScale;
         vec2 topDeriv = uvDeriv * topScale;
@@ -155,18 +149,18 @@ export const fragmentGLSL = /* glsl */`
         }
         #ifdef GRID_CONTRAST
             else {
-                // black over a light part of the scene and white over a dark one
+                // black over light, white over dark
                 vec3 under = texture2DLod(uSceneColorMap, (vClipPos.xy / vClipPos.w) * 0.5 + 0.5, 0.0).rgb;
                 color.rgb = vec3(1.0 - smoothstep(0.4, 0.6, dot(under, vec3(0.2126, 0.7152, 0.0722))));
             }
         #endif
 
-        // fade out with the distance from the camera
+        // distance fade
         float fadeEnd = min(uFade.y, camera_params.y * ${FAR_FRACTION});
         float fadeStart = min(uFade.x, fadeEnd);
         float f = clamp((length(vWorldPos - view_position) - fadeStart) / max(fadeEnd - fadeStart, 1e-5), 0.0, 1.0);
 
-        // and where the plane is seen nearly edge on, as its lines crowd together there
+        // grazing angle fade
         float grazing = 1.0 - pow(1.0 - abs(dot(normalize(vToEye), normalize(vNormal))), 3.0);
         float coverage = line * (1.0 - f * f * (3.0 - 2.0 * f)) * grazing;
         float alpha = coverage * color.a;
@@ -175,7 +169,7 @@ export const fragmentGLSL = /* glsl */`
         }
 
         #ifdef GRID_DEPTH
-            // depth where the line covers more of the pixel than the noise, or most of it
+            // write depth where coverage beats the noise, or half
             #ifdef GRID_DEPTH_DITHER
                 float threshold = texture2DLod(blueNoiseTex32, fract(gl_FragCoord.xy / 32.0), 0.0).y;
             #else
@@ -216,7 +210,7 @@ export const vertexWGSL = /* wgsl */`
     fn vertexMain(input: VertexInput) -> VertexOutput {
         var output: VertexOutput;
 
-        // the plane in world space; the node's scale sizes a fixed grid, but never its cells
+        // the node's scale sizes a fixed grid, never its cells
         let model = uniform.matrix_model;
         let origin = model[3].xyz;
         let axisU = (model * vec4f(uniform.uAxisU, 0.0)).xyz;
@@ -224,7 +218,7 @@ export const vertexWGSL = /* wgsl */`
         let u = normalize(axisU);
         let v = normalize(axisV);
 
-        // an infinite grid follows the camera, spanning the faded distance either side of it
+        // an infinite grid follows the camera and spans the fade distance
         let reach = 2.0 * min(uniform.uFade.y, uniform.camera_params.y * ${FAR_FRACTION});
         let center = vec2f(dot(uniform.view_position - origin, u), dot(uniform.view_position - origin, v)) * uniform.uInfinite;
         let gridPos = center + input.vertex_position.xz * mix(vec2f(length(axisU), length(axisV)), vec2f(reach), uniform.uInfinite);
@@ -232,7 +226,7 @@ export const vertexWGSL = /* wgsl */`
         output.vGridPos = gridPos;
         output.vWorldPos = worldPos;
 
-        // moving along the view ray changes the depth alone
+        // offset along the view ray, so only depth changes
         let view = uniform.matrix_view;
         let back = vec3f(view[0][2], view[1][2], view[2][2]);
         var toEye = uniform.view_position - worldPos;
@@ -280,8 +274,7 @@ export const fragmentWGSL = /* wgsl */`
     varying vToEye: vec3f;
     varying vNormal: vec3f;
 
-    // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c, with lines a number
-    // of pixels wide where its cells are large on screen, each axis of lines scaled by its fade
+    // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c, with lines in pixels
     fn pristineGrid(uv: vec2f, uvDeriv: vec2f, pixels: f32, fade: vec2f) -> f32 {
         let targetWidth = min(pixels * uvDeriv, vec2f(min(pixels / (${LINE_FADE_CELL} * uniform.uPixelRatio), 0.5)));
         let drawWidth = clamp(targetWidth, uvDeriv, vec2f(0.5));
@@ -294,7 +287,7 @@ export const fragmentWGSL = /* wgsl */`
         return mix(grid2.x, 1.0, grid2.y);
     }
 
-    // each axis of lines, without its line through the origin while the axes replace it
+    // drops the origin line when the axes draw it
     fn offAxis(uv: vec2f) -> vec2f {
         return select(vec2f(1.0), step(vec2f(0.5), abs(uv)), uniform.uShowAxes > 0.5);
     }
@@ -303,16 +296,14 @@ export const fragmentWGSL = /* wgsl */`
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         var output: FragmentOutput;
 
-        // derivatives first, as they need uniform control flow
+        // derivatives need uniform control flow
         let pos = input.vGridPos / uniform.uSpacing;
         let ddx = dpdx(pos);
         let ddy = dpdy(pos);
         let uvDeriv = vec2f(length(vec2f(ddx.x, ddy.x)), length(vec2f(ddx.y, ddy.y)));
         let epsilon = 1.0 / 255.0;
 
-        // the levels follow the zoom, as in Blender: the level of lines fading in is where the cells
-        // are LEVEL_FADE_CELL pixels, so the grid keeps the same density at any distance
-        // with no subdivisions, every level is the spacing, drawn as one fixed level of major lines
+        // the level fading in, by cell size on screen; one fixed level without subdivisions
         let lod = select(
             -1.0,
             log(${LEVEL_FADE_CELL} * uniform.uPixelRatio * max(uvDeriv.x, uvDeriv.y)) / log(uniform.uSubdivisions),
@@ -320,8 +311,7 @@ export const fragmentWGSL = /* wgsl */`
         );
         let finest = ceil(lod);
 
-        // from the coarsest level down, as each finer level's lines include the coarser ones; the
-        // finest level fades in, the next turns from minor to major, and the one above is major
+        // coarsest level first; the finest fades in and the coarser turn major
         var color = uniform.uMinorColor;
         var line = 0.0;
         for (var i: i32 = ${LEVELS_ABOVE}; i >= 0; i--) {
@@ -338,7 +328,7 @@ export const fragmentWGSL = /* wgsl */`
             }
         }
 
-        // the line through the origin along each axis, found on the coarsest level
+        // axis lines, from the coarsest level
         let topScale = pow(uniform.uSubdivisions, -(finest + ${LEVELS_ABOVE}.0));
         let top = pos * topScale;
         let topDeriv = uvDeriv * topScale;
@@ -351,7 +341,7 @@ export const fragmentWGSL = /* wgsl */`
         }
         #ifdef GRID_CONTRAST
             else {
-                // black over a light part of the scene and white over a dark one
+                // black over light, white over dark
                 var uv = (input.vClipPos.xy / input.vClipPos.w) * 0.5 + vec2f(0.5);
                 uv.y = 1.0 - uv.y;
                 let under = textureSampleLevel(uSceneColorMap, uSceneColorMapSampler, uv, 0.0).rgb;
@@ -359,12 +349,12 @@ export const fragmentWGSL = /* wgsl */`
             }
         #endif
 
-        // fade out with the distance from the camera
+        // distance fade
         let fadeEnd = min(uniform.uFade.y, uniform.camera_params.y * ${FAR_FRACTION});
         let fadeStart = min(uniform.uFade.x, fadeEnd);
         let f = clamp((length(input.vWorldPos - uniform.view_position) - fadeStart) / max(fadeEnd - fadeStart, 1e-5), 0.0, 1.0);
 
-        // and where the plane is seen nearly edge on, as its lines crowd together there
+        // grazing angle fade
         let grazing = 1.0 - pow(1.0 - abs(dot(normalize(input.vToEye), normalize(input.vNormal))), 3.0);
         let coverage = line * (1.0 - f * f * (3.0 - 2.0 * f)) * grazing;
         let alpha = coverage * color.a;
@@ -373,7 +363,7 @@ export const fragmentWGSL = /* wgsl */`
         }
 
         #ifdef GRID_DEPTH
-            // depth where the line covers more of the pixel than the noise, or most of it
+            // write depth where coverage beats the noise, or half
             #ifdef GRID_DEPTH_DITHER
                 let threshold = textureSampleLevel(blueNoiseTex32, blueNoiseTex32Sampler, fract(pcPosition.xy / 32.0), 0.0).y;
             #else

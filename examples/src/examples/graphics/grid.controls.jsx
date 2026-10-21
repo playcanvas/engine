@@ -22,14 +22,14 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from 'playcanvas';
  * @returns {ReactElement} The control panel.
  */
 export function Controls({ observer }) {
-    // the size is offered only while the grid isn't infinite
+    // size only when not infinite
     const [infinite, setInfinite] = useState(observer.get('grid.infinite') ?? true);
     useEffect(() => {
         const event = observer.on('grid.infinite:set', setInfinite);
         return () => event?.unbind();
     }, [observer]);
 
-    // the axis thickness is offered only while the axes are shown
+    // axis thickness only when axes show
     const [showAxes, setShowAxes] = useState(observer.get('grid.showAxes') ?? true);
     useEffect(() => {
         const event = observer.on('grid.showAxes:set', setShowAxes);

@@ -1,6 +1,6 @@
 import { Color, Grid as EngineGrid, Script, Vec2 } from 'playcanvas';
 
-// whether the deprecated resolution has been warned about
+// warn once about the deprecated resolution
 let resolutionWarned = false;
 
 /**
@@ -8,15 +8,8 @@ let resolutionWarned = false;
  */
 
 /**
- * Renders an anti-aliased reference grid with the engine's {@link EngineGrid | Grid}. Lines
- * through the origin are drawn in {@link Grid#colorX}, {@link Grid#colorY} and
- * {@link Grid#colorZ}. The levels of lines follow the zoom, as in Blender, and the grid follows
- * each camera that renders it and fades out with distance, unless {@link Grid#infinite} is cleared
- * to make it as large as the entity's scale.
- *
- * The script creates a render component on its entity. The grid lies at the entity's position and
- * rotation. Its scale sizes a grid that isn't infinite, but never its cells, so use
- * {@link Grid#spacing} for those.
+ * Renders the engine's {@link EngineGrid | Grid} through a render component on its entity. The
+ * entity's scale sizes the grid when it isn't {@link Grid#infinite}.
  *
  * @example
  * gridEntity.addComponent('script');
@@ -32,21 +25,21 @@ class Grid extends Script {
 
     /**
      * @type {number}
-     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @deprecated Has no effect, as the levels follow the zoom.
      * @ignore
      */
     static RESOLUTION_LOW = 0;
 
     /**
      * @type {number}
-     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @deprecated Has no effect, as the levels follow the zoom.
      * @ignore
      */
     static RESOLUTION_MEDIUM = 1;
 
     /**
      * @type {number}
-     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @deprecated Has no effect, as the levels follow the zoom.
      * @ignore
      */
     static RESOLUTION_HIGH = 2;
@@ -65,7 +58,7 @@ class Grid extends Script {
     constructor(args) {
         super(args);
 
-        // the grid exists from construction, so it is released even if the script never initializes
+        // release the grid even if the script never initializes
         this.on('destroy', () => {
             if (this.entity.render?.meshInstances === this._grid.meshInstances) {
                 this.entity.removeComponent('render');
@@ -97,7 +90,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Plane
-     * @description The plane the grid lies on, in the entity's local space: 'xz', 'xy' or 'yz'.
+     * @description The plane in the entity's local space: 'xz', 'xy' or 'yz'.
      * @type {string}
      * @default xz
      */
@@ -112,7 +105,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Spacing
-     * @description The cell size in world units the levels of lines are scaled from.
+     * @description The cell size the levels are scaled from, in world units.
      * @type {number}
      * @default 10
      */
@@ -127,8 +120,8 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Subdivisions
-     * @description How many cells of each level span a cell of the level above, or 1 for a single
-     * fixed level of cells of the spacing.
+     * @description How many cells of a level fit across one of the level above, or 1 for a
+     * single fixed level.
      * @type {number}
      * @default 10
      */
@@ -143,8 +136,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Infinite
-     * @description Whether the grid has no edge, following the camera. When false, the grid is
-     * as large as the entity's scale along the two axes of its plane, centered on the entity.
+     * @description Whether the grid has no edge. When false, the entity's scale sizes it.
      * @type {boolean}
      * @default true
      */
@@ -159,7 +151,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Show Axes
-     * @description Whether the lines through the origin are drawn in the colors of their axes.
+     * @description Whether the lines through the origin use the axis colors.
      * @type {boolean}
      * @default true
      */
@@ -174,7 +166,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Axis Line Thickness
-     * @description The thickness of the lines through the origin in CSS pixels.
+     * @description The axis line thickness in CSS pixels.
      * @type {number}
      * @default 2
      */
@@ -189,7 +181,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Major Line Thickness
-     * @description The thickness of the major lines in CSS pixels.
+     * @description The major line thickness in CSS pixels.
      * @type {number}
      * @default 1.5
      */
@@ -204,7 +196,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Minor Line Thickness
-     * @description The thickness of the minor lines in CSS pixels.
+     * @description The minor line thickness in CSS pixels.
      * @type {number}
      * @default 1
      */
@@ -219,9 +211,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Fade Range
-     * @description The distances from the camera where the grid starts to fade out and where it
-     * has faded out completely, the far one held inside 90% of the camera's far clip. A larger gap
-     * fades the grid more softly.
+     * @description The distances from the camera where the grid starts and finishes fading out.
      * @type {Vec2}
      * @default [400, 1000]
      */
@@ -238,9 +228,8 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Contrast
-     * @description Whether the lines are black over a light part of the scene and white over a
-     * dark one, instead of their colors, so they read against anything. The camera must capture
-     * the scene color (CameraComponent#requestSceneColorMap).
+     * @description Whether the lines are black over light parts of the scene and white over dark
+     * ones. Needs the camera's scene color map.
      * @type {boolean}
      * @default false
      */
@@ -255,7 +244,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Axis Color X
-     * @description The color of the line through the origin along the X axis.
+     * @description The X axis line color.
      * @type {Color}
      * @default [1, 0.3, 0.3, 1]
      */
@@ -272,8 +261,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Axis Color Y
-     * @description The color of the line through the origin along the Y axis, on the XY and YZ
-     * planes.
+     * @description The Y axis line color.
      * @type {Color}
      * @default [0.3, 1, 0.3, 1]
      */
@@ -290,7 +278,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Axis Color Z
-     * @description The color of the line through the origin along the Z axis.
+     * @description The Z axis line color.
      * @type {Color}
      * @default [0.3, 0.3, 1, 1]
      */
@@ -307,7 +295,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Major Line Color
-     * @description The color of the major lines. The alpha scales their opacity.
+     * @description The major line color. The alpha sets the opacity.
      * @type {Color}
      * @default [0.8, 0.8, 0.8, 0.6]
      */
@@ -324,7 +312,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Minor Line Color
-     * @description The color of the minor lines. The alpha scales their opacity.
+     * @description The minor line color. The alpha sets the opacity.
      * @type {Color}
      * @default [0.6, 0.6, 0.6, 0.4]
      */
@@ -341,8 +329,8 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Depth Offset
-     * @description The fraction of the distance to the camera the depth of the grid moves toward it
-     * by, so a surface on the grid's plane, such as a floor, doesn't hide it.
+     * @description The fraction of the camera distance the grid's depth moves toward the camera
+     * by, so a coplanar surface doesn't hide it.
      * @type {number}
      * @default 0.001
      */
@@ -357,7 +345,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Depth Test
-     * @description Whether the scene hides the grid where it is in front of it.
+     * @description Whether the grid is depth tested against the scene.
      * @type {boolean}
      * @default true
      */
@@ -372,8 +360,8 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Depth Write
-     * @description Whether the grid writes the depth of its visible lines, so it
-     * hides the transparent meshes and gaussian splats behind it, which draw after it.
+     * @description Whether the lines write depth, hiding transparent meshes and gaussian splats
+     * behind them.
      * @type {boolean}
      * @default false
      */
@@ -388,8 +376,7 @@ class Grid extends Script {
     /**
      * @attribute
      * @title Depth Dither
-     * @description Whether the depth the grid writes is dithered by how much of each pixel its
-     * lines cover, so faint lines hide a share of the gaussian splats behind them.
+     * @description Whether the written depth is dithered by line coverage, for gaussian splats.
      * @type {boolean}
      * @default false
      */
@@ -403,13 +390,13 @@ class Grid extends Script {
 
     /**
      * @type {number}
-     * @deprecated The levels of lines now follow the zoom; set {@link Grid#subdivisions} instead.
+     * @deprecated Has no effect, as the levels follow the zoom.
      * @ignore
      */
     set resolution(value) {
         if (!resolutionWarned) {
             resolutionWarned = true;
-            console.warn('Grid#resolution is deprecated and has no effect: the levels of lines now follow the zoom. Set Grid#subdivisions instead.');
+            console.warn('Grid#resolution is deprecated and has no effect, as the levels follow the zoom.');
         }
     }
 

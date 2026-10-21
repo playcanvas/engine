@@ -6,7 +6,7 @@ import { PlaneGeometry } from '../../scene/geometry/plane-geometry.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Mesh } from '../../scene/mesh.js';
-import { fragmentGLSL, fragmentWGSL, vertexGLSL, vertexWGSL } from './grid-shaders.js';
+import { fragmentGLSL, fragmentWGSL, vertexGLSL, vertexWGSL } from './shaders.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -15,24 +15,18 @@ import { fragmentGLSL, fragmentWGSL, vertexGLSL, vertexWGSL } from './grid-shade
 
 /**
  * @typedef {object} GridTheme
- * @property {{ x: Color, y: Color, z: Color }} axis - The colors of the lines through the origin
- * along each axis.
- * @property {Color} major - The color of the major lines.
- * @property {Color} minor - The color of the minor lines.
+ * @property {{ x: Color, y: Color, z: Color }} axis - The axis line colors.
+ * @property {Color} major - The major line color.
+ * @property {Color} minor - The minor line color.
  */
 
 /**
- * The plane of an {@link Grid}, in the local space of the node it is drawn at. This can be
- * one of the following:
- *
- * - 'xz': The XZ plane, a ground plane
- * - 'xy': The XY plane, facing Z
- * - 'yz': The YZ plane, facing X
+ * The plane of a {@link Grid} in its node's local space: 'xz', 'xy' or 'yz'.
  *
  * @typedef {'xz' | 'xy' | 'yz'} GridPlane
  */
 
-// the local axes of the grid's u and v coordinates on each plane
+// local axes of each plane's u and v coordinates
 const PLANES = {
     xz: [[1, 0, 0], [0, 0, 1]],
     xy: [[1, 0, 0], [0, 1, 0]],
@@ -40,17 +34,9 @@ const PLANES = {
 };
 
 /**
- * Draws an anti-aliased reference grid using the "pristine grid" technique. The levels of lines
- * follow the zoom, as in Blender: each level's cells are {@link Grid#spacing} times a
- * power of {@link Grid#subdivisions}, the finest fades in as its cells grow on screen and
- * the coarser ones turn major, so the grid keeps the same density at any distance. The lines
- * through the origin are drawn in the color of their axis, and lines keep their thickness in
- * pixels. By default the grid has no edge: the plane follows each camera that renders it and
- * fades out with the distance from that camera. Clear {@link Grid#infinite} for a grid the size of
- * its node's scale.
- *
- * The grid lies at the position and rotation of the node of its mesh instances. The node's scale
- * sizes a grid that isn't infinite, but never its cells, so use {@link Grid#spacing} for those.
+ * An anti-aliased reference grid whose levels of lines follow the zoom. It follows the camera and
+ * fades out with distance, or is sized by its node's scale when not {@link Grid#infinite}. It lies
+ * at its node's position and rotation; use {@link Grid#spacing} to size the cells.
  *
  * ```javascript
  * const grid = new Grid(app.graphicsDevice);
@@ -80,7 +66,7 @@ class Grid {
     _material;
 
     /**
-     * Material of the depth pass, which writes the depth of the lines with no color.
+     * Writes the depth of the lines.
      *
      * @type {ShaderMaterial}
      * @private
@@ -137,7 +123,6 @@ class Grid {
      */
     _subdivisions = 10;
 
-
     /**
      * @type {number}
      * @private
@@ -175,7 +160,6 @@ class Grid {
      * @private
      */
     _infinite = true;
-
 
     /**
      * @type {number}
@@ -224,8 +208,8 @@ class Grid {
         this._material = this._createMaterial(false);
         this._depthMaterial = this._createMaterial(true);
 
-        // the plane moves with the camera in the vertex shader, so its bounds mean nothing, and it
-        // draws first of the transparent meshes, so its depth can hide those drawn after it
+        // moved in the vertex shader, so never culled; drawn first of the transparents so its depth
+        // can hide them
         const mesh = Mesh.fromGeometry(device, new PlaneGeometry());
         this._meshInstances = [this._material, this._depthMaterial].map((material) => {
             const meshInstance = new MeshInstance(mesh, material);
@@ -249,10 +233,8 @@ class Grid {
     }
 
     /**
-     * Gets the mesh instances of the grid: the lines, and the pass that writes their depth when
-     * {@link Grid#depthWrite} is set. Add both to a render component or a layer. They have
-     * no node, so a render component gives them its entity; give them one when adding them to a
-     * layer directly.
+     * Gets the mesh instances to add to a render component or layer: the lines and their depth
+     * pass. They have no node, so set one when adding them to a layer directly.
      *
      * @type {MeshInstance[]}
      */
@@ -261,7 +243,7 @@ class Grid {
     }
 
     /**
-     * Gets the current theme for the grid.
+     * Gets the theme.
      *
      * @type {GridTheme}
      */
@@ -270,11 +252,10 @@ class Grid {
     }
 
     /**
-     * Sets the theme or partial theme for the grid. The alpha of each color scales the opacity of
-     * its lines.
+     * Sets the theme or part of it. Each color's alpha sets its lines' opacity.
      *
      * @param {{ axis?: Partial<GridTheme['axis']>, major?: Color, minor?: Color }} partial - The
-     * partial theme to set.
+     * theme to set.
      * @example
      * grid.setTheme({
      *     axis: { x: new Color(1, 0, 0) },
@@ -301,7 +282,7 @@ class Grid {
     }
 
     /**
-     * Sets the plane the grid lies on, in the local space of its node. Defaults to 'xz'.
+     * Sets the plane in the node's local space. Defaults to 'xz'.
      *
      * @type {GridPlane}
      */
@@ -314,7 +295,7 @@ class Grid {
     }
 
     /**
-     * Gets the plane the grid lies on.
+     * Gets the plane.
      *
      * @type {GridPlane}
      */
@@ -323,8 +304,7 @@ class Grid {
     }
 
     /**
-     * Sets whether the lines through the origin are drawn in the colors of their axes. Defaults
-     * to true.
+     * Sets whether the lines through the origin use the axis colors. Defaults to true.
      *
      * @type {boolean}
      */
@@ -334,7 +314,7 @@ class Grid {
     }
 
     /**
-     * Gets whether the lines through the origin are drawn in the colors of their axes.
+     * Gets whether the lines through the origin use the axis colors.
      *
      * @type {boolean}
      */
@@ -343,10 +323,8 @@ class Grid {
     }
 
     /**
-     * Sets whether the lines take a contrasting color from the scene behind them instead of their
-     * theme color: black over a light part of the scene and white over a dark one, so they read
-     * against anything. The lines through the origin keep their axis colors, and the theme alpha
-     * still sets the opacity. The camera must capture the scene color, see
+     * Sets whether the lines are black over light parts of the scene and white over dark ones,
+     * instead of their theme colors. Needs the scene color map, see
      * {@link CameraComponent#requestSceneColorMap}. Defaults to false.
      *
      * @type {boolean}
@@ -358,7 +336,7 @@ class Grid {
     }
 
     /**
-     * Gets whether the lines take a contrasting color from the scene behind them.
+     * Gets whether the lines contrast with the scene.
      *
      * @type {boolean}
      */
@@ -367,8 +345,7 @@ class Grid {
     }
 
     /**
-     * Sets the cell size in world units the levels of lines are scaled from: each level's cells are
-     * this times a power of {@link Grid#subdivisions}. Defaults to 10.
+     * Sets the cell size the levels are scaled from, in world units. Defaults to 10.
      *
      * @type {number}
      */
@@ -378,7 +355,7 @@ class Grid {
     }
 
     /**
-     * Gets the size of the major cells in world units.
+     * Gets the cell size the levels are scaled from.
      *
      * @type {number}
      */
@@ -387,8 +364,8 @@ class Grid {
     }
 
     /**
-     * Sets how many cells of each level span a cell of the level above. Set to 1 for a single fixed
-     * level of cells of {@link Grid#spacing} that doesn't follow the zoom. Defaults to 10.
+     * Sets how many cells of a level fit across one of the level above, or 1 for a single fixed
+     * level. Defaults to 10.
      *
      * @type {number}
      */
@@ -398,7 +375,7 @@ class Grid {
     }
 
     /**
-     * Gets how many cells of each level span a cell of the level above.
+     * Gets how many cells of a level fit across one of the level above.
      *
      * @type {number}
      */
@@ -407,7 +384,7 @@ class Grid {
     }
 
     /**
-     * Sets the thickness of the major lines in CSS pixels. Defaults to 1.5.
+     * Sets the major line thickness in CSS pixels. Defaults to 1.5.
      *
      * @type {number}
      */
@@ -417,7 +394,7 @@ class Grid {
     }
 
     /**
-     * Gets the thickness of the major lines in CSS pixels.
+     * Gets the major line thickness in CSS pixels.
      *
      * @type {number}
      */
@@ -426,7 +403,7 @@ class Grid {
     }
 
     /**
-     * Sets the thickness of the minor lines in CSS pixels. Defaults to 1.
+     * Sets the minor line thickness in CSS pixels. Defaults to 1.
      *
      * @type {number}
      */
@@ -436,7 +413,7 @@ class Grid {
     }
 
     /**
-     * Gets the thickness of the minor lines in CSS pixels.
+     * Gets the minor line thickness in CSS pixels.
      *
      * @type {number}
      */
@@ -445,7 +422,7 @@ class Grid {
     }
 
     /**
-     * Sets the thickness of the lines through the origin in CSS pixels. Defaults to 2.
+     * Sets the axis line thickness in CSS pixels. Defaults to 2.
      *
      * @type {number}
      */
@@ -455,7 +432,7 @@ class Grid {
     }
 
     /**
-     * Gets the thickness of the lines through the origin in CSS pixels.
+     * Gets the axis line thickness in CSS pixels.
      *
      * @type {number}
      */
@@ -464,11 +441,8 @@ class Grid {
     }
 
     /**
-     * Sets the distances from the camera, in world units, where the grid starts to fade out and
-     * where it has faded out completely. A larger gap between them fades the grid more softly; with
-     * no gap the grid stops with a hard edge. An infinite grid ends at the far distance, which is
-     * held inside 90% of the camera's far clip, so the far clip never cuts the grid. Defaults to
-     * [400, 1000].
+     * Sets the distances from the camera where the grid starts and finishes fading out. The end is
+     * kept within 90% of the far clip. Defaults to [400, 1000].
      *
      * @type {Vec2}
      */
@@ -478,7 +452,7 @@ class Grid {
     }
 
     /**
-     * Gets the distances from the camera where the grid starts to fade out and has faded out.
+     * Gets the distances from the camera where the grid starts and finishes fading out.
      *
      * @type {Vec2}
      */
@@ -487,9 +461,8 @@ class Grid {
     }
 
     /**
-     * Sets whether the grid has no edge, following the camera. When false, the grid is as large as
-     * its node's scale along the two axes of its plane (x and z on the 'xz' plane), centered on the
-     * node. Defaults to true.
+     * Sets whether the grid has no edge. When false, it is sized by its node's scale along the
+     * plane's axes. Defaults to true.
      *
      * @type {boolean}
      */
@@ -508,10 +481,8 @@ class Grid {
     }
 
     /**
-     * Sets the fraction of the distance to the camera the grid's depth is moved toward it by. The
-     * grid stays where it is on screen, but a surface on the grid's plane, such as a floor, no
-     * longer hides it, while what stands on that surface still does. Defaults to 0.001, which
-     * moves the grid 1 cm toward a camera 10 m away.
+     * Sets the fraction of the camera distance the grid's depth moves toward the camera by, so a
+     * coplanar surface doesn't hide it. Defaults to 0.001.
      *
      * @type {number}
      */
@@ -521,7 +492,7 @@ class Grid {
     }
 
     /**
-     * Gets the fraction of the distance to the camera the grid's depth is moved toward it by.
+     * Gets the fraction of the camera distance the grid's depth moves toward the camera by.
      *
      * @type {number}
      */
@@ -530,7 +501,7 @@ class Grid {
     }
 
     /**
-     * Sets whether the scene hides the grid where it is in front of it. Defaults to true.
+     * Sets whether the grid is depth tested against the scene. Defaults to true.
      *
      * @type {boolean}
      */
@@ -543,7 +514,7 @@ class Grid {
     }
 
     /**
-     * Gets whether the scene hides the grid where it is in front of it.
+     * Gets whether the grid is depth tested against the scene.
      *
      * @type {boolean}
      */
@@ -552,10 +523,8 @@ class Grid {
     }
 
     /**
-     * Sets whether the grid writes its depth, so it hides what draws after it, such as
-     * transparent meshes and gaussian splats behind it. The grid draws first of the transparent
-     * meshes of a layer sorted back to front. Only lines covering most of a pixel write depth, so
-     * faint and distant lines hide nothing. Defaults to false.
+     * Sets whether the lines write depth, hiding transparent meshes and gaussian splats behind
+     * them. Defaults to false.
      *
      * @type {boolean}
      */
@@ -565,7 +534,7 @@ class Grid {
     }
 
     /**
-     * Gets whether the grid writes its depth.
+     * Gets whether the lines write depth.
      *
      * @type {boolean}
      */
@@ -574,11 +543,8 @@ class Grid {
     }
 
     /**
-     * Sets whether the depth the grid writes is dithered by how much of each pixel its lines cover,
-     * so faint and distant lines hide a share of what is behind them instead of none of it. Suits
-     * gaussian splats, which blend with no depth of their own. When false, only lines covering most
-     * of a pixel write depth, which keeps the lines clean over meshes. Applies when
-     * {@link Grid#depthWrite} is set. Defaults to false.
+     * Sets whether the written depth is dithered by line coverage, so faint lines partly hide what
+     * is behind them. Suits gaussian splats. Defaults to false.
      *
      * @type {boolean}
      */
@@ -589,7 +555,7 @@ class Grid {
     }
 
     /**
-     * Gets whether the depth the grid writes is dithered.
+     * Gets whether the written depth is dithered.
      *
      * @type {boolean}
      */
@@ -617,10 +583,9 @@ class Grid {
     }
 
     /**
-     * Creates a material of the grid.
+     * Creates a grid material.
      *
-     * @param {boolean} depth - Whether the material writes the depth of the lines instead of
-     * their color.
+     * @param {boolean} depth - Whether it writes depth instead of color.
      * @returns {ShaderMaterial} The material.
      * @private
      */
@@ -635,7 +600,7 @@ class Grid {
                 vertex_position: SEMANTIC_POSITION
             }
         });
-        // both draw with the transparent meshes, after the opaque ones the depth must not hide
+        // both blended, so they draw after the opaque meshes
         material.cull = CULLFACE_NONE;
         material.blendType = BLEND_NORMAL;
         material.depthWrite = depth;
@@ -687,11 +652,7 @@ class Grid {
         this._setParameter('uSubdivisions', this._subdivisions);
     }
 
-    /**
-     * Reads the ratio of device to CSS pixels the canvas is drawn at.
-     *
-     * @private
-     */
+    /** @private */
     _updatePixelRatio() {
         const device = this._device;
         device.updateClientRect();
@@ -728,8 +689,7 @@ class Grid {
     }
 
     /**
-     * Destroys the grid's mesh instances and materials. Remove the mesh instances from any render
-     * component or layer first.
+     * Destroys the mesh instances and materials. Remove the mesh instances from use first.
      */
     destroy() {
         this._device.off('resizecanvas', this._updatePixelRatio);
