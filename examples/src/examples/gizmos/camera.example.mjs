@@ -163,7 +163,11 @@ data.set('gizmo', {
     theme: {
         base: gizmo.theme.base.toArray(),
         occluded: gizmo.theme.occluded.toArray(),
-        fill: gizmo.theme.fill.toArray()
+        fill: gizmo.theme.fill.toArray(),
+        primary: gizmo.theme.primary.toArray(),
+        secondary: gizmo.theme.secondary.toArray(),
+        tertiary: gizmo.theme.tertiary.toArray(),
+        backdrop: gizmo.theme.backdrop.toArray()
     },
     lineThickness: gizmo.lineThickness,
     handleSize: gizmo.handleSize,

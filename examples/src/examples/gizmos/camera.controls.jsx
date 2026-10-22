@@ -48,6 +48,34 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'gizmo.theme.fill' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Primary'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.primary' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Secondary'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.secondary' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Tertiary'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.tertiary' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Backdrop'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.backdrop' }}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Layers'>
                 <LabelGroup text='Handles'>

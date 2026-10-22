@@ -1,7 +1,7 @@
-import { Color } from '../../../core/math/color.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
+import { COLOR_BACKDROP } from '../color.js';
 import { Pool } from '../pool.js';
 
 /**
@@ -21,7 +21,6 @@ const GLYPH_TO_VIEW = new Quat().setFromEulerAngles(90, 0, 0);
 
 // backdrop radius as a factor of the icon size
 const ICON_BACKDROP_RADIUS = 7 / 12;
-const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 
 /**
  * Camera-facing icons of a constant screen size, drawn with {@link OverlayRenderer} and picked by
@@ -67,7 +66,8 @@ class OverlayIcons {
     }
 
     /**
-     * Adds an icon at a point, a glyph over a dark backdrop that {@link OverlayIcons#pick} picks.
+     * Adds an icon at a point, a glyph over a backdrop in the theme color that
+     * {@link OverlayIcons#pick} picks.
      *
      * @param {OverlayIcon} kind - The icon.
      * @param {Vec3} position - The world position.
@@ -86,7 +86,8 @@ class OverlayIcons {
             tmpV.copy(entity.forward);
         }
         tmpV.mulScalar(renderer.pixels(position, 1)).add(position);
-        const backdrop = renderer.disc(tmpV, tmpQ.setFromDirections(Vec3.UP, entity.forward), 2 * ICON_BACKDROP_RADIUS * size, ICON_BACKDROP.a, ICON_BACKDROP);
+        const color = renderer.theme.backdrop ?? COLOR_BACKDROP;
+        const backdrop = renderer.disc(tmpV, tmpQ.setFromDirections(Vec3.UP, entity.forward), 2 * ICON_BACKDROP_RADIUS * size, color.a, color);
 
         renderer.glyph(kind, position, tmpQ.copy(entity.getRotation()).mul(GLYPH_TO_VIEW), size);
 

@@ -1,4 +1,5 @@
 import { Color } from '../../core/math/color.js';
+import { COLOR_BACKDROP } from './color.js';
 import { Gizmo } from './gizmo.js';
 import { ICON_GLYPHS } from './overlay/icon-glyphs.js';
 import { OverlayRenderer } from './overlay/overlay-renderer.js';
@@ -14,6 +15,7 @@ import { OverlayRenderer } from './overlay/overlay-renderer.js';
  * @typedef {object} IconGizmoTheme
  * @property {Color} base - The color where the icons are visible.
  * @property {Color} occluded - The color where the scene hides the icons.
+ * @property {Color} backdrop - The color of the disc behind each icon, which is clicked to select it.
  */
 
 /**
@@ -66,7 +68,8 @@ class IconGizmo extends Gizmo {
      */
     _theme = {
         base: Color.WHITE.clone(),
-        occluded: new Color(1, 1, 1, 0.2)
+        occluded: new Color(1, 1, 1, 0.2),
+        backdrop: COLOR_BACKDROP.clone()
     };
 
     /**

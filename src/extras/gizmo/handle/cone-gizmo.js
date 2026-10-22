@@ -1,6 +1,5 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
-import { COLOR_AMBER, COLOR_CYAN } from '../color.js';
 import { ShapeGizmo } from './shape-gizmo.js';
 
 /**
@@ -95,12 +94,12 @@ class ConeGizmo extends ShapeGizmo {
         for (let i = 0; i < 4; i++) {
             const dir = r.transformVector(i & 1 ? Vec3.FORWARD : Vec3.RIGHT, tmpV5).mulScalar(i < 2 ? 1 : -1);
             const pos = tmpV6.copy(dir).mulScalar(radius).add(base);
-            if (this._handle(pos, COLOR_AMBER, null, 'radius', i, base, dir)) {
-                this._readoutAt(pos, 'r', COLOR_AMBER, radius);
+            if (this._handle(pos, this._theme.primary, null, 'radius', i, base, dir)) {
+                this._readoutAt(pos, 'r', this._theme.primary, radius);
             }
         }
-        if (this._handle(apex, COLOR_CYAN, null, 'height', 0, c, up)) {
-            this._readoutAt(apex, 'h', COLOR_CYAN, height);
+        if (this._handle(apex, this._theme.secondary, null, 'height', 0, c, up)) {
+            this._readoutAt(apex, 'h', this._theme.secondary, height);
         }
     }
 

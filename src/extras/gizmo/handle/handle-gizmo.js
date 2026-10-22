@@ -6,7 +6,7 @@ import { Plane } from '../../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { DragGizmo } from '../drag-gizmo.js';
 import { Gizmo } from '../gizmo.js';
-import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW } from '../color.js';
+import { COLOR_AMBER, COLOR_BACKDROP, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW } from '../color.js';
 import { OverlayRenderer } from '../overlay/overlay-renderer.js';
 import { Pool } from '../pool.js';
 
@@ -24,6 +24,14 @@ import { Pool } from '../pool.js';
  * @property {Color} base - The color where the shapes are visible.
  * @property {Color} occluded - The color where the scene hides the shapes.
  * @property {Color} fill - The color of filled volumes. An alpha of 0 skips the volumes.
+ * @property {Color} primary - The color of a hovered or dragged radius, range, width or far clip
+ * handle, and of its guide and readout label.
+ * @property {Color} secondary - The color of a hovered or dragged height, near clip or inner cone
+ * angle handle, and of its guide and readout label.
+ * @property {Color} tertiary - The color of a hovered or dragged depth, field of view or outer cone
+ * angle handle, and of its guide and readout label.
+ * @property {Color} corner - The color of a hovered or dragged box corner handle.
+ * @property {Color} backdrop - The color of the disc behind each icon, which is clicked to select it.
  */
 
 /**
@@ -76,7 +84,6 @@ const SPHERE_AXES = [Vec3.RIGHT, Vec3.LEFT, Vec3.UP, Vec3.DOWN, Vec3.BACK, Vec3.
 
 const BOX_AXES = /** @type {const} */ (['x', 'y', 'z']);
 const BOX_UNITS = [Vec3.RIGHT, Vec3.UP, Vec3.BACK];
-const BOX_FACE_COLORS = [COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA];
 const BOX_FACE_LABELS = ['W', 'H', 'D'];
 const BOX_FACES = 6;
 const BOX_MIN_HALF = 0.005;
@@ -178,8 +185,21 @@ class HandleGizmo extends DragGizmo {
     _theme = {
         base: Color.WHITE.clone(),
         occluded: new Color(1, 1, 1, 0.2),
-        fill: new Color(1, 1, 1, 0.05)
+        fill: new Color(1, 1, 1, 0.05),
+        primary: COLOR_AMBER.clone(),
+        secondary: COLOR_CYAN.clone(),
+        tertiary: COLOR_MAGENTA.clone(),
+        corner: COLOR_YELLOW.clone(),
+        backdrop: COLOR_BACKDROP.clone()
     };
+
+    /**
+     * The theme colors of the box faces along each axis, updated with the theme.
+     *
+     * @type {Color[]}
+     * @private
+     */
+    _faceColors = [this._theme.primary, this._theme.secondary, this._theme.tertiary];
 
     /**
      * Whether to show handles that edit the shapes. Defaults to true.
@@ -387,6 +407,13 @@ class HandleGizmo extends DragGizmo {
      * @param {Partial<HandleGizmoTheme>} partial - The partial theme to set.
      * @example
      * gizmo.setTheme({ occluded: new Color(1, 1, 1, 0.5) });
+     * @example
+     * // accents told apart without red and green
+     * gizmo.setTheme({
+     *     primary: new Color(0.9, 0.6, 0),
+     *     secondary: new Color(0.35, 0.7, 0.9),
+     *     tertiary: new Color(0.8, 0.6, 0.7)
+     * });
      */
     setTheme(partial) {
         this._renderer.applyTheme(partial);
@@ -667,8 +694,8 @@ class HandleGizmo extends DragGizmo {
         for (let i = 0; i < SPHERE_AXES.length; i++) {
             const dir = rotation.transformVector(SPHERE_AXES[i], tmpV1);
             const pos = tmpV2.copy(dir).mulScalar(radius).add(center);
-            if (this._handle(pos, COLOR_AMBER, node, name, i, center, dir)) {
-                this._readoutAt(pos, 'r', COLOR_AMBER, radius);
+            if (this._handle(pos, this._theme.primary, node, name, i, center, dir)) {
+                this._readoutAt(pos, 'r', this._theme.primary, radius);
             }
         }
     }
@@ -714,8 +741,8 @@ class HandleGizmo extends DragGizmo {
                 const k = i >> 1;
                 const dir = tmpV2.copy(boxAxes[k]).mulScalar(i & 1 ? -1 : 1);
                 const pos = tmpV1.copy(dir).mulScalar(halfExtents[BOX_AXES[k]]).add(center);
-                if (this._handle(pos, BOX_FACE_COLORS[k], null, 'size', i, center, dir)) {
-                    this._readoutAt(pos, BOX_FACE_LABELS[k], BOX_FACE_COLORS[k], 2 * (halfExtents[BOX_AXES[k]] - pad));
+                if (this._handle(pos, this._faceColors[k], null, 'size', i, center, dir)) {
+                    this._readoutAt(pos, BOX_FACE_LABELS[k], this._faceColors[k], 2 * (halfExtents[BOX_AXES[k]] - pad));
                 }
             }
         }
@@ -724,10 +751,10 @@ class HandleGizmo extends DragGizmo {
             for (let i = 0; i < boxCorners.length; i++) {
                 const pos = boxCorners[i];
                 const hovered = options.uniform ?
-                    this._handle(pos, COLOR_YELLOW, null, 'size', BOX_FACES + i, center, tmpV2.sub2(pos, center).normalize()) :
-                    this._handle(pos, COLOR_YELLOW, null, 'size', BOX_FACES + i, pos, forward, true);
+                    this._handle(pos, this._theme.corner, null, 'size', BOX_FACES + i, center, tmpV2.sub2(pos, center).normalize()) :
+                    this._handle(pos, this._theme.corner, null, 'size', BOX_FACES + i, pos, forward, true);
                 if (hovered) {
-                    const html = BOX_FACE_LABELS.map((label, k) => this._readoutValue(label, BOX_FACE_COLORS[k], 2 * (halfExtents[BOX_AXES[k]] - pad)));
+                    const html = BOX_FACE_LABELS.map((label, k) => this._readoutValue(label, this._faceColors[k], 2 * (halfExtents[BOX_AXES[k]] - pad)));
                     this._readoutHtmlAt(pos, html.join('  '));
                 }
             }

@@ -73,6 +73,7 @@ const SHAPE_DRAW_ORDER = 1;
  * @property {Color} base - The color where the shapes are visible.
  * @property {Color} occluded - The color where the scene hides the shapes.
  * @property {Color} [fill] - The color of filled volumes, needed only to place them.
+ * @property {Color} [backdrop] - The color of the icon backdrops, needed only to place icons.
  */
 
 /**
@@ -122,6 +123,15 @@ class OverlayRenderer {
      * @private
      */
     _theme;
+
+    /**
+     * Gets the theme the shapes follow.
+     *
+     * @type {OverlayRendererTheme}
+     */
+    get theme() {
+        return this._theme;
+    }
 
     /**
      * @type {ShapePool[]}

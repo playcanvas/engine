@@ -3,7 +3,6 @@ import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
-import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from '../color.js';
 import { HandleGizmo } from './handle-gizmo.js';
 
 /**
@@ -119,8 +118,8 @@ class CameraGizmo extends HandleGizmo {
         renderer.cone('triangle', top, tmpQ1.copy(rotation).mul(CONE_TO_VIEW), triangle, 0.9, false);
 
         // the view axis, colored while a clip handle is active
-        const axis = this._active(entity, 'nearClip', 0) ? COLOR_CYAN :
-            this._active(entity, 'farClip', 0) ? COLOR_AMBER : null;
+        const axis = this._active(entity, 'nearClip', 0) ? this._theme.secondary :
+            this._active(entity, 'farClip', 0) ? this._theme.primary : null;
         renderer.dashed(nearCenter, farCenter, axis ? 1 : 0.55, axis ? 1 : 0.6, axis);
         this._icon('camera', position, entity);
 
@@ -130,19 +129,19 @@ class CameraGizmo extends HandleGizmo {
 
         // the view handle sits on the far edge the field of view spans
         const forward = entity.forward;
-        if (this._handle(nearCenter, COLOR_CYAN, entity, 'nearClip', 0, position, forward, false, false)) {
-            this._readoutAt(nearCenter, 'N', COLOR_CYAN, near);
+        if (this._handle(nearCenter, this._theme.secondary, entity, 'nearClip', 0, position, forward, false, false)) {
+            this._readoutAt(nearCenter, 'N', this._theme.secondary, near);
         }
-        if (this._handle(farCenter, COLOR_AMBER, entity, 'farClip', 0, position, forward, false, false)) {
-            this._readoutAt(farCenter, 'F', COLOR_AMBER, far);
+        if (this._handle(farCenter, this._theme.primary, entity, 'farClip', 0, position, forward, false, false)) {
+            this._readoutAt(farCenter, 'F', this._theme.primary, far);
         }
         const horizontal = perspective && camera.horizontalFov;
         const edge = horizontal ? tmpV5.lerp(corners[4], corners[5], 0.5) : tmpV5.lerp(corners[5], corners[6], 0.5);
-        if (this._handle(edge, COLOR_MAGENTA, entity, perspective ? 'fov' : 'orthoHeight', 0, farCenter, horizontal ? entity.right : entity.up)) {
+        if (this._handle(edge, this._theme.tertiary, entity, perspective ? 'fov' : 'orthoHeight', 0, farCenter, horizontal ? entity.right : entity.up)) {
             if (perspective) {
-                this._readoutAt(edge, 'θ', COLOR_MAGENTA, camera.fov, '°');
+                this._readoutAt(edge, 'θ', this._theme.tertiary, camera.fov, '°');
             } else {
-                this._readoutAt(edge, 'h', COLOR_MAGENTA, camera.orthoHeight);
+                this._readoutAt(edge, 'h', this._theme.tertiary, camera.orthoHeight);
             }
         }
     }

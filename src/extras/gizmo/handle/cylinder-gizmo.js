@@ -1,6 +1,5 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
-import { COLOR_AMBER, COLOR_CYAN } from '../color.js';
 import { ShapeGizmo } from './shape-gizmo.js';
 
 /**
@@ -103,15 +102,15 @@ class CylinderGizmo extends ShapeGizmo {
         }
         for (let i = 0; i < 4; i++) {
             const pos = tmpV6.copy(sides[i]).mulScalar(radius).add(c);
-            if (this._handle(pos, COLOR_AMBER, null, 'radius', i, c, sides[i])) {
-                this._readoutAt(pos, 'r', COLOR_AMBER, radius);
+            if (this._handle(pos, this._theme.primary, null, 'radius', i, c, sides[i])) {
+                this._readoutAt(pos, 'r', this._theme.primary, radius);
             }
         }
         for (let i = 0; i < 2; i++) {
             const dir = i ? up.mulScalar(-1) : up;
             const pos = tmpV6.copy(dir).mulScalar(0.5 * height).add(c);
-            if (this._handle(pos, COLOR_CYAN, null, 'height', i, c, dir)) {
-                this._readoutAt(pos, 'h', COLOR_CYAN, height);
+            if (this._handle(pos, this._theme.secondary, null, 'height', i, c, dir)) {
+                this._readoutAt(pos, 'h', this._theme.secondary, height);
             }
         }
     }

@@ -2,7 +2,6 @@ import { math } from '../../../core/math/math.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../scene/constants.js';
-import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from '../color.js';
 import { HandleGizmo } from './handle-gizmo.js';
 
 /**
@@ -210,7 +209,7 @@ class LightGizmo extends HandleGizmo {
                     for (let i = 0; i < rect.length; i++) {
                         const mid = tmpV2.lerp(rect[i], rect[(i + 1) % rect.length], 0.5);
                         const dir = tmpV3.sub2(mid, pos).normalize();
-                        const color = i & 1 ? COLOR_AMBER : COLOR_MAGENTA;
+                        const color = i & 1 ? this._theme.primary : this._theme.tertiary;
                         if (this._handle(mid, color, entity, i & 1 ? 'width' : 'depth', i, pos, dir)) {
                             this._readoutAt(mid, i & 1 ? 'W' : 'D', color, i & 1 ? sx : sz);
                         }
@@ -230,8 +229,8 @@ class LightGizmo extends HandleGizmo {
                 if (detailed) {
                     for (let i = 0; i < 4; i++) {
                         const rim = this._circlePoint(entity, pos, radius, 0.5 * Math.PI * i, tmpV2);
-                        if (this._handle(rim, COLOR_AMBER, entity, 'radius', i, pos, tmpV3.sub2(rim, pos).normalize())) {
-                            this._readoutAt(rim, '⌀', COLOR_AMBER, 2 * radius);
+                        if (this._handle(rim, this._theme.primary, entity, 'radius', i, pos, tmpV3.sub2(rim, pos).normalize())) {
+                            this._readoutAt(rim, '⌀', this._theme.primary, 2 * radius);
                         }
                     }
                 }
@@ -298,14 +297,14 @@ class LightGizmo extends HandleGizmo {
         // range cap arcs, colored while their angle handle is active
         for (let i = 0; i < 4; i++) {
             const radial = this._circlePoint(entity, Vec3.ZERO, 1, 0.5 * Math.PI * i, tmpV4);
-            const color = this._active(entity, 'outerConeAngle', i) ? COLOR_MAGENTA :
-                this._active(entity, 'innerConeAngle', i) ? COLOR_CYAN : null;
+            const color = this._active(entity, 'outerConeAngle', i) ? this._theme.tertiary :
+                this._active(entity, 'innerConeAngle', i) ? this._theme.secondary : null;
             renderer.arc(apex, dir, radial, range, 0, outer, color ? 1 : 0.625, color ? 1 : 0.6, color);
         }
 
         const tip = tmpV4.copy(dir).mulScalar(range).add(apex);
         const ranging = this._active(entity, 'range', 0);
-        renderer.dashed(apex, tip, ranging ? 1 : 0.55, ranging ? 1 : 0.6, ranging ? COLOR_AMBER : null);
+        renderer.dashed(apex, tip, ranging ? 1 : 0.55, ranging ? 1 : 0.6, ranging ? this._theme.primary : null);
         this._icon('light', apex, entity);
         this._ground(apex);
 
@@ -314,21 +313,21 @@ class LightGizmo extends HandleGizmo {
         }
 
         // angle handles swing along the range cap arcs
-        if (this._handle(tip, COLOR_AMBER, entity, 'range', 0, apex, dir, false, false)) {
-            this._readoutAt(tip, 'r', COLOR_AMBER, range);
+        if (this._handle(tip, this._theme.primary, entity, 'range', 0, apex, dir, false, false)) {
+            this._readoutAt(tip, 'r', this._theme.primary, range);
         }
         for (let i = 0; i < 4; i++) {
             const angle = 0.5 * Math.PI * i;
             const radial = this._circlePoint(entity, Vec3.ZERO, 1, angle, tmpV5);
             const normal = tmpV6.cross(radial, dir).normalize();
             const rim = this._circlePoint(entity, center, radius, angle, tmpV4);
-            if (this._handle(rim, COLOR_MAGENTA, entity, 'outerConeAngle', i, apex, normal, true)) {
-                this._readoutAt(rim, 'θ<sub>o</sub>', COLOR_MAGENTA, outerConeAngle, '°');
+            if (this._handle(rim, this._theme.tertiary, entity, 'outerConeAngle', i, apex, normal, true)) {
+                this._readoutAt(rim, 'θ<sub>o</sub>', this._theme.tertiary, outerConeAngle, '°');
             }
             if (innerConeAngle > 0) {
                 const ring = this._circlePoint(entity, innerCenter, innerRadius, angle, tmpV4);
-                if (this._handle(ring, COLOR_CYAN, entity, 'innerConeAngle', i, apex, normal, true)) {
-                    this._readoutAt(ring, 'θ<sub>i</sub>', COLOR_CYAN, innerConeAngle, '°');
+                if (this._handle(ring, this._theme.secondary, entity, 'innerConeAngle', i, apex, normal, true)) {
+                    this._readoutAt(ring, 'θ<sub>i</sub>', this._theme.secondary, innerConeAngle, '°');
                 }
             }
         }

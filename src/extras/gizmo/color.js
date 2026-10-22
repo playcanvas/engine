@@ -8,6 +8,7 @@ export const COLOR_AMBER = Object.freeze(new Color(1, 0.75, 0.3));
 export const COLOR_CYAN = Object.freeze(new Color(0.3, 0.85, 1));
 export const COLOR_MAGENTA = Object.freeze(new Color(1, 0.45, 0.9));
 export const COLOR_GRAY = Object.freeze(new Color(0.5, 0.5, 0.5, 0.5));
+export const COLOR_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 
 /**
  * Converts Color3 to Color4.

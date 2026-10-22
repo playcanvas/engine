@@ -71,6 +71,13 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'gizmo.theme.occluded' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Backdrop'>
+                    <ColorPicker
+                        channels={4}
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.theme.backdrop' }}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Camera'>
                 <LabelGroup text='Projection'>
