@@ -71,6 +71,58 @@ const ICON_WEIGHT = 0.8;
 const ICON_BACKDROP_RADIUS = 14;
 const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 
+/**
+ * The glyphs of the icons, in CSS pixels from the icon center, x to the right and y up the screen.
+ *
+ * @type {Record<OverlayIcon, IconStroke[]>}
+ */
+const ICON_GLYPHS = {
+
+    // a sun, a dot with eight spokes
+    light: [
+        ['disc', 0, 0, 4.5],
+        ...Array.from({ length: 8 }, (_, i) => {
+            const x = Math.cos(i * Math.PI / 4);
+            const y = Math.sin(i * Math.PI / 4);
+            return /** @type {IconStroke} */ (['line', 7.5 * x, 7.5 * y, 10.5 * x, 10.5 * y]);
+        })
+    ],
+
+    // an outlined body with a lens widening to the right
+    camera: [
+        ['line', -8, -5, 3, -5, 3, 5, -8, 5, -8, -5],
+        ['triangle', 4, 9, 8]
+    ],
+
+    // a microphone, its rounded head held in a cradle on a stand
+    audiolistener: [
+        ['line', -3, 1, -3, 5],
+        ['line', 3, 1, 3, 5],
+        ['arc', 0, 5, 3, 0, Math.PI, 6],
+        ['arc', 0, 1, 3, Math.PI, 2 * Math.PI, 6],
+        ['arc', 0, 1, 6, Math.PI, 2 * Math.PI, 8],
+        ['line', 0, -5, 0, -8.5],
+        ['line', -4, -8.5, 4, -8.5]
+    ],
+
+    // a speaker, a box and its cone, with two sound waves
+    sound: [
+        ['line', -7.5, -3, -4, -3, -4, 3, -7.5, 3, -7.5, -3],
+        ['line', -4, -3, 0.5, -7.5, 0.5, 7.5, -4, 3],
+        ['arc', 0.5, 0, 4, -0.3 * Math.PI, 0.3 * Math.PI, 4],
+        ['arc', 0.5, 0, 8, -0.3 * Math.PI, 0.3 * Math.PI, 6]
+    ],
+
+    // a cluster of dots around a larger one
+    particlesystem: [
+        ['disc', 0, 0, 3.2],
+        ...Array.from({ length: 6 }, (_, i) => {
+            const angle = (0.5 + i / 3) * Math.PI;
+            return /** @type {IconStroke} */ (['disc', 7.5 * Math.cos(angle), 7.5 * Math.sin(angle), i & 1 ? 1.6 : 2.2]);
+        })
+    ]
+};
+
 
 /**
  * @typedef {object} OverlayShapesTheme
@@ -83,6 +135,19 @@ const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
  * The glyph of an icon, named for the component it marks.
  *
  * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem'} OverlayIcon
+ */
+
+/**
+ * A stroke or fill of an icon glyph, in CSS pixels:
+ * - `['line', x0, y0, x1, y1, ...]` - A polyline through the points.
+ * - `['arc', x, y, radius, from, to, segments]` - An arc as straight segments, the angles in
+ * radians from the x axis towards the y axis.
+ * - `['disc', x, y, radius]` - A filled disc.
+ * - `['triangle', apex, base, height]` - A filled triangle on the x axis, from its apex at x =
+ * apex widening to its side, height tall, at x = base.
+ *
+ * @typedef {['line', ...number[]] | ['arc', number, number, number, number, number, number] |
+ * ['disc', number, number, number] | ['triangle', number, number, number]} IconStroke
  */
 
 /**
@@ -203,7 +268,9 @@ class OverlayShapes {
      */
     _pixel = 0;
 
-    /** @private */
+    /**
+     * @private
+     */
     _perspective = true;
 
     /**
@@ -246,6 +313,7 @@ class OverlayShapes {
          * @private
          */
         this._icons = new Pool(() => ({ shape: null, node: null }));
+
         // in a manually sorted layer the filled shapes draw first, so their depth hides the lines
         // and handles behind them
         const pool = (/** @type {(base: Color, occluded: Color) => Shape} */ create, drawOrder = SHAPE_DRAW_ORDER) => {
@@ -272,6 +340,7 @@ class OverlayShapes {
             return arc;
         });
         this._arrows = pool((base, occluded) => new ArrowShape(device, args(base, occluded)));
+
         // filled shapes sit just behind a surface they lie on, so the lines drawn on them and a mesh
         // matching a shape gizmo do not fight them
         const filled = (/** @type {Shape} */ shape) => {
@@ -279,6 +348,7 @@ class OverlayShapes {
             return shape;
         };
         this._boxes = pool((base, occluded) => filled(new BoxShape(device, args(base, occluded))), FILL_DRAW_ORDER);
+
         // bracket arms draw over the shapes behind them, rather than hiding them
         this._arms = pool((base, occluded) => {
             const arm = new BoxShape(device, args(base, occluded));
@@ -419,6 +489,7 @@ class OverlayShapes {
      * @private
      */
     _next(pool) {
+
         // the next line starts a new run, drawn over this shape as a pooled line would be
         this._lines.split();
         const item = pool.next();
@@ -477,6 +548,7 @@ class OverlayShapes {
      * @param {Color|null} [color] - The color replacing the rgb of the theme colors.
      */
     line(a, b, weight = 1, alpha = 1, color = null) {
+
         // keep the part in front of the near plane
         if (this._perspective) {
             const near = this._gizmo.camera.nearClip;
@@ -626,6 +698,7 @@ class OverlayShapes {
      * @private
      */
     _tube(center, radius, weight) {
+
         // the distance to the visible part of the ring, which may surround the camera
         const camera = this._gizmo.camera;
         const dist = Math.hypot(center.distance(camera.entity.getPosition()), radius);
@@ -946,75 +1019,41 @@ class OverlayShapes {
         icon.rotation.setFromDirections(Vec3.UP, camera.forward);
 
         const backdrop = this._iconDisc(ICON_BACKDROP_RADIUS, ICON_BACKDROP, ICON_BACKDROP.a, 1, this._iconDiscs);
-        switch (kind) {
-            case 'light': {
-                // a sun, a dot with eight spokes
-                this._iconDisc(4.5, null, 1);
-                for (let i = 0; i < 8; i++) {
-                    const angle = i * Math.PI / 4;
-                    const x = Math.cos(angle);
-                    const y = Math.sin(angle);
-                    this._iconLine(7.5 * x, 7.5 * y, 10.5 * x, 10.5 * y);
-                }
-                break;
-            }
-            case 'camera': {
-                // an outlined body with a lens widening to the right
-                this._iconLine(-8, -5, 3, -5);
-                this._iconLine(3, -5, 3, 5);
-                this._iconLine(3, 5, -8, 5);
-                this._iconLine(-8, 5, -8, -5);
+        const glyph = ICON_GLYPHS[kind];
+        for (let i = 0; i < glyph.length; i++) {
+            const s = glyph[i];
+            switch (s[0]) {
+                case 'line':
+                    for (let j = 1; j + 3 < s.length; j += 2) {
+                        this._iconLine(s[j], s[j + 1], s[j + 2], s[j + 3]);
+                    }
+                    break;
+                case 'arc':
+                    this._iconArc(s[1], s[2], s[3], s[4], s[5], s[6]);
+                    break;
+                case 'disc':
+                    this._iconDisc(s[3], null, 1, 0, this._iconDots, s[1], s[2]);
+                    break;
+                case 'triangle': {
 
-                // the lens is a three sided cone flattened onto the screen, its apex to the left
-                const { right, up, forward, pixel } = icon;
-                const d = tmpM.setIdentity().data;
-                const back = tmpIconC.copy(forward).mulScalar(-1);
-                d[0] = up.x;
-                d[1] = up.y;
-                d[2] = up.z;
-                d[4] = back.x;
-                d[5] = back.y;
-                d[6] = back.z;
-                d[8] = right.x;
-                d[9] = right.y;
-                d[10] = right.z;
-                const length = 5 / 0.75;
-                const lens = tmpIconA.copy(right).mulScalar((9 - 0.25 * length) * pixel).add(position);
-                this.cone('triangle', lens, tmpIconQ.setFromMat4(tmpM), tmpIconB.set(8 / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, length * pixel), 1, false);
-                break;
-            }
-            case 'audiolistener': {
-                // a microphone, its rounded head held in a cradle on a stand
-                this._iconLine(-3, 1, -3, 5);
-                this._iconLine(3, 1, 3, 5);
-                this._iconArc(0, 5, 3, 0, Math.PI, 6);
-                this._iconArc(0, 1, 3, Math.PI, 2 * Math.PI, 6);
-                this._iconArc(0, 1, 6, Math.PI, 2 * Math.PI, 8);
-                this._iconLine(0, -5, 0, -8.5);
-                this._iconLine(-4, -8.5, 4, -8.5);
-                break;
-            }
-            case 'sound': {
-                // a speaker, a box and its cone, with two sound waves
-                this._iconLine(-7.5, -3, -4, -3);
-                this._iconLine(-4, -3, -4, 3);
-                this._iconLine(-4, 3, -7.5, 3);
-                this._iconLine(-7.5, 3, -7.5, -3);
-                this._iconLine(-4, -3, 0.5, -7.5);
-                this._iconLine(0.5, -7.5, 0.5, 7.5);
-                this._iconLine(0.5, 7.5, -4, 3);
-                this._iconArc(0.5, 0, 4, -0.3 * Math.PI, 0.3 * Math.PI, 4);
-                this._iconArc(0.5, 0, 8, -0.3 * Math.PI, 0.3 * Math.PI, 6);
-                break;
-            }
-            case 'particlesystem': {
-                // a cluster of dots around a larger one
-                this._iconDisc(3.2, null, 1);
-                for (let i = 0; i < 6; i++) {
-                    const angle = (0.5 + i / 3) * Math.PI;
-                    this._iconDisc(i & 1 ? 1.6 : 2.2, null, 1, 0, this._iconDots, 7.5 * Math.cos(angle), 7.5 * Math.sin(angle));
+                    // a three sided cone flattened onto the screen, its apex to the left
+                    const { right, up, forward, pixel } = icon;
+                    const d = tmpM.setIdentity().data;
+                    const back = tmpIconC.copy(forward).mulScalar(-1);
+                    d[0] = up.x;
+                    d[1] = up.y;
+                    d[2] = up.z;
+                    d[4] = back.x;
+                    d[5] = back.y;
+                    d[6] = back.z;
+                    d[8] = right.x;
+                    d[9] = right.y;
+                    d[10] = right.z;
+                    const length = (s[2] - s[1]) / 0.75;
+                    const center = tmpIconA.copy(right).mulScalar((s[2] - 0.25 * length) * pixel).add(position);
+                    this.cone('triangle', center, tmpIconQ.setFromMat4(tmpM), tmpIconB.set(s[3] / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, length * pixel), 1, false);
+                    break;
                 }
-                break;
             }
         }
         const record = this._icons.next();
