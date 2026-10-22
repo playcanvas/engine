@@ -33,6 +33,7 @@ export function Controls({ observer }) {
                             { v: 'box', t: 'Box' },
                             { v: 'sphere', t: 'Sphere' },
                             { v: 'capsule', t: 'Capsule' },
+                            { v: 'cylinder', t: 'Cylinder' },
                             { v: 'cone', t: 'Cone' }
                         ]}
                         binding={new BindingTwoWay()}

@@ -58,6 +58,7 @@ const SECTOR_TOLERANCE = 0.5;
 const CONES = {
     cone: { segments: 32 },
     disk: { segments: 32, peakRadius: 1 },
+    cylinder: { segments: 32, peakRadius: 1 },
     triangle: { segments: 3 },
     frustum: { segments: 4, twist: 45 }
 };
@@ -253,6 +254,7 @@ class OverlayRenderer {
         this._cones = {
             cone: cone('cone'),
             disk: cone('disk'),
+            cylinder: cone('cylinder'),
             triangle: cone('triangle'),
             frustum: cone('frustum')
         };
@@ -813,7 +815,8 @@ class OverlayRenderer {
 
     /**
      * Adds a filled unit cone along the y axis of the rotation, its base at y = -0.5. A disk and a
-     * triangle are meant to be flattened by the size; a frustum is a square pyramid.
+     * triangle are meant to be flattened by the size; a cylinder keeps its radius to the peak; a
+     * frustum is a square pyramid.
      *
      * @param {keyof CONES} kind - The kind of cone.
      * @param {Vec3} center - The world center.

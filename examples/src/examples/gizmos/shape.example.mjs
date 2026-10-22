@@ -1,6 +1,6 @@
 // @config
 //
-// Shape gizmos edit a shape of their own, such as a volume to select within: a box, sphere, capsule or cone
+// Shape gizmos edit a shape of their own, such as a volume to select within: a box, sphere, capsule, cylinder or cone
 
 import {
     AppBase,
@@ -10,6 +10,7 @@ import {
     CapsuleGizmo,
     Color,
     ConeGizmo,
+    CylinderGizmo,
     Entity,
     FILLMODE_FILL_WINDOW,
     Gizmo,
@@ -114,7 +115,8 @@ const gizmos = {
     box: new BoxGizmo(camera.camera, layer),
     sphere: new SphereGizmo(camera.camera, layer),
     cone: new ConeGizmo(camera.camera, layer),
-    capsule: new CapsuleGizmo(camera.camera, layer)
+    capsule: new CapsuleGizmo(camera.camera, layer),
+    cylinder: new CylinderGizmo(camera.camera, layer)
 };
 
 // show one shape at a time

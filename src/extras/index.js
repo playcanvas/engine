@@ -103,6 +103,7 @@ export { BoxGizmo } from './gizmo/handle/box-gizmo.js';
 export { SphereGizmo } from './gizmo/handle/sphere-gizmo.js';
 export { CapsuleGizmo } from './gizmo/handle/capsule-gizmo.js';
 export { ConeGizmo } from './gizmo/handle/cone-gizmo.js';
+export { CylinderGizmo } from './gizmo/handle/cylinder-gizmo.js';
 export { BoundingBoxGizmo } from './gizmo/handle/bounding-box-gizmo.js';
 export { CameraGizmo } from './gizmo/handle/camera-gizmo.js';
 export { LightGizmo } from './gizmo/handle/light-gizmo.js';
