@@ -1,14 +1,14 @@
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { HandleGizmo } from './handle-gizmo.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { Entity } from '../../framework/entity.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { Entity } from '../../../framework/entity.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { MeshInstance } from '../../../scene/mesh-instance.js'
  * @import { HandleGizmoTheme, GizmoHandle } from './handle-gizmo.js'
  */
 

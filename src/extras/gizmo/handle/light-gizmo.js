@@ -1,15 +1,15 @@
-import { math } from '../../core/math/math.js';
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../scene/constants.js';
-import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from './color.js';
+import { math } from '../../../core/math/math.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../scene/constants.js';
+import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from '../color.js';
 import { HandleGizmo } from './handle-gizmo.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { Entity } from '../../framework/entity.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { LightComponent } from '../../framework/components/light/component.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { Entity } from '../../../framework/entity.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { LightComponent } from '../../../framework/components/light/component.js'
  * @import { GizmoHandle } from './handle-gizmo.js'
  */
 

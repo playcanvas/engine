@@ -1,16 +1,16 @@
-import { Vec3 } from '../../core/math/vec3.js';
-import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
 
 import { TransformGizmo } from './transform-gizmo.js';
-import { BoxShape } from './shape/box-shape.js';
-import { PlaneShape } from './shape/plane-shape.js';
-import { BoxLineShape } from './shape/boxline-shape.js';
+import { BoxShape } from '../shape/box-shape.js';
+import { PlaneShape } from '../shape/plane-shape.js';
+import { BoxLineShape } from '../shape/boxline-shape.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { GizmoSpace } from './constants.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { GizmoSpace } from '../constants.js'
  */
 
 // temporary variables

@@ -4,7 +4,7 @@ import { Entity } from '../../../framework/entity.js';
 import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
 import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
 /** @import { ShapeArgs } from './shape.js' */

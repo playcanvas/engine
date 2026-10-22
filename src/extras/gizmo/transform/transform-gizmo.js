@@ -1,10 +1,10 @@
-import { math } from '../../core/math/math.js';
-import { Color } from '../../core/math/color.js';
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { Plane } from '../../core/shape/plane.js';
-import { Entity } from '../../framework/entity.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { BoundingBox } from '../../../core/shape/bounding-box.js';
+import { Plane } from '../../../core/shape/plane.js';
+import { Entity } from '../../../framework/entity.js';
 
 import {
     COLOR_RED,
@@ -12,20 +12,20 @@ import {
     COLOR_BLUE,
     COLOR_GRAY,
     color4from3
-} from './color.js';
-import { LAYERID_IMMEDIATE } from '../../scene/constants.js';
-import { DragGizmo } from './drag-gizmo.js';
-import { Gizmo } from './gizmo.js';
-import { OverlayShapes } from './overlay-shapes.js';
-import { Readout } from './readout.js';
-import { Debug } from '../../core/debug.js';
+} from '../color.js';
+import { LAYERID_IMMEDIATE } from '../../../scene/constants.js';
+import { DragGizmo } from '../drag-gizmo.js';
+import { Gizmo } from '../gizmo.js';
+import { OverlayShapes } from '../overlay/overlay-shapes.js';
+import { Readout } from '../overlay/readout.js';
+import { Debug } from '../../../core/debug.js';
 
 /**
- * @import { Shape } from './shape/shape.js'
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { GizmoAxis, GizmoDragMode } from './constants.js'
+ * @import { Shape } from '../shape/shape.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { MeshInstance } from '../../../scene/mesh-instance.js'
+ * @import { GizmoAxis, GizmoDragMode } from '../constants.js'
  */
 
 const GLANCE_EPSILON = 0.01;

@@ -1,9 +1,9 @@
-import { Vec3 } from '../../core/math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 import { ShapeGizmo } from './shape-gizmo.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { Layer } from '../../scene/layer.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { Layer } from '../../../scene/layer.js'
  * @import { GizmoHandle } from './handle-gizmo.js'
  */
 

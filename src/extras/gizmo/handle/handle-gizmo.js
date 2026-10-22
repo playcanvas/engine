@@ -1,22 +1,22 @@
-import { Color } from '../../core/math/color.js';
-import { math } from '../../core/math/math.js';
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Plane } from '../../core/shape/plane.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { DragGizmo } from './drag-gizmo.js';
-import { Gizmo } from './gizmo.js';
-import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW } from './color.js';
-import { OverlayShapes } from './overlay-shapes.js';
-import { Pool } from './pool.js';
+import { Color } from '../../../core/math/color.js';
+import { math } from '../../../core/math/math.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Plane } from '../../../core/shape/plane.js';
+import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
+import { DragGizmo } from '../drag-gizmo.js';
+import { Gizmo } from '../gizmo.js';
+import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW } from '../color.js';
+import { OverlayShapes } from '../overlay/overlay-shapes.js';
+import { Pool } from '../pool.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { Shape } from './shape/shape.js'
- * @import { OverlayIcon } from './overlay-shapes.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { MeshInstance } from '../../../scene/mesh-instance.js'
+ * @import { Shape } from '../shape/shape.js'
+ * @import { OverlayIcon } from '../overlay/overlay-shapes.js'
  */
 
 /**

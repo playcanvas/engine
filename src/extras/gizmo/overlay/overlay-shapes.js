@@ -1,26 +1,26 @@
-import { Color } from '../../core/math/color.js';
-import { math } from '../../core/math/math.js';
-import { Mat4 } from '../../core/math/mat4.js';
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { MeshLineBatch } from './mesh-line-batch.js';
-import { Pool } from './pool.js';
+import { Color } from '../../../core/math/color.js';
+import { math } from '../../../core/math/math.js';
+import { Mat4 } from '../../../core/math/mat4.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
+import { MeshLineBatch } from '../mesh/mesh-line-batch.js';
+import { Pool } from '../pool.js';
 import { Readout } from './readout.js';
-import { ArcShape } from './shape/arc-shape.js';
-import { ArrowShape } from './shape/arrow-shape.js';
-import { BoxShape } from './shape/box-shape.js';
-import { CapsuleShape } from './shape/capsule-shape.js';
-import { ConeShape } from './shape/cone-shape.js';
-import { SphereShape } from './shape/sphere-shape.js';
+import { ArcShape } from '../shape/arc-shape.js';
+import { ArrowShape } from '../shape/arrow-shape.js';
+import { BoxShape } from '../shape/box-shape.js';
+import { CapsuleShape } from '../shape/capsule-shape.js';
+import { ConeShape } from '../shape/cone-shape.js';
+import { SphereShape } from '../shape/sphere-shape.js';
 
 /**
- * @import { Entity } from '../../framework/entity.js'
- * @import { Gizmo } from './gizmo.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { Shape } from './shape/shape.js'
+ * @import { Entity } from '../../../framework/entity.js'
+ * @import { Gizmo } from '../gizmo.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { MeshInstance } from '../../../scene/mesh-instance.js'
+ * @import { Shape } from '../shape/shape.js'
  */
 
 const tmpV1 = new Vec3();

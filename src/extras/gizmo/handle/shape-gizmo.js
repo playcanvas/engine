@@ -1,10 +1,10 @@
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 import { HandleGizmo } from './handle-gizmo.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { Layer } from '../../scene/layer.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { Layer } from '../../../scene/layer.js'
  */
 
 /**

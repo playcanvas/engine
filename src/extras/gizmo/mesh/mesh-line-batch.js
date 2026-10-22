@@ -1,9 +1,9 @@
-import { math } from '../../core/math/math.js';
-import { Mat4 } from '../../core/math/mat4.js';
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Entity } from '../../framework/entity.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
+import { math } from '../../../core/math/math.js';
+import { Mat4 } from '../../../core/math/mat4.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Entity } from '../../../framework/entity.js';
+import { BlendState } from '../../../platform/graphics/blend-state.js';
 import {
     BUFFER_DYNAMIC,
     SEMANTIC_ATTR8,
@@ -12,20 +12,20 @@ import {
     SEMANTIC_ATTR11,
     SEMANTIC_ATTR12,
     TYPE_FLOAT32
-} from '../../platform/graphics/constants.js';
-import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
-import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { CylinderGeometry } from '../../scene/geometry/cylinder-geometry.js';
-import { ShaderMaterial } from '../../scene/materials/shader-material.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { Mesh } from '../../scene/mesh.js';
-import { Pool } from './pool.js';
-import { lineBatchShader } from './shaders.js';
+} from '../../../platform/graphics/constants.js';
+import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
+import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
+import { ShaderMaterial } from '../../../scene/materials/shader-material.js';
+import { MeshInstance } from '../../../scene/mesh-instance.js';
+import { Mesh } from '../../../scene/mesh.js';
+import { Pool } from '../pool.js';
+import { lineBatchShader } from '../shaders.js';
 
 /**
- * @import { Color } from '../../core/math/color.js'
- * @import { AppBase } from '../../framework/app-base.js'
- * @import { Layer } from '../../scene/layer.js'
+ * @import { Color } from '../../../core/math/color.js'
+ * @import { AppBase } from '../../../framework/app-base.js'
+ * @import { Layer } from '../../../scene/layer.js'
  */
 
 /**

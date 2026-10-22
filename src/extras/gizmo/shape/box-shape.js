@@ -1,6 +1,6 @@
 import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
 /** @import { ShapeArgs } from './shape.js' */

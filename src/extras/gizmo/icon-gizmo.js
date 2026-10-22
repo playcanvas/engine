@@ -1,12 +1,12 @@
 import { Color } from '../../core/math/color.js';
 import { Gizmo } from './gizmo.js';
-import { OverlayShapes } from './overlay-shapes.js';
+import { OverlayShapes } from './overlay/overlay-shapes.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Entity } from '../../framework/entity.js'
  * @import { Layer } from '../../scene/layer.js'
- * @import { OverlayIcon } from './overlay-shapes.js'
+ * @import { OverlayIcon } from './overlay/overlay-shapes.js'
  */
 
 /**

@@ -9,7 +9,7 @@ import { ShaderMaterial } from '../../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { unlitShader } from '../shaders.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
 /**

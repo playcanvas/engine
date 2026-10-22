@@ -1,22 +1,22 @@
-import { Debug } from '../../core/debug.js';
-import { math } from '../../core/math/math.js';
-import { Color } from '../../core/math/color.js';
-import { Quat } from '../../core/math/quat.js';
-import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { Debug } from '../../../core/debug.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 
-import { ArcShape } from './shape/arc-shape.js';
+import { ArcShape } from '../shape/arc-shape.js';
 import { TransformGizmo } from './transform-gizmo.js';
-import { MeshLine } from './mesh-line.js';
-import { MeshSector } from './mesh-sector.js';
-import { SphereShape } from './shape/sphere-shape.js';
+import { MeshLine } from '../mesh/mesh-line.js';
+import { MeshSector } from '../mesh/mesh-sector.js';
+import { SphereShape } from '../shape/sphere-shape.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { GizmoAxis } from './constants.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { GizmoAxis } from '../constants.js'
  */
 
 // temporary variables
