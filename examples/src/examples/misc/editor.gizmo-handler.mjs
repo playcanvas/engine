@@ -3,11 +3,8 @@ import {
     CameraGizmo,
     Gizmo,
     IconGizmo,
-    Layer,
     LightGizmo,
     RotateGizmo,
-    SORTMODE_MANUAL,
-    SORTMODE_NONE,
     ScaleGizmo,
     TranslateGizmo
 } from 'playcanvas';
@@ -88,12 +85,7 @@ class GizmoHandler {
         const app = camera.system.app;
 
         // the helper layer keeps the scene depth, so it goes before the gizmo layer, which clears it
-        const helperLayer = new Layer({
-            name: 'Helpers',
-            opaqueSortMode: SORTMODE_NONE,
-            transparentSortMode: SORTMODE_MANUAL
-        });
-        app.scene.layers.push(helperLayer);
+        const helperLayer = Gizmo.createLayer(app, 'Helpers', undefined, true);
         const layer = Gizmo.createLayer(app);
 
         // a press goes to the first gizmo it hits, so the transform gizmos are created first
