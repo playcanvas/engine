@@ -6,6 +6,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { MeshLineBatch } from '../mesh/mesh-line-batch.js';
 import { Pool } from '../pool.js';
+import { getIconTextures } from './icon-textures.js';
 import { OverlayIcons } from './overlay-icons.js';
 import { Readout } from './readout.js';
 import { ShapePool } from './shape-pool.js';
@@ -14,12 +15,14 @@ import { ArrowShape } from '../shape/arrow-shape.js';
 import { BoxShape } from '../shape/box-shape.js';
 import { CapsuleShape } from '../shape/capsule-shape.js';
 import { ConeShape } from '../shape/cone-shape.js';
+import { GlyphShape } from '../shape/glyph-shape.js';
 import { SphereShape } from '../shape/sphere-shape.js';
 
 /**
  * @import { Entity } from '../../../framework/entity.js'
  * @import { Gizmo } from '../gizmo.js'
  * @import { Layer } from '../../../scene/layer.js'
+ * @import { OverlayIcon } from './icon-glyphs.js'
  * @import { Shape } from '../shape/shape.js'
  */
 
@@ -206,7 +209,6 @@ class OverlayRenderer {
             gizmo.intersectShapes.push(box);
             return box;
         });
-        this._discs = pool((base, occluded) => new ConeShape(device, { ...args(base, occluded), ...CONES.disk }));
         this._pickDiscs = pool((base, occluded) => {
             const disc = new ConeShape(device, { ...args(base, occluded), ...CONES.disk });
             gizmo.intersectShapes.push(disc);
@@ -227,6 +229,17 @@ class OverlayRenderer {
             triangle: cone('triangle'),
             frustum: cone('frustum')
         };
+
+        const textures = getIconTextures(device);
+        /**
+         * The pools of each icon glyph.
+         *
+         * @type {Record<OverlayIcon, ShapePool>}
+         */
+        this._glyphs = /** @type {Record<OverlayIcon, ShapePool>} */ ({});
+        for (const [kind, texture] of Object.entries(textures)) {
+            this._glyphs[/** @type {OverlayIcon} */ (kind)] = pool((base, occluded) => new GlyphShape(device, { ...args(base, occluded), texture }));
+        }
     }
 
     /**
@@ -759,23 +772,38 @@ class OverlayRenderer {
     }
 
     /**
-     * Adds a flat disc facing the y axis of the rotation, drawn with the lines, not as a volume.
+     * Adds a flat disc facing the y axis of the rotation, picked by the gizmo.
      *
      * @param {Vec3} center - The world center.
      * @param {Quat} rotation - The world rotation.
      * @param {number} size - The diameter.
      * @param {number} [alpha] - The alpha factor.
      * @param {Color|null} [color] - The color replacing the rgb of the theme color.
-     * @param {boolean} [pickable] - Whether the gizmo picks the disc.
      * @returns {Shape} The disc.
      */
-    disc(center, rotation, size, alpha = 1, color = null, pickable = false) {
+    disc(center, rotation, size, alpha = 1, color = null) {
         this._colors(alpha, false, color);
-        const disc = this._next(pickable ? this._pickDiscs : this._discs);
+        const disc = this._next(this._pickDiscs);
         disc.entity.setLocalPosition(this._local(center, tmpV1));
         disc.entity.setLocalRotation(rotation);
         disc.entity.setLocalScale(size, 1e-3 * size, size);
         return disc;
+    }
+
+    /**
+     * Adds an icon glyph on the xz plane of the rotation, its top toward -z.
+     *
+     * @param {OverlayIcon} kind - The icon.
+     * @param {Vec3} center - The world center.
+     * @param {Quat} rotation - The world rotation.
+     * @param {number} size - The width and height.
+     */
+    glyph(kind, center, rotation, size) {
+        this._colors(1);
+        const glyph = this._next(this._glyphs[kind]);
+        glyph.entity.setLocalPosition(this._local(center, tmpV1));
+        glyph.entity.setLocalRotation(rotation);
+        glyph.entity.setLocalScale(size, 1, size);
     }
 
     /**

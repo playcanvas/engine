@@ -1,19 +1,26 @@
-import { SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0 } from '../../platform/graphics/constants.js';
 
 /**
  * @import { ShaderDesc } from '../../scene/materials/shader-material.js'
  */
 
 /**
+ * The unlit shader of a shape. TEXTURE scales the alpha by the coverage of a texture.
+ *
  * @type {ShaderDesc}
  */
 export const unlitShader = {
     uniqueName: 'gizmo-unlit',
     attributes: {
-        vertex_position: SEMANTIC_POSITION
+        vertex_position: SEMANTIC_POSITION,
+        vertex_texCoord0: SEMANTIC_TEXCOORD0
     },
     vertexGLSL: /* glsl */`
         attribute vec3 vertex_position;
+        #ifdef TEXTURE
+            attribute vec2 vertex_texCoord0;
+            varying vec2 vUv;
+        #endif
     
         uniform mat4 matrix_model;
         uniform mat4 matrix_viewProjection;
@@ -21,6 +28,9 @@ export const unlitShader = {
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
             gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
+            #ifdef TEXTURE
+                vUv = vertex_texCoord0;
+            #endif
         }
     `,
     fragmentGLSL: /* glsl */`
@@ -30,12 +40,22 @@ export const unlitShader = {
     
         uniform vec4 uColor;
         uniform float uDepth;
+        #ifdef TEXTURE
+            uniform sampler2D uTexture;
+            varying vec2 vUv;
+        #endif
 
         void main(void) {
-            if (uColor.a < 1.0 / 255.0) {
+            vec4 color = uColor;
+            #ifdef TEXTURE
+                // sharpen the filtered edges to a pixel wide, as geometry draws them
+                float coverage = texture2D(uTexture, vUv).a;
+                color.a *= clamp((coverage - 0.5) / max(fwidth(coverage), 1e-4) + 0.5, 0.0, 1.0);
+            #endif
+            if (color.a < 1.0 / 255.0) {
                 discard;
             }
-            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(uColor)), uColor.a);
+            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(color)), color.a);
             #if DEPTH_WRITE == 1
                 gl_FragDepth = uDepth;
             #endif
@@ -43,6 +63,10 @@ export const unlitShader = {
     `,
     vertexWGSL: /* wgsl */`
         attribute vertex_position: vec3f;
+        #ifdef TEXTURE
+            attribute vertex_texCoord0: vec2f;
+            varying vUv: vec2f;
+        #endif
 
         uniform matrix_model: mat4x4f;
         uniform matrix_viewProjection: mat4x4f;
@@ -53,6 +77,9 @@ export const unlitShader = {
             let pos = vec4f(input.vertex_position, 1.0);
             output.position = uniform.matrix_viewProjection * uniform.matrix_model * pos;
             output.position.z = clamp(output.position.z, -abs(output.position.w), abs(output.position.w));
+            #ifdef TEXTURE
+                output.vUv = input.vertex_texCoord0;
+            #endif
             return output;
         }
     `,
@@ -61,14 +88,25 @@ export const unlitShader = {
 
         uniform uColor: vec4f;
         uniform uDepth: f32;
+        #ifdef TEXTURE
+            var uTexture: texture_2d<f32>;
+            var uTextureSampler: sampler;
+            varying vUv: vec2f;
+        #endif
 
         @fragment
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             var output: FragmentOutput;
-            if (uniform.uColor.a < 1.0 / 255.0) {
+            var color = uniform.uColor;
+            #ifdef TEXTURE
+                // sharpen the filtered edges to a pixel wide, as geometry draws them
+                let coverage = textureSample(uTexture, uTextureSampler, input.vUv).a;
+                color.a *= clamp((coverage - 0.5) / max(fwidth(coverage), 1e-4) + 0.5, 0.0, 1.0);
+            #endif
+            if (color.a < 1.0 / 255.0) {
                 discard;
             }
-            output.color = vec4f(gammaCorrectOutput(decodeGamma(uniform.uColor)), uniform.uColor.a);
+            output.color = vec4f(gammaCorrectOutput(decodeGamma(color)), color.a);
             #if DEPTH_WRITE == 1
                 output.fragDepth = uniform.uDepth;
             #endif
