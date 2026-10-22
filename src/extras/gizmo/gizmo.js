@@ -818,6 +818,12 @@ class Gizmo extends EventHandler {
      * gizmo.update();
      */
     update() {
+
+        // recheck a gizmo hidden only because the camera sat on it
+        if (this._enabled && !this.root.enabled) {
+            this.enabled = true;
+        }
+
         if (this._renderUpdate) {
             this._renderUpdate = false;
             this.fire(Gizmo.EVENT_RENDERUPDATE);
