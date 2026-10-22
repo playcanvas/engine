@@ -955,18 +955,30 @@ class RotateGizmo extends TransformGizmo {
 
         super.destroy();
     }
-}
 
-// snapIncrement was the angle increment of the rotate gizmo, now the snapAngleIncrement of every drag gizmo
-Object.defineProperty(RotateGizmo.prototype, 'snapIncrement', {
-    get: function () {
-        Debug.deprecated('RotateGizmo#snapIncrement is deprecated. Use RotateGizmo#snapAngleIncrement instead.');
-        return this.snapAngleIncrement;
-    },
-    set: function (value) {
+    // ---- deprecated block start ----
+
+    /**
+     * @type {number}
+     * @deprecated Use {@link RotateGizmo#snapAngleIncrement} instead.
+     * @ignore
+     */
+    set snapIncrement(value) {
         Debug.deprecated('RotateGizmo#snapIncrement is deprecated. Use RotateGizmo#snapAngleIncrement instead.');
         this.snapAngleIncrement = value;
     }
-});
+
+    /**
+     * @type {number}
+     * @deprecated Use {@link RotateGizmo#snapAngleIncrement} instead.
+     * @ignore
+     */
+    get snapIncrement() {
+        Debug.deprecated('RotateGizmo#snapIncrement is deprecated. Use RotateGizmo#snapAngleIncrement instead.');
+        return this.snapAngleIncrement;
+    }
+
+    // ---- deprecated block end ----
+}
 
 export { RotateGizmo };
