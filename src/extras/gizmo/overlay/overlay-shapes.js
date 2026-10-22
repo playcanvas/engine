@@ -6,7 +6,9 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { MeshLineBatch } from '../mesh/mesh-line-batch.js';
 import { Pool } from '../pool.js';
+import { OverlayIcons } from './overlay-icons.js';
 import { Readout } from './readout.js';
+import { ShapePool } from './shape-pool.js';
 import { ArcShape } from '../shape/arc-shape.js';
 import { ArrowShape } from '../shape/arrow-shape.js';
 import { BoxShape } from '../shape/box-shape.js';
@@ -17,9 +19,7 @@ import { SphereShape } from '../shape/sphere-shape.js';
 /**
  * @import { Entity } from '../../../framework/entity.js'
  * @import { Gizmo } from '../gizmo.js'
- * @import { GraphNode } from '../../../scene/graph-node.js'
  * @import { Layer } from '../../../scene/layer.js'
- * @import { MeshInstance } from '../../../scene/mesh-instance.js'
  * @import { Shape } from '../shape/shape.js'
  */
 
@@ -36,10 +36,6 @@ const tmpZ = new Vec3();
 const tmpQ1 = new Quat();
 const tmpBase = new Color();
 const tmpOccluded = new Color();
-const tmpIconA = new Vec3();
-const tmpIconB = new Vec3();
-const tmpIconC = new Vec3();
-const tmpIconQ = new Quat();
 const tmpClipA = new Vec3();
 const tmpClipB = new Vec3();
 
@@ -67,63 +63,6 @@ const FILL_DEPTH_BIAS = 2;
 const FILL_DRAW_ORDER = 0;
 const SHAPE_DRAW_ORDER = 1;
 
-const ICON_WEIGHT = 0.8;
-const ICON_BACKDROP_RADIUS = 14;
-const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
-
-/**
- * The glyphs of the icons, in CSS pixels from the icon center, x to the right and y up the screen.
- *
- * @type {Record<OverlayIcon, IconStroke[]>}
- */
-const ICON_GLYPHS = {
-
-    // a sun, a dot with eight spokes
-    light: [
-        ['disc', 0, 0, 4.5],
-        ...Array.from({ length: 8 }, (_, i) => {
-            const x = Math.cos(i * Math.PI / 4);
-            const y = Math.sin(i * Math.PI / 4);
-            return /** @type {IconStroke} */ (['line', 7.5 * x, 7.5 * y, 10.5 * x, 10.5 * y]);
-        })
-    ],
-
-    // an outlined body with a lens widening to the right
-    camera: [
-        ['line', -8, -5, 3, -5, 3, 5, -8, 5, -8, -5],
-        ['triangle', 4, 9, 8]
-    ],
-
-    // a microphone, its rounded head held in a cradle on a stand
-    audiolistener: [
-        ['line', -3, 1, -3, 5],
-        ['line', 3, 1, 3, 5],
-        ['arc', 0, 5, 3, 0, Math.PI, 6],
-        ['arc', 0, 1, 3, Math.PI, 2 * Math.PI, 6],
-        ['arc', 0, 1, 6, Math.PI, 2 * Math.PI, 8],
-        ['line', 0, -5, 0, -8.5],
-        ['line', -4, -8.5, 4, -8.5]
-    ],
-
-    // a speaker, a box and its cone, with two sound waves
-    sound: [
-        ['line', -7.5, -3, -4, -3, -4, 3, -7.5, 3, -7.5, -3],
-        ['line', -4, -3, 0.5, -7.5, 0.5, 7.5, -4, 3],
-        ['arc', 0.5, 0, 4, -0.3 * Math.PI, 0.3 * Math.PI, 4],
-        ['arc', 0.5, 0, 8, -0.3 * Math.PI, 0.3 * Math.PI, 6]
-    ],
-
-    // a cluster of dots around a larger one
-    particlesystem: [
-        ['disc', 0, 0, 3.2],
-        ...Array.from({ length: 6 }, (_, i) => {
-            const angle = (0.5 + i / 3) * Math.PI;
-            return /** @type {IconStroke} */ (['disc', 7.5 * Math.cos(angle), 7.5 * Math.sin(angle), i & 1 ? 1.6 : 2.2]);
-        })
-    ]
-};
-
-
 /**
  * @typedef {object} OverlayShapesTheme
  * @property {Color} base - The color where the shapes are visible.
@@ -132,84 +71,8 @@ const ICON_GLYPHS = {
  */
 
 /**
- * The glyph of an icon, named for the component it marks.
- *
- * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem'} OverlayIcon
- */
-
-/**
- * A stroke or fill of an icon glyph, in CSS pixels:
- * - `['line', x0, y0, x1, y1, ...]` - A polyline through the points.
- * - `['arc', x, y, radius, from, to, segments]` - An arc as straight segments, the angles in
- * radians from the x axis towards the y axis.
- * - `['disc', x, y, radius]` - A filled disc.
- * - `['triangle', apex, base, height]` - A filled triangle on the x axis, from its apex at x =
- * apex widening to its side, height tall, at x = base.
- *
- * @typedef {['line', ...number[]] | ['arc', number, number, number, number, number, number] |
- * ['disc', number, number, number] | ['triangle', number, number, number]} IconStroke
- */
-
-/**
- * @typedef {object} Item
- * @property {Entity} entity - The entity placed each frame.
- * @property {Shape} shape - The pooled shape.
- * @property {Color} base - The color the shape was created with, updated in place.
- * @property {Color} occluded - The occluded color the shape was created with, updated in place.
- */
-
-/**
- * A pool of shapes, placed in order each frame and hidden when unused.
- *
- * @augments {Pool<Item>}
- * @ignore
- */
-class ShapePool extends Pool {
-    /**
-     * @param {(base: Color, occluded: Color) => Shape} create - Creates a shape in the
-     * supplied colors.
-     * @param {Entity} parent - The parent of the shapes.
-     * @param {number} drawOrder - The draw order of the shapes in a manually sorted layer.
-     */
-    constructor(create, parent, drawOrder) {
-        super(() => {
-            const base = new Color();
-            const occluded = new Color();
-            const shape = create(base, occluded);
-            shape.entity.forEach((node) => {
-                /** @type {Entity} */ (node).render?.meshInstances.forEach((meshInstance) => {
-                    meshInstance.drawOrder = drawOrder;
-                });
-            });
-            parent.addChild(shape.entity);
-            return { entity: shape.entity, shape, base, occluded };
-        });
-    }
-
-    /**
-     * @returns {Item} The next shape, enabled.
-     */
-    next() {
-        const item = super.next();
-        item.entity.enabled = true;
-        return item;
-    }
-
-    hide() {
-        for (let i = this.count; i < this.items.length; i++) {
-            this.items[i].entity.enabled = false;
-        }
-    }
-
-    destroy() {
-        this.items.forEach(item => item.shape.destroy());
-        this.items.length = 0;
-    }
-}
-
-/**
  * Pools of the gizmo shapes drawn by handle and icon gizmos around world-sized geometry, with lines and
- * rings of a constant thickness on screen, handles of a constant size and text labels. Shapes are
+ * rings of a constant thickness on screen, handles of a constant size, text labels and icons. Shapes are
  * placed each frame between {@link begin} and {@link end}, in world space, under the root of the
  * gizmo, which must not be rotated or scaled.
  *
@@ -274,19 +137,11 @@ class OverlayShapes {
     _perspective = true;
 
     /**
-     * The frame of the icon being placed.
+     * The icons drawn with the shapes.
      *
-     * @private
+     * @type {OverlayIcons}
      */
-    _icon = {
-        center: new Vec3(),
-        right: new Vec3(),
-        up: new Vec3(),
-        forward: new Vec3(),
-        rotation: new Quat(),
-        away: new Vec3(),
-        pixel: 0
-    };
+    icons;
 
     /**
      * @param {Gizmo} gizmo - The gizmo owning the shapes.
@@ -306,13 +161,7 @@ class OverlayShapes {
         const layers = [layer.id];
         this._labels = new Pool(() => new Readout(device.canvas));
 
-        /**
-         * The icons placed this frame, with the nodes they mark.
-         *
-         * @type {Pool<{ shape: Shape|null, node: GraphNode|null }>}
-         * @private
-         */
-        this._icons = new Pool(() => ({ shape: null, node: null }));
+        this.icons = new OverlayIcons(this, gizmo);
 
         // in a manually sorted layer the filled shapes draw first, so their depth hides the lines
         // and handles behind them
@@ -360,12 +209,12 @@ class OverlayShapes {
             gizmo.intersectShapes.push(box);
             return box;
         });
-        this._iconDiscs = pool((base, occluded) => {
+        this._discs = pool((base, occluded) => new ConeShape(device, { ...args(base, occluded), ...CONES.disk }));
+        this._pickDiscs = pool((base, occluded) => {
             const disc = new ConeShape(device, { ...args(base, occluded), ...CONES.disk });
             gizmo.intersectShapes.push(disc);
             return disc;
         });
-        this._iconDots = pool((base, occluded) => new ConeShape(device, { ...args(base, occluded), ...CONES.disk }));
         this._spheres = pool((base, occluded) => filled(new SphereShape(device, args(base, occluded))), FILL_DRAW_ORDER);
         this._capsules = pool((base, occluded) => filled(new CapsuleShape(device, args(base, occluded))), FILL_DRAW_ORDER);
 
@@ -398,7 +247,7 @@ class OverlayShapes {
         }
         this._lines.begin();
         this._labels.count = 0;
-        this._icons.count = 0;
+        this.icons.begin();
     }
 
     /**
@@ -424,7 +273,7 @@ class OverlayShapes {
         }
         this._lines.begin();
         this._labels.count = 0;
-        this._icons.count = 0;
+        this.icons.begin();
         this.end();
     }
 
@@ -917,42 +766,21 @@ class OverlayShapes {
     }
 
     /**
-     * Places a line of an icon, in CSS pixels from its center, x to the right and y up the screen.
+     * Adds a flat disc facing along the y axis of the rotation, drawn with the lines and handles
+     * rather than as a filled volume.
      *
-     * @param {number} x0 - The start x.
-     * @param {number} y0 - The start y.
-     * @param {number} x1 - The end x.
-     * @param {number} y1 - The end y.
-     * @private
-     */
-    _iconLine(x0, y0, x1, y1) {
-        const { center, right, up, pixel } = this._icon;
-        const a = tmpIconA.copy(right).mulScalar(x0 * pixel).add(tmpIconB.copy(up).mulScalar(y0 * pixel)).add(center);
-        const b = tmpIconB.copy(right).mulScalar(x1 * pixel).add(tmpIconC.copy(up).mulScalar(y1 * pixel)).add(center);
-        this.line(a, b, ICON_WEIGHT);
-    }
-
-    /**
-     * Places a disc of an icon facing the camera.
-     *
-     * @param {number} radius - The radius in CSS pixels.
-     * @param {Color|null} color - The color replacing the rgb of the theme color.
-     * @param {number} alpha - The alpha factor.
-     * @param {number} [back] - How far behind the icon to place the disc, in CSS pixels.
-     * @param {ShapePool} [pool] - The pool of the disc.
-     * @param {number} [x] - The x of the disc center, in CSS pixels from the icon center.
-     * @param {number} [y] - The y of the disc center, up the screen.
+     * @param {Vec3} center - The world center.
+     * @param {Quat} rotation - The world rotation.
+     * @param {number} size - The diameter.
+     * @param {number} [alpha] - The alpha factor.
+     * @param {Color|null} [color] - The color replacing the rgb of the theme color.
+     * @param {boolean} [pickable] - Whether the gizmo picks the disc.
      * @returns {Shape} The disc.
-     * @private
      */
-    _iconDisc(radius, color, alpha, back = 0, pool = this._iconDots, x = 0, y = 0) {
-        const { center, away, right, up, pixel, rotation } = this._icon;
-        const size = 2 * radius * pixel;
+    disc(center, rotation, size, alpha = 1, color = null, pickable = false) {
         this._colors(alpha, false, color);
-        const disc = this._next(pool);
-        const pos = tmpIconA.copy(away).mulScalar(back * pixel).add(center)
-        .add(tmpIconB.copy(up).mulScalar(y * pixel)).add(tmpIconB.copy(right).mulScalar(x * pixel));
-        disc.entity.setLocalPosition(this._local(pos, tmpIconA));
+        const disc = this._next(pickable ? this._pickDiscs : this._discs);
+        disc.entity.setLocalPosition(this._local(center, tmpV1));
         disc.entity.setLocalRotation(rotation);
         disc.entity.setLocalScale(size, 1e-3 * size, size);
         return disc;
@@ -971,113 +799,6 @@ class OverlayShapes {
             if (color instanceof Color) {
                 theme[key]?.copy(color);
             }
-        }
-    }
-
-    /**
-     * Gets the node whose icon, placed this frame, was picked.
-     *
-     * @param {MeshInstance} [meshInstance] - The picked mesh instance.
-     * @returns {GraphNode|null} The node, or null when no icon was picked.
-     */
-    pickIcon(meshInstance) {
-        if (!meshInstance) {
-            return null;
-        }
-        const icons = this._icons;
-        for (let i = 0; i < icons.count; i++) {
-            if (icons.items[i].shape?.meshInstances[0] === meshInstance) {
-                return icons.items[i].node;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Adds an icon at a point, a glyph of a constant size on screen facing the camera over a
-     * faint dark backdrop, which {@link OverlayShapes#pickIcon} picks: a sun for a light, a
-     * camera body with a lens for a camera, a microphone for an audio listener, a speaker for a
-     * sound and a cluster of dots for a particle system.
-     *
-     * @param {OverlayIcon} kind - The icon.
-     * @param {Vec3} position - The world position.
-     * @param {GraphNode} node - The node the icon marks.
-     */
-    icon(kind, position, node) {
-        const camera = this._gizmo.camera.entity;
-        const icon = this._icon;
-        icon.center.copy(position);
-        icon.right.copy(camera.right);
-        icon.up.copy(camera.up);
-        icon.forward.copy(camera.forward);
-        if (this._perspective) {
-            icon.away.sub2(position, camera.getPosition()).normalize();
-        } else {
-            icon.away.copy(camera.forward);
-        }
-        icon.pixel = this.pixels(position, 1);
-        icon.rotation.setFromDirections(Vec3.UP, camera.forward);
-
-        const backdrop = this._iconDisc(ICON_BACKDROP_RADIUS, ICON_BACKDROP, ICON_BACKDROP.a, 1, this._iconDiscs);
-        const glyph = ICON_GLYPHS[kind];
-        for (let i = 0; i < glyph.length; i++) {
-            const s = glyph[i];
-            switch (s[0]) {
-                case 'line':
-                    for (let j = 1; j + 3 < s.length; j += 2) {
-                        this._iconLine(s[j], s[j + 1], s[j + 2], s[j + 3]);
-                    }
-                    break;
-                case 'arc':
-                    this._iconArc(s[1], s[2], s[3], s[4], s[5], s[6]);
-                    break;
-                case 'disc':
-                    this._iconDisc(s[3], null, 1, 0, this._iconDots, s[1], s[2]);
-                    break;
-                case 'triangle': {
-
-                    // a three sided cone flattened onto the screen, its apex to the left
-                    const { right, up, forward, pixel } = icon;
-                    const d = tmpM.setIdentity().data;
-                    const back = tmpIconC.copy(forward).mulScalar(-1);
-                    d[0] = up.x;
-                    d[1] = up.y;
-                    d[2] = up.z;
-                    d[4] = back.x;
-                    d[5] = back.y;
-                    d[6] = back.z;
-                    d[8] = right.x;
-                    d[9] = right.y;
-                    d[10] = right.z;
-                    const length = (s[2] - s[1]) / 0.75;
-                    const center = tmpIconA.copy(right).mulScalar((s[2] - 0.25 * length) * pixel).add(position);
-                    this.cone('triangle', center, tmpIconQ.setFromMat4(tmpM), tmpIconB.set(s[3] / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, length * pixel), 1, false);
-                    break;
-                }
-            }
-        }
-        const record = this._icons.next();
-        record.shape = backdrop;
-        record.node = node;
-    }
-
-    /**
-     * Places an arc of an icon, as straight segments, in CSS pixels from its center.
-     *
-     * @param {number} x - The x of the arc center.
-     * @param {number} y - The y of the arc center, up the screen.
-     * @param {number} radius - The radius.
-     * @param {number} from - The start angle in radians, from the x axis towards the y axis.
-     * @param {number} to - The end angle in radians.
-     * @param {number} segments - The number of segments.
-     * @private
-     */
-    _iconArc(x, y, radius, from, to, segments) {
-        const step = (to - from) / segments;
-        for (let i = 0; i < segments; i++) {
-            const a0 = from + i * step;
-            const a1 = a0 + step;
-            this._iconLine(x + radius * Math.cos(a0), y + radius * Math.sin(a0), x + radius * Math.cos(a1), y + radius * Math.sin(a1));
         }
     }
 

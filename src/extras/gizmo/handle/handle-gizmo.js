@@ -16,7 +16,7 @@ import { Pool } from '../pool.js';
  * @import { Layer } from '../../../scene/layer.js'
  * @import { MeshInstance } from '../../../scene/mesh-instance.js'
  * @import { Shape } from '../shape/shape.js'
- * @import { OverlayIcon } from '../overlay/overlay-shapes.js'
+ * @import { OverlayIcon } from '../overlay/icon-glyphs.js'
  */
 
 /**
@@ -283,7 +283,7 @@ class HandleGizmo extends DragGizmo {
             }
             const handle = this._find(meshInstance);
             if (!handle) {
-                const node = this._shapes.pickIcon(meshInstance);
+                const node = this._shapes.icons.pick(meshInstance);
                 if (node) {
                     this.fire(HandleGizmo.EVENT_ICONSELECT, node);
                 }
@@ -835,7 +835,7 @@ class HandleGizmo extends DragGizmo {
      */
     _icon(kind, position, node) {
         if (this.icon) {
-            this._shapes.icon(kind, position, node);
+            this._shapes.icons.add(kind, position, node);
         }
     }
 

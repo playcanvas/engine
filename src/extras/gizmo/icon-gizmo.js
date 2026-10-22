@@ -6,7 +6,7 @@ import { OverlayShapes } from './overlay/overlay-shapes.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Entity } from '../../framework/entity.js'
  * @import { Layer } from '../../scene/layer.js'
- * @import { OverlayIcon } from './overlay/overlay-shapes.js'
+ * @import { OverlayIcon } from './overlay/icon-glyphs.js'
  */
 
 /**
@@ -112,7 +112,7 @@ class IconGizmo extends Gizmo {
         this._shapes = new OverlayShapes(this, this._colors);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (_x, _y, meshInstance) => {
-            const entity = this._shapes.pickIcon(meshInstance);
+            const entity = this._shapes.icons.pick(meshInstance);
             if (entity) {
                 this.fire(IconGizmo.EVENT_ICONSELECT, entity);
             }
@@ -201,7 +201,7 @@ class IconGizmo extends Gizmo {
             const icon = this._iconOf(entity);
             if (icon) {
                 shapes.tint = this.useLightColor && icon === 'light' ? /** @type {Color} */ (entity.light?.color) : null;
-                shapes.icon(icon, entity.getPosition(), entity);
+                shapes.icons.add(icon, entity.getPosition(), entity);
             }
         }
         shapes.tint = null;
