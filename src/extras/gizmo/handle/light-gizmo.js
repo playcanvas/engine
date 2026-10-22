@@ -86,6 +86,13 @@ class LightGizmo extends HandleGizmo {
     _startWorldScale = new Vec3();
 
     /**
+     * The world scale of the dragged light's parent at the start of the drag.
+     *
+     * @private
+     */
+    _startParentScale = new Vec3();
+
+    /**
      * Creates a new LightGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -416,6 +423,12 @@ class LightGizmo extends HandleGizmo {
         const entity = /** @type {Entity} */ (handle.node);
         this._startScale.copy(entity.getLocalScale());
         entity.getWorldTransform().getScale(this._startWorldScale);
+        const parent = entity.parent;
+        if (parent) {
+            parent.getWorldTransform().getScale(this._startParentScale);
+        } else {
+            this._startParentScale.copy(Vec3.ONE);
+        }
     }
 
     /**
@@ -433,6 +446,7 @@ class LightGizmo extends HandleGizmo {
         const dist = offset.dot(handle.dir);
         const start = this._startScale;
         const world = this._startWorldScale;
+        const parent = this._startParentScale;
 
         switch (handle.name) {
             case 'range': {
@@ -454,11 +468,11 @@ class LightGizmo extends HandleGizmo {
                 break;
             }
             case 'width': {
-                entity.setLocalScale(start.x * Math.max(this._snapLength(2 * dist), MIN_SIZE) / world.x, start.y, start.z);
+                entity.setLocalScale(Math.max(this._snapLength(2 * dist), MIN_SIZE) / parent.x, start.y, start.z);
                 break;
             }
             case 'depth': {
-                entity.setLocalScale(start.x, start.y, start.z * Math.max(this._snapLength(2 * dist), MIN_SIZE) / world.z);
+                entity.setLocalScale(start.x, start.y, Math.max(this._snapLength(2 * dist), MIN_SIZE) / parent.z);
                 break;
             }
             case 'radius': {

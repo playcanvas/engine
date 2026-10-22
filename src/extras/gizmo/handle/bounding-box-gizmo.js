@@ -26,6 +26,7 @@ const AXES = /** @type {const} */ (['x', 'y', 'z']);
 const ORIGIN_DOT = 3;
 const ORIGIN_RING = 7;
 const MIN_FACTOR = 0.01;
+const MIN_EXTENT = 1e-6;
 
 /**
  * @param {Vec3} dir - A unit direction.
@@ -37,6 +38,15 @@ const nearest = (dir) => {
     const z = Math.abs(dir.z);
     return x >= y && x >= z ? 'x' : y >= z ? 'y' : 'z';
 };
+
+/**
+ * @param {number} half - The half extent, padding included.
+ * @param {number} start - The half extent at the start of the resize, padding included.
+ * @param {number} pad - The padding.
+ * @returns {number} The factor the extent scaled by, 1 for a flat extent, which cannot scale.
+ */
+const fitFactor = (half, start, pad) => (start - pad > MIN_EXTENT ?
+    Math.max((half - pad) / (start - pad), MIN_FACTOR) : 1);
 
 /**
  * Draws corner brackets around the world bounds of the attached nodes, with a dot at each node's
@@ -343,9 +353,9 @@ class BoundingBoxGizmo extends HandleGizmo {
         const pad = this.padding;
         const start = this._startHalfExtents;
         const factor = tmpV3.set(
-            Math.max((half.x - pad) / Math.max(start.x - pad, 1e-6), MIN_FACTOR),
-            Math.max((half.y - pad) / Math.max(start.y - pad, 1e-6), MIN_FACTOR),
-            Math.max((half.z - pad) / Math.max(start.z - pad, 1e-6), MIN_FACTOR)
+            fitFactor(half.x, start.x, pad),
+            fitFactor(half.y, start.y, pad),
+            fitFactor(half.z, start.z, pad)
         );
 
         for (let i = 0; i < this.nodes.length; i++) {

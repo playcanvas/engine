@@ -360,7 +360,9 @@ class Gizmo extends EventHandler {
     set enabled(state) {
         this._enabled = state;
         const cameraDist = this.root.getLocalPosition().distance(this.camera.entity.getPosition());
-        const enabled = state ? (!this._requiresNodes || this.nodes.length > 0) && cameraDist > DIST_EPSILON : false;
+
+        // gizmos without nodes draw away from the root, so the camera can sit on it
+        const enabled = state && (!this._requiresNodes || (this.nodes.length > 0 && cameraDist > DIST_EPSILON));
         if (enabled !== this.root.enabled) {
             this.root.enabled = enabled;
             this._renderUpdate = true;
@@ -608,7 +610,7 @@ class Gizmo extends EventHandler {
      */
     _updatePosition() {
         position.set(0, 0, 0);
-        if (this._coordSpace === 'local') {
+        if (this._coordSpace === 'local' && this.nodes.length !== 0) {
             position.copy(this.nodes[this.nodes.length - 1].getPosition());
         } else {
             for (let i = 0; i < this.nodes.length; i++) {

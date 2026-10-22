@@ -77,6 +77,14 @@ class MeshLineBatch {
     _run = null;
 
     /**
+     * The layer of the lines.
+     *
+     * @type {Layer}
+     * @private
+     */
+    _layer;
+
+    /**
      * Whether the lines were destroyed.
      *
      * @private
@@ -92,6 +100,7 @@ class MeshLineBatch {
     constructor(app, layer, parent, drawOrder) {
         const device = app.graphicsDevice;
         this._parent = parent;
+        this._layer = layer;
         this._material = this._createMaterial(false);
         this._occludedMaterial = this._createMaterial(true);
         this._mesh = Mesh.fromGeometry(device, new CylinderGeometry());
@@ -117,13 +126,39 @@ class MeshLineBatch {
             const entity = new Entity('mesh-lines');
             entity.addComponent('render', {
                 meshInstances,
-                layers: [layer.id],
+                layers: [this._layer.id],
                 castShadows: false
             });
             parent.addChild(entity);
             const data = new Float32Array(vertexBuffer.lock());
             return { entity, meshInstances, vertexBuffer, data, capacity: MIN_CAPACITY, count: 0 };
         });
+    }
+
+    /**
+     * Sets the layer of the lines.
+     *
+     * @type {Layer}
+     */
+    set layer(value) {
+        this._layer = value;
+        const ids = [value.id];
+        const runs = this._runs.items;
+        for (let i = 0; i < runs.length; i++) {
+            const { render } = runs[i].entity;
+            if (render) {
+                render.layers = ids;
+            }
+        }
+    }
+
+    /**
+     * Gets the layer of the lines.
+     *
+     * @type {Layer}
+     */
+    get layer() {
+        return this._layer;
     }
 
     /**

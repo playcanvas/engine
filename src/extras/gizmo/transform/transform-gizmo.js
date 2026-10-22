@@ -276,10 +276,11 @@ class TransformGizmo extends DragGizmo {
     constructor(camera, layer, name = 'gizmo:transform') {
         super(camera, layer, name);
 
-        // guides sit on an unrotated root in the immediate layer, whose depth lets the scene hide them
+        // guides sit on an unrotated root in the immediate layer, whose depth lets the scene hide them,
+        // or follow the gizmo layer without one
         this._guideRoot = new Entity('guides');
         this._app.root.addChild(this._guideRoot);
-        const guideLayer = this._app.scene.layers.getLayerById(LAYERID_IMMEDIATE) ?? layer;
+        const guideLayer = this._app.scene.layers.getLayerById(LAYERID_IMMEDIATE);
         this._guides = new OverlayRenderer(this, this._guideTheme, this._guideRoot, guideLayer);
         this._guides.lineThickness = 1;
 

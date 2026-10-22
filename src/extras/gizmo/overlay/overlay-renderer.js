@@ -147,6 +147,22 @@ class OverlayRenderer {
     _perspective = true;
 
     /**
+     * The layer the shapes stay on, or null to follow the layer of the gizmo.
+     *
+     * @type {Layer|null}
+     * @private
+     */
+    _fixedLayer;
+
+    /**
+     * The layer of the shapes.
+     *
+     * @type {Layer}
+     * @private
+     */
+    _layer;
+
+    /**
      * The icons drawn with the shapes.
      *
      * @type {OverlayIcons}
@@ -158,17 +174,18 @@ class OverlayRenderer {
      * @param {OverlayRendererTheme} theme - The theme, whose colors the shapes follow.
      * @param {Entity} [parent] - The parent of the shapes, which must not be rotated or scaled.
      * Defaults to the root of the gizmo.
-     * @param {Layer} [layer] - The layer of the shapes, which must keep the scene depth. Defaults
-     * to the layer of the gizmo.
+     * @param {Layer|null} [layer] - The layer of the shapes, which must keep the scene depth.
+     * Defaults to following the layer of the gizmo.
      */
-    constructor(gizmo, theme, parent = gizmo.root, layer = gizmo.layer) {
+    constructor(gizmo, theme, parent = gizmo.root, layer = null) {
         this._gizmo = gizmo;
         this._theme = theme;
         this._parent = parent;
+        this._fixedLayer = layer;
+        this._layer = layer ?? gizmo.layer;
 
         const { app } = gizmo.camera.system;
         const device = app.graphicsDevice;
-        const layers = [layer.id];
         this._labels = new Pool(() => new Readout(device.canvas));
 
         this.icons = new OverlayIcons(this, gizmo);
@@ -179,14 +196,16 @@ class OverlayRenderer {
             this._pools.push(p);
             return p;
         };
+
+        // shapes are created lazily, so they take the current layer
         const args = (/** @type {Color} */ base, /** @type {Color} */ occluded) => ({
-            layers,
+            layers: [this._layer.id],
             defaultColor: base,
             hoverColor: base,
             occludedColor: occluded
         });
 
-        this._lines = new MeshLineBatch(app, layer, parent, SHAPE_DRAW_ORDER);
+        this._lines = new MeshLineBatch(app, this._layer, parent, SHAPE_DRAW_ORDER);
         this._rings = pool((base, occluded) => {
             const ring = new ArcShape(device, { ...args(base, occluded), ringRadius: 1 });
             ring.show('ring');
@@ -258,7 +277,12 @@ class OverlayRenderer {
         const { width, height } = camera.system.app.graphicsDevice.clientRect;
         this._perspective = camera.projection === PROJECTION_PERSPECTIVE;
         const span = this._perspective ? 2 * Math.tan(0.5 * camera.fov * math.DEG_TO_RAD) : 2 * camera.orthoHeight;
-        this._pixel = span / Math.max(camera.horizontalFov ? width : height, 1);
+        this._pixel = span / Math.max(this._perspective && camera.horizontalFov ? width : height, 1);
+
+        const layer = this._fixedLayer ?? this._gizmo.layer;
+        if (layer !== this._layer) {
+            this._moveTo(layer);
+        }
 
         for (let i = 0; i < this._pools.length; i++) {
             this._pools[i].count = 0;
@@ -266,6 +290,29 @@ class OverlayRenderer {
         this._lines.begin();
         this._labels.count = 0;
         this.icons.begin();
+    }
+
+    /**
+     * Moves the shapes to a layer.
+     *
+     * @param {Layer} layer - The layer.
+     * @private
+     */
+    _moveTo(layer) {
+        this._layer = layer;
+        this._lines.layer = layer;
+        const ids = [layer.id];
+        for (let i = 0; i < this._pools.length; i++) {
+            const { items } = this._pools[i];
+            for (let j = 0; j < items.length; j++) {
+                items[j].entity.forEach((node) => {
+                    const { render } = /** @type {Entity} */ (node);
+                    if (render) {
+                        render.layers = ids;
+                    }
+                });
+            }
+        }
     }
 
     /**
