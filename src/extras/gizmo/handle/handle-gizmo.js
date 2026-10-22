@@ -709,14 +709,13 @@ class HandleGizmo extends DragGizmo {
         if (!this._detailed(center, Math.max(halfExtents.x, halfExtents.y, halfExtents.z))) {
             return;
         }
-        const extent = (/** @type {number} */ k) => 2 * halfExtents[BOX_AXES[k]] - 2 * pad;
         if (options.faceHandles) {
             for (let i = 0; i < BOX_FACES; i++) {
                 const k = i >> 1;
                 const dir = tmpV2.copy(boxAxes[k]).mulScalar(i & 1 ? -1 : 1);
                 const pos = tmpV1.copy(dir).mulScalar(halfExtents[BOX_AXES[k]]).add(center);
                 if (this._handle(pos, BOX_FACE_COLORS[k], null, 'size', i, center, dir)) {
-                    this._readoutAt(pos, BOX_FACE_LABELS[k], BOX_FACE_COLORS[k], extent(k));
+                    this._readoutAt(pos, BOX_FACE_LABELS[k], BOX_FACE_COLORS[k], 2 * (halfExtents[BOX_AXES[k]] - pad));
                 }
             }
         }
@@ -728,7 +727,7 @@ class HandleGizmo extends DragGizmo {
                     this._handle(pos, COLOR_YELLOW, null, 'size', BOX_FACES + i, center, tmpV2.sub2(pos, center).normalize()) :
                     this._handle(pos, COLOR_YELLOW, null, 'size', BOX_FACES + i, pos, forward, true);
                 if (hovered) {
-                    const html = BOX_FACE_LABELS.map((label, k) => this._readoutValue(label, BOX_FACE_COLORS[k], extent(k)));
+                    const html = BOX_FACE_LABELS.map((label, k) => this._readoutValue(label, BOX_FACE_COLORS[k], 2 * (halfExtents[BOX_AXES[k]] - pad)));
                     this._readoutHtmlAt(pos, html.join('  '));
                 }
             }

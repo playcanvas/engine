@@ -482,8 +482,12 @@ class OverlayRenderer {
         let d0 = this._depth(a);
         let d1 = this._depth(b);
         if (d0 > d1) {
-            [a, b] = [b, a];
-            [d0, d1] = [d1, d0];
+            const point = a;
+            a = b;
+            b = point;
+            const depth = d0;
+            d0 = d1;
+            d1 = depth;
         }
         const ratio = d1 / d0;
         const pieces = ratio < PIECE_RATIO ? 1 :
@@ -541,11 +545,12 @@ class OverlayRenderer {
         // dash; screen fraction s maps to line fraction s d0 / (d1 - s (d1 - d0))
         const period = Math.max(DASH_PERIOD * this.lineThickness, length / MAX_LINE_DASHES) / length;
         const dashes = Math.ceil(1 / period);
-        const along = (/** @type {number} */ s) => s * d0 / (d1 - s * (d1 - d0));
         this._colors(alpha, false, color);
         for (let i = 0; i < dashes; i++) {
-            const from = tmpV5.lerp(start, end, along(i * period));
-            const to = tmpV6.lerp(start, end, along(Math.min((i + DASH_FRACTION) * period, 1)));
+            const u0 = i * period;
+            const u1 = Math.min((i + DASH_FRACTION) * period, 1);
+            const from = tmpV5.lerp(start, end, u0 * d0 / (d1 - u0 * (d1 - d0)));
+            const to = tmpV6.lerp(start, end, u1 * d0 / (d1 - u1 * (d1 - d0)));
             this._piece(from, to, weight);
         }
     }
@@ -565,7 +570,9 @@ class OverlayRenderer {
      */
     arc(center, x, y, radius, from, to, weight = 1, alpha = 1, color = null) {
         if (to < from) {
-            [from, to] = [to, from];
+            const angle = from;
+            from = to;
+            to = angle;
         }
         const tube = this._tube(center, radius, weight);
         const sector = (to - from) * math.RAD_TO_DEG;
