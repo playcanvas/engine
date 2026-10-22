@@ -693,21 +693,24 @@ class TransformGizmo extends DragGizmo {
                 add('xyz');
             } else if (this._hoverIsPlane) {
                 switch (this._hoverAxis) {
-                    case 'x':
+                    case 'x': {
                         add('y');
                         add('z');
                         add('yz');
                         break;
-                    case 'y':
+                    }
+                    case 'y': {
                         add('x');
                         add('z');
                         add('xz');
                         break;
-                    case 'z':
+                    }
+                    case 'z': {
                         add('x');
                         add('y');
                         add('xy');
                         break;
+                    }
                 }
             } else {
                 add(this._hoverAxis);

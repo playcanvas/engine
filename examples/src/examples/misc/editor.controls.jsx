@@ -29,17 +29,19 @@ export function Controls({ observer }) {
         switch (category) {
             case 'camera': {
                 switch (key) {
-                    case 'proj':
+                    case 'proj': {
                         setType(value);
                         break;
+                    }
                 }
                 break;
             }
             case 'gizmo': {
                 switch (key) {
-                    case 'type':
+                    case 'type': {
                         setType(value);
                         break;
+                    }
                 }
                 break;
             }

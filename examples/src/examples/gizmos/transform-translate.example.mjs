@@ -179,12 +179,14 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     switch (category) {
         case 'camera': {
             switch (key) {
-                case 'proj':
+                case 'proj': {
                     camera.camera.projection = value - 1;
                     break;
-                case 'fov':
+                }
+                case 'fov': {
                     camera.camera.fov = value;
                     break;
+                }
             }
             break;
         }

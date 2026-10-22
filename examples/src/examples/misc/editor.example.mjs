@@ -311,24 +311,30 @@ const keyup = (/** @type {KeyboardEvent} */ e) => {
 };
 const keypress = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
-        case 'x':
+        case 'x': {
             data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
             break;
-        case '1':
+        }
+        case '1': {
             data.set('gizmo.type', 'translate');
             break;
-        case '2':
+        }
+        case '2': {
             data.set('gizmo.type', 'rotate');
             break;
-        case '3':
+        }
+        case '3': {
             data.set('gizmo.type', 'scale');
             break;
-        case 'p':
+        }
+        case 'p': {
             data.set('camera.proj', PROJECTION_PERSPECTIVE + 1);
             break;
-        case 'o':
+        }
+        case 'o': {
             data.set('camera.proj', PROJECTION_ORTHOGRAPHIC + 1);
             break;
+        }
     }
 };
 window.addEventListener('keydown', keydown);
@@ -342,12 +348,14 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     switch (category) {
         case 'camera': {
             switch (key) {
-                case 'proj':
+                case 'proj': {
                     camera.camera.projection = value - 1;
                     break;
-                case 'fov':
+                }
+                case 'fov': {
                     camera.camera.fov = value;
                     break;
+                }
             }
             break;
         }
@@ -368,38 +376,47 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         }
         case 'grid': {
             switch (key) {
-                case 'colorX':
+                case 'colorX': {
                     grid.colorX = tmpC1.set(value[0], value[1], value[2]);
                     break;
-                case 'colorZ':
+                }
+                case 'colorZ': {
                     grid.colorZ = tmpC1.set(value[0], value[1], value[2]);
                     break;
+                }
             }
             break;
         }
         case 'viewCube': {
             switch (key) {
-                case 'colorX':
+                case 'colorX': {
                     viewCube.colorX = tmpC1.set(value[0], value[1], value[2]);
                     break;
-                case 'colorY':
+                }
+                case 'colorY': {
                     viewCube.colorY = tmpC1.set(value[0], value[1], value[2]);
                     break;
-                case 'colorZ':
+                }
+                case 'colorZ': {
                     viewCube.colorZ = tmpC1.set(value[0], value[1], value[2]);
                     break;
-                case 'radius':
+                }
+                case 'radius': {
                     viewCube.radius = value;
                     break;
-                case 'textSize':
+                }
+                case 'textSize': {
                     viewCube.textSize = value;
                     break;
-                case 'lineThickness':
+                }
+                case 'lineThickness': {
                     viewCube.lineThickness = value;
                     break;
-                case 'lineLength':
+                }
+                case 'lineLength': {
                     viewCube.lineLength = value;
                     break;
+                }
             }
             break;
         }

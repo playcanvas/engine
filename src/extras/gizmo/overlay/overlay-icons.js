@@ -111,17 +111,20 @@ class OverlayIcons {
         for (let i = 0; i < glyph.length; i++) {
             const s = glyph[i];
             switch (s[0]) {
-                case 'line':
+                case 'line': {
                     for (let j = 1; j + 3 < s.length; j += 2) {
                         this._line(s[j], s[j + 1], s[j + 2], s[j + 3]);
                     }
                     break;
-                case 'arc':
+                }
+                case 'arc': {
                     this._arc(s[1], s[2], s[3], s[4], s[5], s[6]);
                     break;
-                case 'disc':
+                }
+                case 'disc': {
                     this._disc(s[3], null, 1, 0, false, s[1], s[2]);
                     break;
+                }
                 case 'triangle': {
 
                     // a three sided cone flattened onto the screen
