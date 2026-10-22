@@ -109,8 +109,8 @@ class LightGizmo extends HandleGizmo {
             return;
         }
         const foot = tmpV5.set(pos.x, 0, pos.z);
-        this._shapes.dashed(pos, foot, 0.625, 0.7);
-        this._shapes.circle(foot, Vec3.UP, GROUND_RADIUS, 0.625, 0.7);
+        this._renderer.dashed(pos, foot, 0.625, 0.7);
+        this._renderer.circle(foot, Vec3.UP, GROUND_RADIUS, 0.625, 0.7);
     }
 
     /**
@@ -127,7 +127,7 @@ class LightGizmo extends HandleGizmo {
     _rays(entity, starts, count, length, weight = 0.625, alpha = 0.55) {
         const along = tmpV5.copy(entity.up).mulScalar(-length);
         for (let i = 0; i < count; i++) {
-            this._shapes.line(starts[i], tmpV6.add2(starts[i], along), weight, alpha);
+            this._renderer.line(starts[i], tmpV6.add2(starts[i], along), weight, alpha);
         }
     }
 
@@ -175,7 +175,7 @@ class LightGizmo extends HandleGizmo {
         }
         const { shape } = light;
 
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const { entity } = light;
         const wtm = entity.getWorldTransform();
         const pos = entity.getPosition();
@@ -192,10 +192,10 @@ class LightGizmo extends HandleGizmo {
                     wtm.transformPoint(RECT[i], rect[i]);
                 }
                 if (volume) {
-                    shapes.box(pos, rot, tmpV2.set(sx, 1e-3 * (sx + sz), sz), FACE_OPACITY);
+                    renderer.box(pos, rot, tmpV2.set(sx, 1e-3 * (sx + sz), sz), FACE_OPACITY);
                 }
                 for (let i = 0; i < rect.length; i++) {
-                    shapes.line(rect[i], rect[(i + 1) % rect.length], 1.1);
+                    renderer.line(rect[i], rect[(i + 1) % rect.length], 1.1);
                 }
                 this._rays(entity, rect, rect.length, 0.17 * (sx + sz));
 
@@ -214,9 +214,9 @@ class LightGizmo extends HandleGizmo {
             }
             case LIGHTSHAPE_DISK: {
                 if (volume) {
-                    shapes.cone('disk', pos, rot, tmpV2.set(2 * radius, 2e-3 * radius, 2 * radius), FACE_OPACITY);
+                    renderer.cone('disk', pos, rot, tmpV2.set(2 * radius, 2e-3 * radius, 2 * radius), FACE_OPACITY);
                 }
-                shapes.ring(pos, rot, radius, 1.1);
+                renderer.ring(pos, rot, radius, 1.1);
                 for (let i = 0; i < RAYS; i++) {
                     this._circlePoint(entity, pos, radius, 2 * Math.PI * i / RAYS, rays[i]);
                 }
@@ -233,7 +233,7 @@ class LightGizmo extends HandleGizmo {
             }
             case LIGHTSHAPE_SPHERE: {
                 if (volume) {
-                    shapes.sphere(pos, radius, FACE_OPACITY);
+                    renderer.sphere(pos, radius, FACE_OPACITY);
                 }
                 this._sphereOutline(pos, rot, radius);
                 if (detailed) {
@@ -247,7 +247,7 @@ class LightGizmo extends HandleGizmo {
         }
 
         if (shape !== LIGHTSHAPE_SPHERE) {
-            shapes.arrow(pos, tmpQ1.copy(rot).mul(FLIP), 0.45 * (sx + sz));
+            renderer.arrow(pos, tmpQ1.copy(rot).mul(FLIP), 0.45 * (sx + sz));
         }
         if (light.type !== 'directional') {
             this._ground(pos);
@@ -263,7 +263,7 @@ class LightGizmo extends HandleGizmo {
      * @private
      */
     _drawSpot(light) {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const { entity, range, innerConeAngle, outerConeAngle } = light;
         const apex = entity.getPosition();
         const dir = tmpV1.copy(entity.up).mulScalar(-1);
@@ -277,16 +277,16 @@ class LightGizmo extends HandleGizmo {
 
         if (this._theme.fill.a > 0 && length > 1e-4) {
             const mid = tmpV4.copy(dir).mulScalar(0.5 * length).add(apex);
-            shapes.cone('cone', mid, entity.getRotation(), tmpV5.set(2 * radius, length, 2 * radius));
+            renderer.cone('cone', mid, entity.getRotation(), tmpV5.set(2 * radius, length, 2 * radius));
         }
 
         // edges along the entity x and z axes
         for (let i = 0; i < 4; i++) {
-            shapes.line(apex, this._circlePoint(entity, center, radius, 0.5 * Math.PI * i, tmpV4));
+            renderer.line(apex, this._circlePoint(entity, center, radius, 0.5 * Math.PI * i, tmpV4));
         }
-        shapes.circle(center, dir, radius, 1.1);
+        renderer.circle(center, dir, radius, 1.1);
         if (innerConeAngle > 0 && innerConeAngle < outerConeAngle) {
-            shapes.dashedCircle(innerCenter, dir, innerRadius, 0.625, 0.8);
+            renderer.dashedCircle(innerCenter, dir, innerRadius, 0.625, 0.8);
         }
 
         // range cap arcs, colored while their angle handle is active
@@ -294,12 +294,12 @@ class LightGizmo extends HandleGizmo {
             const radial = this._circlePoint(entity, Vec3.ZERO, 1, 0.5 * Math.PI * i, tmpV4);
             const color = this._active(entity, 'outerConeAngle', i) ? COLOR_MAGENTA :
                 this._active(entity, 'innerConeAngle', i) ? COLOR_CYAN : null;
-            shapes.arc(apex, dir, radial, range, 0, outer, color ? 1 : 0.625, color ? 1 : 0.6, color);
+            renderer.arc(apex, dir, radial, range, 0, outer, color ? 1 : 0.625, color ? 1 : 0.6, color);
         }
 
         const tip = tmpV4.copy(dir).mulScalar(range).add(apex);
         const ranging = this._active(entity, 'range', 0);
-        shapes.dashed(apex, tip, ranging ? 1 : 0.55, ranging ? 1 : 0.6, ranging ? COLOR_AMBER : null);
+        renderer.dashed(apex, tip, ranging ? 1 : 0.55, ranging ? 1 : 0.6, ranging ? COLOR_AMBER : null);
         this._icon('light', apex, entity);
         this._ground(apex);
 
@@ -335,19 +335,19 @@ class LightGizmo extends HandleGizmo {
      * @private
      */
     _drawDirectional(light) {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const { entity } = light;
         const pos = entity.getPosition();
         const rot = entity.getRotation();
         const scale = this._getScreenScale(pos);
         const radius = 0.24 * scale;
 
-        shapes.ring(pos, rot, radius);
+        renderer.ring(pos, rot, radius);
         for (let i = 0; i < RAYS; i++) {
             this._circlePoint(entity, pos, radius, 2 * Math.PI * i / RAYS, rays[i]);
         }
         this._rays(entity, rays, RAYS, 0.58 * scale, 0.7, 0.75);
-        shapes.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
+        renderer.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
 
         // keep the icon clear of the arrow
         this._icon('light', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
@@ -383,7 +383,7 @@ class LightGizmo extends HandleGizmo {
             if (!entity.enabled || !light?.enabled) {
                 continue;
             }
-            this._shapes.tint = this.useLightColor ? light.color : null;
+            this._renderer.tint = this.useLightColor ? light.color : null;
             if (this._drawArea(light)) {
                 continue;
             }
@@ -403,7 +403,7 @@ class LightGizmo extends HandleGizmo {
                 }
             }
         }
-        this._shapes.tint = null;
+        this._renderer.tint = null;
     }
 
     /**

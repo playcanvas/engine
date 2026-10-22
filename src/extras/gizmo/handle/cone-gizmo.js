@@ -73,19 +73,19 @@ class ConeGizmo extends ShapeGizmo {
      * @override
      */
     _drawShapes() {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const { position: c, rotation: r, radius, height } = this;
         const up = r.transformVector(Vec3.UP, tmpV1);
         const apex = tmpV2.copy(up).mulScalar(0.5 * height).add(c);
         const base = tmpV3.copy(up).mulScalar(-0.5 * height).add(c);
 
         if (this._theme.fill.a > 0) {
-            shapes.cone('cone', c, r, tmpV4.set(2 * radius, height, 2 * radius));
+            renderer.cone('cone', c, r, tmpV4.set(2 * radius, height, 2 * radius));
         }
-        shapes.ring(base, r, radius);
+        renderer.ring(base, r, radius);
         for (let i = 0; i < 4; i++) {
             const side = r.transformVector(i & 1 ? Vec3.FORWARD : Vec3.RIGHT, tmpV5).mulScalar(i < 2 ? radius : -radius);
-            shapes.line(side.add(base), apex, 0.5, 0.35);
+            renderer.line(side.add(base), apex, 0.5, 0.35);
         }
         this._outline(apex, base, up, radius, height);
 
@@ -133,7 +133,7 @@ class ConeGizmo extends ShapeGizmo {
         across.mulScalar(radius * cos).add(base);
         for (let i = 0; i < 2; i++) {
             side.mulScalar(-1);
-            this._shapes.line(tmpV6.add2(across, side), apex, 1.1);
+            this._renderer.line(tmpV6.add2(across, side), apex, 1.1);
         }
     }
 

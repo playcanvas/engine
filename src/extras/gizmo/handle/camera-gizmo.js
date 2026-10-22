@@ -73,7 +73,7 @@ class CameraGizmo extends HandleGizmo {
      * @private
      */
     _draw(entity) {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const camera = /** @type {CameraComponent} */ (entity.camera);
         const { nearClip: near, farClip: far } = camera;
         const perspective = camera.projection === PROJECTION_PERSPECTIVE;
@@ -102,27 +102,27 @@ class CameraGizmo extends HandleGizmo {
             const center = tmpV5.lerp(nearCenter, farCenter, 0.5);
             if (perspective) {
                 const size = tmpV2.set(farX / FRUSTUM_HALF_SIDE, far - near, farY / FRUSTUM_HALF_SIDE);
-                shapes.cone('frustum', center, tmpQ1.copy(rotation).mul(CONE_TO_VIEW), size, 1, true, nearX / farX);
+                renderer.cone('frustum', center, tmpQ1.copy(rotation).mul(CONE_TO_VIEW), size, 1, true, nearX / farX);
             } else {
-                shapes.box(center, rotation, tmpV2.set(2 * farX, 2 * farY, far - near));
+                renderer.box(center, rotation, tmpV2.set(2 * farX, 2 * farY, far - near));
             }
         }
 
         for (let i = 0; i < FAR.length; i += 2) {
-            shapes.line(corners[FAR[i]], corners[FAR[i + 1]], 0.8, 0.85);
+            renderer.line(corners[FAR[i]], corners[FAR[i + 1]], 0.8, 0.85);
         }
         for (let i = 0; i < SIDES.length; i += 2) {
-            shapes.line(corners[SIDES[i]], corners[SIDES[i + 1]], 0.7, 0.7);
+            renderer.line(corners[SIDES[i]], corners[SIDES[i + 1]], 0.7, 0.7);
         }
         for (let i = 0; i < NEAR.length; i += 2) {
-            shapes.line(corners[NEAR[i]], corners[NEAR[i + 1]], 1.1);
+            renderer.line(corners[NEAR[i]], corners[NEAR[i + 1]], 1.1);
         }
-        shapes.cone('triangle', top, tmpQ1.copy(rotation).mul(CONE_TO_VIEW), triangle, 0.9, false);
+        renderer.cone('triangle', top, tmpQ1.copy(rotation).mul(CONE_TO_VIEW), triangle, 0.9, false);
 
         // the view axis, colored while a clip handle is active
         const axis = this._active(entity, 'nearClip', 0) ? COLOR_CYAN :
             this._active(entity, 'farClip', 0) ? COLOR_AMBER : null;
-        shapes.dashed(nearCenter, farCenter, axis ? 1 : 0.55, axis ? 1 : 0.6, axis);
+        renderer.dashed(nearCenter, farCenter, axis ? 1 : 0.55, axis ? 1 : 0.6, axis);
         this._icon('camera', position, entity);
 
         if (!this._detailed(farCenter, farY)) {

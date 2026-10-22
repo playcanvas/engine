@@ -94,7 +94,7 @@ class CapsuleGizmo extends ShapeGizmo {
      * @override
      */
     _drawShapes() {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const { position: c, rotation: r, radius } = this;
         const half = Math.max(0.5 * this.height, radius);
         const up = r.transformVector(Vec3.UP, tmpV1);
@@ -105,22 +105,22 @@ class CapsuleGizmo extends ShapeGizmo {
         }
 
         if (this._theme.fill.a > 0) {
-            shapes.capsule(c, r, radius, 2 * half);
+            renderer.capsule(c, r, radius, 2 * half);
         }
 
         // rings where the caps meet the body
         const top = tmpV4.copy(up).mulScalar(half - radius).add(c);
         const bottom = tmpV5.copy(up).mulScalar(radius - half).add(c);
-        shapes.ring(top, r, radius, 0.5, 0.35);
-        shapes.ring(bottom, r, radius, 0.5, 0.35);
+        renderer.ring(top, r, radius, 0.5, 0.35);
+        renderer.ring(bottom, r, radius, 0.5, 0.35);
         for (let i = 0; i < 4; i++) {
             const a = this._offset(top, sides[i], radius, 0);
             const b = this._offset(bottom, sides[i], radius, 1);
-            shapes.line(a, b, 0.5, 0.35);
+            renderer.line(a, b, 0.5, 0.35);
         }
         for (let i = 0; i < 2; i++) {
-            shapes.arc(top, sides[i], up, radius, 0, Math.PI, 0.5, 0.35);
-            shapes.arc(bottom, sides[i], up, radius, Math.PI, 2 * Math.PI, 0.5, 0.35);
+            renderer.arc(top, sides[i], up, radius, 0, Math.PI, 0.5, 0.35);
+            renderer.arc(bottom, sides[i], up, radius, Math.PI, 2 * Math.PI, 0.5, 0.35);
         }
         this._outline(top, bottom, up, radius);
 
@@ -180,7 +180,7 @@ class CapsuleGizmo extends ShapeGizmo {
             side.mulScalar(-1);
             const a = this._offset(top, offset, 1, 0).add(side);
             const b = this._offset(bottom, offset, 1, 1).add(side);
-            this._shapes.line(a, b, 1.1);
+            this._renderer.line(a, b, 1.1);
         }
         this._capOutline(top, up, across, radius, cos);
         this._capOutline(bottom, tmpV10.copy(up).mulScalar(-1), across, radius, cos);
@@ -203,7 +203,7 @@ class CapsuleGizmo extends ShapeGizmo {
         const outline = tmpV12;
         const size = this._sphereSilhouette(center, radius, outline);
         if (!across) {
-            this._shapes.circle(outline, view, size, 1.1);
+            this._renderer.circle(outline, view, size, 1.1);
             return;
         }
 
@@ -212,7 +212,7 @@ class CapsuleGizmo extends ShapeGizmo {
         const x = tmpV13.cross(axis, across);
         const y = tmpV14.copy(view).mulScalar(-view.dot(axis)).add(axis).normalize();
         const from = Math.atan2(radius * cos * across.dot(y), radius * Math.sqrt(1 - cos * cos));
-        this._shapes.arc(outline, x, y, size, from, Math.PI - from, 1.1);
+        this._renderer.arc(outline, x, y, size, from, Math.PI - from, 1.1);
     }
 
     /**

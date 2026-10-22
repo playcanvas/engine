@@ -11,7 +11,7 @@ import { ICON_GLYPHS } from './icon-glyphs.js';
  * @import { GraphNode } from '../../../scene/graph-node.js'
  * @import { MeshInstance } from '../../../scene/mesh-instance.js'
  * @import { OverlayIcon } from './icon-glyphs.js'
- * @import { OverlayShapes } from './overlay-shapes.js'
+ * @import { OverlayRenderer } from './overlay-renderer.js'
  * @import { Shape } from '../shape/shape.js'
  */
 
@@ -26,17 +26,17 @@ const ICON_BACKDROP_RADIUS = 14;
 const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 
 /**
- * Camera-facing icons of a constant screen size, drawn with {@link OverlayShapes} and picked by
+ * Camera-facing icons of a constant screen size, drawn with {@link OverlayRenderer} and picked by
  * their backdrops.
  *
  * @ignore
  */
 class OverlayIcons {
     /**
-     * @type {OverlayShapes}
+     * @type {OverlayRenderer}
      * @private
      */
-    _shapes;
+    _renderer;
 
     /**
      * @type {Gizmo}
@@ -68,11 +68,11 @@ class OverlayIcons {
     _placed = new Pool(() => ({ shape: null, node: null }));
 
     /**
-     * @param {OverlayShapes} shapes - The shapes the icons are drawn with.
+     * @param {OverlayRenderer} renderer - The renderer the icons are drawn with.
      * @param {Gizmo} gizmo - The gizmo owning the shapes.
      */
-    constructor(shapes, gizmo) {
-        this._shapes = shapes;
+    constructor(renderer, gizmo) {
+        this._renderer = renderer;
         this._gizmo = gizmo;
     }
 
@@ -103,7 +103,7 @@ class OverlayIcons {
         } else {
             frame.away.copy(entity.forward);
         }
-        frame.pixel = this._shapes.pixels(position, 1);
+        frame.pixel = this._renderer.pixels(position, 1);
         frame.rotation.setFromDirections(Vec3.UP, entity.forward);
 
         const backdrop = this._disc(ICON_BACKDROP_RADIUS, ICON_BACKDROP, ICON_BACKDROP.a, 1, true);
@@ -142,7 +142,7 @@ class OverlayIcons {
                     d[10] = right.z;
                     const length = (s[2] - s[1]) / 0.75;
                     const center = tmpA.copy(right).mulScalar((s[2] - 0.25 * length) * pixel).add(position);
-                    this._shapes.cone('triangle', center, tmpQ.setFromMat4(tmpM), tmpB.set(s[3] / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, length * pixel), 1, false);
+                    this._renderer.cone('triangle', center, tmpQ.setFromMat4(tmpM), tmpB.set(s[3] / (0.5 * Math.sqrt(3)) * pixel, 1e-3 * pixel, length * pixel), 1, false);
                     break;
                 }
             }
@@ -184,7 +184,7 @@ class OverlayIcons {
         const { center, right, up, pixel } = this._frame;
         const a = tmpA.copy(right).mulScalar(x0 * pixel).add(tmpB.copy(up).mulScalar(y0 * pixel)).add(center);
         const b = tmpB.copy(right).mulScalar(x1 * pixel).add(tmpC.copy(up).mulScalar(y1 * pixel)).add(center);
-        this._shapes.line(a, b, ICON_WEIGHT);
+        this._renderer.line(a, b, ICON_WEIGHT);
     }
 
     /**
@@ -224,7 +224,7 @@ class OverlayIcons {
         const { center, away, right, up, pixel, rotation } = this._frame;
         const pos = tmpA.copy(away).mulScalar(back * pixel).add(center)
         .add(tmpB.copy(up).mulScalar(y * pixel)).add(tmpB.copy(right).mulScalar(x * pixel));
-        return this._shapes.disc(pos, rotation, 2 * radius * pixel, alpha, color, pickable);
+        return this._renderer.disc(pos, rotation, 2 * radius * pixel, alpha, color, pickable);
     }
 }
 

@@ -249,7 +249,7 @@ class BoundingBoxGizmo extends HandleGizmo {
      * @override
      */
     _drawShapes() {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         this._empty = true;
         for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].forEach(this._addNode);
@@ -262,7 +262,7 @@ class BoundingBoxGizmo extends HandleGizmo {
             const corners = this._boxCorners(c, Quat.IDENTITY, h);
             this._drawBrackets(corners);
             if (this._theme.fill.a > 0) {
-                shapes.box(c, Quat.IDENTITY, tmpV1.copy(h).mulScalar(2));
+                renderer.box(c, Quat.IDENTITY, tmpV1.copy(h).mulScalar(2));
             }
             this._boxHandles(c, h, this, this.padding);
         }
@@ -272,8 +272,8 @@ class BoundingBoxGizmo extends HandleGizmo {
                 const node = this.nodes[i];
                 if (node.enabled) {
                     const pos = node.getPosition();
-                    shapes.dot(pos, ORIGIN_DOT);
-                    shapes.circle(pos, camera.forward, shapes.pixels(pos, ORIGIN_RING), 0.6);
+                    renderer.dot(pos, ORIGIN_DOT);
+                    renderer.circle(pos, camera.forward, renderer.pixels(pos, ORIGIN_RING), 0.6);
                 }
             }
         }
@@ -286,7 +286,7 @@ class BoundingBoxGizmo extends HandleGizmo {
      * @private
      */
     _drawBrackets(corners) {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const { _center: c, _halfExtents: h } = this;
 
         for (let x = -1; x <= 1; x += 2) {
@@ -296,7 +296,7 @@ class BoundingBoxGizmo extends HandleGizmo {
                     for (let k = 0; k < 3; k++) {
                         const axis = AXES[k];
                         const sign = k === 0 ? x : k === 1 ? y : z;
-                        shapes.arm(corner, axis, sign, h[axis] * this.armLength, this.armThickness);
+                        renderer.arm(corner, axis, sign, h[axis] * this.armLength, this.armThickness);
                     }
                 }
             }
@@ -306,7 +306,7 @@ class BoundingBoxGizmo extends HandleGizmo {
             for (let i = 0; i < corners.length; i++) {
                 for (let bit = 1; bit < corners.length; bit <<= 1) {
                     if (!(i & bit)) {
-                        shapes.dashed(corners[i], corners[i | bit], 0.5, 0.45);
+                        renderer.dashed(corners[i], corners[i | bit], 0.5, 0.45);
                     }
                 }
             }

@@ -57,7 +57,7 @@ class SphereGizmo extends ShapeGizmo {
     _drawShapes() {
         const { position: c, rotation: r, radius } = this;
         if (this._theme.fill.a > 0) {
-            this._shapes.sphere(c, radius);
+            this._renderer.sphere(c, radius);
         }
         this._sphereOutline(c, r, radius);
         if (!this._detailed(c, radius)) {

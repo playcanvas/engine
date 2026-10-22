@@ -1,6 +1,6 @@
 import { Color } from '../../core/math/color.js';
 import { Gizmo } from './gizmo.js';
-import { OverlayShapes } from './overlay/overlay-shapes.js';
+import { OverlayRenderer } from './overlay/overlay-renderer.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -88,12 +88,12 @@ class IconGizmo extends Gizmo {
     };
 
     /**
-     * The icon shapes.
+     * The renderer drawing the icons.
      *
-     * @type {OverlayShapes}
+     * @type {OverlayRenderer}
      * @private
      */
-    _shapes;
+    _renderer;
 
     /**
      * Creates a new IconGizmo object.
@@ -106,10 +106,10 @@ class IconGizmo extends Gizmo {
     constructor(camera, layer) {
         super(camera, layer, 'gizmo:icon');
 
-        this._shapes = new OverlayShapes(this, this._colors);
+        this._renderer = new OverlayRenderer(this, this._colors);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (_x, _y, meshInstance) => {
-            const entity = this._shapes.icons.pick(meshInstance);
+            const entity = this._renderer.icons.pick(meshInstance);
             if (entity) {
                 this.fire(IconGizmo.EVENT_ICONSELECT, entity);
             }
@@ -183,26 +183,26 @@ class IconGizmo extends Gizmo {
      * @override
      */
     prerender() {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         if (!this.enabled) {
-            shapes.clear();
+            renderer.clear();
             return;
         }
 
         const { base, occluded } = this._colors;
         occluded.copy(base).a *= OCCLUDED_ALPHA;
 
-        shapes.begin();
+        renderer.begin();
         for (let i = 0; i < this.nodes.length; i++) {
             const entity = /** @type {Entity} */ (this.nodes[i]);
             const icon = this._iconOf(entity);
             if (icon) {
-                shapes.tint = this.useLightColor && icon === 'light' ? /** @type {Color} */ (entity.light?.color) : null;
-                shapes.icons.add(icon, entity.getPosition(), entity);
+                renderer.tint = this.useLightColor && icon === 'light' ? /** @type {Color} */ (entity.light?.color) : null;
+                renderer.icons.add(icon, entity.getPosition(), entity);
             }
         }
-        shapes.tint = null;
-        shapes.end();
+        renderer.tint = null;
+        renderer.end();
     }
 
     /**
@@ -211,7 +211,7 @@ class IconGizmo extends Gizmo {
      * @override
      */
     destroy() {
-        this._shapes.destroy();
+        this._renderer.destroy();
 
         super.destroy();
     }

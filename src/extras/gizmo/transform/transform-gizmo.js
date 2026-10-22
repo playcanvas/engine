@@ -16,7 +16,7 @@ import {
 import { LAYERID_IMMEDIATE } from '../../../scene/constants.js';
 import { DragGizmo } from '../drag-gizmo.js';
 import { Gizmo } from '../gizmo.js';
-import { OverlayShapes } from '../overlay/overlay-shapes.js';
+import { OverlayRenderer } from '../overlay/overlay-renderer.js';
 import { Readout } from '../overlay/readout.js';
 import { Debug } from '../../../core/debug.js';
 
@@ -192,7 +192,7 @@ class TransformGizmo extends DragGizmo {
     /**
      * The guide lines.
      *
-     * @type {OverlayShapes}
+     * @type {OverlayRenderer}
      * @private
      */
     _guides;
@@ -280,7 +280,7 @@ class TransformGizmo extends DragGizmo {
         this._guideRoot = new Entity('guides');
         this._app.root.addChild(this._guideRoot);
         const guideLayer = this._app.scene.layers.getLayerById(LAYERID_IMMEDIATE) ?? layer;
-        this._guides = new OverlayShapes(this, this._guideTheme, this._guideRoot, guideLayer);
+        this._guides = new OverlayRenderer(this, this._guideTheme, this._guideRoot, guideLayer);
         this._guides.lineThickness = 1;
 
         this.readout = true;

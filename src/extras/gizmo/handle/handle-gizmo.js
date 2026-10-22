@@ -7,7 +7,7 @@ import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { DragGizmo } from '../drag-gizmo.js';
 import { Gizmo } from '../gizmo.js';
 import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW } from '../color.js';
-import { OverlayShapes } from '../overlay/overlay-shapes.js';
+import { OverlayRenderer } from '../overlay/overlay-renderer.js';
 import { Pool } from '../pool.js';
 
 /**
@@ -204,12 +204,12 @@ class HandleGizmo extends DragGizmo {
     icon = true;
 
     /**
-     * The overlay shapes.
+     * The overlay renderer.
      *
-     * @type {OverlayShapes}
+     * @type {OverlayRenderer}
      * @protected
      */
-    _shapes;
+    _renderer;
 
     /**
      * The handles placed this frame.
@@ -266,7 +266,7 @@ class HandleGizmo extends DragGizmo {
     constructor(camera, layer, name = 'gizmo:handle') {
         super(camera, layer, name);
 
-        this._shapes = new OverlayShapes(this, this._theme);
+        this._renderer = new OverlayRenderer(this, this._theme);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             if (this._dragging || !meshInstance) {
@@ -274,7 +274,7 @@ class HandleGizmo extends DragGizmo {
             }
             const handle = this._find(meshInstance);
             if (!handle) {
-                const node = this._shapes.icons.pick(meshInstance);
+                const node = this._renderer.icons.pick(meshInstance);
                 if (node) {
                     this.fire(HandleGizmo.EVENT_ICONSELECT, node);
                 }
@@ -324,7 +324,7 @@ class HandleGizmo extends DragGizmo {
      * @type {number}
      */
     set lineThickness(value) {
-        this._shapes.lineThickness = value;
+        this._renderer.lineThickness = value;
     }
 
     /**
@@ -333,7 +333,7 @@ class HandleGizmo extends DragGizmo {
      * @type {number}
      */
     get lineThickness() {
-        return this._shapes.lineThickness;
+        return this._renderer.lineThickness;
     }
 
     /**
@@ -342,7 +342,7 @@ class HandleGizmo extends DragGizmo {
      * @type {number}
      */
     set handleSize(value) {
-        this._shapes.handleSize = value;
+        this._renderer.handleSize = value;
     }
 
     /**
@@ -351,7 +351,7 @@ class HandleGizmo extends DragGizmo {
      * @type {number}
      */
     get handleSize() {
-        return this._shapes.handleSize;
+        return this._renderer.handleSize;
     }
 
     /**
@@ -371,7 +371,7 @@ class HandleGizmo extends DragGizmo {
      * gizmo.setTheme({ occluded: new Color(1, 1, 1, 0.5) });
      */
     setTheme(partial) {
-        this._shapes.applyTheme(partial);
+        this._renderer.applyTheme(partial);
     }
 
     /**
@@ -488,7 +488,7 @@ class HandleGizmo extends DragGizmo {
     _detailed(center, radius) {
 
         // fade in rather than pop in
-        const size = this._shapes.screenSize(center, radius);
+        const size = this._renderer.screenSize(center, radius);
         this._detailFade = this._dragging ? 1 :
             math.clamp((size - DETAIL_FADE_START) / (DETAIL_FADE_END - DETAIL_FADE_START), 0, 1);
         return this._detailFade > 0;
@@ -517,11 +517,11 @@ class HandleGizmo extends DragGizmo {
         const hovered = this._active(node, name, index);
 
         const handle = this._placed.next();
-        handle.shape = this._shapes.handle(position, hovered ? color : null);
+        handle.shape = this._renderer.handle(position, hovered ? color : null);
         handle.shape.fade = hovered ? 1 : this._detailFade;
 
         if (hovered && guide) {
-            this._shapes.dashed(origin, position, 1, 1, color);
+            this._renderer.dashed(origin, position, 1, 1, color);
         }
         handle.node = node;
         handle.name = name;
@@ -555,8 +555,8 @@ class HandleGizmo extends DragGizmo {
      */
     _readoutHtmlAt(position, html) {
         if (this.readout) {
-            const shapes = this._shapes;
-            shapes.label(position, html, shapes.handleSize);
+            const renderer = this._renderer;
+            renderer.label(position, html, renderer.handleSize);
         }
     }
 
@@ -585,7 +585,7 @@ class HandleGizmo extends DragGizmo {
      */
     _sphereRings(center, rotation, radius, weight = 1, alpha = 1) {
         for (let i = 0; i < SPHERE_RINGS.length; i++) {
-            this._shapes.ring(center, tmpQ1.copy(rotation).mul(SPHERE_RINGS[i]), radius, weight, alpha);
+            this._renderer.ring(center, tmpQ1.copy(rotation).mul(SPHERE_RINGS[i]), radius, weight, alpha);
         }
     }
 
@@ -607,11 +607,11 @@ class HandleGizmo extends DragGizmo {
             this._sphereRings(center, rotation, radius);
             return;
         }
-        if (this._shapes.screenSize(center, radius) > RINGS_SIZE) {
+        if (this._renderer.screenSize(center, radius) > RINGS_SIZE) {
             this._sphereRings(center, rotation, radius, 0.5, 0.35);
         }
         const size = this._sphereSilhouette(center, radius, tmpV5);
-        this._shapes.circle(tmpV5, perspective ? toCamera : camera.entity.forward, size, 1.1);
+        this._renderer.circle(tmpV5, perspective ? toCamera : camera.entity.forward, size, 1.1);
     }
 
     /**
@@ -817,7 +817,7 @@ class HandleGizmo extends DragGizmo {
      */
     _icon(kind, position, node) {
         if (this.icon) {
-            this._shapes.icons.add(kind, position, node);
+            this._renderer.icons.add(kind, position, node);
         }
     }
 
@@ -868,16 +868,16 @@ class HandleGizmo extends DragGizmo {
      * @override
      */
     prerender() {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         this._placed.count = 0;
         if (!this.enabled) {
-            shapes.clear();
+            renderer.clear();
             return;
         }
 
-        shapes.begin();
+        renderer.begin();
         this._drawShapes();
-        shapes.end();
+        renderer.end();
     }
 
     /**
@@ -886,7 +886,7 @@ class HandleGizmo extends DragGizmo {
      * @override
      */
     destroy() {
-        this._shapes.destroy();
+        this._renderer.destroy();
 
         super.destroy();
     }

@@ -97,18 +97,18 @@ class BoxGizmo extends ShapeGizmo {
      * @override
      */
     _drawShapes() {
-        const shapes = this._shapes;
+        const renderer = this._renderer;
         const { position: c, rotation: r, halfExtents: h } = this;
         const corners = this._boxCorners(c, r, h);
         for (let i = 0; i < corners.length; i++) {
             for (let bit = 1; bit < corners.length; bit <<= 1) {
                 if (!(i & bit)) {
-                    shapes.line(corners[i], corners[i | bit]);
+                    renderer.line(corners[i], corners[i | bit]);
                 }
             }
         }
         if (this._theme.fill.a > 0) {
-            shapes.box(c, r, tmpV1.copy(h).mulScalar(2));
+            renderer.box(c, r, tmpV1.copy(h).mulScalar(2));
         }
         this._boxHandles(c, h, this);
     }

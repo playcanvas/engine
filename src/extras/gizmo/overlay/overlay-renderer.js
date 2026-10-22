@@ -64,7 +64,7 @@ const FILL_DRAW_ORDER = 0;
 const SHAPE_DRAW_ORDER = 1;
 
 /**
- * @typedef {object} OverlayShapesTheme
+ * @typedef {object} OverlayRendererTheme
  * @property {Color} base - The color where the shapes are visible.
  * @property {Color} occluded - The color where the scene hides the shapes.
  * @property {Color} [fill] - The color of filled volumes, needed only to place them.
@@ -77,7 +77,7 @@ const SHAPE_DRAW_ORDER = 1;
  *
  * @ignore
  */
-class OverlayShapes {
+class OverlayRenderer {
     /**
      * The line thickness in CSS pixels.
      *
@@ -106,7 +106,7 @@ class OverlayShapes {
     _gizmo;
 
     /**
-     * @type {OverlayShapesTheme}
+     * @type {OverlayRendererTheme}
      * @private
      */
     _theme;
@@ -144,7 +144,7 @@ class OverlayShapes {
 
     /**
      * @param {Gizmo} gizmo - The gizmo owning the shapes.
-     * @param {OverlayShapesTheme} theme - The theme, whose colors the shapes follow.
+     * @param {OverlayRendererTheme} theme - The theme, whose colors the shapes follow.
      * @param {Entity} [parent] - The parent of the shapes, which must not be rotated or scaled.
      * Defaults to the root of the gizmo.
      * @param {Layer} [layer] - The layer of the shapes, which must keep the scene depth. Defaults
@@ -781,11 +781,11 @@ class OverlayShapes {
     /**
      * Copies the colors of a partial theme into the theme.
      *
-     * @param {Partial<OverlayShapesTheme>} [partial] - The partial theme.
+     * @param {Partial<OverlayRendererTheme>} [partial] - The partial theme.
      */
     applyTheme(partial) {
         const theme = this._theme;
-        for (const key of /** @type {(keyof OverlayShapesTheme)[]} */ (Object.keys(theme))) {
+        for (const key of /** @type {(keyof OverlayRendererTheme)[]} */ (Object.keys(theme))) {
             const color = partial?.[key];
             if (color instanceof Color) {
                 theme[key]?.copy(color);
@@ -820,4 +820,4 @@ class OverlayShapes {
     }
 }
 
-export { OverlayShapes };
+export { OverlayRenderer };
