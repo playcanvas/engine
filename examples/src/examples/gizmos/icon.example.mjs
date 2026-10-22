@@ -148,7 +148,8 @@ show('light');
 data.set('icon', 'light');
 data.set('gizmo', {
     theme: {
-        base: gizmo.theme.base.toArray()
+        base: gizmo.theme.base.toArray(),
+        occluded: gizmo.theme.occluded.toArray()
     },
     useLightColor: gizmo.useLightColor,
     iconSize: gizmo.iconSize

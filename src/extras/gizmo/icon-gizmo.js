@@ -12,11 +12,9 @@ import { OverlayRenderer } from './overlay/overlay-renderer.js';
 
 /**
  * @typedef {object} IconGizmoTheme
- * @property {Color} base - The color of the icons, drawn faint where the scene hides them.
+ * @property {Color} base - The color where the icons are visible.
+ * @property {Color} occluded - The color where the scene hides the icons.
  */
-
-// alpha factor of icons the scene hides
-const OCCLUDED_ALPHA = 0.2;
 
 /**
  * Draws an icon at each attached entity with nothing else to see, such as a light, camera or sound.
@@ -24,7 +22,7 @@ const OCCLUDED_ALPHA = 0.2;
  * fires {@link IconGizmo.EVENT_ICONSELECT}. The icons are {@link IconGizmo#iconSize} CSS pixels
  * square.
  *
- * Use a layer that keeps the scene depth, so hidden icons draw faint.
+ * Use a layer that keeps the scene depth, so hidden icons use the `occluded` color.
  *
  * ```javascript
  * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
@@ -67,17 +65,8 @@ class IconGizmo extends Gizmo {
      * @private
      */
     _theme = {
-        base: Color.WHITE.clone()
-    };
-
-    /**
-     * The icon colors, the occluded one derived from the base each frame.
-     *
-     * @private
-     */
-    _colors = {
-        base: this._theme.base,
-        occluded: new Color()
+        base: Color.WHITE.clone(),
+        occluded: new Color(1, 1, 1, 0.2)
     };
 
     /**
@@ -99,7 +88,7 @@ class IconGizmo extends Gizmo {
     constructor(camera, layer) {
         super(camera, layer, 'gizmo:icon');
 
-        this._renderer = new OverlayRenderer(this, this._colors);
+        this._renderer = new OverlayRenderer(this, this._theme);
 
         this.on(Gizmo.EVENT_POINTERDOWN, (_x, _y, meshInstance) => {
             const entity = this._renderer.icons.pick(meshInstance);
@@ -141,12 +130,10 @@ class IconGizmo extends Gizmo {
      *
      * @param {Partial<IconGizmoTheme>} partial - The partial theme to set.
      * @example
-     * gizmo.setTheme({ base: new Color(1, 0.8, 0.3) });
+     * gizmo.setTheme({ occluded: new Color(1, 1, 1, 0.5) });
      */
     setTheme(partial) {
-        if (partial?.base instanceof Color) {
-            this._theme.base.copy(partial.base);
-        }
+        this._renderer.applyTheme(partial);
     }
 
     /**
@@ -199,9 +186,6 @@ class IconGizmo extends Gizmo {
             renderer.clear();
             return;
         }
-
-        const { base, occluded } = this._colors;
-        occluded.copy(base).a *= OCCLUDED_ALPHA;
 
         renderer.begin();
         for (let i = 0; i < this.nodes.length; i++) {
