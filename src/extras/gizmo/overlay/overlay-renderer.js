@@ -65,8 +65,11 @@ const CONES = {
 
 const PEAK_TOLERANCE = 1e-3;
 const FILL_DEPTH_BIAS = 2;
+
+// placements count up from the start of their band, so a frame draws in placement order with
+// the fills first, whatever order the layer added the shapes in
 const FILL_DRAW_ORDER = 0;
-const SHAPE_DRAW_ORDER = 1;
+const SHAPE_DRAW_ORDER = 1 << 20;
 
 /**
  * @typedef {object} OverlayRendererTheme
@@ -156,6 +159,13 @@ class OverlayRenderer {
      * @private
      */
     _perspective = true;
+
+    /**
+     * The number of draw orders taken this frame.
+     *
+     * @private
+     */
+    _order = 0;
 
     /**
      * The layer the shapes stay on, or null to follow the layer of the gizmo.
@@ -300,6 +310,8 @@ class OverlayRenderer {
             this._pools[i].count = 0;
         }
         this._lines.begin();
+        this._lines.drawOrder = SHAPE_DRAW_ORDER;
+        this._order = 0;
         this._labels.count = 0;
         this.icons.begin();
     }
@@ -408,17 +420,23 @@ class OverlayRenderer {
     }
 
     /**
-     * Places the next shape of a pool, recoloring it only on change.
+     * Places the next shape of a pool after those placed before it, recoloring it only on change.
      *
      * @param {ShapePool} pool - The pool.
      * @returns {Shape} The shape.
      * @private
      */
     _next(pool) {
+        const item = pool.next();
+        const order = pool.drawOrder + ++this._order;
+        const { meshInstances } = item;
+        for (let i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].drawOrder = order;
+        }
 
         // start a new line run, so later lines draw over this shape
         this._lines.split();
-        const item = pool.next();
+        this._lines.drawOrder = SHAPE_DRAW_ORDER + ++this._order;
         const shape = item.shape;
         if (!item.base.equals(tmpBase) || !item.occluded.equals(tmpOccluded)) {
             item.base.copy(tmpBase);

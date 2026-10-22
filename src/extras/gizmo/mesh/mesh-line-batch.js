@@ -77,6 +77,13 @@ class MeshLineBatch {
     _run = null;
 
     /**
+     * The draw order of the next run in a manually sorted layer.
+     *
+     * @type {number}
+     */
+    drawOrder;
+
+    /**
      * The layer of the lines.
      *
      * @type {Layer}
@@ -95,12 +102,13 @@ class MeshLineBatch {
      * @param {AppBase} app - The application.
      * @param {Layer} layer - The layer of the lines.
      * @param {Entity} parent - The parent of the lines, which the line points are relative to.
-     * @param {number} drawOrder - The draw order of the lines in a manually sorted layer.
+     * @param {number} drawOrder - The draw order of the first run in a manually sorted layer.
      */
     constructor(app, layer, parent, drawOrder) {
         const device = app.graphicsDevice;
         this._parent = parent;
         this._layer = layer;
+        this.drawOrder = drawOrder;
         this._material = this._createMaterial(false);
         this._occludedMaterial = this._createMaterial(true);
         this._mesh = Mesh.fromGeometry(device, new CylinderGeometry());
@@ -121,7 +129,6 @@ class MeshLineBatch {
             const vertexBuffer = new VertexBuffer(device, format, MIN_CAPACITY, { usage: BUFFER_DYNAMIC });
             for (let i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].setInstancing(vertexBuffer);
-                meshInstances[i].drawOrder = drawOrder;
             }
             const entity = new Entity('mesh-lines');
             entity.addComponent('render', {
@@ -230,6 +237,9 @@ class MeshLineBatch {
             run = this._run = this._runs.next();
             run.entity.enabled = true;
             run.count = 0;
+            for (let i = 0; i < run.meshInstances.length; i++) {
+                run.meshInstances[i].drawOrder = this.drawOrder;
+            }
         }
         if (run.count === run.capacity) {
             this._grow(run);
