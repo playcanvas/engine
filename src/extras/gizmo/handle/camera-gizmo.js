@@ -36,12 +36,9 @@ const TRIANGLE_HEIGHT = 0.75;
 const MIN_CLIP = 1e-3;
 
 /**
- * Draws the view frustum of each attached camera entity: a bold near plane with a filled triangle
- * on its top edge that shows the camera's up direction, lighter sides and far plane, a faint
- * volume and a dashed view axis. Once the frustum is large enough on screen, handles drag the
- * near and far clip planes and the field of view, or the orthographic height, each showing its
- * value while hovered. Entities without an enabled camera component are skipped, as is the camera
- * viewing the gizmo.
+ * Draws the view frustum of each attached camera entity, with a triangle marking its up direction.
+ * Handles drag the near and far clip planes and the field of view or orthographic height. The
+ * camera viewing the gizmo is skipped.
  *
  * ```javascript
  * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
@@ -82,7 +79,7 @@ class CameraGizmo extends HandleGizmo {
         const perspective = camera.projection === PROJECTION_PERSPECTIVE;
         const position = entity.getPosition();
 
-        // the corners are in the camera's space, which ignores the entity scale
+        // frustum corners ignore the entity scale
         const rotation = entity.getRotation();
         tmpM.setTRS(position, rotation, Vec3.ONE);
         const points = camera.camera.getFrustumCorners();
@@ -91,7 +88,7 @@ class CameraGizmo extends HandleGizmo {
         const farX = 0.5 * (points[4].x - points[7].x);
         const farY = 0.5 * (points[5].y - points[4].y);
 
-        // the up marker, its base on the middle 40% of the near top edge, flattened onto the plane
+        // the up marker spans the middle 40% of the near top edge
         const triangle = tmpV1.set(0.8 * nearX / TRIANGLE_BASE, 1e-3 * nearY, 0.6 * nearY / TRIANGLE_HEIGHT);
         const top = tmpM.transformPoint(tmpV6.set(0.5 * (points[1].x + points[2].x), points[1].y + 0.25 * triangle.z, -near), tmpV6);
 
@@ -111,7 +108,6 @@ class CameraGizmo extends HandleGizmo {
             }
         }
 
-        // far plane and sides, then the bold near plane and its up marker
         for (let i = 0; i < FAR.length; i += 2) {
             shapes.line(corners[FAR[i]], corners[FAR[i + 1]], 0.8, 0.85);
         }
@@ -123,7 +119,7 @@ class CameraGizmo extends HandleGizmo {
         }
         shapes.cone('triangle', top, tmpQ1.copy(rotation).mul(CONE_TO_VIEW), triangle, 0.9, false);
 
-        // the near and far handles slide along the view axis, colored while one is active
+        // the view axis, colored while a clip handle is active
         const axis = this._active(entity, 'nearClip', 0) ? COLOR_CYAN :
             this._active(entity, 'farClip', 0) ? COLOR_AMBER : null;
         shapes.dashed(nearCenter, farCenter, axis ? 1 : 0.55, axis ? 1 : 0.6, axis);
@@ -133,7 +129,7 @@ class CameraGizmo extends HandleGizmo {
             return;
         }
 
-        // the view handle sits on the far edge the field of view is measured across
+        // the view handle sits on the far edge the field of view spans
         const forward = entity.forward;
         if (this._handle(nearCenter, COLOR_CYAN, entity, 'nearClip', 0, position, forward, false, false)) {
             this._readoutAt(nearCenter, 'N', COLOR_CYAN, near);
@@ -169,7 +165,7 @@ class CameraGizmo extends HandleGizmo {
     }
 
     /**
-     * Edits the clip range, field of view or orthographic height of the dragged handle's camera.
+     * Edits the clip range, field of view or orthographic height of the dragged camera.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.

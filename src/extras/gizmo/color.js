@@ -13,7 +13,7 @@ export const COLOR_GRAY = Object.freeze(new Color(0.5, 0.5, 0.5, 0.5));
  * Converts Color3 to Color4.
  *
  * @param {Color} color - Color3
- * @param {number} a - Alpha value for Color4
+ * @param {number} a - The alpha.
  * @returns {Color} - Color4
  */
 export const color4from3 = (color, a) => {

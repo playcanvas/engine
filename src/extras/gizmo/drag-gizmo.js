@@ -12,11 +12,9 @@ const tmpSide = new Vec3();
 const LINE_EPSILON = 1e-8;
 
 /**
- * The base class of gizmos that are dragged to edit values: the {@link TransformGizmo}s, which
- * move, rotate and scale nodes, and the {@link HandleGizmo}s, whose handles edit sizes, ranges and
- * angles. With {@link DragGizmo#snap} on, a transform gizmo snaps the change since the drag
- * started and a handle snaps the value it edits, lengths to {@link DragGizmo#snapIncrement} and
- * angles to {@link DragGizmo#snapAngleIncrement}.
+ * The base class of gizmos dragged to edit values: {@link TransformGizmo}s and
+ * {@link HandleGizmo}s. With {@link DragGizmo#snap} on, lengths snap to
+ * {@link DragGizmo#snapIncrement} and angles to {@link DragGizmo#snapAngleIncrement}.
  *
  * @category Gizmo
  */
@@ -54,7 +52,7 @@ class DragGizmo extends Gizmo {
     }
 
     /**
-     * Sets the increment lengths, and the factors of a {@link ScaleGizmo}, snap to. Defaults to 1.
+     * Sets the increment lengths and {@link ScaleGizmo} factors snap to. Defaults to 1.
      *
      * @type {number}
      */
@@ -63,7 +61,7 @@ class DragGizmo extends Gizmo {
     }
 
     /**
-     * Gets the increment lengths, and the factors of a {@link ScaleGizmo}, snap to.
+     * Gets the increment lengths and {@link ScaleGizmo} factors snap to.
      *
      * @type {number}
      */
@@ -101,8 +99,8 @@ class DragGizmo extends Gizmo {
     }
 
     /**
-     * Rounds a length to a multiple of {@link DragGizmo#snapIncrement} while snapping, no smaller
-     * than one increment, so a size never snaps to nothing.
+     * Rounds a length to a multiple of {@link DragGizmo#snapIncrement} while snapping, at least one
+     * increment so a size never snaps to zero.
      *
      * @param {number} value - The length.
      * @returns {number} The length, snapped while {@link DragGizmo#snap} is on.
@@ -128,13 +126,13 @@ class DragGizmo extends Gizmo {
     }
 
     /**
-     * Gets the normal of the plane that holds a line and faces the camera as squarely as it can,
-     * which a pointer ray meets to drag along the line.
+     * Gets the normal of the plane through a line that best faces the camera, for dragging along
+     * the line.
      *
      * @param {Vec3} dir - The unit direction of the line.
      * @param {Vec3} facing - The unit direction towards the camera.
      * @param {Vec3} out - Receives the unit normal.
-     * @returns {boolean} False when the line points at the camera, and no plane faces it.
+     * @returns {boolean} False when the line points at the camera.
      * @protected
      */
     _lineNormal(dir, facing, out) {

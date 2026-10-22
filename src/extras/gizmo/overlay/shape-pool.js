@@ -22,8 +22,7 @@ import { Pool } from '../pool.js';
  */
 class ShapePool extends Pool {
     /**
-     * @param {(base: Color, occluded: Color) => Shape} create - Creates a shape in the
-     * supplied colors.
+     * @param {(base: Color, occluded: Color) => Shape} create - Creates a shape in the colors.
      * @param {Entity} parent - The parent of the shapes.
      * @param {number} drawOrder - The draw order of the shapes in a manually sorted layer.
      */

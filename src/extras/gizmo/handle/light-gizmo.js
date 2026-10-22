@@ -39,22 +39,9 @@ const FACE_OPACITY = 3;
 const MIN_SIZE = 0.01;
 
 /**
- * Draws the shape of each attached light entity. A light shines along the negative y-axis of its
- * entity. Entities without an enabled light component are skipped.
- *
- * - A directional light is a solid arrow through a disc of parallel rays, a constant size on
- * screen like the arrows of a {@link TranslateGizmo}, sized by {@link Gizmo#size} rather than
- * {@link HandleGizmo#lineThickness}.
- * - An omni light is the outline of its range over three faint great circles, which become
- * solid when the camera is inside the range.
- * - A spot light is its outer cone, capped by arcs of its range, with a dashed inner cone ring, a
- * dashed axis and a faint volume.
- * - An area light is its rectangle, disk or sphere, sized by the entity scale, with a filled
- * emitting face, and rays and an arrow along the direction it shines.
- *
- * Once a shape is large enough on screen, handles drag its range, cone angles or size, each
- * showing its value while hovered. Dragging the size of an area light sets the entity's local scale,
- * which matches its world size when its parent is not scaled.
+ * Draws the shape of each attached light entity: an arrow for a directional light, sized by
+ * {@link Gizmo#size}, the range of an omni light, the cone of a spot light, and the shape of an area
+ * light. Handles drag the range, cone angles or area size, which sets the entity's local scale.
  *
  * ```javascript
  * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
@@ -71,30 +58,29 @@ const MIN_SIZE = 0.01;
  */
 class LightGizmo extends HandleGizmo {
     /**
-     * Whether to draw a dashed line from each omni, spot and area light down to the ground, taken
-     * as the plane y = 0, which places the light in depth. Defaults to false.
+     * Whether to draw a dashed line from each local light down to the plane y = 0. Defaults to
+     * false.
      *
      * @type {boolean}
      */
     groundLine = false;
 
     /**
-     * Whether to draw each light in its own color, keeping the alpha of the theme colors. Defaults
-     * to false.
+     * Whether to draw each light in its own color. Defaults to false.
      *
      * @type {boolean}
      */
     useLightColor = false;
 
     /**
-     * The local scale of the dragged light's entity at the start of the drag.
+     * The local scale of the dragged light at the start of the drag.
      *
      * @private
      */
     _startScale = new Vec3();
 
     /**
-     * The world scale of the dragged light's entity at the start of the drag.
+     * The world scale of the dragged light at the start of the drag.
      *
      * @private
      */
@@ -113,7 +99,7 @@ class LightGizmo extends HandleGizmo {
     }
 
     /**
-     * Places a dashed line from a light down to the ground, with a ring where it meets it.
+     * Places a dashed line from a light down to the ground.
      *
      * @param {Vec3} pos - The light position.
      * @private
@@ -146,8 +132,7 @@ class LightGizmo extends HandleGizmo {
     }
 
     /**
-     * Gets a point of a circle in the xz plane of an entity, a quarter turn per step from its x
-     * axis.
+     * Gets a point of a circle in the xz plane of an entity.
      *
      * @param {Entity} entity - The entity.
      * @param {Vec3} center - The circle center.
@@ -214,7 +199,7 @@ class LightGizmo extends HandleGizmo {
                 }
                 this._rays(entity, rect, rect.length, 0.17 * (sx + sz));
 
-                // the edge midpoints alternate between the depth (z) and width (x) of the rectangle
+                // edge midpoints alternate between depth (z) and width (x)
                 if (detailed) {
                     for (let i = 0; i < rect.length; i++) {
                         const mid = tmpV2.lerp(rect[i], rect[(i + 1) % rect.length], 0.5);
@@ -261,7 +246,6 @@ class LightGizmo extends HandleGizmo {
             }
         }
 
-        // the direction it shines, out of the face of a rectangle or disk
         if (shape !== LIGHTSHAPE_SPHERE) {
             shapes.arrow(pos, tmpQ1.copy(rot).mul(FLIP), 0.45 * (sx + sz));
         }
@@ -296,7 +280,7 @@ class LightGizmo extends HandleGizmo {
             shapes.cone('cone', mid, entity.getRotation(), tmpV5.set(2 * radius, length, 2 * radius));
         }
 
-        // edges to the rim along the entity x and z axes, perpendicular to the light
+        // edges along the entity x and z axes
         for (let i = 0; i < 4; i++) {
             shapes.line(apex, this._circlePoint(entity, center, radius, 0.5 * Math.PI * i, tmpV4));
         }
@@ -305,7 +289,7 @@ class LightGizmo extends HandleGizmo {
             shapes.dashedCircle(innerCenter, dir, innerRadius, 0.625, 0.8);
         }
 
-        // range cap arcs from the axis out to each edge, colored while its angle handle is active
+        // range cap arcs, colored while their angle handle is active
         for (let i = 0; i < 4; i++) {
             const radial = this._circlePoint(entity, Vec3.ZERO, 1, 0.5 * Math.PI * i, tmpV4);
             const color = this._active(entity, 'outerConeAngle', i) ? COLOR_MAGENTA :
@@ -323,7 +307,7 @@ class LightGizmo extends HandleGizmo {
             return;
         }
 
-        // the angle handles swing along the range cap arcs, in the plane of the axis and their edge
+        // angle handles swing along the range cap arcs
         if (this._handle(tip, COLOR_AMBER, entity, 'range', 0, apex, dir, false, false)) {
             this._readoutAt(tip, 'r', COLOR_AMBER, range);
         }
@@ -345,7 +329,7 @@ class LightGizmo extends HandleGizmo {
     }
 
     /**
-     * Places a solid arrow through a disc of parallel rays, a constant size on screen.
+     * Places an arrow through a disc of parallel rays, a constant size on screen.
      *
      * @param {LightComponent} light - The light to draw.
      * @private
@@ -365,7 +349,7 @@ class LightGizmo extends HandleGizmo {
         this._rays(entity, rays, RAYS, 0.58 * scale, 0.7, 0.75);
         shapes.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
 
-        // the sun sits just behind the bundle, clear of the arrow
+        // keep the icon clear of the arrow
         this._icon('light', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
     }
 
@@ -423,7 +407,7 @@ class LightGizmo extends HandleGizmo {
     }
 
     /**
-     * Keeps the scale of the dragged light's entity, which area light handles edit.
+     * Stores the scale of the dragged light, which area light handles edit.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @protected
@@ -480,8 +464,7 @@ class LightGizmo extends HandleGizmo {
             }
             case 'radius': {
 
-                // the radius of a disk is a quarter of its width and depth, of a sphere half its largest
-                // size, and a disk snaps the diameter its readout shows
+                // a disk's radius is a quarter of its width plus depth and snaps by diameter
                 const disk = light.shape === LIGHTSHAPE_DISK;
                 const radius = disk ? 0.25 * (world.x + world.z) : 0.5 * Math.max(world.x, world.y, world.z);
                 const snapped = disk ? 0.5 * this._snapLength(2 * dist) : this._snapLength(dist);

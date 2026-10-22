@@ -12,8 +12,7 @@ const tmpV1 = new Vec3();
 const MIN_RADIUS = 0.005;
 
 /**
- * Draws a sphere, its outline over three faint great circles, with handles at the ends of its
- * axes that drag its radius.
+ * Draws a sphere with handles that drag its radius.
  *
  * ```javascript
  * const gizmo = new SphereGizmo(cameraComponent, layer);
@@ -68,7 +67,7 @@ class SphereGizmo extends ShapeGizmo {
     }
 
     /**
-     * Sets the radius from how far the handle is dragged from the center.
+     * Sets the radius from the handle's distance to the center.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.

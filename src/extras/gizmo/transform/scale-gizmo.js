@@ -13,23 +13,15 @@ import { BoxLineShape } from '../shape/boxline-shape.js';
  * @import { GizmoSpace } from '../constants.js'
  */
 
-// temporary variables
 const v1 = new Vec3();
 const v2 = new Vec3();
 const point = new Vec3();
 const delta = new Vec3();
 const q = new Quat();
 
-// constants
-
 /**
- * The ScaleGizmo provides interactive 3D manipulation handles for scaling/resizing
- * {@link Entity}s in a {@link Scene}. It creates a visual widget with box-tipped lines along the
- * X, Y and Z axes, planes at their intersections, and a center box, allowing precise control over
- * object scaling through direct manipulation. The gizmo's visual appearance can be customized
- * away from the defaults as required.
- *
- * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ * Handles for scaling {@link Entity}s: box-tipped lines along the X, Y and Z axes, planes between
+ * them and a center box that scales uniformly. Works with mouse, keyboard and touch input.
  *
  * ```javascript
  * // Create a layer for rendering all gizmos
@@ -125,7 +117,7 @@ class ScaleGizmo extends TransformGizmo {
     _coordSpace = 'local';
 
     /**
-     * Internal mapping from each attached node to their starting scale.
+     * The local scale of each attached node at the start of a drag.
      *
      * @type {Map<GraphNode, Vec3>}
      * @private
@@ -133,7 +125,7 @@ class ScaleGizmo extends TransformGizmo {
     _nodeScales = new Map();
 
     /**
-     * Internal state if transform should use uniform scaling.
+     * Whether planes scale uniformly.
      *
      * @protected
      */
@@ -150,8 +142,7 @@ class ScaleGizmo extends TransformGizmo {
     lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
 
     /**
-     * Creates a new ScaleGizmo object. Use {@link Gizmo.createLayer} to create the layer
-     * required to display the gizmo.
+     * Creates a new ScaleGizmo object. Use {@link Gizmo.createLayer} to create its layer.
      *
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The layer responsible for rendering the gizmo.
@@ -164,19 +155,15 @@ class ScaleGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
-
-            // store initial scales of nodes
             this._storeNodeScales();
 
-            // hide shapes that are not selected
+            // hide the unselected shapes
             this._drag(true);
 
             this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, Vec3.ONE);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
-
-            // calculate scale delta and update node scales
             const scaleDelta = delta.copy(point).sub(this._selectionStartPoint).mulScalar(1 / this._scale);
             this._snapVector(scaleDelta, this.snapIncrement);
             this._setNodeScales(scaleDelta.add(Vec3.ONE));
@@ -198,15 +185,13 @@ class ScaleGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
-
-            // reset stored scales
             this._nodeScales.clear();
         });
     }
 
     set coordSpace(value) {
 
-        // disallow changing coordSpace for scale
+        // scale always uses local space
     }
 
     get coordSpace() {
@@ -214,7 +199,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the uniform scaling state for planes.
+     * Sets whether planes scale uniformly.
      *
      * @type {boolean}
      */
@@ -223,7 +208,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Gets the uniform scaling state for planes.
+     * Gets whether planes scale uniformly.
      *
      * @type {boolean}
      */
@@ -358,8 +343,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the opacity of the plane fill, as a factor of the theme color alpha. The plane outline
-     * keeps the full color. Defaults to 0.35.
+     * Sets the plane fill opacity, as a factor of the theme color alpha. Defaults to 0.35.
      *
      * @type {number}
      */
@@ -368,7 +352,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Gets the opacity of the plane fill.
+     * Gets the plane fill opacity.
      *
      * @type {number}
      */
@@ -377,8 +361,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the thickness of the outline on the outer edges of the planes. A thickness of 0 hides
-     * the outline. Defaults to 0.01.
+     * Sets the plane outline thickness; 0 hides the outline. Defaults to 0.01.
      *
      * @type {number}
      */
@@ -387,7 +370,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Gets the thickness of the outline on the outer edges of the planes.
+     * Gets the plane outline thickness.
      *
      * @type {number}
      */
@@ -396,9 +379,8 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the angle in degrees between the view and an axis, or the view and a plane, below
-     * which the shape fades out, until it hides at about 8 degrees. A value of 8 or less hides
-     * the shape without fading. Defaults to 25.
+     * Sets the view angle in degrees below which an axis or plane fades out, hiding at about 8
+     * degrees. Defaults to 25.
      *
      * @type {number}
      */
@@ -480,12 +462,11 @@ class ScaleGizmo extends TransformGizmo {
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
-        // axes fade out as the view looks along them
+        // axes and planes fade out as the view looks along them
         let changed = this._glance(this._shapes.x, Math.abs(cameraDir.dot(this.root.right)));
         changed = this._glance(this._shapes.y, Math.abs(cameraDir.dot(this.root.up))) || changed;
         changed = this._glance(this._shapes.z, Math.abs(cameraDir.dot(this.root.forward))) || changed;
 
-        // planes fade out as the view looks along them
         let flipped;
         v1.cross(cameraDir, this.root.right);
         changed = this._glance(this._shapes.yz, v1.length()) || changed;
@@ -558,7 +539,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} scaleDelta - The point delta.
+     * @param {Vec3} scaleDelta - The scale factor.
      * @private
      */
     _setNodeScales(scaleDelta) {
@@ -591,34 +572,25 @@ class ScaleGizmo extends TransformGizmo {
             return point;
         }
 
-        // uniform scaling for XYZ axis
+        // the center box scales uniformly, by the drag along the screen diagonal
         if (axis === 'xyz') {
-
-            // calculate projection vector for scale direction
             const projDir = v2.add2(this._camera.entity.up, this._camera.entity.right).normalize();
-
-            // calculate direction vector for scaling
             const dir = v1.sub2(point, gizmoPos);
-
-            // normalize vector and project it to scale direction
             const v = dir.length() * dir.normalize().dot(projDir);
             point.set(v, v, v);
 
             return point;
         }
 
-        // rotate point back to world coords
+        // into the frame of the gizmo at the start of the drag
         q.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        // project point onto axis
         if (!isPlane) {
             this._projectToAxis(point, axis);
         }
 
-        // uniform scaling for planes
+        // uniform plane scaling projects onto the diagonal
         if (this._uniform && isPlane) {
-
-            // project to diagonal line
             v1.set(1, 1, 1);
             v1[axis] = 0;
             point.copy(v1.mulScalar(v1.dot(point) / v1.lengthSq()));

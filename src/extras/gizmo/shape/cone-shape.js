@@ -24,21 +24,21 @@ import { Shape } from './shape.js';
  */
 class ConeShape extends Shape {
     /**
-     * The internal peak radius, as a fraction of the base radius.
+     * The peak radius, as a fraction of the base radius.
      *
      * @private
      */
     _peakRadius = 0;
 
     /**
-     * The internal number of sides.
+     * The number of sides.
      *
      * @private
      */
     _segments = 32;
 
     /**
-     * The internal entity holding the mesh, turned by the twist.
+     * The entity holding the mesh, turned by the twist.
      *
      * @type {Entity}
      * @private
@@ -57,10 +57,9 @@ class ConeShape extends Shape {
         this._peakRadius = args.peakRadius ?? this._peakRadius;
         this._segments = args.segments ?? this._segments;
 
-        // intersect, for a cone that keeps its peak radius
+        // hit-testing uses the initial peak radius
         this.triData = [new TriData(this._createGeometry())];
 
-        // render
         this._body = new Entity(`body:${this.axis}`);
         this._body.setLocalEulerAngles(0, args.twist ?? 0, 0);
         this.entity.addChild(this._body);

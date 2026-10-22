@@ -29,9 +29,8 @@ const sides = Array.from({ length: 4 }, () => new Vec3());
 const MIN_SIZE = 0.005;
 
 /**
- * Draws a capsule along its y-axis, its outline over faint rings where its caps meet its body, cap
- * arcs and lines along its sides, with handles around its middle that drag its radius and at its
- * ends that drag its height. The height spans the whole capsule, caps included, and keeps the center in place.
+ * Draws a capsule along its y-axis, with handles that drag its radius and its height, caps
+ * included. A height edit keeps the center in place.
  *
  * ```javascript
  * const gizmo = new CapsuleGizmo(cameraComponent, layer);
@@ -109,7 +108,7 @@ class CapsuleGizmo extends ShapeGizmo {
             shapes.capsule(c, r, radius, 2 * half);
         }
 
-        // rings where the caps meet the body, the sides between them and the arcs over the caps
+        // rings where the caps meet the body
         const top = tmpV4.copy(up).mulScalar(half - radius).add(c);
         const bottom = tmpV5.copy(up).mulScalar(radius - half).add(c);
         shapes.ring(top, r, radius, 0.5, 0.35);
@@ -144,8 +143,7 @@ class CapsuleGizmo extends ShapeGizmo {
     }
 
     /**
-     * Places the outline of the capsule as the camera sees it: the lines where the camera looks
-     * past its body, and the arcs where it looks past its caps.
+     * Places the outline of the capsule as the camera sees it.
      *
      * @param {Vec3} top - The center of the top cap.
      * @param {Vec3} bottom - The center of the bottom cap.
@@ -167,7 +165,7 @@ class CapsuleGizmo extends ShapeGizmo {
             }
         }
 
-        // the sides are where the view across the axis grazes the body
+        // the sides are where the view grazes the body
         const across = tmpV7.copy(up).mulScalar(-along).add(view);
         const dist = across.length();
         const cos = perspective ? radius / dist : 0;
@@ -189,8 +187,7 @@ class CapsuleGizmo extends ShapeGizmo {
     }
 
     /**
-     * Places the outline of a cap, the part of the outline of its sphere beyond the body, or all of
-     * it when the camera looks along the axis.
+     * Places the outline of a cap beyond the body, or all of it when viewed along the axis.
      *
      * @param {Vec3} center - The center of the cap.
      * @param {Vec3} axis - The direction the cap faces.
@@ -210,7 +207,7 @@ class CapsuleGizmo extends ShapeGizmo {
             return;
         }
 
-        // the arc runs over the end of the cap, between where the sides meet it
+        // the arc runs over the cap between the sides
         view.normalize();
         const x = tmpV13.cross(axis, across);
         const y = tmpV14.copy(view).mulScalar(-view.dot(axis)).add(axis).normalize();
@@ -231,7 +228,7 @@ class CapsuleGizmo extends ShapeGizmo {
     }
 
     /**
-     * Sets the radius or height from how far the handle is dragged from the center.
+     * Sets the radius or height from the handle's distance to the center.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.

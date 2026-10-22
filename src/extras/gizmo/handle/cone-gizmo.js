@@ -22,9 +22,8 @@ const tmpV9 = new Vec3();
 const MIN_SIZE = 0.005;
 
 /**
- * Draws a cone along its y-axis, its base ring and outline over faint lines from the base to its
- * apex, with handles on the base that drag its radius and at the apex that drags its height. The
- * height keeps the center in place.
+ * Draws a cone along its y-axis, with handles that drag its base radius and its height. A height
+ * edit keeps the center in place.
  *
  * ```javascript
  * const gizmo = new ConeGizmo(cameraComponent, layer);
@@ -106,8 +105,7 @@ class ConeGizmo extends ShapeGizmo {
     }
 
     /**
-     * Places the outline of the cone as the camera sees it, the lines from the apex that graze its
-     * base ring. There are none when the camera sees the whole base around the apex.
+     * Places the outline of the cone as the camera sees it, none when the base surrounds the apex.
      *
      * @param {Vec3} apex - The apex.
      * @param {Vec3} base - The center of the base.
@@ -122,8 +120,7 @@ class ConeGizmo extends ShapeGizmo {
             tmpV7.sub2(apex, camera.entity.getPosition()) :
             tmpV7.copy(camera.entity.forward);
 
-        // the planes through the camera and the apex that graze the base meet it beyond the base
-        // ring, where the view from the apex reaches the plane of the base
+        // the outline lines graze the base ring where the view from the apex meets its plane
         const along = view.dot(up);
         const across = tmpV8.copy(up).mulScalar(-along).add(view);
         const dist = across.length();
@@ -141,8 +138,7 @@ class ConeGizmo extends ShapeGizmo {
     }
 
     /**
-     * Sets the radius from how far a base handle is dragged from the base center, or the height
-     * from how far the apex is dragged from the center.
+     * Sets the radius or height from the dragged handle's distance.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.

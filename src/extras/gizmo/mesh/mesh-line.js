@@ -16,9 +16,13 @@ import { unlitShader } from '../shaders.js';
 
 const tmpV1 = new Vec3();
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class MeshLine {
-    /** @private */
+    /**
+     * @private
+     */
     _thickness = 0.02;
 
     /**

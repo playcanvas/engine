@@ -26,8 +26,8 @@ const ICON_BACKDROP_RADIUS = 14;
 const ICON_BACKDROP = Object.freeze(new Color(0.05, 0.055, 0.07, 0.6));
 
 /**
- * The icons of an {@link OverlayShapes}, glyphs of a constant size on screen facing the camera,
- * drawn with its lines and shapes and picked by their backdrops.
+ * Camera-facing icons of a constant screen size, drawn with {@link OverlayShapes} and picked by
+ * their backdrops.
  *
  * @ignore
  */
@@ -77,16 +77,14 @@ class OverlayIcons {
     }
 
     /**
-     * Forgets the icons placed in the last frame.
+     * Starts a frame.
      */
     begin() {
         this._placed.count = 0;
     }
 
     /**
-     * Adds an icon at a point, a glyph over a faint dark backdrop, which {@link OverlayIcons#pick}
-     * picks: a sun for a light, a camera body with a lens for a camera, a microphone for an audio
-     * listener, a speaker for a sound and a cluster of dots for a particle system.
+     * Adds an icon at a point, a glyph over a dark backdrop that {@link OverlayIcons#pick} picks.
      *
      * @param {OverlayIcon} kind - The icon.
      * @param {Vec3} position - The world position.
@@ -126,7 +124,7 @@ class OverlayIcons {
                     break;
                 case 'triangle': {
 
-                    // a three sided cone flattened onto the screen, its apex to the left
+                    // a three sided cone flattened onto the screen
                     const { right, up, forward, pixel } = frame;
                     const d = tmpM.setIdentity().data;
                     const back = tmpC.copy(forward).mulScalar(-1);
@@ -171,7 +169,7 @@ class OverlayIcons {
     }
 
     /**
-     * Places a line of the icon, in CSS pixels from its center, x to the right and y up the screen.
+     * Places a line of the icon, in CSS pixels from its center, y up the screen.
      *
      * @param {number} x0 - The start x.
      * @param {number} y0 - The start y.
@@ -187,12 +185,12 @@ class OverlayIcons {
     }
 
     /**
-     * Places an arc of the icon, as straight segments, in CSS pixels from its center.
+     * Places an arc of the icon as straight segments.
      *
      * @param {number} x - The x of the arc center.
      * @param {number} y - The y of the arc center, up the screen.
      * @param {number} radius - The radius.
-     * @param {number} from - The start angle in radians, from the x axis towards the y axis.
+     * @param {number} from - The start angle in radians, from the x axis.
      * @param {number} to - The end angle in radians.
      * @param {number} segments - The number of segments.
      * @private

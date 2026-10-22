@@ -52,12 +52,10 @@ const FLOATS_PER_LINE = 20;
 const MIN_CAPACITY = 16;
 
 /**
- * Lines drawn as instances of a cylinder, each taking the transform a {@link MeshLine} entity
- * would. Consecutive lines form a run, drawn in two instanced draw calls: one without depth test
- * in the occluded color, then one depth tested in the color. Each run has an entity of its own,
- * created when the run is first added, so in a manually sorted layer it draws in the order the
- * lines were placed among other shapes. Lines are added each frame between {@link begin} and
- * {@link end}, and {@link split} starts a new run.
+ * Lines drawn as instanced cylinders, added each frame between {@link begin} and {@link end}.
+ * Consecutive lines form a run with its own entity, drawn as an occluded pass then a depth tested
+ * pass, so in a manually sorted layer it keeps its place among other shapes. {@link split} starts
+ * a new run.
  *
  * @ignore
  */
@@ -176,8 +174,7 @@ class MeshLineBatch {
     }
 
     /**
-     * Ends the current run, so the next line starts a new one, drawn after the shapes placed in
-     * between.
+     * Ends the current run, so the next line draws after the shapes placed in between.
      */
     split() {
         this._run = null;
@@ -233,7 +230,7 @@ class MeshLineBatch {
     }
 
     /**
-     * Uploads the runs of the frame and hides the runs not used.
+     * Uploads the runs of the frame and hides unused runs.
      */
     end() {
         const { items, count } = this._runs;

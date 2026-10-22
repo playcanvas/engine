@@ -34,11 +34,9 @@ import { Pool } from '../pool.js';
  * @property {GraphNode|null} node - The node the handle edits, or null for a shape gizmo.
  * @property {string} name - The value the handle edits.
  * @property {number} index - The index of the handle among those editing the value.
- * @property {Vec3} origin - A point the edit is measured from, on the line or plane the handle
- * moves in.
+ * @property {Vec3} origin - The point the edit is measured from.
  * @property {Vec3} dir - The unit direction of the line, or the normal of the plane.
- * @property {boolean} plane - Whether the handle moves in a plane, along a curve the gizmo draws,
- * rather than along a line.
+ * @property {boolean} plane - Whether the handle moves in a plane rather than along a line.
  * @ignore
  */
 
@@ -89,7 +87,6 @@ const RINGS_SIZE = 40;
 const DETAIL_FADE_START = 60;
 const DETAIL_FADE_END = 100;
 
-
 /**
  * @param {number} corner - The corner index.
  * @param {number} axis - The axis index.
@@ -111,14 +108,11 @@ const createHandle = () => ({
 });
 
 /**
- * The base class of gizmos that draw overlay shapes, such as the frustum of a camera or the shape
- * of a light, around world-sized geometry. Lines and rings keep a constant thickness on screen,
- * and once a shape is large enough on screen, handles that drag to edit its values and a readout
- * of those values show.
+ * The base class of gizmos that draw world-sized overlay shapes, such as a camera frustum or a
+ * light shape, with handles that drag to edit them once large enough on screen.
  *
- * Use a layer that keeps the scene depth so occluded parts draw in the theme's `occluded` color;
- * a {@link Gizmo.createLayer} layer clears depth. Sort its transparent mesh instances manually
- * ({@link SORTMODE_MANUAL}), so filled volumes draw before the lines and handles they hide.
+ * Use a layer that keeps the scene depth, unlike {@link Gizmo.createLayer}, so occluded parts use
+ * the `occluded` color, and sorts transparent mesh instances manually ({@link SORTMODE_MANUAL}).
  *
  * ```javascript
  * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
@@ -165,7 +159,7 @@ class HandleGizmo extends DragGizmo {
     static EVENT_HANDLEEND = 'handle:end';
 
     /**
-     * Fired when the icon of a node is clicked, so an app can select the node.
+     * Fired when the icon of a node is clicked.
      *
      * @event
      * @example
@@ -189,24 +183,21 @@ class HandleGizmo extends DragGizmo {
     };
 
     /**
-     * Whether to show handles that drag to edit the shapes, once a shape is large enough on
-     * screen. Defaults to true.
+     * Whether to show handles that edit the shapes. Defaults to true.
      *
      * @type {boolean}
      */
     handles = true;
 
     /**
-     * Whether to show the value a handle edits just below it, while the handle is hovered or
-     * dragged. Defaults to true.
+     * Whether to show the value of a hovered or dragged handle. Defaults to true.
      *
      * @type {boolean}
      */
     readout = true;
 
     /**
-     * Whether to show an icon at the position of each node, a glyph of a constant size on screen.
-     * Defaults to true.
+     * Whether to show an icon at each node. Defaults to true.
      *
      * @type {boolean}
      */
@@ -237,7 +228,7 @@ class HandleGizmo extends DragGizmo {
     _hovered = createHandle();
 
     /**
-     * The dragged handle, its origin and direction kept from the start of the drag.
+     * The dragged handle, as it was at the start of the drag.
      *
      * @type {GizmoHandle}
      * @protected
@@ -252,14 +243,14 @@ class HandleGizmo extends DragGizmo {
     _dragging = false;
 
     /**
-     * The fade of the handles of the shape being drawn, as set by {@link HandleGizmo#_detailed}.
+     * The fade of the handles, set by {@link HandleGizmo#_detailed}.
      *
      * @private
      */
     _detailFade = 1;
 
     /**
-     * The offset from the pointer to the dragged handle, so it does not jump when grabbed.
+     * The offset from the pointer to the dragged handle, so it does not jump.
      *
      * @private
      */
@@ -445,9 +436,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Gets the point of the dragged handle's line or plane under the pointer. As for a transform
-     * gizmo axis, the pointer ray meets a plane that holds the line and faces the camera, and the
-     * hit is projected onto the line.
+     * Gets the point of the dragged handle's line or plane under the pointer.
      *
      * @param {number} x - The canvas x coordinate.
      * @param {number} y - The canvas y coordinate.
@@ -489,8 +478,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Gets whether a shape is large enough on screen to show its handles, which fade in as it grows
-     * and which a drag keeps shown in full.
+     * Gets whether a shape is large enough on screen to show its handles.
      *
      * @param {Vec3} center - The center of the shape.
      * @param {number} radius - The radius of the shape.
@@ -499,7 +487,7 @@ class HandleGizmo extends DragGizmo {
      */
     _detailed(center, radius) {
 
-        // the handles fade in as the shape grows on screen, rather than appearing at a size
+        // fade in rather than pop in
         const size = this._shapes.screenSize(center, radius);
         this._detailFade = this._dragging ? 1 :
             math.clamp((size - DETAIL_FADE_START) / (DETAIL_FADE_END - DETAIL_FADE_START), 0, 1);
@@ -507,9 +495,8 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Places a handle, which drags along a line or in a plane. While it is hovered or dragged, a
-     * dashed line in its color runs from the origin to the handle, unless the gizmo already draws
-     * the path, which the subclass colors instead.
+     * Places a handle that drags along a line or in a plane, with a dashed guide from the origin
+     * while hovered or dragged.
      *
      * @param {Vec3} position - The world position.
      * @param {Color} color - The color of the handle when hovered or dragged, and of its guide.
@@ -520,8 +507,7 @@ class HandleGizmo extends DragGizmo {
      * @param {Vec3} dir - The unit direction of the line, or the normal of the plane.
      * @param {boolean} [inPlane] - Whether the handle moves in a plane.
      * @param {boolean} [guide] - Whether to show the dashed line. Defaults to true for a line.
-     * @returns {boolean} Whether the handle is hovered or dragged, when the subclass shows the
-     * value it edits with {@link HandleGizmo#_readoutAt}.
+     * @returns {boolean} Whether the handle is hovered or dragged.
      * @protected
      */
     _handle(position, color, node, name, index, origin, dir, inPlane = false, guide = !inPlane) {
@@ -547,7 +533,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Shows the value a hovered or dragged handle edits, below the handle.
+     * Shows the value of a hovered or dragged handle below it.
      *
      * @param {Vec3} position - The handle position.
      * @param {string} label - The value label.
@@ -575,7 +561,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Gets whether the handle editing a value is hovered, or dragged.
+     * Gets whether the handle editing a value is hovered or dragged.
      *
      * @param {GraphNode|null} node - The node the handle edits, or null for a shape gizmo.
      * @param {string} name - The value the handle edits.
@@ -604,8 +590,8 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Places the outline of a sphere over three faint great circles, shown once it is large enough
-     * on screen, or three solid rings when the camera is inside it.
+     * Places the outline of a sphere, over faint great circles once large enough on screen, or
+     * solid rings when the camera is inside it.
      *
      * @param {Vec3} center - The center of the sphere.
      * @param {Quat} rotation - The rotation of the great circles.
@@ -629,8 +615,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Gets the outline of a sphere as the camera sees it, a circle nearer the camera and smaller
-     * than the sphere in perspective, or the great circle facing the view in orthographic.
+     * Gets the outline of a sphere as the camera sees it.
      *
      * @param {Vec3} center - The center of the sphere.
      * @param {number} radius - The radius of the sphere.
@@ -651,7 +636,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Places handles at the ends of the axes of a sphere, which drag its radius.
+     * Places handles at the ends of a sphere's axes, which drag its radius.
      *
      * @param {Vec3} center - The center of the sphere.
      * @param {Quat} rotation - The rotation of the axes.
@@ -671,7 +656,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Gets the corners of a box, the bits of each index giving its x, y and z sides.
+     * Gets the corners of a box, indexed by their x, y and z bits.
      *
      * @param {Vec3} center - The center of the box.
      * @param {Quat} rotation - The rotation of the box.
@@ -693,10 +678,8 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Places the handles of the box last passed to {@link HandleGizmo#_boxCorners}, once it is
-     * large enough on screen. A face handle moves its face along its axis, and a corner handle
-     * moves its corner across the view, or along the diagonal for a uniform box. The readouts show
-     * the extents.
+     * Places the face and corner handles of the box last passed to
+     * {@link HandleGizmo#_boxCorners}, once large enough on screen.
      *
      * @param {Vec3} center - The center of the box.
      * @param {Vec3} halfExtents - The half extents.
@@ -735,7 +718,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Resizes one axis of a box from where its face or corner is dragged to.
+     * Resizes one axis of a box to a dragged face or corner.
      *
      * @param {number} axis - The axis index.
      * @param {number} sign - The side of the dragged face or corner, -1 or 1.
@@ -760,7 +743,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Snaps a half extent so the extent the readout shows, without the padding, is a multiple of
+     * Snaps a half extent so the extent without padding is a multiple of
      * {@link DragGizmo#snapIncrement}.
      *
      * @param {number} half - The half extent, padding included.
@@ -773,8 +756,8 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Resizes a box from where one of the handles of {@link HandleGizmo#_boxHandles} is dragged
-     * to. The opposite face or corner stays in place, or the center does for a centered box.
+     * Resizes a box to a dragged {@link HandleGizmo#_boxHandles} handle, keeping the opposite face
+     * or corner in place, or the center for a centered box.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
@@ -798,7 +781,6 @@ class HandleGizmo extends DragGizmo {
             this._resizeBoxAxis(handle.index >> 1, handle.index & 1 ? -1 : 1, local, start, centered, pad, half, mid);
         } else if (options.uniform) {
 
-            // the box scales evenly about the opposite corner, or the center
             const corner = handle.index - BOX_FACES;
             const anchor = tmpAnchor.set(-boxSide(corner, 0) * start.x, -boxSide(corner, 1) * start.y, -boxSide(corner, 2) * start.z);
             if (centered) {
@@ -808,7 +790,7 @@ class HandleGizmo extends DragGizmo {
             let factor = Math.max(local.distance(anchor) / from, BOX_MIN_FACTOR);
             if (this.snap) {
 
-                // the largest extent snaps, and the others keep their proportions
+                // snap the largest extent and keep the proportions
                 const largest = Math.max(start.x, start.y, start.z);
                 factor = this._snapBoxHalf(largest * factor, pad) / largest;
             }
@@ -840,8 +822,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Formats a value with two decimals after a colored label, as the transform readout does for
-     * its axes.
+     * Formats a value with two decimals after a colored label.
      *
      * @param {string} label - The label.
      * @param {Color} color - The label color.
@@ -863,8 +844,7 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Called when a handle starts being dragged, to keep the values it edits from. Implemented by
-     * the subclass.
+     * Stores the values a handle edits at the start of a drag. Implemented by the subclass.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @protected

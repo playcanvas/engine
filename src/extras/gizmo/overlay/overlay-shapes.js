@@ -71,10 +71,9 @@ const SHAPE_DRAW_ORDER = 1;
  */
 
 /**
- * Pools of the gizmo shapes drawn by handle and icon gizmos around world-sized geometry, with lines and
- * rings of a constant thickness on screen, handles of a constant size, text labels and icons. Shapes are
- * placed each frame between {@link begin} and {@link end}, in world space, under the root of the
- * gizmo, which must not be rotated or scaled.
+ * Pooled shapes drawn each frame between {@link begin} and {@link end}: lines and rings of a
+ * constant screen thickness, handles of a constant screen size, labels and icons. Placed in world
+ * space under a parent that must not be rotated or scaled.
  *
  * @ignore
  */
@@ -94,7 +93,7 @@ class OverlayShapes {
     handleSize = 7;
 
     /**
-     * The color replacing the rgb of the theme colors, or null to keep them.
+     * The rgb replacing the theme colors, or null to keep them.
      *
      * @type {Color|null}
      */
@@ -125,7 +124,7 @@ class OverlayShapes {
     _labels;
 
     /**
-     * The world size of a pixel at unit depth in perspective, or at any depth in orthographic.
+     * The world size of a pixel at unit depth, or at any depth in orthographic.
      *
      * @private
      */
@@ -148,8 +147,8 @@ class OverlayShapes {
      * @param {OverlayShapesTheme} theme - The theme, whose colors the shapes follow.
      * @param {Entity} [parent] - The parent of the shapes, which must not be rotated or scaled.
      * Defaults to the root of the gizmo.
-     * @param {Layer} [layer] - The layer of the shapes, which must keep the scene depth for the
-     * scene to hide them. Defaults to the layer of the gizmo.
+     * @param {Layer} [layer] - The layer of the shapes, which must keep the scene depth. Defaults
+     * to the layer of the gizmo.
      */
     constructor(gizmo, theme, parent = gizmo.root, layer = gizmo.layer) {
         this._gizmo = gizmo;
@@ -163,8 +162,7 @@ class OverlayShapes {
 
         this.icons = new OverlayIcons(this, gizmo);
 
-        // in a manually sorted layer the filled shapes draw first, so their depth hides the lines
-        // and handles behind them
+        // filled shapes draw first in a manually sorted layer, so they hide the lines behind them
         const pool = (/** @type {(base: Color, occluded: Color) => Shape} */ create, drawOrder = SHAPE_DRAW_ORDER) => {
             const p = new ShapePool(create, parent, drawOrder);
             this._pools.push(p);
@@ -190,15 +188,14 @@ class OverlayShapes {
         });
         this._arrows = pool((base, occluded) => new ArrowShape(device, args(base, occluded)));
 
-        // filled shapes sit just behind a surface they lie on, so the lines drawn on them and a mesh
-        // matching a shape gizmo do not fight them
+        // filled shapes sit just behind their surface, so lines and matching meshes don't z-fight
         const filled = (/** @type {Shape} */ shape) => {
             shape.depthBias = FILL_DEPTH_BIAS;
             return shape;
         };
         this._boxes = pool((base, occluded) => filled(new BoxShape(device, args(base, occluded))), FILL_DRAW_ORDER);
 
-        // bracket arms draw over the shapes behind them, rather than hiding them
+        // bracket arms draw over the shapes behind them
         this._arms = pool((base, occluded) => {
             const arm = new BoxShape(device, args(base, occluded));
             arm.depthWrite = false;
@@ -233,7 +230,7 @@ class OverlayShapes {
     }
 
     /**
-     * Starts placing the shapes of a frame.
+     * Starts a frame.
      */
     begin() {
         const camera = this._gizmo.camera;
@@ -251,7 +248,7 @@ class OverlayShapes {
     }
 
     /**
-     * Hides the shapes and labels not placed this frame.
+     * Hides the shapes not placed this frame.
      */
     end() {
         for (let i = 0; i < this._pools.length; i++) {
@@ -307,7 +304,7 @@ class OverlayShapes {
     }
 
     /**
-     * Sets the temporary colors, from the base or fill color of the theme.
+     * Sets the temporary colors from the theme.
      *
      * @param {number} alpha - The alpha factor.
      * @param {boolean} [volume] - Whether to use the fill color.
@@ -331,7 +328,7 @@ class OverlayShapes {
     }
 
     /**
-     * Places the next shape of a pool in the temporary colors, recoloring it only on change.
+     * Places the next shape of a pool, recoloring it only on change.
      *
      * @param {ShapePool} pool - The pool.
      * @returns {Shape} The shape.
@@ -339,7 +336,7 @@ class OverlayShapes {
      */
     _next(pool) {
 
-        // the next line starts a new run, drawn over this shape as a pooled line would be
+        // start a new line run, so later lines draw over this shape
         this._lines.split();
         const item = pool.next();
         const shape = item.shape;
@@ -352,7 +349,7 @@ class OverlayShapes {
     }
 
     /**
-     * Places one piece of a line in the temporary colors.
+     * Places one piece of a line.
      *
      * @param {Vec3} from - The start point.
      * @param {Vec3} to - The end point.
@@ -377,7 +374,7 @@ class OverlayShapes {
     }
 
     /**
-     * Gets the world size of a length on screen at a point.
+     * Gets the world size of a screen length at a point.
      *
      * @param {Vec3} point - The world point.
      * @param {number} count - The length in CSS pixels.
@@ -388,7 +385,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a line between two world points, split into pieces along its depth.
+     * Adds a line between two world points.
      *
      * @param {Vec3} a - The start point.
      * @param {Vec3} b - The end point.
@@ -413,7 +410,7 @@ class OverlayShapes {
             }
         }
 
-        // pieces grow geometrically away from the near end, as the depth does along them
+        // split into pieces growing with depth, so the thickness stays constant on screen
         let d0 = this._depth(a);
         let d1 = this._depth(b);
         if (d0 > d1) {
@@ -472,9 +469,8 @@ class OverlayShapes {
             return;
         }
 
-        // dashes a fixed distance apart on screen from the start, so moving the end only grows or
-        // shrinks the last dash, where a point a fraction s of the way across the screen is a
-        // fraction t = s d0 / (d1 - s (d1 - d0)) along the line
+        // dashes are spaced on screen from the start, so moving the end only changes the last
+        // dash; screen fraction s maps to line fraction s d0 / (d1 - s (d1 - d0))
         const period = Math.max(DASH_PERIOD, length / MAX_LINE_DASHES) / length;
         const dashes = Math.ceil(1 / period);
         const along = (/** @type {number} */ s) => s * d0 / (d1 - s * (d1 - d0));
@@ -487,7 +483,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds an arc, a sector of a ring.
+     * Adds an arc.
      *
      * @param {Vec3} center - The world center.
      * @param {Vec3} x - The unit direction at angle 0.
@@ -509,7 +505,7 @@ class OverlayShapes {
         this._colors(alpha, false, color);
         const arc = /** @type {ArcShape} */ (this._next(this._arcs));
 
-        // rebuilding the torus is costly, so only once the tube or sector is well off
+        // rebuilding the torus is costly, so only rebuild once well off
         if (Math.abs(arc.tubeRadius - tube) > tube * TUBE_TOLERANCE) {
             arc.tubeRadius = tube;
         }
@@ -538,7 +534,7 @@ class OverlayShapes {
     }
 
     /**
-     * Gets the tube radius of a unit torus scaled to a ring, for a constant thickness on screen.
+     * Gets the tube radius of a unit torus for a constant screen thickness.
      *
      * @param {Vec3} center - The world center.
      * @param {number} radius - The radius.
@@ -548,7 +544,7 @@ class OverlayShapes {
      */
     _tube(center, radius, weight) {
 
-        // the distance to the visible part of the ring, which may surround the camera
+        // the ring may surround the camera, so use the distance to its edge
         const camera = this._gizmo.camera;
         const dist = Math.hypot(center.distance(camera.entity.getPosition()), radius);
         const depth = this._perspective ? Math.max(dist, camera.nearClip) : 1;
@@ -556,7 +552,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a ring, lying in the xz plane of the supplied rotation.
+     * Adds a ring in the xz plane of the rotation.
      *
      * @param {Vec3} center - The world center.
      * @param {Quat} rotation - The world rotation.
@@ -570,7 +566,7 @@ class OverlayShapes {
         this._colors(alpha);
         const ring = /** @type {ArcShape} */ (this._next(this._rings));
 
-        // rebuilding the torus is costly, so only once the tube is well off
+        // rebuilding the torus is costly, so only rebuild once well off
         if (Math.abs(ring.tubeRadius - tube) > tube * TUBE_TOLERANCE) {
             ring.tubeRadius = tube;
         }
@@ -581,7 +577,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a ring facing the supplied normal.
+     * Adds a ring facing the normal.
      *
      * @param {Vec3} center - The world center.
      * @param {Vec3} normal - The ring normal. Need not be normalized.
@@ -594,7 +590,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a dashed ring facing the supplied normal, each dash a chord.
+     * Adds a dashed ring facing the normal.
      *
      * @param {Vec3} center - The world center.
      * @param {Vec3} normal - The ring normal. Need not be normalized.
@@ -619,7 +615,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds an arrow pointing along the y axis of the supplied rotation.
+     * Adds an arrow along the y axis of the rotation.
      *
      * @param {Vec3} position - The world position of the arrow base.
      * @param {Quat} rotation - The world rotation.
@@ -634,7 +630,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a handle, a cube of a constant size on screen, which the gizmo picks.
+     * Adds a pickable handle, a cube of a constant screen size.
      *
      * @param {Vec3} position - The world position.
      * @param {Color|null} [hover] - The color of a hovered handle, or null for the theme color.
@@ -654,8 +650,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds an arm of a corner bracket, a box running back from a corner along a world axis, which
-     * overhangs the corner by half its thickness so the arms at a corner meet.
+     * Adds a corner bracket arm along a world axis, overhanging the corner so the arms meet.
      *
      * @param {Vec3} corner - The world corner.
      * @param {'x' | 'y' | 'z'} axis - The world axis the arm runs along.
@@ -676,7 +671,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a dot, a sphere of a constant size on screen.
+     * Adds a dot of a constant screen size.
      *
      * @param {Vec3} position - The world position.
      * @param {number} radius - The radius in CSS pixels.
@@ -695,7 +690,7 @@ class OverlayShapes {
      * @param {Quat} rotation - The world rotation.
      * @param {Vec3} size - The size along each axis of the rotation.
      * @param {number} [alpha] - The alpha factor.
-     * @param {boolean} [volume] - Whether to use the theme fill color rather than the base color.
+     * @param {boolean} [volume] - Whether to use the theme fill color.
      */
     box(center, rotation, size, alpha = 1, volume = true) {
         this._colors(alpha, volume);
@@ -741,17 +736,15 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a filled unit cone along the y axis of the rotation, its base at y = -0.5. A disk is a
-     * cylinder and a triangle a three sided pyramid, both meant to be flattened by the size, and a
-     * frustum a four sided pyramid with square sides along the x and z axes.
+     * Adds a filled unit cone along the y axis of the rotation, its base at y = -0.5. A disk and a
+     * triangle are meant to be flattened by the size; a frustum is a square pyramid.
      *
      * @param {keyof CONES} kind - The kind of cone.
      * @param {Vec3} center - The world center.
      * @param {Quat} rotation - The world rotation.
-     * @param {Vec3} size - The size along each axis of the rotation, where a size of 1 gives a
-     * base radius of 0.5.
+     * @param {Vec3} size - The size along each axis of the rotation; 1 gives a base radius of 0.5.
      * @param {number} [alpha] - The alpha factor.
-     * @param {boolean} [volume] - Whether to use the theme fill color rather than the base color.
+     * @param {boolean} [volume] - Whether to use the theme fill color.
      * @param {number} [peak] - The peak radius of a frustum, as a fraction of its base radius.
      */
     cone(kind, center, rotation, size, alpha = 1, volume = true, peak = 0) {
@@ -766,8 +759,7 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a flat disc facing along the y axis of the rotation, drawn with the lines and handles
-     * rather than as a filled volume.
+     * Adds a flat disc facing the y axis of the rotation, drawn with the lines, not as a volume.
      *
      * @param {Vec3} center - The world center.
      * @param {Quat} rotation - The world rotation.
@@ -787,8 +779,7 @@ class OverlayShapes {
     }
 
     /**
-     * Copies the colors of a partial theme into the theme the shapes follow, for the colors the
-     * theme has.
+     * Copies the colors of a partial theme into the theme.
      *
      * @param {Partial<OverlayShapesTheme>} [partial] - The partial theme.
      */
@@ -803,12 +794,11 @@ class OverlayShapes {
     }
 
     /**
-     * Adds a text label centered just below a world point, in the style of the transform readout.
+     * Adds a text label just below a world point.
      *
      * @param {Vec3} position - The world position.
      * @param {string} html - The label markup.
-     * @param {number} [below] - How much further below the point to place the label, in CSS
-     * pixels.
+     * @param {number} [below] - The extra offset below the point, in CSS pixels.
      */
     label(position, html, below = 0) {
         if (this._perspective && this._viewDepth(position) < this._gizmo.camera.nearClip) {
@@ -820,7 +810,7 @@ class OverlayShapes {
     }
 
     /**
-     * Destroys the shapes and labels. Safe to call again.
+     * Destroys the shapes. Safe to call again.
      */
     destroy() {
         this._pools.forEach(pool => pool.destroy());

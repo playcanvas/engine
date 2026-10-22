@@ -21,7 +21,7 @@ import { Shape } from './shape.js';
  */
 class CapsuleShape extends Shape {
     /**
-     * The internal height, as a multiple of the radius.
+     * The height, as a multiple of the radius.
      *
      * @private
      */
@@ -38,10 +38,8 @@ class CapsuleShape extends Shape {
 
         this._height = args.height ?? this._height;
 
-        // intersect
         this.triData = [new TriData(this._createGeometry())];
 
-        // render
         this._createRenderComponent(this.entity, [this._createMesh()]);
     }
 

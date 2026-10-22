@@ -43,7 +43,7 @@ class PlaneShape extends Shape {
     _cull = CULLFACE_NONE;
 
     /**
-     * The size of the plane.
+     * The size.
      *
      * @private
      */
@@ -57,7 +57,7 @@ class PlaneShape extends Shape {
     _gap = 0;
 
     /**
-     * The internal flipped state of the plane.
+     * The flipped state.
      *
      * @private
      */
@@ -86,7 +86,7 @@ class PlaneShape extends Shape {
     _outlineMaterial = new ShaderMaterial(unlitShader);
 
     /**
-     * The outline edges on the two outer sides of the plane, which keep clear of the axes.
+     * The outline edges on the two outer sides, clear of the axes.
      *
      * @type {Entity[]}
      * @private
@@ -123,17 +123,14 @@ class PlaneShape extends Shape {
         this._opacity = args.opacity ?? this._opacity;
         this._outlineThickness = args.outlineThickness ?? this._outlineThickness;
 
-        // intersect
         this.triData = [
             new TriData(new PlaneGeometry())
         ];
 
-        // render
         this._createRenderComponent(this.entity, [
             Mesh.fromGeometry(this.device, new PlaneGeometry())
         ]);
 
-        // outline
         this._outlineMaterial.setDefine('DEPTH_WRITE', this._depth > 0 ? '1' : '0');
         this._outlineMaterial.setParameter('uDepth', this._depth);
         this._outlineMaterial.cull = this._cull;
@@ -154,13 +151,12 @@ class PlaneShape extends Shape {
             this._outlineMeshInstances.push(meshInstance);
         }
 
-        // update transform and colors
         this._update();
         this.hover(false);
     }
 
     /**
-     * Set the visibility state of the plane and its outline.
+     * Set the visibility state.
      *
      * @type {boolean}
      */
@@ -172,7 +168,7 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Get the visibility state of the plane.
+     * Get the visibility state.
      *
      * @type {boolean}
      */
@@ -181,7 +177,7 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Set the size of the plane.
+     * Set the size.
      *
      * @type {number}
      */
@@ -191,7 +187,7 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Get the size of the plane.
+     * Get the size.
      *
      * @type {number}
      */
@@ -219,8 +215,7 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Set the opacity of the fill, as a factor of the shape color alpha. The outline keeps the
-     * full color.
+     * Set the opacity of the fill, as a factor of the shape color alpha.
      *
      * @type {number}
      */
@@ -258,7 +253,7 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Set the flipped state of the plane.
+     * Set the flipped state.
      *
      * @type {Vec3}
      */
@@ -271,7 +266,7 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Get the flipped state of the plane.
+     * Get the flipped state.
      *
      * @type {Vec3}
      */
@@ -280,14 +275,12 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Update the shape's transform.
+     * Updates the transform.
      *
      * @protected
      * @override
      */
     _update() {
-
-        // intersect/render
         const offset = this._size / 2 + this._gap;
         this._position.set(
             this._flipped.x ? -offset : offset,
@@ -299,7 +292,7 @@ class PlaneShape extends Shape {
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._size, this._size, this._size);
 
-        // the outer sides face away from the center, in the space of the unit plane
+        // the outer sides face away from the center
         const outer = tmpQ1.setFromEulerAngles(this._rotation).invert().transformVector(this._position, tmpV1);
         const sx = outer.x < 0 ? -1 : 1;
         const sz = outer.z < 0 ? -1 : 1;
@@ -308,7 +301,7 @@ class PlaneShape extends Shape {
             this._outlines[i].enabled = t > 0;
         }
 
-        // each edge runs past the outer corner by half a thickness, so the two meet
+        // overhang the corner by half a thickness so the edges meet
         this._outlines[0]?.setLocalPosition(sx * 0.25 * t, 0, sz * 0.5);
         this._outlines[0]?.setLocalScale(1 + 0.5 * t, t, t);
         this._outlines[1]?.setLocalPosition(sx * 0.5, 0, sz * 0.25 * t);
@@ -316,7 +309,7 @@ class PlaneShape extends Shape {
     }
 
     /**
-     * Sets the hover state of the plane, its fill translucent and its outline in the full color.
+     * Sets the hover state.
      *
      * @param {boolean} state - Whether the shape is hovered.
      * @override

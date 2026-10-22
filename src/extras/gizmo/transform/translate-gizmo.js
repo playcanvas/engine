@@ -13,24 +13,17 @@ import { SphereShape } from '../shape/sphere-shape.js';
  * @import { GizmoAxis } from '../constants.js'
  */
 
-// temporary variables
 const v1 = new Vec3();
 const v2 = new Vec3();
 const point = new Vec3();
 const delta = new Vec3();
 const q = new Quat();
 
-// constants
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
- * The TranslateGizmo provides interactive 3D manipulation handles for translating/moving
- * {@link Entity}s in a {@link Scene}. It creates a visual widget with arrows along the X, Y
- * and Z axes, planes at their intersections, and a center sphere, allowing precise control over
- * object positioning through direct manipulation. The gizmo's visual appearance can be customized
- * away from the defaults as required.
- *
- * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ * Handles for moving {@link Entity}s: arrows along the X, Y and Z axes, planes between them and a
+ * center sphere that moves in the view plane. Works with mouse, keyboard and touch input.
  *
  * ```javascript
  * // Create a layer for rendering all gizmos
@@ -120,7 +113,7 @@ class TranslateGizmo extends TransformGizmo {
     };
 
     /**
-     * Internal mapping from each attached node to their starting position in local space.
+     * The local position of each attached node at the start of a drag.
      *
      * @type {Map<GraphNode, Vec3>}
      * @private
@@ -128,7 +121,7 @@ class TranslateGizmo extends TransformGizmo {
     _nodeLocalPositions = new Map();
 
     /**
-     * Internal mapping from each attached node to their starting position in world space.
+     * The world position of each attached node at the start of a drag.
      *
      * @type {Map<GraphNode, Vec3>}
      * @private
@@ -141,8 +134,7 @@ class TranslateGizmo extends TransformGizmo {
     flipPlanes = true;
 
     /**
-     * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create the layer
-     * required to display the gizmo.
+     * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create its layer.
      *
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The layer responsible for rendering the gizmo.
@@ -155,19 +147,15 @@ class TranslateGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
-
-            // store the initial positions of the nodes
             this._storeNodePositions();
 
-            // hide shapes that are not selected
+            // hide the unselected shapes
             this._drag(true);
 
             this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, Vec3.ZERO);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
-
-            // calculate translate delta and update node positions
             const translateDelta = delta.copy(point).sub(this._selectionStartPoint);
             this._snapVector(translateDelta, this.snapIncrement);
             this._setNodePositions(translateDelta);
@@ -189,8 +177,6 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
-
-            // reset stored positions
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
         });
@@ -341,8 +327,7 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the opacity of the plane fill, as a factor of the theme color alpha. The plane outline
-     * keeps the full color. Defaults to 0.35.
+     * Sets the plane fill opacity, as a factor of the theme color alpha. Defaults to 0.35.
      *
      * @type {number}
      */
@@ -351,7 +336,7 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Gets the opacity of the plane fill.
+     * Gets the plane fill opacity.
      *
      * @type {number}
      */
@@ -360,8 +345,7 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the thickness of the outline on the outer edges of the planes. A thickness of 0 hides
-     * the outline. Defaults to 0.01.
+     * Sets the plane outline thickness; 0 hides the outline. Defaults to 0.01.
      *
      * @type {number}
      */
@@ -370,7 +354,7 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Gets the thickness of the outline on the outer edges of the planes.
+     * Gets the plane outline thickness.
      *
      * @type {number}
      */
@@ -379,9 +363,8 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the angle in degrees between the view and an axis, or the view and a plane, below
-     * which the shape fades out, until it hides at about 8 degrees. A value of 8 or less hides
-     * the shape without fading. Defaults to 25.
+     * Sets the view angle in degrees below which an axis or plane fades out, hiding at about 8
+     * degrees. Defaults to 25.
      *
      * @type {number}
      */
@@ -463,12 +446,11 @@ class TranslateGizmo extends TransformGizmo {
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
-        // axes fade out as the view looks along them
+        // axes and planes fade out as the view looks along them
         let changed = this._glance(this._shapes.x, Math.abs(cameraDir.dot(this.root.right)));
         changed = this._glance(this._shapes.y, Math.abs(cameraDir.dot(this.root.up))) || changed;
         changed = this._glance(this._shapes.z, Math.abs(cameraDir.dot(this.root.forward))) || changed;
 
-        // planes fade out as the view looks along them
         let flipped;
         v1.cross(cameraDir, this.root.right);
         changed = this._glance(this._shapes.yz, v1.length()) || changed;
@@ -541,7 +523,7 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {Vec3} translateDelta - The delta to apply to the node positions.
+     * @param {Vec3} translateDelta - The offset from the start positions.
      * @private
      */
     _setNodePositions(translateDelta) {
@@ -592,10 +574,9 @@ class TranslateGizmo extends TransformGizmo {
             return point;
         }
 
-        // rotate point back to world coords
+        // into the frame of the gizmo at the start of the drag
         q.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        // project point onto axis
         if (!isPlane && axis !== 'xyz') {
             this._projectToAxis(point, axis);
         }

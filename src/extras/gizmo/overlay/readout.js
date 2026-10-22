@@ -11,8 +11,7 @@ class Readout {
     _canvas;
 
     /**
-     * The element showing the readout, a `div` with the class `gizmo-readout` in the document
-     * body.
+     * The `div.gizmo-readout` element in the document body.
      *
      * @type {HTMLDivElement}
      * @private
@@ -20,7 +19,7 @@ class Readout {
     _dom = document.createElement('div');
 
     /**
-     * The markup shown, kept to skip rewriting an unchanged readout.
+     * The markup shown, to skip unchanged rewrites.
      *
      * @private
      */
@@ -49,7 +48,7 @@ class Readout {
     }
 
     /**
-     * Shows the markup centered on a canvas x coordinate, just below a canvas y coordinate.
+     * Shows the markup centered on x, just below y, in canvas coordinates.
      *
      * @param {string} html - The readout markup.
      * @param {number} x - The canvas x coordinate to center on.

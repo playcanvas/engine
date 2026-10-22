@@ -23,35 +23,35 @@ const TORUS_INTERSECT_SEGMENTS = 20;
  */
 class ArcShape extends Shape {
     /**
-     * The internal tube radius of the arc.
+     * The tube radius.
      *
      * @private
      */
     _tubeRadius = 0.01;
 
     /**
-     * The internal ring radius of the arc.
+     * The ring radius.
      *
      * @private
      */
     _ringRadius = 0.5;
 
     /**
-     * The internal sector angle of the arc.
+     * The sector angle.
      *
      * @private
      */
     _sectorAngle = 360;
 
     /**
-     * The internal intersection tolerance of the arc.
+     * The intersection tolerance.
      *
      * @private
      */
     _tolerance = 0.05;
 
     /**
-     * The internal cache for triangle data.
+     * The cache for triangle data.
      *
      * @type {[TriData, TriData]}
      * @private
@@ -69,14 +69,12 @@ class ArcShape extends Shape {
         this._ringRadius = args.ringRadius ?? this._ringRadius;
         this._sectorAngle = args.sectorAngle ?? this._sectorAngle;
 
-        // intersect
         this._triDataCache = [
             new TriData(this._createTorusGeometry(this._sectorAngle)),
             new TriData(this._createTorusGeometry(360))
         ];
         this.triData = [this._triDataCache[0]];
 
-        // render
         this._createRenderComponent(this.entity, [
             this._createTorusMesh(this._sectorAngle),
             this._createTorusMesh(360)
@@ -194,18 +192,16 @@ class ArcShape extends Shape {
     }
 
     /**
-     * Update the shape's transform.
+     * Updates the transform.
      *
      * @protected
      * @override
      */
     _update() {
-
-        // intersect
         this._triDataCache[0].fromGeometry(this._createTorusGeometry(this._sectorAngle));
         this._triDataCache[1].fromGeometry(this._createTorusGeometry(360));
 
-        // render, destroying the replaced meshes
+        // destroy the meshes being replaced
         const angles = [this._sectorAngle, 360];
         for (let i = 0; i < angles.length; i++) {
             const mesh = this.meshInstances[i].mesh;

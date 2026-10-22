@@ -15,24 +15,22 @@ import { OverlayShapes } from './overlay/overlay-shapes.js';
  */
 
 /**
- * The components that show an icon, in order of priority, each drawing the icon of its name.
+ * The components that show an icon, in order of priority.
  *
  * @type {OverlayIcon[]}
  */
 const ICONS = ['camera', 'light', 'audiolistener', 'sound', 'particlesystem'];
 
-// the alpha of an icon where the scene hides it, as a factor of its color alpha
+// alpha factor of icons the scene hides
 const OCCLUDED_ALPHA = 0.2;
 
 /**
- * Draws an icon at each attached entity that has nothing else to see or click: a glyph of a
- * constant size on screen, for the first of its camera, light, audio listener, sound and particle
- * system components. Entities that render, with an enabled render, model, sprite or element
- * component, show no icon, as does the camera viewing the gizmo. Clicking an icon fires
- * {@link IconGizmo.EVENT_ICONSELECT}, so an app can select its entity.
+ * Draws an icon at each attached entity with nothing else to see, such as a light, camera or sound.
+ * Entities with an enabled render, model, sprite or element component show none. Clicking an icon
+ * fires {@link IconGizmo.EVENT_ICONSELECT}.
  *
- * Use a layer that keeps the scene depth so icons the scene hides draw faint; a
- * {@link Gizmo.createLayer} layer clears depth.
+ * Use a layer that keeps the scene depth, so hidden icons draw faint; a {@link Gizmo.createLayer}
+ * layer clears depth.
  *
  * ```javascript
  * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
@@ -51,7 +49,7 @@ const OCCLUDED_ALPHA = 0.2;
  */
 class IconGizmo extends Gizmo {
     /**
-     * Fired when the icon of an entity is clicked, so an app can select the entity.
+     * Fired when the icon of an entity is clicked.
      *
      * @event
      * @example
@@ -63,15 +61,14 @@ class IconGizmo extends Gizmo {
     static EVENT_ICONSELECT = 'icon:select';
 
     /**
-     * Whether to draw the icon of each light in its own color, keeping the alpha of the theme
-     * colors. Defaults to false.
+     * Whether to draw light icons in the light color. Defaults to false.
      *
      * @type {boolean}
      */
     useLightColor = false;
 
     /**
-     * Internal theme.
+     * The theme.
      *
      * @type {IconGizmoTheme}
      * @private
@@ -81,7 +78,7 @@ class IconGizmo extends Gizmo {
     };
 
     /**
-     * The colors the icon shapes follow, the occluded color taken from the base color each frame.
+     * The icon colors, the occluded one derived from the base each frame.
      *
      * @private
      */

@@ -5,20 +5,18 @@
  */
 
 /**
- * A stroke or fill of an icon glyph, in CSS pixels:
- * - `['line', x0, y0, x1, y1, ...]` - A polyline through the points.
- * - `['arc', x, y, radius, from, to, segments]` - An arc as straight segments, the angles in
- * radians from the x axis towards the y axis.
+ * A stroke of an icon glyph, in CSS pixels:
+ * - `['line', x0, y0, x1, y1, ...]` - A polyline.
+ * - `['arc', x, y, radius, from, to, segments]` - An arc, angles in radians from the x axis.
  * - `['disc', x, y, radius]` - A filled disc.
- * - `['triangle', apex, base, height]` - A filled triangle on the x axis, from its apex at x =
- * apex widening to its side, height tall, at x = base.
+ * - `['triangle', apex, base, height]` - A filled triangle on the x axis, apex to the left.
  *
  * @typedef {['line', ...number[]] | ['arc', number, number, number, number, number, number] |
  * ['disc', number, number, number] | ['triangle', number, number, number]} IconStroke
  */
 
 /**
- * The glyphs of the icons, in CSS pixels from the icon center, x to the right and y up the screen.
+ * The icon glyphs, in CSS pixels from the icon center, y up the screen.
  *
  * @type {Record<OverlayIcon, IconStroke[]>}
  */

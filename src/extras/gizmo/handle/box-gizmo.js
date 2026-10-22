@@ -10,10 +10,8 @@ import { ShapeGizmo } from './shape-gizmo.js';
 const tmpV1 = new Vec3();
 
 /**
- * Draws a box with handles on its faces and corners that resize it. A face handle moves its face
- * along its axis. A corner handle moves its corner across the view, resizing each axis, or along
- * the diagonal with {@link BoxGizmo#uniform}, scaling the box evenly. The opposite face or corner
- * stays in place, or the center does with {@link BoxGizmo#centered}.
+ * Draws a box with face and corner handles that resize it, keeping the opposite face or corner in
+ * place, or the center with {@link BoxGizmo#centered}.
  *
  * ```javascript
  * const gizmo = new BoxGizmo(cameraComponent, layer);
@@ -53,16 +51,14 @@ class BoxGizmo extends ShapeGizmo {
     cornerHandles = true;
 
     /**
-     * Whether a resize keeps the center of the box in place, moving the opposite face or corner
-     * too, rather than keeping the opposite face or corner in place. Defaults to false.
+     * Whether a resize keeps the center in place. Defaults to false.
      *
      * @type {boolean}
      */
     centered = false;
 
     /**
-     * Whether a corner handle scales the box evenly, along the diagonal through the corner, rather
-     * than resizing each axis. Defaults to false.
+     * Whether corner handles scale evenly. Defaults to false.
      *
      * @type {boolean}
      */
@@ -118,7 +114,7 @@ class BoxGizmo extends ShapeGizmo {
     }
 
     /**
-     * Keeps the box at the start of a resize.
+     * Stores the box at the start of a resize.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @protected
@@ -130,7 +126,7 @@ class BoxGizmo extends ShapeGizmo {
     }
 
     /**
-     * Resizes the box from where its face or corner is dragged to.
+     * Resizes the box to the dragged face or corner.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.

@@ -17,7 +17,9 @@ import { unlitShader } from '../shaders.js';
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class MeshSector {
     /**
      * @type {ShaderMaterial}

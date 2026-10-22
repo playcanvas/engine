@@ -78,8 +78,7 @@ export const unlitShader = {
 };
 
 /**
- * The unlit shader of a batch of lines, each an instance with its own transform and colors. The
- * occluded pass reads the occluded color with OCCLUDED defined.
+ * The unlit shader of a line batch, one instance per line. The occluded pass defines OCCLUDED.
  *
  * @type {ShaderDesc}
  */

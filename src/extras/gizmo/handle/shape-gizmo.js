@@ -8,11 +8,9 @@ import { HandleGizmo } from './handle-gizmo.js';
  */
 
 /**
- * The base class of gizmos that draw a shape of their own, a box, sphere, capsule or cone, with
- * handles that edit its size. They attach to no nodes: an app sets the shape's {@link position},
- * {@link rotation} and size, and listens to {@link HandleGizmo.EVENT_HANDLEMOVE} to apply edits
- * however it needs, such as to a collision shape or a trigger volume. The handle events pass a
- * null node.
+ * The base class of gizmos that draw their own shape with handles that edit its size. They attach
+ * no nodes: set the {@link position}, {@link rotation} and size, and apply edits on
+ * {@link HandleGizmo.EVENT_HANDLEMOVE}, whose node is null.
  *
  * @category Gizmo
  */

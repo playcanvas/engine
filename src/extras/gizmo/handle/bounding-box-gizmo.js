@@ -16,7 +16,6 @@ import { HandleGizmo } from './handle-gizmo.js';
  * @typedef {HandleGizmoTheme} BoundingBoxGizmoTheme
  */
 
-// temporary variables
 const tmpBox = new BoundingBox();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -40,12 +39,9 @@ const nearest = (dir) => {
 };
 
 /**
- * Draws corner brackets around the world-space bounds of the attached nodes and their
- * descendants, joined by dashed edges over a faint volume, with a dot at the origin of each
- * attached node. Like a {@link BoxGizmo}, once the box is large enough on screen, its face and
- * corner handles resize it, which resizes the attached nodes, showing the width, height or
- * depth while hovered. A resize scales each node along its local axes nearest the world axes,
- * which is exact for nodes aligned with them.
+ * Draws corner brackets around the world bounds of the attached nodes, with a dot at each node's
+ * origin. Face and corner handles resize the bounds, scaling each node along its local axes
+ * nearest the world axes.
  *
  * ```javascript
  * const layer = new Layer({ name: 'Bounds', transparentSortMode: SORTMODE_MANUAL });
@@ -77,16 +73,14 @@ class BoundingBoxGizmo extends HandleGizmo {
     cornerHandles = true;
 
     /**
-     * Whether a resize keeps the center of the bounds in place, moving the opposite face or corner
-     * too, rather than keeping the opposite face or corner in place. Defaults to false.
+     * Whether a resize keeps the center in place. Defaults to false.
      *
      * @type {boolean}
      */
     centered = false;
 
     /**
-     * Whether a corner handle scales the bounds evenly, along the diagonal through the corner,
-     * rather than resizing each axis. Defaults to false.
+     * Whether corner handles scale evenly. Defaults to false.
      *
      * @type {boolean}
      */
@@ -100,14 +94,14 @@ class BoundingBoxGizmo extends HandleGizmo {
     edges = true;
 
     /**
-     * The arm length as a fraction of the half edge; 1 draws full edges. Defaults to 0.3.
+     * The arm length as a fraction of the half edge. Defaults to 0.3.
      *
      * @type {number}
      */
     armLength = 0.3;
 
     /**
-     * The world-space padding on each side. Defaults to 0.01.
+     * The padding on each side, in world units. Defaults to 0.01.
      *
      * @type {number}
      */
@@ -137,14 +131,14 @@ class BoundingBoxGizmo extends HandleGizmo {
     _empty = true;
 
     /**
-     * The center of the box drawn this frame, or resized by a drag.
+     * The box center.
      *
      * @private
      */
     _center = new Vec3();
 
     /**
-     * The half extents of the box drawn this frame, padding included.
+     * The box half extents, padding included.
      *
      * @private
      */
@@ -249,7 +243,7 @@ class BoundingBoxGizmo extends HandleGizmo {
     }
 
     /**
-     * Gathers the bounds of the attached nodes and places the box around them.
+     * Draws the box around the attached nodes.
      *
      * @protected
      * @override
@@ -262,7 +256,7 @@ class BoundingBoxGizmo extends HandleGizmo {
         }
         if (!this._empty) {
 
-            // the box follows the bounds, which a resize changes through the nodes
+            // a resize changes the nodes, so the box follows their bounds
             const c = this._center.copy(this._bounds.center);
             const h = this._halfExtents.copy(this._bounds.halfExtents).addScalar(this.padding);
             const corners = this._boxCorners(c, Quat.IDENTITY, h);
@@ -286,17 +280,15 @@ class BoundingBoxGizmo extends HandleGizmo {
     }
 
     /**
-     * Places the corner brackets and the dashed edges joining them.
+     * Draws the corner brackets and dashed edges.
      *
-     * @param {Vec3[]} corners - The world corners, the bits of each index giving its x, y and z
-     * sides.
+     * @param {Vec3[]} corners - The world corners, indexed by their x, y and z bits.
      * @private
      */
     _drawBrackets(corners) {
         const shapes = this._shapes;
         const { _center: c, _halfExtents: h } = this;
 
-        // three arms per corner
         for (let x = -1; x <= 1; x += 2) {
             for (let y = -1; y <= 1; y += 2) {
                 for (let z = -1; z <= 1; z += 2) {
@@ -322,7 +314,7 @@ class BoundingBoxGizmo extends HandleGizmo {
     }
 
     /**
-     * Keeps the bounds and the transforms of the attached nodes at the start of a resize.
+     * Stores the box and node transforms at the start of a resize.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @protected
@@ -339,8 +331,7 @@ class BoundingBoxGizmo extends HandleGizmo {
     }
 
     /**
-     * Resizes the box, then the attached nodes to fit it. Each node keeps its place within the
-     * box and scales along its local axes nearest the world axes.
+     * Resizes the box and fits the attached nodes to it.
      *
      * @param {GizmoHandle} handle - The dragged handle.
      * @param {Vec3} point - Where the handle is dragged to.
@@ -364,7 +355,7 @@ class BoundingBoxGizmo extends HandleGizmo {
             const pos = tmpV1.sub2(this._startPositions[i], this._startCenter).mul(factor).add(this._center);
             node.setPosition(pos);
 
-            // each local axis takes the factor of the world axis it is nearest
+            // scale each local axis by the factor of its nearest world axis
             const scale = tmpV2.copy(this._startScales[i]);
             scale.x *= factor[nearest(node.right)];
             scale.y *= factor[nearest(node.up)];

@@ -40,7 +40,6 @@ const GLANCE_ANGLE = Math.acos(1 - GLANCE_EPSILON);
  * @property {Color} disabled - The disabled color.
  */
 
-// temporary variables
 const v1 = new Vec3();
 const v2 = new Vec3();
 const point = new Vec3();
@@ -49,20 +48,12 @@ const bounds = new BoundingBox();
 const corner = new Vec3();
 const screen = new Vec3();
 
-// constants
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
- * The base class for all transform gizmos.
- *
- * It adds to {@link Gizmo} everything the {@link TranslateGizmo}, {@link RotateGizmo} and
- * {@link ScaleGizmo} share: colored X, Y and Z handles with plane and center shapes, any of which
- * {@link enableShape} can turn off; a drag interaction that fires `transform:start`,
- * `transform:move` with the position or angle delta so far, and `transform:end`; {@link snap}
- * with {@link snapIncrement} to quantize the change; {@link dragMode} to show, hide or keep only
- * the selected shape while dragging; and a color {@link theme} adjusted through {@link setTheme},
- * `xAxisColor`, `yAxisColor`, `zAxisColor` and `colorAlpha`. The
- * subclasses decide what a drag does to the attached nodes.
+ * The base class of {@link TranslateGizmo}, {@link RotateGizmo} and {@link ScaleGizmo}. It
+ * provides the axis, plane and center shapes, the transform events, {@link snap},
+ * {@link dragMode} and a color {@link theme}; subclasses decide what a drag does to the nodes.
  *
  * @category Gizmo
  */
@@ -80,8 +71,7 @@ class TransformGizmo extends DragGizmo {
     static EVENT_TRANSFORMSTART = 'transform:start';
 
     /**
-     * Fired during the transformation, with the dragged point on the selected axis or plane and
-     * the screen position of the pointer.
+     * Fired during the transformation with the dragged point and the pointer's screen position.
      *
      * @event
      * @example
@@ -93,12 +83,10 @@ class TransformGizmo extends DragGizmo {
     static EVENT_TRANSFORMMOVE = 'transform:move';
 
     /**
-     * Fired with the value shown in the readout when the transformation starts and on each step of
-     * it, whether or not {@link TransformGizmo#readout} is enabled, to show the value in a custom
-     * UI. The handler is passed the selected axis, whether it is a plane, which moves along the
-     * other two axes, and the value: the translation as a `Vec3` for a translate gizmo, the scale
-     * factor as a `Vec3` for a scale gizmo, or the angle in degrees for a rotate gizmo. The `Vec3`
-     * is reused, so copy it to keep it.
+     * Fired with the readout value at the start and each step of the transformation, even with
+     * {@link TransformGizmo#readout} off. The handler gets the axis, whether it is a plane, and the
+     * value: a `Vec3` translation or scale factor, or an angle in degrees. Copy the reused `Vec3`
+     * to keep it.
      *
      * @event
      * @example
@@ -153,21 +141,21 @@ class TransformGizmo extends DragGizmo {
     };
 
     /**
-     * Internal gizmo starting rotation in world space.
+     * The gizmo position at the start of a drag.
      *
      * @protected
      */
     _rootStartPos = new Vec3();
 
     /**
-     * Internal gizmo starting rotation in world space.
+     * The gizmo rotation at the start of a drag.
      *
      * @protected
      */
     _rootStartRot = new Quat();
 
     /**
-     * Internal object containing the gizmo shapes to render.
+     * The gizmo shapes.
      *
      * @type {{ [key in GizmoAxis]?: Shape }}
      * @protected
@@ -175,7 +163,7 @@ class TransformGizmo extends DragGizmo {
     _shapes = {};
 
     /**
-     * Internal mapping of mesh instances to gizmo shapes.
+     * The shapes by mesh instance.
      *
      * @type {Map<MeshInstance, Shape>}
      * @private
@@ -183,7 +171,7 @@ class TransformGizmo extends DragGizmo {
     _shapeMap = new Map();
 
     /**
-     * Internal colors of the guide lines, whose rgb each guide replaces with its axis color.
+     * The guide line colors, whose rgb each guide replaces with its axis color.
      *
      * @private
      */
@@ -194,7 +182,7 @@ class TransformGizmo extends DragGizmo {
     };
 
     /**
-     * Internal parent of the guide lines.
+     * The parent of the guide lines.
      *
      * @type {Entity}
      * @private
@@ -202,7 +190,7 @@ class TransformGizmo extends DragGizmo {
     _guideRoot;
 
     /**
-     * Internal guide lines, a constant thickness on screen.
+     * The guide lines.
      *
      * @type {OverlayShapes}
      * @private
@@ -210,15 +198,14 @@ class TransformGizmo extends DragGizmo {
     _guides;
 
     /**
-     * Internal angle in degrees between the view and an axis, or the view and a plane, below
-     * which the shape fades out.
+     * The angle in degrees between the view and a shape below which it fades out.
      *
      * @protected
      */
     _fadeAngle = 25;
 
     /**
-     * Internal currently hovered axes
+     * The hovered axes.
      *
      * @type {Set<GizmoAxis>}
      * @private
@@ -226,7 +213,7 @@ class TransformGizmo extends DragGizmo {
     _hovering = new Set();
 
     /**
-     * Internal currently hovered axis.
+     * The hovered axis.
      *
      * @type {GizmoAxis | ''}
      * @private
@@ -234,14 +221,14 @@ class TransformGizmo extends DragGizmo {
     _hoverAxis = '';
 
     /**
-     * Internal state of if currently hovered shape is a plane.
+     * Whether the hovered shape is a plane.
      *
      * @private
      */
     _hoverIsPlane = false;
 
     /**
-     * Internal currently selected axis.
+     * The selected axis.
      *
      * @type {GizmoAxis | ''}
      * @protected
@@ -249,21 +236,21 @@ class TransformGizmo extends DragGizmo {
     _selectedAxis = '';
 
     /**
-     * Internal state of if currently selected shape is a plane.
+     * Whether the selected shape is a plane.
      *
      * @protected
      */
     _selectedIsPlane = false;
 
     /**
-     * Internal selection starting coordinates in world space.
+     * The selected point at the start of a drag, in world space.
      *
      * @protected
      */
     _selectionStartPoint = new Vec3();
 
     /**
-     * Internal readout showing the transform delta while dragging.
+     * The readout of the drag delta.
      *
      * @type {Readout | null}
      * @protected
@@ -289,8 +276,7 @@ class TransformGizmo extends DragGizmo {
     constructor(camera, layer, name = 'gizmo:transform') {
         super(camera, layer, name);
 
-        // the guides sit under an entity that is not rotated or scaled with the gizmo, in the
-        // immediate layer, which keeps the scene depth so the scene hides them, unlike the gizmo layer
+        // guides sit on an unrotated root in the immediate layer, whose depth lets the scene hide them
         this._guideRoot = new Entity('guides');
         this._app.root.addChild(this._guideRoot);
         const guideLayer = this._app.scene.layers.getLayerById(LAYERID_IMMEDIATE) ?? layer;
@@ -401,10 +387,9 @@ class TransformGizmo extends DragGizmo {
     }
 
     /**
-     * Sets whether to show the transform delta in a text readout just below the gizmo while
-     * dragging. The readout is a `div` with the class `gizmo-readout`, added to the document body.
-     * To show the value in a custom UI instead, turn this off and listen to
-     * {@link TransformGizmo.EVENT_TRANSFORMREADOUT}. Defaults to true.
+     * Sets whether to show the drag delta in a `div.gizmo-readout` below the gizmo. For a custom
+     * UI, turn this off and listen to {@link TransformGizmo.EVENT_TRANSFORMREADOUT}. Defaults to
+     * true.
      *
      * @type {boolean}
      */
@@ -421,8 +406,7 @@ class TransformGizmo extends DragGizmo {
     }
 
     /**
-     * Gets whether to show the transform delta in a text readout just below the gizmo while
-     * dragging.
+     * Gets whether to show the drag delta below the gizmo.
      *
      * @type {boolean}
      */
@@ -593,8 +577,7 @@ class TransformGizmo extends DragGizmo {
     }
 
     /**
-     * Formats a delta with an explicit sign, so it does not read as an absolute value. A value
-     * that rounds to zero is shown as positive.
+     * Formats a delta with an explicit sign, positive when it rounds to zero.
      *
      * @param {number} value - The value.
      * @param {number} digits - The number of digits after the decimal point.
@@ -610,8 +593,7 @@ class TransformGizmo extends DragGizmo {
      * Formats a value for each of the axes being dragged.
      *
      * @param {Vec3} values - The value for each axis.
-     * @param {boolean} [factor] - Whether the values are factors rather than deltas. Defaults to
-     * false.
+     * @param {boolean} [factor] - Whether the values are factors, not deltas. Defaults to false.
      * @returns {string} The readout markup.
      * @protected
      */
@@ -629,8 +611,7 @@ class TransformGizmo extends DragGizmo {
     }
 
     /**
-     * Shows the readout centered below the visible gizmo shapes, which while dragging is the
-     * dragged handle.
+     * Shows the readout centered below the visible shapes.
      *
      * @param {string} html - The readout markup.
      * @protected
@@ -656,7 +637,7 @@ class TransformGizmo extends DragGizmo {
             }
         }
 
-        // with every shape hidden while dragging, sit below the gizmo center
+        // with every shape hidden, sit below the gizmo center
         if (!found) {
             bounds.center.copy(this.root.getPosition());
             bounds.halfExtents.set(0, 0, 0);
@@ -689,7 +670,6 @@ class TransformGizmo extends DragGizmo {
             return;
         }
 
-        // track changes
         const remove = new Set(this._hovering);
         let changed = false;
         const add = (/** @type {GizmoAxis} */ axis) => {
@@ -702,11 +682,9 @@ class TransformGizmo extends DragGizmo {
             }
         };
 
-        // determine which axis is hovered
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
 
-        // add shapes that are hovered
         if (this._hoverAxis) {
             if (this._hoverAxis === 'xyz') {
                 add('x');
@@ -736,7 +714,6 @@ class TransformGizmo extends DragGizmo {
             }
         }
 
-        // unhover removed shapes
         for (const axis of remove) {
             this._hovering.delete(axis);
             this._shapes[axis]?.hover(false);
@@ -760,18 +737,14 @@ class TransformGizmo extends DragGizmo {
         const normal = plane.normal.set(0, 0, 0);
 
         if (isFacing) {
-
-            // set plane normal to face camera
             normal.copy(this._camera.entity.forward).mulScalar(-1);
         } else {
-
-            // set plane normal based on axis
             normal[axis] = 1;
             this._rootStartRot.transformVector(normal, normal);
 
             if (isLine) {
 
-                // set plane normal to face camera but keep normal perpendicular to axis
+                // face the camera but stay perpendicular to the axis
                 this._lineNormal(normal, facingDir, normal);
             }
         }
@@ -801,13 +774,11 @@ class TransformGizmo extends DragGizmo {
      * @protected
      */
     _projectToAxis(point, axis) {
-
-        // set normal to axis and project position from plane onto normal
         v1.set(0, 0, 0);
         v1[axis] = 1;
         point.copy(v1.mulScalar(v1.dot(point)));
 
-        // set other axes to zero (floating point fix)
+        // zero the other axes against float error
         const v = point[axis];
         point.set(0, 0, 0);
         point[axis] = v;
@@ -877,12 +848,11 @@ class TransformGizmo extends DragGizmo {
     }
 
     /**
-     * Shows a shape unless the view looks along the direction it hides at, fading it out over
-     * the fade angle before that.
+     * Hides a shape when the view looks along its direction, fading it over the fade angle.
      *
      * @param {Shape} shape - The shape.
      * @param {number} cos - The absolute cosine of the angle between the view and the direction.
-     * @returns {boolean} Whether the shape was shown or hidden.
+     * @returns {boolean} Whether the visibility changed.
      * @protected
      */
     _glance(shape, cos) {
@@ -901,8 +871,6 @@ class TransformGizmo extends DragGizmo {
      * @protected
      */
     _createTransform() {
-
-        // shapes
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             this.root.addChild(shape.entity);
@@ -934,8 +902,8 @@ class TransformGizmo extends DragGizmo {
     /**
      * Get the enabled state of the shape.
      *
-     * @param {GizmoAxis | 'face'} shapeAxis - The shape axis. Can be:
-     * @returns {boolean} - Then enabled state of the shape
+     * @param {GizmoAxis | 'face'} shapeAxis - The shape axis.
+     * @returns {boolean} - Whether the shape is enabled.
      */
     isShapeEnabled(shapeAxis) {
         if (shapeAxis === 'face') {
@@ -963,7 +931,6 @@ class TransformGizmo extends DragGizmo {
             return;
         }
 
-        // shape
         for (const axis in theme.shapeBase) {
             if (theme.shapeBase[axis] instanceof Color) {
                 this._theme.shapeBase[axis].copy(theme.shapeBase[axis]);
@@ -975,7 +942,6 @@ class TransformGizmo extends DragGizmo {
             }
         }
 
-        // guide
         for (const axis in theme.guideBase) {
             if (theme.guideBase[axis] instanceof Color) {
                 this._theme.guideBase[axis].copy(theme.guideBase[axis]);
@@ -985,12 +951,10 @@ class TransformGizmo extends DragGizmo {
             this._theme.guideOcclusion = math.clamp(theme.guideOcclusion, 0, 1);
         }
 
-        // disabled
         if (theme.disabled instanceof Color) {
             this._theme.disabled.copy(theme.disabled);
         }
 
-        // update shapes
         for (const name in this._shapes) {
             this._shapes[name].hover(this._hovering.has(/** @type {GizmoAxis} */ (name)));
         }
