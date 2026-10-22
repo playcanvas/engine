@@ -110,7 +110,7 @@ app.scene.ambientLuminance = 20000;
 app.scene.lighting.areaLightsEnabled = true;
 
 // Set the loaded area light LUT data
-const luts = assets.luts.resource;
+const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 const sheen1 = assets.sheen.resource.instantiateRenderEntity({

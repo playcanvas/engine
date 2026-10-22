@@ -125,10 +125,7 @@ const createCube = (x, y, z) => {
 const controllers = [];
 // Create controller model
 const createController = (inputSource) => {
-    const entity = new Entity();
-    entity.addComponent('model', {
-        type: 'asset',
-        asset: assets.glb.resource.model,
+    const entity = assets.glb.resource.instantiateModelEntity({
         castShadows: true
     });
     app.root.addChild(entity);

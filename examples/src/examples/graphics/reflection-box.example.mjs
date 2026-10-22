@@ -35,7 +35,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -131,7 +131,6 @@ roomMaterial.normalMapTiling.set(5, 5);
 roomMaterial.bumpiness = 0.1;
 roomMaterial.gloss = 0.9;
 roomMaterial.reflectivity = 0.3;
-// @ts-ignore
 roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
 roomMaterial.metalness = 0.5;
 
@@ -163,7 +162,6 @@ sphereMaterial.bumpiness = 0.7;
 sphereMaterial.gloss = 0.3;
 sphereMaterial.metalness = 0.7;
 sphereMaterial.reflectivity = 0.3;
-// @ts-ignore
 sphereMaterial.envAtlas = envAtlas; // use reflection from env atlas
 sphereMaterial.update();
 // Set up video playback into a texture
@@ -210,7 +208,7 @@ screenMaterial.update();
 /**
  * Helper function to create a 3d primitive including its material.
  *
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {Material} material - The material.

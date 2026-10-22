@@ -137,12 +137,12 @@ monitor.setLocalPosition(0, 1, -1);
 app.root.addChild(monitor);
 
 // Resize scrollable area to match its content
-const entityText = monitor.findByName('Lorem');
+const entityText = /** @type {Entity} */ (monitor.findByName('Lorem'));
 entityText.element.text = uiText;
-monitor.findByName('Content').element.height = entityText.element.height + 40;
+/** @type {Entity} */ (monitor.findByName('Content')).element.height = entityText.element.height + 40;
 
 // FPS counter
-const entityFps = monitor.findByName('FPS');
+const entityFps = /** @type {Entity} */ (monitor.findByName('FPS'));
 let ticks = 0;
 let fpsTime = 0;
 

@@ -17,6 +17,7 @@ import {
     PROJECTION_PERSPECTIVE,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    ScaleGizmo,
     ScriptComponentSystem,
     ScriptHandler,
     StandardMaterial,
@@ -290,7 +291,9 @@ resize();
 // Key event handlers
 const keydown = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
-    gizmoHandler.gizmo.uniform = !e.ctrlKey;
+    if (gizmoHandler.gizmo instanceof ScaleGizmo) {
+        gizmoHandler.gizmo.uniform = !e.ctrlKey;
+    }
 
     switch (e.key) {
         case 'f': {
@@ -307,7 +310,9 @@ const keydown = (/** @type {KeyboardEvent} */ e) => {
 };
 const keyup = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
-    gizmoHandler.gizmo.uniform = !e.ctrlKey;
+    if (gizmoHandler.gizmo instanceof ScaleGizmo) {
+        gizmoHandler.gizmo.uniform = !e.ctrlKey;
+    }
 };
 const keypress = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {

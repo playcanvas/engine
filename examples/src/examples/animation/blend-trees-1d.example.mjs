@@ -22,6 +22,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -164,8 +168,14 @@ modelEntity.anim.loadStateGraph(animStateGraphData);
 
 // Load the state graph asset resource into the anim component
 const characterStateLayer = modelEntity.anim.baseLayer;
-characterStateLayer.assignAnimation('Movement.Idle', assets.idleAnim.resource.animations[0].resource);
-characterStateLayer.assignAnimation('Movement.Dance', assets.danceAnim.resource.animations[0].resource);
+characterStateLayer.assignAnimation(
+    'Movement.Idle',
+    /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource)
+);
+characterStateLayer.assignAnimation(
+    'Movement.Dance',
+    /** @type {AnimTrack} */ (assets.danceAnim.resource.animations[0].resource)
+);
 
 app.root.addChild(modelEntity);
 

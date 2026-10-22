@@ -470,11 +470,11 @@ const restoreIdealSizes = () => {
 // While fitting, the line height is scaled by the font size relative to the maximum font size, so
 // it is set for the maximum font size
 const autoFit = card('04 / AUTO FIT', 'Text fills a parent that resizes');
-const fits = [
+const fits = /** @type {[string, object][]} */ ([
     ['BOTH', { text: 'Both', autoFitWidth: true, autoFitHeight: true }],
     ['WIDTH', { text: 'Width', autoFitWidth: true, autoFitHeight: false, fontSize: 60 }],
     ['HEIGHT + WRAP', { text: 'Fits its height', autoFitWidth: false, autoFitHeight: true, wrapLines: true }]
-].map(([name, properties], i) => {
+]).map(([name, properties], i) => {
     const x = (i - 1) * 108;
     const box = element(
         autoFit.panel,

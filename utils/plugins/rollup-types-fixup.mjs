@@ -93,6 +93,18 @@ const STANDARD_MAT_PROPS = [
     ['heightMapRotation', 'number'],
     ['heightMapTiling', 'Vec2'],
     ['heightMapUv', 'number'],
+    ['iridescenceMap', 'Texture|null'],
+    ['iridescenceMapChannel', 'string'],
+    ['iridescenceMapOffset', 'Vec2'],
+    ['iridescenceMapRotation', 'number'],
+    ['iridescenceMapTiling', 'Vec2'],
+    ['iridescenceMapUv', 'number'],
+    ['iridescenceThicknessMap', 'Texture|null'],
+    ['iridescenceThicknessMapChannel', 'string'],
+    ['iridescenceThicknessMapOffset', 'Vec2'],
+    ['iridescenceThicknessMapRotation', 'number'],
+    ['iridescenceThicknessMapTiling', 'Vec2'],
+    ['iridescenceThicknessMapUv', 'number'],
     ['lightMap', 'Texture|null'],
     ['lightMapChannel', 'string'],
     ['lightMapOffset', 'Vec2'],
@@ -132,7 +144,16 @@ const STANDARD_MAT_PROPS = [
     ['opacityMapUv', 'number'],
     ['opacityVertexColor', 'boolean'],
     ['opacityVertexColorChannel', 'string'],
+    ['parallaxMode', 'string'],
     ['pixelSnap', 'boolean'],
+    ['refractionMap', 'Texture|null'],
+    ['refractionMapChannel', 'string'],
+    ['refractionMapOffset', 'Vec2'],
+    ['refractionMapRotation', 'number'],
+    ['refractionMapTiling', 'Vec2'],
+    ['refractionMapUv', 'number'],
+    ['refractionVertexColor', 'boolean'],
+    ['refractionVertexColorChannel', 'string'],
     ['shadowCatcher', 'boolean'],
     ['specularMap', 'Texture|null'],
     ['specularMapChannel', 'string'],
@@ -148,7 +169,19 @@ const STANDARD_MAT_PROPS = [
     ['specularityFactorMapRotation', 'number'],
     ['specularityFactorMapTiling', 'Vec2'],
     ['specularityFactorMapUv', 'number'],
+    ['specularityFactorTint', 'boolean'],
+    ['specularityFactorVertexColor', 'boolean'],
+    ['specularityFactorVertexColorChannel', 'string'],
     ['useSheen', 'boolean'],
+    ['sheenGlossInvert', 'boolean'],
+    ['sheenGlossMap', 'Texture|null'],
+    ['sheenGlossMapChannel', 'string'],
+    ['sheenGlossMapOffset', 'Vec2'],
+    ['sheenGlossMapRotation', 'number'],
+    ['sheenGlossMapTiling', 'Vec2'],
+    ['sheenGlossMapUv', 'number'],
+    ['sheenGlossVertexColor', 'boolean'],
+    ['sheenGlossVertexColorChannel', 'string'],
     ['sheenMap', 'Texture|null'],
     ['sheenMapChannel', 'string'],
     ['sheenMapOffset', 'Vec2'],
@@ -158,13 +191,24 @@ const STANDARD_MAT_PROPS = [
     ['sheenVertexColor', 'boolean'],
     ['sheenVertexColorChannel', 'string'],
     ['sphereMap', 'Texture|null'],
+    ['thicknessMap', 'Texture|null'],
+    ['thicknessMapChannel', 'string'],
+    ['thicknessMapOffset', 'Vec2'],
+    ['thicknessMapRotation', 'number'],
+    ['thicknessMapTiling', 'Vec2'],
+    ['thicknessMapUv', 'number'],
+    ['thicknessVertexColor', 'boolean'],
+    ['thicknessVertexColorChannel', 'string'],
     ['twoSidedLighting', 'boolean'],
+    ['useDynamicRefraction', 'boolean'],
     ['useFog', 'boolean'],
+    ['useIridescence', 'boolean'],
     ['useTonemap', 'boolean'],
     ['useLighting', 'boolean'],
     ['useMetalness', 'boolean'],
     ['useMetalnessSpecularColor', 'boolean'],
-    ['useSkybox', 'boolean']
+    ['useSkybox', 'boolean'],
+    ['vertexColorGamma', 'boolean']
 ];
 
 // The accessors are injected directly after this member of the tsc-emitted class body.
@@ -236,8 +280,8 @@ import { Texture } from '../../platform/graphics/texture.js';
     path: `${TYPES_PATH}/framework/script/script-type.d.ts`,
     replacement: {
         guard: 'initialize?(): void;',
-        from: 'get enabled(): boolean;',
-        to: `get enabled(): boolean;
+        from: '__initializeAttributes(force?: boolean): void;',
+        to: `__initializeAttributes(force?: boolean): void;
     /**
      * Called when script is about to run for the first time.
      */
@@ -293,6 +337,9 @@ export function fixTypes(root = '.') {
         const { from, to, footer, guard, transformer } = item.replacement;
         let contents = fs.readFileSync(path.resolve(root, item.path), 'utf-8');
         if (!guard || !contents.includes(guard)) {
+            if (!transformer && !contents.includes(from)) {
+                throw new Error(`types-fixup: '${from}' not found in ${item.path}`);
+            }
             contents = transformer ? transformer(contents) : contents.replace(from, to);
         }
         if (footer) {

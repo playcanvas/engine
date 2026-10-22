@@ -639,7 +639,7 @@ function measureFrames(app, device, label, budgetLabel, gpuTimingSupported) {
             splatCounts.push(app.stats.frame.gsplats);
 
             if (gpuTimingSupported && device.gpuProfiler) {
-                const gt = device.gpuProfiler._frameTime;
+                const gt = device.gpuProfiler.frameTime;
                 if (gt > 0) gpuTimes.push(gt);
 
                 for (const [name, time] of device.gpuProfiler.passTimings) {

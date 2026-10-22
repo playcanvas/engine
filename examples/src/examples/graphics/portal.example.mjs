@@ -38,7 +38,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { RenderComponent } from 'playcanvas'
+ * @import { RenderComponent, ScriptType } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -151,7 +151,7 @@ PortalGeometry.attributes.add('inside', {
     title: 'True indicating the geometry is inside the portal, false for outside'
 });
 
-PortalGeometry.prototype.initialize = function () {
+PortalGeometry.prototype.initialize = /** @this {ScriptType & { inside: boolean }} */ function () {
     // Based on value in the stencil buffer (0 outside, 1 inside), either render
     // The geometry when the value is equal, or not equal to zero.
     const stencil = new StencilParameters({

@@ -16,6 +16,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -69,6 +73,7 @@ const batchGroup = app.batcher.addGroup('Meshes', true, 100);
 
 // Create various primitive instances using one of the two materials
 const numInstances = 500;
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 /** @type {Entity[]} */
 const entities = [];

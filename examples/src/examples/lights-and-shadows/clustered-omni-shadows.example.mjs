@@ -26,6 +26,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -125,7 +129,7 @@ lighting.cookieAtlasResolution = 2048;
 
 /**
  * helper function to create a 3d primitive including its material
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @returns {Entity} The returned entity.
@@ -272,7 +276,6 @@ app.root.addChild(camera);
 // Handle HUD changes - update properties on the scene
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
-    // @ts-ignore
     lighting[pathArray[1]] = value;
 });
 

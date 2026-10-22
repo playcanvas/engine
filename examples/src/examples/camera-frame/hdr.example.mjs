@@ -49,6 +49,10 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -140,14 +144,16 @@ loveEntity.rotate(0, -90, 0);
 app.root.addChild(loveEntity);
 
 // Make the love sign emissive to bloom
-const loveMaterial = loveEntity.findByName('s.0009_Standard_FF00BB_0').render.meshInstances[0].material;
+const loveMaterial = /** @type {StandardMaterial} */ (
+    /** @type {Entity} */ (loveEntity.findByName('s.0009_Standard_FF00BB_0')).render.meshInstances[0].material
+);
 loveMaterial.emissiveIntensity = 200;
 loveMaterial.update();
 
 // Adjust all materials of the love sign to disable dynamic refraction
 loveEntity.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((meshInstance) => {
-        meshInstance.material.useDynamicRefraction = false;
+        /** @type {StandardMaterial} */ (meshInstance.material).useDynamicRefraction = false;
     });
 });
 

@@ -347,7 +347,6 @@ fog.addComponent('render', {
 app.root.addChild(fog);
 
 // Find a tree in the middle to use as a focus point
-// @ts-ignore
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
 // the camera, with the scene depth map the fog stops at

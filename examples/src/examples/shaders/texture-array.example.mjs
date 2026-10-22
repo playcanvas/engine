@@ -172,14 +172,14 @@ const textureArrayOptions = {
     mipmaps: true,
     addressU: ADDRESS_CLAMP_TO_EDGE,
     addressV: ADDRESS_CLAMP_TO_EDGE,
-    levels: [
+    levels: /** @type {HTMLImageElement[][] | Uint8Array[][]} */ ([
         [
             assets.rockyTrail.resource.getSource(),
             assets.rockBoulder.resource.getSource(),
             assets.aerialRocks.resource.getSource(),
             assets.coastSand.resource.getSource()
         ]
-    ]
+    ])
 };
 
 const textureArray = new Texture(app.graphicsDevice, textureArrayOptions);
@@ -245,8 +245,8 @@ const torus = Mesh.fromGeometry(
     new TorusGeometry({
         tubeRadius: 0.2,
         ringRadius: 0.3,
-        radialSegments: 50,
-        tubularSegments: 40
+        segments: 40,
+        sides: 50
     })
 );
 const shape = new Entity();

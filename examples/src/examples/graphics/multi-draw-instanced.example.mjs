@@ -101,29 +101,35 @@ material.update();
 // Build 3 primitive geometries (unit size)
 const sphereGeom = new SphereGeometry({ radius: 0.5, latitudeBands: 24, longitudeBands: 24 });
 const boxGeom = new BoxGeometry();
-const cylGeom = new CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, radialSegments: 32 });
+const cylGeom = new CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, capSegments: 32 });
 
 // Combine into single geometry
 const combine = new Geometry();
+/** @type {number[]} */
+const positions = [];
+/** @type {number[]} */
+const normals = [];
+/** @type {number[]} */
+const uvs = [];
+/** @type {number[]} */
+const indices = [];
 const pushGeom = (g, vertexOffset) => {
     // positions / normals / uvs
-    combine.positions.push(...g.positions);
-    if (g.normals) combine.normals ??= [];
-    if (g.normals) combine.normals.push(...g.normals);
-    if (g.uvs) combine.uvs ??= [];
-    if (g.uvs) combine.uvs.push(...g.uvs);
+    positions.push(...g.positions);
+    if (g.normals) normals.push(...g.normals);
+    if (g.uvs) uvs.push(...g.uvs);
 
     // Indices with offset
     const base = vertexOffset;
     const srcIdx = g.indices;
-    for (let i = 0; i < srcIdx.length; i++) combine.indices.push(srcIdx[i] + base);
+    for (let i = 0; i < srcIdx.length; i++) indices.push(srcIdx[i] + base);
 };
 
 // Initialize arrays
-combine.positions = [];
-combine.normals = [];
-combine.uvs = [];
-combine.indices = [];
+combine.positions = positions;
+combine.normals = normals;
+combine.uvs = uvs;
+combine.indices = indices;
 
 // Vertex offsets and firstIndex tracking (in indices)
 const vtxCounts = [sphereGeom.positions.length / 3, boxGeom.positions.length / 3, cylGeom.positions.length / 3];

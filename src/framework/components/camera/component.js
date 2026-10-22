@@ -1499,6 +1499,9 @@ class CameraComponent extends Component {
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
+     * @param {boolean} [options.meshDetection] - Set to true to attempt to enable {@link XrMeshDetection}.
+     * @param {boolean} [options.cameraColor] - Set to true to attempt to enable camera color
+     * access, see {@link XrViews#availableColor}.
      * @param {XrErrorCallback} [options.callback] - Optional callback function called once the
      * session is started. The callback has one argument Error - it is null if the XR session
      * started successfully.

@@ -444,7 +444,6 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         if (property === 'enabled') {
             light.enabled = value;
         } else {
-            // @ts-ignore
             light.light[property] = value;
         }
     });

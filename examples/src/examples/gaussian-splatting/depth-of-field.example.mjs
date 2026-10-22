@@ -162,7 +162,8 @@ content.addChild(splat);
 // Fast time to first frame: start by loading only the coarsest LOD level so the splat appears
 // almost immediately. Once it is on screen, restore the full LOD range (so higher detail
 // streams in) and enable Depth of Field at the same time.
-const lodLevels = splat.gsplat.resource?.octree?.lodLevels;
+const resource = assets.island.resource;
+const lodLevels = resource && 'octree' in resource ? resource.octree?.lodLevels : undefined;
 if (lodLevels) {
     splat.gsplat.lodRangeMin = lodLevels - 1;
     splat.gsplat.lodRangeMax = lodLevels - 1;

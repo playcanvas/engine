@@ -57,7 +57,7 @@ import { ThirdPersonController } from 'playcanvas/scripts/esm/third-person-contr
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { KeyboardEvent, RenderComponent } from 'playcanvas'
+ * @import { AnimTrack, KeyboardEvent, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -414,11 +414,11 @@ characterModel.anim.loadStateGraph({
 });
 
 const layer = characterModel.anim.baseLayer;
-layer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
-layer.assignAnimation('Walk', assets.walkAnim.resource.animations[0].resource);
-layer.assignAnimation('Jog', assets.jogAnim.resource.animations[0].resource);
-layer.assignAnimation('Jump', assets.jumpAnim.resource.animations[0].resource);
-layer.assignAnimation('Dance', assets.danceAnim.resource.animations[0].resource);
+layer.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource));
+layer.assignAnimation('Walk', /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource));
+layer.assignAnimation('Jog', /** @type {AnimTrack} */ (assets.jogAnim.resource.animations[0].resource));
+layer.assignAnimation('Jump', /** @type {AnimTrack} */ (assets.jumpAnim.resource.animations[0].resource));
+layer.assignAnimation('Dance', /** @type {AnimTrack} */ (assets.danceAnim.resource.animations[0].resource));
 
 // Wire the third-person controller
 characterController.addComponent('script');

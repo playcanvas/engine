@@ -32,7 +32,7 @@ import shaderWgslFrag from './shader.wgsl.frag';
 import shaderWgslVert from './shader.wgsl.vert';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -90,7 +90,7 @@ app.scene.skyboxIntensity = 1.7; // make it brighter
 /**
  * Helper function to create a primitive with shape type, position, scale, color and layer.
  *
- * @param {string} primitiveType - Type of the primitive to create.
+ * @param {RenderComponent['type']} primitiveType - Type of the primitive to create.
  * @param {Vec3} position - The position of the primitive.
  * @param {Vec3} scale - The scale of the primitive.
  * @param {Color} color - The color of the primitive.
@@ -167,6 +167,7 @@ app.root.addChild(statueEntity);
  * @type {Entity[]}
  */
 const entities = [];
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 for (let i = 0; i < 6; i++) {
     const shapeName = shapes[Math.floor(Math.random() * shapes.length)];

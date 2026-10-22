@@ -32,6 +32,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -121,7 +125,7 @@ groundMaterial.useMetalness = true;
 /**
  * Helper function to create a primitive with shape type, position, scale and color.
  *
- * @param {string} primitiveType - The type of the primitive.
+ * @param {RenderComponent['type']} primitiveType - The type of the primitive.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {*} assetManifest - The asset manifest.
@@ -226,7 +230,7 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
 }
 
 // Set the loaded area light LUT data
-const luts = assets.luts.resource;
+const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // Create ground plane

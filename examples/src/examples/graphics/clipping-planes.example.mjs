@@ -131,7 +131,7 @@ const turbofan = assets.turbofan.resource.instantiateRenderEntity({
     receiveShadows: true
 });
 app.root.addChild(turbofan);
-const engine = turbofan.findByName('Engine');
+const engine = /** @type {Entity} */ (turbofan.findByName('Engine'));
 const lowSpool = turbofan.findByName('LowSpool');
 const highSpool = turbofan.findByName('HighSpool');
 

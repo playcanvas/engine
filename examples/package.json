@@ -21,7 +21,7 @@
     "serve": "vite preview",
     "typecheck": "npm run -s typecheck:app && npm run -s typecheck:examples",
     "typecheck:app": "npm run -s build:metadata && tsc -p tsconfig.app.json --pretty false",
-    "typecheck:examples": "tsc -p tsconfig.examples.json --pretty false"
+    "typecheck:examples": "node utils/typecheck-examples.mjs"
   },
   "devDependencies": {
     "@babel/standalone": "8.0.5",

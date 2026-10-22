@@ -45,6 +45,10 @@ import {
 
 import { data, deviceType, win } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -130,7 +134,7 @@ app.scene.clusteredLightingEnabled = false;
 app.scene.skyboxIntensity = 0.1;
 
 // Set the loaded area light LUT data
-const luts = assets.luts.resource;
+const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 const planeMaterial = new StandardMaterial();
@@ -178,7 +182,7 @@ occluder.addComponent('anim', {
 occluder.setLocalScale(3, 3, 3);
 app.root.addChild(occluder);
 
-occluder.anim.assignAnimation('Idle', assets.asset.resource.animations[0].resource);
+occluder.anim.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.asset.resource.animations[0].resource));
 occluder.anim.baseLayer.weight = 1.0;
 occluder.anim.speed = 0.1;
 // const animLayer = occluder.anim.addLayer('Idle', 1.0, )
@@ -348,7 +352,6 @@ let timeDiff = 0;
 let index = 0;
 app.on('update', (dt) => {
     if (time === 0) {
-        // @ts-ignore engine-tsd
         camera.script.orbitCamera.distance = 25;
     }
     timeDiff += dt;

@@ -49,6 +49,10 @@ import {
 import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -150,7 +154,7 @@ applyMaterial(bitmojiEntity, material);
 
 // Play the dance animation
 bitmojiEntity.addComponent('anim', { activate: true });
-const danceTrack = assets.danceAnim.resource.animations[0].resource;
+const danceTrack = /** @type {AnimTrack} */ (assets.danceAnim.resource.animations[0].resource);
 bitmojiEntity.anim.assignAnimation('Dance', danceTrack, undefined, 0.62);
 
 // Create an instance of the morph target model with a clone of the hatch material, and play
@@ -165,7 +169,7 @@ app.root.addChild(morphEntity);
 morphEntity.setLocalScale(12, 12, 12);
 morphEntity.setLocalPosition(0, 1.2, -18);
 morphEntity.addComponent('anim', { activate: true });
-const morphAnimation = assets.morph.resource.animations[1].resource;
+const morphAnimation = /** @type {AnimTrack} */ (assets.morph.resource.animations[1].resource);
 morphEntity.anim.assignAnimation('Default', morphAnimation, undefined, 0.62);
 applyMaterial(morphEntity, morphMaterial);
 

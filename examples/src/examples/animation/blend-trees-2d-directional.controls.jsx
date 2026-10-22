@@ -16,13 +16,13 @@ export function Controls({ observer }) {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const width = window.top.controlPanel.offsetWidth;
+        const width = /** @type {HTMLElement} */ (canvas.closest('#controlPanel')).offsetWidth;
         const height = width;
         const halfWidth = Math.floor(width / 2);
         const halfHeight = Math.floor(height / 2);
         canvas.setAttribute('style', `width: ${width}px; height: ${height}px;`);
-        canvas.setAttribute('width', width);
-        canvas.setAttribute('height', height);
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
 
         const drawPosition = () => {

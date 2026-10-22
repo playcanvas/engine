@@ -39,6 +39,10 @@ import { GSplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effe
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -117,10 +121,11 @@ terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // Find source clouds (Icosphere nodes)
-/** @type {Array<Entity>} */
-const srcClouds = terrain.find((node) => {
-    return node.name.includes('Icosphere');
-});
+const srcClouds = /** @type {Entity[]} */ (
+    terrain.find((node) => {
+        return node.name.includes('Icosphere');
+    })
+);
 
 // Store cloud parents for later and remove clouds from terrain hierarchy
 const cloudParents = srcClouds.map((cloud) => cloud.parent);
@@ -155,7 +160,9 @@ revealScript.edgeTint.set(5, 2, 0); // orange/gold edge
 revealScript.tint.set(1, 1, 1);
 
 // Now disable the original terrain render components (keep gsplat visible)
-const terrainRenders = terrain.find((node) => node.render && !node.name.includes('GSplat'));
+const terrainRenders = /** @type {Entity[]} */ (
+    terrain.find((/** @type {Entity} */ node) => node.render && !node.name.includes('GSplat'))
+);
 terrainRenders.forEach((node) => {
     node.render.enabled = false;
 });
@@ -176,7 +183,7 @@ srcClouds.forEach((srcCloud, srcIndex) => {
         srcCloud.render.meshInstances.forEach((mi) => {
             if (mi.material) {
                 mi.material.blendType = BLEND_NORMAL;
-                mi.material.opacity = 0.2;
+                /** @type {StandardMaterial} */ (mi.material).opacity = 0.2;
             }
         });
     }
@@ -218,7 +225,6 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 clouds.sort(() => Math.random() - 0.5);
 
 // Find a tree to use as focus point (same as shadow-cascades)
-// @ts-ignore
 const tree = terrain.findOne('name', 'Arbol 2.002');
 
 // Create camera with orbit controls (same setup as shadow-cascades)
@@ -254,7 +260,6 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // On the first frame, move camera further away
     if (frameNumber === 0) {
-        // @ts-ignore
         camera.script.orbitCamera.distance = 470;
     }
 

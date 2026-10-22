@@ -38,6 +38,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack, ScriptType } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -308,10 +312,10 @@ characterEntity.anim.loadStateGraph(animStateGraphData);
 
 // Assign the loaded animation assets to each of the states present in the state graph
 const locomotionLayer = characterEntity.anim.baseLayer;
-locomotionLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
-locomotionLayer.assignAnimation('Walk', assets.walkAnim.resource.animations[0].resource);
-locomotionLayer.assignAnimation('Jog', assets.jogAnim.resource.animations[0].resource);
-locomotionLayer.assignAnimation('Jump', assets.jumpAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource));
+locomotionLayer.assignAnimation('Walk', /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource));
+locomotionLayer.assignAnimation('Jog', /** @type {AnimTrack} */ (assets.jogAnim.resource.animations[0].resource));
+locomotionLayer.assignAnimation('Jump', /** @type {AnimTrack} */ (assets.jumpAnim.resource.animations[0].resource));
 
 app.root.addChild(characterEntity);
 
@@ -343,7 +347,10 @@ data.on('jump', () => {
 });
 
 // Create a Locomotion script and initialize some variables
-const Locomotion = createScript('Locomotion');
+/**
+ * @typedef {ScriptType & { onMouseDown(event: MouseEvent): void, destroy(): void }} LocomotionScript
+ */
+const Locomotion = /** @type {typeof ScriptType & { prototype: LocomotionScript }} */ (createScript('Locomotion'));
 
 let characterDirection;
 /** @type {Vec3} */
@@ -357,12 +364,10 @@ Locomotion.prototype.initialize = function () {
     this.on('destroy', this.destroy, this);
 };
 
-// @ts-ignore engine-tsd
 Locomotion.prototype.onMouseDown = function (event) {
     if (event.button !== 0) return;
     // Set the character target position to a position on the plane that the user has clicked
-    /** @type {Entity} */
-    const cameraEntity = app.root.findByName('Camera');
+    const cameraEntity = /** @type {Entity} */ (app.root.findByName('Camera'));
     const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
     const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
     const result = app.systems.rigidbody.raycastFirst(far, near);

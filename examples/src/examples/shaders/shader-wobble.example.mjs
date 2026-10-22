@@ -126,8 +126,7 @@ renders.forEach((render) => {
     for (let i = 0; i < meshInstances.length; i++) {
         const meshInstance = meshInstances[i];
         if (!originalTexture) {
-            /** @type {StandardMaterial} */
-            const originalMaterial = meshInstance.material;
+            const originalMaterial = /** @type {StandardMaterial} */ (meshInstance.material);
             originalTexture = originalMaterial.diffuseMap;
         }
         meshInstance.material = material;

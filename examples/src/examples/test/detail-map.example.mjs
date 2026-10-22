@@ -30,7 +30,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -146,7 +146,7 @@ material.update();
 /**
  * Helper function to create a 3d primitive including its material.
  *
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {Material} material - The material.

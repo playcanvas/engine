@@ -633,6 +633,7 @@ const BENCH_SIZES = [
 //   - OneSweep is the production fastpath on NVIDIA; it's unstable on Mali
 //     (validates incorrectly) and Apple (GPU hangs under heavy validation
 //     load on M1), so it's restricted to NVIDIA here.
+// @ts-expect-error the gpu adapter is internal to the webgpu device
 const _nvidia = (device.gpuAdapter?.info?.vendor || '').toLowerCase().includes('nvidia');
 const BENCH_CONFIGS = [
     { label: '4-bit', modeKey: '4-shared-mem' },

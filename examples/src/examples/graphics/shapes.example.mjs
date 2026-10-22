@@ -23,6 +23,10 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -99,6 +103,7 @@ uvTexture.setSource(gridCanvas);
 const material = new StandardMaterial();
 
 // All render component primitive shape types
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'plane', 'cone', 'cylinder', 'sphere', 'capsule'];
 let x = -1,
     y = -1;

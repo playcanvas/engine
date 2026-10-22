@@ -26,6 +26,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -188,10 +192,22 @@ modelEntity.anim.loadStateGraph(animStateGraphData);
 
 // Load the state graph asset resource into the anim component
 const characterStateLayer = modelEntity.anim.baseLayer;
-characterStateLayer.assignAnimation('Emote.Idle', assets.idleAnim.resource.animations[0].resource);
-characterStateLayer.assignAnimation('Emote.Eager', assets.eagerAnim.resource.animations[0].resource);
-characterStateLayer.assignAnimation('Emote.Dance', assets.danceAnim.resource.animations[0].resource);
-characterStateLayer.assignAnimation('Emote.Walk', assets.walkAnim.resource.animations[0].resource);
+characterStateLayer.assignAnimation(
+    'Emote.Idle',
+    /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource)
+);
+characterStateLayer.assignAnimation(
+    'Emote.Eager',
+    /** @type {AnimTrack} */ (assets.eagerAnim.resource.animations[0].resource)
+);
+characterStateLayer.assignAnimation(
+    'Emote.Dance',
+    /** @type {AnimTrack} */ (assets.danceAnim.resource.animations[0].resource)
+);
+characterStateLayer.assignAnimation(
+    'Emote.Walk',
+    /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource)
+);
 
 // Initialize observer data
 data.set('data', {
@@ -201,6 +217,7 @@ data.set('data', {
 
 // Helper to update animation points for visualization
 const updateAnimPoints = () => {
+    // @ts-expect-error the blend tree nodes are internal, read here only to visualize them
     const points = characterStateLayer._controller._states.Emote.animations.map((/** @type {any} */ animNode) => ({
         x: animNode.point?.x ?? 0,
         y: animNode.point?.y ?? 0,

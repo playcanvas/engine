@@ -47,7 +47,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -156,7 +156,7 @@ cubeMaterial.useMetalness = true;
 cubeMaterial.update();
 
 /**
- * @param {string} primitiveType - Primitive mesh type (e.g. `'box'`).
+ * @param {RenderComponent['type']} primitiveType - Primitive mesh type (e.g. `'box'`).
  * @param {Vec3} position - World-space position for the new entity.
  * @param {Vec3} scale - Local scale of the primitive.
  * @param {Material} mat - Material assigned to the render component.

@@ -260,7 +260,7 @@ if (app.xr.supported) {
 
     app.xr.planeDetection.on('add', (xrPlane) => {
         // Entity
-        const entity = new Entity();
+        const entity = /** @type {Entity & { label?: Entity }} */ (new Entity());
         entity.addComponent('render');
         app.root.addChild(entity);
         entities.set(xrPlane, entity);
@@ -338,7 +338,8 @@ if (app.xr.supported) {
                 app.drawLine(plane.getPosition(), vec3B, Color.GREEN, false);
                 app.drawLine(plane.getPosition(), vec3C, Color.BLUE, false);
 
-                vec3A.copy(plane.points[0]);
+                const point = plane.points[0];
+                vec3A.set(point.x, point.y, point.z);
                 transform.transformPoint(vec3A, vec3A);
             }
         }

@@ -209,6 +209,7 @@ const createToggle = (name, values, apply) => {
 };
 
 // Fit follows whichever axis has less room, so the whole reference area stays on screen
+/** @type {'fit' | number} */
 let blend = 'fit';
 const fitReference = () => {
     const { resolution, referenceResolution } = hud.screen;

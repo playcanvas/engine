@@ -171,7 +171,7 @@ const createButton = (label, x, [color, hoverTint, pressedTint]) => {
 };
 const decline = createButton('Decline', -90, [SLATE, new Color(0.33, 0.37, 0.45), new Color(0.2, 0.22, 0.28)]);
 const accept = createButton('Accept', 90, [ORANGE, new Color(1, 0.7, 0.45), new Color(0.8, 0.4, 0.1)]);
-accept.findByName('label').element.color = INK;
+/** @type {Entity} */ (accept.findByName('label')).element.color = INK;
 
 // A toast, sized to its message: only the middle of the sliced panel grows
 const toast = createElement(screen, 'toast', {
