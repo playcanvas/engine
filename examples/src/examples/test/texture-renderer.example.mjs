@@ -45,6 +45,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { ShaderMaterial } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 
 const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
@@ -121,7 +125,7 @@ document.body.appendChild(dashboard);
 
 // The shader variant of the first preview, named by its shader and the defines selecting it.
 const variantName = () => {
-    const { material } = app.scene.defaultDrawLayer.meshInstances[0];
+    const material = /** @type {ShaderMaterial} */ (app.scene.defaultDrawLayer.meshInstances[0].material);
     const defines = Array.from(material.defines, ([key, value]) => (value === true ? key : value)).sort();
     return [material.shaderDesc.uniqueName.replace(/^TextureRenderer-?/, ''), ...defines].filter(Boolean).join(' ');
 };
@@ -165,6 +169,7 @@ app.on('destroy', () => {
 const sourceTypes = [TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP];
 const originalFilterable = device.textureFloatFilterable;
 const setFiltering = (value) => {
+    // @ts-expect-error textureFloatFilterable is read-only, overridden here to test both paths
     device.textureFloatFilterable = value;
 };
 const setGamma = (value) => {
@@ -208,7 +213,12 @@ const encodeOutput = (linear, gamma) => [
     ...linear.map((value) => Math.round(Math.min(1, gamma === GAMMA_SRGB ? (value + 1e-7) ** (1 / 2.2) : value) * 255)),
     255
 ];
-const makeSource = (format, type = TEXTURETYPE_DEFAULT, zeroExponent = false, alphaOverride = undefined) => {
+const makeSource = (
+    format,
+    type = /** @type {string} */ (TEXTURETYPE_DEFAULT),
+    zeroExponent = false,
+    alphaOverride = undefined
+) => {
     const float = format === PIXELFORMAT_RGBA32F;
     const alpha =
         alphaOverride ??
@@ -237,7 +247,7 @@ const makeSource = (format, type = TEXTURETYPE_DEFAULT, zeroExponent = false, al
             mipmaps: false,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
-            levels: [values]
+            levels: /** @type {Uint8Array[] | Float32Array[]} */ ([values])
         })
     );
     const centerOffset = (4 * size + 4) * 4;
@@ -413,7 +423,7 @@ async function runTests() {
                                 mipmaps: false,
                                 minFilter: FILTER_NEAREST,
                                 magFilter: FILTER_NEAREST,
-                                levels: [values]
+                                levels: /** @type {Uint8Array[] | Float32Array[]} */ ([values])
                             })
                         );
                         const params = camera.camera.shaderParams;
@@ -464,6 +474,7 @@ async function runTests() {
             [1, 0, 1],
             [0, 1, 1]
         ];
+        /** @type {(cell: number[], x: number, y: number) => [number, number]} */
         const cellPixel = ([column, row], x, y) => [1 + column * 16 + x, 1 + row * 16 + y];
         const drawCube = (texture) => {
             renderer.draw(texture, 1 / 64, 1 / 64, 1, 0.75);
@@ -502,7 +513,7 @@ async function runTests() {
                     mipmaps,
                     minFilter: mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_NEAREST,
                     magFilter: FILTER_NEAREST,
-                    levels
+                    levels: /** @type {Uint8Array[][] | Float32Array[][]} */ (levels)
                 })
             );
         };
@@ -640,7 +651,10 @@ async function runTests() {
                     showReport('running');
                     check(
                         layer.meshInstances.every(
-                            (instance) => !instance.visible && instance.material.getParameter('colorMap').data === null
+                            (instance) =>
+                                !instance.visible &&
+                                /** @type {{ data: Texture | null }} */ (instance.material.getParameter('colorMap'))
+                                    .data === null
                         ),
                         'Frame cleanup retained a preview or texture'
                     );
@@ -648,10 +662,10 @@ async function runTests() {
                 sources.forEach(({ texture }) => release(texture));
             });
             if (cycle === 0) {
-                warmTextureCount = device.textures.length;
+                warmTextureCount = device.textures.size;
                 warmInstances = layer.meshInstances.slice();
             } else {
-                check(device.textures.length === warmTextureCount, 'Texture count grew after destroying sources');
+                check(device.textures.size === warmTextureCount, 'Texture count grew after destroying sources');
                 check(
                     layer.meshInstances.length === 4 &&
                         layer.meshInstances.every((instance, i) => instance === warmInstances[i]),

@@ -207,7 +207,6 @@ app.on('update', (dt) => {
     // On the first frame, when camera is updated, move it further away from the focus tree
     if (firstFrame) {
         firstFrame = false;
-        // @ts-ignore engine-tsd
         camera.script.orbitCamera.distance = 320;
     }
 

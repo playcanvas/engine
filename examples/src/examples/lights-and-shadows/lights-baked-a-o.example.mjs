@@ -230,19 +230,14 @@ data.on('*:set', (/** @type {string} */ path, value) => {
             app.scene.ambientBakeSpherePart = value ? 0.4 : 1;
         } else {
             // All other values are set directly on the scene
-            // @ts-ignore engine-tsd
             app.scene[pathArray[2]] = value;
         }
     } else if (pathArray[1] === 'directional') {
-        // @ts-ignore engine-tsd
         lightDirectional.light[pathArray[2]] = value;
     } else if (pathArray[1] === 'settings') {
-        // @ts-ignore engine-tsd
         app.scene[pathArray[2]] = value;
     } else if (pathArray[1] === 'other') {
-        // @ts-ignore engine-tsd
         lightOmni.light[pathArray[2]] = value;
-        // @ts-ignore engine-tsd
         lightSpot.light[pathArray[2]] = value;
     } else {
         // Don't rebake if stats change

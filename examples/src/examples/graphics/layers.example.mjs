@@ -50,6 +50,10 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -168,7 +172,7 @@ const walker = assets.bitmoji.resource.instantiateRenderEntity();
 walker.setLocalScale(60, 60, 60);
 walkerRoot.addChild(walker);
 walker.addComponent('anim', { activate: true });
-walker.anim.assignAnimation('Walk', assets.walk.resource.animations[0].resource);
+walker.anim.assignAnimation('Walk', /** @type {AnimTrack} */ (assets.walk.resource.animations[0].resource));
 walker.findComponents('render').forEach((render) => {
     render.layers = [characterLayer.id];
 });

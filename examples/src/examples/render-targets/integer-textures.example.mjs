@@ -105,10 +105,7 @@ createOptions.graphicsDevice = device;
 createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
-createOptions.resourceHandlers = [
-    // @ts-ignore
-    TextureHandler
-];
+createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -281,8 +278,7 @@ gameScreen.setLocalPosition(0, 5, 0);
 gameScreen.setLocalScale(PLANE_WIDTH, 1, PLANE_HEIGHT);
 gameScreen.setEulerAngles(90, 0, 0);
 
-/** @type {StandardMaterial} */
-const gameScreenMaterial = gameScreen.render.material;
+const gameScreenMaterial = /** @type {StandardMaterial} */ (gameScreen.render.material);
 gameScreenMaterial.diffuse = Color.BLACK;
 gameScreenMaterial.emissiveMap = outputTexture;
 gameScreenMaterial.emissive = Color.WHITE;
@@ -380,7 +376,7 @@ app.on('update', (/** @type {number} */) => {
         device.scope.resolve('passNum').setValue(passNum);
         device.scope.resolve('randomVal').setValue(Math.random());
         drawQuadWithShader(device, sandRenderTarget, sandShader);
-        device.copyRenderTarget(sandRenderTarget, sourceRenderTarget, true, false);
+        sourceRenderTarget.copy(sandRenderTarget, true, false);
         passNum = (passNum + 1) % 16;
     }
 

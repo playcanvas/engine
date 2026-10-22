@@ -277,7 +277,16 @@ const setupEditableProcessors = (gsplatComponent) => {
     return { selectionProcessor: selectionProc, deleteProcessor: deleteProc };
 };
 
-// Creates an editable gsplat entity with splatVisible and splatSelection streams
+/**
+ * Creates an editable gsplat entity with splatVisible and splatSelection streams.
+ *
+ * @param {string} name - The entity name.
+ * @param {Asset} asset - The gsplat asset.
+ * @param {[number, number, number]} position - The local position.
+ * @param {[number, number, number]} rotation - The local euler angles in degrees.
+ * @param {[number, number, number]} scale - The local scale.
+ * @returns {object} The editable record, also added to the editables list.
+ */
 const createEditableSplat = (name, asset, position, rotation, scale) => {
     const entity = new Entity(name);
     const gsplatComponent = entity.addComponent('gsplat', { asset });
@@ -542,14 +551,14 @@ gizmoLayer = Gizmo.createLayer(app);
 gizmo = new TranslateGizmo(camera.camera, gizmoLayer);
 
 camera.addComponent('script');
-const orbitCamera = camera.script.create('orbitCamera', {
+camera.script.create('orbitCamera', {
     attributes: {
         frameOnStart: false,
         inertiaFactor: 0.07
     }
 });
 const orbitInput = camera.script.create('orbitCameraInputMouse');
-orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
+camera.script.orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
 
 // Gizmo interaction - disable camera when using gizmo
 gizmo.on('pointer:down', (_x, _y, meshInstance) => {

@@ -53,6 +53,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -124,6 +128,7 @@ ground.setLocalScale(13, 1, 13);
 
 // Two rows of otherwise identical objects, differing only in whether they are lightmapped. The
 // back row takes the lightmap (and so MASK_AFFECT_LIGHTMAPPED), the front row stays dynamic.
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'sphere', 'capsule', 'cone', 'cylinder'];
 const rowSpacing = 2.4;
 

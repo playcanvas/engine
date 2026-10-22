@@ -149,7 +149,7 @@ const createAtlas = (source, name) => {
 
 // scene environment (wide street): a full resolution skybox cubemap for the background and the sharp
 // reflection term, and a lighting atlas, both generated from the same HDR
-const sceneHdr = assets.sceneHdr.resource;
+const sceneHdr = /** @type {Texture} */ (assets.sceneHdr.resource);
 const sceneCubemap = EnvLighting.generateSkyboxCubemap(sceneHdr);
 sceneCubemap.name = 'wide-street-skybox';
 const sceneAtlas = createAtlas(sceneHdr, 'wide-street-atlas');
@@ -157,7 +157,7 @@ const sceneAtlas = createAtlas(sceneHdr, 'wide-street-atlas');
 // material environment (empty room)
 const roomCubemap = roomCubemapAsset.resource;
 const roomAtlas = createAtlas(roomCubemap, 'empty-room-atlas');
-const roomSphereMap = assets.roomSphereMap.resource;
+const roomSphereMap = /** @type {Texture} */ (assets.roomSphereMap.resource);
 
 // SH9 irradiance of the same environment, in the layout evaluated by ambientPS (r, g, b per coefficient)
 const roomSH = new Float32Array([
@@ -326,7 +326,7 @@ data.on('rebuild', () => {
 
 // record what the env samplers actually see when the test sphere draws: the forward renderer publishes
 // meshInstanceId right before each draw, which identifies the draw call without any renderer hooks
-const testMeshInstance = testSphere.findByName('sphere').render.meshInstances[0];
+const testMeshInstance = /** @type {Entity} */ (testSphere.findByName('sphere')).render.meshInstances[0];
 const meshInstanceIdScope = device.scope.resolve('meshInstanceId');
 const envScopes = ['texture_envAtlas', 'texture_cubeMap', 'texture_sphereMap', 'scene_envAtlas', 'scene_skybox'].map(
     (name) => device.scope.resolve(name)
@@ -417,6 +417,7 @@ const applyState = () => {
         material.envAtlas = hasAtlas(mat.env) ? roomAtlas : null;
         material.cubeMap = hasCubemap(mat.env) ? roomCubemap : null;
         material.sphereMap = mat.env === 'spheremap' ? roomSphereMap : null;
+        // @ts-expect-error ambientSH is an internal material property
         material.ambientSH = mat.ambientSH ? roomSH : null;
         material.useSkybox = mat.useSkybox;
         material.cubeMapProjection = mat.boxProjection ? CUBEPROJ_BOX : CUBEPROJ_NONE;

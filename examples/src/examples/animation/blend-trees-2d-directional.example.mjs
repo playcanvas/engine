@@ -26,6 +26,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -190,10 +194,22 @@ modelEntity.anim.loadStateGraph(animStateGraphData);
 
 // Load the state graph asset resource into the anim component
 const locomotionLayer = modelEntity.anim.baseLayer;
-locomotionLayer.assignAnimation('Travel.Idle', assets.idleAnim.resource.animations[0].resource);
-locomotionLayer.assignAnimation('Travel.Walk', assets.walkAnim.resource.animations[0].resource);
-locomotionLayer.assignAnimation('Travel.WalkBackwards', assets.walkAnim.resource.animations[0].resource);
-locomotionLayer.assignAnimation('Travel.Jog', assets.jogAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation(
+    'Travel.Idle',
+    /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource)
+);
+locomotionLayer.assignAnimation(
+    'Travel.Walk',
+    /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource)
+);
+locomotionLayer.assignAnimation(
+    'Travel.WalkBackwards',
+    /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource)
+);
+locomotionLayer.assignAnimation(
+    'Travel.Jog',
+    /** @type {AnimTrack} */ (assets.jogAnim.resource.animations[0].resource)
+);
 
 // Initialize observer data
 data.set('data', {
@@ -203,6 +219,7 @@ data.set('data', {
 
 // Helper to update animation points for visualization
 const updateAnimPoints = () => {
+    // @ts-expect-error the blend tree nodes are internal, read here only to visualize them
     const points = locomotionLayer._controller._states.Travel.animations.map((animNode) => ({
         x: animNode.point?.x ?? 0,
         y: animNode.point?.y ?? 0,

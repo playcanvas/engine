@@ -42,6 +42,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { WebgpuGraphicsDevice } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -149,7 +153,7 @@ class CompositeArrayPass extends RenderPassShaderQuad {
                     viewFormat
                 });
             }
-            this.device.xrSubImages = subImages;
+            /** @type {WebgpuGraphicsDevice} */ (this.device).xrSubImages = subImages;
         }
     }
 

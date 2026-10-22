@@ -128,7 +128,6 @@ const areaSizeUniform = app.graphicsDevice.scope.resolve('areaSize');
 const deltaTimeUniform = app.graphicsDevice.scope.resolve('deltaTime');
 const directionSampler = app.graphicsDevice.scope.resolve('directionSampler');
 
-// @ts-ignore engine-tsd
 if (app.graphicsDevice.isWebGL2) {
     // Simulated particles
     const maxNumPoints = 200000;

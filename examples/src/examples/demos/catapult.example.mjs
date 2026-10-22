@@ -77,6 +77,10 @@ import { VatCharacters } from 'playcanvas/scripts/esm/vat/vat-characters.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -724,7 +728,9 @@ catapult.findComponents('render').forEach((render) => {
 // only the firing animation is used. The layer stays paused and the game scrubs it a frame at a time,
 // which is what lets the swing keep its own timing independently of the reload
 const animations = assets.catapult.resource.animations;
-const fireTrack = (animations.find((animation) => animation.resource.name.includes('Shot')) ?? animations[0]).resource;
+const fireTrack = /** @type {AnimTrack} */ (
+    (animations.find((animation) => animation.resource.name.includes('Shot')) ?? animations[0]).resource
+);
 
 catapult.addComponent('anim', { activate: false });
 catapult.anim.assignAnimation('Fire', fireTrack, undefined, 1, false);
@@ -874,7 +880,9 @@ characters.count = 0;
 // the valley is backlit by a sun sitting almost on the horizon, which leaves the crowd as dark
 // silhouettes against the ground. Feeding their own albedo back in as a weak emissive lifts them out
 // of the shade without flattening the lighting on them
-const charactersMaterial = charactersEntity.findComponent('render').meshInstances[0].material;
+const charactersMaterial = /** @type {StandardMaterial} */ (
+    charactersEntity.findComponent('render').meshInstances[0].material
+);
 charactersMaterial.emissiveMap = charactersMaterial.diffuseMap;
 charactersMaterial.emissive = new Color(1, 1, 1);
 charactersMaterial.emissiveIntensity = 0.45;

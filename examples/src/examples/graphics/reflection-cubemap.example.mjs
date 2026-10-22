@@ -36,7 +36,7 @@ import {
 import { deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -123,9 +123,9 @@ const createHighQualitySphere = (material, layer) => {
 
 /**
  * helper function to create a primitive with shape type, position, scale, color and layer
- * @param {string} primitiveType - The primitive type.
- * @param {number | Vec3} position - The entity's position.
- * @param {number | Vec3} scale - The entity's scale.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
+ * @param {Vec3} position - The entity's position.
+ * @param {Vec3} scale - The entity's scale.
  * @param {Color} color - The color.
  * @param {number[]} layer - The render component's layers.
  * @returns {Entity} The returned entity.
@@ -219,6 +219,7 @@ shinyMat.update();
  * @type {Entity[]}
  */
 const entities = [];
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 for (let i = 0; i < 6; i++) {
     const shapeName = shapes[Math.floor(Math.random() * shapes.length)];

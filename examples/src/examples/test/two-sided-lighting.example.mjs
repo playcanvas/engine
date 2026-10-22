@@ -97,7 +97,7 @@ app.root.addChild(entity);
 // the same plane without its normal map, which builds no TBN matrix and so is shaded with the
 // vertex normal
 const plain = assets.model.resource.instantiateRenderEntity();
-const plainMaterial = plain.render.meshInstances[0].material.clone();
+const plainMaterial = /** @type {StandardMaterial} */ (plain.render.meshInstances[0].material).clone();
 plainMaterial.normalMap = null;
 plainMaterial.update();
 plain.render.meshInstances[0].material = plainMaterial;

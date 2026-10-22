@@ -252,7 +252,7 @@ if (app.xr.supported) {
         createController(inputSource);
     });
 
-    if (window.XRHand) {
+    if ('XRHand' in window) {
         message('Choose XR mode, and switch to hand input');
     } else {
         message('WebXR Hands Input is not supported by your platform');

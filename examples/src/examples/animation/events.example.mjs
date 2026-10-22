@@ -29,6 +29,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -169,7 +173,7 @@ app.on('update', (/** @type {number} */ dt) => {
     modelEntityParent.rotate(0, 13.8 * dt, 0);
 });
 
-const walkTrack = assets.walkAnim.resource.animations[0].resource;
+const walkTrack = /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource);
 
 // Add two anim events to the walk animation, one for each foot step. These events should occur just as each foot touches the ground
 walkTrack.events = new AnimEvents([
@@ -196,7 +200,7 @@ modelEntity.anim.on('foot_step', (event) => {
 app.on('update', () => {
     // On update, iterate over any currently highlighted boxes and reduce their emissive property
     highlightedBoxes.forEach((box) => {
-        const material = box.render.material;
+        const material = /** @type {StandardMaterial} */ (box.render.material);
         material.emissiveIntensity *= 0.95;
         material.update();
     });

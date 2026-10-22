@@ -241,7 +241,7 @@ app.on('update', (dt) => {
 
     // Apply auto-rotation
     if (autoRotateEnabled) {
-        const orbitCamera = camera.script?.get('orbitCamera');
+        const orbitCamera = camera.script?.orbitCamera;
         if (orbitCamera) {
             orbitCamera.yaw += autoRotateSpeed * dt;
         }

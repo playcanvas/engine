@@ -239,7 +239,7 @@ app.on('update', (dt) => {
     cameraFrame.dof.enabled = data.get('data.dof');
 
     // DOF distance - distance between the camera and the entity
-    const distance = cameraEntity.position.distance(statueEntity.position);
+    const distance = cameraEntity.getPosition().distance(statueEntity.getPosition());
     cameraFrame.dof.focusDistance = distance;
     cameraFrame.update();
 

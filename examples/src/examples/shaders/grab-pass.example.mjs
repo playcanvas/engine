@@ -26,6 +26,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 import shaderGlslFrag from './shader.glsl.frag';
 import shaderGlslVert from './shader.glsl.vert';
 import shaderWgslFrag from './shader.wgsl.frag';
@@ -94,7 +98,7 @@ app.scene.layers.insertOpaque(depthLayer, 2);
 /**
  * Helper function to create a primitive with shape type, position, scale, color.
  *
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {Color} color - The color.
@@ -130,6 +134,7 @@ function createPrimitive(primitiveType, position, scale, color) {
  */
 const primitives = [];
 const count = 7;
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 for (let i = 0; i < count; i++) {
     const shapeName = shapes[Math.floor(Math.random() * shapes.length)];

@@ -158,7 +158,7 @@ app.root.addChild(l);
 // The menu is always visible and follows the camera, biased to the right of the eye line.
 const menuEntity = new Entity('XrMenu');
 menuEntity.addComponent('script');
-menuEntity.script.create(XrMenu, {
+const xrMenu = menuEntity.script.create(XrMenu, {
     properties: {
         menuItems: [
             // Foveation row doubles as a toggle button: clicking enables/disables foveation,
@@ -179,7 +179,6 @@ menuEntity.script.create(XrMenu, {
     }
 });
 app.root.addChild(menuEntity);
-const xrMenu = menuEntity.script.xrMenu;
 
 let fov = 0;
 let lastNonZeroFov = 1; // value restored by the toggle when re-enabling foveation

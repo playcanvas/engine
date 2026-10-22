@@ -43,6 +43,10 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack, RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -106,7 +110,7 @@ app.start();
 
 /**
  * @param {string} name - The entity name.
- * @param {string} type - The primitive type.
+ * @param {RenderComponent['type']} type - The primitive type.
  * @param {Color} color - The diffuse color.
  * @returns {Entity} The entity.
  */
@@ -286,7 +290,7 @@ app.on('update', (dt) => {
 const character = assets.character.resource.instantiateRenderEntity({ castShadows: true });
 character.name = 'bitmoji';
 character.addComponent('anim', { activate: true });
-character.anim.assignAnimation('Idle', assets.idle.resource.animations[0].resource);
+character.anim.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.idle.resource.animations[0].resource));
 character.setLocalScale(1.5, 1.5, 1.5);
 app.root.addChild(character);
 

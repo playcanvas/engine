@@ -54,6 +54,10 @@ import {
 import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -168,7 +172,7 @@ app.root.addChild(morphEntity);
 morphEntity.setLocalScale(50, 50, 50);
 morphEntity.setLocalPosition(0, 5, -120);
 morphEntity.addComponent('anim', { activate: true });
-const morphAnimation = assets.morph.resource.animations[1].resource;
+const morphAnimation = /** @type {AnimTrack} */ (assets.morph.resource.animations[1].resource);
 morphEntity.anim.assignAnimation('Default', morphAnimation, undefined, 0.62);
 applyMaterial(morphEntity, morphMaterial);
 
@@ -209,7 +213,7 @@ applyMaterial(bitmojiEntity, bitmojiMaterial);
 
 // Play the animation
 bitmojiEntity.addComponent('anim', { activate: true });
-const walkTrack = assets.danceAnim.resource.animations[0].resource;
+const walkTrack = /** @type {AnimTrack} */ (assets.danceAnim.resource.animations[0].resource);
 bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
 // Create an Entity with a camera component

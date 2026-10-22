@@ -202,7 +202,7 @@ computePass.onAfter = () => {
     const generation = readGeneration;
     histogramStorageBuffer
         .read(0, undefined, histogramData)
-        .then((data) => {
+        .then((/** @type {Uint32Array} */ data) => {
             // A request can settle after recovery or application destruction.
             if (generation !== readGeneration) return;
 

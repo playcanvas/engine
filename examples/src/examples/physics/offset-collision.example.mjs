@@ -32,6 +32,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { AnimTrack } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -227,7 +231,7 @@ modelEntity.addComponent('collision', {
 
 // Load the state graph asset resource into the anim component
 const characterStateLayer = modelEntity.anim.baseLayer;
-characterStateLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
+characterStateLayer.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource));
 
 app.root.addChild(modelEntity);
 
