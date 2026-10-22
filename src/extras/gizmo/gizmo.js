@@ -740,7 +740,7 @@ class Gizmo extends EventHandler {
                         const dist = triWTM.transformPoint(hit).sub(start).length();
 
                         // priority decides between prioritized hits, otherwise distance
-                        const wins = !best || (bestPriority !== 0 && priority !== 0 ?
+                        const wins = !best || (bestPriority !== 0 && priority !== 0 && priority !== bestPriority ?
                             priority > bestPriority : dist < bestDist);
                         if (wins) {
                             best = shape.meshInstances;

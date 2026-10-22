@@ -123,8 +123,9 @@ class PlaneShape extends Shape {
         this._opacity = args.opacity ?? this._opacity;
         this._outlineThickness = args.outlineThickness ?? this._outlineThickness;
 
+        // below the center shape, so a plane in front of it does not take its press
         this.triData = [
-            new TriData(new PlaneGeometry())
+            new TriData(new PlaneGeometry(), 1)
         ];
 
         this._createRenderComponent(this.entity, [
