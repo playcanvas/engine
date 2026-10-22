@@ -16,6 +16,7 @@ import { Pool } from '../pool.js';
  * @import { Layer } from '../../../scene/layer.js'
  * @import { MeshInstance } from '../../../scene/mesh-instance.js'
  * @import { Shape } from '../shape/shape.js'
+ * @import { OverlayIcon } from '../overlay/icon-glyphs.js'
  */
 
 /**
@@ -826,14 +827,14 @@ class HandleGizmo extends DragGizmo {
     /**
      * Places the icon of a node, which fires {@link HandleGizmo.EVENT_ICONSELECT} when clicked.
      *
-     * @param {string} svg - The SVG markup of the icon, as in {@link GIZMO_ICONS}.
+     * @param {OverlayIcon} kind - The icon.
      * @param {Vec3} position - The world position.
      * @param {GraphNode} node - The node the icon marks.
      * @protected
      */
-    _icon(svg, position, node) {
+    _icon(kind, position, node) {
         if (this.icon) {
-            this._renderer.icons.add(svg, position, node);
+            this._renderer.icons.add(kind, position, node);
         }
     }
 

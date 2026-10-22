@@ -107,5 +107,4 @@ export { BoundingBoxGizmo } from './gizmo/handle/bounding-box-gizmo.js';
 export { CameraGizmo } from './gizmo/handle/camera-gizmo.js';
 export { LightGizmo } from './gizmo/handle/light-gizmo.js';
 export { IconGizmo } from './gizmo/icon-gizmo.js';
-export { GIZMO_ICONS } from './gizmo/overlay/icon-glyphs.js';
 export { ViewCube } from './gizmo/view-cube.js';

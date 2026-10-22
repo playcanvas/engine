@@ -8,6 +8,7 @@ import { Pool } from '../pool.js';
  * @import { Gizmo } from '../gizmo.js'
  * @import { GraphNode } from '../../../scene/graph-node.js'
  * @import { MeshInstance } from '../../../scene/mesh-instance.js'
+ * @import { OverlayIcon } from './icon-glyphs.js'
  * @import { OverlayRenderer } from './overlay-renderer.js'
  * @import { Shape } from '../shape/shape.js'
  */
@@ -66,13 +67,13 @@ class OverlayIcons {
     }
 
     /**
-     * Adds an icon at a point over a dark backdrop that {@link OverlayIcons#pick} picks.
+     * Adds an icon at a point, a glyph over a dark backdrop that {@link OverlayIcons#pick} picks.
      *
-     * @param {string} svg - The SVG markup of the icon.
+     * @param {OverlayIcon} kind - The icon.
      * @param {Vec3} position - The world position.
      * @param {GraphNode} node - The node the icon marks.
      */
-    add(svg, position, node) {
+    add(kind, position, node) {
         const camera = this._gizmo.camera;
         const entity = camera.entity;
         const renderer = this._renderer;
@@ -87,7 +88,7 @@ class OverlayIcons {
         tmpV.mulScalar(renderer.pixels(position, 1)).add(position);
         const backdrop = renderer.disc(tmpV, tmpQ.setFromDirections(Vec3.UP, entity.forward), 2 * ICON_BACKDROP_RADIUS * size, ICON_BACKDROP.a, ICON_BACKDROP);
 
-        renderer.glyph(svg, position, tmpQ.copy(entity.getRotation()).mul(GLYPH_TO_VIEW), size);
+        renderer.glyph(kind, position, tmpQ.copy(entity.getRotation()).mul(GLYPH_TO_VIEW), size);
 
         const record = this._placed.next();
         record.shape = backdrop;

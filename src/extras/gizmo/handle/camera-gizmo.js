@@ -5,7 +5,6 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from '../color.js';
 import { HandleGizmo } from './handle-gizmo.js';
-import { GIZMO_ICONS } from '../overlay/icon-glyphs.js';
 
 /**
  * @import { CameraComponent } from '../../../framework/components/camera/component.js'
@@ -124,7 +123,7 @@ class CameraGizmo extends HandleGizmo {
         const axis = this._active(entity, 'nearClip', 0) ? COLOR_CYAN :
             this._active(entity, 'farClip', 0) ? COLOR_AMBER : null;
         renderer.dashed(nearCenter, farCenter, axis ? 1 : 0.55, axis ? 1 : 0.6, axis);
-        this._icon(GIZMO_ICONS.camera, position, entity);
+        this._icon('camera', position, entity);
 
         if (!this._detailed(farCenter, farY)) {
             return;

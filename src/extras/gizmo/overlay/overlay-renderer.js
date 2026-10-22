@@ -6,7 +6,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { MeshLineBatch } from '../mesh/mesh-line-batch.js';
 import { Pool } from '../pool.js';
-import { getIconTexture } from './icon-textures.js';
+import { getIconTextures } from './icon-textures.js';
 import { OverlayIcons } from './overlay-icons.js';
 import { Readout } from './readout.js';
 import { ShapePool } from './shape-pool.js';
@@ -22,6 +22,7 @@ import { SphereShape } from '../shape/sphere-shape.js';
  * @import { Entity } from '../../../framework/entity.js'
  * @import { Gizmo } from '../gizmo.js'
  * @import { Layer } from '../../../scene/layer.js'
+ * @import { OverlayIcon } from './icon-glyphs.js'
  * @import { Shape } from '../shape/shape.js'
  */
 
@@ -145,22 +146,6 @@ class OverlayRenderer {
     _perspective = true;
 
     /**
-     * The pools of each icon, by its SVG markup.
-     *
-     * @type {Map<string, ShapePool>}
-     * @private
-     */
-    _glyphs = new Map();
-
-    /**
-     * Creates the pool of an icon.
-     *
-     * @type {(svg: string) => ShapePool}
-     * @private
-     */
-    _glyphPool;
-
-    /**
      * The icons drawn with the shapes.
      *
      * @type {OverlayIcons}
@@ -199,10 +184,6 @@ class OverlayRenderer {
             hoverColor: base,
             occludedColor: occluded
         });
-        this._glyphPool = (/** @type {string} */ svg) => {
-            const texture = getIconTexture(device, svg);
-            return pool((base, occluded) => new GlyphShape(device, { ...args(base, occluded), texture }));
-        };
 
         this._lines = new MeshLineBatch(app, layer, parent, SHAPE_DRAW_ORDER);
         this._rings = pool((base, occluded) => {
@@ -256,6 +237,16 @@ class OverlayRenderer {
             frustum: cone('frustum')
         };
 
+        const textures = getIconTextures(device);
+        /**
+         * The pools of each icon glyph.
+         *
+         * @type {Record<OverlayIcon, ShapePool>}
+         */
+        this._glyphs = /** @type {Record<OverlayIcon, ShapePool>} */ ({});
+        for (const [kind, texture] of Object.entries(textures)) {
+            this._glyphs[/** @type {OverlayIcon} */ (kind)] = pool((base, occluded) => new GlyphShape(device, { ...args(base, occluded), texture }));
+        }
     }
 
     /**
@@ -807,21 +798,16 @@ class OverlayRenderer {
     }
 
     /**
-     * Adds an icon on the xz plane of the rotation, its top toward -z.
+     * Adds an icon glyph on the xz plane of the rotation, its top toward -z.
      *
-     * @param {string} svg - The SVG markup of the icon.
+     * @param {OverlayIcon} kind - The icon.
      * @param {Vec3} center - The world center.
      * @param {Quat} rotation - The world rotation.
      * @param {number} size - The width and height.
      */
-    glyph(svg, center, rotation, size) {
+    glyph(kind, center, rotation, size) {
         this._colors(1);
-        let pool = this._glyphs.get(svg);
-        if (!pool) {
-            pool = this._glyphPool(svg);
-            this._glyphs.set(svg, pool);
-        }
-        const glyph = this._next(pool);
+        const glyph = this._next(this._glyphs[kind]);
         glyph.entity.setLocalPosition(this._local(center, tmpV1));
         glyph.entity.setLocalRotation(rotation);
         glyph.entity.setLocalScale(size, 1, size);
