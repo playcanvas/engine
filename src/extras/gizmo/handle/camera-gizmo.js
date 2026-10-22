@@ -41,8 +41,7 @@ const MIN_CLIP = 1e-3;
  * camera viewing the gizmo is skipped.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
- * app.scene.layers.push(layer);
+ * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
  * const gizmo = new CameraGizmo(cameraComponent, layer);
  * gizmo.attach([otherCameraEntity]);
  * ```

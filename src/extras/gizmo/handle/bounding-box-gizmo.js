@@ -44,8 +44,7 @@ const nearest = (dir) => {
  * nearest the world axes.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Bounds', transparentSortMode: SORTMODE_MANUAL });
- * app.scene.layers.push(layer);
+ * const layer = Gizmo.createLayer(app, 'Bounds', undefined, true);
  * const gizmo = new BoundingBoxGizmo(cameraComponent, layer);
  * gizmo.attach([entity]);
  * ```

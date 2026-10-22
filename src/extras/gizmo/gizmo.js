@@ -4,7 +4,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
+import { PROJECTION_PERSPECTIVE, SORTMODE_MANUAL, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
 
@@ -284,14 +284,19 @@ class Gizmo extends EventHandler {
      * @param {AppBase} app - The app.
      * @param {string} [layerName] - The layer name. Defaults to 'Gizmo'.
      * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
+     * @param {boolean} [depth] - Whether the layer keeps the scene depth and sorts transparent mesh
+     * instances manually, as overlay gizmos need so occluded parts draw faint. Otherwise it clears
+     * depth and draws on top, as transform gizmos need. Defaults to false.
      * @returns {Layer} The new layer.
+     * @example
+     * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
      */
-    static createLayer(app, layerName = 'Gizmo', layerIndex = app.scene.layers.layerList.length) {
+    static createLayer(app, layerName = 'Gizmo', layerIndex = app.scene.layers.layerList.length, depth = false) {
         const layer = new Layer({
             name: layerName,
-            clearDepthBuffer: true,
+            clearDepthBuffer: !depth,
             opaqueSortMode: SORTMODE_NONE,
-            transparentSortMode: SORTMODE_NONE
+            transparentSortMode: depth ? SORTMODE_MANUAL : SORTMODE_NONE
         });
         app.scene.layers.insert(layer, layerIndex);
         return layer;

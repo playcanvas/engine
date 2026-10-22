@@ -111,12 +111,11 @@ const createHandle = () => ({
  * The base class of gizmos that draw world-sized overlay shapes, such as a camera frustum or a
  * light shape, with handles that drag to edit them once large enough on screen.
  *
- * Use a layer that keeps the scene depth, unlike {@link Gizmo.createLayer}, so occluded parts use
- * the `occluded` color, and sorts transparent mesh instances manually ({@link SORTMODE_MANUAL}).
+ * Use a layer that keeps the scene depth, so occluded parts use the `occluded` color, and sorts
+ * transparent mesh instances manually, as {@link Gizmo.createLayer} makes with `depth` set.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
- * app.scene.layers.push(layer);
+ * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
  * ```
  *
  * @category Gizmo

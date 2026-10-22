@@ -44,8 +44,7 @@ const MIN_SIZE = 0.01;
  * light. Handles drag the range, cone angles or area size, which sets the entity's local scale.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
- * app.scene.layers.push(layer);
+ * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
  * const gizmo = new LightGizmo(cameraComponent, layer);
  * gizmo.attach([lightEntity]);
  * ```

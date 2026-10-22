@@ -11,15 +11,13 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
+    Gizmo,
     Keyboard,
-    Layer,
     LightComponentSystem,
     Mouse,
     PROJECTION_PERSPECTIVE,
     RESOLUTION_AUTO,
     RenderComponentSystem,
-    SORTMODE_MANUAL,
-    SORTMODE_NONE,
     ScriptComponentSystem,
     ScriptHandler,
     TextureHandler,
@@ -115,12 +113,7 @@ app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
 // Create gizmo in a layer that keeps the scene depth
-const layer = new Layer({
-    name: 'Bounds',
-    opaqueSortMode: SORTMODE_NONE,
-    transparentSortMode: SORTMODE_MANUAL
-});
-app.scene.layers.push(layer);
+const layer = Gizmo.createLayer(app, 'Bounds', undefined, true);
 const gizmo = new BoundingBoxGizmo(camera.camera, layer);
 gizmo.attach(box);
 

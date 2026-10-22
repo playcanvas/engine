@@ -24,12 +24,10 @@ const OCCLUDED_ALPHA = 0.2;
  * fires {@link IconGizmo.EVENT_ICONSELECT}. The icons are {@link IconGizmo#iconSize} CSS pixels
  * square.
  *
- * Use a layer that keeps the scene depth, so hidden icons draw faint; a {@link Gizmo.createLayer}
- * layer clears depth.
+ * Use a layer that keeps the scene depth, so hidden icons draw faint.
  *
  * ```javascript
- * const layer = new Layer({ name: 'Overlays', transparentSortMode: SORTMODE_MANUAL });
- * app.scene.layers.push(layer);
+ * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
  * const gizmo = new IconGizmo(cameraComponent, layer);
  * gizmo.attach([lightEntity, soundEntity]);
  * gizmo.on('icon:select', entity => select(entity));
