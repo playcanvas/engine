@@ -126,7 +126,6 @@ class OverlayIcons {
                     break;
                 }
                 case 'triangle': {
-
                     // a three sided cone flattened onto the screen
                     const { right, up, forward, pixel } = frame;
                     const d = tmpM.setIdentity().data;

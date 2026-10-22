@@ -463,7 +463,6 @@ class LightGizmo extends HandleGizmo {
                 break;
             }
             case 'radius': {
-
                 // a disk's radius is a quarter of its width plus depth and snaps by diameter
                 const disk = light.shape === LIGHTSHAPE_DISK;
                 const radius = disk ? 0.25 * (world.x + world.z) : 0.5 * Math.max(world.x, world.y, world.z);

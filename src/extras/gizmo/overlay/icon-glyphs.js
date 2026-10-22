@@ -21,7 +21,6 @@
  * @type {Record<OverlayIcon, IconStroke[]>}
  */
 const ICON_GLYPHS = {
-
     // a sun, a dot with eight spokes
     light: [
         ['disc', 0, 0, 4.5],

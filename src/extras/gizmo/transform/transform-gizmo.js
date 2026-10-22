@@ -746,7 +746,6 @@ class TransformGizmo extends DragGizmo {
             this._rootStartRot.transformVector(normal, normal);
 
             if (isLine) {
-
                 // face the camera but stay perpendicular to the axis
                 this._lineNormal(normal, facingDir, normal);
             }

@@ -789,7 +789,6 @@ class HandleGizmo extends DragGizmo {
             const from = Math.hypot(boxSide(corner, 0) * start.x - anchor.x, boxSide(corner, 1) * start.y - anchor.y, boxSide(corner, 2) * start.z - anchor.z);
             let factor = Math.max(local.distance(anchor) / from, BOX_MIN_FACTOR);
             if (this.snap) {
-
                 // snap the largest extent and keep the proportions
                 const largest = Math.max(start.x, start.y, start.z);
                 factor = this._snapBoxHalf(largest * factor, pad) / largest;

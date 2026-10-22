@@ -749,14 +749,12 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === 'f' || axis === 'xyz', false);
 
         if (!plane.intersectsRay(ray, point)) {
-
             // retry with the ray reversed
             ray.direction.mulScalar(-1);
             const intersection = plane.intersectsRay(ray, point);
             ray.direction.mulScalar(-1);
 
             if (!intersection) {
-
                 // fall back to the gizmo position so the angle guide stays put
                 return point.copy(this.root.getLocalPosition());
             }
@@ -788,7 +786,6 @@ class RotateGizmo extends TransformGizmo {
             case 'absolute': {
                 this._camera.worldToScreen(gizmoPos, v2);
                 if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
-
                     // flip the direction by which side of the ring the pointer is on
                     v1.set(
                         this._screenStartPos.y >= v2.y ? 1 : -1,
@@ -807,7 +804,6 @@ class RotateGizmo extends TransformGizmo {
                 break;
             }
             case 'orbit': {
-
                 // the angle of the point around the gizmo
                 v1.sub2(point, gizmoPos);
 
