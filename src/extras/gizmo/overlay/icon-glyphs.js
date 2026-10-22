@@ -6,22 +6,23 @@
 
 /**
  * The icon glyphs as SVG content in a 24 by 24 CSS pixel box centered on the origin, y down. They
- * are stroked white, 1.6 pixels wide, and drawn in the theme color by their alpha.
+ * are stroked white, 1.6 pixels wide, and drawn in the theme color by their alpha. An entity with
+ * several of the components shows the first glyph in this order.
  *
  * @type {Record<OverlayIcon, string>}
  */
 const ICON_GLYPHS = {
+    // an outlined body with a lens widening to the right
+    camera: `
+        <rect x="-8" y="-5" width="11" height="10"/>
+        <path d="M4 0L9 -4V4Z" fill="white" stroke="none"/>`,
+
     // a sun, a dot with eight spokes
     light: `
         <circle r="4.5" fill="white" stroke="none"/>
         <path d="M7.5 0H10.5M-7.5 0H-10.5M0 7.5V10.5M0 -7.5V-10.5
                  M5.303 5.303L7.425 7.425M-5.303 5.303L-7.425 7.425
                  M5.303 -5.303L7.425 -7.425M-5.303 -5.303L-7.425 -7.425"/>`,
-
-    // an outlined body with a lens widening to the right
-    camera: `
-        <rect x="-8" y="-5" width="11" height="10"/>
-        <path d="M4 0L9 -4V4Z" fill="white" stroke="none"/>`,
 
     // a microphone, its rounded head held in a cradle on a stand
     audiolistener: `

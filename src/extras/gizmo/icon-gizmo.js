@@ -1,5 +1,6 @@
 import { Color } from '../../core/math/color.js';
 import { Gizmo } from './gizmo.js';
+import { ICON_GLYPHS } from './overlay/icon-glyphs.js';
 import { OverlayRenderer } from './overlay/overlay-renderer.js';
 
 /**
@@ -13,13 +14,6 @@ import { OverlayRenderer } from './overlay/overlay-renderer.js';
  * @typedef {object} IconGizmoTheme
  * @property {Color} base - The color of the icons, drawn faint where the scene hides them.
  */
-
-/**
- * The components that show an icon, in order of priority.
- *
- * @type {OverlayIcon[]}
- */
-const ICONS = ['camera', 'light', 'audiolistener', 'sound', 'particlesystem'];
 
 // alpha factor of icons the scene hides
 const OCCLUDED_ALPHA = 0.2;
@@ -188,9 +182,9 @@ class IconGizmo extends Gizmo {
             sprite?.enabled || element?.enabled) {
             return null;
         }
-        for (let i = 0; i < ICONS.length; i++) {
-            if (entity[ICONS[i]]?.enabled) {
-                return ICONS[i];
+        for (const kind in ICON_GLYPHS) {
+            if (entity.c[kind]?.enabled) {
+                return /** @type {OverlayIcon} */ (kind);
             }
         }
         return null;
