@@ -318,7 +318,8 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
-     * Sets the line thickness in CSS pixels. Defaults to 2.
+     * Sets the line thickness in CSS pixels; dashed lines space their dashes to match. Defaults
+     * to 2.
      *
      * @type {number}
      */

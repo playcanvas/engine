@@ -47,7 +47,8 @@ const MAX_PIECES = 32;
 
 const TUBE_TOLERANCE = 0.25;
 
-const DASH_PERIOD = 8;
+// dash period as a multiple of the line thickness
+const DASH_PERIOD = 4;
 const DASH_FRACTION = 0.5;
 const MAX_DASHES = 24;
 const MAX_LINE_DASHES = 256;
@@ -491,7 +492,7 @@ class OverlayRenderer {
 
         // dashes are spaced on screen from the start, so moving the end only changes the last
         // dash; screen fraction s maps to line fraction s d0 / (d1 - s (d1 - d0))
-        const period = Math.max(DASH_PERIOD, length / MAX_LINE_DASHES) / length;
+        const period = Math.max(DASH_PERIOD * this.lineThickness, length / MAX_LINE_DASHES) / length;
         const dashes = Math.ceil(1 / period);
         const along = (/** @type {number} */ s) => s * d0 / (d1 - s * (d1 - d0));
         this._colors(alpha, false, color);
@@ -622,7 +623,8 @@ class OverlayRenderer {
         const rotation = tmpQ1.setFromDirections(Vec3.UP, tmpV1.copy(normal).normalize());
         const x = rotation.transformVector(Vec3.RIGHT, tmpX);
         const z = rotation.transformVector(Vec3.BACK, tmpZ);
-        const dashes = math.clamp(Math.round(2 * Math.PI * this.screenSize(center, radius) / DASH_PERIOD), 8, MAX_DASHES);
+        const size = this.screenSize(center, radius);
+        const dashes = math.clamp(Math.round(2 * Math.PI * size / (DASH_PERIOD * this.lineThickness)), 8, MAX_DASHES);
         const step = 2 * Math.PI / dashes;
         this._colors(alpha);
         for (let i = 0; i < dashes; i++) {
