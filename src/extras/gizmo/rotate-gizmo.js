@@ -265,6 +265,7 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
+
             // store start screen point
             this._screenPos.set(x, y);
             this._screenStartPos.set(x, y);
@@ -297,6 +298,7 @@ class RotateGizmo extends TransformGizmo {
             this._screenPos.set(x, y);
 
             if (axis === 'xyz') {
+
                 // calculate angle axis and delta and update node rotations
                 const facingDir = v1.copy(this.facingDir);
                 const delta = v2.copy(point).sub(this._selectionStartPoint);
@@ -306,6 +308,7 @@ class RotateGizmo extends TransformGizmo {
 
                 this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, angleDelta);
             } else {
+
                 // calculate angle axis and delta and update node rotations
                 let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
 
@@ -329,6 +332,7 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+
             // show all shapes
             this._drag(false);
 
@@ -337,6 +341,7 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
+
             // reset stored rotations and offsets
             this._nodeLocalRotations.clear();
             this._nodeRotations.clear();
@@ -565,7 +570,9 @@ class RotateGizmo extends TransformGizmo {
         this._readout?.show(html, x, this._camera.worldToScreen(v3, point).y);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _storeGuidePoints() {
         const gizmoPos = this.root.getLocalPosition();
         const axis = this._selectedAxis;
@@ -645,8 +652,11 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _shapesLookAtCamera() {
+
         // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const dir = this._camera.entity.getPosition().sub(this.root.getPosition()).normalize();
@@ -716,7 +726,9 @@ class RotateGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _storeNodeRotations() {
         const gizmoPos = this.root.getLocalPosition();
         for (let i = 0; i < this.nodes.length; i++) {
@@ -786,12 +798,14 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === 'f' || axis === 'xyz', false);
 
         if (!plane.intersectsRay(ray, point)) {
+
             // if no intersection, try inverting the ray direction
             ray.direction.mulScalar(-1);
             const intersection = plane.intersectsRay(ray, point);
             ray.direction.mulScalar(-1);
 
             if (!intersection) {
+
                 // use gizmo position if ray does not intersect to position angle guide correctly
                 return point.copy(this.root.getLocalPosition());
             }
@@ -824,6 +838,7 @@ class RotateGizmo extends TransformGizmo {
             case 'absolute': {
                 this._camera.worldToScreen(gizmoPos, v2);
                 if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
+
                     // determine which size of the ring the mouse is on to flip rotation direction
                     v1.set(
                         this._screenStartPos.y >= v2.y ? 1 : -1,
@@ -831,6 +846,7 @@ class RotateGizmo extends TransformGizmo {
                         0
                     ).normalize();
                 } else {
+
                     // calculate projection vector in world space for rotation axis
                     const projDir = v1.cross(plane.normal, facingDir).normalize();
 
@@ -845,29 +861,34 @@ class RotateGizmo extends TransformGizmo {
                 break;
             }
             case 'orbit': {
+
                 // plane facing camera so based on mouse position around gizmo
                 v1.sub2(point, gizmoPos);
 
                 switch (axis) {
                     case 'x': {
+
                         // convert to local space
                         q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
                         angle = Math.atan2(v1.z, v1.y) * math.RAD_TO_DEG;
                         break;
                     }
                     case 'y': {
+
                         // convert to local space
                         q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
                         angle = Math.atan2(v1.x, v1.z) * math.RAD_TO_DEG;
                         break;
                     }
                     case 'z': {
+
                         // convert to local space
                         q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
                         angle = Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
                         break;
                     }
                     case 'f': {
+
                         // convert to camera space
                         q1.copy(this._camera.entity.getRotation()).invert().transformVector(v1, v1);
                         angle = Math.sign(facingDot) * Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
@@ -912,7 +933,9 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     prerender() {
         super.prerender();
 
@@ -923,7 +946,9 @@ class RotateGizmo extends TransformGizmo {
         this._shapesLookAtCamera();
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     destroy() {
         this._guideAngleLines.forEach(line => line.destroy());
         this._guideAngleSectors.forEach(sector => sector.destroy());

@@ -113,7 +113,9 @@ const subjects = {
     sound: { sound: {} },
     particlesystem: { particlesystem: { autoPlay: false } }
 };
-/** @type {Record<string, Entity>} */
+/**
+ * @type {Record<string, Entity>}
+ */
 const entities = {};
 for (const [name, components] of Object.entries(subjects)) {
     const entity = new Entity(`${name} subject`);
@@ -191,6 +193,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 }
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

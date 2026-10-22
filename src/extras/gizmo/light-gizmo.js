@@ -170,6 +170,7 @@ class LightGizmo extends HandleGizmo {
      * @private
      */
     _isArea(light) {
+
         // clustered lighting treats local area lights as punctual unless area lights are enabled
         const { scene } = this._app;
         return light.shape !== LIGHTSHAPE_PUNCTUAL &&
@@ -478,6 +479,7 @@ class LightGizmo extends HandleGizmo {
                 break;
             }
             case 'radius': {
+
                 // the radius of a disk is a quarter of its width and depth, of a sphere half its largest
                 // size, and a disk snaps the diameter its readout shows
                 const disk = light.shape === LIGHTSHAPE_DISK;

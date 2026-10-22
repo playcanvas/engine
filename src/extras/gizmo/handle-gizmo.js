@@ -476,7 +476,9 @@ class HandleGizmo extends DragGizmo {
         return tmpV1.copy(dir).mulScalar(along).add(origin);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _endDrag() {
         if (!this._dragging) {
             return;
@@ -496,6 +498,7 @@ class HandleGizmo extends DragGizmo {
      * @protected
      */
     _detailed(center, radius) {
+
         // the handles fade in as the shape grows on screen, rather than appearing at a size
         const size = this._shapes.screenSize(center, radius);
         this._detailFade = this._dragging ? 1 :
@@ -794,6 +797,7 @@ class HandleGizmo extends DragGizmo {
         if (handle.index < BOX_FACES) {
             this._resizeBoxAxis(handle.index >> 1, handle.index & 1 ? -1 : 1, local, start, centered, pad, half, mid);
         } else if (options.uniform) {
+
             // the box scales evenly about the opposite corner, or the center
             const corner = handle.index - BOX_FACES;
             const anchor = tmpAnchor.set(-boxSide(corner, 0) * start.x, -boxSide(corner, 1) * start.y, -boxSide(corner, 2) * start.z);
@@ -803,6 +807,7 @@ class HandleGizmo extends DragGizmo {
             const from = Math.hypot(boxSide(corner, 0) * start.x - anchor.x, boxSide(corner, 1) * start.y - anchor.y, boxSide(corner, 2) * start.z - anchor.z);
             let factor = Math.max(local.distance(anchor) / from, BOX_MIN_FACTOR);
             if (this.snap) {
+
                 // the largest extent snaps, and the others keep their proportions
                 const largest = Math.max(start.x, start.y, start.z);
                 factor = this._snapBoxHalf(largest * factor, pad) / largest;

@@ -12,8 +12,10 @@ import { unlitShader } from '../shaders.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
@@ -28,7 +30,9 @@ const UPDATE_EPSILON = 1e-6;
  * @property {number} [outlineThickness] - The thickness of the outline, in the units of the gizmo
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class PlaneShape extends Shape {
     /**
      * The culling mode for the plane.
@@ -282,6 +286,7 @@ class PlaneShape extends Shape {
      * @override
      */
     _update() {
+
         // intersect/render
         const offset = this._size / 2 + this._gap;
         this._position.set(

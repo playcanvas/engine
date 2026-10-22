@@ -538,6 +538,7 @@ class Gizmo extends EventHandler {
         if (e.pointerId !== this._pointerId && canvas.hasPointerCapture(this._pointerId)) {
             return;
         }
+
         // a press goes to the first gizmo it hits, so overlapping gizmos do not drag together
         if (claimed.has(e)) {
             return;
@@ -619,7 +620,9 @@ class Gizmo extends EventHandler {
         this._camera.layers = ids;
     }
 
-    /** @protected */
+    /**
+     * @protected
+     */
     _updatePosition() {
         position.set(0, 0, 0);
         if (this._coordSpace === 'local') {
@@ -642,7 +645,9 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
-    /** @protected */
+    /**
+     * @protected
+     */
     _updateRotation() {
         rotation.set(0, 0, 0, 1);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
@@ -678,7 +683,9 @@ class Gizmo extends EventHandler {
         return Math.max(scale * this._size, MIN_SCALE);
     }
 
-    /** @protected */
+    /**
+     * @protected
+     */
     _updateScale() {
         this._scale = this._getScreenScale(this.root.getLocalPosition());
 
@@ -720,7 +727,9 @@ class Gizmo extends EventHandler {
         const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
         const dir = v.copy(end).sub(start).normalize();
 
-        /** @type {MeshInstance[] | null} */
+        /**
+         * @type {MeshInstance[] | null}
+         */
         let best = null;
         let bestDist = 0;
         let bestPriority = 0;
@@ -848,6 +857,7 @@ class Gizmo extends EventHandler {
      * gizmo.destroy();
      */
     destroy() {
+
         // destroy can be called again, e.g. by the app destroy event after the user
         if (this._destroyed) {
             return;

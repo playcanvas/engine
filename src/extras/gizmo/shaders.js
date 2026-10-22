@@ -1,6 +1,8 @@
 import { SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 
-/** @import { ShaderDesc } from '../../scene/materials/shader-material.js'; */
+/**
+ * @import { ShaderDesc } from '../../scene/materials/shader-material.js'
+ */
 
 /**
  * @type {ShaderDesc}

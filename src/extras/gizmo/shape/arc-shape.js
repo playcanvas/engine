@@ -3,8 +3,10 @@ import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
@@ -16,7 +18,9 @@ const TORUS_INTERSECT_SEGMENTS = 20;
  * @property {number} [sectorAngle] - The sector angle.
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class ArcShape extends Shape {
     /**
      * The internal tube radius of the arc.
@@ -196,6 +200,7 @@ class ArcShape extends Shape {
      * @override
      */
     _update() {
+
         // intersect
         this._triDataCache[0].fromGeometry(this._createTorusGeometry(this._sectorAngle));
         this._triDataCache[1].fromGeometry(this._createTorusGeometry(360));

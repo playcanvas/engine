@@ -164,6 +164,7 @@ class ScaleGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
+
             // store initial scales of nodes
             this._storeNodeScales();
 
@@ -174,6 +175,7 @@ class ScaleGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+
             // calculate scale delta and update node scales
             const scaleDelta = delta.copy(point).sub(this._selectionStartPoint).mulScalar(1 / this._scale);
             this._snapVector(scaleDelta, this.snapIncrement);
@@ -190,17 +192,20 @@ class ScaleGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+
             // show all shapes
             this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
+
             // reset stored scales
             this._nodeScales.clear();
         });
     }
 
     set coordSpace(value) {
+
         // disallow changing coordSpace for scale
     }
 
@@ -469,7 +474,9 @@ class ScaleGizmo extends TransformGizmo {
         this._shapes.xy[prop] = value;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
@@ -540,7 +547,9 @@ class ScaleGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -584,6 +593,7 @@ class ScaleGizmo extends TransformGizmo {
 
         // uniform scaling for XYZ axis
         if (axis === 'xyz') {
+
             // calculate projection vector for scale direction
             const projDir = v2.add2(this._camera.entity.up, this._camera.entity.right).normalize();
 
@@ -607,6 +617,7 @@ class ScaleGizmo extends TransformGizmo {
 
         // uniform scaling for planes
         if (this._uniform && isPlane) {
+
             // project to diagonal line
             v1.set(1, 1, 1);
             v1[axis] = 0;
@@ -617,7 +628,9 @@ class ScaleGizmo extends TransformGizmo {
         return point;
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     prerender() {
         super.prerender();
 

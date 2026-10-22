@@ -178,6 +178,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 }
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

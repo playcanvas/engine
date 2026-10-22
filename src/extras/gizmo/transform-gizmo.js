@@ -760,14 +760,17 @@ class TransformGizmo extends DragGizmo {
         const normal = plane.normal.set(0, 0, 0);
 
         if (isFacing) {
+
             // set plane normal to face camera
             normal.copy(this._camera.entity.forward).mulScalar(-1);
         } else {
+
             // set plane normal based on axis
             normal[axis] = 1;
             this._rootStartRot.transformVector(normal, normal);
 
             if (isLine) {
+
                 // set plane normal to face camera but keep normal perpendicular to axis
                 this._lineNormal(normal, facingDir, normal);
             }
@@ -798,6 +801,7 @@ class TransformGizmo extends DragGizmo {
      * @protected
      */
     _projectToAxis(point, axis) {
+
         // set normal to axis and project position from plane onto normal
         v1.set(0, 0, 0);
         v1[axis] = 1;
@@ -893,8 +897,11 @@ class TransformGizmo extends DragGizmo {
         return true;
     }
 
-    /** @protected */
+    /**
+     * @protected
+     */
     _createTransform() {
+
         // shapes
         for (const key in this._shapes) {
             const shape = this._shapes[key];
@@ -989,7 +996,9 @@ class TransformGizmo extends DragGizmo {
         }
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     prerender() {
         super.prerender();
 
@@ -1009,7 +1018,9 @@ class TransformGizmo extends DragGizmo {
         guides.end();
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     destroy() {
         super.destroy();
 

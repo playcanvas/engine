@@ -1,6 +1,8 @@
 const GAP = 6;
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class Readout {
     /**
      * @type {HTMLCanvasElement}

@@ -198,6 +198,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 gizmo.setTheme(theme);
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

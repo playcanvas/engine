@@ -155,6 +155,7 @@ class TranslateGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
+
             // store the initial positions of the nodes
             this._storeNodePositions();
 
@@ -165,6 +166,7 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+
             // calculate translate delta and update node positions
             const translateDelta = delta.copy(point).sub(this._selectionStartPoint);
             this._snapVector(translateDelta, this.snapIncrement);
@@ -181,11 +183,13 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+
             // show all shapes
             this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
+
             // reset stored positions
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
@@ -453,7 +457,9 @@ class TranslateGizmo extends TransformGizmo {
         this._shapes.xy[prop] = value;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
@@ -523,7 +529,9 @@ class TranslateGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _storeNodePositions() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -620,7 +628,9 @@ class TranslateGizmo extends TransformGizmo {
         }
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     prerender() {
         super.prerender();
 

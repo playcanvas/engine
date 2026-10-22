@@ -213,6 +213,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 light.light.color = tmpC.fromArray(value);
                 return;
             }
+
             // @ts-ignore
             light.light[key] = value;
             break;
@@ -224,6 +225,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 }
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

@@ -114,7 +114,9 @@ const layer = new Layer({
 });
 app.scene.layers.push(layer);
 
-/** @type {Record<string, ShapeGizmo>} */
+/**
+ * @type {Record<string, ShapeGizmo>}
+ */
 const gizmos = {
     box: new BoxGizmo(camera.camera, layer),
     sphere: new SphereGizmo(camera.camera, layer),
@@ -208,6 +210,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     }
                     continue;
                 }
+
                 // @ts-ignore
                 gizmo[key] = value;
             }

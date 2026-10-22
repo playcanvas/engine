@@ -261,6 +261,7 @@ class BoundingBoxGizmo extends HandleGizmo {
             this.nodes[i].forEach(this._addNode);
         }
         if (!this._empty) {
+
             // the box follows the bounds, which a resize changes through the nodes
             const c = this._center.copy(this._bounds.center);
             const h = this._halfExtents.copy(this._bounds.halfExtents).addScalar(this.padding);

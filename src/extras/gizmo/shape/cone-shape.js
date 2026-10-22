@@ -4,8 +4,10 @@ import { Mesh } from '../../../scene/mesh.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * @typedef {object} ConeShapeArgs

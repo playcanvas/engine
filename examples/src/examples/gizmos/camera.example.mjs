@@ -216,6 +216,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 subject.camera.projection = value - 1;
                 return;
             }
+
             // @ts-ignore
             subject.camera[key] = value;
             break;
@@ -227,6 +228,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 }
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

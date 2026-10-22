@@ -360,6 +360,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 setGizmoControls();
                 return;
             }
+
             // the rotate gizmo snaps angles, which its own increment sets
             gizmoHandler.gizmo[key === 'snapIncrement' && gizmoHandler.type === 'rotate' ? 'snapAngleIncrement' : key] =
                 value;
