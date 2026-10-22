@@ -29,7 +29,14 @@ import {
  */
 export function Controls({ observer }) {
     const [type, setType] = useState('spot');
+    const [shape, setShape] = useState(LIGHTSHAPE_PUNCTUAL);
     const [proj, setProj] = useState(PROJECTION_PERSPECTIVE);
+
+    // the gizmo draws area shapes in place of punctual ones, and no handles for a directional
+    const area = shape !== LIGHTSHAPE_PUNCTUAL;
+    const directional = type === 'directional';
+    const editable = !directional || area;
+    const cone = type === 'spot' && !area;
 
     return (
         <>
@@ -57,20 +64,24 @@ export function Controls({ observer }) {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Layers'>
-                <LabelGroup text='Handles'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.handles' }}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Readout'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.readout' }}
-                    />
-                </LabelGroup>
+                {editable && (
+                    <>
+                        <LabelGroup text='Handles'>
+                            <BooleanInput
+                                type='toggle'
+                                binding={new BindingTwoWay()}
+                                link={{ observer, path: 'gizmo.handles' }}
+                            />
+                        </LabelGroup>
+                        <LabelGroup text='Readout'>
+                            <BooleanInput
+                                type='toggle'
+                                binding={new BindingTwoWay()}
+                                link={{ observer, path: 'gizmo.readout' }}
+                            />
+                        </LabelGroup>
+                    </>
+                )}
                 <LabelGroup text='Icon'>
                     <BooleanInput
                         type='toggle'
@@ -78,13 +89,15 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'gizmo.icon' }}
                     />
                 </LabelGroup>
-                <LabelGroup text='Ground Line'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.groundLine' }}
-                    />
-                </LabelGroup>
+                {!directional && (
+                    <LabelGroup text='Ground Line'>
+                        <BooleanInput
+                            type='toggle'
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'gizmo.groundLine' }}
+                        />
+                    </LabelGroup>
+                )}
                 <LabelGroup text='Use Light Color'>
                     <BooleanInput
                         type='toggle'
@@ -103,52 +116,69 @@ export function Controls({ observer }) {
                         precision={1}
                     />
                 </LabelGroup>
-                <LabelGroup text='Arrow Size'>
+                {directional && !area && (
+                    <LabelGroup text='Arrow Size'>
+                        <SliderInput
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'gizmo.size' }}
+                            min={0.2}
+                            max={3}
+                            precision={2}
+                        />
+                    </LabelGroup>
+                )}
+                {editable && (
+                    <LabelGroup text='Handle Size'>
+                        <SliderInput
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'gizmo.handleSize' }}
+                            min={2}
+                            max={20}
+                            precision={1}
+                        />
+                    </LabelGroup>
+                )}
+                <LabelGroup text='Icon Size'>
                     <SliderInput
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.size' }}
-                        min={0.2}
-                        max={3}
-                        precision={2}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Handle Size'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.handleSize' }}
-                        min={2}
-                        max={20}
-                        precision={1}
-                    />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Snap'>
-                <LabelGroup text='Snap'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.snap' }}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Increment'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.snapIncrement' }}
-                        min={0.05}
-                        max={2}
-                        precision={2}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Angle Increment'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.snapAngleIncrement' }}
-                        min={1}
-                        max={45}
+                        link={{ observer, path: 'gizmo.iconSize' }}
+                        min={8}
+                        max={64}
                         precision={0}
                     />
                 </LabelGroup>
             </Panel>
+            {editable && (
+                <Panel headerText='Snap'>
+                    <LabelGroup text='Snap'>
+                        <BooleanInput
+                            type='toggle'
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'gizmo.snap' }}
+                        />
+                    </LabelGroup>
+                    <LabelGroup text='Increment'>
+                        <SliderInput
+                            binding={new BindingTwoWay()}
+                            link={{ observer, path: 'gizmo.snapIncrement' }}
+                            min={0.05}
+                            max={2}
+                            precision={2}
+                        />
+                    </LabelGroup>
+                    {cone && (
+                        <LabelGroup text='Angle Increment'>
+                            <SliderInput
+                                binding={new BindingTwoWay()}
+                                link={{ observer, path: 'gizmo.snapAngleIncrement' }}
+                                min={1}
+                                max={45}
+                                precision={0}
+                            />
+                        </LabelGroup>
+                    )}
+                </Panel>
+            )}
             <Panel headerText='Light'>
                 <LabelGroup text='Type'>
                     <SelectInput
@@ -173,6 +203,7 @@ export function Controls({ observer }) {
                         ]}
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'light.shape' }}
+                        onSelect={(value) => setShape(parseInt(value, 10) || LIGHTSHAPE_PUNCTUAL)}
                     />
                 </LabelGroup>
                 <LabelGroup text='Color'>

@@ -4,6 +4,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../scene/constants.js';
 import { COLOR_AMBER, COLOR_CYAN, COLOR_MAGENTA } from '../color.js';
 import { HandleGizmo } from './handle-gizmo.js';
+import { GIZMO_ICONS } from '../overlay/icon-glyphs.js';
 
 /**
  * @import { CameraComponent } from '../../../framework/components/camera/component.js'
@@ -252,7 +253,7 @@ class LightGizmo extends HandleGizmo {
         if (light.type !== 'directional') {
             this._ground(pos);
         }
-        this._icon('light', pos, entity);
+        this._icon(GIZMO_ICONS.light, pos, entity);
         return true;
     }
 
@@ -300,7 +301,7 @@ class LightGizmo extends HandleGizmo {
         const tip = tmpV4.copy(dir).mulScalar(range).add(apex);
         const ranging = this._active(entity, 'range', 0);
         renderer.dashed(apex, tip, ranging ? 1 : 0.55, ranging ? 1 : 0.6, ranging ? COLOR_AMBER : null);
-        this._icon('light', apex, entity);
+        this._icon(GIZMO_ICONS.light, apex, entity);
         this._ground(apex);
 
         if (!this._detailed(center, radius)) {
@@ -350,7 +351,7 @@ class LightGizmo extends HandleGizmo {
         renderer.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
 
         // keep the icon clear of the arrow
-        this._icon('light', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
+        this._icon(GIZMO_ICONS.light, tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
     }
 
     /**
@@ -364,7 +365,7 @@ class LightGizmo extends HandleGizmo {
         const pos = entity.getPosition();
         this._sphereOutline(pos, Quat.IDENTITY, range);
         this._ground(pos);
-        this._icon('light', pos, entity);
+        this._icon(GIZMO_ICONS.light, pos, entity);
         if (this._detailed(pos, range)) {
             this._sphereHandles(pos, Quat.IDENTITY, range, entity, 'range');
         }

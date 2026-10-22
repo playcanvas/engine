@@ -1,12 +1,12 @@
 import { Color } from '../../core/math/color.js';
 import { Gizmo } from './gizmo.js';
+import { GIZMO_ICONS } from './overlay/icon-glyphs.js';
 import { OverlayRenderer } from './overlay/overlay-renderer.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Entity } from '../../framework/entity.js'
  * @import { Layer } from '../../scene/layer.js'
- * @import { OverlayIcon } from './overlay/icon-glyphs.js'
  */
 
 /**
@@ -14,20 +14,14 @@ import { OverlayRenderer } from './overlay/overlay-renderer.js';
  * @property {Color} base - The color of the icons, drawn faint where the scene hides them.
  */
 
-/**
- * The components that show an icon, in order of priority.
- *
- * @type {OverlayIcon[]}
- */
-const ICONS = ['camera', 'light', 'audiolistener', 'sound', 'particlesystem'];
-
 // alpha factor of icons the scene hides
 const OCCLUDED_ALPHA = 0.2;
 
 /**
  * Draws an icon at each attached entity with nothing else to see, such as a light, camera or sound.
  * Entities with an enabled render, model, sprite or element component show none. Clicking an icon
- * fires {@link IconGizmo.EVENT_ICONSELECT}.
+ * fires {@link IconGizmo.EVENT_ICONSELECT}. The icons are SVG markup in {@link IconGizmo#icons},
+ * which can be replaced or extended, and are {@link IconGizmo#iconSize} CSS pixels square.
  *
  * Use a layer that keeps the scene depth, so hidden icons draw faint; a {@link Gizmo.createLayer}
  * layer clears depth.
@@ -38,6 +32,11 @@ const OCCLUDED_ALPHA = 0.2;
  * const gizmo = new IconGizmo(cameraComponent, layer);
  * gizmo.attach([lightEntity, soundEntity]);
  * gizmo.on('icon:select', entity => select(entity));
+ *
+ * // show a custom icon for entities with a script component
+ * gizmo.icons.script = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+ *     <circle cx="12" cy="12" r="8" fill="none" stroke="white" stroke-width="1.6"/>
+ * </svg>`;
  * ```
  *
  * Relevant Engine API examples:
@@ -59,6 +58,18 @@ class IconGizmo extends Gizmo {
      * });
      */
     static EVENT_ICONSELECT = 'icon:select';
+
+    /**
+     * The icon of each component, as SVG markup with a square view box, drawn
+     * {@link IconGizmo#iconSize} CSS pixels square in the theme color by its alpha. An entity shows
+     * the icon of its first enabled component in this order. Defaults to a copy of {@link GIZMO_ICONS}.
+     *
+     * @type {Record<string, string>}
+     * @example
+     * // replace the light icon
+     * gizmo.icons.light = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">...</svg>';
+     */
+    icons = { ...GIZMO_ICONS };
 
     /**
      * Whether to draw light icons in the light color. Defaults to false.
@@ -126,6 +137,24 @@ class IconGizmo extends Gizmo {
     }
 
     /**
+     * Sets the icon size in CSS pixels. Defaults to 24.
+     *
+     * @type {number}
+     */
+    set iconSize(value) {
+        this._renderer.iconSize = value;
+    }
+
+    /**
+     * Gets the icon size in CSS pixels.
+     *
+     * @type {number}
+     */
+    get iconSize() {
+        return this._renderer.iconSize;
+    }
+
+    /**
      * Sets the theme or partial theme for the gizmo.
      *
      * @param {Partial<IconGizmoTheme>} partial - The partial theme to set.
@@ -155,11 +184,11 @@ class IconGizmo extends Gizmo {
     }
 
     /**
-     * Gets the icon an entity shows.
+     * Gets the icon an entity shows. Override to choose icons another way.
      *
      * @param {Entity} entity - The entity.
-     * @returns {OverlayIcon|null} The icon, or null for none.
-     * @private
+     * @returns {string|null} The key of the icon in {@link IconGizmo#icons}, or null for none.
+     * @protected
      */
     _iconOf(entity) {
         const { render, model, sprite, element } = entity;
@@ -169,9 +198,9 @@ class IconGizmo extends Gizmo {
             sprite?.enabled || element?.enabled) {
             return null;
         }
-        for (let i = 0; i < ICONS.length; i++) {
-            if (entity[ICONS[i]]?.enabled) {
-                return ICONS[i];
+        for (const key in this.icons) {
+            if (entity.c[key]?.enabled) {
+                return key;
             }
         }
         return null;
@@ -196,9 +225,10 @@ class IconGizmo extends Gizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             const entity = /** @type {Entity} */ (this.nodes[i]);
             const icon = this._iconOf(entity);
-            if (icon) {
+            const svg = icon && this.icons[icon];
+            if (svg) {
                 renderer.tint = this.useLightColor && icon === 'light' ? /** @type {Color} */ (entity.light?.color) : null;
-                renderer.icons.add(icon, entity.getPosition(), entity);
+                renderer.icons.add(svg, entity.getPosition(), entity);
             }
         }
         renderer.tint = null;

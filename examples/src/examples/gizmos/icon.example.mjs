@@ -157,7 +157,8 @@ data.set('gizmo', {
     theme: {
         base: gizmo.theme.base.toArray()
     },
-    useLightColor: gizmo.useLightColor
+    useLightColor: gizmo.useLightColor,
+    iconSize: gizmo.iconSize
 });
 
 // Create grid

@@ -174,6 +174,7 @@ data.set('gizmo', {
     },
     lineThickness: gizmo.lineThickness,
     handleSize: gizmo.handleSize,
+    iconSize: gizmo.iconSize,
     handles: gizmo.handles,
     readout: gizmo.readout,
     icon: gizmo.icon,

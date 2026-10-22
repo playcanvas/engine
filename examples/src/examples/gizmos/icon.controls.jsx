@@ -46,6 +46,15 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'gizmo.useLightColor' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Icon Size'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.iconSize' }}
+                        min={8}
+                        max={64}
+                        precision={0}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Theme'>
                 <LabelGroup text='Base'>

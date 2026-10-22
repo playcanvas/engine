@@ -91,6 +91,15 @@ export function Controls({ observer }) {
                         precision={1}
                     />
                 </LabelGroup>
+                <LabelGroup text='Icon Size'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.iconSize' }}
+                        min={8}
+                        max={64}
+                        precision={0}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Snap'>
                 <LabelGroup text='Snap'>
