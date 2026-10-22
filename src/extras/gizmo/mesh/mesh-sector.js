@@ -1,23 +1,25 @@
-import { Quat } from '../../core/math/quat.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Entity } from '../../framework/entity.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
-import { CULLFACE_NONE, PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
-import { ShaderMaterial } from '../../scene/materials/shader-material.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { Mesh } from '../../scene/mesh.js';
-import { unlitShader } from './shaders.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Entity } from '../../../framework/entity.js';
+import { BlendState } from '../../../platform/graphics/blend-state.js';
+import { CULLFACE_NONE, PRIMITIVE_TRIANGLES } from '../../../platform/graphics/constants.js';
+import { ShaderMaterial } from '../../../scene/materials/shader-material.js';
+import { MeshInstance } from '../../../scene/mesh-instance.js';
+import { Mesh } from '../../../scene/mesh.js';
+import { unlitShader } from '../shaders.js';
 
 /**
- * @import { Color } from '../../core/math/color.js'
- * @import { AppBase } from '../../framework/app-base.js'
- * @import { Layer } from '../../scene/layer.js'
+ * @import { Color } from '../../../core/math/color.js'
+ * @import { AppBase } from '../../../framework/app-base.js'
+ * @import { Layer } from '../../../scene/layer.js'
  */
 
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class MeshSector {
     /**
      * @type {ShaderMaterial}

@@ -1,10 +1,12 @@
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
@@ -16,38 +18,40 @@ const TORUS_INTERSECT_SEGMENTS = 20;
  * @property {number} [sectorAngle] - The sector angle.
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class ArcShape extends Shape {
     /**
-     * The internal tube radius of the arc.
+     * The tube radius.
      *
      * @private
      */
     _tubeRadius = 0.01;
 
     /**
-     * The internal ring radius of the arc.
+     * The ring radius.
      *
      * @private
      */
     _ringRadius = 0.5;
 
     /**
-     * The internal sector angle of the arc.
+     * The sector angle.
      *
      * @private
      */
     _sectorAngle = 360;
 
     /**
-     * The internal intersection tolerance of the arc.
+     * The intersection tolerance.
      *
      * @private
      */
     _tolerance = 0.05;
 
     /**
-     * The internal cache for triangle data.
+     * The cache for triangle data.
      *
      * @type {[TriData, TriData]}
      * @private
@@ -65,14 +69,12 @@ class ArcShape extends Shape {
         this._ringRadius = args.ringRadius ?? this._ringRadius;
         this._sectorAngle = args.sectorAngle ?? this._sectorAngle;
 
-        // intersect
         this._triDataCache = [
             new TriData(this._createTorusGeometry(this._sectorAngle)),
             new TriData(this._createTorusGeometry(360))
         ];
         this.triData = [this._triDataCache[0]];
 
-        // render
         this._createRenderComponent(this.entity, [
             this._createTorusMesh(this._sectorAngle),
             this._createTorusMesh(360)
@@ -152,6 +154,25 @@ class ArcShape extends Shape {
     }
 
     /**
+     * Set the sector angle in degrees.
+     *
+     * @type {number}
+     */
+    set sectorAngle(value) {
+        this._sectorAngle = value ?? this._sectorAngle;
+        this._update();
+    }
+
+    /**
+     * Get the sector angle in degrees.
+     *
+     * @type {number}
+     */
+    get sectorAngle() {
+        return this._sectorAngle;
+    }
+
+    /**
      * Set the intersection tolerance.
      *
      * @type {number}
@@ -171,21 +192,23 @@ class ArcShape extends Shape {
     }
 
     /**
-     * Update the shape's transform.
+     * Updates the transform.
      *
      * @protected
      * @override
      */
     _update() {
-        // intersect
         this._triDataCache[0].fromGeometry(this._createTorusGeometry(this._sectorAngle));
         this._triDataCache[1].fromGeometry(this._createTorusGeometry(360));
 
-        // render, destroying the replaced meshes
+        // destroy the meshes being replaced
         const angles = [this._sectorAngle, 360];
         for (let i = 0; i < angles.length; i++) {
             const mesh = this.meshInstances[i].mesh;
             this.meshInstances[i].mesh = this._createTorusMesh(angles[i]);
+            if (this.occludedMeshInstances[i]) {
+                this.occludedMeshInstances[i].mesh = this.meshInstances[i].mesh;
+            }
             if (mesh && mesh.refCount < 1) {
                 mesh.destroy();
             }
@@ -214,6 +237,9 @@ class ArcShape extends Shape {
                 this.meshInstances[1].visible = false;
                 break;
             }
+        }
+        for (let i = 0; i < this.occludedMeshInstances.length; i++) {
+            this.occludedMeshInstances[i].visible = this.meshInstances[i].visible;
         }
     }
 }

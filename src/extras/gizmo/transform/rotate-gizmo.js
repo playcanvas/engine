@@ -1,24 +1,24 @@
-import { math } from '../../core/math/math.js';
-import { Color } from '../../core/math/color.js';
-import { Quat } from '../../core/math/quat.js';
-import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { Debug } from '../../../core/debug.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 
-import { ArcShape } from './shape/arc-shape.js';
+import { ArcShape } from '../shape/arc-shape.js';
 import { TransformGizmo } from './transform-gizmo.js';
-import { MeshLine } from './mesh-line.js';
-import { MeshSector } from './mesh-sector.js';
-import { SphereShape } from './shape/sphere-shape.js';
+import { MeshLine } from '../mesh/mesh-line.js';
+import { MeshSector } from '../mesh/mesh-sector.js';
+import { SphereShape } from '../shape/sphere-shape.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { GizmoAxis } from './constants.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { GizmoAxis } from '../constants.js'
  */
 
-// temporary variables
 const point = new Vec3();
 const v1 = new Vec3();
 const v2 = new Vec3();
@@ -27,36 +27,18 @@ const q1 = new Quat();
 const q2 = new Quat();
 const color = new Color();
 
-// constants
 const RING_FACING_EPSILON = 1e-4;
 const SECTOR_ALPHA = 0.4;
 const UPDATE_EPSILON = 1e-6;
 const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
- * The RotateGizmo provides interactive 3D manipulation handles for rotating/reorienting
- * {@link Entity}s in a {@link Scene}. It creates a visual widget with a draggable ring for each
- * axis of rotation, plus a fourth ring for rotation in the camera's view plane, allowing precise
- * control over object orientation through direct manipulation. The gizmo's visual appearance can
- * be customized away from the defaults as required.
- *
- * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ * Rotates the attached {@link Entity}s with a ring for each axis, plus a ring in the camera's view
+ * plane. Works with mouse, keyboard and touch input.
  *
  * ```javascript
- * // Create a layer for rendering all gizmos
  * const gizmoLayer = Gizmo.createLayer(app);
- *
- * // Create a rotate gizmo
  * const gizmo = new RotateGizmo(cameraComponent, gizmoLayer);
- *
- * // Create an entity to attach the gizmo to
- * const entity = new Entity();
- * entity.addComponent('render', {
- *     type: 'box'
- * });
- * app.root.addChild(entity);
- *
- * // Attach the gizmo to the entity
  * gizmo.attach([entity]);
  * ```
  *
@@ -115,14 +97,14 @@ class RotateGizmo extends TransformGizmo {
     };
 
     /**
-     * Internal selection starting angle in world space.
+     * The angle at the start of a drag.
      *
      * @private
      */
     _selectionStartAngle = 0;
 
     /**
-     * Internal mapping from each attached node to their starting rotation in local space.
+     * The local rotation of each node at the start of a drag.
      *
      * @type {Map<GraphNode, Quat>}
      * @private
@@ -130,7 +112,7 @@ class RotateGizmo extends TransformGizmo {
     _nodeLocalRotations = new Map();
 
     /**
-     * Internal mapping from each attached node to their starting rotation in world space.
+     * The world rotation of each node at the start of a drag.
      *
      * @type {Map<GraphNode, Quat>}
      * @private
@@ -138,7 +120,7 @@ class RotateGizmo extends TransformGizmo {
     _nodeRotations = new Map();
 
     /**
-     * Internal mapping from each attached node to their offset position from the gizmo.
+     * The offset of each node from the gizmo at the start of a drag.
      *
      * @type {Map<GraphNode, Vec3>}
      * @private
@@ -146,35 +128,35 @@ class RotateGizmo extends TransformGizmo {
     _nodeOffsets = new Map();
 
     /**
-     * Internal vector for storing the mouse position in screen space.
+     * The pointer position on screen.
      *
      * @private
      */
     _screenPos = new Vec2();
 
     /**
-     * Internal vector for storing the mouse start position in screen space.
+     * The pointer position on screen at the start of a drag.
      *
      * @private
      */
     _screenStartPos = new Vec2();
 
     /**
-     * Internal vector for the start point of the guide line angle.
+     * The start point of the angle guide.
      *
      * @private
      */
     _guideAngleStart = new Vec3();
 
     /**
-     * Internal vector for the end point of the guide line angle.
+     * The end point of the angle guide.
      *
      * @private
      */
     _guideAngleEnd = new Vec3();
 
     /**
-     * Internal mesh lines for guide angles.
+     * The angle guide lines.
      *
      * @type {[MeshLine, MeshLine]}
      * @private
@@ -182,7 +164,7 @@ class RotateGizmo extends TransformGizmo {
     _guideAngleLines;
 
     /**
-     * Internal sectors filling the swept angle and, once past a full turn, the rest of the circle.
+     * The sectors filling the swept angle and, past a full turn, the rest of the circle.
      *
      * @type {MeshSector[]}
      * @private
@@ -190,47 +172,39 @@ class RotateGizmo extends TransformGizmo {
     _guideAngleSectors;
 
     /**
-     * Internal axis the angle guide sweeps around, in world space.
+     * The world axis the angle guide sweeps around.
      *
      * @private
      */
     _guideAngleAxis = new Vec3();
 
     /**
-     * Internal angle swept by the angle guide, in degrees.
+     * The swept angle in degrees.
      *
      * @private
      */
     _guideAngle = 0;
 
     /**
-     * Internal copy of facing direction to avoid unnecessary updates.
+     * The last facing direction, to skip unneeded updates.
      *
      * @private
      */
     _facingDir = new Vec3();
 
-    /** @override */
-    snapIncrement = 5;
-
     /**
-     * The rotation mode of the gizmo. This can be either:
-     *
-     * - 'absolute': The rotation is calculated based on the mouse displacement relative to the
-     * initial click point.
-     * - 'orbit': The rotation is calculated based on the gizmos position around the center of
-     * rotation.
+     * The rotation mode: 'absolute' rotates by the pointer movement from the initial click, and
+     * 'orbit' by the pointer's angle around the gizmo. Defaults to 'absolute'.
      *
      * @type {'absolute' | 'orbit'}
      */
     rotationMode = 'absolute';
 
     /**
-     * Creates a new RotateGizmo object. Use {@link Gizmo.createLayer} to create the layer
-     * required to display the gizmo.
+     * Creates a new RotateGizmo object. Use {@link Gizmo.createLayer} to create its layer.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The layer responsible for rendering the gizmo.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new RotateGizmo(camera, layer);
      */
@@ -267,23 +241,17 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
-            // store start screen point
             this._screenPos.set(x, y);
             this._screenStartPos.set(x, y);
 
-            // store start angle
             this._selectionStartAngle = this._calculateArcAngle(point, x, y);
 
-            // store initial node rotations
             this._storeNodeRotations();
 
-            // store guide points
             this._storeGuidePoints();
 
-            // drag handle for disk (arc <-> circle)
             this._drag(true);
 
-            // angle guide lines
             this._angleGuide(true);
 
             this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, 0);
@@ -295,11 +263,9 @@ class RotateGizmo extends TransformGizmo {
                 return;
             }
 
-            // update screen point
             this._screenPos.set(x, y);
 
             if (axis === 'xyz') {
-                // calculate angle axis and delta and update node rotations
                 const facingDir = v1.copy(this.facingDir);
                 const delta = v2.copy(point).sub(this._selectionStartPoint);
                 const angleAxis = v1.cross(facingDir, delta).normalize();
@@ -308,16 +274,12 @@ class RotateGizmo extends TransformGizmo {
 
                 this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, angleDelta);
             } else {
-                // calculate angle axis and delta and update node rotations
                 let angleDelta = this._calculateArcAngle(point, x, y) - this._selectionStartAngle;
 
-                if (this.snap) {
-                    angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
-                }
+                angleDelta = this._snapAngle(angleDelta);
                 const angleAxis = this._dirFromAxis(axis, v1);
                 this._setNodeRotations(axis, angleAxis, angleDelta);
 
-                // update guide points and show angle guide
                 this._updateGuidePoints(angleDelta);
                 this._angleGuide(true);
 
@@ -333,15 +295,12 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
-            // show all shapes
             this._drag(false);
 
-            // hide angle guide
             this._angleGuide(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
-            // reset stored rotations and offsets
             this._nodeLocalRotations.clear();
             this._nodeRotations.clear();
             this._nodeOffsets.clear();
@@ -533,8 +492,7 @@ class RotateGizmo extends TransformGizmo {
     }
 
     /**
-     * Shows the angle in the readout, labelled with the axis unless rotating freely or facing. It
-     * sits below the outline of a sphere around all the rings, since the ring shapes turn while
+     * Shows the angle in the readout, below a sphere around the rings since the rings turn while
      * dragging.
      *
      * @param {number} angle - The angle in degrees.
@@ -550,8 +508,7 @@ class RotateGizmo extends TransformGizmo {
         const center = this.root.getPosition();
         const x = this._camera.worldToScreen(center, v3).x;
 
-        // the lowest point of the outline: in perspective its tangent from the camera, which
-        // reaches further than the radius straight down once the sphere is close
+        // in perspective the lowest point of the outline is where a camera ray grazes the sphere
         const up = this._camera.entity.up;
         const eye = this._camera.entity.getPosition();
         const view = v1.sub2(center, eye);
@@ -569,7 +526,9 @@ class RotateGizmo extends TransformGizmo {
         this._readout?.show(html, x, this._camera.worldToScreen(v3, point).y);
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _storeGuidePoints() {
         const gizmoPos = this.root.getLocalPosition();
         const axis = this._selectedAxis;
@@ -624,8 +583,7 @@ class RotateGizmo extends TransformGizmo {
             this._guideAngleLines[0].entity.enabled = true;
             this._guideAngleLines[1].entity.enabled = true;
 
-            // at most one turn is filled: each full turn adds a step of opacity to the whole
-            // circle, and the swept part one step more
+            // each full turn adds opacity to the whole circle, the swept part one step more
             const angle = this._guideAngle;
             const turns = Math.floor(Math.abs(angle) / 360);
             const swept = angle % 360;
@@ -649,9 +607,10 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _shapesLookAtCamera() {
-        // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const dir = this._camera.entity.getPosition().sub(this.root.getPosition()).normalize();
             const elev = Math.atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z)) * math.RAD_TO_DEG;
@@ -663,7 +622,6 @@ class RotateGizmo extends TransformGizmo {
             this._shapes.f.entity.rotateLocal(-90, 0, 0);
         }
 
-        // axes shapes
         let angle, dot, sector;
         const facingDir = v1.copy(this.facingDir);
         q1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
@@ -720,7 +678,9 @@ class RotateGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _storeNodeRotations() {
         const gizmoPos = this.root.getLocalPosition();
         for (let i = 0; i < this.nodes.length; i++) {
@@ -740,7 +700,6 @@ class RotateGizmo extends TransformGizmo {
     _setNodeRotations(axis, angleAxis, angleDelta) {
         const gizmoPos = this.root.getLocalPosition();
 
-        // calculate rotation from axis and angle
         q1.setFromAxisAngle(angleAxis, angleDelta);
 
         for (let i = 0; i < this.nodes.length; i++) {
@@ -790,13 +749,13 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === 'f' || axis === 'xyz', false);
 
         if (!plane.intersectsRay(ray, point)) {
-            // if no intersection, try inverting the ray direction
+            // retry with the ray reversed
             ray.direction.mulScalar(-1);
             const intersection = plane.intersectsRay(ray, point);
             ray.direction.mulScalar(-1);
 
             if (!intersection) {
-                // use gizmo position if ray does not intersect to position angle guide correctly
+                // fall back to the gizmo position so the angle guide stays put
                 return point.copy(this.root.getLocalPosition());
             }
         }
@@ -820,7 +779,6 @@ class RotateGizmo extends TransformGizmo {
 
         let angle = 0;
 
-        // arc angle
         const facingDir = this.facingDir;
         const facingDot = plane.normal.dot(facingDir);
 
@@ -828,58 +786,51 @@ class RotateGizmo extends TransformGizmo {
             case 'absolute': {
                 this._camera.worldToScreen(gizmoPos, v2);
                 if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
-                    // determine which size of the ring the mouse is on to flip rotation direction
+                    // flip the direction by which side of the ring the pointer is on
                     v1.set(
                         this._screenStartPos.y >= v2.y ? 1 : -1,
                         this._screenStartPos.x >= v2.x ? -1 : 1,
                         0
                     ).normalize();
                 } else {
-                    // calculate projection vector in world space for rotation axis
                     const projDir = v1.cross(plane.normal, facingDir).normalize();
 
-                    // convert to screen space
                     this._camera.worldToScreen(projDir.add(gizmoPos), v3);
                     v1.sub2(v3, v2).normalize();
                 }
 
-                // angle is dot product with mouse position
                 v2.set(x, y, 0);
                 angle = v1.dot(v2);
                 break;
             }
             case 'orbit': {
-                // plane facing camera so based on mouse position around gizmo
+                // the angle of the point around the gizmo
                 v1.sub2(point, gizmoPos);
 
                 switch (axis) {
                     case 'x': {
-                        // convert to local space
                         q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
                         angle = Math.atan2(v1.z, v1.y) * math.RAD_TO_DEG;
                         break;
                     }
                     case 'y': {
-                        // convert to local space
                         q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
                         angle = Math.atan2(v1.x, v1.z) * math.RAD_TO_DEG;
                         break;
                     }
                     case 'z': {
-                        // convert to local space
                         q1.copy(this._rootStartRot).invert().transformVector(v1, v1);
                         angle = Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
                         break;
                     }
                     case 'f': {
-                        // convert to camera space
                         q1.copy(this._camera.entity.getRotation()).invert().transformVector(v1, v1);
                         angle = Math.sign(facingDot) * Math.atan2(v1.y, v1.x) * math.RAD_TO_DEG;
                         break;
                     }
                 }
 
-                // intersection point can be behind camera, so need to check to flip angle delta
+                // flip the angle for an intersection behind the camera
                 const dir = v1.sub2(point, this._camera.entity.getPosition()).normalize();
                 const dot = dir.dot(this._camera.entity.forward);
                 if (dot < 0) {
@@ -916,7 +867,9 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     prerender() {
         super.prerender();
 
@@ -927,13 +880,39 @@ class RotateGizmo extends TransformGizmo {
         this._shapesLookAtCamera();
     }
 
-    /** @override */
+    /**
+     * @override
+     */
     destroy() {
         this._guideAngleLines.forEach(line => line.destroy());
         this._guideAngleSectors.forEach(sector => sector.destroy());
 
         super.destroy();
     }
+
+    // ---- deprecated block start ----
+
+    /**
+     * @type {number}
+     * @deprecated Use {@link RotateGizmo#snapAngleIncrement} instead.
+     * @ignore
+     */
+    set snapIncrement(value) {
+        Debug.deprecated('RotateGizmo#snapIncrement is deprecated. Use RotateGizmo#snapAngleIncrement instead.');
+        this.snapAngleIncrement = value;
+    }
+
+    /**
+     * @type {number}
+     * @deprecated Use {@link RotateGizmo#snapAngleIncrement} instead.
+     * @ignore
+     */
+    get snapIncrement() {
+        Debug.deprecated('RotateGizmo#snapIncrement is deprecated. Use RotateGizmo#snapAngleIncrement instead.');
+        return this.snapAngleIncrement;
+    }
+
+    // ---- deprecated block end ----
 }
 
 export { RotateGizmo };

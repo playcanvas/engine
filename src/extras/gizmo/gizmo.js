@@ -4,7 +4,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
+import { PROJECTION_PERSPECTIVE, SORTMODE_MANUAL, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
 
@@ -19,7 +19,6 @@ import { Layer } from '../../scene/layer.js';
  * @import { GizmoSpace } from './constants.js'
  */
 
-// temporary variables
 const v = new Vec3();
 const position = new Vec3();
 const dir = new Vec3();
@@ -28,8 +27,8 @@ const rotation = new Quat();
 const m1 = new Mat4();
 const m2 = new Mat4();
 const ray = new Ray();
+const claimed = new WeakSet();
 
-// constants
 const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
@@ -39,18 +38,10 @@ const DIST_EPSILON = 1e-4;
 /**
  * The base class for all gizmos.
  *
- * A gizmo is an interactive widget drawn over the scene in its own {@link Layer};
- * {@link createLayer} makes such a layer and adds it to the scene and the camera. Construct a gizmo
- * for a {@link CameraComponent}, then {@link attach} the {@link GraphNode}s it should act on, which
- * are then listed in {@link nodes}; {@link detach} releases them. A gizmo updates and renders
- * itself from the application's update and prerender hooks, so it needs no per-frame call and is
- * torn down with {@link destroy}. {@link size} scales the widget, which otherwise keeps a constant
- * apparent size as the camera moves; {@link coordSpace} selects `'world'` or `'local'` axes;
- * {@link enabled} hides it without detaching; and {@link mouseButtons} chooses which buttons
- * interact. Pointer interaction is reported through the `pointer:down`, `pointer:move` and
- * `pointer:up` events, node changes through `nodes:attach` and `nodes:detach`, and the
- * resulting transforms through `position:update`, `rotation:update` and `scale:update`.
- * {@link TransformGizmo} builds the translate, rotate and scale gizmos on this base.
+ * A gizmo draws in its own {@link Layer} (see {@link createLayer}) for a {@link CameraComponent},
+ * acts on the {@link GraphNode}s passed to {@link attach}, and updates itself each frame until
+ * {@link destroy}. Where gizmos overlap, a press goes to the first one created that it hits, so
+ * create the gizmos that should win, such as transform gizmos, first.
  *
  * @category Gizmo
  */
@@ -164,21 +155,21 @@ class Gizmo extends EventHandler {
     static EVENT_RENDERUPDATE = 'render:update';
 
     /**
-     * Internal version of the gizmo size. Defaults to 1.
+     * The gizmo size.
      *
      * @private
      */
     _size = 1;
 
     /**
-     * Internal version of the gizmo scale. Defaults to 1.
+     * The gizmo scale.
      *
      * @protected
      */
     _scale = 1;
 
     /**
-     * Internal version of coordinate space. Defaults to 'world'.
+     * The coordinate space.
      *
      * @type {GizmoSpace}
      * @protected
@@ -186,7 +177,7 @@ class Gizmo extends EventHandler {
     _coordSpace = 'world';
 
     /**
-     * Internal reference to the app containing the gizmo.
+     * The app.
      *
      * @type {AppBase}
      * @protected
@@ -194,7 +185,7 @@ class Gizmo extends EventHandler {
     _app;
 
     /**
-     * Internal reference to the graphics device of the app.
+     * The graphics device.
      *
      * @type {GraphicsDevice}
      * @protected
@@ -202,7 +193,7 @@ class Gizmo extends EventHandler {
     _device;
 
     /**
-     * Internal list of app event handles for the gizmo.
+     * The app event handles.
      *
      * @type {EventHandle[]}
      * @protected
@@ -210,7 +201,7 @@ class Gizmo extends EventHandler {
     _handles = [];
 
     /**
-     * Internal array of mouse buttons that can interact with the gizmo.
+     * The mouse buttons that interact.
      *
      * @type {[boolean, boolean, boolean]}
      * @protected
@@ -218,7 +209,7 @@ class Gizmo extends EventHandler {
     _mouseButtons = [true, true, true];
 
     /**
-     * Internal reference to camera component to view the gizmo.
+     * The camera viewing the gizmo.
      *
      * @type {CameraComponent}
      * @protected
@@ -226,7 +217,7 @@ class Gizmo extends EventHandler {
     _camera;
 
     /**
-     * Internal reference to layer to render the gizmo..
+     * The render layer.
      *
      * @type {Layer}
      * @protected
@@ -234,28 +225,28 @@ class Gizmo extends EventHandler {
     _layer;
 
     /**
-     * Internal flag to track if a render update is required.
+     * Whether a render update is due.
      *
      * @protected
      */
     _renderUpdate = false;
 
     /**
-     * Internal enabled state requested by the user.
+     * The enabled state the user requested.
      *
      * @private
      */
     _enabled = true;
 
     /**
-     * Internal id of the pointer interacting with the gizmo.
+     * The id of the interacting pointer.
      *
      * @private
      */
     _pointerId = -1;
 
     /**
-     * Internal flag to track if the gizmo has been destroyed.
+     * Whether the gizmo is destroyed.
      *
      * @private
      */
@@ -276,14 +267,14 @@ class Gizmo extends EventHandler {
     root;
 
     /**
-     * The intersection shapes for the gizmo.
+     * The shapes the gizmo picks.
      *
      * @type {Shape[]}
      */
     intersectShapes = [];
 
     /**
-     * Flag to indicate whether to call `preventDefault` on pointer events.
+     * Whether to call `preventDefault` on pointer events.
      */
     preventDefault = true;
 
@@ -293,14 +284,19 @@ class Gizmo extends EventHandler {
      * @param {AppBase} app - The app.
      * @param {string} [layerName] - The layer name. Defaults to 'Gizmo'.
      * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
+     * @param {boolean} [depth] - Whether the layer keeps the scene depth and sorts transparent mesh
+     * instances manually, as overlay gizmos need so occluded parts draw faint. Otherwise it clears
+     * depth and draws on top, as transform gizmos need. Defaults to false.
      * @returns {Layer} The new layer.
+     * @example
+     * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
      */
-    static createLayer(app, layerName = 'Gizmo', layerIndex = app.scene.layers.layerList.length) {
+    static createLayer(app, layerName = 'Gizmo', layerIndex = app.scene.layers.layerList.length, depth = false) {
         const layer = new Layer({
             name: layerName,
-            clearDepthBuffer: true,
+            clearDepthBuffer: !depth,
             opaqueSortMode: SORTMODE_NONE,
-            transparentSortMode: SORTMODE_NONE
+            transparentSortMode: depth ? SORTMODE_MANUAL : SORTMODE_NONE
         });
         app.scene.layers.insert(layer, layerIndex);
         return layer;
@@ -310,9 +306,8 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer. The layer is added to the camera, and gizmos can share
-     * the same layer. It is removed from the camera when the last gizmo using it on that camera is
-     * destroyed or moved to another camera.
+     * @param {Layer} layer - The render layer, added to the camera. Gizmos can share it; it leaves
+     * the camera with the last gizmo using it there.
      * @param {string} [name] - The name of the gizmo. Defaults to 'gizmo'.
      * @example
      * const gizmo = new Gizmo(camera, layer);
@@ -347,6 +342,17 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * Gets whether the gizmo shows only with attached nodes. A getter, so a subclass's value
+     * applies while the base constructor runs.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    get _requiresNodes() {
+        return true;
+    }
+
+    /**
      * Sets the gizmo enabled state.
      *
      * @type {boolean}
@@ -354,7 +360,9 @@ class Gizmo extends EventHandler {
     set enabled(state) {
         this._enabled = state;
         const cameraDist = this.root.getLocalPosition().distance(this.camera.entity.getPosition());
-        const enabled = state ? this.nodes.length > 0 && cameraDist > DIST_EPSILON : false;
+
+        // gizmos without nodes draw away from the root, so the camera can sit on it
+        const enabled = state && (!this._requiresNodes || (this.nodes.length > 0 && cameraDist > DIST_EPSILON));
         if (enabled !== this.root.enabled) {
             this.root.enabled = enabled;
             this._renderUpdate = true;
@@ -371,14 +379,9 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Array of mouse buttons that can interact with the gizmo. The button indices are defined as:
-     *
-     *  - 0: Left button
-     *  - 1: Middle button
-     *  - 2: Right button
-     *
-     * The full list of button indices can be found here:
-     * {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button}
+     * The mouse buttons that interact with the gizmo, by
+     * {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button | button index}:
+     * 0 left, 1 middle, 2 right.
      *
      * @type {[boolean, boolean, boolean]}
      */
@@ -399,7 +402,6 @@ class Gizmo extends EventHandler {
         this._layer = layer;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
 
-        // move the gizmo meshes to the new layer
         const ids = [layer.id];
         this.root.forEach((node) => {
             const { render } = /** @type {Entity} */ (node);
@@ -446,7 +448,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Sets the gizmo coordinate space. Defaults to 'world'
+     * Sets the gizmo coordinate space. Defaults to 'world'.
      *
      * @type {GizmoSpace}
      */
@@ -523,15 +525,20 @@ class Gizmo extends EventHandler {
         if (e.pointerId !== this._pointerId && canvas.hasPointerCapture(this._pointerId)) {
             return;
         }
+
+        // the first gizmo hit claims the press, so overlapping gizmos don't drag together
+        if (claimed.has(e)) {
+            return;
+        }
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
+            claimed.add(e);
             if (this.preventDefault) {
                 e.preventDefault();
             }
             e.stopPropagation();
         }
 
-        // capture the pointer during drag
         this._pointerId = e.pointerId;
         canvas.setPointerCapture(e.pointerId);
 
@@ -568,7 +575,7 @@ class Gizmo extends EventHandler {
             return;
         }
 
-        // always end the drag, even if disabled or pointer locked mid-drag
+        // end the drag even if disabled or pointer locked mid-drag
         const active = this.enabled && !document.pointerLockElement;
         const selection = active ? this._getSelection(e.offsetX, e.offsetY) : [];
         if (selection[0]) {
@@ -585,8 +592,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Removes a single reference to the gizmo layer from the camera, as other gizmos may share the
-     * layer with the same camera.
+     * Removes one reference to the layer from the camera, which other gizmos may share.
      *
      * @private
      */
@@ -599,10 +605,12 @@ class Gizmo extends EventHandler {
         this._camera.layers = ids;
     }
 
-    /** @protected */
+    /**
+     * @protected
+     */
     _updatePosition() {
         position.set(0, 0, 0);
-        if (this._coordSpace === 'local') {
+        if (this._coordSpace === 'local' && this.nodes.length !== 0) {
             position.copy(this.nodes[this.nodes.length - 1].getPosition());
         } else {
             for (let i = 0; i < this.nodes.length; i++) {
@@ -622,7 +630,9 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
-    /** @protected */
+    /**
+     * @protected
+     */
     _updateRotation() {
         rotation.set(0, 0, 0, 1);
         if (this._coordSpace === 'local' && this.nodes.length !== 0) {
@@ -639,17 +649,30 @@ class Gizmo extends EventHandler {
         this._renderUpdate = true;
     }
 
-    /** @protected */
-    _updateScale() {
+    /**
+     * Gets the scale keeping geometry at a world position a constant size on screen.
+     *
+     * @param {Vec3} pos - The world position.
+     * @returns {number} The scale.
+     * @protected
+     */
+    _getScreenScale(pos) {
+        let scale;
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            const gizmoPos = this.root.getLocalPosition();
             const cameraPos = this._camera.entity.getPosition();
-            const dist = v.sub2(gizmoPos, cameraPos).dot(this._camera.entity.forward);
-            this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
+            const dist = v.sub2(pos, cameraPos).dot(this._camera.entity.forward);
+            scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
         } else {
-            this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
+            scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
-        this._scale = Math.max(this._scale * this._size, MIN_SCALE);
+        return Math.max(scale * this._size, MIN_SCALE);
+    }
+
+    /**
+     * @protected
+     */
+    _updateScale() {
+        this._scale = this._getScreenScale(this.root.getLocalPosition());
 
         if (Math.abs(this._scale - this.root.getLocalScale().x) < UPDATE_EPSILON) {
             return;
@@ -659,6 +682,23 @@ class Gizmo extends EventHandler {
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
 
         this._renderUpdate = true;
+    }
+
+    /**
+     * @param {Vec3} mouseWPos - The mouse world position.
+     * @returns {Ray} - The ray.
+     * @protected
+     */
+    _createRay(mouseWPos) {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
+            ray.origin.copy(this._camera.entity.getPosition());
+            ray.direction.sub2(mouseWPos, ray.origin).normalize();
+            return ray;
+        }
+        const orthoDepth = this._camera.farClip - this._camera.nearClip;
+        ray.origin.sub2(mouseWPos, v.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        ray.direction.copy(this._camera.entity.forward);
+        return ray;
     }
 
     /**
@@ -672,7 +712,9 @@ class Gizmo extends EventHandler {
         const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
         const dir = v.copy(end).sub(start).normalize();
 
-        /** @type {MeshInstance[] | null} */
+        /**
+         * @type {MeshInstance[] | null}
+         */
         let best = null;
         let bestDist = 0;
         let bestPriority = 0;
@@ -686,7 +728,6 @@ class Gizmo extends EventHandler {
             for (let j = 0; j < shape.triData.length; j++) {
                 const { tris, transform, priority } = shape.triData[j];
 
-                // combine node world transform with transform of tri relative to parent
                 const triWTM = m1.copy(parentTM).mul(transform);
                 const invTriWTM = m2.copy(triWTM).invert();
 
@@ -699,7 +740,7 @@ class Gizmo extends EventHandler {
                         const dist = triWTM.transformPoint(hit).sub(start).length();
 
                         // priority decides between prioritized hits, otherwise distance
-                        const wins = !best || (bestPriority !== 0 && priority !== 0 ?
+                        const wins = !best || (bestPriority !== 0 && priority !== 0 && priority !== bestPriority ?
                             priority > bestPriority : dist < bestDist);
                         if (wins) {
                             best = shape.meshInstances;
@@ -758,7 +799,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Pre-render method. This is called before the gizmo is rendered.
+     * Called before the gizmo renders.
      *
      * @example
      * const gizmo = new Gizmo(camera, layer);
@@ -777,6 +818,12 @@ class Gizmo extends EventHandler {
      * gizmo.update();
      */
     update() {
+
+        // recheck a gizmo hidden only because the camera sat on it
+        if (this._enabled && !this.root.enabled) {
+            this.enabled = true;
+        }
+
         if (this._renderUpdate) {
             this._renderUpdate = false;
             this.fire(Gizmo.EVENT_RENDERUPDATE);
@@ -800,7 +847,8 @@ class Gizmo extends EventHandler {
      * gizmo.destroy();
      */
     destroy() {
-        // destroy can be called again, e.g. by the app destroy event after the user
+
+        // the app destroy event may call this again
         if (this._destroyed) {
             return;
         }

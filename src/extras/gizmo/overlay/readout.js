@@ -1,6 +1,8 @@
 const GAP = 6;
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class Readout {
     /**
      * @type {HTMLCanvasElement}
@@ -9,13 +11,19 @@ class Readout {
     _canvas;
 
     /**
-     * The element showing the readout, a `div` with the class `gizmo-readout` in the document
-     * body.
+     * The `div.gizmo-readout` element in the document body.
      *
      * @type {HTMLDivElement}
      * @private
      */
     _dom = document.createElement('div');
+
+    /**
+     * The markup shown, to skip unchanged rewrites.
+     *
+     * @private
+     */
+    _html = '';
 
     /**
      * @param {HTMLCanvasElement} canvas - The canvas the readout is placed over.
@@ -40,7 +48,7 @@ class Readout {
     }
 
     /**
-     * Shows the markup centered on a canvas x coordinate, just below a canvas y coordinate.
+     * Shows the markup centered on x, just below y, in canvas coordinates.
      *
      * @param {string} html - The readout markup.
      * @param {number} x - The canvas x coordinate to center on.
@@ -48,7 +56,10 @@ class Readout {
      */
     show(html, x, y) {
         const rect = this._canvas.getBoundingClientRect();
-        this._dom.innerHTML = html;
+        if (html !== this._html) {
+            this._html = html;
+            this._dom.innerHTML = html;
+        }
         this._dom.style.left = `${rect.left + x}px`;
         this._dom.style.top = `${rect.top + y + GAP}px`;
         this._dom.style.display = 'block';

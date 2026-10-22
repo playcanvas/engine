@@ -54,7 +54,7 @@ export function Controls({ observer }) {
                 <LabelGroup text='Snap Increment'>
                     <SliderInput
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'gizmo.snapIncrement' }}
+                        link={{ observer, path: 'gizmo.snapAngleIncrement' }}
                         min={1}
                         max={10}
                         precision={0}
@@ -203,6 +203,15 @@ export function Controls({ observer }) {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Render'>
+                <LabelGroup text='Guide Thickness'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'gizmo.guideThickness' }}
+                        min={0.5}
+                        max={8}
+                        precision={1}
+                    />
+                </LabelGroup>
                 <LabelGroup text='XYZ Tube Radius'>
                     <SliderInput
                         binding={new BindingTwoWay()}

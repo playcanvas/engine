@@ -1,24 +1,28 @@
-import { math } from '../../core/math/math.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Entity } from '../../framework/entity.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
-import { CylinderGeometry } from '../../scene/geometry/cylinder-geometry.js';
-import { ShaderMaterial } from '../../scene/materials/shader-material.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { Mesh } from '../../scene/mesh.js';
-import { unlitShader } from './shaders.js';
+import { math } from '../../../core/math/math.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Entity } from '../../../framework/entity.js';
+import { BlendState } from '../../../platform/graphics/blend-state.js';
+import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
+import { ShaderMaterial } from '../../../scene/materials/shader-material.js';
+import { MeshInstance } from '../../../scene/mesh-instance.js';
+import { Mesh } from '../../../scene/mesh.js';
+import { unlitShader } from '../shaders.js';
 
 /**
- * @import { Color } from '../../core/math/color.js'
- * @import { AppBase } from '../../framework/app-base.js'
- * @import { Layer } from '../../scene/layer.js'
+ * @import { Color } from '../../../core/math/color.js'
+ * @import { AppBase } from '../../../framework/app-base.js'
+ * @import { Layer } from '../../../scene/layer.js'
  */
 
 const tmpV1 = new Vec3();
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class MeshLine {
-    /** @private */
+    /**
+     * @private
+     */
     _thickness = 0.02;
 
     /**

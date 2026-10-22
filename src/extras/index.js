@@ -92,9 +92,20 @@ export {
     GIZMOAXIS_FACE
 } from './gizmo/constants.js';
 export { Gizmo } from './gizmo/gizmo.js';
-export { TransformGizmo } from './gizmo/transform-gizmo.js';
-export { TranslateGizmo } from './gizmo/translate-gizmo.js';
-export { RotateGizmo } from './gizmo/rotate-gizmo.js';
-export { ScaleGizmo } from './gizmo/scale-gizmo.js';
-export { BoundingBoxGizmo } from './gizmo/bounding-box-gizmo.js';
+export { DragGizmo } from './gizmo/drag-gizmo.js';
+export { TransformGizmo } from './gizmo/transform/transform-gizmo.js';
+export { TranslateGizmo } from './gizmo/transform/translate-gizmo.js';
+export { RotateGizmo } from './gizmo/transform/rotate-gizmo.js';
+export { ScaleGizmo } from './gizmo/transform/scale-gizmo.js';
+export { HandleGizmo } from './gizmo/handle/handle-gizmo.js';
+export { ShapeGizmo } from './gizmo/handle/shape-gizmo.js';
+export { BoxGizmo } from './gizmo/handle/box-gizmo.js';
+export { SphereGizmo } from './gizmo/handle/sphere-gizmo.js';
+export { CapsuleGizmo } from './gizmo/handle/capsule-gizmo.js';
+export { ConeGizmo } from './gizmo/handle/cone-gizmo.js';
+export { CylinderGizmo } from './gizmo/handle/cylinder-gizmo.js';
+export { BoundingBoxGizmo } from './gizmo/handle/bounding-box-gizmo.js';
+export { CameraGizmo } from './gizmo/handle/camera-gizmo.js';
+export { LightGizmo } from './gizmo/handle/light-gizmo.js';
+export { IconGizmo } from './gizmo/icon-gizmo.js';
 export { ViewCube } from './gizmo/view-cube.js';

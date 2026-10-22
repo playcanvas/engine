@@ -124,7 +124,7 @@ gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snap: gizmo.snap,
-    snapIncrement: gizmo.snapIncrement,
+    snapAngleIncrement: gizmo.snapAngleIncrement,
     dragMode: gizmo.dragMode,
     rotationMode: gizmo.rotationMode,
     theme: {
@@ -151,6 +151,7 @@ data.set('gizmo', {
         disabled: gizmo.theme.disabled.toArray()
     },
     coordSpace: gizmo.coordSpace,
+    guideThickness: gizmo.guideThickness,
     ringTolerance: gizmo.ringTolerance,
     xyzTubeRadius: gizmo.xyzTubeRadius,
     xyzRingRadius: gizmo.xyzRingRadius,
@@ -173,12 +174,14 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     switch (category) {
         case 'camera': {
             switch (key) {
-                case 'proj':
+                case 'proj': {
                     camera.camera.projection = value - 1;
                     break;
-                case 'fov':
+                }
+                case 'fov': {
                     camera.camera.fov = value;
                     break;
+                }
             }
             break;
         }
@@ -197,6 +200,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 gizmo.setTheme(theme);
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

@@ -1,43 +1,36 @@
-import { Vec3 } from '../../core/math/vec3.js';
-import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
 
 import { TransformGizmo } from './transform-gizmo.js';
-import { BoxShape } from './shape/box-shape.js';
-import { PlaneShape } from './shape/plane-shape.js';
-import { BoxLineShape } from './shape/boxline-shape.js';
+import { PlaneShape } from '../shape/plane-shape.js';
+import { ArrowShape } from '../shape/arrow-shape.js';
+import { SphereShape } from '../shape/sphere-shape.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { GizmoSpace } from './constants.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { GizmoAxis } from '../constants.js'
  */
 
-// temporary variables
 const v1 = new Vec3();
 const v2 = new Vec3();
 const point = new Vec3();
 const delta = new Vec3();
 const q = new Quat();
 
-// constants
-const GLANCE_EPSILON = 0.01;
+const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
 
 /**
- * The ScaleGizmo provides interactive 3D manipulation handles for scaling/resizing
- * {@link Entity}s in a {@link Scene}. It creates a visual widget with box-tipped lines along the
- * X, Y and Z axes, planes at their intersections, and a center box, allowing precise control over
- * object scaling through direct manipulation. The gizmo's visual appearance can be customized
- * away from the defaults as required.
- *
- * Note that the gizmo can be driven by both mouse+keyboard and touch input.
+ * Handles for moving {@link Entity}s: arrows along the X, Y and Z axes, planes between them and a
+ * center sphere that moves in the view plane. Works with mouse, keyboard and touch input.
  *
  * ```javascript
  * // Create a layer for rendering all gizmos
  * const gizmoLayer = Gizmo.createLayer(app);
  *
- * // Create a scale gizmo
- * const gizmo = new ScaleGizmo(cameraComponent, gizmoLayer);
+ * // Create a translate gizmo
+ * const gizmo = new TranslateGizmo(cameraComponent, gizmoLayer);
  *
  * // Create an entity to attach the gizmo to
  * const entity = new Entity();
@@ -52,14 +45,14 @@ const GLANCE_EPSILON = 0.01;
  *
  * Relevant Engine API examples:
  *
- * - [Scale Gizmo](https://playcanvas.github.io/#/gizmos/transform-scale)
+ * - [Translate Gizmo](https://playcanvas.github.io/#/gizmos/transform-translate)
  * - [Editor](https://playcanvas.github.io/#/misc/editor)
  *
  * @category Gizmo
  */
-class ScaleGizmo extends TransformGizmo {
+class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        xyz: new BoxShape(this._device, {
+        xyz: new SphereShape(this._device, {
             axis: 'xyz',
             layers: [this._layer.id],
             defaultColor: this._theme.shapeBase.xyz,
@@ -93,7 +86,7 @@ class ScaleGizmo extends TransformGizmo {
             disabledColor: this._theme.disabled,
             depth: 1
         }),
-        x: new BoxLineShape(this._device, {
+        x: new ArrowShape(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
@@ -101,7 +94,7 @@ class ScaleGizmo extends TransformGizmo {
             hoverColor: this._theme.shapeHover.x,
             disabledColor: this._theme.disabled
         }),
-        y: new BoxLineShape(this._device, {
+        y: new ArrowShape(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
@@ -109,7 +102,7 @@ class ScaleGizmo extends TransformGizmo {
             hoverColor: this._theme.shapeHover.y,
             disabledColor: this._theme.disabled
         }),
-        z: new BoxLineShape(this._device, {
+        z: new ArrowShape(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
@@ -120,28 +113,20 @@ class ScaleGizmo extends TransformGizmo {
     };
 
     /**
-     * @type {GizmoSpace}
-     * @protected
-     */
-    _coordSpace = 'local';
-
-    /**
-     * Internal mapping from each attached node to their starting scale.
+     * The local position of each attached node at the start of a drag.
      *
      * @type {Map<GraphNode, Vec3>}
      * @private
      */
-    _nodeScales = new Map();
+    _nodeLocalPositions = new Map();
 
     /**
-     * Internal state if transform should use uniform scaling.
+     * The world position of each attached node at the start of a drag.
      *
-     * @protected
+     * @type {Map<GraphNode, Vec3>}
+     * @private
      */
-    _uniform = false;
-
-    /** @override */
-    snapIncrement = 1;
+    _nodePositions = new Map();
 
     /**
      * Flips the planes to face the camera.
@@ -149,89 +134,52 @@ class ScaleGizmo extends TransformGizmo {
     flipPlanes = true;
 
     /**
-     * The lower bound for scaling.
-     */
-    lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
-
-    /**
-     * Creates a new ScaleGizmo object. Use {@link Gizmo.createLayer} to create the layer
-     * required to display the gizmo.
+     * Creates a new TranslateGizmo object. Use {@link Gizmo.createLayer} to create its layer.
      *
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The layer responsible for rendering the gizmo.
      * @example
-     * const gizmo = new ScaleGizmo(camera, layer);
+     * const gizmo = new TranslateGizmo(camera, layer);
      */
     constructor(camera, layer) {
-        super(camera, layer, 'gizmo:scale');
+        super(camera, layer, 'gizmo:translate');
 
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
-            // store initial scales of nodes
-            this._storeNodeScales();
+            this._storeNodePositions();
 
-            // hide shapes that are not selected
+            // hide the unselected shapes
             this._drag(true);
 
-            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, Vec3.ONE);
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, Vec3.ZERO);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
-            // calculate scale delta and update node scales
-            const scaleDelta = delta.copy(point).sub(this._selectionStartPoint).mulScalar(1 / this._scale);
-            if (this.snap) {
-                scaleDelta.mulScalar(1 / this.snapIncrement);
-                scaleDelta.round();
-                scaleDelta.mulScalar(this.snapIncrement);
-            }
-            this._setNodeScales(scaleDelta.add(Vec3.ONE));
+            const translateDelta = delta.copy(point).sub(this._selectionStartPoint);
+            this._snapVector(translateDelta, this.snapIncrement);
+            this._setNodePositions(translateDelta);
 
-            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, scaleDelta);
+            this.fire(TransformGizmo.EVENT_TRANSFORMREADOUT, this._selectedAxis, this._selectedIsPlane, translateDelta);
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMREADOUT, (_axis, _isPlane, value) => {
             if (!this._readout) {
                 return;
             }
-            this._showReadout(this._readoutAxes(value, true));
+            this._showReadout(this._readoutAxes(value));
         });
 
         this.on(TransformGizmo.EVENT_TRANSFORMEND, () => {
+
             // show all shapes
             this._drag(false);
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
-            // reset stored scales
-            this._nodeScales.clear();
+            this._nodeLocalPositions.clear();
+            this._nodePositions.clear();
         });
-    }
-
-    set coordSpace(value) {
-        // disallow changing coordSpace for scale
-    }
-
-    get coordSpace() {
-        return this._coordSpace;
-    }
-
-    /**
-     * Sets the uniform scaling state for planes.
-     *
-     * @type {boolean}
-     */
-    set uniform(value) {
-        this._uniform = value ?? this._uniform;
-    }
-
-    /**
-     * Gets the uniform scaling state for planes.
-     *
-     * @type {boolean}
-     */
-    get uniform() {
-        return this._uniform;
     }
 
     /**
@@ -307,21 +255,39 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Sets the axis box size.
+     * Sets the arrow thickness.
      *
      * @type {number}
      */
-    set axisBoxSize(value) {
-        this._setArrowProp('boxSize', value);
+    set axisArrowThickness(value) {
+        this._setArrowProp('arrowThickness', value);
     }
 
     /**
-     * Gets the axis box size.
+     * Gets the arrow thickness.
      *
      * @type {number}
      */
-    get axisBoxSize() {
-        return this._shapes.x.boxSize;
+    get axisArrowThickness() {
+        return this._shapes.x.arrowThickness;
+    }
+
+    /**
+     * Sets the arrow length.
+     *
+     * @type {number}
+     */
+    set axisArrowLength(value) {
+        this._setArrowProp('arrowLength', value);
+    }
+
+    /**
+     * Gets the arrow length.
+     *
+     * @type {number}
+     */
+    get axisArrowLength() {
+        return this._shapes.x.arrowLength;
     }
 
     /**
@@ -361,12 +327,68 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
+     * Sets the plane fill opacity, as a factor of the theme color alpha. Defaults to 0.35.
+     *
+     * @type {number}
+     */
+    set axisPlaneOpacity(value) {
+        this._setPlaneProp('opacity', value);
+    }
+
+    /**
+     * Gets the plane fill opacity.
+     *
+     * @type {number}
+     */
+    get axisPlaneOpacity() {
+        return this._shapes.yz.opacity;
+    }
+
+    /**
+     * Sets the plane outline thickness; 0 hides the outline. Defaults to 0.01.
+     *
+     * @type {number}
+     */
+    set axisPlaneOutlineThickness(value) {
+        this._setPlaneProp('outlineThickness', value);
+    }
+
+    /**
+     * Gets the plane outline thickness.
+     *
+     * @type {number}
+     */
+    get axisPlaneOutlineThickness() {
+        return this._shapes.yz.outlineThickness;
+    }
+
+    /**
+     * Sets the view angle in degrees below which an axis or plane fades out, hiding at about 8
+     * degrees. Defaults to 25.
+     *
+     * @type {number}
+     */
+    set axisFadeAngle(value) {
+        this._fadeAngle = value ?? this._fadeAngle;
+        this._shapesLookAtCamera();
+    }
+
+    /**
+     * Gets the angle in degrees below which an axis or plane fades out.
+     *
+     * @type {number}
+     */
+    get axisFadeAngle() {
+        return this._fadeAngle;
+    }
+
+    /**
      * Sets the axis center size.
      *
      * @type {number}
      */
     set axisCenterSize(value) {
-        this._shapes.xyz.size = value;
+        this._shapes.xyz.radius = value;
     }
 
     /**
@@ -375,7 +397,7 @@ class ScaleGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterSize() {
-        return this._shapes.xyz.size;
+        return this._shapes.xyz.radius;
     }
 
     /**
@@ -397,8 +419,8 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {string} prop - The property name.
-     * @param {any} value - The property value.
+     * @param {string} prop - The property to set.
+     * @param {any} value - The value to set.
      * @private
      */
     _setArrowProp(prop, value) {
@@ -408,8 +430,8 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * @param {string} prop - The property name.
-     * @param {any} value - The property value.
+     * @param {string} prop - The property to set.
+     * @param {any} value - The value to set.
      * @private
      */
     _setPlaneProp(prop, value) {
@@ -418,62 +440,34 @@ class ScaleGizmo extends TransformGizmo {
         this._shapes.xy[prop] = value;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _shapesLookAtCamera() {
         const cameraDir = this.cameraDir;
 
-        // axes
-        let changed = false;
-        let dot, enabled;
-        dot = cameraDir.dot(this.root.right);
-        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this._shapes.x.entity.enabled !== enabled) {
-            this._shapes.x.entity.enabled = enabled;
-            changed = true;
-        }
-        dot = cameraDir.dot(this.root.up);
-        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this._shapes.y.entity.enabled !== enabled) {
-            this._shapes.y.entity.enabled = enabled;
-            changed = true;
-        }
-        dot = cameraDir.dot(this.root.forward);
-        enabled = 1 - Math.abs(dot) > GLANCE_EPSILON;
-        if (this._shapes.z.entity.enabled !== enabled) {
-            this._shapes.z.entity.enabled = enabled;
-            changed = true;
-        }
+        // axes and planes fade out as the view looks along them
+        let changed = this._glance(this._shapes.x, Math.abs(cameraDir.dot(this.root.right)));
+        changed = this._glance(this._shapes.y, Math.abs(cameraDir.dot(this.root.up))) || changed;
+        changed = this._glance(this._shapes.z, Math.abs(cameraDir.dot(this.root.forward))) || changed;
 
-        // planes
         let flipped;
         v1.cross(cameraDir, this.root.right);
-        enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this._shapes.yz.entity.enabled !== enabled) {
-            this._shapes.yz.entity.enabled = enabled;
-            changed = true;
-        }
+        changed = this._glance(this._shapes.yz, v1.length()) || changed;
         flipped = this.flipPlanes ? v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0)) : Vec3.ZERO;
         if (!this._shapes.yz.flipped.equals(flipped)) {
             this._shapes.yz.flipped = flipped;
             changed = true;
         }
         v1.cross(cameraDir, this.root.forward);
-        enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this._shapes.xy.entity.enabled !== enabled) {
-            this._shapes.xy.entity.enabled = enabled;
-            changed = true;
-        }
+        changed = this._glance(this._shapes.xy, v1.length()) || changed;
         flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.up) < 0), +(v1.dot(this.root.right) > 0), 0) : Vec3.ZERO;
         if (!this._shapes.xy.flipped.equals(flipped)) {
             this._shapes.xy.flipped = flipped;
             changed = true;
         }
         v1.cross(cameraDir, this.root.up);
-        enabled = 1 - v1.length() > GLANCE_EPSILON;
-        if (this._shapes.xz.entity.enabled !== enabled) {
-            this._shapes.xz.entity.enabled = enabled;
-            changed = true;
-        }
+        changed = this._glance(this._shapes.xz, v1.length()) || changed;
         flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0)) : Vec3.ZERO;
         if (!this._shapes.xz.flipped.equals(flipped)) {
             this._shapes.xz.flipped = flipped;
@@ -510,7 +504,6 @@ class ScaleGizmo extends TransformGizmo {
                         continue;
                     }
                     shape.visible = state ? axis === this._selectedAxis : true;
-                    continue;
                 }
             }
         }
@@ -518,27 +511,49 @@ class ScaleGizmo extends TransformGizmo {
         this._renderUpdate = true;
     }
 
-    /** @private */
-    _storeNodeScales() {
+    /**
+     * @private
+     */
+    _storeNodePositions() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            this._nodeScales.set(node, node.getLocalScale().clone());
+            this._nodeLocalPositions.set(node, node.getLocalPosition().clone());
+            this._nodePositions.set(node, node.getPosition().clone());
         }
     }
 
     /**
-     * @param {Vec3} scaleDelta - The point delta.
+     * @param {Vec3} translateDelta - The offset from the start positions.
      * @private
      */
-    _setNodeScales(scaleDelta) {
+    _setNodePositions(translateDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const scale = this._nodeScales.get(node);
-            if (!scale) {
-                continue;
+
+            if (this._coordSpace === 'local') {
+                const pos = this._nodeLocalPositions.get(node);
+                if (!pos) {
+                    continue;
+                }
+                v1.copy(translateDelta);
+                v2.set(1, 1, 1);
+                node.parent?.getWorldTransform().getScale(v2);
+                v2.x = 1 / v2.x;
+                v2.y = 1 / v2.y;
+                v2.z = 1 / v2.z;
+                q.copy(node.getLocalRotation()).transformVector(v1, v1);
+                v1.mul(v2);
+                node.setLocalPosition(v1.add(pos));
+            } else {
+                const pos = this._nodePositions.get(node);
+                if (!pos) {
+                    continue;
+                }
+                node.setPosition(v1.copy(translateDelta).add(pos));
             }
-            node.setLocalScale(v1.copy(scale).mul(scaleDelta).max(this.lowerBoundScale));
         }
+
+        this._updatePosition();
     }
 
     /**
@@ -548,7 +563,6 @@ class ScaleGizmo extends TransformGizmo {
      * @protected
      */
     _screenToPoint(x, y) {
-        const gizmoPos = this.root.getLocalPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;
@@ -560,42 +574,44 @@ class ScaleGizmo extends TransformGizmo {
             return point;
         }
 
-        // uniform scaling for XYZ axis
-        if (axis === 'xyz') {
-            // calculate projection vector for scale direction
-            const projDir = v2.add2(this._camera.entity.up, this._camera.entity.right).normalize();
-
-            // calculate direction vector for scaling
-            const dir = v1.sub2(point, gizmoPos);
-
-            // normalize vector and project it to scale direction
-            const v = dir.length() * dir.normalize().dot(projDir);
-            point.set(v, v, v);
-
-            return point;
-        }
-
-        // rotate point back to world coords
+        // into the frame of the gizmo at the start of the drag
         q.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        // project point onto axis
-        if (!isPlane) {
+        if (!isPlane && axis !== 'xyz') {
             this._projectToAxis(point, axis);
-        }
-
-        // uniform scaling for planes
-        if (this._uniform && isPlane) {
-            // project to diagonal line
-            v1.set(1, 1, 1);
-            v1[axis] = 0;
-            point.copy(v1.mulScalar(v1.dot(point) / v1.lengthSq()));
-            point[axis] = 0;
         }
 
         return point;
     }
 
-    /** @override */
+    /**
+     * @param {Vec3} pos - The position.
+     * @param {Quat} rot - The rotation.
+     * @param {GizmoAxis} activeAxis - The active axis.
+     * @param {boolean} activeIsPlane - Whether the active axis is a plane.
+     * @override
+     */
+    _drawGuideLines(pos, rot, activeAxis, activeIsPlane) {
+        for (const axis of AXES) {
+            if (this._dragging || activeAxis === 'xyz') {
+                this._drawSpanLine(pos, rot, axis);
+                continue;
+            }
+            if (activeIsPlane) {
+                if (axis !== activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            } else {
+                if (axis === activeAxis) {
+                    this._drawSpanLine(pos, rot, axis);
+                }
+            }
+        }
+    }
+
+    /**
+     * @override
+     */
     prerender() {
         super.prerender();
 
@@ -607,4 +623,4 @@ class ScaleGizmo extends TransformGizmo {
     }
 }
 
-export { ScaleGizmo };
+export { TranslateGizmo };

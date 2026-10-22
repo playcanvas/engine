@@ -13,8 +13,10 @@ import { unlitShader } from '../shaders.js';
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
  * @import { Mesh } from '../../../scene/mesh.js';
- * @import { TriData } from '../tri-data.js';
+ * @import { TriData } from './tri-data.js';
  */
+
+const tmpC1 = new Color();
 
 const tmpG = new Geometry();
 tmpG.positions = [];
@@ -32,35 +34,39 @@ tmpG.normals = [];
  * @property {Color} [defaultColor] - The default color of the shape.
  * @property {Color} [hoverColor] - The hover color of the shape.
  * @property {Color} [disabledColor] - The disabled color of the shape.
+ * @property {Color} [occludedColor] - The color where the scene hides the shape, drawn first
+ * without depth test.
  * @property {number} [cull] - The culling mode of the shape.
  * @property {number} [depth] - The depth of the shape. -1 = interpolated depth.
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class Shape {
     /**
-     * The internal position of the shape.
+     * The position.
      *
      * @protected
      */
     _position = new Vec3();
 
     /**
-     * The internal rotation of the shape.
+     * The rotation.
      *
      * @protected
      */
     _rotation = new Vec3();
 
     /**
-     * The internal scale of the shape.
+     * The scale.
      *
      * @protected
      */
     _scale = new Vec3(1, 1, 1);
 
     /**
-     * The internal render component layers of the shape.
+     * The render component layers.
      *
      * @type {number[]}
      * @protected
@@ -68,7 +74,7 @@ class Shape {
     _layers = [];
 
     /**
-     * The internal material state of the shape.
+     * The material state.
      *
      * @type {ShaderMaterial}
      * @protected
@@ -76,21 +82,21 @@ class Shape {
     _material = new ShaderMaterial(unlitShader);
 
     /**
-     * The internal disabled state of the shape.
+     * The disabled state.
      *
      * @protected
      */
     _disabled = false;
 
     /**
-     * The internal visibility state of the shape.
+     * The visibility state.
      *
      * @protected
      */
     _visible = true;
 
     /**
-     * The internal default color of the shape.
+     * The default color.
      *
      * @type {Color}
      * @protected
@@ -98,7 +104,7 @@ class Shape {
     _defaultColor = Color.WHITE;
 
     /**
-     * The internal hover color of the shape.
+     * The hover color.
      *
      * @type {Color}
      * @protected
@@ -106,7 +112,7 @@ class Shape {
     _hoverColor = Color.BLACK;
 
     /**
-     * The internal disabled color of the shape.
+     * The disabled color.
      *
      * @type {Color}
      * @protected
@@ -114,7 +120,53 @@ class Shape {
     _disabledColor = COLOR_GRAY;
 
     /**
-     * The internal culling state of the shape.
+     * The occluded color, or null for no occluded pass.
+     *
+     * @type {Color|null}
+     * @protected
+     */
+    _occludedColor = null;
+
+    /**
+     * The material of the occluded pass.
+     *
+     * @type {ShaderMaterial|null}
+     * @protected
+     */
+    _occludedMaterial = null;
+
+    /**
+     * The hover state.
+     *
+     * @protected
+     */
+    _hovered = false;
+
+    /**
+     * The fade, a factor of the alpha of its colors.
+     *
+     * @protected
+     */
+    _fade = 1;
+
+    /**
+     * Uniform storage for the color.
+     *
+     * @type {number[]}
+     * @protected
+     */
+    _colorData = [0, 0, 0, 0];
+
+    /**
+     * Uniform storage for the occluded color.
+     *
+     * @type {number[]}
+     * @protected
+     */
+    _occludedColorData = [0, 0, 0, 0];
+
+    /**
+     * The culling state.
      *
      * @type {number}
      * @protected
@@ -122,7 +174,7 @@ class Shape {
     _cull = CULLFACE_BACK;
 
     /**
-     * The internal depth state of the shape. -1 = interpolated depth.
+     * The depth state. -1 = interpolated depth.
      *
      * @protected
      */
@@ -136,32 +188,39 @@ class Shape {
     device;
 
     /**
-     * The axis of the shape.
+     * The axis.
      *
      * @type {string}
      */
     axis;
 
     /**
-     * The entity of the shape.
+     * The entity.
      *
      * @type {Entity}
      */
     entity;
 
     /**
-     * The triangle data of the shape.
+     * The triangle data.
      *
      * @type {TriData[]}
      */
     triData = [];
 
     /**
-     * The mesh instances of the shape.
+     * The mesh instances.
      *
      * @type {MeshInstance[]}
      */
     meshInstances = [];
+
+    /**
+     * The mesh instances of the occluded pass, one per entry of {@link Shape#meshInstances}.
+     *
+     * @type {MeshInstance[]}
+     */
+    occludedMeshInstances = [];
 
     /**
      * Create a shape.
@@ -198,11 +257,13 @@ class Shape {
         if (args.disabledColor instanceof Color) {
             this._disabledColor = args.disabledColor;
         }
+        if (args.occludedColor instanceof Color) {
+            this._occludedColor = args.occludedColor;
+        }
 
         this._cull = args.cull ?? this._cull;
         this._depth = args.depth ?? this._depth;
 
-        // entity
         this.entity = new Entity(`${name}:${this.axis}`);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
@@ -210,7 +271,7 @@ class Shape {
     }
 
     /**
-     * Set the disabled state of the shape.
+     * Set the disabled state.
      *
      * @type {boolean}
      */
@@ -220,7 +281,7 @@ class Shape {
     }
 
     /**
-     * Get the disabled state of the shape.
+     * Get the disabled state.
      *
      * @type {boolean}
      */
@@ -229,7 +290,7 @@ class Shape {
     }
 
     /**
-     * Set the visibility state of the shape.
+     * Set the visibility state.
      *
      * @type {boolean}
      */
@@ -240,16 +301,94 @@ class Shape {
         for (let i = 0; i < this.meshInstances.length; i++) {
             this.meshInstances[i].visible = value;
         }
+        for (let i = 0; i < this.occludedMeshInstances.length; i++) {
+            this.occludedMeshInstances[i].visible = value;
+        }
         this._visible = value;
     }
 
     /**
-     * Get the visibility state of the shape.
+     * Get the visibility state.
      *
      * @type {boolean}
      */
     get visible() {
         return this._visible;
+    }
+
+    /**
+     * Set the fade, a factor of the alpha of its colors.
+     *
+     * @type {number}
+     */
+    set fade(value) {
+        if (value === this._fade) {
+            return;
+        }
+        this._fade = value;
+        this.hover(this._hovered);
+    }
+
+    /**
+     * Get the fade.
+     *
+     * @type {number}
+     */
+    get fade() {
+        return this._fade;
+    }
+
+    /**
+     * Gets the color for the current state, its alpha scaled by the fade and factor.
+     *
+     * @param {number[]} out - The array to receive the color.
+     * @param {number} [factor] - A further factor of the alpha.
+     * @returns {number[]} The color array.
+     * @protected
+     */
+    _stateColor(out, factor = 1) {
+        const color = this._disabled ?
+            this._disabledColor : this._hovered ? this._hoverColor : this._defaultColor;
+        tmpC1.copy(color).a *= this._fade * factor;
+        return tmpC1.toArray(out);
+    }
+
+    /**
+     * Set the depth bias, so the shape does not fight a surface it lies on. Positive values push
+     * it away from the camera.
+     *
+     * @type {number}
+     */
+    set depthBias(value) {
+        this._material.depthBias = value;
+        this._material.slopeDepthBias = value;
+    }
+
+    /**
+     * Get the depth bias.
+     *
+     * @type {number}
+     */
+    get depthBias() {
+        return this._material.depthBias;
+    }
+
+    /**
+     * Set whether the shape writes the depth buffer where it is visible.
+     *
+     * @type {boolean}
+     */
+    set depthWrite(value) {
+        this._material.depthWrite = value;
+    }
+
+    /**
+     * Get whether the shape writes the depth buffer where it is visible.
+     *
+     * @type {boolean}
+     */
+    get depthWrite() {
+        return this._material.depthWrite;
     }
 
     /**
@@ -268,8 +407,28 @@ class Shape {
         this._material.blendType = BLEND_NORMAL;
         this._material.update();
 
+        if (this._occludedColor && !this._occludedMaterial) {
+            const material = new ShaderMaterial(unlitShader);
+            material.setDefine('DEPTH_WRITE', '0');
+            material.setParameter('uDepth', this._depth);
+            material.setParameter('uColor', this._occludedColor.toArray());
+            material.cull = this._cull;
+            material.blendType = BLEND_NORMAL;
+            material.depthTest = false;
+            material.depthWrite = false;
+            material.update();
+            this._occludedMaterial = material;
+        }
+
+        // each occluded instance draws before its visible instance
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
+            if (this._occludedMaterial) {
+                const occluded = new MeshInstance(meshes[i], this._occludedMaterial);
+                occluded.cull = false;
+                meshInstances.push(occluded);
+                this.occludedMeshInstances.push(occluded);
+            }
             const mi = new MeshInstance(meshes[i], this._material);
             mi.cull = false;
             meshInstances.push(mi);
@@ -283,7 +442,7 @@ class Shape {
     }
 
     /**
-     * Update the shape's transform.
+     * Updates the transform.
      *
      * @protected
      */
@@ -294,15 +453,18 @@ class Shape {
     }
 
     /**
-     * Sets the hover state of the shape.
+     * Sets the hover state.
      *
      * @param {boolean} state - Whether the shape is hovered.
      * @returns {void}
      */
     hover(state) {
-        const color = this._disabled ?
-            this._disabledColor : state ? this._hoverColor : this._defaultColor;
-        this._material.setParameter('uColor', color.toArray());
+        this._hovered = state;
+        this._material.setParameter('uColor', this._stateColor(this._colorData));
+        if (this._occludedColor) {
+            tmpC1.copy(this._occludedColor).a *= this._fade;
+            this._occludedMaterial?.setParameter('uColor', tmpC1.toArray(this._occludedColorData));
+        }
     }
 
     /**
@@ -312,6 +474,7 @@ class Shape {
      */
     destroy() {
         this.entity.destroy();
+        this._occludedMaterial?.destroy();
     }
 }
 

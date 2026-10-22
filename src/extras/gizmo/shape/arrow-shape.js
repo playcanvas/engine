@@ -4,11 +4,13 @@ import { Entity } from '../../../framework/entity.js';
 import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
 import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -24,52 +26,54 @@ const tmpQ1 = new Quat();
  * @property {number} [tolerance] - The tolerance for intersection tests
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class ArrowShape extends Shape {
     /**
-     * The internal gap between the arrow base and the center.
+     * The gap between the arrow base and the center.
      *
      * @private
      */
     _gap = 0;
 
     /**
-     * The internal line thickness of the arrow.
+     * The line thickness.
      *
      * @private
      */
     _lineThickness = 0.02;
 
     /**
-     * The internal line length of the arrow.
+     * The line length.
      *
      * @private
      */
     _lineLength = 0.5;
 
     /**
-     * The internal arrow thickness of the arrow.
+     * The head thickness.
      *
      * @private
      */
     _arrowThickness = 0.12;
 
     /**
-     * The internal arrow length of the arrow.
+     * The head length.
      *
      * @private
      */
     _arrowLength = 0.18;
 
     /**
-     * The internal tolerance of the arrow.
+     * The intersection tolerance.
      *
      * @private
      */
     _tolerance = 0.1;
 
     /**
-     * The internal head entity of the arrow.
+     * The head entity.
      *
      * @type {Entity}
      * @private
@@ -77,7 +81,7 @@ class ArrowShape extends Shape {
     _head;
 
     /**
-     * The internal line entity of the arrow.
+     * The line entity.
      *
      * @type {Entity}
      * @private
@@ -100,13 +104,11 @@ class ArrowShape extends Shape {
         this._arrowLength = args.arrowLength ?? this._arrowLength;
         this._tolerance = args.tolerance ?? this._tolerance;
 
-        // intersect
         this.triData = [
             new TriData(new ConeGeometry()),
             new TriData(new CylinderGeometry(), 1)
         ];
 
-        // render
         this._head = new Entity(`head:${this.axis}`);
         this.entity.addChild(this._head);
         this._createRenderComponent(this._head, [
@@ -118,7 +120,6 @@ class ArrowShape extends Shape {
             Mesh.fromGeometry(this.device, new CylinderGeometry())
         ]);
 
-        // update
         this._update();
     }
 
@@ -142,7 +143,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Set the line thickness of the arrow.
+     * Set the line thickness.
      *
      * @type {number}
      */
@@ -152,7 +153,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Get the line thickness of the arrow.
+     * Get the line thickness.
      *
      * @type {number}
      */
@@ -161,7 +162,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Set the line length of the arrow.
+     * Set the line length.
      *
      * @type {number}
      */
@@ -171,7 +172,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Get the line length of the arrow.
+     * Get the line length.
      *
      * @type {number}
      */
@@ -180,7 +181,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Set the arrow thickness of the arrow.
+     * Set the head thickness.
      *
      * @type {number}
      */
@@ -190,7 +191,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Get the arrow thickness of the arrow.
+     * Get the head thickness.
      *
      * @type {number}
      */
@@ -199,7 +200,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Set the arrow length of the arrow.
+     * Set the head length.
      *
      * @type {number}
      */
@@ -209,7 +210,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Get the arrow length of the arrow.
+     * Get the head length.
      *
      * @type {number}
      */
@@ -218,7 +219,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Set the tolerance of the arrow.
+     * Set the intersection tolerance.
      *
      * @type {number}
      */
@@ -228,7 +229,7 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Get the tolerance of the arrow.
+     * Get the intersection tolerance.
      *
      * @type {number}
      */
@@ -237,13 +238,12 @@ class ArrowShape extends Shape {
     }
 
     /**
-     * Update the shape's transform.
+     * Updates the transform.
      *
      * @protected
      * @override
      */
     _update() {
-        // intersect
         tmpV1.set(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._arrowThickness, this._arrowLength, this._arrowThickness);
@@ -253,7 +253,6 @@ class ArrowShape extends Shape {
         tmpV2.set(this._lineThickness + this._tolerance, this._lineLength, this._lineThickness + this._tolerance);
         this.triData[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
-        // render
         this._head.setLocalPosition(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
         this._head.setLocalScale(this._arrowThickness, this._arrowLength, this._arrowThickness);
         this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);

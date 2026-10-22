@@ -11,14 +11,13 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
+    Gizmo,
     Keyboard,
-    Layer,
     LightComponentSystem,
     Mouse,
     PROJECTION_PERSPECTIVE,
     RESOLUTION_AUTO,
     RenderComponentSystem,
-    SORTMODE_NONE,
     ScriptComponentSystem,
     ScriptHandler,
     TextureHandler,
@@ -30,6 +29,10 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { MeshInstance } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -110,22 +113,37 @@ app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
 // Create gizmo in a layer that keeps the scene depth
-const layer = new Layer({
-    name: 'Bounds',
-    opaqueSortMode: SORTMODE_NONE,
-    transparentSortMode: SORTMODE_NONE
-});
-app.scene.layers.push(layer);
+const layer = Gizmo.createLayer(app, 'Bounds', undefined, true);
 const gizmo = new BoundingBoxGizmo(camera.camera, layer);
 gizmo.attach(box);
+
+// Stop the camera orbiting while a handle is dragged
+gizmo.on('pointer:down', (_x, _y, /** @type {MeshInstance} */ meshInstance) => {
+    cc.enabled = !meshInstance;
+});
+gizmo.on('pointer:up', () => {
+    cc.enabled = true;
+});
 data.set('gizmo', {
     theme: {
         base: gizmo.theme.base.toArray(),
-        occluded: gizmo.theme.occluded.toArray()
+        occluded: gizmo.theme.occluded.toArray(),
+        fill: gizmo.theme.fill.toArray(),
+        primary: gizmo.theme.primary.toArray(),
+        secondary: gizmo.theme.secondary.toArray(),
+        tertiary: gizmo.theme.tertiary.toArray(),
+        corner: gizmo.theme.corner.toArray()
     },
     armLength: gizmo.armLength,
     armThickness: gizmo.armThickness,
-    padding: gizmo.padding
+    padding: gizmo.padding,
+    handleSize: gizmo.handleSize,
+    edges: gizmo.edges,
+    handles: gizmo.handles,
+    readout: gizmo.readout,
+    icon: gizmo.icon,
+    snap: gizmo.snap,
+    snapIncrement: gizmo.snapIncrement
 });
 
 // Create grid
@@ -141,12 +159,14 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     switch (category) {
         case 'camera': {
             switch (key) {
-                case 'proj':
+                case 'proj': {
                     camera.camera.projection = value - 1;
                     break;
-                case 'fov':
+                }
+                case 'fov': {
                     camera.camera.fov = value;
                     break;
+                }
             }
             break;
         }
@@ -157,6 +177,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 }
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

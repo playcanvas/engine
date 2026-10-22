@@ -23,7 +23,9 @@ class ViewCube extends EventHandler {
      */
     static EVENT_CAMERAALIGN = 'camera:align';
 
-    /** @private */
+    /**
+     * @private
+     */
     _size = 0;
 
     /**
@@ -38,31 +40,49 @@ class ViewCube extends EventHandler {
      */
     _group;
 
-    /** @private */
+    /**
+     * @private
+     */
     _anchor = new Vec4(1, 1, 1, 1);
 
-    /** @private */
+    /**
+     * @private
+     */
     _colorX = COLOR_RED.clone();
 
-    /** @private */
+    /**
+     * @private
+     */
     _colorY = COLOR_GREEN.clone();
 
-    /** @private */
+    /**
+     * @private
+     */
     _colorZ = COLOR_BLUE.clone();
 
-    /** @private */
+    /**
+     * @private
+     */
     _colorNeg = new Color(0.3, 0.3, 0.3);
 
-    /** @private */
+    /**
+     * @private
+     */
     _radius = 10;
 
-    /** @private */
+    /**
+     * @private
+     */
     _textSize = 10;
 
-    /** @private */
+    /**
+     * @private
+     */
     _lineThickness = 2;
 
-    /** @private */
+    /**
+     * @private
+     */
     _lineLength = 40;
 
     /**
@@ -86,7 +106,6 @@ class ViewCube extends EventHandler {
     constructor(anchor) {
         super();
 
-        // container
         this.dom = document.createElement('div');
         this.dom.id = 'view-cube-container';
         this.dom.style.cssText = [
@@ -98,13 +117,11 @@ class ViewCube extends EventHandler {
 
         this.anchor = anchor ?? this._anchor;
 
-        // construct svg root and group
         this._svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         this._svg.id = 'view-cube-svg';
         this._group = document.createElementNS(this._svg.namespaceURI, 'g');
         this._svg.appendChild(this._group);
 
-        // size
         this._resize();
 
         const colX = this._colorX.toString(false);
@@ -292,7 +309,9 @@ class ViewCube extends EventHandler {
         return this._lineLength;
     }
 
-    /** @private */
+    /**
+     * @private
+     */
     _resize() {
         this._size = 2 * (this.lineLength + this.radius + this.lineThickness);
 
@@ -381,7 +400,8 @@ class ViewCube extends EventHandler {
      * @param {Mat4} cameraMatrix - The camera matrix.
      */
     update(cameraMatrix) {
-        // skip if the container is not visible
+
+        // the container is hidden
         if (!this._size) {
             return;
         }
@@ -402,7 +422,7 @@ class ViewCube extends EventHandler {
         this._x2y2(this._shapes.yaxis, tmpV2.x, -tmpV2.y);
         this._x2y2(this._shapes.zaxis, tmpV3.x, -tmpV3.y);
 
-        // reorder dom for the mighty svg painter's algorithm
+        // reorder the dom, as svg paints in document order
         const order = [
             { n: ['xaxis', 'px'], value: tmpV1.z },
             { n: ['yaxis', 'py'], value: tmpV2.z },
