@@ -182,6 +182,13 @@ jobs:
         working-directory: ./examples
         run: npm run lint
 
+      - name: Build TypeScript declarations
+        run: npm run build:types
+
+      - name: Type check examples
+        working-directory: ./examples
+        run: npm run typecheck
+
       - name: Build Examples Browser
         working-directory: ./examples
         run: npm run build
