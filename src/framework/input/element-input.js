@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
@@ -397,7 +398,9 @@ class ElementSelectEvent extends ElementInputEvent {
  */
 class ElementInput {
     /**
-     * Create a new ElementInput instance.
+     * Create a new ElementInput instance. Attach it to the canvas: with touch input, attaching it
+     * to `document.body` or `document.documentElement` sets `touch-action: none` on the whole page,
+     * which stops the page from scrolling and zooming.
      *
      * @param {Element} domElement - The DOM element.
      * @param {object} [options] - Optional arguments.
@@ -492,7 +495,9 @@ class ElementInput {
     /**
      * Attach mouse and touch events to a DOM element. Mouse pointer events are listened for on
      * the window, and touch and pen pointer events on the element, whose `touch-action` style is
-     * `none` until it is detached so the browser does not scroll or zoom it.
+     * `none` until it is detached so the browser does not scroll or zoom it. Attach to the canvas:
+     * attaching to `document.body` or `document.documentElement` stops the whole page from
+     * scrolling and zooming.
      *
      * @param {Element} domElement - The DOM element.
      */
@@ -516,6 +521,12 @@ class ElementInput {
         }
 
         if (this._useTouch) {
+            Debug.call(() => {
+                if (domElement === document.body || domElement === document.documentElement) {
+                    Debug.warnOnce('ElementInput attached to the document sets touch-action: none on the whole page, which stops it from scrolling and zooming. Attach it to the canvas instead.');
+                }
+            });
+
             // pointer events cannot prevent default scrolling and zooming, unlike touch events
             const style = /** @type {HTMLElement} */ (domElement).style;
             if (style) {

@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 import { isTouchPointer, TouchEvent } from './touch-event.js';
@@ -121,7 +122,9 @@ class TouchDevice extends EventHandler {
     _cancelHandler;
 
     /**
-     * Create a new touch device and attach it to an element.
+     * Create a new touch device and attach it to an element. Attach it to the canvas: attaching it
+     * to `document.body` or `document.documentElement` sets `touch-action: none` on the whole page,
+     * which stops the page from scrolling and zooming.
      *
      * @param {Element} element - The element to attach listen for events on.
      */
@@ -139,7 +142,8 @@ class TouchDevice extends EventHandler {
     /**
      * Attach a device to an element in the DOM. If the device is already attached to an element
      * this method will detach it first. The element's `touch-action` style is set to `none` until
-     * it is detached.
+     * it is detached, so attach to the canvas: attaching to `document.body` or
+     * `document.documentElement` stops the whole page from scrolling and zooming.
      *
      * @param {Element} element - The element to attach to.
      */
@@ -147,6 +151,12 @@ class TouchDevice extends EventHandler {
         if (this._element) {
             this.detach();
         }
+
+        Debug.call(() => {
+            if (element === document.body || element === document.documentElement) {
+                Debug.warnOnce('TouchDevice attached to the document sets touch-action: none on the whole page, which stops it from scrolling and zooming. Attach it to the canvas instead.');
+            }
+        });
 
         this._element = element;
 
