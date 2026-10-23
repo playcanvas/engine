@@ -689,8 +689,12 @@ class Mouse extends EventHandler {
         // the window listeners never capture, matching mouse events, which have no cancel
         if (!this._capture) return;
 
-        this._buttons.fill(false);
         this._captureId = -1;
+
+        // engaging pointer lock takes the capture, but the press continues and pointerup still arrives
+        if (event.type === 'lostpointercapture' && isMousePointerLocked()) return;
+
+        this._buttons.fill(false);
         this._lastPositionValid = false;
     }
 

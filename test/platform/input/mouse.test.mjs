@@ -665,6 +665,32 @@ describe('Mouse', function () {
                 expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
             });
 
+            it('keeps the button held when pointer lock takes the capture', function () {
+                const log = [];
+                mouse.on('mousedown', e => log.push(`down${e.button}`));
+                mouse.on('mouseup', e => log.push(`up${e.button}`));
+                pointer('pointerdown', { buttons: 1 });
+                expect(canvas.setPointerCapture.calledOnce).to.equal(true);
+
+                // engaging the lock releases the capture
+                Object.defineProperty(document, 'pointerLockElement', { configurable: true, value: canvas });
+                pointer('lostpointercapture', { buttons: 1 });
+                pointer('pointermove', { buttons: 1, movementX: 3 });
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(true);
+                expect(mouse.movement).to.deep.equal([3, 0]);
+
+                pointer('pointerup', { buttons: 0 });
+                expect(log).to.deep.equal(['down0', 'up0']);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
+            it('clears buttons on pointercancel under pointer lock', function () {
+                Object.defineProperty(document, 'pointerLockElement', { configurable: true, value: canvas });
+                pointer('pointerdown', { buttons: 1 });
+                pointer('pointercancel');
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
             it('tracks buttons pressed and released mid-chord', function () {
                 const down = sinon.spy();
                 const up = sinon.spy();
