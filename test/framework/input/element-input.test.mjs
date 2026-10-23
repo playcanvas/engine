@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-import { Debug } from '../../../src/core/debug.js';
 import { platform } from '../../../src/core/platform.js';
 import { Application } from '../../../src/framework/application.js';
 import { ElementDragHelper } from '../../../src/framework/components/element/element-drag-helper.js';
@@ -419,15 +418,15 @@ describe('ElementInput', function () {
             expect(other.style.touchAction).to.equal('pan-y');
         });
 
-        it('warns when attached to the body or the document element with touch', function () {
-            const warn = stub(Debug, 'warnOnce');
-            app.elementInput.attach(document.body);
-            app.elementInput.attach(document.documentElement);
-            expect(warn.callCount).to.equal(2);
-            expect(warn.firstCall.args[0]).to.include('touch-action');
-            app.elementInput.attach(canvas);
-            new ElementInput(document.body, { useTouch: false }).detach();
-            expect(warn.callCount).to.equal(2);
+        it('leaves touch-action alone on the body and the document element', function () {
+            for (const page of [document.body, document.documentElement]) {
+                page.style.touchAction = 'pan-y';
+                app.elementInput.attach(page);
+                expect(page.style.touchAction).to.equal('pan-y');
+                app.elementInput.detach();
+                expect(page.style.touchAction).to.equal('pan-y');
+            }
+            expect(canvas.style.touchAction).to.equal('');
         });
 
         it('leaves the previous element when attached to another', function () {

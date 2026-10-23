@@ -17,6 +17,20 @@ function isTouchPointer(event) {
 }
 
 /**
+ * Returns the style whose `touch-action` is managed while touch input is attached to an element.
+ * The page (`document.body` and `document.documentElement`) is left alone, as its passive touch
+ * listeners never blocked page scrolling and zooming.
+ *
+ * @param {EventTarget} element - The element touch input is attached to.
+ * @returns {CSSStyleDeclaration|null} The style, or null if there is none to manage.
+ * @ignore
+ */
+function getTouchActionStyle(element) {
+    if (element === document.body || element === document.documentElement) return null;
+    return /** @type {HTMLElement} */ (element).style ?? null;
+}
+
+/**
  * Creates a snapshot of a touch pointer with the fields of a browser Touch. Like a browser Touch,
  * it does not change afterwards.
  *
@@ -214,4 +228,4 @@ class TouchEvent {
     }
 }
 
-export { createTouch, getTouchTargetCoords, isTouchPointer, Touch, TouchEvent };
+export { createTouch, getTouchActionStyle, getTouchTargetCoords, isTouchPointer, Touch, TouchEvent };

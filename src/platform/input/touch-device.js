@@ -1,7 +1,6 @@
-import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { isTouchPointer, TouchEvent } from './touch-event.js';
+import { getTouchActionStyle, isTouchPointer, TouchEvent } from './touch-event.js';
 
 /**
  * @import { Mouse } from './mouse.js'
@@ -21,7 +20,9 @@ import { isTouchPointer, TouchEvent } from './touch-event.js';
  * touch. A touch keeps the target it started on, and its coordinates stay relative to that
  * target, as with browser touch events. A touch that leaves the element without lifting or being
  * cancelled ends with `touchend`. The element's `touch-action` style is `none` while attached so
- * the browser does not scroll or zoom it.
+ * the browser does not scroll or zoom it, unless the element is `document.body` or
+ * `document.documentElement`, which are left alone so the page still scrolls. Apps attached to the
+ * page should set `touch-action: none` on the canvas themselves to stop browser pan and zoom.
  *
  * Your application's TouchDevice instance is managed and accessible via {@link AppBase#touch}.
  *
@@ -123,9 +124,7 @@ class TouchDevice extends EventHandler {
     _cancelHandler;
 
     /**
-     * Create a new touch device and attach it to an element. Attach it to the canvas: attaching it
-     * to `document.body` or `document.documentElement` sets `touch-action: none` on the whole page,
-     * which stops the page from scrolling and zooming.
+     * Create a new touch device and attach it to an element.
      *
      * @param {Element} element - The element to attach listen for events on.
      */
@@ -143,8 +142,9 @@ class TouchDevice extends EventHandler {
     /**
      * Attach a device to an element in the DOM. If the device is already attached to an element
      * this method will detach it first. The element's `touch-action` style is set to `none` until
-     * it is detached, so attach to the canvas: attaching to `document.body` or
-     * `document.documentElement` stops the whole page from scrolling and zooming.
+     * it is detached, except on `document.body` and `document.documentElement`, where it is left
+     * alone so the page still scrolls. Apps attached to the page should set `touch-action: none` on
+     * the canvas themselves to stop browser pan and zoom.
      *
      * @param {Element} element - The element to attach to.
      */
@@ -153,16 +153,10 @@ class TouchDevice extends EventHandler {
             this.detach();
         }
 
-        Debug.call(() => {
-            if (element === document.body || element === document.documentElement) {
-                Debug.warnOnce('TouchDevice attached to the document sets touch-action: none on the whole page, which stops it from scrolling and zooming. Attach it to the canvas instead.');
-            }
-        });
-
         this._element = element;
 
         // pointer events cannot prevent default scrolling and zooming, unlike touch events
-        const style = /** @type {HTMLElement} */ (element).style;
+        const style = getTouchActionStyle(element);
         if (style) {
             this._touchAction = style.touchAction;
             style.touchAction = 'none';
@@ -177,7 +171,7 @@ class TouchDevice extends EventHandler {
 
     /**
      * Detach a device from the element it is attached to and restore the element's `touch-action`
-     * style. Active touches are forgotten without firing events.
+     * style, if it was set. Active touches are forgotten without firing events.
      */
     detach() {
         const element = this._element;
@@ -187,7 +181,7 @@ class TouchDevice extends EventHandler {
             element.removeEventListener('pointermove', this._moveHandler, false);
             element.removeEventListener('pointercancel', this._cancelHandler, false);
             element.removeEventListener('pointerleave', this._endHandler, false);
-            const style = /** @type {HTMLElement} */ (element).style;
+            const style = getTouchActionStyle(element);
             if (style) {
                 style.touchAction = this._touchAction;
             }

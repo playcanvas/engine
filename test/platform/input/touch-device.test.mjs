@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import { Debug } from '../../../src/core/debug.js';
 import { platform } from '../../../src/core/platform.js';
 import { MOUSEBUTTON_LEFT, MOUSEBUTTON_NONE } from '../../../src/platform/input/constants.js';
 import { Gestures } from '../../../src/platform/input/gestures.js';
@@ -317,15 +316,17 @@ describe('TouchDevice', function () {
         expect(canvas.style.touchAction).to.equal('none');
     });
 
-    it('warns when attached to the body or the document element', function () {
-        const warn = sinon.stub(Debug, 'warnOnce');
-        expect(warn.called).to.equal(false);
-        device.attach(document.body);
-        device.attach(document.documentElement);
-        expect(warn.callCount).to.equal(2);
-        expect(warn.firstCall.args[0]).to.include('touch-action');
-        device.attach(canvas);
-        expect(warn.callCount).to.equal(2);
+    it('leaves touch-action alone on the body and the document element', function () {
+        for (const page of [document.body, document.documentElement]) {
+            page.style.touchAction = 'pan-y';
+            device.attach(page);
+            expect(page.style.touchAction).to.equal('pan-y');
+            pointer('pointerdown', { x: 3 });
+            device.detach();
+            expect(page.style.touchAction).to.equal('pan-y');
+        }
+        expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchstart']);
+        expect(canvas.style.touchAction).to.equal('');
     });
 
     it('ignores events after detach and forgets active touches', function () {
