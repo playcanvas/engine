@@ -235,7 +235,7 @@ if (app.xr.supported) {
         meshInstanceWireframe.renderStyle = RENDERSTYLE_WIREFRAME;
 
         // Entity
-        const entity = new Entity();
+        const entity = /** @type {Entity & { label?: Entity }} */ (new Entity());
         entity.addComponent('render', {
             meshInstances: [meshInstance, meshInstanceWireframe]
         });

@@ -50,7 +50,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { GSplatResource } from 'playcanvas'
+ * @import { GSplatResource, Script } from 'playcanvas'
  */
 
 // Shader options for GSplatProcessor - paints splats inside brush sphere
@@ -202,7 +202,16 @@ data.set('renderer', GSPLAT_RENDERER_AUTO);
 // Store all paintable entities
 const paintables = [];
 
-// Creates a paintable gsplat entity with position, rotation, scale, and sets up processing
+/**
+ * Creates a paintable gsplat entity with position, rotation, scale, and sets up processing.
+ *
+ * @param {string} name - The entity name.
+ * @param {Asset} asset - The gsplat asset.
+ * @param {[number, number, number]} position - The local position.
+ * @param {[number, number, number]} rotation - The local euler angles in degrees.
+ * @param {[number, number, number]} scale - The local scale.
+ * @returns {Entity} The created entity.
+ */
 const createPaintableSplat = (name, asset, position, rotation, scale) => {
     const entity = new Entity(name);
     const gsplatComponent = entity.addComponent('gsplat', { asset });
@@ -270,16 +279,16 @@ app.root.addChild(camera);
 
 // Add orbit camera script with native mouse input (LMB orbit, MMB pan, wheel zoom)
 camera.addComponent('script');
-const orbitCamera = camera.script.create('orbitCamera', {
+camera.script.create('orbitCamera', {
     attributes: {
         frameOnStart: false,
         inertiaFactor: 0.07
     }
 });
-const orbitInput = camera.script.create('orbitCameraInputMouse');
+const orbitInput = /** @type {Script & { panButtonDown: boolean }} */ (camera.script.create('orbitCameraInputMouse'));
 
 // Initialize orbit camera to match current camera position and focus
-orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
+camera.script.orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
 
 // Paint state
 let isPainting = false;

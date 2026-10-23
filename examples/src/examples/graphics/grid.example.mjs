@@ -331,10 +331,8 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 camera.camera.renderSceneColorMap = v;
                 grid.contrast = v;
             } else if (COLORS.includes(key)) {
-                // @ts-ignore
                 grid[key] = new Color().fromArray(v);
             } else {
-                // @ts-ignore
                 grid[key] = v;
             }
             break;

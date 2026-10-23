@@ -217,7 +217,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 return;
             }
 
-            // @ts-ignore
             subject.camera[key] = value;
             break;
         }
@@ -229,7 +228,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 return;
             }
 
-            // @ts-ignore
             gizmo[key] = value;
             break;
         }

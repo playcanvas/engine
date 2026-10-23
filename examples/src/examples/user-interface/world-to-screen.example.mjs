@@ -156,12 +156,12 @@ const createElement = (parent, name, properties) => {
 };
 
 // The fighters walk around the arena, each on a circle of its own
-const fighters = [
+const fighters = /** @type {[string, number[], number, number][]} */ ([
     ['Aria', [1, 0.55, 0.2], 2.5, 0.5],
     ['Brom', [0.3, 0.6, 1], 4.5, -0.3],
     ['Cai', [0.45, 0.8, 0.4], 6.5, 0.2],
     ['Dara', [0.7, 0.45, 0.95], 4, 0.4]
-].map(([name, color, radius, speed], i) => {
+]).map(([name, color, radius, speed], i) => {
     const body = new Entity(name);
     body.addComponent('render', { type: 'capsule', material: createMaterial(color) });
     body.setLocalScale(0.8, 1, 0.8);

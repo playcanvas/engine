@@ -619,7 +619,7 @@ const tryStartVr = () => {
         // Start XR directly (rather than firing 'vr:start') so we can pass framebufferScaleFactor
         // from the controls — it is read-only once a session is running. XrSession still performs
         // its rig setup, as that is bound to the xr 'start' event, not the start call.
-        camera.camera.startXr(XRTYPE_VR, XRSPACE_LOCALFLOOR, {
+        app.xr.start(camera.camera, XRTYPE_VR, XRSPACE_LOCALFLOOR, {
             framebufferScaleFactor: data.get('framebufferScaleFactor'),
             callback: (err) => {
                 if (err) setMessage(`Failed to start VR: ${err.message}`);
@@ -704,6 +704,6 @@ app.on('update', (dt) => {
 
     // GPU time is the sum of all compute + render pass timings (device.gpuProfiler).
     xrHud?.setItemLabel(0, `FPS: ${app.stats.frame.fps}`);
-    xrHud?.setItemLabel(1, `GPU: ${(device.gpuProfiler?._frameTime ?? 0).toFixed(1)}ms`);
+    xrHud?.setItemLabel(1, `GPU: ${(device.gpuProfiler?.frameTime ?? 0).toFixed(1)}ms`);
     xrHud?.setItemLabel(2, `RES: ${bb.x} x ${bb.y}`);
 });

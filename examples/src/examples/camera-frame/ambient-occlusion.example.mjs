@@ -122,7 +122,7 @@ laboratoryEntity.findComponents('render').forEach((render) => {
         meshInstance.material.blendType = BLEND_NONE;
 
         // Disable baked AO map as we want to use SSAO only
-        meshInstance.material.aoMap = null;
+        /** @type {StandardMaterial} */ (meshInstance.material).aoMap = null;
         meshInstance.material.update();
     });
 });
@@ -141,7 +141,7 @@ torches.forEach((torch) => {
         normalOffsetBias: 0.2,
         shadowUpdateMode: SHADOWUPDATE_THISFRAME
     });
-    light.setLocalPosition(torch.children[0].render.meshInstances[0].aabb.center);
+    light.setLocalPosition(/** @type {Entity} */ (torch.children[0]).render.meshInstances[0].aabb.center);
     app.root.addChild(light);
 });
 

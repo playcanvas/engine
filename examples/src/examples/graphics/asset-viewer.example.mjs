@@ -283,7 +283,6 @@ function jumpToAsset(offset) {
     const newPos = new Vec3(0, 2.0, 6.0).add(pos);
     camera.setLocalPosition(newPos);
 
-    // @ts-ignore engine-tsd
     camera.script.orbitCamera.focusEntity = assetList[currentAssetIndex];
 }
 

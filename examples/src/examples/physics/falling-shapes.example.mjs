@@ -30,7 +30,7 @@ import {
 import { deviceType } from 'examples/context';
 
 /**
- * @import { RigidBodyComponent } from 'playcanvas'
+ * @import { RenderComponent, RigidBodyComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -176,7 +176,7 @@ camera.lookAt(0, 2, 0);
 /**
  * Helper function which creates a template for a collider.
  *
- * @param {string} type - The render component type.
+ * @param {RenderComponent['type']} type - The render component type.
  * @param {object} collisionOptions - The options for the collision component.
  * @param {Entity} [template] - The template entity to use.
  * @returns {Entity} The new template entity.

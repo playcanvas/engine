@@ -191,7 +191,7 @@ const apply = () => {
 
     const show = (/** @type {Entity} */ button, /** @type {boolean} */ chosen) => {
         button.findByName('chosen').enabled = chosen;
-        button.findByName('label').element.color = chosen ? ORANGE : LIGHT;
+        /** @type {Entity} */ (button.findByName('label')).element.color = chosen ? ORANGE : LIGHT;
     };
     show(justify, settings.justify);
     alignments.forEach(({ button, x }) => show(button, x === settings.alignment));

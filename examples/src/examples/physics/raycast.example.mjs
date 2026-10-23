@@ -33,6 +33,10 @@ import { deviceType } from 'examples/context';
  * @import { Material, RenderComponent } from 'playcanvas'
  */
 
+/**
+ * @typedef {'box' | 'capsule' | 'cone' | 'cylinder' | 'sphere'} ShapeType
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -127,7 +131,7 @@ app.root.addChild(camera);
 camera.setPosition(5, 0, 15);
 
 /**
- * @param {string} type - The shape type.
+ * @param {ShapeType} type - The shape type.
  * @param {Material} material - The material.
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
@@ -158,6 +162,7 @@ function createPhysicalShape(type, material, x, y, z) {
 }
 
 // Create two rows of physical geometric shapes
+/** @type {ShapeType[]} */
 const types = ['box', 'capsule', 'cone', 'cylinder', 'sphere'];
 types.forEach((type, idx) => {
     createPhysicalShape(type, green, idx * 2 + 1, 2, 0);

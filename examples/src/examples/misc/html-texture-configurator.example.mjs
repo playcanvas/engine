@@ -56,6 +56,15 @@ import { deviceType } from 'examples/context';
  * @import { CameraComponent } from 'playcanvas'
  */
 
+/**
+ * The HTML-in-Canvas proposal API, which the DOM types don't declare yet.
+ *
+ * @typedef {object} HtmlInCanvas
+ * @property {() => void} requestPaint - Requests a 'paint' event for the canvas children.
+ * @property {(element: Element, transform: DOMMatrix) => void} [getElementTransform] - Registers
+ * the draw transform of a canvas child for hit testing.
+ */
+
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
 // Copy this class into any PlayCanvas project that uses the HTML-in-Canvas
@@ -167,7 +176,7 @@ class HtmlSync {
 // Enable HTML-in-Canvas: the "layoutsubtree" attribute tells the browser to
 // composite any child HTML elements into the canvas, making them available as
 // texture sources and enabling hit testing through getElementTransform.
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+const canvas = /** @type {HTMLCanvasElement & HtmlInCanvas} */ (document.getElementById('application-canvas'));
 canvas.setAttribute('layoutsubtree', 'true');
 window.focus();
 
@@ -238,7 +247,7 @@ htmlPanel.style.height = `${PANEL_HEIGHT}px`;
 htmlPanel.style.padding = '20px';
 htmlPanel.style.background = 'rgba(15, 15, 25, 0.375)';
 htmlPanel.style.backdropFilter = 'blur(12px)';
-htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
+htmlPanel.style.setProperty('-webkit-backdrop-filter', 'blur(12px)');
 htmlPanel.style.borderRadius = '20px';
 htmlPanel.style.fontFamily = "'Segoe UI', Arial, sans-serif";
 htmlPanel.style.color = 'white';

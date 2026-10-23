@@ -196,7 +196,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             break;
         }
         case 'box': {
-            // @ts-ignore
             gizmos.box[key] = value;
             break;
         }
@@ -210,7 +209,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     continue;
                 }
 
-                // @ts-ignore
                 gizmo[key] = value;
             }
             break;

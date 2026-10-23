@@ -37,7 +37,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+// requestPaint is part of the HTML-in-Canvas proposal, which the DOM types don't declare yet
+const canvas = /** @type {HTMLCanvasElement & { requestPaint: () => void }} */ (
+    document.getElementById('application-canvas')
+);
 
 // Enable layoutsubtree for HTML-in-Canvas support
 canvas.setAttribute('layoutsubtree', 'true');

@@ -39,6 +39,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -119,7 +123,7 @@ laboratoryEntity.findComponents('render').forEach((render) => {
         meshInstance.material.blendType = BLEND_NONE;
 
         // Disable baked AO map as we want to use SSAO only
-        meshInstance.material.aoMap = null;
+        /** @type {StandardMaterial} */ (meshInstance.material).aoMap = null;
         meshInstance.material.update();
     });
 });
@@ -225,9 +229,9 @@ applySettings();
 const outlineRenderer = new OutlineRenderer(app);
 
 // Add entities to the outline renderer
-outlineRenderer.addEntity(laboratoryEntity.findByName('Weltkugel'), Color.RED);
-outlineRenderer.addEntity(laboratoryEntity.findByName('Stuhl'), Color.WHITE);
-outlineRenderer.addEntity(laboratoryEntity.findByName('Teleskop'), Color.GREEN);
+outlineRenderer.addEntity(/** @type {Entity} */ (laboratoryEntity.findByName('Weltkugel')), Color.RED);
+outlineRenderer.addEntity(/** @type {Entity} */ (laboratoryEntity.findByName('Stuhl')), Color.WHITE);
+outlineRenderer.addEntity(/** @type {Entity} */ (laboratoryEntity.findByName('Teleskop')), Color.GREEN);
 
 // The camera frame renders the UI layer after the post-processing. Compositing the outlines before
 // it keeps them unaffected by the tone mapping and the volumetric fog. Without the camera frame, the

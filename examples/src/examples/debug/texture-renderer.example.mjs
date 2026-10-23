@@ -27,6 +27,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
@@ -47,7 +51,7 @@ const sculpture = new Entity('Sculpture');
 app.root.addChild(sculpture);
 
 /**
- * @param {string} type - Primitive type.
+ * @param {RenderComponent['type']} type - Primitive type.
  * @param {number[]} position - Local position.
  * @param {number[]} scale - Local scale.
  * @param {string} color - Surface color.

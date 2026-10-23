@@ -43,6 +43,10 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -106,7 +110,7 @@ app.start();
 
 /**
  * @param {string} name - The entity name.
- * @param {string} type - The primitive type.
+ * @param {RenderComponent['type']} type - The primitive type.
  * @param {Color} color - The diffuse color.
  * @returns {Entity} The entity.
  */

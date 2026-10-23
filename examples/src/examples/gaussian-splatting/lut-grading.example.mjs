@@ -159,7 +159,7 @@ const lutAssetOptions = {
 
 const lutBaseUrl = './assets/cube-luts';
 
-/** @type {Record<string, Asset>} */
+/** @type {Record<string, Asset<'texture'>>} */
 const lutAssets = {};
 for (const { key, file } of LUT_CATALOG) {
     if (!file) {

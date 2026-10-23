@@ -37,6 +37,10 @@ import {
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -148,7 +152,7 @@ app.root.addChild(forest);
 // Find the mesh instance we want to instantiate, and swap its material for the custom gooch material,
 // while preserving its texture
 const meshInstance = forest.findComponent('render').meshInstances[0];
-const material = createGoochMaterial(meshInstance.material.diffuseMap);
+const material = createGoochMaterial(/** @type {StandardMaterial} */ (meshInstance.material).diffuseMap);
 meshInstance.material = material;
 
 // Initialize instancing using the vertex buffer on meshInstance
