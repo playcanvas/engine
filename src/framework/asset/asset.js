@@ -123,10 +123,10 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
  * @template {AssetType | (string & {})} [K=string]
- * @template [R=AssetResource<K>]
+ * @template [Resource=AssetResource<K>]
  * @callback AssetReadyCallback
  * Callback used by {@link Asset#ready} and called when an asset is ready.
- * @param {Asset<K, R>} asset - The ready asset.
+ * @param {Asset<K, Resource>} asset - The ready asset.
  * @returns {void}
  */
 
@@ -165,7 +165,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  *     material.diffuseMap = asset.resource;
  * });
  * @template {AssetType | (string & {})} [K=string]
- * @template [R=AssetResource<K>]
+ * @template [Resource=AssetResource<K>]
  * @category Asset
  */
 class Asset extends EventHandler {
@@ -291,7 +291,7 @@ class Asset extends EventHandler {
     /**
      * This is where the loaded resource(s) are stored.
      *
-     * @type {R[]}
+     * @type {Resource[]}
      * @private
      */
     _resources = [];
@@ -544,7 +544,7 @@ class Asset extends EventHandler {
      * bypassed when assigning through a variable typed as a plain `Asset`, so keep typed assets
      * typed where their resource is assigned.
      *
-     * @param {R} value - The resource.
+     * @param {Resource} value - The resource.
      */
     set resource(value) {
         const _old = this._resources[0];
@@ -559,7 +559,7 @@ class Asset extends EventHandler {
      * until the asset has loaded and after {@link Asset#unload}, so narrow it before use unless the
      * asset is known to be loaded, for example inside {@link Asset#ready}.
      *
-     * @type {R | undefined}
+     * @type {Resource | undefined}
      */
     get resource() {
         return this._resources[0];
@@ -569,7 +569,7 @@ class Asset extends EventHandler {
      * Sets the asset resources. Some assets can hold more than one runtime resource (cube maps,
      * for example).
      *
-     * @type {R[]}
+     * @type {Resource[]}
      */
     set resources(value) {
         const _old = this._resources;
@@ -581,7 +581,7 @@ class Asset extends EventHandler {
      * Gets the asset resources. For a cube map asset, the first entry is the cube map and the
      * remaining entries are its prefiltered levels, some of which may be `null`.
      *
-     * @type {R[]}
+     * @type {Resource[]}
      */
     get resources() {
         return this._resources;
@@ -730,7 +730,7 @@ class Asset extends EventHandler {
      * for the `error` event as well whenever a failure has to be handled, check `asset.resource`
      * inside the callback, and never await this callback alone.
      *
-     * @param {AssetReadyCallback<K, R>} callback - The function called when the asset is ready. Passed
+     * @param {AssetReadyCallback<K, Resource>} callback - The function called when the asset is ready. Passed
      * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
