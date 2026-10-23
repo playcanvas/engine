@@ -33,7 +33,9 @@ export function Controls({ observer }) {
                             { v: 'light', t: 'Light' },
                             { v: 'audiolistener', t: 'Audio Listener' },
                             { v: 'sound', t: 'Sound' },
-                            { v: 'particlesystem', t: 'Particle System' }
+                            { v: 'particlesystem', t: 'Particle System' },
+                            { v: 'anim', t: 'Anim' },
+                            { v: 'script', t: 'Script' }
                         ]}
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'icon' }}
