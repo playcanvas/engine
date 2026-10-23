@@ -1091,6 +1091,33 @@ class GamePads extends EventHandler {
         }
         return null;
     }
+
+    /**
+     * Applies a radial dead zone to a stick. Magnitudes below `low` are zeroed; larger magnitudes
+     * are rescaled so that `low` maps to 0 and `high` maps to 1, preserving direction. The result
+     * is not clamped, so magnitudes above `high` will exceed 1.
+     *
+     * Mutates and returns the given array.
+     *
+     * @param {number[]} stick - The stick as `[x, y]`, with each axis in the range -1 to 1.
+     * @param {number} low - The magnitude below which the stick is zeroed.
+     * @param {number} high - The magnitude that maps to 1 after rescaling.
+     * @returns {number[]} The same `stick` array, with the dead zone applied.
+     * @example
+     * const stick = GamePads.applyDeadZone([0.5, 0], 0.3, 0.6);
+     * // stick is approximately [0.667, 0]
+     */
+    static applyDeadZone(stick, low, high) {
+        const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
+        if (mag < low) {
+            stick.fill(0);
+            return stick;
+        }
+        const scale = (mag - low) / (high - low) / mag;
+        stick[0] *= scale;
+        stick[1] *= scale;
+        return stick;
+    }
 }
 
 export { GamePads, GamePad, GamePadButton };
