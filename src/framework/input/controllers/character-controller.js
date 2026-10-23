@@ -135,7 +135,7 @@ class CharacterController extends InputController {
     /**
      * The collision mask of the sweeps. Defaults to everything except characters and triggers.
      */
-    filterCollisionMask = BODYMASK_ALL ^ (BODYGROUP_ENGINE_1 | BODYGROUP_TRIGGER);
+    filterCollisionMask = BODYMASK_ALL ^ (CHARACTER_GROUP | BODYGROUP_TRIGGER);
 
     /**
      * The display position damping, used when attached with smoothing. In the range 0 to 1.
@@ -225,7 +225,7 @@ class CharacterController extends InputController {
     }
 
     /**
-     * Sets the authoritative state.
+     * Sets the authoritative state and moves the entity to its position.
      *
      * @type {{ position: number[], velocity: number[], look: number[], grounded: boolean, jumping: boolean, prevJump: boolean }}
      */
@@ -237,6 +237,7 @@ class CharacterController extends InputController {
         this._grounded = !!value.grounded;
         this._jumping = !!value.jumping;
         this._prevJump = !!value.prevJump;
+        this.entity.setPosition(this._position);
     }
 
     /**
@@ -291,13 +292,20 @@ class CharacterController extends InputController {
         const decay = Math.pow(grounded ? this.velocityDampingGround : this.velocityDampingAir, dt * 1000);
         velocity.x = (velocity.x + wish.x * speed * dt) * decay;
         velocity.z = (velocity.z + wish.z * speed * dt) * decay;
-        if (pressed && !this._prevJump && grounded) {
+        const jumped = pressed && !this._prevJump && grounded;
+        if (jumped) {
             velocity.y = this.jumpSpeed;
             this._jumping = true;
         }
-        velocity.y += this.gravity * dt;
+
+        // no gravity while standing, so a walkable slope does not slide the character down it
+        if (!grounded || jumped) {
+            velocity.y += this.gravity * dt;
+        }
 
         // collide and slide, stopping skin short of each hit and sliding the remainder along it
+        const x = position.x;
+        const z = position.z;
         disp.copy(velocity).mulScalar(dt);
         for (let i = 0; i < MAX_SLIDES; i++) {
             const len = disp.length();
@@ -322,16 +330,18 @@ class CharacterController extends InputController {
             }
         }
 
-        // ground probe
-        const probe = 2 * this.skin + GROUND_PROBE;
+        // ground probe, reaching as far as the steepest walkable slope drops over the distance moved
+        const slope = this.maxSlope * math.DEG_TO_RAD;
+        const probe = 2 * this.skin + GROUND_PROBE + Math.hypot(position.x - x, position.z - z) * Math.tan(slope);
         to.set(position.x, position.y - probe, position.z);
         const ground = this._system.sweep(shape, position, to, options);
-        this._grounded = !!ground && ground.normal.y >= Math.cos(this.maxSlope * math.DEG_TO_RAD);
-        if (this._grounded && velocity.y < 0) {
+        this._grounded = !!ground && ground.normal.y >= Math.cos(slope);
+
+        // on the ground unless rising from a jump: stop vertical motion and snap down to skin above
+        // the ground, so landing and walking downhill keep contact
+        if (this._grounded && !(this._jumping && velocity.y > 0)) {
             velocity.y = 0;
             this._jumping = false;
-
-            // snap down to skin above the ground, so landing does not stop short by up to the probe
             position.y -= Math.max(0, ground.hitFraction * probe - this.skin);
         }
         this._prevJump = pressed;

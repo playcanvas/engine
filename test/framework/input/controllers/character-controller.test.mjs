@@ -50,11 +50,13 @@ describe('CharacterController', function () {
     /**
      * @param {Vec3} position - The box centre.
      * @param {Vec3} halfExtents - The box half extents.
+     * @param {number} [tilt] - The rotation about X in degrees.
      * @returns {Entity} The static box.
      */
-    const createBox = (position, halfExtents) => {
+    const createBox = (position, halfExtents, tilt = 0) => {
         const box = new Entity('box');
         box.setPosition(position);
+        box.setEulerAngles(tilt, 0, 0);
         app.root.addChild(box);
         box.addComponent('rigidbody', { type: 'static' });
         box.addComponent('collision', { type: 'box', halfExtents });
@@ -62,11 +64,12 @@ describe('CharacterController', function () {
     };
 
     /**
-     * @returns {CharacterController} A controller on a kinematic capsule at (0, 1, 0).
+     * @param {Vec3} [position] - The capsule centre.
+     * @returns {CharacterController} A controller on a kinematic capsule.
      */
-    const createCharacter = () => {
+    const createCharacter = (position = new Vec3(0, 1, 0)) => {
         const entity = new Entity('character');
-        entity.setPosition(0, 1, 0);
+        entity.setPosition(position);
         app.root.addChild(entity);
         entity.addComponent('rigidbody', { type: 'kinematic', group: CHARACTER_GROUP });
         entity.addComponent('collision', { type: 'capsule', radius: 0.5, height: 2 });
@@ -139,10 +142,18 @@ describe('CharacterController', function () {
 
         it('does not tunnel through a wall on a 1 s snapshot', function () {
             addWall();
-            controller.state = { ...controller.state, velocity: [0, 0, -50] };
+            controller.state = { ...controller.state, velocity: [0, 0, -500] };
             controller.step(snap({}, 1));
             expect(controller.state.position[2]).to.be.at.least(-1.52);
             expect(controller.state.position[2]).to.be.lessThan(-1.4);
+        });
+
+        it('is not blocked by its own body while the world steps', function () {
+            for (let i = 0; i < 60; i++) {
+                controller.step(snap({ move: [0, 1] }));
+                app.systems.rigidbody.step(1 / 60);
+            }
+            expect(controller.state.position[2]).to.be.lessThan(-2);
         });
 
         it('jumps once per press', function () {
@@ -234,6 +245,55 @@ describe('CharacterController', function () {
             const state = controller.state;
             state.position[1] = 100;
             expect(controller.state.position[1]).to.equal(1);
+        });
+
+        it('moves the entity when state is set', function () {
+            controller.state = { ...controller.state, position: [2, 3, 4] };
+            const p = controller.entity.getPosition();
+            expect([p.x, p.y, p.z]).to.deep.equal([2, 3, 4]);
+        });
+
+        describe('on a 30 degree slope', function () {
+
+            beforeEach(function () {
+                controller.entity.destroy();
+                // high enough above the floor that the slope never meets it
+                const centre = new Vec3(0, 20, 0);
+                createBox(centre, new Vec3(30, 0.5, 30), 30);
+
+                // resting on the slope: the lower cap centre one radius plus half the skin off it
+                const n = new Vec3(0, Math.cos(Math.PI / 6), Math.sin(Math.PI / 6));
+                controller = createCharacter(n.mulScalar(1.005).add(centre).add(new Vec3(0, 0.5, 0)));
+            });
+
+            it('stands still on a walkable slope', function () {
+                const [x, , z] = controller.state.position;
+                for (let i = 0; i < 60; i++) {
+                    controller.step(snap({}));
+                    if (i > 0) {
+                        expect(controller.state.grounded, `step ${i}`).to.equal(true);
+                    }
+                }
+                const { position, grounded } = controller.state;
+                expect(Math.hypot(position[0] - x, position[2] - z)).to.be.lessThan(0.01);
+                expect(grounded).to.equal(true);
+            });
+
+            it('stays grounded sprinting downhill', function () {
+                let landed = false;
+                for (let i = 0; i < 60; i++) {
+                    controller.step(snap({ move: [0, 1], look: [0, 180], sprint: true }));
+                    if (landed) {
+                        expect(controller.state.grounded, `step ${i}`).to.equal(true);
+                    }
+                    landed ||= controller.state.grounded;
+                }
+                expect(landed).to.equal(true);
+
+                // well down the slope, +z being downhill
+                expect(controller.state.position[2]).to.be.greaterThan(4);
+            });
+
         });
 
         it('places the display pose at the eye without smoothing', function () {
