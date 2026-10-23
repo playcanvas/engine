@@ -4,18 +4,24 @@ import sinon from 'sinon';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import {
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT,
-    GSPLAT_RENDERER_STEADY, PROJECTION_ORTHOGRAPHIC
+    GSPLAT_RENDERER_STEADY, PROJECTION_ORTHOGRAPHIC, LAYERID_WORLD, LAYERID_UI, GAMMA_NONE, GAMMA_SRGB, TONEMAP_NONE
 } from '../../../src/scene/constants.js';
 import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
 import { GSplatDirector } from '../../../src/scene/gsplat-unified/gsplat-director.js';
+import { GSplatIntervalCompaction } from '../../../src/scene/gsplat-unified/gsplat-interval-compaction.js';
 import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
+import { GSplatSteadyCompaction } from '../../../src/scene/gsplat-unified/gsplat-steady-compaction.js';
 import { GSplatSteadyRenderer } from '../../../src/scene/gsplat-unified/gsplat-steady-renderer.js';
+import { GSplatSteadyView } from '../../../src/scene/gsplat-unified/gsplat-steady-view.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
+import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -42,7 +48,7 @@ describe('GSplat SteadySplats settings', function () {
         expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_GPU_SORT);
     });
 
-    it('resolves the new mode on WebGPU and preserves the sorted WebGL fallback', function () {
+    it('resolves the new mode on WebGPU and preserves the fallback on unsupported devices', function () {
         params.renderer = GSPLAT_RENDERER_STEADY;
         expect(params.renderer).to.equal(GSPLAT_RENDERER_STEADY);
         expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_CPU_SORT);
@@ -52,12 +58,35 @@ describe('GSplat SteadySplats settings', function () {
         expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_STEADY);
     });
 
+    it('enables SteadySplats on WebGL2 with float targets and four history attachments', function () {
+        device.isWebGL2 = true;
+        device.maxColorAttachments = 4;
+        params.renderer = GSPLAT_RENDERER_STEADY;
+        expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_STEADY);
+        params.renderer = GSPLAT_RENDERER_RASTER_GPU_SORT;
+        expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_CPU_SORT);
+    });
+
+    it('uses sorted rendering when WebGL2 cannot allocate the required targets', function () {
+        device.isWebGL2 = true;
+        device.textureFloatRenderable = false;
+        params.renderer = GSPLAT_RENDERER_STEADY;
+        expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_CPU_SORT);
+        device.textureFloatRenderable = true;
+        device.maxColorAttachments = 3;
+        params.renderer = GSPLAT_RENDERER_AUTO;
+        params.renderer = GSPLAT_RENDERER_STEADY;
+        expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_CPU_SORT);
+    });
+
     it('invalidates history without changing sampling or renderer settings', function () {
         const version = params.historyVersion;
         params.resetHistory();
         params.resetHistory();
         expect(params.historyVersion).to.equal(version + 2);
         expect(params.steadyHistoryWeight).to.equal(0.7);
+        expect(params.steadyConvergence).to.equal(true);
+        expect(params.steadyConvergenceFrames).to.equal(16);
         expect(params.stochastic).to.equal(false);
         expect(params.renderer).to.equal(GSPLAT_RENDERER_AUTO);
     });
@@ -80,7 +109,7 @@ describe('GSplat SteadySplats view admission', function () {
         renderer = Object.create(GSplatSteadyRenderer.prototype);
         renderer._material = new ShaderMaterial();
         renderer._forwardRenderer = app.renderer;
-        renderer._coverageSupported = true;
+        renderer._steadyView = new GSplatSteadyView(SHADERLANGUAGE_WGSL, app.renderer, []);
         params = { cameraNode: camera, material, varyings: { words: 0 }, fisheye: 0 };
     });
 
@@ -106,6 +135,21 @@ describe('GSplat SteadySplats view admission', function () {
         expect(renderer.supportsView(params)).to.equal(false);
     });
 
+    [SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL].forEach((shaderLanguage) => {
+        it(`supports off-axis perspective and rejects oblique depth on ${shaderLanguage}`, function () {
+            const view = new GSplatSteadyView(shaderLanguage, app.renderer, []);
+            const projection = camera.camera.camera.projectionMatrix.data;
+            projection[8] = 0.2;
+            projection[9] = -0.3;
+            expect(view.supports(params)).to.equal(true);
+            for (const index of [2, 6, 3, 7]) {
+                projection[index] = 0.1;
+                expect(view.supports(params)).to.equal(false);
+                projection[index] = 0;
+            }
+        });
+    });
+
     it('never evaluates a Gaussian PDF for custom fragment coverage', function () {
         material.getShaderChunks(SHADERLANGUAGE_WGSL).set('gsplatModifyPS', 'fn modifySplatColor() {}');
         expect(renderer.supportsView(params)).to.equal(false);
@@ -125,7 +169,7 @@ describe('GSplat SteadySplats view admission', function () {
         params.varyings.words = 1;
         expect(renderer.supportsView(params)).to.equal(false);
         params.varyings.words = 0;
-        renderer._material.setDefine('GSPLAT_OVERDRAW', true);
+        params.overdraw = true;
         expect(renderer.supportsView(params)).to.equal(false);
     });
 
@@ -140,18 +184,23 @@ describe('GSplat SteadySplats view admission', function () {
 
     it('collects dependencies only for the matching camera and active managers', function () {
         const passA = {}, passB = {};
+        const forwardPass = {};
+        const prepare = sinon.stub().returns(true);
         const director = new GSplatDirector(null, null, null, null, null);
         director.camerasMap.set(camera.camera.camera, {
             layersMap: new Map([
-                [1, { gsplatManager: { renderer: { renderPasses: [passA, passB] } } }],
-                [2, { gsplatManager: { renderer: { renderPasses: null } } }],
-                [3, { gsplatManager: null }]
+                [1, { gsplatManager: { prepareRenderPass: prepare, renderer: { renderPasses: [passA, passB] } } }],
+                [2, { gsplatManager: { prepareRenderPass: () => true, renderer: { renderPasses: null } } }],
+                [3, { gsplatManager: { prepareRenderPass: () => false, renderer: { renderPasses: [{}] } } }],
+                [4, { gsplatManager: null }]
             ])
         });
         const passes = [];
-        director.collectRenderPasses({}, passes);
+        director.collectRenderPasses({}, passes, forwardPass);
         expect(passes).to.deep.equal([]);
-        director.collectRenderPasses(camera.camera.camera, passes);
+        expect(prepare.called).to.equal(false);
+        director.collectRenderPasses(camera.camera.camera, passes, forwardPass);
+        expect(prepare.calledOnceWithExactly(forwardPass)).to.equal(true);
         expect(passes).to.deep.equal([passA, passB]);
     });
 });
@@ -224,10 +273,25 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
         const renderer = getRenderer();
         expect(renderer).to.be.instanceOf(GSplatSteadyRenderer);
         expect(renderer.gpuSorter).to.equal(null);
+        expect(renderer.intervalCompaction).to.equal(null);
+        expect(renderer._steadyCompaction).to.be.instanceOf(GSplatSteadyCompaction);
         expect(renderer.steadyPass.frame).to.equal(1);
         expect(renderer.steadyPass.valid).to.equal(true);
         renderFrame();
         expect(renderer.steadyPass.frame).to.equal(2);
+    });
+
+    it('keeps SteadySplats projection independent of sorted preparation', function () {
+        renderFrame();
+        const renderer = getRenderer();
+        const sortedPreparation = sinon.spy(renderer, 'sortAndProjectForCamera');
+        const projection = sinon.spy(renderer.projector, 'dispatch');
+        renderer._projectionValid = false;
+        renderFrame();
+        expect(projection.calledOnce).to.equal(true);
+        expect(sortedPreparation.called).to.equal(false);
+        expect(renderer.intervalCompaction).to.equal(null);
+        expect(renderer.gpuSorter).to.equal(null);
     });
 
     it('invalidates histories on explicit reset, resize and device recovery', function () {
@@ -248,27 +312,65 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
     it('uses sorted fallback for custom coverage and restores resampling afterwards', function () {
         renderFrame();
         const renderer = getRenderer();
+        const steadyCompaction = renderer._steadyCompaction;
         const chunks = app.scene.gsplat.material.getShaderChunks(SHADERLANGUAGE_WGSL);
         chunks.set('gsplatModifyPS', 'fn modifySplatColor(uv: vec2f, color: ptr<function, vec4f>) {}');
         app.scene.gsplat.material.update();
         renderFrame();
         expect(renderer.renderPasses).to.equal(null);
         expect(renderer.gpuSorter).to.not.equal(null);
+        expect(renderer.intervalCompaction.constructor).to.equal(GSplatIntervalCompaction);
+        expect(renderer.intervalCompaction).to.not.equal(steadyCompaction);
+        const sortedCompaction = renderer.intervalCompaction;
         chunks.delete('gsplatModifyPS');
         app.scene.gsplat.material.update();
         renderFrame();
         expect(renderer.renderPasses).to.not.equal(null);
+        expect(renderer._steadyCompaction).to.equal(steadyCompaction);
+        expect(renderer.intervalCompaction).to.equal(sortedCompaction);
+        renderer.invalidateCullUpload();
+        expect(steadyCompaction._uploadedVersion).to.equal(-1);
+        expect(sortedCompaction._uploadedVersion).to.equal(-1);
+        renderFrame();
+        expect(steadyCompaction._uploadedVersion).to.not.equal(-1);
+        expect(sortedCompaction._uploadedVersion).to.equal(-1);
+    });
+
+    it('switches overdraw visualization to sorted rendering in the frame it is enabled', function () {
+        renderFrame();
+        const renderer = getRenderer();
+        const frame = renderer.steadyPass.frame;
+        const ramp = new Texture(app.graphicsDevice, { width: 2, height: 1, mipmaps: false });
+        ramp.lock().fill(255);
+        ramp.unlock();
+        try {
+            app.scene.gsplat.colorRamp = ramp;
+            renderFrame();
+            expect(renderer.renderPasses).to.equal(null);
+            expect(renderer.gpuSorter).to.not.equal(null);
+            expect(renderer.steadyPass.frame).to.equal(frame);
+            app.scene.gsplat.colorRamp = null;
+            renderFrame();
+            expect(renderer.renderPasses).to.not.equal(null);
+            expect(renderer.steadyPass.frame).to.equal(frame + 1);
+        } finally {
+            app.scene.gsplat.colorRamp = null;
+            ramp.destroy();
+        }
     });
 
     it('releases frame resources when switching back to automatic rendering', function () {
         renderFrame();
         const renderer = getRenderer();
         const pass = renderer.steadyPass;
+        const compaction = renderer._steadyCompaction;
         app.scene.gsplat.renderer = GSPLAT_RENDERER_AUTO;
         renderFrame();
         expect(renderer.steadyPass).to.equal(null);
         expect(pass.textures).to.have.length(0);
         expect(pass.historyBuffers).to.have.length(0);
+        expect(renderer._steadyCompaction).to.equal(null);
+        expect(compaction.intervalsBuffer).to.equal(null);
     });
 
     it('produces visible samples and a finite resampled image on an executing GPU', async function () {
@@ -290,7 +392,7 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
         const ids = async () => {
             const pass = getRenderer().steadyPass;
             const samples = await pass.samples.read(0, 0, pass.width, pass.height, { immediate: true });
-            return Array.from(samples).filter((value, index) => index % 4 === 1);
+            return Array.from(samples).filter((value, index) => index % 2 === 0);
         };
         renderFrame();
         const renderer = getRenderer();
@@ -321,7 +423,7 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
         const material = renderer.sampleMaterial;
         const original = material.shaderDesc;
         // Restore the full quad independently of the optimized corner calculation, retaining
-        // the same projected data, output processing and per-splat sampling seed.
+        // the same projected data, output processing and STBN thresholds.
         const reference = {
             ...original,
             uniqueName: 'GSplatSteadyUnclipped',
@@ -349,16 +451,13 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
                 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
                     var output: FragmentOutput;
                     let p = vec2u(input.position.xy);
-                    let pixel = p.x + p.y * u32(uniform.steadySize.x);
-                    let key = steadySeed ^ steadyHash(pixel);
-                    let threshold = f32(steadyHash(key) >> 8u) * (1.0 / 16777216.0);
+                    let threshold = steadyThreshold(p);
                     let alpha = steadyAlphaFromUV(steadyOpacity, steadyUV);
                     if (alpha <= threshold) {
                         discard;
                     }
                     output.color = vec4f(steadyColor, 1.0);
-                    output.color1 = vec4u(steadyIndex + 1u, steadyId,
-                        bitcast<u32>(steadyDepth), bitcast<u32>(input.position.z));
+                    output.color1 = vec4u(steadyIndex + 1u, bitcast<u32>(steadyDepth), 0u, 0u);
                     return output;
                 }
             `
@@ -368,18 +467,18 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
             material.update();
         };
         const sample = async (desc, frame) => {
-            // Capture the acceptance values in the two depth channels for boundary diagnostics.
+            // Capture distance to either acceptance boundary in the linear depth channel.
             setSampleShader({
                 ...desc,
                 uniqueName: `${desc.uniqueName}Coverage`,
-                fragmentWGSL: desc.fragmentWGSL.replace('bitcast<u32>(steadyDepth)', 'bitcast<u32>(alpha)')
-                .replace('bitcast<u32>(input.position.z)', 'bitcast<u32>(threshold)')
+                fragmentWGSL: desc.fragmentWGSL.replace('bitcast<u32>(steadyDepth)',
+                    'bitcast<u32>(min(abs(alpha - uniform.alphaClipForward), abs(alpha - threshold)))')
             });
             renderer.steadyPass.frame = frame;
             renderFrame();
             const pass = renderer.steadyPass;
             const pixels = await pass.samples.read(0, 0, pass.width, pass.height, { immediate: true });
-            return { ids: Array.from(pixels).filter((value, index) => index % 4 === 1),
+            return { ids: Array.from(pixels).filter((value, index) => index % 2 === 0),
                 values: new Float32Array(pixels.buffer) };
         };
         try {
@@ -397,14 +496,13 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
                 // precision. Permit only rare decisions within 1e-4 of an acceptance boundary.
                 expect(changed.length).to.be.at.most(clipped.ids.length / 1000);
                 const nearBoundary = (capture, pixel) => {
-                    const alpha = capture.values[pixel * 4 + 2];
-                    const threshold = capture.values[pixel * 4 + 3];
-                    return capture.ids[pixel] > 0 &&
-                        Math.min(Math.abs(alpha - cutoff), Math.abs(alpha - threshold)) < 1e-4;
+                    return capture.ids[pixel] > 0 && capture.values[pixel * 2 + 1] < 1e-4;
                 };
                 for (const pixel of changed) {
                     expect(nearBoundary(clipped, pixel) || nearBoundary(unclipped, pixel),
-                        `cutoff ${cutoff}, frame ${frame}, pixel ${pixel}`).to.equal(true);
+                        `cutoff ${cutoff}, frame ${frame}, pixel ${pixel}, ` +
+                        `clipped ${clipped.ids[pixel]}:${clipped.values[pixel * 2 + 1]}, ` +
+                        `full ${unclipped.ids[pixel]}:${unclipped.values[pixel * 2 + 1]}`).to.equal(true);
                 }
                 if (cutoff < 0.49) expect(unclipped.ids.some(id => id > 0)).to.equal(true);
             }, Promise.resolve());
@@ -430,8 +528,26 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
         renderFrame();
         expect(pass.colors).to.have.length(2);
         expect(pass.resolvePass.computes[0]).to.equal(pass.temporalCompute);
+        expect(pass.temporalCompute.getParameter('steadyCameraStill')).to.equal(0);
         expect(pass.temporalCompute.getParameter('steadyValid')).to.equal(0);
         expect(pass.historyBuffers[0]).to.equal(history);
+    });
+
+    it('uses same-pixel history for an unchanged camera independently of convergence', function () {
+        app.scene.gsplat.steadyConvergence = false;
+        renderFrame();
+        const pass = getRenderer().steadyPass;
+        expect(pass.temporalCompute.getParameter('steadyCameraStill')).to.equal(0);
+        renderFrame();
+        expect(pass.temporalCompute.getParameter('steadyCameraStill')).to.equal(1);
+        camera.setPosition(0.01, 0, 3);
+        renderFrame();
+        expect(pass.temporalCompute.getParameter('steadyCameraStill')).to.equal(0);
+        renderFrame();
+        expect(pass.temporalCompute.getParameter('steadyCameraStill')).to.equal(1);
+        app.scene.gsplat.resetHistory();
+        renderFrame();
+        expect(pass.temporalCompute.getParameter('steadyCameraStill')).to.equal(0);
     });
 
     it('keeps histories independent for two cameras sharing the same splat layer', function () {
@@ -448,19 +564,27 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
         expect(secondRenderer.steadyPass.frame).to.equal(1);
         expect(firstRenderer.steadyPass.colors[0]).to.not.equal(secondRenderer.steadyPass.colors[0]);
         expect(firstRenderer.steadyPass.historyBuffers[0]).to.not.equal(secondRenderer.steadyPass.historyBuffers[0]);
+        expect(firstRenderer.sampleMaterial.getParameter('steadyNoise').data)
+        .to.equal(secondRenderer.sampleMaterial.getParameter('steadyNoise').data);
     });
 
     it('retains sorted picking and restores the forward projection on the next frame', function () {
         renderFrame();
         const renderer = getRenderer();
+        const steadyCompaction = renderer._steadyCompaction;
         const data = app.renderer.gsplatDirector.camerasMap.get(camera.camera.camera);
         const manager = Array.from(data.layersMap.values())[0].gsplatManager;
         const mesh = manager.prepareForPicking(camera.camera.camera, 96, 64);
         expect(mesh).to.not.equal(null);
         expect(renderer.gpuSorter).to.not.equal(null);
+        expect(renderer.intervalCompaction.constructor).to.equal(GSplatIntervalCompaction);
+        expect(renderer.intervalCompaction).to.not.equal(steadyCompaction);
+        const sortedCompaction = renderer.intervalCompaction;
         renderFrame();
         expect(renderer.steadyPass.frame).to.equal(2);
         expect(renderer.renderPasses).to.not.equal(null);
+        expect(renderer.intervalCompaction).to.equal(sortedCompaction);
+        expect(renderer._steadyCompaction).to.equal(steadyCompaction);
     });
 
     it('schedules resampling with CameraFrame, HDR and a scaled scene target', function () {
@@ -470,10 +594,223 @@ describe('GSplat SteadySplats WebGPU rendering', function () {
             frame.update();
             renderFrame();
             expect(getRenderer().steadyPass.frame).to.equal(1);
+            expect(getRenderer().steadyPass.width).to.equal(48);
+            expect(getRenderer().steadyPass.height).to.equal(32);
+            const target = getRenderer().steadyPass.target;
             renderFrame();
             expect(getRenderer().steadyPass.frame).to.equal(2);
+            expect(getRenderer().steadyPass.target).to.equal(target);
         } finally {
             frame.destroy();
         }
+    });
+
+    it('uses the target and color settings of the pass drawing the splat sublayer', function () {
+        const device = app.graphicsDevice;
+        const composition = app.scene.layers;
+        const world = composition.getLayerById(LAYERID_WORLD);
+        const target = new RenderTarget({
+            colorBuffer: new Texture(device, {
+                width: 40,
+                height: 28,
+                format: PIXELFORMAT_RGBA16F,
+                mipmaps: false
+            }),
+            depth: true
+        });
+        const early = new RenderPassForward(device, composition, app.scene, app.renderer, camera.camera);
+        early.init(null);
+        early.gammaCorrection = GAMMA_SRGB;
+        early.addLayer(composition.getLayerById(LAYERID_UI), true);
+        early.addLayer(world, false);
+        const late = new RenderPassForward(device, composition, app.scene, app.renderer, camera.camera);
+        late.init(target);
+        late.gammaCorrection = GAMMA_NONE;
+        late.toneMapping = TONEMAP_NONE;
+        late.addLayer(world, true);
+        camera.camera.framePasses = [early, late];
+        try {
+            renderFrame();
+            const pass = getRenderer().steadyPass;
+            expect(pass.width).to.equal(40);
+            expect(pass.height).to.equal(28);
+            expect(pass.samplePass.gammaCorrection).to.equal(GAMMA_NONE);
+            expect(pass.samplePass.toneMapping).to.equal(TONEMAP_NONE);
+            expect(pass.frame).to.equal(1);
+            expect(early.internalBeforePasses).to.not.include(pass);
+            expect(late.internalBeforePasses).to.include(pass);
+            renderFrame();
+            expect(pass.frame).to.equal(2);
+        } finally {
+            camera.camera.framePasses = [];
+            early.destroy();
+            late.destroy();
+            target.destroyTextureBuffers();
+            target.destroy();
+        }
+    });
+
+    it('restarts stationary convergence on motion and history invalidation', function () {
+        camera.camera.jitter = 1;
+        renderFrame();
+        const pass = getRenderer().steadyPass;
+        expect(pass.restFrames).to.equal(0);
+        renderFrame();
+        expect(pass.restFrames).to.equal(1);
+        renderFrame();
+        expect(pass.restFrames).to.equal(2);
+        const buffer = pass.convergenceBuffers[0];
+        expect(buffer.byteSize).to.equal(pass.width * pass.height * 16);
+        expect(pass.resolvePass.computes).to.equal(pass.convergenceComputes);
+        camera.setPosition(0.01, 0, 3);
+        renderFrame();
+        expect(pass.restFrames).to.equal(0);
+        expect(pass.resolvePass.computes[0].getParameter('steadyValid')).to.equal(1);
+        renderFrame();
+        expect(pass.restFrames).to.equal(1);
+        app.scene.gsplat.resetHistory();
+        renderFrame();
+        expect(pass.restFrames).to.equal(0);
+        expect(pass.resolvePass.computes[0].getParameter('steadyValid')).to.equal(0);
+        expect(pass.convergenceBuffers[0]).to.equal(buffer);
+        renderFrame();
+        expect(pass.restFrames).to.equal(1);
+        app.graphicsDevice.resizeCanvas(80, 56);
+        renderFrame();
+        expect(pass.restFrames).to.equal(0);
+        expect(pass.convergenceBuffers[0]).to.not.equal(buffer);
+        expect(pass.convergenceBuffers[0].byteSize).to.equal(80 * 56 * 16);
+        app.graphicsDevice.fire('devicelost');
+        expect(pass.restFrames).to.equal(0);
+    });
+
+    it('releases the stationary average for fixed samples, disabled convergence or zero retention', function () {
+        renderFrame();
+        const pass = getRenderer().steadyPass;
+        expect(pass.convergenceBuffers).to.have.length(0);
+        camera.camera.jitter = 1;
+        renderFrame();
+        expect(pass.convergenceBuffers).to.have.length(1);
+        renderFrame();
+        expect(pass.restFrames).to.equal(1);
+        app.scene.gsplat.steadyConvergence = false;
+        renderFrame();
+        expect(pass.convergenceBuffers).to.have.length(0);
+        expect(pass.restFrames).to.equal(0);
+        expect(pass.resolvePass.computes[0]).to.equal(pass.temporalCompute);
+        app.scene.gsplat.steadyConvergence = true;
+        renderFrame();
+        expect(pass.convergenceBuffers).to.have.length(1);
+        app.scene.gsplat.steadyHistoryWeight = 0;
+        renderFrame();
+        expect(pass.convergenceBuffers).to.have.length(0);
+        expect(pass.resolvePass.computes[0]).to.equal(pass.spatialCompute);
+        app.scene.gsplat.steadyHistoryWeight = 0.7;
+        renderFrame();
+        expect(pass.convergenceBuffers).to.have.length(1);
+        camera.camera.jitter = 0;
+        renderFrame();
+        expect(pass.convergenceBuffers).to.have.length(0);
+    });
+
+    it('freezes the last image at its refinement limit and resumes on motion or a larger budget', function () {
+        camera.camera.jitter = 1;
+        renderFrame();
+        const renderer = getRenderer();
+        const pass = renderer.steadyPass;
+        const project = sinon.spy(renderer.projector, 'dispatch');
+        for (let i = 0; i < 16; i++) renderFrame();
+        expect(pass.restFrames).to.equal(16);
+        expect(project.callCount).to.equal(0);
+        const frame = pass.frame;
+        const image = renderer.resolveMaterial.getParameter('steadyImage').data;
+        const sample = sinon.spy(pass.samplePass, 'execute');
+        const drawArgs = sinon.spy(renderer.projector, 'writeIndirectArgs');
+        renderFrame();
+        renderFrame();
+        expect(pass.frame).to.equal(frame);
+        expect(sample.called).to.equal(false);
+        expect(drawArgs.called).to.equal(false);
+        expect(renderer.resolveMaterial.getParameter('steadyImage').data).to.equal(image);
+        app.scene.gsplat.steadyConvergenceFrames = 18;
+        renderFrame();
+        expect(pass.restFrames).to.equal(17);
+        expect(pass.frame).to.equal(frame + 1);
+        expect(project.called).to.equal(false);
+        camera.setPosition(0.01, 0, 3);
+        renderFrame();
+        expect(pass.restFrames).to.equal(0);
+        expect(project.callCount).to.equal(1);
+    });
+
+    it('matches fresh projection samples while reusing a stationary camera cache', async function () {
+        if (!process.env.PC_WEBGPU_BACKEND || process.env.PC_WEBGPU_BACKEND === 'null') this.skip();
+        camera.camera.jitter = 1;
+        app.scene.gsplat.steadyConvergence = false;
+        renderFrame();
+        const renderer = getRenderer();
+        const pass = renderer.steadyPass;
+        const capture = async (cached) => {
+            if (!cached) renderer._projectionValid = false;
+            pass.frame = 37;
+            renderFrame();
+            const pixels = await pass.samples.read(0, 0, pass.width, pass.height, { immediate: true });
+            // Cache-local indices can change during compaction; visibility identity must agree.
+            return Array.from(pixels).filter((value, index) => index % 4 === 1);
+        };
+        const first = await capture(false);
+        expect(await capture(true)).to.deep.equal(first);
+        expect(await capture(false)).to.deep.equal(first);
+        const data = app.renderer.gsplatDirector.camerasMap.get(camera.camera.camera);
+        const manager = Array.from(data.layersMap.values())[0].gsplatManager;
+        expect(manager.prepareForPicking(camera.camera.camera, 48, 48)).to.not.equal(null);
+        const project = sinon.spy(renderer.projector, 'dispatch');
+        expect(await capture(true)).to.deep.equal(first);
+        expect(project.callCount).to.equal(1);
+    });
+
+    it('requests finite refinement frames for an on-demand application and restarts after camera motion', function () {
+        camera.camera.jitter = 1;
+        app.autoRender = false;
+        app.scene.gsplat.steadyConvergenceFrames = 3;
+        let requested = 0;
+        const request = () => {
+            requested++;
+            app.renderNextFrame = true;
+        };
+        app.systems.gsplat.on('frame:request', request);
+        renderFrame();
+        const pass = getRenderer().steadyPass;
+        requested = 0;
+        const tick = () => {
+            app.renderNextFrame = false;
+            app.fire('framerender');
+            if (app.renderNextFrame) app.render();
+        };
+        for (let i = 0; i < 20; i++) tick();
+        expect(pass.restFrames).to.equal(3);
+        expect(pass.frame).to.equal(4);
+        expect(requested).to.equal(3);
+        camera.setPosition(0.01, 0, 3);
+        for (let i = 0; i < 20; i++) tick();
+        expect(pass.frame).to.equal(8);
+        expect(requested).to.equal(7);
+        camera.enabled = false;
+        app.scene.gsplat.resetHistory();
+        tick();
+        expect(requested).to.equal(7);
+    });
+
+    it('shifts STBN with fixed-point arithmetic between 64-frame cycles', function () {
+        camera.camera.jitter = 1;
+        app.scene.gsplat.steadyConvergence = false;
+        renderFrame();
+        const renderer = getRenderer();
+        const pass = renderer.steadyPass;
+        pass.frame = 63;
+        renderFrame();
+        expect(renderer.sampleMaterial.getParameter('steadyNoiseShift').data).to.equal(0);
+        renderFrame();
+        expect(renderer.sampleMaterial.getParameter('steadyNoiseShift').data).to.equal(0x9e3779b9);
     });
 });

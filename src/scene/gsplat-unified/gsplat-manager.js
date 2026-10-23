@@ -6,6 +6,7 @@ import { GSplatWorld } from './gsplat-world.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
 import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js';
 import { GSplatSteadyRenderer } from './gsplat-steady-renderer.js';
+import { GSplatSteadyWebglRenderer } from './gsplat-steady-webgl-renderer.js';
 import { GSplatHybridRendererScratch } from './gsplat-hybrid-renderer-scratch.js';
 import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js';
 import { Debug } from '../../core/debug.js';
@@ -30,6 +31,9 @@ import { getLodDebugColors, lodDebugColorIndex } from './gsplat-lod-colors.js';
  * @import { GSplatRenderer } from './gsplat-renderer.js'
  * @import { GSplatRenderViewParams } from './gsplat-renderer.js'
  * @import { GSplatParams } from './gsplat-params.js'
+ * @import { RenderPassForward } from '../renderer/render-pass-forward.js'
+ * @import { ForwardRenderer } from '../renderer/forward-renderer.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
  */
 
 const cameraPosition = new Vec3();
@@ -176,6 +180,13 @@ class GSplatManager {
     _lastStreamToken = -1;
 
     /**
+     * Render version in which this manager's forward dependencies were scheduled.
+     *
+     * @private
+     */
+    _preparedRenderVersion = -1;
+
+    /**
      * Whether the most recent streaming pass produced new data a render would show (new world-state
      * version or work-buffer recreation). Used by the director to decide whether to fire frame:request.
      *
@@ -300,6 +311,7 @@ class GSplatManager {
 
         // Switch renderer to CPU-sorted mode (also hides until update() restores visibility)
         this.renderer.setCpuSortedRendering();
+        this.sortNeeded = true;
     }
 
     get material() {
@@ -335,6 +347,15 @@ class GSplatManager {
     }
 
     /**
+     * Whether another rendered frame would advance this view's progressive reconstruction.
+     *
+     * @type {boolean}
+     */
+    get hasPendingRefinement() {
+        return this.renderer.needsRender;
+    }
+
+    /**
      * Dispatches a renderer-specific pick pipeline and returns the configured pick mesh instance.
      * The hybrid renderer refreshes its shared projector/sort buffers for the picker camera and
      * returns a transient pick mesh.
@@ -342,13 +363,42 @@ class GSplatManager {
      * @param {object} camera - The camera.
      * @param {number} width - Pick target width.
      * @param {number} height - Pick target height.
-     * @returns {import('../mesh-instance.js').MeshInstance|null} The pick mesh instance, or null.
+     * @returns {MeshInstance|null} The pick mesh instance, or null.
      */
     prepareForPicking(camera, width, height) {
-        if (!this.renderer.usesGpuSort || !camera.node) return null;
+        if (!camera.node) return null;
         const sortedState = this.world.getState(this.world.currentVersion);
         if (!sortedState?.sortedBefore) return null;
         return this.renderer.preparePickingView(this.world, sortedState, this._fillPickParams(camera, width, height));
+    }
+
+    /**
+     * @param {RenderPassForward} pass - Forward pass.
+     * @returns {boolean} Whether this pass is the first to draw the manager's forward mesh.
+     */
+    prepareRenderPass(pass) {
+        if (this._preparedRenderVersion === this.device.renderVersion || !(this.renderMode & GSPLAT_FORWARD)) return false;
+        const renderer = this.renderer;
+        if (!renderer.deferForwardPreparation && !renderer.renderPasses) return false;
+        const steps = pass.layerRenderSteps;
+        const transparent = renderer.material.transparent;
+        let drawsSplats = false;
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            if (step.layer === this.layer && step.transparent === transparent &&
+                pass.layerComposition.isEnabled(step.layer, step.transparent)) {
+                drawsSplats = true;
+                break;
+            }
+        }
+        if (!drawsSplats) return false;
+        const state = this.world.currentState;
+        if (!state) return false;
+        if (renderer.deferForwardPreparation) {
+            renderer.prepareRenderView(this.world, state, this._fillRenderViewParams(pass));
+        }
+        this._preparedRenderVersion = this.device.renderVersion;
+        return true;
     }
 
     /**
@@ -362,8 +412,11 @@ class GSplatManager {
         const gsplat = this.gsplat;
         p.radialSorting = gsplat.radialSorting;
         p.stochastic = gsplat.stochastic;
+        p.overdraw = !!gsplat.colorRamp;
         p.dither = gsplat.dither;
         p.steadyHistoryWeight = gsplat.steadyHistoryWeight;
+        p.steadyConvergence = gsplat.steadyConvergence;
+        p.steadyConvergenceFrames = gsplat.steadyConvergenceFrames;
         p.historyVersion = gsplat.historyVersion;
         p.alphaClip = gsplat.alphaClip;
         p.alphaClipForward = gsplat.alphaClipForward;
@@ -380,13 +433,19 @@ class GSplatManager {
     /**
      * Fills and returns the reused forward-view parameter bag for the manager's camera.
      *
+     * @param {RenderPassForward} [pass] - Pass providing the effective target and color settings.
      * @returns {GSplatRenderViewParams} The populated {@link _renderViewParams}.
      * @private
      */
-    _fillRenderViewParams() {
+    _fillRenderViewParams(pass) {
         const p = this._renderViewParams;
         this._writeGsplatParams(p);
         p.cameraNode = this.cameraNode;
+        const target = pass?.renderTarget;
+        p.width = pass ? (target ? target.width : this.device.width) : undefined;
+        p.height = pass ? (target ? target.height : this.device.height) : undefined;
+        p.gammaCorrection = pass?.gammaCorrection;
+        p.toneMapping = pass?.toneMapping;
         return p;
     }
 
@@ -471,7 +530,10 @@ class GSplatManager {
      */
     _createRenderer(mode) {
         const workBuffer = this.world.workBuffer;
-        if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT || mode === GSPLAT_RENDERER_STEADY) {
+        if (mode === GSPLAT_RENDERER_STEADY && !this.device.isWebGPU) {
+            this.renderer = new GSplatSteadyWebglRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer,
+                /** @type {ForwardRenderer} */ (this.director.renderer));
+        } else if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT || mode === GSPLAT_RENDERER_STEADY) {
             // The GPU-sort path shares one scratch (compaction candidate buffer) across the forward
             // renderer and the shadow cull; create it here so it exists for both constructors. Freed
             // in _syncShadowRenderer once no GPU-sort renderer remains (and in destroy()).
@@ -479,7 +541,7 @@ class GSplatManager {
             // The hybrid renderer creates its own GPU sort resources (radix sorter, projector).
             this.renderer = mode === GSPLAT_RENDERER_STEADY ?
                 new GSplatSteadyRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch,
-                    /** @type {import('../renderer/forward-renderer.js').ForwardRenderer} */ (this.director.renderer)) :
+                    /** @type {ForwardRenderer} */ (this.director.renderer)) :
                 new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch);
         } else {
             this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
@@ -553,8 +615,8 @@ class GSplatManager {
      */
     _markSortedIfNeeded(worldState) {
         if (!worldState.sortedBefore) {
-            // GPU sort always runs interval culling, so upload bounds (updateBounds = true).
-            this.world.markSorted(worldState.version, worldState.totalActiveSplats, this.cameraNode, true, this._markResult);
+            this.world.markSorted(worldState.version, worldState.totalActiveSplats, this.cameraNode,
+                this.renderer.requiresBounds, this._markResult);
             if (this._markResult.rebuilt) {
                 this.renderer.update(this._markResult.count, this._markResult.textureSize);
             }
@@ -623,6 +685,19 @@ class GSplatManager {
 
         // Check for runtime renderer mode changes and transition if needed.
         this.prepareRendererMode();
+
+        // WebGL SteadySplats can switch individual views between unsorted reconstruction and
+        // native CPU sorting. Resolve admission before world-state construction chooses centers.
+        this.renderer.prepareFrame(this._fillRenderViewParams());
+        if (this.renderer.requiresCpuSort !== !!this.cpuSorter) {
+            // Rebuild on both transitions so resources without CPU centers follow the active path.
+            this.world.invalidate({ worldState: true });
+            if (this.renderer.requiresCpuSort) {
+                this.initCpuSorting();
+            } else {
+                this.destroyCpuSorting();
+            }
+        }
 
         // GPU sorting is always ready, CPU sorting is ready if not too many jobs in flight. This is
         // the back-pressure gate the world uses to throttle LOD/world-state production.
@@ -704,12 +779,11 @@ class GSplatManager {
         // an incremental update may have detected moved splats requiring a re-sort
         if (this._bakeResult.sortNeeded) this.sortNeeded = true;
 
-        // Kick off sorting. The GPU path runs every frame (projector + radix + fresh per-frame
-        // indirect args; the post-projector visible count differs from the interval prefix sum).
-        // The CPU path posts to the worker only when a re-sort is needed. The version lifecycle
-        // (markSorted on the first sort of a version) stays here in the manager.
+        // Renderers without a CPU sorter make new world states render-ready synchronously.
+        // Their per-view work either runs here or waits for the actual forward target. The CPU
+        // path posts to the worker only when a re-sort is needed.
         if (lastState) {
-            if (this.renderer.usesGpuSort) {
+            if (!this.renderer.requiresCpuSort) {
                 this._markSortedIfNeeded(lastState);
 
                 // Only run the forward GPU pipeline (projector + radix sort) when this manager
@@ -717,7 +791,7 @@ class GSplatManager {
                 // GSPLAT_FORWARD bit) skips it: its GSplatShadowRenderer culls + draws the shadow
                 // independently, so the forward sorter/projector would be pure waste (and are never
                 // even allocated — see GSplatHybridRenderer._ensureGpuPipeline).
-                if (this.renderMode & GSPLAT_FORWARD) {
+                if ((this.renderMode & GSPLAT_FORWARD) && !this.renderer.deferForwardPreparation) {
                     this.renderer.prepareRenderView(this.world, lastState, this._fillRenderViewParams());
                 }
             } else if (this.sortNeeded) {

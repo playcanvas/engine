@@ -3,6 +3,7 @@ export default /* wgsl */`
 varying steadyUV: vec2f;
 var steadyImage: texture_2d<f32>;
 var steadySamples: texture_2d<u32>;
+uniform steadyDepthProjection: vec4f;
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -14,9 +15,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     if (color.a <= 0.0) {
         discard;
     }
-    let depth = select(1e20, bitcast<f32>(sample.z), sample.y != 0u);
+    let depth = select(1e20, bitcast<f32>(sample.y), sample.x != 0u);
+    let projection = uniform.steadyDepthProjection;
+    let deviceDepth = clamp((projection.y - projection.x * depth) / (projection.w - projection.z * depth), 0.0, 1.0);
     output.color = vec4f(max(color.rgb, vec3f(0.0)), color.a);
-    output.fragDepth = select(1.0, bitcast<f32>(sample.w), sample.y != 0u);
+    output.fragDepth = select(1.0, deviceDepth, sample.x != 0u);
     #ifdef SCENE_TEXTURE_DEPTH
         writeSceneTextureDepth(&output, depth, color.a);
     #endif

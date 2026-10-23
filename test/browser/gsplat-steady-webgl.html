@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>SteadySplats WebGL2 tests</title>
+<style>body { background: #171a20; color: #e7eaf0; font: 15px system-ui; margin: 24px; } canvas { width: 384px; height: 256px; } pre { white-space: pre-wrap; }</style>
+<h1>SteadySplats WebGL2 tests</h1>
+<pre id="result">Running on the browser's WebGL2 implementation…</pre>
+<script type="importmap">{"imports":{"fflate":"/node_modules/fflate/esm/browser.js"}}</script>
+<script type="module">
+    let result;
+    try {
+        const { runSteadyWebglTests } = await import('/test/browser/gsplat-steady-webgl.mjs');
+        result = { passed: true, ...(await runSteadyWebglTests()) };
+    } catch (error) {
+        result = { passed: false, error: error.stack ?? String(error) };
+    }
+    document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+    document.title = result.passed ? 'WebGL2 tests passed' : 'WebGL2 tests failed';
+    await fetch('/results', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(result) });
+</script>
+</html>

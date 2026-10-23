@@ -1,11 +1,22 @@
 // @config
 //
-// Compare SteadySplats importance resampling with native stochastic and sorted GSplat rendering.
-// Native stochastic uses the engine's default blue-noise dither without temporal filtering.
-// Both stochastic paths use camera.jitter to switch between fixed and animated samples.
-// SteadySplats temporal retention trades response for stability.
-// The minimal resampling path supports splat-only, full-viewport mono perspective views;
-// unsupported views and WebGL retain sorted rendering.
+// Compare SteadySplats with native stochastic and sorted rendering.
+// Orbit, then stop to watch noise settle. Toggle Converge at Rest to compare.
+//
+// @credit
+// title: SteadySplats: Resampling of Low-Variance Gaussians for High-Fidelity Stochastic Rendering
+// author: Felix Windisch et al. (2026)
+// source: https://arxiv.org/abs/2610.05576
+//
+// @credit
+// title: LichtFeld-Studio viewport resampling (PR #3728)
+// author: Yehe Liu
+// source: https://github.com/MrNeRF/LichtFeld-Studio/pull/3728
+//
+// @credit
+// title: LichtFeld-Studio color-variance training (PR #3726)
+// author: Yehe Liu
+// source: https://github.com/MrNeRF/LichtFeld-Studio/pull/3726
 
 import {
     AppBase,
@@ -33,12 +44,16 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+// Native stochastic uses blue-noise dither without temporal filtering. Both stochastic paths
+// use camera.jitter to switch between fixed and animated samples. SteadySplats uses STBN and
+// progressively averages stationary views; history weight controls the moving-camera filter.
+// Unsupported views or devices retain sorted rendering.
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 const device = await createGraphicsDevice(canvas, {
     deviceTypes: [deviceType],
     antialias: false
 });
-device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const options = new AppOptions();
 options.graphicsDevice = device;
@@ -52,9 +67,19 @@ app.init(options);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-const resize = () => app.resizeCanvas();
+// Bound reconstruction memory and sample time on high-DPI displays.
+const maxPixels = device.isWebGPU ? 2560 * 1600 : 1920 * 1200;
+const resize = () => {
+    device.maxPixelRatio = Math.min(
+        window.devicePixelRatio,
+        2,
+        Math.sqrt(maxPixels / Math.max(1, window.innerWidth * window.innerHeight))
+    );
+    app.resizeCanvas();
+};
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
+resize();
 
 const assets = {
     biker: new Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
@@ -76,11 +101,12 @@ const camera = new Entity('Camera');
 camera.addComponent('camera', { clearColor: new Color(0.08, 0.08, 0.08) });
 camera.addComponent('script');
 app.root.addChild(camera);
-const orbit = /** @type {any} */ (
-    camera.script.create('orbitCamera', {
-        attributes: { inertiaFactor: 0, distanceMax: 60, frameOnStart: false }
-    })
-);
+const orbit =
+    /** @type {import('playcanvas').ScriptType & { pivotPoint: Vec3, reset: (yaw: number, pitch: number, distance: number) => void }} */ (
+        camera.script.create('orbitCamera', {
+            attributes: { inertiaFactor: 0, distanceMax: 60, frameOnStart: false }
+        })
+    );
 orbit.pivotPoint.copy(new Vec3(0, 1.4, 0));
 orbit.reset(32, -10, 5);
 camera.script.create('orbitCameraInputMouse');
@@ -103,13 +129,19 @@ data.on('mode:set', () => {
     app.scene.gsplat.stochastic = mode === 'stochastic' && device.isWebGPU;
     app.scene.gsplat.renderer = renderers[mode];
     updateSampling();
-    // Show the resolved WebGL fallback for both WebGPU-only modes.
+    // Show the resolved device fallback when the selected renderer is unavailable.
     const current = app.scene.gsplat.currentRenderer;
     if (current !== renderers[mode]) {
         setTimeout(() => data.set('mode', 'cpu-sort'), 0);
     }
 });
 data.on('animateSamples:set', updateSampling);
+data.on('convergence:set', () => {
+    app.scene.gsplat.steadyConvergence = data.get('convergence');
+});
+data.on('refinementFrames:set', () => {
+    app.scene.gsplat.steadyConvergenceFrames = data.get('refinementFrames');
+});
 data.on('historyWeight:set', () => {
     app.scene.gsplat.steadyHistoryWeight = data.get('historyWeight');
     app.scene.gsplat.resetHistory();
@@ -117,7 +149,5 @@ data.on('historyWeight:set', () => {
 data.set('animateSamples', true);
 data.set('mode', 'steady');
 data.set('historyWeight', 0.7);
-
-// SteadySplats inference does not change model training. Four cached occluders approximate
-// proposal-density ratios; finite histories and self-normalization leave residual error.
-// See Windisch et al., https://arxiv.org/abs/2610.05576 (Eq. 9, 14, 20; Algorithms 2 and 3).
+data.set('convergence', true);
+data.set('refinementFrames', 16);

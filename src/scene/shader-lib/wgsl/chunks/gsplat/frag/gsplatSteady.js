@@ -1,11 +1,21 @@
 export default /* wgsl */`
 varying @interpolate(flat, either) steadyIndex: u32;
-varying @interpolate(flat, either) steadyId: u32;
 varying @interpolate(flat, either) steadyDepth: f32;
 varying @interpolate(flat, either) steadyColor: vec3f;
-varying @interpolate(flat, either) steadySeed: u32;
+varying @interpolate(flat, either) steadyNoiseOffset: vec2u;
+varying @interpolate(flat, either) steadyNoisePhase: u32;
 varying @interpolate(flat, either) steadyOpacity: f32;
 varying steadyUV: vec2f;
+uniform steadyFrame: u32;
+uniform steadyNoiseShift: u32;
+var steadyNoise: texture_3d<f32>;
+
+fn steadyThreshold(pixel: vec2u) -> f32 {
+    let coord = vec3i(vec2i((pixel + steadyNoiseOffset) & vec2u(31u)), i32(uniform.steadyFrame & 63u));
+    // Rotate in fixed point before converting to float, avoiding R8 threshold quantization.
+    let rank = u32(textureLoad(steadyNoise, coord, 0).r * 255.0 + 0.5);
+    return steadyNoiseThreshold(rank, steadyNoisePhase, uniform.steadyNoiseShift);
+}
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -20,15 +30,14 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         return output;
     }
     let p = vec2u(input.position.xy);
-    let pixel = p.x + p.y * u32(uniform.steadySize.x);
-    let key = steadySeed ^ steadyHash(pixel);
-    let threshold = f32(steadyHash(key) >> 8u) * (1.0 / 16777216.0);
+    let threshold = steadyThreshold(p);
     if (alpha <= threshold) {
         discard;
     }
     output.color = vec4f(steadyColor, 1.0);
-    // Cache indices are frame-local; FIFO identity is the stable work-buffer ID.
-    output.color1 = vec4u(steadyIndex + 1u, steadyId, bitcast<u32>(steadyDepth), bitcast<u32>(input.position.z));
+    // RG32U stores only a frame-local cache index and full-precision linear depth. The history
+    // pass looks up the stable ID; the composite derives device depth from the projection.
+    output.color1 = vec4u(steadyIndex + 1u, bitcast<u32>(steadyDepth), 0u, 0u);
     return output;
 }
 `;
