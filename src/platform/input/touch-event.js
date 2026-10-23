@@ -12,9 +12,18 @@
  * @category Input Devices
  */
 function getTouchTargetCoords(touch) {
+    return targetCoords(touch.target, touch.pageX, touch.pageY);
+}
+
+/**
+ * @param {EventTarget|null} target - The DOM node the coordinates are relative to.
+ * @param {number} pageX - The page x coordinate.
+ * @param {number} pageY - The page y coordinate.
+ * @returns {{x: number, y: number}} The coordinates relative to the target.
+ */
+function targetCoords(target, pageX, pageY) {
     let totalOffsetX = 0;
     let totalOffsetY = 0;
-    let target = touch.target;
 
     while (!(target instanceof HTMLElement) && target) {
         target = target.parentNode;
@@ -27,8 +36,8 @@ function getTouchTargetCoords(touch) {
     }
 
     return {
-        x: touch.pageX - totalOffsetX,
-        y: touch.pageY - totalOffsetY
+        x: pageX - totalOffsetX,
+        y: pageY - totalOffsetY
     };
 }
 
@@ -46,21 +55,21 @@ class Touch {
     id;
 
     /**
-     * The x coordinate relative to the element that the TouchDevice is attached to.
+     * The x coordinate relative to the element the touch started on.
      *
      * @type {number}
      */
     x;
 
     /**
-     * The y coordinate relative to the element that the TouchDevice is attached to.
+     * The y coordinate relative to the element the touch started on.
      *
      * @type {number}
      */
     y;
 
     /**
-     * The target DOM element of the touch event.
+     * The DOM element the touch started on, which stays the same while the touch moves.
      *
      * @type {Element}
      */
@@ -77,14 +86,16 @@ class Touch {
      * Create a new Touch object from a browser PointerEvent.
      *
      * @param {globalThis.PointerEvent} touch - The browser PointerEvent.
+     * @param {Element} [target] - The element the touch started on, which the coordinates are
+     * relative to. Defaults to the target of the PointerEvent.
      */
-    constructor(touch) {
-        const coords = getTouchTargetCoords(touch);
+    constructor(touch, target = /** @type {Element} */ (touch.target)) {
+        const coords = targetCoords(target, touch.pageX, touch.pageY);
 
         this.id = touch.pointerId;
         this.x = coords.x;
         this.y = coords.y;
-        this.target = touch.target;
+        this.target = target;
         this.touch = touch;
     }
 }
@@ -102,7 +113,7 @@ class Touch {
  */
 class TouchEvent {
     /**
-     * The target DOM element that the event was fired from.
+     * The DOM element the changed touch started on.
      *
      * @type {Element}
      */
@@ -136,13 +147,15 @@ class TouchEvent {
      *
      * @param {TouchDevice} device - The source device of the touch events.
      * @param {globalThis.PointerEvent} event - The original browser PointerEvent.
+     * @param {Element} [target] - The element the changed touch started on. Defaults to the target
+     * of the PointerEvent.
      */
-    constructor(device, event) {
-        this.element = event.target;
+    constructor(device, event, target = /** @type {Element} */ (event.target)) {
+        this.element = target;
         this.event = event;
 
-        this.touches = Array.from(device._touches.values(), e => new Touch(e));
-        this.changedTouches = [new Touch(event)];
+        this.touches = Array.from(device._touches.values(), t => new Touch(t.event, t.target));
+        this.changedTouches = [new Touch(event, target)];
     }
 
     /**

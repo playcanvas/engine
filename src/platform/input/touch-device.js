@@ -12,8 +12,10 @@ import { TouchEvent } from './touch-event.js';
  *
  * Events are driven by the touch and pen pointer events of the element. Each pointer that goes
  * down, moves, lifts or is cancelled fires one event, whose {@link TouchEvent#changedTouches}
- * holds that pointer's touch. The pointer is captured while it is down, and the element's
- * `touch-action` style is `none` while attached so the browser does not scroll or zoom it.
+ * holds that pointer's touch. A touch keeps the target it started on, and its coordinates stay
+ * relative to that target, as with browser touch events. A touch that leaves the element without
+ * lifting or being cancelled ends with `touchend`. The element's `touch-action` style is `none`
+ * while attached so the browser does not scroll or zoom it.
  *
  * Your application's TouchDevice instance is managed and accessible via {@link AppBase#touch}.
  *
@@ -75,9 +77,10 @@ class TouchDevice extends EventHandler {
     _element = null;
 
     /**
-     * The latest pointer event of each active touch by pointer id, in the order the touches started.
+     * The start target and latest pointer event of each active touch by pointer id, in the order
+     * the touches started.
      *
-     * @type {Map<number, globalThis.PointerEvent>}
+     * @type {Map<number, { target: Element, event: globalThis.PointerEvent }>}
      * @ignore
      */
     _touches = new Map();
@@ -145,14 +148,16 @@ class TouchDevice extends EventHandler {
 
         // pointer events cannot prevent default scrolling and zooming, unlike touch events
         const style = /** @type {HTMLElement} */ (element).style;
-        this._touchAction = style.touchAction;
-        style.touchAction = 'none';
+        if (style) {
+            this._touchAction = style.touchAction;
+            style.touchAction = 'none';
+        }
 
         element.addEventListener('pointerdown', this._startHandler, false);
         element.addEventListener('pointerup', this._endHandler, false);
         element.addEventListener('pointermove', this._moveHandler, false);
         element.addEventListener('pointercancel', this._cancelHandler, false);
-        element.addEventListener('lostpointercapture', this._cancelHandler, false);
+        element.addEventListener('pointerleave', this._endHandler, false);
     }
 
     /**
@@ -166,8 +171,11 @@ class TouchDevice extends EventHandler {
             element.removeEventListener('pointerup', this._endHandler, false);
             element.removeEventListener('pointermove', this._moveHandler, false);
             element.removeEventListener('pointercancel', this._cancelHandler, false);
-            element.removeEventListener('lostpointercapture', this._cancelHandler, false);
-            /** @type {HTMLElement} */ (element).style.touchAction = this._touchAction;
+            element.removeEventListener('pointerleave', this._endHandler, false);
+            const style = /** @type {HTMLElement} */ (element).style;
+            if (style) {
+                style.touchAction = this._touchAction;
+            }
         }
         this._touches.clear();
         this._element = null;
@@ -179,50 +187,47 @@ class TouchDevice extends EventHandler {
             return;
         }
 
-        // keep the touch on the element, as touch events stay on their start target
-        try {
-            this._element.setPointerCapture(pointerId);
-        } catch {
-            // synthetic pointers are not active and cannot be captured
-        }
-
-        this._touches.set(pointerId, e);
-        this.fire('touchstart', new TouchEvent(this, e));
+        // no explicit capture: the browser implicitly captures a touch to its start target, and
+        // capturing here would steal it from that target's own listeners
+        const touch = { target: e.target, event: e };
+        this._touches.set(pointerId, touch);
+        this.fire('touchstart', new TouchEvent(this, e, touch.target));
     }
 
+    // a leave without an up or a cancel ends the touch too, as both touches of a two-handed pinch
+    // do in Safari on Apple Vision Pro
     _handleTouchEnd(e) {
         this._end('touchend', e);
     }
 
     _handleTouchMove(e) {
-        if (!this._touches.has(e.pointerId)) {
+        const touch = this._touches.get(e.pointerId);
+        if (!touch) {
             return;
         }
-        this._touches.set(e.pointerId, e);
-        this.fire('touchmove', new TouchEvent(this, e));
+        touch.event = e;
+        this.fire('touchmove', new TouchEvent(this, e, touch.target));
     }
 
-    // a lost capture cancels too, as the rest of the touch may no longer reach the element
     _handleTouchCancel(e) {
         this._end('touchcancel', e);
     }
 
     /**
-     * Ends a tracked touch and fires the event, whose active touches no longer include it.
+     * Ends a tracked touch once, whichever event ends it, and fires the event without it in the
+     * active touches.
      *
      * @param {string} name - The event name.
      * @param {globalThis.PointerEvent} e - The pointer event.
      * @private
      */
     _end(name, e) {
-        const { pointerId } = e;
-        if (!this._touches.delete(pointerId)) {
+        const touch = this._touches.get(e.pointerId);
+        if (!touch) {
             return;
         }
-        if (this._element.hasPointerCapture(pointerId)) {
-            this._element.releasePointerCapture(pointerId);
-        }
-        this.fire(name, new TouchEvent(this, e));
+        this._touches.delete(e.pointerId);
+        this.fire(name, new TouchEvent(this, e, touch.target));
     }
 }
 

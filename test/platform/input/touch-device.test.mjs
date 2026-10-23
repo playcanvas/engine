@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { MOUSEBUTTON_LEFT, MOUSEBUTTON_NONE } from '../../../src/platform/input/constants.js';
+import { Gestures } from '../../../src/platform/input/gestures.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
 import { TouchDevice } from '../../../src/platform/input/touch-device.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -49,10 +50,10 @@ describe('TouchDevice', function () {
 
         canvas = document.createElement('canvas');
         document.body.appendChild(canvas);
-        const captured = new Set();
-        canvas.setPointerCapture = sinon.spy(id => captured.add(id));
-        canvas.releasePointerCapture = sinon.spy(id => captured.delete(id));
-        canvas.hasPointerCapture = id => captured.has(id);
+        for (const el of [canvas, document.body]) {
+            el.setPointerCapture = sinon.spy();
+            el.releasePointerCapture = sinon.spy();
+        }
 
         device = new TouchDevice(canvas);
         const entries = [];
@@ -121,16 +122,30 @@ describe('TouchDevice', function () {
         expect(log.map(e => [e.name, summary(e.event.touches), summary(e.event.changedTouches)]).slice(2)).to.deep.equal([
             ['touchcancel', [[2, 50, 0]], [[1, 0, 0]]]
         ]);
-        expect(canvas.releasePointerCapture.calledOnceWith(1)).to.equal(true);
     });
 
-    it('cancels a touch whose capture was lost, but not one that already ended', function () {
+    it('ends a touch that leaves without an up or a cancel with touchend, once', function () {
         pointer('pointerdown', { pointerId: 1 });
-        pointer('lostpointercapture', { pointerId: 1 });
-        pointer('pointerdown', { pointerId: 2 });
-        pointer('pointerup', { pointerId: 2 });
-        pointer('lostpointercapture', { pointerId: 2 });
-        expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchcancel', 'touchstart', 'touchend']);
+        pointer('pointerdown', { pointerId: 2, isPrimary: false, x: 50 });
+        pointer('pointerleave', { pointerId: 1, x: 5 });
+        pointer('pointerup', { pointerId: 1 });
+        pointer('pointercancel', { pointerId: 1 });
+
+        // browsers fire a leave after a touch lifts too
+        pointer('pointerup', { pointerId: 2, x: 50 });
+        pointer('pointerleave', { pointerId: 2, x: 50 });
+
+        expect(log.map(e => [e.name, summary(e.event.touches), summary(e.event.changedTouches)]).slice(2)).to.deep.equal([
+            ['touchend', [[2, 50, 0]], [[1, 5, 0]]],
+            ['touchend', [], [[2, 50, 0]]]
+        ]);
+    });
+
+    it('does not end a touch when its pointer capture is lost', function () {
+        pointer('pointerdown');
+        pointer('lostpointercapture');
+        pointer('pointermove', { x: 4 });
+        expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchmove']);
     });
 
     it('tracks pen pointers', function () {
@@ -173,20 +188,67 @@ describe('TouchDevice', function () {
         expect(log[0].event.changedTouches[0].target).to.equal(child);
     });
 
-    it('captures the pointer on down and releases it on up', function () {
-        pointer('pointerdown', { pointerId: 7 });
-        expect(canvas.setPointerCapture.calledOnceWith(7)).to.equal(true);
-        expect(canvas.releasePointerCapture.called).to.equal(false);
-        pointer('pointerup', { pointerId: 7 });
-        expect(canvas.releasePointerCapture.calledOnceWith(7)).to.equal(true);
+    it('keeps the start target and its coordinate frame for the whole touch', function () {
+        const parent = document.createElement('div');
+        const child = document.createElement('div');
+        parent.appendChild(child);
+        document.body.appendChild(parent);
+        Object.defineProperty(child, 'offsetLeft', { value: 10 });
+        Object.defineProperty(child, 'offsetTop', { value: 5 });
+        device.attach(parent);
+
+        pointer('pointerdown', { x: 30, y: 30 }, child);
+        pointer('pointermove', { x: 40, y: 45 }, parent);
+        pointer('pointerdown', { pointerId: 2, isPrimary: false, x: 60, y: 60 }, parent);
+        pointer('pointerup', { x: 50, y: 50 }, parent);
+
+        expect(log.map(e => [e.name, e.event.element, e.event.changedTouches[0].target, summary(e.event.changedTouches)])).to.deep.equal([
+            ['touchstart', child, child, [[1, 20, 25]]],
+            ['touchmove', child, child, [[1, 30, 40]]],
+            ['touchstart', parent, parent, [[2, 60, 60]]],
+            ['touchend', child, child, [[1, 40, 45]]]
+        ]);
+        expect(log[2].event.touches.map(t => t.target)).to.deep.equal([child, parent]);
+        expect(summary(log[2].event.touches)).to.deep.equal([[1, 30, 40], [2, 60, 60]]);
     });
 
-    it('still fires touch events when the capture throws', function () {
-        canvas.setPointerCapture = sinon.stub().throws(new window.DOMException('no pointer', 'NotFoundError'));
-        pointer('pointerdown');
-        pointer('pointerup');
-        expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchend']);
+    it('never captures or releases the pointer', function () {
+        pointer('pointerdown', { pointerId: 7 });
+        pointer('pointermove', { pointerId: 7 });
+        pointer('pointerup', { pointerId: 7 });
+        pointer('pointerdown', { pointerId: 8 });
+        pointer('pointercancel', { pointerId: 8 });
+        expect(canvas.setPointerCapture.called).to.equal(false);
         expect(canvas.releasePointerCapture.called).to.equal(false);
+    });
+
+    it('leaves Gestures on a child canvas its capture and moves', function () {
+        device.attach(document.body);
+        const gestures = new Gestures(canvas);
+        const touch = (type, x) => pointer(type, { x, y: 0 }, canvas);
+
+        touch('pointerdown', 0);
+        touch('pointermove', 10);
+        touch('pointermove', 15);
+        expect(gestures.pan).to.deep.equal([15, 0]);
+        expect(gestures.count).to.equal(1);
+        touch('pointerup', 15);
+        gestures.destroy();
+
+        expect(canvas.setPointerCapture.calledOnceWith(1)).to.equal(true);
+        expect(canvas.releasePointerCapture.calledOnceWith(1)).to.equal(true);
+        expect(document.body.setPointerCapture.called).to.equal(false);
+        expect(document.body.releasePointerCapture.called).to.equal(false);
+        expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchmove', 'touchmove', 'touchend']);
+    });
+
+    it('attaches to the window without touch-action', function () {
+        expect(() => device.attach(window)).to.not.throw();
+        pointer('pointerdown', { x: 3 });
+        pointer('pointerup', { x: 3 });
+        expect(() => device.detach()).to.not.throw();
+        expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchend']);
+        expect(log[0].event.element).to.equal(canvas);
     });
 
     it('does not prevent default', function () {
