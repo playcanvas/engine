@@ -1,5 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { platform } from '../../core/platform.js';
 
@@ -1101,15 +1102,16 @@ class GamePads extends EventHandler {
      *
      * @param {number[]} stick - The stick as `[x, y]`, with each axis in the range -1 to 1.
      * @param {number} low - The magnitude below which the stick is zeroed.
-     * @param {number} high - The magnitude that maps to 1 after rescaling.
+     * @param {number} high - The magnitude that maps to 1 after rescaling. Must be greater than `low`.
      * @returns {number[]} The same `stick` array, with the dead zone applied.
      * @example
      * const stick = GamePads.applyDeadZone([0.5, 0], 0.3, 0.6);
      * // stick is approximately [0.667, 0]
      */
     static applyDeadZone(stick, low, high) {
+        Debug.assert(high > low, 'GamePads.applyDeadZone: high must be greater than low.');
         const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
-        if (mag < low) {
+        if (mag <= low) {
             stick.fill(0);
             return stick;
         }

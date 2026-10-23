@@ -163,22 +163,41 @@ describe('GamePads', function () {
     });
 
     describe('.applyDeadZone', function () {
+
         it('zeroes sticks inside the low dead zone', function () {
             expect(GamePads.applyDeadZone([0.2, 0.1], 0.3, 0.6)).to.deep.equal([0, 0]);
         });
+
         it('rescales from the low edge', function () {
             const [x, y] = GamePads.applyDeadZone([0.5, 0], 0.3, 0.6);
             expect(x).to.be.closeTo(2 / 3, 1e-9);
             expect(y).to.equal(0);
         });
+
         it('keeps the stick direction', function () {
             const [x, y] = GamePads.applyDeadZone([0.4, 0.4], 0.3, 0.6);
             expect(x).to.be.closeTo(y, 1e-12);
         });
+
         it('returns the same array', function () {
             const stick = [1, 0];
             expect(GamePads.applyDeadZone(stick, 0.3, 0.6)).to.equal(stick);
         });
+
+        it('zeroes a centred stick when the low dead zone is 0', function () {
+            expect(GamePads.applyDeadZone([0, 0], 0, 0.6)).to.deep.equal([0, 0]);
+        });
+
+        it('zeroes a stick exactly at the low edge', function () {
+            expect(GamePads.applyDeadZone([0.3, 0], 0.3, 0.6)).to.deep.equal([0, 0]);
+        });
+
+        it('is unclamped above the high edge', function () {
+            const [x, y] = GamePads.applyDeadZone([0.9, 0], 0.3, 0.6);
+            expect(x).to.be.closeTo(2, 1e-9);
+            expect(y).to.equal(0);
+        });
+
     });
 
 });
