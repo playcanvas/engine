@@ -1,5 +1,6 @@
 import type { Entity, ScriptType, Vec3 } from 'playcanvas';
 
+// TODO: remove once examples use CameraControls (#9816)
 /**
  * The classic `orbitCamera` script from `scripts/camera/orbit-camera.js`, which examples reach
  * through the script component by name.
