@@ -111,9 +111,27 @@ class CylinderController {
         const shift = locked ? key(kb, 'ShiftLeft') + key(kb, 'ShiftRight') : 0;
 
         // combined move input (keyboard + left joystick), clamped to unit range per axis
-        const moveX = math.clamp((locked ? key(kb, 'KeyD') - key(kb, 'KeyA') + key(kb, 'ArrowRight') - key(kb, 'ArrowLeft') : 0) + lx, -1, 1); // strafe
-        const moveY = math.clamp(locked ? key(kb, 'KeyE') - key(kb, 'KeyQ') + key(kb, 'Space') - key(kb, 'ControlLeft') - key(kb, 'ControlRight') : 0, -1, 1); // up (camera up)
-        const moveZ = math.clamp((locked ? key(kb, 'KeyW') - key(kb, 'KeyS') + key(kb, 'ArrowUp') - key(kb, 'ArrowDown') : 0) - ly, -1, 1); // forward
+        const moveX = math.clamp(
+            (locked ? key(kb, 'KeyD') - key(kb, 'KeyA') + key(kb, 'ArrowRight') - key(kb, 'ArrowLeft') : 0) + lx,
+            -1,
+            1
+        ); // strafe
+        const moveY = math.clamp(
+            locked
+                ? key(kb, 'KeyE') -
+                      key(kb, 'KeyQ') +
+                      key(kb, 'Space') -
+                      key(kb, 'ControlLeft') -
+                      key(kb, 'ControlRight')
+                : 0,
+            -1,
+            1
+        ); // up (camera up)
+        const moveZ = math.clamp(
+            (locked ? key(kb, 'KeyW') - key(kb, 'KeyS') + key(kb, 'ArrowUp') - key(kb, 'ArrowDown') : 0) - ly,
+            -1,
+            1
+        ); // forward
 
         // --- look: apply yaw about the camera's up and pitch about its right (free 6-DOF) ---
         const yawIn = mx * this.lookSpeed + rx * this.touchLookSpeed * dt;
