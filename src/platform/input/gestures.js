@@ -112,6 +112,13 @@ class Gestures extends EventHandler {
      */
     _element = null;
 
+    /**
+     * The `touch-action` style of the element before it was attached, restored on detach.
+     *
+     * @private
+     */
+    _touchAction = '';
+
     /** @private */
     _mx = 0;
 
@@ -321,6 +328,8 @@ class Gestures extends EventHandler {
 
     /**
      * Attaches to an element and starts listening for touches, detaching from any previous one.
+     * The element's `touch-action` style is set to `none` until it is detached, so the browser
+     * does not scroll or zoom while it is touched.
      *
      * @param {HTMLElement} element - The element.
      */
@@ -328,6 +337,8 @@ class Gestures extends EventHandler {
         this.detach();
 
         this._element = element;
+        this._touchAction = element.style.touchAction;
+        element.style.touchAction = 'none';
         element.addEventListener('pointerdown', this._onDown);
         element.addEventListener('pointermove', this._onMove);
         element.addEventListener('pointerup', this._onEnd);
@@ -337,7 +348,8 @@ class Gestures extends EventHandler {
     }
 
     /**
-     * Stops listening and releases all active touches.
+     * Stops listening, releases all active touches and restores the element's `touch-action`
+     * style.
      */
     detach() {
         const element = this._element;
@@ -351,6 +363,7 @@ class Gestures extends EventHandler {
         element.removeEventListener('pointercancel', this._onEnd);
         element.removeEventListener('pointerleave', this._onEnd);
         element.removeEventListener('contextmenu', this._onMenu);
+        element.style.touchAction = this._touchAction;
         this._element = null;
     }
 

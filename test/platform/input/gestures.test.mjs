@@ -193,6 +193,20 @@ describe('Gestures', function () {
         expect(gestures.count).to.equal(1);
     });
 
+    it('sets touch-action to none while attached and restores it on detach', function () {
+        element.style.touchAction = 'pan-x';
+        make();
+        expect(element.style.touchAction).to.equal('none');
+
+        const other = document.createElement('div');
+        gestures.attach(other);
+        expect(element.style.touchAction).to.equal('pan-x');
+        expect(other.style.touchAction).to.equal('none');
+
+        gestures.detach();
+        expect(other.style.touchAction).to.equal('');
+    });
+
     it('ignores events after detach', function () {
         make();
         gestures.detach();
