@@ -113,20 +113,20 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  */
 
 /**
- * The resource an {@link Asset} of type `K` holds: `AssetMap[K]` for a type in {@link AssetMap}, so
- * `AssetResource<'texture'>` is {@link Texture}, and `unknown` for any other string, including a
- * plain `string`. This is the type of {@link Asset#resource}.
+ * The resource an {@link Asset} holds for its `Type`: `AssetMap[Type]` for a type in
+ * {@link AssetMap}, so `AssetResource<'texture'>` is {@link Texture}, and `unknown` for any other
+ * string, including a plain `string`. This is the type of {@link Asset#resource}.
  *
- * @template {AssetType | (string & {})} K
- * @typedef {K extends AssetType ? AssetMap[K] : unknown} AssetResource
+ * @template {AssetType | (string & {})} Type
+ * @typedef {Type extends AssetType ? AssetMap[Type] : unknown} AssetResource
  */
 
 /**
- * @template {AssetType | (string & {})} [K=string]
- * @template [Resource=AssetResource<K>]
+ * @template {AssetType | (string & {})} [Type=string]
+ * @template [Resource=AssetResource<Type>]
  * @callback AssetReadyCallback
  * Callback used by {@link Asset#ready} and called when an asset is ready.
- * @param {Asset<K, Resource>} asset - The ready asset.
+ * @param {Asset<Type, Resource>} asset - The ready asset.
  * @returns {void}
  */
 
@@ -164,8 +164,8 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * asset.ready((asset) => {
  *     material.diffuseMap = asset.resource;
  * });
- * @template {AssetType | (string & {})} [K=string]
- * @template [Resource=AssetResource<K>]
+ * @template {AssetType | (string & {})} [Type=string]
+ * @template [Resource=AssetResource<Type>]
  * @category Asset
  */
 class Asset extends EventHandler {
@@ -349,7 +349,7 @@ class Asset extends EventHandler {
      * The type of the asset: one of the {@link AssetType} names, or the name of an
      * application-defined resource handler. See {@link AssetMap}.
      *
-     * @type {K}
+     * @type {Type}
      */
     type;
 
@@ -367,7 +367,7 @@ class Asset extends EventHandler {
      *
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
-     * @param {K} type - The type of asset (an {@link AssetType}), which selects the resource
+     * @param {Type} type - The type of asset (an {@link AssetType}), which selects the resource
      * handler and the type of {@link Asset#resource}. The types a developer commonly creates are:
      *
      * - "animation" - see {@link Animation} and {@link AnimTrack}
@@ -730,7 +730,7 @@ class Asset extends EventHandler {
      * for the `error` event as well whenever a failure has to be handled, check `asset.resource`
      * inside the callback, and never await this callback alone.
      *
-     * @param {AssetReadyCallback<K, Resource>} callback - The function called when the asset is ready. Passed
+     * @param {AssetReadyCallback<Type, Resource>} callback - The function called when the asset is ready. Passed
      * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
