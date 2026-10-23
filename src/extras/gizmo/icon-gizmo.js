@@ -7,7 +7,10 @@ import { OverlayRenderer } from './overlay/overlay-renderer.js';
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Entity } from '../../framework/entity.js'
+ * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { Picker } from '../../framework/graphics/picker.js'
  * @import { OverlayIcon } from './overlay/icon-glyphs.js'
  */
 
@@ -109,6 +112,17 @@ class IconGizmo extends Gizmo {
      */
     get theme() {
         return this._theme;
+    }
+
+    /**
+     * Gets the entity whose icon a mesh instance draws, such as one a {@link Picker} returns, so
+     * an app can pick icons with the rest of its scene.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance.
+     * @returns {GraphNode|null} The entity, or null when the mesh instance draws no icon.
+     */
+    getIconNode(meshInstance) {
+        return this._renderer.icons.pick(meshInstance);
     }
 
     /**

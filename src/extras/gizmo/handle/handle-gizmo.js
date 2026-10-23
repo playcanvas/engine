@@ -316,10 +316,15 @@ class HandleGizmo extends DragGizmo {
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
             if (!this._dragging) {
                 const handle = this._find(meshInstance);
+                const hovered = this._hovered;
+                if (handle ? !this._matches(hovered, handle.node, handle.name, handle.index) : hovered.name !== '') {
+                    // the highlight changes, so a render-on-demand app draws a frame
+                    this._renderUpdate = true;
+                }
                 if (handle) {
-                    this._copy(handle, this._hovered);
+                    this._copy(handle, hovered);
                 } else {
-                    this._hovered.name = '';
+                    hovered.name = '';
                 }
                 return;
             }
@@ -521,6 +526,7 @@ class HandleGizmo extends DragGizmo {
             return;
         }
         this._dragging = false;
+        this._renderUpdate = true;
         this.fire(HandleGizmo.EVENT_HANDLEEND, this._drag.node, this._drag.name);
         this._drag.name = '';
     }
@@ -753,14 +759,22 @@ class HandleGizmo extends DragGizmo {
             }
         }
         if (options.cornerHandles) {
-            const forward = this._camera.entity.forward;
+            // a flat box's corners move in its plane, so they stay under the pointer
+            const flat = BOX_AXES.findIndex(a => halfExtents[a] - pad <= BOX_FLAT_HALF);
+            const normal = flat < 0 ? this._camera.entity.forward : boxAxes[flat];
             for (let i = 0; i < boxCorners.length; i++) {
                 const pos = boxCorners[i];
                 const hovered = options.uniform ?
                     this._handle(pos, this._theme.corner, null, 'size', BOX_FACES + i, center, tmpV2.sub2(pos, center).normalize()) :
-                    this._handle(pos, this._theme.corner, null, 'size', BOX_FACES + i, pos, forward, true);
+                    this._handle(pos, this._theme.corner, null, 'size', BOX_FACES + i, pos, normal, true);
                 if (hovered) {
-                    const html = BOX_FACE_LABELS.map((label, k) => this._readoutValue(label, this._faceColors[k], 2 * (halfExtents[BOX_AXES[k]] - pad)));
+                    const html = [];
+                    for (let k = 0; k < 3; k++) {
+                        const half = halfExtents[BOX_AXES[k]] - pad;
+                        if (half > BOX_FLAT_HALF) {
+                            html.push(this._readoutValue(BOX_FACE_LABELS[k], this._faceColors[k], 2 * half));
+                        }
+                    }
                     this._readoutHtmlAt(pos, html.join('  '));
                 }
             }

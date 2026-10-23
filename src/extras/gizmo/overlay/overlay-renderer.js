@@ -259,6 +259,10 @@ class OverlayRenderer {
         });
         this._pickDiscs = pool((base, occluded) => {
             const disc = new ConeShape(device, { ...args(base, occluded), ...CONES.disk });
+
+            // icons face the camera a pixel or so apart, finer than the depth buffer resolves far
+            // away, so they don't write depth and draw in placement order instead
+            disc.depthWrite = false;
             gizmo.intersectShapes.push(disc);
             return disc;
         });
@@ -287,7 +291,11 @@ class OverlayRenderer {
          */
         this._glyphs = /** @type {Record<OverlayIcon, ShapePool>} */ ({});
         for (const [kind, texture] of Object.entries(textures)) {
-            this._glyphs[/** @type {OverlayIcon} */ (kind)] = pool((base, occluded) => new GlyphShape(device, { ...args(base, occluded), texture }));
+            this._glyphs[/** @type {OverlayIcon} */ (kind)] = pool((base, occluded) => {
+                const glyph = new GlyphShape(device, { ...args(base, occluded), texture });
+                glyph.depthWrite = false;
+                return glyph;
+            });
         }
     }
 
@@ -798,6 +806,7 @@ class OverlayRenderer {
      * @param {Vec3} size - The size along each axis of the rotation.
      * @param {number} [alpha] - The alpha factor.
      * @param {boolean} [volume] - Whether to use the theme fill color.
+     * @returns {Shape} The box.
      */
     box(center, rotation, size, alpha = 1, volume = true) {
         this._colors(alpha, volume);
@@ -805,6 +814,7 @@ class OverlayRenderer {
         box.entity.setLocalPosition(this._local(center, tmpV1));
         box.entity.setLocalRotation(rotation);
         box.entity.setLocalScale(size);
+        return box;
     }
 
     /**
@@ -858,7 +868,7 @@ class OverlayRenderer {
     cone(kind, center, rotation, size, alpha = 1, volume = true, peak = 0) {
         this._colors(alpha, volume);
         const cone = /** @type {ConeShape} */ (this._next(this._cones[kind]));
-        if (kind === 'frustum' && Math.abs(cone.peakRadius - peak) > PEAK_TOLERANCE) {
+        if (kind === 'frustum' && Math.abs(cone.peakRadius - peak) > PEAK_TOLERANCE * peak) {
             cone.peakRadius = peak;
         }
         cone.entity.setLocalPosition(this._local(center, tmpV1));
@@ -892,6 +902,7 @@ class OverlayRenderer {
      * @param {Vec3} center - The world center.
      * @param {Quat} rotation - The world rotation.
      * @param {number} size - The width and height.
+     * @returns {Shape} The glyph.
      */
     glyph(kind, center, rotation, size) {
         this._colors(1);
@@ -899,6 +910,7 @@ class OverlayRenderer {
         glyph.entity.setLocalPosition(this._local(center, tmpV1));
         glyph.entity.setLocalRotation(rotation);
         glyph.entity.setLocalScale(size, 1, size);
+        return glyph;
     }
 
     /**

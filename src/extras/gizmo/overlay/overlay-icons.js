@@ -44,10 +44,10 @@ class OverlayIcons {
     /**
      * The icons placed this frame, with the nodes they mark.
      *
-     * @type {Pool<{ shape: Shape|null, node: GraphNode|null }>}
+     * @type {Pool<{ shape: Shape|null, glyph: Shape|null, node: GraphNode|null }>}
      * @private
      */
-    _placed = new Pool(() => ({ shape: null, node: null }));
+    _placed = new Pool(() => ({ shape: null, glyph: null, node: null }));
 
     /**
      * @param {OverlayRenderer} renderer - The renderer the icons are drawn with.
@@ -89,15 +89,16 @@ class OverlayIcons {
         const color = renderer.theme.backdrop ?? COLOR_BACKDROP;
         const backdrop = renderer.disc(tmpV, tmpQ.setFromDirections(Vec3.UP, entity.forward), 2 * ICON_BACKDROP_RADIUS * size, color.a, color);
 
-        renderer.glyph(kind, position, tmpQ.copy(entity.getRotation()).mul(GLYPH_TO_VIEW), size);
+        const glyph = renderer.glyph(kind, position, tmpQ.copy(entity.getRotation()).mul(GLYPH_TO_VIEW), size);
 
         const record = this._placed.next();
         record.shape = backdrop;
+        record.glyph = glyph;
         record.node = node;
     }
 
     /**
-     * Gets the node whose icon, placed this frame, was picked.
+     * Gets the node whose icon, placed this frame, was picked by its backdrop or glyph.
      *
      * @param {MeshInstance} [meshInstance] - The picked mesh instance.
      * @returns {GraphNode|null} The node, or null when no icon was picked.
@@ -108,8 +109,9 @@ class OverlayIcons {
         }
         const placed = this._placed;
         for (let i = 0; i < placed.count; i++) {
-            if (placed.items[i].shape?.meshInstances[0] === meshInstance) {
-                return placed.items[i].node;
+            const { shape, glyph, node } = placed.items[i];
+            if (shape?.meshInstances[0] === meshInstance || glyph?.meshInstances[0] === meshInstance) {
+                return node;
             }
         }
         return null;
