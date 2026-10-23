@@ -277,11 +277,12 @@ confirm.button.on('click', () => {
 });
 closeDialog();
 
-// After a tap, the browser sends emulated mouse events. A tap that closes the dialog would have
-// its emulated click land on whatever is behind the button, so cancel touchend to stop them
-const cancelEmulation = (/** @type {TouchEvent} */ event) => event.preventDefault();
-canvas.addEventListener('touchend', cancelEmulation);
-app.on('destroy', () => canvas.removeEventListener('touchend', cancelEmulation));
+// After a tap, emulated mouse events follow, as browsers send them. A tap that closes the dialog
+// would have its emulated click land on whatever is behind the button, so cancel the pointerup to
+// stop them
+const cancelEmulation = (/** @type {PointerEvent} */ event) => event.preventDefault();
+canvas.addEventListener('pointerup', cancelEmulation);
+app.on('destroy', () => canvas.removeEventListener('pointerup', cancelEmulation));
 
 // An update downloads over six seconds, and starts again two seconds later
 let time = 3;
