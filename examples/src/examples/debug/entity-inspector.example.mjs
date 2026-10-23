@@ -44,7 +44,7 @@ import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
 import { deviceType } from 'examples/context';
 
 /**
- * @import { AnimTrack, RenderComponent } from 'playcanvas'
+ * @import { RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -290,7 +290,7 @@ app.on('update', (dt) => {
 const character = assets.character.resource.instantiateRenderEntity({ castShadows: true });
 character.name = 'bitmoji';
 character.addComponent('anim', { activate: true });
-character.anim.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.idle.resource.animations[0].resource));
+character.anim.assignAnimation('Idle', assets.idle.resource.animations[0].resource);
 character.setLocalScale(1.5, 1.5, 1.5);
 app.root.addChild(character);
 

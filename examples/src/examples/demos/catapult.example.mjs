@@ -77,10 +77,6 @@ import { VatCharacters } from 'playcanvas/scripts/esm/vat/vat-characters.mjs';
 
 import { data, deviceType } from 'examples/context';
 
-/**
- * @import { AnimTrack } from 'playcanvas'
- */
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -728,9 +724,7 @@ catapult.findComponents('render').forEach((render) => {
 // only the firing animation is used. The layer stays paused and the game scrubs it a frame at a time,
 // which is what lets the swing keep its own timing independently of the reload
 const animations = assets.catapult.resource.animations;
-const fireTrack = /** @type {AnimTrack} */ (
-    (animations.find((animation) => animation.resource.name.includes('Shot')) ?? animations[0]).resource
-);
+const fireTrack = (animations.find((animation) => animation.resource.name.includes('Shot')) ?? animations[0]).resource;
 
 catapult.addComponent('anim', { activate: false });
 catapult.anim.assignAnimation('Fire', fireTrack, undefined, 1, false);
