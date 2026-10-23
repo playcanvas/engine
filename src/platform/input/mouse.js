@@ -565,8 +565,10 @@ class Mouse extends EventHandler {
         if (!this._isMouseTarget(event)) return;
 
         this._target.releasePointerCapture(event.pointerId);
-        this._captureId = -1;
+
+        // keep capture state until mouseup fires so a release outside the element still resolves coords
         this._handleUp(event);
+        this._captureId = -1;
     }
 
     _handlePointerWheel(event) {
@@ -582,6 +584,7 @@ class Mouse extends EventHandler {
 
         this._buttons.fill(false);
         this._captureId = -1;
+        this._lastPositionValid = false;
     }
 
     _getTargetCoords(event) {

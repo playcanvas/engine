@@ -414,6 +414,16 @@ describe('Mouse', function () {
                 expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
             });
 
+            it('fires mouseup for a drag released outside the element', function () {
+                const up = sinon.spy();
+                mouse.on('mouseup', up);
+                pointer('pointerdown');
+                pointer('pointerup', { clientX: 150, clientY: 50 });
+                expect(up.calledOnce).to.equal(true);
+                expect(up.firstCall.args[0].button).to.equal(MOUSEBUTTON_LEFT);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
             it('keeps counting moves outside the element while captured', function () {
                 pointer('pointerdown');
                 pointer('pointermove', { clientX: 150, clientY: 50 });
@@ -455,6 +465,8 @@ describe('Mouse', function () {
                 pointer('pointerdown');
                 pointer('lostpointercapture');
                 expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+                pointer('pointermove', { clientX: 90, clientY: 90 });
+                expect(mouse.movement).to.deep.equal([0, 0]);
             });
 
             it('moves element listeners when attached to another element', function () {
