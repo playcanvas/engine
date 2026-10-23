@@ -38,6 +38,7 @@ declare module '../../build/playcanvas.js' {
 
 declare const assets: AssetRegistry;
 declare const container: ContainerResource;
+declare const animationAsset: Asset<'animation'>;
 const name: string = 'texture';
 
 // ---- constructor: the type string types the asset, its resource and its type field
@@ -98,6 +99,17 @@ const allMaybe = assets.findAll('brick', maybeType);
 type T32 = Expect<Equal<typeof allMaybe, Asset[]>>;
 type T22 = Expect<Equal<Asset<'json'>['resource'], unknown>>;
 type T23 = Expect<Equal<Asset<'animation'>['resource'], Animation | AnimTrack | undefined>>;
+
+// ---- the second type parameter narrows the resource: container animations are always AnimTracks
+type T37 = Expect<Equal<Asset<'texture'>, Asset<'texture', Texture>>>;
+type T38 = Expect<Equal<typeof container.animations, Asset<'animation', AnimTrack>[]>>;
+type T39 = Expect<Equal<typeof container.animations[0]['resource'], AnimTrack | undefined>>;
+type T40 = Expect<Equal<typeof container.animations[0]['resources'], AnimTrack[]>>;
+const containerAnimation: Asset<'animation'> = container.animations[0];
+const containerAsset: Asset = container.animations[0];
+container.animations[0].ready((asset) => {
+    type R1 = Expect<Equal<typeof asset, Asset<'animation', AnimTrack>>>;
+});
 
 // ---- loadFromUrl, loadFromUrlAndFilename and ready: the callback's asset follows the type
 assets.loadFromUrl('statue.glb', 'container', (err, asset) => {
@@ -163,6 +175,10 @@ texture.resource = undefined;
 const notAnAssetType: AssetType = 'nope';
 // @ts-expect-error renders are Asset<'render'>, not Asset<'texture'>
 const wrongRenders: Asset<'texture'>[] = container.renders;
+// @ts-expect-error a container animation's resource is an AnimTrack, never a legacy Animation
+container.animations[0].resource = {} as Animation;
+// @ts-expect-error an animation asset may hold a legacy Animation, so it is not a container animation
+const notContainerAnimation: Asset<'animation', AnimTrack> = animationAsset;
 assets.loadFromUrl('a.png', 'texture', (err, asset) => {
     // @ts-expect-error a texture asset's resource is a Texture, not a Material
     const wrong: Material | undefined = asset?.resource;
@@ -172,9 +188,10 @@ assets.loadFromUrl('a.png', 'texture', (err, asset) => {
 export { concatenateShaders, concatenateTextAssets };
 export {
     assetType, literalArgument, stringArgument, myType, wrongResource, narrowed, notAnAssetType,
-    wrongRenders
+    wrongRenders, containerAnimation, containerAsset, notContainerAnimation
 };
 export type Checks = [
     T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20,
-    T21, T22, T23, T24, T25, T26, T27, T28, T29, T30, T31, T32, T33, T34, T35, T36
+    T21, T22, T23, T24, T25, T26, T27, T28, T29, T30, T31, T32, T33, T34, T35, T36, T37, T38, T39,
+    T40
 ];

@@ -26,10 +26,6 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
-/**
- * @import { AnimTrack } from 'playcanvas'
- */
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -141,10 +137,10 @@ modelEntity.addComponent('anim', {
 app.root.addChild(modelEntity);
 
 // Retrieve the animation assets
-const idleTrack = /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource);
-const walkTrack = /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource);
-const danceTrack = /** @type {AnimTrack} */ (assets.danceAnim.resource.animations[0].resource);
-const idleEagerTrack = /** @type {AnimTrack} */ (assets.idleEagerAnim.resource.animations[0].resource);
+const idleTrack = assets.idleAnim.resource.animations[0].resource;
+const walkTrack = assets.walkAnim.resource.animations[0].resource;
+const danceTrack = assets.danceAnim.resource.animations[0].resource;
+const idleEagerTrack = assets.idleEagerAnim.resource.animations[0].resource;
 
 // Create the full body layer by assigning full body animations to the anim component
 modelEntity.anim.assignAnimation('Idle', idleTrack);

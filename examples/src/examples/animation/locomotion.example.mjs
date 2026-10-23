@@ -39,7 +39,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { AnimTrack, ScriptType } from 'playcanvas'
+ * @import { ScriptType } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -312,10 +312,10 @@ characterEntity.anim.loadStateGraph(animStateGraphData);
 
 // Assign the loaded animation assets to each of the states present in the state graph
 const locomotionLayer = characterEntity.anim.baseLayer;
-locomotionLayer.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource));
-locomotionLayer.assignAnimation('Walk', /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource));
-locomotionLayer.assignAnimation('Jog', /** @type {AnimTrack} */ (assets.jogAnim.resource.animations[0].resource));
-locomotionLayer.assignAnimation('Jump', /** @type {AnimTrack} */ (assets.jumpAnim.resource.animations[0].resource));
+locomotionLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation('Walk', assets.walkAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation('Jog', assets.jogAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation('Jump', assets.jumpAnim.resource.animations[0].resource);
 
 app.root.addChild(characterEntity);
 

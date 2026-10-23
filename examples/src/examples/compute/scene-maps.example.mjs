@@ -61,10 +61,6 @@ import { data, deviceType } from 'examples/context';
 
 import scannerWgsl from './scanner.wgsl';
 
-/**
- * @import { AnimTrack } from 'playcanvas'
- */
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -209,7 +205,7 @@ for (let i = 0; i < walkerCount; i++) {
     });
     walker.setLocalScale(20, 20, 20);
     walker.addComponent('anim', { activate: true, speed: 0.9 + (i % 3) * 0.1 });
-    walker.anim.assignAnimation('Walk', /** @type {AnimTrack} */ (assets.walk.resource.animations[0].resource));
+    walker.anim.assignAnimation('Walk', assets.walk.resource.animations[0].resource);
     app.root.addChild(walker);
 
     walkers.push({

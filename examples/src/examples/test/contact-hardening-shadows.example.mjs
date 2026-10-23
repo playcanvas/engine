@@ -45,10 +45,6 @@ import {
 
 import { data, deviceType, win } from 'examples/context';
 
-/**
- * @import { AnimTrack } from 'playcanvas'
- */
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -182,7 +178,7 @@ occluder.addComponent('anim', {
 occluder.setLocalScale(3, 3, 3);
 app.root.addChild(occluder);
 
-occluder.anim.assignAnimation('Idle', /** @type {AnimTrack} */ (assets.asset.resource.animations[0].resource));
+occluder.anim.assignAnimation('Idle', assets.asset.resource.animations[0].resource);
 occluder.anim.baseLayer.weight = 1.0;
 occluder.anim.speed = 0.1;
 // const animLayer = occluder.anim.addLayer('Idle', 1.0, )

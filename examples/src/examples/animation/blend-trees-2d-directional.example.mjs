@@ -26,10 +26,6 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
-/**
- * @import { AnimTrack } from 'playcanvas'
- */
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -194,22 +190,10 @@ modelEntity.anim.loadStateGraph(animStateGraphData);
 
 // Load the state graph asset resource into the anim component
 const locomotionLayer = modelEntity.anim.baseLayer;
-locomotionLayer.assignAnimation(
-    'Travel.Idle',
-    /** @type {AnimTrack} */ (assets.idleAnim.resource.animations[0].resource)
-);
-locomotionLayer.assignAnimation(
-    'Travel.Walk',
-    /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource)
-);
-locomotionLayer.assignAnimation(
-    'Travel.WalkBackwards',
-    /** @type {AnimTrack} */ (assets.walkAnim.resource.animations[0].resource)
-);
-locomotionLayer.assignAnimation(
-    'Travel.Jog',
-    /** @type {AnimTrack} */ (assets.jogAnim.resource.animations[0].resource)
-);
+locomotionLayer.assignAnimation('Travel.Idle', assets.idleAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation('Travel.Walk', assets.walkAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation('Travel.WalkBackwards', assets.walkAnim.resource.animations[0].resource);
+locomotionLayer.assignAnimation('Travel.Jog', assets.jogAnim.resource.animations[0].resource);
 
 // Initialize observer data
 data.set('data', {

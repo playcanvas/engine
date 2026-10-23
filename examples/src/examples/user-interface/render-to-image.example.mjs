@@ -43,10 +43,6 @@ import {
 import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
 import { deviceType } from 'examples/context';
 
-/**
- * @import { AnimTrack } from 'playcanvas'
- */
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -137,10 +133,7 @@ character.findComponents('render').forEach((render) => {
     render.layers = [previewLayer.id];
 });
 const [idleClip, attackClip] = ['Idle_FightingStance', 'Attack_SwordThrust'].map(
-    (name) =>
-        /** @type {AnimTrack} */ (
-            assets.knight.resource.animations.find((asset) => asset.resource.name === name).resource
-        )
+    (name) => assets.knight.resource.animations.find((asset) => asset.resource.name === name).resource
 );
 character.addComponent('anim', { activate: true });
 character.anim.assignAnimation('Idle', idleClip);

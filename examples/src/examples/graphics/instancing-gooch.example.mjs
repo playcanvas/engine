@@ -38,7 +38,7 @@ import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material
 import { deviceType } from 'examples/context';
 
 /**
- * @import { AnimTrack, StandardMaterial } from 'playcanvas'
+ * @import { StandardMaterial } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -182,7 +182,7 @@ applyMaterial(bitmojiEntity, materials);
 
 // Play the animation
 bitmojiEntity.addComponent('anim', { activate: true });
-const walkTrack = /** @type {AnimTrack} */ (assets.danceAnim.resource.animations[0].resource);
+const walkTrack = assets.danceAnim.resource.animations[0].resource;
 bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
 // Set an update function on the app's update event
