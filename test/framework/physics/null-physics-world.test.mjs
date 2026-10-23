@@ -76,6 +76,11 @@ describe('NullPhysicsWorld', function () {
             expect(app.systems.rigidbody.raycastFirst(start, end, { filterCallback: () => true })).to.equal(null);
         });
 
+        it('misses all sweeps', function () {
+            expect(world.sweep({ type: 'sphere', radius: 0.5 }, new Vec3(0, 5, 0), new Vec3(0, -5, 0))).to.equal(null);
+            expect(app.systems.rigidbody.sweep({ type: 'sphere', radius: 0.5 }, new Vec3(0, 5, 0), new Vec3(0, -5, 0))).to.equal(null);
+        });
+
         it('creates identity-distinct opaque shape handles', function () {
             const a = world.createShape({ type: 'box', halfExtents: new Vec3(1, 1, 1) });
             const b = world.createShape({ type: 'box', halfExtents: new Vec3(1, 1, 1) });

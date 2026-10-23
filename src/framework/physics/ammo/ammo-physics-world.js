@@ -281,6 +281,20 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     _btRayEnd = null;
 
     /**
+     * Convex shapes used by sweep(), keyed by type, radius and height.
+     *
+     * @type {Map<string, object>}
+     * @private
+     */
+    _sweepShapes = new Map();
+
+    /** @private */
+    _btSweepFrom = null;
+
+    /** @private */
+    _btSweepTo = null;
+
+    /**
      * Create a new AmmoPhysicsWorld instance. The Ammo library must be loaded before the
      * backend is constructed.
      */
@@ -320,6 +334,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this._btTransform = new Ammo.btTransform();
         this._btRayStart = new Ammo.btVector3();
         this._btRayEnd = new Ammo.btVector3();
+        this._btSweepFrom = new Ammo.btTransform();
+        this._btSweepTo = new Ammo.btTransform();
     }
 
     destroy() {
@@ -340,12 +356,18 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         Ammo.destroy(this._btTransform);
         Ammo.destroy(this._btRayStart);
         Ammo.destroy(this._btRayEnd);
+        Ammo.destroy(this._btSweepFrom);
+        Ammo.destroy(this._btSweepTo);
+        this._sweepShapes.forEach(shape => Ammo.destroy(shape));
+        this._sweepShapes.clear();
         this._btVec1 = null;
         this._btVec2 = null;
         this._btQuat = null;
         this._btTransform = null;
         this._btRayStart = null;
         this._btRayEnd = null;
+        this._btSweepFrom = null;
+        this._btSweepTo = null;
 
         // unregister before the native world is freed: the next world may be allocated at the
         // same address
@@ -591,6 +613,50 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         }
 
         Ammo.destroy(rayCallback);
+
+        return result;
+    }
+
+    sweep(shape, from, to, options = {}) {
+        const { type, radius, height } = shape;
+        const key = `${type}:${radius}:${height}`;
+        let native = this._sweepShapes.get(key);
+        if (!native) {
+            native = type === 'capsule' ?
+                new Ammo.btCapsuleShape(radius, Math.max(height - 2 * radius, 0)) :
+                new Ammo.btSphereShape(radius);
+            this._sweepShapes.set(key, native);
+        }
+
+        const fromT = this._btSweepFrom;
+        const toT = this._btSweepTo;
+        fromT.setIdentity();
+        toT.setIdentity();
+        this._btRayStart.setValue(from.x, from.y, from.z);
+        this._btRayEnd.setValue(to.x, to.y, to.z);
+        fromT.setOrigin(this._btRayStart);
+        toT.setOrigin(this._btRayEnd);
+
+        const callback = new Ammo.ClosestConvexResultCallback(this._btRayStart, this._btRayEnd);
+        applyRayOptions(callback, options);
+
+        let result = null;
+        this.nativeWorld.convexSweepTest(native, fromT, toT, callback, 0);
+        if (callback.hasHit()) {
+            const body = Ammo.castObject(callback.get_m_hitCollisionObject(), Ammo.btRigidBody);
+            if (body) {
+                const point = callback.get_m_hitPointWorld();
+                const normal = callback.get_m_hitNormalWorld();
+                result = new RaycastResult(
+                    body.entity,
+                    new Vec3(point.x(), point.y(), point.z()),
+                    new Vec3(normal.x(), normal.y(), normal.z()),
+                    callback.get_m_closestHitFraction()
+                );
+            }
+        }
+
+        Ammo.destroy(callback);
 
         return result;
     }
