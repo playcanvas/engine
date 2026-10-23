@@ -1,27 +1,31 @@
 import {
     math,
+    BODYMASK_ALL,
+    CHARACTER_GROUP,
+    CharacterController,
+    GamePads,
+    Gestures,
     InputFrame,
-    KeyboardMouseSource,
-    DualGestureSource,
-    GamepadSource,
+    Keyboard,
+    Mouse,
+    PAD_FACE_1,
     Quat,
     Script,
     Vec3
 } from 'playcanvas';
 
-/** @import { Entity, RigidBodyComponent, RigidBodyComponentSystem } from 'playcanvas' */
-
-/**
- * @typedef {object} ThirdPersonControllerState
- * @property {Vec3} axis - The movement axis.
- * @property {number[]} mouse - The mouse delta.
- * @property {number} a - The 'A' button state.
- * @property {number} space - The space key state.
- * @property {number} shift - The shift key state.
- * @property {number} ctrl - The ctrl key state.
- */
+/** @import { Entity, RigidBodyComponent } from 'playcanvas' */
 
 const EPSILON = 0.0001;
+
+// the mass of the former dynamic body, so a jump force gives the same jump velocity
+const MASS = 100;
+
+// the longest step the controller applies, used to turn its displacement into a speed
+const MAX_STEP_DT = 0.1;
+
+// the camera collision ray ignores characters, including this one
+const CAMERA_RAY_OPTIONS = { filterCollisionMask: BODYMASK_ALL ^ CHARACTER_GROUP };
 
 // scratch
 const v = new Vec3();
@@ -29,15 +33,10 @@ const v2 = new Vec3();
 const v3 = new Vec3();
 const v4 = new Vec3();
 const forward = new Vec3();
-const right = new Vec3();
-const offset = new Vec3();
 const tmpQ = new Quat();
 
-const frame = new InputFrame({
-    move: [0, 0, 0],
-    rotate: [0, 0, 0],
-    jump: [0]
-});
+const leftStick = [0, 0];
+const rightStick = [0, 0];
 
 /**
  * Calculate the damp rate.
@@ -45,25 +44,8 @@ const frame = new InputFrame({
  * @param {number} damping - The damping factor (smaller = snappier).
  * @param {number} dt - The delta time.
  * @returns {number} - The lerp factor in 0..1.
- * @ignore
  */
-export const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
-
-/**
- * @param {number[]} stick - The stick.
- * @param {number} low - The low dead zone.
- * @param {number} high - The high dead zone.
- */
-const applyDeadZone = (stick, low, high) => {
-    const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
-    if (mag < low) {
-        stick.fill(0);
-        return;
-    }
-    const scale = (mag - low) / (high - low);
-    stick[0] *= scale / mag;
-    stick[1] *= scale / mag;
-};
+const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 /**
  * Lerp between two angles taking the shortest arc.
@@ -79,13 +61,22 @@ const lerpAngle = (from, to, alpha) => {
 };
 
 /**
+ * @param {Keyboard} keyboard - The keyboard.
+ * @param {string} code - The `KeyboardEvent.code`.
+ * @returns {number} 1 while the key is held, otherwise 0.
+ */
+const key = (keyboard, code) => +keyboard.isPressed(code);
+
+/**
  * A reusable third-person character controller.
  *
- * The script is attached to a character controller entity (a dynamic rigidbody
- * with a capsule collision shape). It reads keyboard / mouse / touch / gamepad
- * input and:
+ * The script is attached to a character controller entity with a capsule collision shape. Its
+ * rigid body is made kinematic in {@link CHARACTER_GROUP} and moved by a
+ * {@link CharacterController}. A physics library such as Ammo must be loaded. It reads keyboard /
+ * mouse (with pointer lock) / touch / gamepad input and:
  *
- * - Moves the character along the ground using a velocity-based capsule.
+ * - Moves the character along the ground relative to the camera yaw, with damped ground and air
+ *   movement, sprinting, jumping and sliding along walls and slopes.
  * - Rotates an optional {@link characterModel} child entity to face the
  *   movement direction.
  * - Orbits a separate {@link camera} entity around the character at a
@@ -100,48 +91,68 @@ class ThirdPersonController extends Script {
     static scriptName = 'thirdPersonController';
 
     /**
-     * @type {boolean}
+     * @type {CharacterController|null}
      * @private
      */
-    _ready = false;
+    _controller = null;
 
     /**
-     * @type {RigidBodyComponent}
+     * @type {InputFrame}
+     * @private
+     */
+    _frame = new InputFrame(CharacterController.fields);
+
+    /**
+     * @type {Keyboard}
      * @private
      */
     // @ts-ignore
-    _rigidbody;
+    _keyboard;
 
     /**
-     * @type {KeyboardMouseSource}
+     * @type {Mouse}
      * @private
      */
-    _desktopInput = new KeyboardMouseSource({ pointerLock: true });
+    // @ts-ignore
+    _mouse;
 
     /**
-     * @type {DualGestureSource}
+     * @type {Gestures}
      * @private
      */
-    _mobileInput = new DualGestureSource();
+    // @ts-ignore
+    _gestures;
 
     /**
-     * @type {GamepadSource}
+     * The gamepads owned by the script, when the app has none.
+     *
+     * @type {GamePads|null}
      * @private
      */
-    _gamepadInput = new GamepadSource();
+    _gamepads = null;
 
     /**
-     * @type {ThirdPersonControllerState}
+     * @type {(event: PointerEvent) => void}
      * @private
      */
-    _state = {
-        axis: new Vec3(),
-        mouse: [0, 0, 0],
-        a: 0,
-        space: 0,
-        shift: 0,
-        ctrl: 0
-    };
+    // @ts-ignore
+    _onPointerDown;
+
+    /**
+     * The jump input of the previous frame, to find the press the controller jumps on.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _prevJump = false;
+
+    /**
+     * The character position before the last step.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _prevPos = new Vec3();
 
     /**
      * Current camera yaw in degrees (around character).
@@ -190,18 +201,6 @@ class ThirdPersonController extends Script {
      * @private
      */
     _camInitialized = false;
-
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _grounded = false;
-
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _jumping = false;
 
     /**
      * @type {number}
@@ -566,34 +565,49 @@ class ThirdPersonController extends Script {
         }
         if (!this.entity.rigidbody) {
             this.entity.addComponent('rigidbody', {
-                type: 'dynamic',
-                mass: 100,
-                linearDamping: 0,
-                angularDamping: 0,
-                linearFactor: Vec3.ONE,
-                angularFactor: Vec3.ZERO,
+                type: 'kinematic',
                 friction: 0.5,
                 restitution: 0
             });
         }
-        this._rigidbody = /** @type {RigidBodyComponent} */ (this.entity.rigidbody);
 
-        // attach input
-        this._desktopInput.attach(this.app.graphicsDevice.canvas);
-        this._mobileInput.attach(this.app.graphicsDevice.canvas);
-        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
+        // setting the type resets the group and mask, so it goes first
+        const rigidbody = /** @type {RigidBodyComponent} */ (this.entity.rigidbody);
+        rigidbody.type = 'kinematic';
+        rigidbody.group = CHARACTER_GROUP;
+        rigidbody.mask = BODYMASK_ALL;
+
+        // devices
+        const canvas = this.app.graphicsDevice.canvas;
+        this._keyboard = new Keyboard(window);
+        this._mouse = new Mouse(canvas, { pointer: true });
+        this._gestures = new Gestures(canvas, { layout: 'joystick-touch' });
+        if (!this.app.gamepads) {
+            this._gamepads = new GamePads();
+        }
+
+        // pointer lock on click
+        this._onPointerDown = (event) => {
+            if (event.pointerType === 'mouse' && document.pointerLockElement !== canvas) {
+                canvas.requestPointerLock?.();
+            }
+        };
+        canvas.addEventListener('pointerdown', this._onPointerDown);
 
         // expose ui events for mobile virtual joysticks
-        this._mobileInput.on('joystick:position:left', ([bx, by, sx, sy]) => {
+        this._gestures.on('joystick:position:left', ([bx, by, sx, sy]) => {
             this.app.fire(`${this.joystickEventName}:left`, bx, by, sx, sy);
         });
-        this._mobileInput.on('joystick:position:right', ([bx, by, sx, sy]) => {
+        this._gestures.on('joystick:position:right', ([bx, by, sx, sy]) => {
             this.app.fire(`${this.joystickEventName}:right`, bx, by, sx, sy);
         });
 
-        // initial camera yaw from the camera entity, if it already faces character
-        const camEuler = this.camera.getEulerAngles();
-        this._yaw = camEuler.y;
+        this._controller = new CharacterController(this.entity);
+
+        // initial camera yaw from where the camera entity faces, which holds past 90 degrees
+        // unlike its euler angles
+        const camForward = this.camera.forward;
+        this._yaw = Math.atan2(-camForward.x, -camForward.z) * math.RAD_TO_DEG;
         this._pitch = math.clamp(this.initialPitch, this.pitchMin, this.pitchMax);
         this._targetCameraDistance = this.cameraDistance;
         this._clampedDistance = this.cameraDistance;
@@ -611,8 +625,6 @@ class ThirdPersonController extends Script {
         }
 
         this.on('destroy', this.destroy, this);
-
-        this._ready = true;
     }
 
     /**
@@ -725,51 +737,137 @@ class ThirdPersonController extends Script {
     }
 
     /**
-     * @param {InputFrame<{ move: number[], rotate: number[], jump: number[] }>} frame - The input frame.
+     * Writes the device input into the frame and turns the camera orbit. The look yaw is the
+     * camera yaw, so movement is relative to the camera.
+     *
      * @param {number} dt - The delta time.
      * @private
      */
-    _updateController(frame, dt) {
-        const { move, rotate, jump } = frame.read();
+    _map(dt) {
+        const { _keyboard: keyboard, _mouse: mouse, _gestures: gestures } = this;
+        const gamepads = this.app.gamepads ?? this._gamepads;
+        const { input } = this._frame;
+        const move = /** @type {number[]} */ (input.move);
+        const look = /** @type {number[]} */ (input.look);
+        let jump = false;
+        let sprint = false;
+        let yaw = 0;
+        let pitch = 0;
 
-        // jump
-        if (this._rigidbody.linearVelocity.y < 0) {
-            this._jumping = false;
+        // keyboard and mouse only once the pointer is locked
+        if (document.pointerLockElement === this.app.graphicsDevice.canvas) {
+            move[0] = key(keyboard, 'KeyD') - key(keyboard, 'KeyA') + key(keyboard, 'ArrowRight') - key(keyboard, 'ArrowLeft');
+            move[1] = key(keyboard, 'KeyW') - key(keyboard, 'KeyS') + key(keyboard, 'ArrowUp') - key(keyboard, 'ArrowDown');
+            jump = keyboard.isPressed('Space');
+            sprint = keyboard.isPressed('ShiftLeft') || keyboard.isPressed('ShiftRight');
+            yaw += mouse.movement[0] * this.lookSens;
+            pitch += mouse.movement[1] * this.lookSens;
+        } else {
+            move[0] = move[1] = 0;
         }
-        if (jump[0] && !this._jumping && this._grounded) {
-            this._jumping = true;
-            this._rigidbody.applyImpulse(0, this.jumpForce, 0);
+
+        // scroll down zooms out; the wheel moves a target distance the camera glides toward
+        if (mouse.wheel !== 0) {
+            this._targetCameraDistance = math.clamp(
+                this._targetCameraDistance + mouse.wheel * this.zoomSpeed,
+                this.cameraDistanceMin,
+                this.cameraDistanceMax
+            );
+        }
+
+        // half joystick deflection moves at full speed and full deflection sprints
+        const { x, y } = gestures.leftJoystick.value;
+        const mag = Math.sqrt(x * x + y * y) * 2;
+        const scale = mag > 1 ? 2 / mag : 2;
+        move[0] += x * scale;
+        move[1] -= y * scale;
+        sprint ||= mag > 2 - EPSILON;
+        jump ||= gestures.doubleTaps > 0;
+        yaw += gestures.right[0] * this._mobileTurnSpeed * dt;
+        pitch += gestures.right[1] * this._mobileTurnSpeed * dt;
+
+        // the high dead zone is a thickness from the rim
+        if (gamepads) {
+            const low = this._gamePadDeadZoneLow;
+            const high = 1 - this._gamePadDeadZoneHigh;
+            for (const pad of gamepads.current) {
+                if (pad.mapping !== 'standard') {
+                    continue;
+                }
+                jump ||= pad.isPressed(PAD_FACE_1);
+                const axes = pad.axes;
+                if (axes.length < 4) {
+                    continue;
+                }
+                leftStick[0] = axes[0];
+                leftStick[1] = axes[1];
+                rightStick[0] = axes[2];
+                rightStick[1] = axes[3];
+                GamePads.applyDeadZone(leftStick, low, high);
+                GamePads.applyDeadZone(rightStick, low, high);
+                move[0] += leftStick[0];
+                move[1] -= leftStick[1];
+                yaw += rightStick[0] * this._gamePadTurnSpeed * dt;
+                pitch += rightStick[1] * this._gamePadTurnSpeed * dt;
+            }
+        }
+
+        // camera orbit
+        this._yaw -= yaw;
+        this._pitch = math.clamp(this._pitch - (this.invertLookY ? -1 : 1) * pitch, this.pitchMin, this.pitchMax);
+
+        move[0] = math.clamp(move[0], -1, 1);
+        move[1] = math.clamp(move[1], -1, 1);
+        look[1] = this._yaw;
+        input.jump = jump;
+        input.sprint = sprint;
+    }
+
+    /**
+     * @param {number} dt - The delta time.
+     */
+    update(dt) {
+        const controller = this._controller;
+        if (!controller) {
+            return;
+        }
+
+        // forward settings
+        controller.speedGround = this.speedGround;
+        controller.speedAir = this.speedAir;
+        controller.sprintMult = this.sprintMult;
+        controller.velocityDampingGround = this.velocityDampingGround;
+        controller.velocityDampingAir = this.velocityDampingAir;
+        controller.jumpSpeed = this.jumpForce / MASS;
+        controller.gravity = this.app.systems.rigidbody.gravity.y;
+
+        this._map(dt);
+
+        // the controller jumps on a press while grounded
+        const jump = /** @type {boolean} */ (this._frame.input.jump);
+        const jumped = jump && !this._prevJump && controller.state.grounded;
+        this._prevJump = jump;
+
+        const prev = this._prevPos.copy(this.entity.getPosition());
+        controller.step(this._frame.capture(dt));
+        if (jumped) {
             this.fire('jump');
         }
 
-        // camera orbit (mouse rotates camera around character; W/S becomes
-        // forward/back along camera's flat yaw)
-        this._yaw -= rotate[0];
-        this._pitch -= (this.invertLookY ? -1 : 1) * rotate[1];
-        this._pitch = math.clamp(this._pitch, this.pitchMin, this.pitchMax);
-
-        // movement direction relative to camera yaw only
-        tmpQ.setFromEulerAngles(0, this._yaw, 0);
-        tmpQ.transformVector(Vec3.FORWARD, forward);
-        tmpQ.transformVector(Vec3.RIGHT, right);
-        offset.set(0, 0, 0);
-        offset.add(forward.mulScalar(move[2]));
-        offset.add(right.mulScalar(move[0]));
-
-        const velocity = this._rigidbody.linearVelocity.add(offset);
-        const alpha = damp(this._grounded ? this.velocityDampingGround : this.velocityDampingAir, dt);
-        velocity.x = math.lerp(velocity.x, 0, alpha);
-        velocity.z = math.lerp(velocity.z, 0, alpha);
-        this._rigidbody.linearVelocity = velocity;
+        // horizontal velocity from the step's displacement
+        const charPos = this.entity.getPosition();
+        const inv = dt > 0 ? 1 / Math.min(dt, MAX_STEP_DT) : 0;
+        const vx = (charPos.x - prev.x) * inv;
+        const vz = (charPos.z - prev.z) * inv;
+        const horizSpeed = Math.sqrt(vx * vx + vz * vz);
 
         // character model yaw: smoothly turn toward horizontal velocity
-        const horizSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
         if (this.characterModel) {
             if (horizSpeed > this.walkSpeedThreshold * 0.5) {
                 // movement direction in world space; convert to yaw, plus a
                 // per-model offset so models with a different forward axis can
                 // be aligned without rotating the mesh data.
-                const targetYaw = Math.atan2(velocity.x, velocity.z) * math.RAD_TO_DEG + this.modelYawOffset;
+                const targetYaw = Math.atan2(vx, vz) * math.RAD_TO_DEG + this.modelYawOffset;
                 const a = damp(this.modelTurnSmoothing, dt);
                 this._modelYaw = lerpAngle(this._modelYaw, targetYaw, a);
             }
@@ -789,7 +887,6 @@ class ThirdPersonController extends Script {
         }
 
         // ---- camera positioning ----
-        const charPos = this.entity.getPosition();
 
         // pivot = character + cameraHeight on Y; camera orbits this point
         const pivot = v.copy(charPos);
@@ -810,9 +907,8 @@ class ThirdPersonController extends Script {
         // its full desired distance, then smoothly track the resulting clamped
         // distance so that the camera eases in/out behind walls rather than
         // snapping when geometry comes between the camera and the character.
-        const sys = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
         const probePos = v3.copy(pivot).add(v4.copy(back).mulScalar(this.cameraDistance));
-        const hit = sys.raycastFirst(pivot, probePos);
+        const hit = this.app.systems.rigidbody.raycastFirst(pivot, probePos, CAMERA_RAY_OPTIONS);
         let targetClamped = this.cameraDistance;
         if (hit) {
             const hitDist = v4.copy(hit.point).sub(pivot).length();
@@ -845,123 +941,20 @@ class ThirdPersonController extends Script {
 
         this.camera.setPosition(this._camPos);
         this.camera.lookAt(this._camLookAt);
-    }
 
-    /**
-     * @param {number} dt - The delta time.
-     */
-    update(dt) {
-        if (!this._ready) {
-            return;
-        }
-
-        const { keyCode } = KeyboardMouseSource;
-        const { buttonCode } = GamepadSource;
-
-        const { key, button, mouse, wheel } = this._desktopInput.read();
-        const { leftInput, rightInput, doubleTap } = this._mobileInput.read();
-        const { buttons, leftStick, rightStick } = this._gamepadInput.read();
-
-        applyDeadZone(leftStick, this.gamePadDeadZoneLow, this.gamePadDeadZoneHigh);
-        applyDeadZone(rightStick, this.gamePadDeadZoneLow, this.gamePadDeadZoneHigh);
-
-        // mouse scroll wheel zoom (wheel[0] is deltaY: positive when scrolling
-        // down -> zoom out; negative when scrolling up -> zoom in). The wheel
-        // mutates a TARGET distance which the actual cameraDistance smoothly
-        // lerps toward each frame in _updateController, giving a glide-zoom.
-        if (wheel[0] !== 0) {
-            this._targetCameraDistance = math.clamp(
-                this._targetCameraDistance + wheel[0] * this.zoomSpeed,
-                this.cameraDistanceMin,
-                this.cameraDistanceMax
-            );
-        }
-
-        // update state
-        this._state.axis.add(v.set(
-            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
-            0,
-            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
-        ));
-        for (let i = 0; i < this._state.mouse.length; i++) {
-            this._state.mouse[i] += button[i];
-        }
-        this._state.a += buttons[buttonCode.A];
-        this._state.space += key[keyCode.SPACE];
-        this._state.shift += key[keyCode.SHIFT];
-        this._state.ctrl += key[keyCode.CTRL];
-
-        // grounded raycast (matches FPS controller convention)
-        const start = this.entity.getPosition();
-        const end = v.copy(start).add(Vec3.DOWN);
-        end.y -= 0.1;
-        const sys = /** @type {RigidBodyComponentSystem} */ (this._rigidbody.system);
-        this._grounded = !!sys.raycastFirst(start, end);
-
-        const moveMult = (this._grounded ? this.speedGround : this.speedAir) * dt;
-        const rotateMult = this.lookSens * 60 * dt;
-        const rotateTouchMult = this._mobileTurnSpeed * dt;
-        const rotateJoystickMult = this.gamePadTurnSpeed * dt;
-
-        const { deltas } = frame;
-
-        // desktop move
-        v.set(0, 0, 0);
-        const keyMove = this._state.axis.clone().normalize();
-        v.add(keyMove.mulScalar(moveMult * (this._state.shift ? this.sprintMult : 1)));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // desktop rotate
-        v.set(0, 0, 0);
-        const mouseRotate = new Vec3(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar(rotateMult));
-        deltas.rotate.append([v.x, v.y, v.z]);
-
-        // desktop jump
-        deltas.jump.append([this._state.space]);
-
-        // mobile move
-        v.set(0, 0, 0);
-        const flyMove = new Vec3(leftInput[0], 0, -leftInput[1]);
-        flyMove.mulScalar(2);
-        const mag = flyMove.length();
-        if (mag > 1) {
-            flyMove.normalize();
-        }
-        v.add(flyMove.mulScalar(moveMult * (mag > 2 - EPSILON ? this.sprintMult : 1)));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // mobile rotate
-        v.set(0, 0, 0);
-        const mobileRotate = new Vec3(rightInput[0], rightInput[1], 0);
-        v.add(mobileRotate.mulScalar(rotateTouchMult));
-        deltas.rotate.append([v.x, v.y, v.z]);
-
-        // mobile jump
-        deltas.jump.append([doubleTap[0]]);
-
-        // gamepad move
-        v.set(0, 0, 0);
-        const stickMove = new Vec3(leftStick[0], 0, -leftStick[1]);
-        v.add(stickMove.mulScalar(moveMult));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // gamepad rotate
-        v.set(0, 0, 0);
-        const stickRotate = new Vec3(rightStick[0], rightStick[1], 0);
-        v.add(stickRotate.mulScalar(rotateJoystickMult));
-        deltas.rotate.append([v.x, v.y, v.z]);
-
-        // gamepad jump
-        deltas.jump.append([this._state.a]);
-
-        this._updateController(frame, dt);
+        this._keyboard.update();
+        this._mouse.update();
+        this._gestures.update();
+        this._gamepads?.update();
     }
 
     destroy() {
-        this._desktopInput.destroy();
-        this._mobileInput.destroy();
-        this._gamepadInput.destroy();
+        this.app.graphicsDevice.canvas.removeEventListener('pointerdown', this._onPointerDown);
+        this._keyboard.detach();
+        this._mouse.detach();
+        this._gestures.destroy();
+        this._gamepads?.destroy();
+        this._controller?.destroy();
     }
 }
 
