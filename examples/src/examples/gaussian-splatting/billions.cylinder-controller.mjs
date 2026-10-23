@@ -81,7 +81,7 @@ class CylinderController {
         // cross-platform input devices (same primitives as FirstPersonController)
         const canvas = app.graphicsDevice.canvas;
         this._keyboard = new Keyboard(window);
-        this._mouse = new Mouse(canvas, { pointer: true });
+        this._mouse = new Mouse(canvas, { capture: true });
         this._gestures = new Gestures(canvas, { layout: 'joystick-touch' });
 
         // pointer lock on click

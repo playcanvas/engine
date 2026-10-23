@@ -250,7 +250,7 @@ class FirstPersonController extends Script {
         // devices
         const canvas = this.app.graphicsDevice.canvas;
         this._keyboard = new Keyboard(window);
-        this._mouse = new Mouse(canvas, { pointer: true });
+        this._mouse = new Mouse(canvas, { capture: true });
         this._gestures = new Gestures(canvas, { layout: 'joystick-touch' });
         if (!this.app.gamepads) {
             this._gamepads = new GamePads();

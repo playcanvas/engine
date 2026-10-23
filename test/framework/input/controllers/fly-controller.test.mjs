@@ -139,7 +139,7 @@ describe('FlyController', function () {
             canvas.setPointerCapture = sinon.stub();
             canvas.releasePointerCapture = sinon.stub();
             keyboard = new Keyboard(window);
-            mouse = new Mouse(canvas, { pointer: true });
+            mouse = new Mouse(canvas, { capture: true });
         });
 
         afterEach(function () {

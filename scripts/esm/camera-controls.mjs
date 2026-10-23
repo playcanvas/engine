@@ -520,7 +520,7 @@ class CameraControls extends Script {
         // devices
         const canvas = this.app.graphicsDevice.canvas;
         const keyboard = this._keyboard = new Keyboard(window);
-        const mouse = this._mouse = new Mouse(canvas, { pointer: true });
+        const mouse = this._mouse = new Mouse(canvas, { capture: true });
         const gestures = this._gestures;
         gestures.attach(canvas);
         if (!this.app.gamepads) {

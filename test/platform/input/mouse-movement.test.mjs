@@ -9,13 +9,13 @@ describe('Mouse movement', function () {
     let mouse;
     let moves;
 
+    // jsdom has no PointerEvent
+    const pointer = (type, props) => {
+        window.dispatchEvent(Object.assign(new window.Event(type), { pointerId: 1, pointerType: 'mouse', button: -1 }, props));
+    };
+
     const move = (x, y, movementX = 0, movementY = 0) => {
-        const event = new MouseEvent('mousemove', { clientX: x, clientY: y });
-        Object.defineProperties(event, {
-            movementX: { value: movementX },
-            movementY: { value: movementY }
-        });
-        window.dispatchEvent(event);
+        pointer('pointermove', { clientX: x, clientY: y, movementX, movementY });
     };
 
     beforeEach(function () {
@@ -117,8 +117,8 @@ describe('Mouse movement', function () {
         mouse.on('mouseup', record);
         mouse.on('mousewheel', record);
 
-        window.dispatchEvent(new MouseEvent('mousedown', { clientX: 800, clientY: 600, button: 0 }));
-        window.dispatchEvent(new MouseEvent('mouseup', { clientX: 800, clientY: 600, button: 0 }));
+        pointer('pointerdown', { clientX: 800, clientY: 600, button: 0 });
+        pointer('pointerup', { clientX: 800, clientY: 600, button: 0 });
         window.dispatchEvent(new window.WheelEvent('wheel', { clientX: 800, clientY: 600, deltaY: 1 }));
         move(900, 700);
 
