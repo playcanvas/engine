@@ -1,8 +1,14 @@
-import { math } from '../../../core/math/math.js';
-import { Vec2 } from '../../../core/math/vec2.js';
+import { math } from '../../core/math/math.js';
+import { Vec2 } from '../../core/math/vec2.js';
 
 const v = new Vec2();
 
+/**
+ * A virtual on-screen joystick. It turns the drag from a touch-down position into a vector
+ * normalized to the range of -1 to 1, as used by {@link Gestures}.
+ *
+ * @category Input Devices
+ */
 class VirtualJoystick {
     /** @private */
     _range = 70;

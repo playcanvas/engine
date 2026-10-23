@@ -127,12 +127,14 @@ export { NullGraphicsDevice } from './platform/graphics/null/null-graphics-devic
 export * from './platform/input/constants.js';
 export { Controller } from './platform/input/controller.js';
 export { GamePads } from './platform/input/game-pads.js';
+export { Gestures } from './platform/input/gestures.js';
 export { Keyboard } from './platform/input/keyboard.js';
 export { KeyboardEvent } from './platform/input/keyboard-event.js';
 export { Mouse } from './platform/input/mouse.js';
 export { MouseEvent } from './platform/input/mouse-event.js';
 export { TouchDevice } from './platform/input/touch-device.js';
 export { getTouchTargetCoords, Touch, TouchEvent } from './platform/input/touch-event.js';
+export { VirtualJoystick } from './platform/input/virtual-joystick.js';
 
 // PLATFORM / NET
 export { http, Http } from './platform/net/http.js';

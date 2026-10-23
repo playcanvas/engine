@@ -1,7 +1,7 @@
 import { DOUBLE_TAP_THRESHOLD, DOUBLE_TAP_VARIANCE } from '../constants.js';
 import { InputSource } from '../input.js';
 import { movementState } from '../utils.js';
-import { VirtualJoystick } from './virtual-joystick.js';
+import { VirtualJoystick } from '../../../platform/input/virtual-joystick.js';
 
 /**
  * @param {string} str - The string to check.
