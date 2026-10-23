@@ -1,4 +1,4 @@
-// Consumer-side type tests for Asset<K>, AssetRegistry#find, AssetRegistry#findAll,
+// Consumer-side type tests for Asset<Type, Resource>, AssetRegistry#find, AssetRegistry#findAll,
 // AssetRegistry#loadFromUrl and the AssetMap augmentation. Compiled by `npm run test:types` against
 // build/playcanvas.d.ts, so they exercise exactly what an application sees.
 import { Asset, Material } from '../../build/playcanvas.js';
@@ -109,6 +109,7 @@ const containerAnimation: Asset<'animation'> = container.animations[0];
 const containerAsset: Asset = container.animations[0];
 container.animations[0].ready((asset) => {
     type R1 = Expect<Equal<typeof asset, Asset<'animation', AnimTrack>>>;
+    return null as R1 | null;
 });
 
 // ---- loadFromUrl, loadFromUrlAndFilename and ready: the callback's asset follows the type
