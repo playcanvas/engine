@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { KEY_DOWN, KEY_UP } from '../../../src/platform/input/constants.js';
+import { KEY_DOWN, KEY_UP, KEY_W } from '../../../src/platform/input/constants.js';
 import { Keyboard } from '../../../src/platform/input/keyboard.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -24,6 +24,47 @@ describe('Keyboard', function () {
 
         it('should create a new instance', function () {
             expect(keyboard).to.be.an.instanceOf(Keyboard);
+        });
+
+    });
+
+    describe('event.code', function () {
+
+        it('tracks keys by event.code', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW', keyCode: 87 }));
+            expect(keyboard.isPressed('KeyW')).to.equal(true);
+            expect(keyboard.isPressed(KEY_W)).to.equal(true);
+            window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW', keyCode: 87 }));
+            expect(keyboard.isPressed('KeyW')).to.equal(false);
+        });
+
+        it('keeps single-character strings as key characters', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW', keyCode: 87 }));
+            expect(keyboard.isPressed('w')).to.equal(true);
+        });
+
+        it('reports code presses and releases across update()', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', keyCode: 32 }));
+            expect(keyboard.wasPressed('Space')).to.equal(true);
+            keyboard.update();
+            expect(keyboard.wasPressed('Space')).to.equal(false);
+            window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space', keyCode: 32 }));
+            expect(keyboard.wasReleased('Space')).to.equal(true);
+        });
+
+        it('clears code state on blur', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyA', keyCode: 65 }));
+            window.dispatchEvent(new window.Event('blur'));
+            expect(keyboard.isPressed('KeyA')).to.equal(false);
+        });
+
+        it('passes the code on keyboard events', function () {
+            let code = null;
+            keyboard.on('keydown', (e) => {
+                code = e.code;
+            });
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD', keyCode: 68 }));
+            expect(code).to.equal('KeyD');
         });
 
     });
