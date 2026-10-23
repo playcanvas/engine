@@ -34,7 +34,7 @@ const qTmp = new Quat();
  * the axis that makes angular schemes spin out as you approach the center.
  *
  * Controls: keyboard (WASD/arrows move, Q/E or Ctrl/Space down/up, Shift to sprint) + mouse look
- * (pointer lock) on desktop; twin virtual joysticks (left = move, right = look) on touch.
+ * (pointer lock) on desktop; virtual joystick (left = move) and drag (right = look) on touch.
  */
 class CylinderController {
     /**
@@ -82,7 +82,7 @@ class CylinderController {
         const canvas = app.graphicsDevice.canvas;
         this._keyboard = new Keyboard(window);
         this._mouse = new Mouse(canvas, { pointer: true });
-        this._gestures = new Gestures(canvas, { layout: 'joystick-joystick' });
+        this._gestures = new Gestures(canvas, { layout: 'joystick-touch' });
 
         // pointer lock on click
         this._onPointerDown = (event) => {
@@ -101,7 +101,7 @@ class CylinderController {
     update(dt) {
         const { _keyboard: kb, _mouse: mouse, _gestures: gestures } = this;
         const { x: lx, y: ly } = gestures.leftJoystick.value;
-        const { x: rx, y: ry } = gestures.rightJoystick.value;
+        const [rx, ry] = gestures.right;
         const R = this.radius;
 
         // keyboard and mouse only once the pointer is locked
