@@ -11,7 +11,7 @@ import {
     DITHER_BLUENOISE,
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
-    GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_RENDERER_STEADY,
     GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
     GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS,
     GSPLAT_LODMODE_DISTANCE,
@@ -150,6 +150,79 @@ class GSplatParams {
     stochastic = false;
 
     /**
+     * Fraction of reprojected history retained by {@link GSPLAT_RENDERER_STEADY}, in [0, 1).
+     * Larger values reduce sampling noise but take longer to respond to changes. Zero disables
+     * temporal color reuse and its history allocation while retaining spatial resampling and
+     * the occluder cache. Defaults to 0.7.
+     *
+     * Like native stochastic rendering, {@link CameraComponent#jitter} controls sample animation:
+     * zero repeats a fixed pattern, and a positive value changes samples each rendered frame.
+     * Sampling animation and this history weight are independent.
+     * When {@link steadyConvergence} is enabled, stationary animated views additionally build
+     * a progressive average; this weight controls the moving-camera history.
+     *
+     * @type {number}
+     * @beta
+     */
+    steadyHistoryWeight = 0.7;
+
+    /**
+     * Enables progressive convergence of {@link GSPLAT_RENDERER_STEADY} while the camera is
+     * stationary. Requires animated samples ({@link CameraComponent#jitter} greater than zero)
+     * and a positive {@link steadyHistoryWeight}. Defaults to true.
+     *
+     * A separate full-precision average accumulates up to {@link steadyConvergenceFrames} stationary
+     * frames. Its first eight samples use spatial reuse; subsequent samples use raw visibility to
+     * remove residual spatial bias. Motion resumes the regular temporal filter and restarts this
+     * average. Size, projection, material, work-buffer changes and {@link resetHistory} also invalidate it.
+     * This adds 16 bytes of storage per render pixel on WebGPU or 32 bytes on WebGL2, allocated
+     * only while enabled and sampling is animated. Call {@link resetHistory} after external changes
+     * to shader inputs or a camera cut.
+     *
+     * @type {boolean}
+     * @beta
+     */
+    steadyConvergence = true;
+
+    /**
+     * Maximum number of refinement frames after an animated SteadySplats camera stops, in
+     * [1, 1024]. Defaults to 16. Once reached, the renderer reuses its last reconstructed image
+     * until the camera, scene or history changes. Increasing the limit resumes refinement.
+     *
+     * While refinement is pending, the GSplat system fires {@link GSplatComponentSystem.EVENT_FRAMEREQUEST}
+     * so applications with {@link AppBase#autoRender} set to false can request the next frame.
+     * This does not stop other scene rendering or application updates. Ignored when {@link steadyConvergence}
+     * is disabled. Call {@link resetHistory} to restart with a new budget.
+     *
+     * @type {number}
+     * @beta
+     */
+    steadyConvergenceFrames = 16;
+
+    /** @private */
+    _historyVersion = 0;
+
+    /**
+     * Invalidates SteadySplats occluder and temporal histories on the next rendered frame for
+     * every camera and layer. Call after a camera cut or an abrupt change to splat data. Smooth
+     * camera motion is reprojected automatically. This does not reset the stochastic sample sequence
+     * or affect other renderers.
+     *
+     * @beta
+     * @example
+     * camera.setPosition(newPosition);
+     * app.scene.gsplat.resetHistory();
+     */
+    resetHistory() {
+        this._historyVersion++;
+    }
+
+    /** @type {number} @ignore */
+    get historyVersion() {
+        return this._historyVersion;
+    }
+
+    /**
      * The noise pattern the coverage of a {@link GSplatParams#stochastic} splat is dithered
      * against, ignored when `stochastic` is false. Can be:
      *
@@ -191,13 +264,19 @@ class GSplatParams {
      * @private
      */
     _resolveRenderer(value) {
+        const device = this._device;
         // AUTO picks GPU-side sorting on WebGPU, CPU-side sorting elsewhere.
         if (value === GSPLAT_RENDERER_AUTO) {
-            return this._device.isWebGPU ?
+            return device.isWebGPU ?
                 GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
         }
-        // GPU sort requires WebGPU; fall back to CPU sort on WebGL.
-        if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
+        if (value === GSPLAT_RENDERER_STEADY) {
+            // WebGL2 needs four integer history attachments and full-precision stationary averages.
+            const supported = device.isWebGPU || (device.isWebGL2 && device.textureFloatRenderable &&
+                device.textureHalfFloatRenderable && device.maxColorAttachments >= 4);
+            return supported ? value : GSPLAT_RENDERER_RASTER_CPU_SORT;
+        }
+        if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !device.isWebGPU) {
             return GSPLAT_RENDERER_RASTER_CPU_SORT;
         }
         return value;
@@ -211,9 +290,20 @@ class GSplatParams {
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL.
      * - {@link GSPLAT_RENDERER_RASTER_CPU_SORT}: Rasterization with CPU-side sorting.
      * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only).
+     * - {@link GSPLAT_RENDERER_STEADY}: Unsorted stochastic rasterization with spatial importance
+     * resampling and temporal reuse on WebGPU and capable WebGL2 devices. WebGL2 requires
+     * floating-point render targets and at least four color attachments. Supports full-viewport, mono,
+     * perspective cameras, standard fragment coverage and scenes without opaque mesh occluders.
+     * Perspective depth must be independent of the projected x/y coordinates on both backends.
+     * Other views use GPU sorting on WebGPU or CPU sorting on WebGL2.
+     * Inference uses per-primitive spatiotemporal blue-noise (STBN) samples. Model training is
+     * unchanged; models trained for low stochastic variance can further improve quality.
+     * {@link CameraComponent#jitter} controls whether those samples animate, independently of
+     * {@link steadyHistoryWeight}. The native {@link dither} patterns apply to the GPU-sort
+     * renderer; SteadySplats uses uniform STBN thresholds so its PDF ratios remain consistent.
      *
-     * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
-     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
+     * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes unsupported by the device fall back to
+     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT}. The resolved mode actually used
      * can be queried via {@link currentRenderer}.
      *
      * @type {number}
@@ -244,6 +334,8 @@ class GSplatParams {
      * The current rendering pipeline in effect after platform-based fallback resolution. When
      * {@link renderer} is set to a mode requiring WebGPU on a WebGL device, this returns the
      * fallback mode actually being used.
+     * This is the device-level selection; {@link GSPLAT_RENDERER_STEADY} additionally uses native
+     * sorting for views outside its supported camera and material configuration.
      *
      * @type {number}
      */

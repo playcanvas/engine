@@ -1331,6 +1331,35 @@ export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 export const GSPLAT_RENDERER_COMPUTE = 3;
 
 /**
+ * Unsorted stochastic rasterization with SteadySplats spatial importance resampling and
+ * temporal reuse. Supports WebGPU and WebGL2 devices with floating-point render targets and
+ * at least four color attachments. Other devices fall back to CPU sorting. This renderer trades
+ * per-pixel history storage and sampling noise for removing the depth sort.
+ *
+ * Sampling uses a shared 32x32x64 scalar spatiotemporal blue-noise volume with per-primitive
+ * offsets, four cached occluders and four spatial neighbors. History and frame targets use
+ * approximately 136 bytes per render pixel on WebGPU with stationary convergence, 120 without
+ * it, or 112 with temporal color reuse disabled. WebGL2 uses texture-based ping-pong histories
+ * and requires approximately 220, 188, or 180 bytes respectively. These exclude the shared
+ * GSplat work buffer, WebGPU projection cache and 64 KiB noise volume. Camera jitter controls
+ * fixed or animated sampling. Full-precision primitive phases decorrelate overlapping samples
+ * without quantizing their acceptance probability to the volume's 8-bit ranks.
+ * Animated stationary views progressively converge when {@link GSplatParams#steadyConvergence}
+ * is enabled. {@link GSplatParams#steadyConvergenceFrames} defaults to 16 refinement frames;
+ * completed views reuse their last image without running the reconstruction passes again.
+ * See {@link GSplatParams#renderer} for supported views and fallback behavior, and
+ * {@link GSplatParams#resetHistory} for camera cuts. Model training is unchanged.
+ *
+ * @see https://arxiv.org/abs/2610.05576 SteadySplats, Windisch et al. (2026).
+ * @see https://github.com/MrNeRF/LichtFeld-Studio/pull/3728 Related native viewport implementation.
+ *
+ * @type {number}
+ * @category Graphics
+ * @beta
+ */
+export const GSPLAT_RENDERER_STEADY = 4;
+
+/**
  * The splat budget is a target: LOD detail is raised until {@link GSplatParams#splatBudget} is
  * used up, wherever the camera is. The LOD distances of each GSplat still shape how detail falls
  * off with distance and how it divides between GSplats, but not how much of it there is. The

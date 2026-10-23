@@ -127,16 +127,17 @@ class GSplatComponentSystem extends ComponentSystem {
     /**
      * Fired once per frame, after the component/script updates and before rendering, when GSplat
      * streaming has produced new data that a render would show (newly streamed octree LOD) or a CPU
-     * sort result is ready to be applied. This drives on-demand rendering for apps that run with
+     * sort result is ready to be applied, or SteadySplats has progressive refinement pending.
+     * This drives on-demand rendering for apps that run with
      * {@link AppBase#autoRender} set to false: a typical handler sets {@link AppBase#renderNextFrame}
      * so the new data is shown.
      *
      * Streaming (LOD evaluation, file loading) runs every frame regardless of `autoRender`, so the
      * scene keeps loading in the background; this event tells you when it's worth rendering.
      *
-     * Note: this event covers streaming changes only. Changes you make yourself — moving the camera,
-     * modifying the scene, or adding, removing, or changing properties of gsplat components — should
-     * trigger a render yourself.
+     * SteadySplats requests further frames up to {@link GSplatParams#steadyConvergenceFrames}.
+     * Applications should still request a render for other changes they make themselves, such as
+     * adding cameras, changing component properties or modifying other scene geometry.
      *
      * @event
      * @example

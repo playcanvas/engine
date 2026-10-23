@@ -99,6 +99,9 @@ class GSplatWorld {
     /** @type {number} */
     _bufferCopyTotal = 0;
 
+    /** @type {number} */
+    _contentVersion = 0;
+
     /** @type {GSplatPlacementStateTracker} */
     _stateTracker = new GSplatPlacementStateTracker();
 
@@ -245,6 +248,16 @@ class GSplatWorld {
     /** @type {number} */
     get bufferCopyTotal() {
         return this._bufferCopyTotal;
+    }
+
+    /**
+     * Version of geometry and work-buffer contents. Camera-only SH color refreshes leave
+     * stable Gaussian identities and coverage unchanged, so do not invalidate visibility history.
+     *
+     * @type {number}
+     */
+    get contentVersion() {
+        return this._contentVersion;
     }
 
     /** @type {boolean} */
@@ -844,6 +857,7 @@ class GSplatWorld {
         const changedAllocIds = renderAll ? null : worldState.needsUploadIds;
 
         if (splatsToRender.length > 0) {
+            this._contentVersion++;
             const totalBlocks = this._allocationMap.size;
             const uploadBlocks = renderAll ? totalBlocks : worldState.needsUploadIds.size;
 
@@ -1018,6 +1032,7 @@ class GSplatWorld {
 
         // Batch render all updated splats in a single render pass
         if (_updatedSplats.length > 0) {
+            this._contentVersion++;
             this._workBuffer.render(_updatedSplats, camera, this.getDebugColors());
             _updatedSplats.length = 0;
         }

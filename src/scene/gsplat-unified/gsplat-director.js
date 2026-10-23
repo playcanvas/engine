@@ -13,6 +13,9 @@ import { GSplatResourceCleanup } from '../gsplat/gsplat-resource-cleanup.js';
  * @import { Renderer } from '../renderer/renderer.js'
  * @import { EventHandler } from '../../core/event-handler.js'
  * @import { GSplatParams } from './gsplat-params.js'
+ * @import { RenderPassForward } from '../renderer/render-pass-forward.js'
+ * @import { FramePass } from '../../platform/graphics/frame-pass.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
  */
 
 const tempLayersToRemove = [];
@@ -242,6 +245,30 @@ class GSplatDirector {
     }
 
     /**
+     * Collects dependencies before the first pass drawing each manager's forward mesh. A camera
+     * can split its layers across passes with different targets and color settings.
+     *
+     * @param {Camera} camera - The camera about to render.
+     * @param {FramePass[]} passes - Destination.
+     * @param {RenderPassForward} forwardPass - Effective forward target and color settings.
+     */
+    collectRenderPasses(camera, passes, forwardPass) {
+        const cameraData = this.camerasMap.get(camera);
+        if (cameraData) {
+            for (const layerData of cameraData.layersMap.values()) {
+                const manager = layerData.gsplatManager;
+                if (!manager?.prepareRenderPass(forwardPass)) continue;
+                const dependencies = manager.renderer.renderPasses;
+                if (dependencies) {
+                    for (let i = 0; i < dependencies.length; i++) {
+                        passes.push(dependencies[i]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Dispatches pick compute for the given camera and layer, returning a ready-to-render
      * pick mesh instance (or null if no gsplat data exists for this camera/layer pair).
      *
@@ -249,7 +276,7 @@ class GSplatDirector {
      * @param {number} width - Pick target width.
      * @param {number} height - Pick target height.
      * @param {Layer} layer - The layer to pick from.
-     * @returns {import('../mesh-instance.js').MeshInstance|null} The configured pick mesh instance.
+     * @returns {MeshInstance|null} The configured pick mesh instance.
      */
     prepareForPicking(camera, width, height, layer) {
         const cameraData = this.camerasMap.get(camera);
@@ -266,7 +293,8 @@ class GSplatDirector {
      * skipped, e.g. `app.autoRender = false`). Applies pending param changes, processes resource
      * cleanup, and advances each existing manager's LOD/streaming/world-state via
      * {@link GSplatManager#updateStreaming}. Fires `frame:request` once when a render would show new
-     * data (a new world-state version) or when a CPU-sort result is waiting to be applied.
+     * data (a new world-state version), a CPU-sort result is waiting to be applied, or a view has
+     * progressive refinement pending.
      *
      * Uses the cached `camerasMap` topology (built by {@link update} on the render path). Placement
      * changes on layers that already have managers are reconciled here, so they reach the world state
@@ -313,6 +341,7 @@ class GSplatDirector {
                 if (manager) {
                     needRender = manager.updateStreaming(token) || needRender;
                     needRender = manager.hasPendingSort || needRender;
+                    needRender = manager.hasPendingRefinement || needRender;
                     streamed = true;
                 }
                 const shadowManager = layerData.gsplatManagerShadow;
@@ -335,7 +364,7 @@ class GSplatDirector {
             this.gsplat.dirty = false;
         }
 
-        // request a render when streaming advanced, or a CPU sort result is waiting to be applied
+        // Request a render for new streamed data, a completed sort, or progressive refinement.
         if (needRender) {
             this.eventHandler.fire('frame:request');
         }
