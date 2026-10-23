@@ -1,8 +1,13 @@
 /**
  * The glyph of an icon, named for the component it marks.
  *
- * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem'} OverlayIcon
+ * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem' | 'anim' | 'animation' | 'script'} OverlayIcon
  */
+
+// the glyph of the anim and animation components
+const PLAY = `
+        <circle r="9"/>
+        <path d="M-2.5 -4.5L4.5 0L-2.5 4.5Z" fill="white" stroke="none"/>`;
 
 /**
  * The icon glyphs as SVG content in a 24 by 24 CSS pixel box centered on the origin, y down. They
@@ -45,7 +50,17 @@ const ICON_GLYPHS = {
             <circle cy="7.5" r="1.6"/>
             <circle cx="6.495" cy="3.75" r="2.2"/>
             <circle cx="6.495" cy="-3.75" r="1.6"/>
-        </g>`
+        </g>`,
+
+    // a play button, a triangle in a circle
+    anim: PLAY,
+
+    // the legacy animation component, drawn as anim
+    animation: PLAY,
+
+    // code brackets around a slash
+    script: `
+        <path d="M-4.5 -5.5L-10 0L-4.5 5.5M4.5 -5.5L10 0L4.5 5.5M1.8 -8L-1.8 8"/>`
 };
 
 export { ICON_GLYPHS };

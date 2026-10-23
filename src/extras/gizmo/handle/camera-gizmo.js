@@ -53,6 +53,15 @@ const MIN_CLIP = 1e-3;
  */
 class CameraGizmo extends HandleGizmo {
     /**
+     * Whether to also draw cameras whose camera component is disabled, such as the scene cameras
+     * of an editor that renders them itself. Cameras of disabled entities are never drawn.
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    drawDisabled = false;
+
+    /**
      * Creates a new CameraGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -156,7 +165,7 @@ class CameraGizmo extends HandleGizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             const entity = /** @type {Entity} */ (this.nodes[i]);
             const { camera } = entity;
-            if (entity.enabled && camera?.enabled && camera !== this._camera) {
+            if (entity.enabled && camera && (camera.enabled || this.drawDisabled) && camera !== this._camera) {
                 this._draw(entity);
             }
         }

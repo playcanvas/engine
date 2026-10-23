@@ -71,6 +71,14 @@ class LightGizmo extends HandleGizmo {
     useLightColor = false;
 
     /**
+     * Whether to also draw lights whose light component is disabled. Lights of disabled entities
+     * are never drawn. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    drawDisabled = false;
+
+    /**
      * The local scale of the dragged light at the start of the drag.
      *
      * @private
@@ -353,9 +361,7 @@ class LightGizmo extends HandleGizmo {
         }
         this._rays(entity, rays, RAYS, 0.58 * scale, 0.7, 0.75);
         renderer.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
-
-        // keep the icon clear of the arrow
-        this._icon('light', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
+        this._icon('light', pos, entity);
     }
 
     /**
@@ -385,7 +391,7 @@ class LightGizmo extends HandleGizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             const entity = /** @type {Entity} */ (this.nodes[i]);
             const light = entity.light;
-            if (!entity.enabled || !light?.enabled) {
+            if (!entity.enabled || !light || !(light.enabled || this.drawDisabled)) {
                 continue;
             }
             this._renderer.tint = this.useLightColor ? light.color : null;

@@ -61,6 +61,14 @@ class IconGizmo extends Gizmo {
     useLightColor = false;
 
     /**
+     * Whether to also draw icons for disabled components, such as the scene cameras of an editor
+     * that renders them itself. Disabled entities never show an icon. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    drawDisabled = false;
+
+    /**
      * The theme.
      *
      * @type {IconGizmoTheme}
@@ -171,7 +179,8 @@ class IconGizmo extends Gizmo {
             return null;
         }
         for (const kind in ICON_GLYPHS) {
-            if (entity.c[kind]?.enabled) {
+            const component = entity.c[kind];
+            if (component && (component.enabled || this.drawDisabled)) {
                 return /** @type {OverlayIcon} */ (kind);
             }
         }

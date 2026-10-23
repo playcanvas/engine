@@ -335,6 +335,7 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
         this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
+        this._device.canvas.addEventListener('pointercancel', this._onPointerUp);
 
         this._handles.push(this._app.on('prerender', () => this.prerender()));
         this._handles.push(this._app.on('update', () => this.update()));
@@ -571,12 +572,14 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerUp(e) {
-        if (!this.mouseButtons[e.button] || e.pointerId !== this._pointerId) {
+        // a cancelled pointer has no button, and ends the drag without a hit
+        const cancel = e.type === 'pointercancel';
+        if ((!cancel && !this.mouseButtons[e.button]) || e.pointerId !== this._pointerId) {
             return;
         }
 
         // end the drag even if disabled or pointer locked mid-drag
-        const active = this.enabled && !document.pointerLockElement;
+        const active = !cancel && this.enabled && !document.pointerLockElement;
         const selection = active ? this._getSelection(e.offsetX, e.offsetY) : [];
         if (selection[0]) {
             if (this.preventDefault) {
@@ -861,6 +864,7 @@ class Gizmo extends EventHandler {
         this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
         this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
+        this._device.canvas.removeEventListener('pointercancel', this._onPointerUp);
 
         this._handles.forEach(handle => handle.off());
 
