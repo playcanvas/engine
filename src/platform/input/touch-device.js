@@ -1,7 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
-import { platform } from '../../core/platform.js';
 
-import { TouchEvent } from './touch-event.js';
+import { isTouchPointer, TouchEvent } from './touch-event.js';
 
 /**
  * @import { Mouse } from './mouse.js'
@@ -187,10 +186,8 @@ class TouchDevice extends EventHandler {
     }
 
     _handleTouchStart(e) {
-        const { pointerId, pointerType } = e;
-
-        // a pen is a mouse on platforms without touch support
-        if ((pointerType !== 'touch' && (pointerType !== 'pen' || !platform.touch)) || this._touches.has(pointerId)) {
+        const { pointerId } = e;
+        if (!isTouchPointer(e) || this._touches.has(pointerId)) {
             return;
         }
 
@@ -230,7 +227,9 @@ class TouchDevice extends EventHandler {
      */
     _end(name, e) {
         const touch = this._touches.get(e.pointerId);
-        if (!touch) {
+
+        // a mouse may share a pointer id with a touch
+        if (!touch || !isTouchPointer(e)) {
             return;
         }
         this._touches.delete(e.pointerId);

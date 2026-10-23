@@ -1,10 +1,9 @@
-import { platform } from '../../core/platform.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Mouse } from '../../platform/input/mouse.js';
 import { isMousePointer } from '../../platform/input/mouse-event.js';
-import { getTouchTargetCoords } from '../../platform/input/touch-event.js';
+import { getTouchTargetCoords, isTouchPointer } from '../../platform/input/touch-event.js';
 import { getApplication } from '../globals.js';
 
 /**
@@ -22,9 +21,6 @@ const TAP_MAX_DURATION = 500;
 
 // `PointerEvent#buttons` bits indexed by MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE and MOUSEBUTTON_RIGHT
 const BUTTON_BITS = [1, 4, 2];
-
-// a pen is a touch on platforms with touch support, and a mouse otherwise
-const isTouch = e => e.pointerType === 'touch' || (e.pointerType === 'pen' && platform.touch);
 
 /**
  * `TouchList#item` for the arrays that stand in for TouchLists.
@@ -829,7 +825,7 @@ class ElementInput {
 
     _handleTouchStart(event) {
         const id = event.pointerId;
-        if (!isTouch(event) || this._touches.has(id)) return;
+        if (!isTouchPointer(event) || this._touches.has(id)) return;
 
         // no explicit capture: the browser implicitly captures a touch to its start target
         this._touches.set(id, { target: event.target, event });
@@ -855,7 +851,7 @@ class ElementInput {
     _handleTouchEnd(event, eventType) {
         const id = event.pointerId;
         const record = this._touches.get(id);
-        if (!record || !isTouch(event)) return;
+        if (!record || !isTouchPointer(event)) return;
         this._touches.delete(id);
 
         if (!this._enabled) return;
@@ -908,7 +904,7 @@ class ElementInput {
     _handleTouchMove(event) {
         const id = event.pointerId;
         const record = this._touches.get(id);
-        if (!record || !isTouch(event)) return;
+        if (!record || !isTouchPointer(event)) return;
         record.event = event;
 
         if (!this._enabled) return;

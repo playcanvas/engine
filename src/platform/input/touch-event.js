@@ -1,6 +1,20 @@
+import { platform } from '../../core/platform.js';
+
 /**
  * @import { TouchDevice } from './touch-device.js'
  */
+
+/**
+ * Returns true if a pointer event comes from a touch. A pen counts as a touch on platforms with
+ * touch support, and as a mouse otherwise.
+ *
+ * @param {globalThis.PointerEvent} event - The pointer event.
+ * @returns {boolean} True if the pointer is a touch.
+ * @ignore
+ */
+function isTouchPointer(event) {
+    return event.pointerType === 'touch' || (event.pointerType === 'pen' && platform.touch);
+}
 
 /**
  * This function takes a browser Touch or PointerEvent and returns the coordinates of the touch
@@ -171,4 +185,4 @@ class TouchEvent {
     }
 }
 
-export { getTouchTargetCoords, Touch, TouchEvent };
+export { getTouchTargetCoords, isTouchPointer, Touch, TouchEvent };

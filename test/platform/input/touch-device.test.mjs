@@ -94,6 +94,15 @@ describe('TouchDevice', function () {
         expect(end.event).to.equal(up);
     });
 
+    it('does not end a touch on a mouse pointerup or pointerleave with the same pointer id', function () {
+        pointer('pointerdown');
+        pointer('pointerup', { pointerType: 'mouse' });
+        pointer('pointerleave', { pointerType: 'mouse' });
+        pointer('pointercancel', { pointerType: 'mouse' });
+        pointer('pointermove', { x: 4 });
+        expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchmove']);
+    });
+
     it('reports all active touches and the changed one for two touches', function () {
         pointer('pointerdown', { pointerId: 1, x: 0, y: 0 });
         pointer('pointerdown', { pointerId: 2, isPrimary: false, x: 100, y: 0 });
