@@ -3,10 +3,10 @@
  */
 
 /**
- * This function takes a browser Touch object and returns the coordinates of the touch relative to
- * the target DOM element.
+ * This function takes a browser Touch or PointerEvent and returns the coordinates of the touch
+ * relative to the target DOM element.
  *
- * @param {globalThis.Touch} touch - The browser Touch object.
+ * @param {globalThis.Touch|globalThis.PointerEvent} touch - The browser Touch or PointerEvent.
  * @returns {{x: number, y: number}} The coordinates of the touch relative to the touch.target
  * DOM element.
  * @category Input Devices
@@ -39,7 +39,7 @@ function getTouchTargetCoords(touch) {
  */
 class Touch {
     /**
-     * The identifier of the touch.
+     * The identifier of the touch, which is the `pointerId` of its pointer events.
      *
      * @type {number}
      */
@@ -67,21 +67,21 @@ class Touch {
     target;
 
     /**
-     * The original browser Touch object.
+     * The browser PointerEvent that last updated the touch.
      *
-     * @type {globalThis.Touch}
+     * @type {globalThis.PointerEvent}
      */
     touch;
 
     /**
-     * Create a new Touch object from the browser Touch.
+     * Create a new Touch object from a browser PointerEvent.
      *
-     * @param {globalThis.Touch} touch - The browser Touch object.
+     * @param {globalThis.PointerEvent} touch - The browser PointerEvent.
      */
     constructor(touch) {
         const coords = getTouchTargetCoords(touch);
 
-        this.id = touch.identifier;
+        this.id = touch.pointerId;
         this.x = coords.x;
         this.y = coords.y;
         this.target = touch.target;
@@ -109,9 +109,9 @@ class TouchEvent {
     element;
 
     /**
-     * The original browser TouchEvent.
+     * The original browser PointerEvent.
      *
-     * @type {globalThis.TouchEvent}
+     * @type {globalThis.PointerEvent}
      */
     event;
 
@@ -123,7 +123,9 @@ class TouchEvent {
     touches = [];
 
     /**
-     * A list of touches that have changed since the last event.
+     * A list of touches that have changed since the last event. This holds the one touch whose
+     * pointer fired the event, and on `touchend` and `touchcancel` it is no longer in
+     * {@link TouchEvent#touches}.
      *
      * @type {Touch[]}
      */
@@ -133,14 +135,14 @@ class TouchEvent {
      * Create a new TouchEvent instance. It is created from an existing browser event.
      *
      * @param {TouchDevice} device - The source device of the touch events.
-     * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
+     * @param {globalThis.PointerEvent} event - The original browser PointerEvent.
      */
     constructor(device, event) {
         this.element = event.target;
         this.event = event;
 
-        this.touches = Array.from(event.touches).map(touch => new Touch(touch));
-        this.changedTouches = Array.from(event.changedTouches).map(touch => new Touch(touch));
+        this.touches = Array.from(device._touches.values(), e => new Touch(e));
+        this.changedTouches = [new Touch(event)];
     }
 
     /**
