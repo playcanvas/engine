@@ -83,6 +83,13 @@ class FlyController extends InputController {
     rotateJoystickSens = 2;
 
     /**
+     * The left touch drag sensitivity, in `move` units per pixel dragged in a frame. A drag only
+     * moves on the frames the finger moves, and `move` is limited to 1, so a drag of 10 pixels or
+     * more per frame moves at full speed. Default is 0.1.
+     */
+    touchMoveSens = 0.1;
+
+    /**
      * The gamepad stick dead zone as `[low, high]`, see {@link GamePads.applyDeadZone}.
      *
      * @type {number[]}
@@ -169,9 +176,9 @@ class FlyController extends InputController {
         }
 
         if (gestures) {
-            const { leftJoystick, rightJoystick, right } = gestures;
-            move[0] += leftJoystick.value.x;
-            move[2] -= leftJoystick.value.y;
+            const { leftJoystick, rightJoystick, left, right } = gestures;
+            move[0] += leftJoystick.value.x + left[0] * this.touchMoveSens;
+            move[2] -= leftJoystick.value.y + left[1] * this.touchMoveSens;
             lookRate[0] += rightJoystick.value.x;
             lookRate[1] += rightJoystick.value.y;
             look[0] += right[0];

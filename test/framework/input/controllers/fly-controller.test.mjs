@@ -4,6 +4,7 @@ import sinon from 'sinon';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { FlyController } from '../../../../src/framework/input/controllers/fly-controller.js';
 import { Pose } from '../../../../src/framework/input/pose.js';
+import { Gestures } from '../../../../src/platform/input/gestures.js';
 import { InputFrame } from '../../../../src/platform/input/input-frame.js';
 import { Keyboard } from '../../../../src/platform/input/keyboard.js';
 import { Mouse } from '../../../../src/platform/input/mouse.js';
@@ -180,6 +181,27 @@ describe('FlyController', function () {
 
             expect(frame.input.fast).to.equal(true);
             expect(frame.input.slow).to.equal(true);
+        });
+
+        it('maps a left touch drag into move for that frame only', function () {
+            const frame = new InputFrame(FlyController.fields);
+            const gestures = new Gestures(canvas, { layout: 'touch-touch' });
+            const touch = (type, x, y) => pointer(type, { pointerType: 'touch', clientX: x, clientY: y, screenX: x, screenY: y });
+
+            touch('pointerdown', 100, 100);
+            touch('pointermove', 102, 96);
+            controller.map({ gestures }, frame);
+
+            expect(frame.input.move[0]).to.be.closeTo(2 * controller.touchMoveSens, 1e-9);
+            expect(frame.input.move[1]).to.equal(0);
+            expect(frame.input.move[2]).to.be.closeTo(4 * controller.touchMoveSens, 1e-9);
+
+            // a still finger stops
+            gestures.update();
+            controller.map({ gestures }, frame);
+            expect(frame.input.move).to.deep.equal([0, 0, 0]);
+
+            gestures.destroy();
         });
 
     });

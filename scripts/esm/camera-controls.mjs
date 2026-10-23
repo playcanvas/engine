@@ -1,12 +1,15 @@
 import {
     math,
-    DualGestureSource,
     FlyController,
     FocusController,
-    GamepadSource,
+    GamePads,
+    Gestures,
     InputFrame,
-    KeyboardMouseSource,
-    MultiTouchSource,
+    Keyboard,
+    Mouse,
+    MOUSEBUTTON_LEFT,
+    MOUSEBUTTON_MIDDLE,
+    MOUSEBUTTON_RIGHT,
     OrbitController,
     Pose,
     PROJECTION_PERSPECTIVE,
@@ -17,103 +20,9 @@ import {
 
 /** @import { CameraComponent, InputController } from 'playcanvas' */
 
-/**
- * @typedef {object} CameraControlsState
- * @property {Vec3} axis - The axis.
- * @property {number} shift - The shift.
- * @property {number} ctrl - The ctrl.
- * @property {number[]} mouse - The mouse.
- * @property {number} touches - The touches.
- */
-
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
 
 const pose = new Pose();
-
-const frame = new InputFrame({
-    move: [0, 0, 0],
-    rotate: [0, 0, 0]
-});
-
-/**
- * Calculate the damp rate.
- *
- * @param {number} damping - The damping.
- * @param {number} dt - The delta time.
- * @returns {number} - The lerp rate.
- * @ignore
- */
-export const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
-
-/**
- * @param {number[]} stick - The stick
- * @param {number} low - The low dead zone
- * @param {number} high - The high dead zone
- */
-const applyDeadZone = (stick, low, high) => {
-    const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
-    if (mag < low) {
-        stick.fill(0);
-        return;
-    }
-    const scale = (mag - low) / (high - low);
-    stick[0] *= scale / mag;
-    stick[1] *= scale / mag;
-};
-
-/**
- * Converts screen space mouse deltas to world space pan vector.
- *
- * @param {CameraComponent} camera - The camera component.
- * @param {number} dx - The mouse delta x value.
- * @param {number} dy - The mouse delta y value.
- * @param {number} dz - The world space zoom delta value.
- * @param {Vec3} [out] - The output vector to store the pan result.
- * @returns {Vec3} - The pan vector in world space.
- * @private
- */
-const screenToWorld = (camera, dx, dy, dz, out = new Vec3()) => {
-    const { system, fov, aspectRatio, horizontalFov, projection, orthoHeight } = camera;
-    const { width, height } = system.app.graphicsDevice.clientRect;
-
-    // normalize deltas to device coord space
-    out.set(
-        -(dx / width) * 2,
-        (dy / height) * 2,
-        0
-    );
-
-    // calculate half size of the view frustum at the current distance
-    const halfSize = tmpV2.set(0, 0, 0);
-    if (projection === PROJECTION_PERSPECTIVE) {
-        const halfSlice = dz * Math.tan(0.5 * fov * math.DEG_TO_RAD);
-        if (horizontalFov) {
-            halfSize.set(
-                halfSlice,
-                halfSlice / aspectRatio,
-                0
-            );
-        } else {
-            halfSize.set(
-                halfSlice * aspectRatio,
-                halfSlice,
-                0
-            );
-        }
-    } else {
-        halfSize.set(
-            orthoHeight * aspectRatio,
-            orthoHeight,
-            0
-        );
-    }
-
-    // scale by device coord space
-    out.mul(halfSize);
-
-    return out;
-};
 
 /**
  * @enum {string}
@@ -193,28 +102,32 @@ class CameraControls extends Script {
     _zoomRange = new Vec2(0.01, 0);
 
     /**
-     * @type {KeyboardMouseSource}
+     * @type {Keyboard}
      * @private
      */
-    _desktopInput = new KeyboardMouseSource();
+    // @ts-ignore
+    _keyboard;
 
     /**
-     * @type {MultiTouchSource}
+     * @type {Mouse}
      * @private
      */
-    _orbitMobileInput = new MultiTouchSource();
+    // @ts-ignore
+    _mouse;
 
     /**
-     * @type {DualGestureSource}
+     * @type {Gestures}
      * @private
      */
-    _flyMobileInput = new DualGestureSource();
+    _gestures = new Gestures(undefined, { layout: 'joystick-touch' });
 
     /**
-     * @type {GamepadSource}
+     * The gamepads owned by the script, when the app has none.
+     *
+     * @type {GamePads|null}
      * @private
      */
-    _gamepadInput = new GamepadSource();
+    _gamepads = null;
 
     /**
      * @type {FlyController}
@@ -255,16 +168,40 @@ class CameraControls extends Script {
     _mode;
 
     /**
-     * @type {CameraControlsState}
+     * @type {InputFrame}
      * @private
      */
-    _state = {
-        axis: new Vec3(),
-        shift: 0,
-        ctrl: 0,
-        mouse: [0, 0, 0],
-        touches: 0
-    };
+    _orbitFrame = new InputFrame(OrbitController.fields);
+
+    /**
+     * @type {InputFrame}
+     * @private
+     */
+    _flyFrame = new InputFrame(FlyController.fields);
+
+    /**
+     * The devices read by the active controller.
+     *
+     * @type {object}
+     * @private
+     */
+    _devices = {};
+
+    /**
+     * The devices that interrupt a focus.
+     *
+     * @type {object}
+     * @private
+     */
+    _focusDevices = {};
+
+    /**
+     * The devices that switch to fly mode.
+     *
+     * @type {object}
+     * @private
+     */
+    _keyDevices = {};
 
     /**
      * Enable fly camera controls.
@@ -553,11 +490,11 @@ class CameraControls extends Script {
             console.warn(`CameraControls: invalid mobile input layout: ${layout}`);
             return;
         }
-        this._flyMobileInput.layout = layout;
+        this._gestures.layout = layout;
     }
 
     get mobileInputLayout() {
-        return this._flyMobileInput.layout;
+        return this._gestures.layout;
     }
 
     /**
@@ -580,20 +517,27 @@ class CameraControls extends Script {
         // set orbit controller defaults
         this._orbitController.zoomRange = new Vec2(0.01, Infinity);
 
-        // attach input
-        this._desktopInput.attach(this.app.graphicsDevice.canvas);
-        this._orbitMobileInput.attach(this.app.graphicsDevice.canvas);
-        this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
-        this._gamepadInput.attach(this.app.graphicsDevice.canvas);
+        // devices
+        const canvas = this.app.graphicsDevice.canvas;
+        const keyboard = this._keyboard = new Keyboard(window);
+        const mouse = this._mouse = new Mouse(canvas, { pointer: true });
+        const gestures = this._gestures;
+        gestures.attach(canvas);
+        if (!this.app.gamepads) {
+            this._gamepads = new GamePads();
+        }
+        this._devices = { element: canvas, keyboard, mouse, gestures, gamepads: this.app.gamepads ?? this._gamepads };
+        this._focusDevices = { element: canvas, keyboard, mouse };
+        this._keyDevices = { keyboard };
 
         // expose ui events
-        this._flyMobileInput.on('joystick:position:left', ([bx, by, sx, sy]) => {
+        gestures.on('joystick:position:left', ([bx, by, sx, sy]) => {
             if (this._mode !== 'fly') {
                 return;
             }
             this.app.fire(`${this.joystickEventName}:left`, bx, by, sx, sy);
         });
-        this._flyMobileInput.on('joystick:position:right', ([bx, by, sx, sy]) => {
+        gestures.on('joystick:position:right', ([bx, by, sx, sy]) => {
             if (this._mode !== 'fly') {
                 return;
             }
@@ -607,13 +551,7 @@ class CameraControls extends Script {
         this._setMode('orbit');
 
         // state
-        this.on('state', () => {
-            // discard inputs
-            this._desktopInput.read();
-            this._orbitMobileInput.read();
-            this._flyMobileInput.read();
-            this._gamepadInput.read();
-        });
+        this.on('state', this._discard, this);
 
         // destroy
         this.on('destroy', this._destroy, this);
@@ -623,13 +561,36 @@ class CameraControls extends Script {
      * @private
      */
     _destroy() {
-        this._desktopInput.destroy();
-        this._orbitMobileInput.destroy();
-        this._flyMobileInput.destroy();
-        this._gamepadInput.destroy();
+        this._keyboard.detach();
+        this._mouse.detach();
+        this._gestures.destroy();
+        this._gamepads?.destroy();
 
         this._flyController.destroy();
         this._orbitController.destroy();
+    }
+
+    /**
+     * Discards the input since the last update.
+     *
+     * @private
+     */
+    _discard() {
+        this._orbitFrame.reset();
+        this._flyFrame.reset();
+        this._updateDevices();
+    }
+
+    /**
+     * Clears the per-update device totals.
+     *
+     * @private
+     */
+    _updateDevices() {
+        this._keyboard.update();
+        this._mouse.update();
+        this._gestures.update();
+        this._gamepads?.update();
     }
 
     /**
@@ -725,121 +686,75 @@ class CameraControls extends Script {
      */
     update(dt) {
         dt = Math.min(dt, 0.1);
-        const { keyCode } = KeyboardMouseSource;
 
-        const { key, button, mouse, wheel } = this._desktopInput.read();
-        const { touch, pinch, count } = this._orbitMobileInput.read();
-        const { leftInput, rightInput } = this._flyMobileInput.read();
-        const { leftStick, rightStick } = this._gamepadInput.read();
+        const { _mouse: mouse, _orbitFrame: orbitFrame, _flyFrame: flyFrame } = this;
+        const orbit = this._orbitController;
+        const fly = this._flyController;
 
-        // apply dead zone to gamepad sticks
-        applyDeadZone(leftStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
-        applyDeadZone(rightStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
+        // forward settings
+        fly.moveSpeed = this.moveSpeed;
+        fly.moveFastSpeed = this.moveFastSpeed;
+        fly.moveSlowSpeed = this.moveSlowSpeed;
+        fly.rotateSpeed = this.rotateSpeed;
+        fly.rotateJoystickSens = this.rotateJoystickSens;
+        fly.gamepadDeadZone[0] = this.gamepadDeadZone.x;
+        fly.gamepadDeadZone[1] = this.gamepadDeadZone.y;
+        orbit.rotateSpeed = this.rotateSpeed;
+        orbit.zoomSpeed = this.zoomSpeed;
+        orbit.zoomPinchSens = this.zoomPinchSens;
+        orbit.enablePan = this.enablePan;
 
-        // update state
-        this._state.axis.add(tmpV1.set(
-            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
-            (key[keyCode.E] - key[keyCode.Q]),
-            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
-        ));
-        for (let i = 0; i < this._state.mouse.length; i++) {
-            this._state.mouse[i] += button[i];
-        }
-        this._state.shift += key[keyCode.SHIFT];
-        this._state.ctrl += key[keyCode.CTRL];
-        this._state.touches += count[0];
+        // copy the projection used to scale panning
+        const { camera } = orbit;
+        camera.fov = this._camera.fov;
+        camera.aspectRatio = this._camera.aspectRatio;
+        camera.horizontalFov = this._camera.horizontalFov;
+        camera.perspective = this._camera.projection === PROJECTION_PERSPECTIVE;
+        camera.orthoHeight = this._camera.orthoHeight;
 
-        if (button[0] === 1 || button[1] === 1 || wheel[0] !== 0) {
+        // only movement keys switch to fly, so map the keyboard alone first
+        fly.map(this._keyDevices, flyFrame);
+        const [kx, ky, kz] = /** @type {number[]} */ (flyFrame.input.move);
+
+        if (mouse.wasPressed(MOUSEBUTTON_LEFT) || mouse.wasPressed(MOUSEBUTTON_MIDDLE) || mouse.wheel !== 0) {
             // left mouse button, middle mouse button, mouse wheel
             this._setMode('orbit');
-        } else if (button[2] === 1 || this._state.axis.length() > 0) {
+        } else if (mouse.wasPressed(MOUSEBUTTON_RIGHT) || kx || ky || kz) {
             // right mouse button or any movement
             this._setMode('fly');
         }
 
-        const orbit = +(this._mode === 'orbit');
-        const fly = +(this._mode === 'fly');
-        const double = +(this._state.touches > 1);
-        const desktopPan = +(this._state.shift || this._state.mouse[1]);
-        const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
-
-        // rate-based multipliers (keyboard, gamepad, virtual joystick)
-        const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
-            this.moveSlowSpeed : this.moveSpeed) * dt;
-        const rotateJoystickMult = this.rotateSpeed * this.rotateJoystickSens * 60 * dt;
-
-        // delta-based multipliers (mouse, touch, wheel)
-        const rotateDeltaMult = this.rotateSpeed;
-        const zoomDeltaMult = this.zoomSpeed;
-        const zoomTouchDeltaMult = this.zoomSpeed * this.zoomPinchSens;
-
-        const { deltas } = frame;
-
-        // desktop move
-        const v = tmpV1.set(0, 0, 0);
-        const keyMove = this._state.axis.clone().normalize();
-        v.add(keyMove.mulScalar(fly * moveMult));
-        const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
-        v.add(panMove.mulScalar(orbit * desktopPan * +this.enablePan));
-        const wheelMove = tmpV2.set(0, 0, wheel[0]);
-        v.add(wheelMove.mulScalar(orbit * zoomDeltaMult));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // desktop rotate
-        v.set(0, 0, 0);
-        const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar((1 - (orbit * desktopPan)) * rotateDeltaMult));
-        deltas.rotate.append([v.x, v.y, v.z]);
-
-        // mobile move
-        v.set(0, 0, 0);
-        const flyMove = tmpV2.set(leftInput[0], 0, -leftInput[1]);
-        v.add(flyMove.mulScalar(fly * moveMult));
-        const orbitMove = screenToWorld(this._camera, touch[0], touch[1], this._pose.distance);
-        v.add(orbitMove.mulScalar(orbit * double * +this.enablePan));
-        const pinchMove = tmpV2.set(0, 0, pinch[0]);
-        v.add(pinchMove.mulScalar(orbit * double * zoomTouchDeltaMult));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // mobile rotate
-        v.set(0, 0, 0);
-        const orbitRotate = tmpV2.set(touch[0], touch[1], 0);
-        v.add(orbitRotate.mulScalar(orbit * (1 - double) * rotateDeltaMult));
-        const flyRotate = tmpV2.set(rightInput[0], rightInput[1], 0);
-        v.add(flyRotate.mulScalar(fly * (mobileJoystick ? rotateJoystickMult : rotateDeltaMult)));
-        deltas.rotate.append([v.x, v.y, v.z]);
-
-        // gamepad move
-        v.set(0, 0, 0);
-        const stickMove = tmpV2.set(leftStick[0], 0, -leftStick[1]);
-        v.add(stickMove.mulScalar(fly * moveMult));
-        deltas.move.append([v.x, v.y, v.z]);
-
-        // gamepad rotate
-        v.set(0, 0, 0);
-        const stickRotate = tmpV2.set(rightStick[0], rightStick[1], 0);
-        v.add(stickRotate.mulScalar(fly * rotateJoystickMult));
-        deltas.rotate.append([v.x, v.y, v.z]);
-
         // check if XR is active for frame discard
         if (this.app.xr?.active) {
-            frame.read();
+            this._discard();
             return;
         }
 
-        // check focus end
+        // check focus end, only mouse input interrupting it
         if (this._mode === 'focus') {
-            const focusInterrupt = deltas.move.length() + deltas.rotate.length() > 0;
-            const focusComplete = this._focusController.complete();
-            if (focusInterrupt || focusComplete) {
+            orbit.map(this._focusDevices, orbitFrame);
+            const { rotate, pan, zoom } = /** @type {{ rotate: number[], pan: number[], zoom: number }} */ (orbitFrame.input);
+            const focusInterrupt = rotate[0] || rotate[1] || pan[0] || pan[1] || zoom;
+            orbitFrame.reset();
+            if (focusInterrupt || this._focusController.complete()) {
                 this._setMode('orbit');
             }
         }
 
-        // update controller by consuming frame
-        this._pose.copy(this._controller.update(frame, dt));
+        // device totals are kept until the end, so mapping again reads the same input
+        if (this._mode === 'orbit') {
+            orbit.map(this._devices, orbitFrame);
+            orbit.step(orbitFrame.capture(dt));
+        } else if (this._mode === 'fly') {
+            fly.map(this._devices, flyFrame);
+            fly.step(flyFrame.capture(dt));
+        }
+
+        this._pose.copy(this._controller.update(dt));
         this._camera.entity.setPosition(this._pose.position);
         this._camera.entity.setEulerAngles(this._pose.angles);
+
+        this._updateDevices();
     }
 }
 
