@@ -486,6 +486,67 @@ describe('Mouse', function () {
                 expect(down.callCount).to.equal(0);
             });
 
+            it('records a press without capturing while the pointer is locked', function () {
+                Object.defineProperty(document, 'pointerLockElement', { configurable: true, value: canvas });
+
+                // browsers throw InvalidStateError on capture under pointer lock
+                canvas.setPointerCapture = sinon.stub().throws(new window.DOMException('locked', 'InvalidStateError'));
+                const errors = sinon.spy();
+                window.addEventListener('error', errors);
+                const down = sinon.spy();
+                const up = sinon.spy();
+                mouse.on('mousedown', down);
+                mouse.on('mouseup', up);
+                pointer('pointerdown', { buttons: 1 });
+                expect(errors.callCount).to.equal(0);
+                expect(canvas.setPointerCapture.called).to.equal(false);
+                expect(down.calledOnce).to.equal(true);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(true);
+                pointer('pointerup', { buttons: 0 });
+                window.removeEventListener('error', errors);
+                expect(errors.callCount).to.equal(0);
+                expect(canvas.releasePointerCapture.called).to.equal(false);
+                expect(up.calledOnce).to.equal(true);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
+            it('tracks buttons pressed and released mid-chord', function () {
+                const down = sinon.spy();
+                const up = sinon.spy();
+                mouse.on('mousedown', down);
+                mouse.on('mouseup', up);
+                pointer('pointerdown', { button: MOUSEBUTTON_LEFT, buttons: 1 });
+
+                // chorded changes arrive as pointermove with the changed button
+                pointer('pointermove', { button: MOUSEBUTTON_RIGHT, buttons: 3 });
+                expect(mouse.isPressed(MOUSEBUTTON_RIGHT)).to.equal(true);
+                expect(down.callCount).to.equal(2);
+                expect(down.secondCall.args[0].button).to.equal(MOUSEBUTTON_RIGHT);
+                pointer('pointermove', { button: MOUSEBUTTON_MIDDLE, buttons: 7 });
+                expect(mouse.isPressed(MOUSEBUTTON_MIDDLE)).to.equal(true);
+                pointer('pointermove', { button: MOUSEBUTTON_RIGHT, buttons: 5 });
+                expect(mouse.isPressed(MOUSEBUTTON_RIGHT)).to.equal(false);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(true);
+                expect(up.firstCall.args[0].button).to.equal(MOUSEBUTTON_RIGHT);
+                pointer('pointermove', { button: MOUSEBUTTON_LEFT, buttons: 4 });
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+                pointer('pointerup', { button: MOUSEBUTTON_MIDDLE, buttons: 0 });
+                expect(mouse.isPressed(MOUSEBUTTON_MIDDLE)).to.equal(false);
+                expect(down.callCount).to.equal(3);
+                expect(up.callCount).to.equal(3);
+            });
+
+            it('clears buttons and capture when attached to another element', function () {
+                const other = makeCanvas();
+                pointer('pointerdown');
+                mouse.attach(other);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+
+                // no capture carried over, so moves outside the new element are dropped
+                pointer('pointermove', { clientX: 150, clientY: 50 }, other);
+                expect(mouse.movement).to.deep.equal([0, 0]);
+            });
+
         });
 
     });

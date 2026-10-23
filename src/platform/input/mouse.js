@@ -2,6 +2,9 @@ import { EventHandler } from '../../core/event-handler.js';
 
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
+// `PointerEvent#buttons` bits indexed by MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE and MOUSEBUTTON_RIGHT
+const BUTTON_BITS = [1, 4, 2];
+
 /**
  * @callback LockMouseCallback
  * Callback used by {@link Mouse#enablePointerLock} and {@link Mouse#disablePointerLock}.
@@ -28,9 +31,10 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * {@link Mouse#wheel} and cleared by {@link Mouse#update}.
  *
  * By default, mouse events are listened for on the window. Pass `pointer: true` to instead listen
- * for pointer events on the element only, capturing the pointer while a button is held and
- * preventing default on wheel and context menu events. In this mode touch and pen input is
- * ignored.
+ * for pointer events on the element only, capturing the pointer while a button is held (unless
+ * the pointer is locked) and preventing default on wheel and context menu events. In this mode
+ * touch and pen input is ignored, and buttons pressed or released while another is held fire
+ * `mousedown` and `mouseup` too.
  *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
@@ -235,7 +239,8 @@ class Mouse extends EventHandler {
 
     /**
      * Attach mouse events to an Element. If already attached, this changes the target element
-     * while preserving current and previous button states, unlike {@link Keyboard#attach}.
+     * while preserving current and previous button states, unlike {@link Keyboard#attach}. In
+     * pointer mode, changing the element instead clears button states without firing `mouseup`.
      *
      * @param {Element} element - The DOM element to attach the mouse to.
      */
@@ -313,6 +318,9 @@ class Mouse extends EventHandler {
             old.removeEventListener('lostpointercapture', this._lostHandler);
             old.removeEventListener('wheel', this._wheelHandler);
             old.removeEventListener('contextmenu', this._pointerContextHandler);
+
+            // the capture and held buttons belonged to the old element
+            this._handleWindowBlur();
         }
         this._bound = element ?? null;
         if (element) {
@@ -549,26 +557,63 @@ class Mouse extends EventHandler {
         return event.pointerType === 'mouse' && event.target === this._target;
     }
 
+    /**
+     * Fires `mousedown` and `mouseup` for buttons whose state in `event.buttons` differs from the
+     * recorded one, as pointer events only fire down and up for the first and last button held.
+     *
+     * @param {globalThis.PointerEvent} event - The pointer event.
+     * @private
+     */
+    _syncButtons(event) {
+        const mask = event.buttons;
+
+        // synthetic events may omit buttons
+        if (typeof mask !== 'number') return;
+
+        for (let i = 0; i < 3; i++) {
+            const down = (mask & BUTTON_BITS[i]) !== 0;
+            if (down === this._buttons[i]) continue;
+
+            this._buttons[i] = down;
+            const e = new MouseEvent(this, event);
+            if (!e.event) continue;
+
+            e.button = i;
+            this.fire(down ? 'mousedown' : 'mouseup', e);
+        }
+    }
+
     _handlePointerDown(event) {
         if (!this._isMouseTarget(event)) return;
 
-        this._target.setPointerCapture(event.pointerId);
-        this._captureId = event.pointerId;
         this._handleDown(event);
+        this._syncButtons(event);
+
+        // capture throws while the pointer is locked, and locked movement never leaves the element
+        if (!isMousePointerLocked()) {
+            this._target.setPointerCapture(event.pointerId);
+            this._captureId = event.pointerId;
+        }
     }
 
     _handlePointerMove(event) {
-        if (this._isMouseTarget(event)) this._handleMove(event);
+        if (!this._isMouseTarget(event)) return;
+
+        this._syncButtons(event);
+        this._handleMove(event);
     }
 
     _handlePointerUp(event) {
         if (!this._isMouseTarget(event)) return;
 
-        this._target.releasePointerCapture(event.pointerId);
-
         // keep capture state until mouseup fires so a release outside the element still resolves coords
         this._handleUp(event);
-        this._captureId = -1;
+        this._syncButtons(event);
+
+        if (this._captureId !== -1) {
+            this._target.releasePointerCapture(event.pointerId);
+            this._captureId = -1;
+        }
     }
 
     _handlePointerWheel(event) {
