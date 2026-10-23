@@ -47,9 +47,6 @@ const tmpQ = new Quat();
 const tmpLocal = new Mat4();
 const tmpWorld = new Mat4();
 
-// pulls lines toward the camera, past the surfaces they lie on
-const LINE_DEPTH_BIAS = -2;
-
 // three rows of the world transform, then the color and the occluded color
 const FLOATS_PER_LINE = 20;
 const MIN_CAPACITY = 16;
@@ -183,10 +180,6 @@ class MeshLineBatch {
             material.setDefine('OCCLUDED', true);
             material.depthTest = false;
             material.depthWrite = false;
-        } else {
-            // a line on a surface, such as the edge of a box matching a mesh, shows over it
-            material.depthBias = LINE_DEPTH_BIAS;
-            material.slopeDepthBias = LINE_DEPTH_BIAS;
         }
         material.update();
         return material;
