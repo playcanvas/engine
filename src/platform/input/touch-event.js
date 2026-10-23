@@ -17,6 +17,32 @@ function isTouchPointer(event) {
 }
 
 /**
+ * Creates a snapshot of a touch pointer with the fields of a browser Touch. Like a browser Touch,
+ * it does not change afterwards.
+ *
+ * @param {globalThis.PointerEvent} event - The latest pointer event of the touch.
+ * @param {EventTarget} target - The element the touch started on.
+ * @returns {object} The touch.
+ * @ignore
+ */
+function createTouch(event, target) {
+    return {
+        identifier: event.pointerId,
+        target,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        pageX: event.pageX,
+        pageY: event.pageY,
+        screenX: event.screenX,
+        screenY: event.screenY,
+        radiusX: (event.width || 0) / 2,
+        radiusY: (event.height || 0) / 2,
+        rotationAngle: 0,
+        force: event.pressure || 0
+    };
+}
+
+/**
  * This function takes a browser Touch or PointerEvent and returns the coordinates of the touch
  * relative to the target DOM element.
  *
@@ -90,27 +116,29 @@ class Touch {
     target;
 
     /**
-     * The browser PointerEvent that last updated the touch.
+     * The touch as a browser Touch: a plain object with its fields (`identifier`, `target`,
+     * client, page and screen coordinates, `radiusX`, `radiusY`, `rotationAngle` and `force`),
+     * taken from the PointerEvent that last updated the touch.
      *
-     * @type {globalThis.PointerEvent}
+     * @type {globalThis.Touch}
      */
     touch;
 
     /**
      * Create a new Touch object from a browser PointerEvent.
      *
-     * @param {globalThis.PointerEvent} touch - The browser PointerEvent.
+     * @param {globalThis.PointerEvent} event - The browser PointerEvent.
      * @param {Element} [target] - The element the touch started on, which the coordinates are
      * relative to. Defaults to the target of the PointerEvent.
      */
-    constructor(touch, target = /** @type {Element} */ (touch.target)) {
-        const coords = targetCoords(target, touch.pageX, touch.pageY);
+    constructor(event, target = /** @type {Element} */ (event.target)) {
+        const coords = targetCoords(target, event.pageX, event.pageY);
 
-        this.id = touch.pointerId;
+        this.id = event.pointerId;
         this.x = coords.x;
         this.y = coords.y;
         this.target = target;
-        this.touch = touch;
+        this.touch = /** @type {globalThis.Touch} */ (createTouch(event, target));
     }
 }
 
@@ -134,7 +162,8 @@ class TouchEvent {
     element;
 
     /**
-     * The original browser PointerEvent.
+     * The original browser PointerEvent. Touch events are driven by pointer events, so there is no
+     * browser TouchEvent.
      *
      * @type {globalThis.PointerEvent}
      */
@@ -185,4 +214,4 @@ class TouchEvent {
     }
 }
 
-export { getTouchTargetCoords, isTouchPointer, Touch, TouchEvent };
+export { createTouch, getTouchTargetCoords, isTouchPointer, Touch, TouchEvent };

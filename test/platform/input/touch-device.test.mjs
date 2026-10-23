@@ -83,7 +83,6 @@ describe('TouchDevice', function () {
         expect(summary(start.changedTouches)).to.deep.equal([[1, 10, 20]]);
         expect(start.event).to.equal(down);
         expect(start.element).to.equal(canvas);
-        expect(start.changedTouches[0].touch).to.equal(down);
         expect(start.changedTouches[0].target).to.equal(canvas);
 
         expect(summary(move.touches)).to.deep.equal([[1, 30, 40]]);
@@ -92,6 +91,33 @@ describe('TouchDevice', function () {
         expect(summary(end.touches)).to.deep.equal([]);
         expect(summary(end.changedTouches)).to.deep.equal([[1, 35, 45]]);
         expect(end.event).to.equal(up);
+    });
+
+    it('gives each touch a browser Touch shaped snapshot of its pointer', function () {
+        const down = pointer('pointerdown', { pointerId: 7, x: 50, y: 60, screenX: 150, screenY: 160, width: 10, height: 6, pressure: 0.5 });
+        pointer('pointermove', { pointerId: 7, x: 70, y: 80 });
+
+        const [start, move] = log.map(e => e.event);
+        const touch = start.changedTouches[0].touch;
+        expect(touch).to.not.equal(down);
+        expect(touch).to.include({
+            identifier: 7,
+            target: canvas,
+            clientX: 50,
+            clientY: 60,
+            pageX: 50,
+            pageY: 60,
+            screenX: 150,
+            screenY: 160,
+            radiusX: 5,
+            radiusY: 3,
+            rotationAngle: 0,
+            force: 0.5
+        });
+
+        // like a browser Touch, a touch from an earlier event keeps its values
+        expect(start.touches[0].touch).to.include({ clientX: 50, pageX: 50 });
+        expect(move.changedTouches[0].touch).to.include({ identifier: 7, clientX: 70, pageY: 80 });
     });
 
     it('does not end a touch on a mouse pointerup or pointerleave with the same pointer id', function () {

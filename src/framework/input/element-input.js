@@ -3,7 +3,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Mouse } from '../../platform/input/mouse.js';
 import { isMousePointer } from '../../platform/input/mouse-event.js';
-import { getTouchTargetCoords, isTouchPointer } from '../../platform/input/touch-event.js';
+import { createTouch, getTouchTargetCoords, isTouchPointer } from '../../platform/input/touch-event.js';
 import { getApplication } from '../globals.js';
 
 /**
@@ -30,31 +30,6 @@ const BUTTON_BITS = [1, 4, 2];
  */
 function item(i) {
     return this[i] ?? null;
-}
-
-/**
- * Creates a DOM Touch shaped snapshot of a touch pointer. Like a browser Touch, it does not change
- * afterwards.
- *
- * @param {globalThis.PointerEvent} e - The latest pointer event of the touch.
- * @param {EventTarget} target - The element the touch started on.
- * @returns {object} The touch.
- */
-function createTouch(e, target) {
-    return {
-        identifier: e.pointerId,
-        target,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        pageX: e.pageX,
-        pageY: e.pageY,
-        screenX: e.screenX,
-        screenY: e.screenY,
-        radiusX: (e.width || 0) / 2,
-        radiusY: (e.height || 0) / 2,
-        rotationAngle: 0,
-        force: e.pressure || 0
-    };
 }
 
 /**
