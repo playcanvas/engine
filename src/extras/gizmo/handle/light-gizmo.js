@@ -71,7 +71,6 @@ class LightGizmo extends HandleGizmo {
      */
     useLightColor = false;
 
-
     /**
      * The local scale of the dragged light at the start of the drag.
      *

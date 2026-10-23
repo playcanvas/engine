@@ -61,7 +61,6 @@ class IconGizmo extends Gizmo {
      */
     useLightColor = false;
 
-
     /**
      * The theme.
      *
