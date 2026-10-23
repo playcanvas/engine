@@ -413,6 +413,18 @@ class FirstPersonController extends Script {
     }
 
     /**
+     * Moves the player to a position, such as a spawn point, and stops it. Use this instead of
+     * `entity.setPosition`, which the next update undoes.
+     *
+     * @param {Vec3} position - The world space position of the body centre.
+     * @example
+     * playerEntity.script.firstPersonController.teleport(new Vec3(0, 1, 0));
+     */
+    teleport(position) {
+        this._controller?.teleport(position);
+    }
+
+    /**
      * Writes the device input into the frame. The look is absolute, so turn rates and drags are
      * accumulated into it here.
      *

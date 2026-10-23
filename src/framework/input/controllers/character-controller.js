@@ -38,6 +38,10 @@ const rotation = new Quat();
  * steps it, so a client can predict by stepping snapshots locally and replay them from a server
  * {@link state}. Put the entity's rigidbody in {@link CHARACTER_GROUP}.
  *
+ * The controller's {@link state} is authoritative: {@link step} sets the entity position from it,
+ * so moving the entity directly, such as with `entity.setPosition`, is undone by the next step.
+ * Move the character with {@link teleport} or by setting {@link state} instead.
+ *
  * @example
  * entity.addComponent('collision', { type: 'capsule', radius: 0.5, height: 2 });
  * entity.addComponent('rigidbody', { type: 'kinematic', group: CHARACTER_GROUP });
@@ -222,6 +226,23 @@ class CharacterController extends InputController {
         this.height = entity.collision.height;
         this._system = entity.rigidbody.system;
         this._position.copy(entity.getPosition());
+    }
+
+    /**
+     * Moves the character to a position, such as a spawn point, and stops it. The velocity is
+     * zeroed and the grounded and jumping states are cleared, so the next {@link step} finds the
+     * ground from there.
+     *
+     * @param {Vec3} position - The world space position of the capsule centre.
+     * @example
+     * controller.teleport(new Vec3(0, 1, 0));
+     */
+    teleport(position) {
+        this._position.copy(position);
+        this._velocity.set(0, 0, 0);
+        this._grounded = false;
+        this._jumping = false;
+        this.entity.setPosition(this._position);
     }
 
     /**

@@ -737,6 +737,20 @@ class ThirdPersonController extends Script {
     }
 
     /**
+     * Moves the character to a position, such as a spawn point, and stops it. The camera follows
+     * without easing across the gap. Use this instead of `entity.setPosition`, which the next
+     * update undoes.
+     *
+     * @param {Vec3} position - The world space position of the body centre.
+     * @example
+     * playerEntity.script.thirdPersonController.teleport(new Vec3(0, 1, 0));
+     */
+    teleport(position) {
+        this._controller?.teleport(position);
+        this._camInitialized = false;
+    }
+
+    /**
      * Writes the device input into the frame and turns the camera orbit. The look yaw is the
      * camera yaw, so movement is relative to the camera.
      *

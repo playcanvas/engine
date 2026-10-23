@@ -253,6 +253,24 @@ describe('CharacterController', function () {
             expect([p.x, p.y, p.z]).to.deep.equal([2, 3, 4]);
         });
 
+        it('stays where it is teleported', function () {
+            for (let i = 0; i < 30; i++) {
+                controller.step(snap({ move: [0, 1] }));
+            }
+            controller.teleport(new Vec3(5, 1, 5));
+            const p = controller.entity.getPosition();
+            expect([p.x, p.y, p.z]).to.deep.equal([5, 1, 5]);
+            expect(controller.state.velocity).to.deep.equal([0, 0, 0]);
+
+            controller.step(snap({}));
+            const { position, grounded } = controller.state;
+            expect(position[0]).to.be.closeTo(5, 1e-6);
+            expect(position[1]).to.be.closeTo(1, 0.02);
+            expect(position[2]).to.be.closeTo(5, 1e-6);
+            expect(grounded).to.equal(true);
+            expect(controller.entity.getPosition().x).to.be.closeTo(5, 1e-6);
+        });
+
         describe('on a 30 degree slope', function () {
 
             beforeEach(function () {
