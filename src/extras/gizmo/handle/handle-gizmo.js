@@ -316,10 +316,15 @@ class HandleGizmo extends DragGizmo {
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
             if (!this._dragging) {
                 const handle = this._find(meshInstance);
+                const hovered = this._hovered;
+                if (handle ? !this._matches(hovered, handle.node, handle.name, handle.index) : hovered.name !== '') {
+                    // the highlight changes, so a render-on-demand app draws a frame
+                    this._renderUpdate = true;
+                }
                 if (handle) {
-                    this._copy(handle, this._hovered);
+                    this._copy(handle, hovered);
                 } else {
-                    this._hovered.name = '';
+                    hovered.name = '';
                 }
                 return;
             }
@@ -521,6 +526,7 @@ class HandleGizmo extends DragGizmo {
             return;
         }
         this._dragging = false;
+        this._renderUpdate = true;
         this.fire(HandleGizmo.EVENT_HANDLEEND, this._drag.node, this._drag.name);
         this._drag.name = '';
     }
