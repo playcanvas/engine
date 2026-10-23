@@ -34,11 +34,10 @@ const ICON_GLYPHS = {
         <path d="M-3 -1V-5A3 3 0 0 1 3 -5V-1A3 3 0 0 1 -3 -1Z"/>
         <path d="M-6 -1A6 6 0 0 0 6 -1M0 5V8.5M-4 8.5H4"/>`,
 
-    // a speaker, a box and its cone, with two sound waves
+    // a speaker, a box and its cone in one outline, with two sound waves
     sound: `
-        <rect x="-7.5" y="-3" width="3.5" height="6"/>
-        <path d="M-4 -3L0.5 -7.5V7.5L-4 3"/>
-        <path d="M2.851 -3.236A4 4 0 0 1 2.851 3.236M5.202 -6.472A8 8 0 0 1 5.202 6.472"/>`,
+        <path d="M-7.5 -3H-4L0.5 -7V7L-4 3H-7.5Z" stroke-linejoin="round"/>
+        <path d="M2.75 -2.681A3.5 3.5 0 0 1 2.75 2.681M5 -5.362A7 7 0 0 1 5 5.362" stroke-linecap="round"/>`,
 
     // a cluster of dots around a larger one
     particlesystem: `
