@@ -42,8 +42,9 @@ const TAP_SLOP = 10;
  * instead listen on the element only, capturing the pointer while a button is held (unless the
  * pointer is locked) and preventing default on wheel and context menu events. In this mode touch
  * and pen input is ignored. In both modes, buttons pressed or released while another is held fire
- * `mousedown` and `mouseup` too. In default mode on platforms without touch support, a pen is a
- * mouse pointer.
+ * `mousedown` and `mouseup` too, and `mouseup` only fires for a button the mouse saw pressed, so a
+ * `pointerdown` stopped before it reaches the mouse is ignored until the button is released. In
+ * default mode on platforms without touch support, a pen is a mouse pointer.
  *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
@@ -518,6 +519,9 @@ class Mouse extends EventHandler {
     }
 
     _handleUp(event, button = event.button) {
+        // a press that never reached the mouse, such as one an element stopped, has no release
+        if (!this._buttons[button]) return;
+
         // disable released button
         this._buttons[button] = false;
 
@@ -598,29 +602,36 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * Fires `mousedown` and `mouseup` for buttons whose state in `event.buttons` differs from the
-     * recorded one, as pointer events only fire down and up for the first and last button held.
+     * Handles the button state in a `pointermove`. Pointer events only fire down and up for the
+     * first and last button held, so a move with a button presses or releases that button.
+     * Otherwise buttons missing from `event.buttons` are released, as their `pointerup` was missed,
+     * but never pressed, as their `pointerdown` may have been stopped to keep it from the mouse.
      *
      * @param {globalThis.PointerEvent} event - The pointer event.
+     * @returns {boolean} True if the move changed a button rather than moving the pointer.
      * @private
      */
-    _syncButtons(event) {
-        const mask = event.buttons;
+    _moveButtons(event) {
+        const { button, buttons } = event;
 
         // synthetic events may omit buttons
-        if (typeof mask !== 'number') return;
+        if (typeof buttons !== 'number') return false;
+
+        if (button >= 0) {
+            if (button < 3) {
+                if ((buttons & BUTTON_BITS[button]) !== 0) {
+                    if (!this._buttons[button]) this._handleDown(event, button);
+                } else {
+                    this._handleUp(event, button);
+                }
+            }
+            return true;
+        }
 
         for (let i = 0; i < 3; i++) {
-            const down = (mask & BUTTON_BITS[i]) !== 0;
-            if (down === this._buttons[i]) continue;
-
-            this._buttons[i] = down;
-            const e = new MouseEvent(this, event);
-            if (!e.event) continue;
-
-            e.button = i;
-            this.fire(down ? 'mousedown' : 'mouseup', e);
+            if ((buttons & BUTTON_BITS[i]) === 0) this._handleUp(event, i);
         }
+        return false;
     }
 
     /**
@@ -649,7 +660,6 @@ class Mouse extends EventHandler {
         if (this._capture && event.target !== this._target) return;
 
         this._handleDown(event);
-        this._syncButtons(event);
 
         // capture throws while the pointer is locked, and locked movement never leaves the element
         if (this._capture && !isMousePointerLocked()) {
@@ -665,8 +675,7 @@ class Mouse extends EventHandler {
         }
         if (this._capture && event.target !== this._target) return;
 
-        this._syncButtons(event);
-        this._handleMove(event);
+        if (!this._moveButtons(event)) this._handleMove(event);
     }
 
     _handlePointerUp(event) {
@@ -686,7 +695,6 @@ class Mouse extends EventHandler {
 
         // keep capture state until mouseup fires so a release outside the element still resolves coords
         this._handleUp(event);
-        this._syncButtons(event);
 
         if (this._captureId !== -1) {
             this._target.releasePointerCapture(event.pointerId);

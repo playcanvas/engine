@@ -233,6 +233,23 @@ describe('ElementInput', function () {
             mouseDevice.detach();
         });
 
+        it('keeps a mouse press stopped by an element from a Mouse attached after it', function () {
+            element.on('mousedown', e => e.stopPropagation());
+            const mouseDevice = new Mouse(canvas);
+            const mouseEvents = [];
+            ['mousedown', 'mouseup'].forEach(name => mouseDevice.on(name, () => mouseEvents.push(name)));
+
+            mouse('pointerdown', { x: 10, y: 10, buttons: 1 });
+            mouse('pointermove', { x: 12, y: 10, button: -1, buttons: 1 });
+            const held = mouseDevice.isPressed(0);
+            mouse('pointerup', { x: 12, y: 10, buttons: 0 });
+            mouseDevice.detach();
+
+            expect(held).to.be.false;
+            expect(mouseEvents).to.be.empty;
+            expect(names()).to.include.members(['mousedown', 'mouseup']);
+        });
+
         it('follows a tap on a plain element with emulated mouse events, without a second click', function () {
             const mouseDevice = new Mouse(canvas);
             const mouseEvents = [];

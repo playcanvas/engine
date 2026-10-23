@@ -8,14 +8,14 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
 
-// jsdom has no PointerEvent
+// jsdom has no PointerEvent. Moves have no button unless a chord changes
 const dispatch = (target, type, props = {}) => {
     const event = new window.Event(type, { bubbles: true, cancelable: true });
     Object.assign(event, {
         pointerId: 1,
         pointerType: 'mouse',
         isPrimary: true,
-        button: MOUSEBUTTON_LEFT,
+        button: type === 'pointermove' ? -1 : MOUSEBUTTON_LEFT,
         clientX: 50,
         clientY: 50,
         screenX: 50,
@@ -245,6 +245,7 @@ describe('Mouse', function () {
                 done();
             });
 
+            win('pointerdown', { button: 0 });
             win('pointerup', { button: 0 });
         });
 
@@ -387,9 +388,10 @@ describe('Mouse', function () {
                 expect(canvas.setPointerCapture.called).to.equal(false);
             });
 
-            it('tracks buttons pressed and released mid-chord', function () {
+            it('tracks buttons pressed and released mid-chord, without moves', function () {
                 const log = [];
                 record(log);
+                const sequence = () => log.map(e => `${e.name}${e.button}`);
                 win('pointerdown', { button: MOUSEBUTTON_LEFT, buttons: 1 });
 
                 // chorded changes arrive as pointermove with the changed button
@@ -399,9 +401,52 @@ describe('Mouse', function () {
                 expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
                 win('pointerup', { button: MOUSEBUTTON_RIGHT, buttons: 0 });
                 expect(mouse.isPressed(MOUSEBUTTON_RIGHT)).to.equal(false);
-                expect(log.filter(e => e.name !== 'mousemove').map(e => `${e.name}${e.button}`)).to.deep.equal([
-                    'mousedown0', 'mousedown2', 'mouseup0', 'mouseup2'
-                ]);
+                expect(sequence()).to.deep.equal(['mousedown0', 'mousedown2', 'mouseup0', 'mouseup2']);
+
+                // left down, right down, right up, left up
+                log.length = 0;
+                win('pointerdown', { button: MOUSEBUTTON_LEFT, buttons: 1 });
+                win('pointermove', { button: MOUSEBUTTON_RIGHT, buttons: 3 });
+                win('pointermove', { button: MOUSEBUTTON_RIGHT, buttons: 1 });
+                win('pointerup', { button: MOUSEBUTTON_LEFT, buttons: 0 });
+                expect(sequence()).to.deep.equal(['mousedown0', 'mousedown2', 'mouseup2', 'mouseup0']);
+            });
+
+            it('does not press a button whose pointerdown an earlier window listener stopped', function () {
+                // stands in for ElementInput, attached first, whose element mousedown handler stops propagation
+                mouse.detach();
+                const shield = e => e.stopImmediatePropagation();
+                window.addEventListener('pointerdown', shield);
+                mouse = new Mouse(canvas);
+                const log = [];
+                record(log);
+
+                win('pointerdown', { buttons: 1, clientX: 10, clientY: 10 });
+                win('pointermove', { buttons: 1, clientX: 12, clientY: 10 });
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+                win('pointerup', { buttons: 0, clientX: 12, clientY: 10 });
+                window.removeEventListener('pointerdown', shield);
+
+                expect(log.map(e => e.name)).to.deep.equal(['mousemove']);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
+            it('releases a held button whose bit a plain move no longer has', function () {
+                const log = [];
+                record(log);
+                win('pointerdown', { buttons: 1 });
+
+                // the pointerup was swallowed
+                win('pointermove', { buttons: 0, clientX: 12, clientY: 10 });
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+                win('pointerup', { buttons: 0, clientX: 12, clientY: 10 });
+                expect(log.map(e => `${e.name}${e.button}`)).to.deep.equal(['mousedown0', 'mouseup0', 'mousemove-1']);
+            });
+
+            it('ignores pointercancel for mouse pointers', function () {
+                win('pointerdown', { buttons: 1 });
+                win('pointercancel');
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(true);
             });
 
             it('does not prevent default on wheel or contextmenu', function () {
@@ -743,6 +788,23 @@ describe('Mouse', function () {
                 expect(mouse.isPressed(MOUSEBUTTON_MIDDLE)).to.equal(false);
                 expect(down.callCount).to.equal(3);
                 expect(up.callCount).to.equal(3);
+            });
+
+            it('does not press a button from a held move after a stopped pointerdown', function () {
+                mouse.detach();
+                const shield = e => e.stopImmediatePropagation();
+                canvas.addEventListener('pointerdown', shield);
+                mouse = new Mouse(canvas, { capture: true });
+                const log = [];
+                record(log);
+
+                pointer('pointerdown', { buttons: 1 });
+                pointer('pointermove', { buttons: 1, clientX: 12 });
+                pointer('pointerup', { buttons: 0, clientX: 12 });
+                canvas.removeEventListener('pointerdown', shield);
+
+                expect(log.map(e => e.name)).to.deep.equal(['mousemove']);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
             });
 
             it('clears buttons and capture when attached to another element', function () {
