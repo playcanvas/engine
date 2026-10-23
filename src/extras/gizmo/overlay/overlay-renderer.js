@@ -4,6 +4,7 @@ import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
+import { ShaderUtils } from '../../../scene/shader-lib/shader-utils.js';
 import { MeshLineBatch } from '../mesh/mesh-line-batch.js';
 import { Pool } from '../pool.js';
 import { getIconTextures } from './icon-textures.js';
@@ -19,6 +20,7 @@ import { GlyphShape } from '../shape/glyph-shape.js';
 import { SphereShape } from '../shape/sphere-shape.js';
 
 /**
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
  * @import { Entity } from '../../../framework/entity.js'
  * @import { Gizmo } from '../gizmo.js'
  * @import { Layer } from '../../../scene/layer.js'
@@ -109,6 +111,13 @@ class OverlayRenderer {
     iconSize = 24;
 
     /**
+     * Whether each icon shows or hides as a whole by the scene depth at its center.
+     *
+     * @type {boolean}
+     */
+    iconOcclusion = false;
+
+    /**
      * The rgb replacing the theme colors, or null to keep them.
      *
      * @type {Color|null}
@@ -191,6 +200,43 @@ class OverlayRenderer {
     icons;
 
     /**
+     * The pools of the icon backdrops and glyphs.
+     *
+     * @type {Set<ShapePool>}
+     * @private
+     */
+    _iconPools = new Set();
+
+    /**
+     * The camera whose scene depth map the icons read, or null when they depth test.
+     *
+     * @type {CameraComponent|null}
+     * @private
+     */
+    _depthCamera = null;
+
+    /**
+     * The defines of the scene depth map encoding the icons read, or null when they depth test.
+     *
+     * @type {Map<string, string>|null}
+     * @private
+     */
+    _iconDefines = null;
+
+    /**
+     * The key of the icon occlusion state, and the state each icon shape was last set to.
+     *
+     * @private
+     */
+    _iconKey = '';
+
+    /**
+     * @type {WeakMap<Shape, string>}
+     * @private
+     */
+    _iconKeys = new WeakMap();
+
+    /**
      * @param {Gizmo} gizmo - The gizmo owning the shapes.
      * @param {OverlayRendererTheme} theme - The theme, whose colors the shapes follow.
      * @param {Entity} [parent] - The parent of the shapes, which must not be rotated or scaled.
@@ -262,6 +308,7 @@ class OverlayRenderer {
             gizmo.intersectShapes.push(disc);
             return disc;
         });
+        this._iconPools.add(this._pickDiscs);
         this._spheres = pool((base, occluded) => filled(new SphereShape(device, args(base, occluded))), FILL_DRAW_ORDER);
         this._capsules = pool((base, occluded) => filled(new CapsuleShape(device, args(base, occluded))), FILL_DRAW_ORDER);
 
@@ -287,7 +334,9 @@ class OverlayRenderer {
          */
         this._glyphs = /** @type {Record<OverlayIcon, ShapePool>} */ ({});
         for (const [kind, texture] of Object.entries(textures)) {
-            this._glyphs[/** @type {OverlayIcon} */ (kind)] = pool((base, occluded) => new GlyphShape(device, { ...args(base, occluded), texture }));
+            const glyphs = pool((base, occluded) => new GlyphShape(device, { ...args(base, occluded), texture }));
+            this._glyphs[/** @type {OverlayIcon} */ (kind)] = glyphs;
+            this._iconPools.add(glyphs);
         }
     }
 
@@ -301,6 +350,7 @@ class OverlayRenderer {
         this._perspective = camera.projection === PROJECTION_PERSPECTIVE;
         const span = this._perspective ? 2 * Math.tan(0.5 * camera.fov * math.DEG_TO_RAD) : 2 * camera.orthoHeight;
         this._pixel = span / Math.max(this._perspective && camera.horizontalFov ? width * z : height * w, 1);
+        this._useSceneDepth(this.iconOcclusion ? camera : null);
 
         const layer = this._fixedLayer ?? this._gizmo.layer;
         if (layer !== this._layer) {
@@ -365,6 +415,31 @@ class OverlayRenderer {
         this._labels.count = 0;
         this.icons.begin();
         this.end();
+        this._useSceneDepth(null);
+    }
+
+    /**
+     * Requests the scene depth map of a camera for the icons to read, releasing the one before.
+     *
+     * @param {CameraComponent|null} camera - The camera, or null for the icons to depth test.
+     * @private
+     */
+    _useSceneDepth(camera) {
+        if (camera !== this._depthCamera) {
+            this._depthCamera?.requestSceneDepthMap(false);
+            camera?.requestSceneDepthMap(true);
+            this._depthCamera = camera;
+        }
+
+        // the encoding of the depth map follows the render passes of the camera
+        const key = camera ? `depth${ShaderUtils.getScreenDepthChunkKey(camera.shaderParams)}` : '';
+        if (key !== this._iconKey) {
+            this._iconKey = key;
+            this._iconDefines = camera ? new Map() : null;
+            if (camera) {
+                ShaderUtils.addScreenDepthChunkDefines(camera.shaderParams, /** @type {Map<string, string>} */ (this._iconDefines));
+            }
+        }
     }
 
     /**
@@ -429,6 +504,10 @@ class OverlayRenderer {
      */
     _next(pool) {
         const item = pool.next();
+        if (this._iconPools.has(pool) && this._iconKeys.get(item.shape) !== this._iconKey) {
+            this._iconKeys.set(item.shape, this._iconKey);
+            item.shape.setCenterOcclusion(this._iconDefines);
+        }
         const order = pool.drawOrder + ++this._order;
         const { meshInstances } = item;
         for (let i = 0; i < meshInstances.length; i++) {
@@ -936,6 +1015,7 @@ class OverlayRenderer {
      * Destroys the shapes. Safe to call again.
      */
     destroy() {
+        this._useSceneDepth(null);
         this._pools.forEach(pool => pool.destroy());
         this._lines.destroy();
         this._labels.items.forEach(label => label.destroy());

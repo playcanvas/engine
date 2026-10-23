@@ -119,6 +119,27 @@ class IconGizmo extends Gizmo {
     }
 
     /**
+     * Sets whether each icon shows or fades as a whole by the scene depth at its center, instead of
+     * pixel by pixel, so an icon on a surface isn't cut in two. Requests the scene depth map of the
+     * camera, see {@link CameraComponent#requestSceneDepthMap}, which copies the depth each frame
+     * and needs the camera to render the Depth layer. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set iconOcclusion(value) {
+        this._renderer.iconOcclusion = value;
+    }
+
+    /**
+     * Gets whether each icon shows or fades as a whole by the scene depth at its center.
+     *
+     * @type {boolean}
+     */
+    get iconOcclusion() {
+        return this._renderer.iconOcclusion;
+    }
+
+    /**
      * Sets the icon size in CSS pixels. Defaults to 24.
      *
      * @type {number}
