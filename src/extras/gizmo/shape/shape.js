@@ -426,6 +426,9 @@ class Shape {
             if (this._occludedMaterial) {
                 const occluded = new MeshInstance(meshes[i], this._occludedMaterial);
                 occluded.cull = false;
+
+                // drawn through the scene, so a picker would find shapes behind it
+                occluded.pick = false;
                 meshInstances.push(occluded);
                 this.occludedMeshInstances.push(occluded);
             }

@@ -1,11 +1,13 @@
 import { SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0 } from '../../platform/graphics/constants.js';
 
 /**
+ * @import { Picker } from '../../framework/graphics/picker.js'
  * @import { ShaderDesc } from '../../scene/materials/shader-material.js'
  */
 
 /**
- * The unlit shader of a shape. TEXTURE scales the alpha by the coverage of a texture.
+ * The unlit shader of a shape. TEXTURE scales the alpha by the coverage of a texture. The pick
+ * pass writes the mesh instance id, so a {@link Picker} can find the shape.
  *
  * @type {ShaderDesc}
  */
@@ -44,6 +46,9 @@ export const unlitShader = {
             uniform sampler2D uTexture;
             varying vec2 vUv;
         #endif
+        #ifdef PICK_PASS
+            #include "pickPS"
+        #endif
 
         void main(void) {
             vec4 color = uColor;
@@ -55,7 +60,11 @@ export const unlitShader = {
             if (color.a < 1.0 / 255.0) {
                 discard;
             }
-            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(color)), color.a);
+            #ifdef PICK_PASS
+                gl_FragColor = getPickOutput();
+            #else
+                gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(color)), color.a);
+            #endif
             #if DEPTH_WRITE == 1
                 gl_FragDepth = uDepth;
             #endif
@@ -93,6 +102,9 @@ export const unlitShader = {
             var uTextureSampler: sampler;
             varying vUv: vec2f;
         #endif
+        #ifdef PICK_PASS
+            #include "pickPS"
+        #endif
 
         @fragment
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -106,7 +118,11 @@ export const unlitShader = {
             if (color.a < 1.0 / 255.0) {
                 discard;
             }
-            output.color = vec4f(gammaCorrectOutput(decodeGamma(color)), color.a);
+            #ifdef PICK_PASS
+                output.color = getPickOutput();
+            #else
+                output.color = vec4f(gammaCorrectOutput(decodeGamma(color)), color.a);
+            #endif
             #if DEPTH_WRITE == 1
                 output.fragDepth = uniform.uDepth;
             #endif

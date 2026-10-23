@@ -900,6 +900,7 @@ class OverlayRenderer {
      * @param {Vec3} center - The world center.
      * @param {Quat} rotation - The world rotation.
      * @param {number} size - The width and height.
+     * @returns {Shape} The glyph.
      */
     glyph(kind, center, rotation, size) {
         this._colors(1);
@@ -907,6 +908,7 @@ class OverlayRenderer {
         glyph.entity.setLocalPosition(this._local(center, tmpV1));
         glyph.entity.setLocalRotation(rotation);
         glyph.entity.setLocalScale(size, 1, size);
+        return glyph;
     }
 
     /**
