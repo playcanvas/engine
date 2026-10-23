@@ -973,7 +973,8 @@ class ButtonComponent extends Component {
         // listen for touch events still work on mobile. This would leave the
         // button in the `hover` state after `touchend`, instead of going back
         // to the `default` state. Calling preventDefault() on the pointerup
-        // here stops the emulated events.
+        // here stops the engine's emulated events only: the browser's own
+        // compatibility mouse events and `click` still fire.
         event.event.preventDefault();
 
         this._isPressed = false;

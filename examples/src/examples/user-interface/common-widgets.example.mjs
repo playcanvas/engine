@@ -277,9 +277,9 @@ confirm.button.on('click', () => {
 });
 closeDialog();
 
-// After a tap, emulated mouse events follow, as browsers send them. A tap that closes the dialog
-// would have its emulated click land on whatever is behind the button, so cancel the pointerup to
-// stop them
+// After a tap, the engine emulates mouse events, as browsers do. A tap that closes the dialog would
+// have its emulated click land on whatever is behind the button, so cancel the pointerup to stop
+// the engine's emulation. The browser's own compatibility mouse events and click still fire
 const cancelEmulation = (/** @type {PointerEvent} */ event) => event.preventDefault();
 canvas.addEventListener('pointerup', cancelEmulation);
 app.on('destroy', () => canvas.removeEventListener('pointerup', cancelEmulation));
