@@ -189,10 +189,10 @@ class MiniStats {
         let pointerY = 0;
         let startX = 0;
         let startY = 0;
-        div.addEventListener('mouseenter', () => {
+        div.addEventListener('pointerenter', () => {
             this.opacity = 1;
         });
-        div.addEventListener('mouseleave', () => {
+        div.addEventListener('pointerleave', () => {
             this.opacity = 0.95;
         });
         div.addEventListener('click', (event) => {
