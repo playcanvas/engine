@@ -221,6 +221,8 @@ class CharacterController extends InputController {
     constructor(entity) {
         super();
         Debug.assert(entity.rigidbody && entity.collision, 'CharacterController: the entity needs a rigidbody and a collision component');
+        Debug.assert(entity.rigidbody.group & CHARACTER_GROUP, 'CharacterController: put the entity\'s rigidbody in CHARACTER_GROUP, or the sweeps hit the character\'s own body');
+        Debug.assert(entity.collision.type === 'capsule', `CharacterController: the entity needs a capsule collision, not '${entity.collision.type}'`);
         this.entity = entity;
         this.radius = entity.collision.radius;
         this.height = entity.collision.height;

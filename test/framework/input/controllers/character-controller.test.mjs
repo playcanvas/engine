@@ -271,6 +271,22 @@ describe('CharacterController', function () {
             expect(controller.entity.getPosition().x).to.be.closeTo(5, 1e-6);
         });
 
+        it('asserts the body is a capsule in CHARACTER_GROUP', function () {
+            const error = sinon.stub(console, 'error');
+            createCharacter();
+            expect(error.callCount).to.equal(0);
+
+            const entity = new Entity('box character');
+            app.root.addChild(entity);
+            entity.addComponent('rigidbody', { type: 'kinematic' });
+            entity.addComponent('collision', { type: 'box' });
+            expect(new CharacterController(entity)).to.be.an.instanceOf(CharacterController);
+            const messages = error.getCalls().map(call => call.args.join(' '));
+            error.restore();
+            expect(messages.some(m => m.includes('CHARACTER_GROUP'))).to.equal(true);
+            expect(messages.some(m => m.includes('capsule'))).to.equal(true);
+        });
+
         describe('on a 30 degree slope', function () {
 
             beforeEach(function () {
