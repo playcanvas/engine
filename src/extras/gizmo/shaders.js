@@ -6,8 +6,6 @@ import { SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMAN
 
 /**
  * The unlit shader of a shape. TEXTURE scales the alpha by the coverage of a texture.
- * CENTER_OCCLUSION hides the whole shape when the scene depth at its origin is nearer than its
- * front, the origin less half the model x scale.
  *
  * @type {ShaderDesc}
  */
@@ -24,11 +22,6 @@ export const unlitShader = {
             varying vec2 vUv;
         #endif
     
-        #ifdef CENTER_OCCLUSION
-            varying vec4 vCenterClip;
-            varying vec4 vCenter;
-        #endif
-    
         uniform mat4 matrix_model;
         uniform mat4 matrix_viewProjection;
     
@@ -37,11 +30,6 @@ export const unlitShader = {
             gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
             #ifdef TEXTURE
                 vUv = vertex_texCoord0;
-            #endif
-            #ifdef CENTER_OCCLUSION
-                vec3 center = matrix_model[3].xyz;
-                vCenterClip = matrix_viewProjection * vec4(center, 1.0);
-                vCenter = vec4(center, 0.5 * length(matrix_model[0].xyz));
             #endif
         }
     `,
@@ -56,11 +44,6 @@ export const unlitShader = {
             uniform sampler2D uTexture;
             varying vec2 vUv;
         #endif
-        #ifdef CENTER_OCCLUSION
-            #include "screenDepthPS"
-            varying vec4 vCenterClip;
-            varying vec4 vCenter;
-        #endif
 
         void main(void) {
             vec4 color = uColor;
@@ -68,11 +51,6 @@ export const unlitShader = {
                 // sharpen the filtered edges to a pixel wide, as geometry draws them
                 float coverage = texture2D(uTexture, vUv).a;
                 color.a *= clamp((coverage - 0.5) / max(fwidth(coverage), 1e-4) + 0.5, 0.0, 1.0);
-            #endif
-            #ifdef CENTER_OCCLUSION
-                if (getLinearScreenDepth(getGrabScreenPos(vCenterClip)) < getLinearDepth(vCenter.xyz) - vCenter.w) {
-                    discard;
-                }
             #endif
             if (color.a < 1.0 / 255.0) {
                 discard;
@@ -89,10 +67,6 @@ export const unlitShader = {
             attribute vertex_texCoord0: vec2f;
             varying vUv: vec2f;
         #endif
-        #ifdef CENTER_OCCLUSION
-            varying vCenterClip: vec4f;
-            varying vCenter: vec4f;
-        #endif
 
         uniform matrix_model: mat4x4f;
         uniform matrix_viewProjection: mat4x4f;
@@ -105,11 +79,6 @@ export const unlitShader = {
             output.position.z = clamp(output.position.z, -abs(output.position.w), abs(output.position.w));
             #ifdef TEXTURE
                 output.vUv = input.vertex_texCoord0;
-            #endif
-            #ifdef CENTER_OCCLUSION
-                let center = uniform.matrix_model[3].xyz;
-                output.vCenterClip = uniform.matrix_viewProjection * vec4f(center, 1.0);
-                output.vCenter = vec4f(center, 0.5 * length(uniform.matrix_model[0].xyz));
             #endif
             return output;
         }
@@ -124,11 +93,6 @@ export const unlitShader = {
             var uTextureSampler: sampler;
             varying vUv: vec2f;
         #endif
-        #ifdef CENTER_OCCLUSION
-            #include "screenDepthPS"
-            varying vCenterClip: vec4f;
-            varying vCenter: vec4f;
-        #endif
 
         @fragment
         fn fragmentMain(input: FragmentInput) -> FragmentOutput {
@@ -138,11 +102,6 @@ export const unlitShader = {
                 // sharpen the filtered edges to a pixel wide, as geometry draws them
                 let coverage = textureSample(uTexture, uTextureSampler, input.vUv).a;
                 color.a *= clamp((coverage - 0.5) / max(fwidth(coverage), 1e-4) + 0.5, 0.0, 1.0);
-            #endif
-            #ifdef CENTER_OCCLUSION
-                if (getLinearScreenDepth(getGrabScreenPos(input.vCenterClip)) < getLinearDepth(input.vCenter.xyz) - input.vCenter.w) {
-                    discard;
-                }
             #endif
             if (color.a < 1.0 / 255.0) {
                 discard;

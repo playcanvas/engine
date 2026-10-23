@@ -18,9 +18,6 @@ import { unlitShader } from '../shaders.js';
 
 const tmpC1 = new Color();
 
-// the defines describing how the scene depth map is encoded
-const SCENE_DEPTH_DEFINES = ['SCENE_DEPTHMAP_LINEAR', 'SCENE_DEPTHMAP_PACKED', 'SCENE_DEPTHMAP_RECIPROCAL'];
-
 const tmpG = new Geometry();
 tmpG.positions = [];
 tmpG.normals = [];
@@ -453,23 +450,6 @@ class Shape {
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
-    }
-
-    /**
-     * Sets whether the shape shows or hides as a whole by the scene depth at its origin, instead of
-     * depth testing each pixel.
-     *
-     * @param {Map<string, string>|null} defines - The defines of the scene depth map encoding, or
-     * null to depth test.
-     */
-    setCenterOcclusion(defines) {
-        const material = this._material;
-        material.setDefine('CENTER_OCCLUSION', !!defines);
-        for (const name of SCENE_DEPTH_DEFINES) {
-            material.setDefine(name, defines?.get(name));
-        }
-        material.depthTest = !defines;
-        material.update();
     }
 
     /**
