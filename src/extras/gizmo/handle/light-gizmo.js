@@ -1,7 +1,7 @@
 import { math } from '../../../core/math/math.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../scene/constants.js';
+import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE, PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { HandleGizmo } from './handle-gizmo.js';
 
 /**
@@ -354,7 +354,12 @@ class LightGizmo extends HandleGizmo {
         }
         this._rays(entity, rays, RAYS, 0.58 * scale, 0.7, 0.75);
         renderer.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
-        this._icon('light', pos, entity);
+
+        // the icon sits on the light, moved toward the camera past the arrow so it draws on top
+        const camera = this._camera.entity;
+        const toward = this._camera.projection === PROJECTION_PERSPECTIVE ?
+            tmpV3.sub2(camera.getPosition(), pos).normalize() : tmpV3.copy(camera.forward).mulScalar(-1);
+        this._icon('light', toward.mulScalar(scale).add(pos), entity);
     }
 
     /**
