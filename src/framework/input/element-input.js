@@ -34,45 +34,28 @@ function item(i) {
 }
 
 /**
- * Creates a DOM Touch shaped object for a touch pointer, which {@link updateTouch} keeps current.
- * Its target stays the element the touch started on.
+ * Creates a DOM Touch shaped snapshot of a touch pointer. Like a browser Touch, it does not change
+ * afterwards.
  *
- * @param {globalThis.PointerEvent} e - The pointerdown event.
- * @returns {object} The touch.
- */
-function createTouch(e) {
-    return updateTouch({
-        identifier: e.pointerId,
-        target: e.target,
-        clientX: 0,
-        clientY: 0,
-        pageX: 0,
-        pageY: 0,
-        screenX: 0,
-        screenY: 0,
-        radiusX: 0,
-        radiusY: 0,
-        rotationAngle: 0,
-        force: 0
-    }, e);
-}
-
-/**
- * @param {object} touch - The touch made by {@link createTouch}.
  * @param {globalThis.PointerEvent} e - The latest pointer event of the touch.
+ * @param {EventTarget} target - The element the touch started on.
  * @returns {object} The touch.
  */
-function updateTouch(touch, e) {
-    touch.clientX = e.clientX;
-    touch.clientY = e.clientY;
-    touch.pageX = e.pageX;
-    touch.pageY = e.pageY;
-    touch.screenX = e.screenX;
-    touch.screenY = e.screenY;
-    touch.radiusX = (e.width || 0) / 2;
-    touch.radiusY = (e.height || 0) / 2;
-    touch.force = e.pressure || 0;
-    return touch;
+function createTouch(e, target) {
+    return {
+        identifier: e.pointerId,
+        target,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        pageX: e.pageX,
+        pageY: e.pageY,
+        screenX: e.screenX,
+        screenY: e.screenY,
+        radiusX: (e.width || 0) / 2,
+        radiusY: (e.height || 0) / 2,
+        rotationAngle: 0,
+        force: e.pressure || 0
+    };
 }
 
 /**
@@ -485,22 +468,13 @@ class ElementInput {
         this._pressedElement = null;
 
         /**
-         * The touch of each active touch pointer by pointer id, in the order the touches started,
-         * with the list holding just that touch for `changedTouches`. Both are reused while the
-         * touch lasts.
+         * The start target and latest pointer event of each active touch by pointer id, in the
+         * order the touches started.
          *
-         * @type {Map<number, { touch: object, changed: object[] }>}
+         * @type {Map<number, { target: EventTarget, event: globalThis.PointerEvent }>}
          * @private
          */
         this._touches = new Map();
-
-        /**
-         * The list of all active touches, rebuilt when a touch starts or ends.
-         *
-         * @type {object[]|null}
-         * @private
-         */
-        this._touchList = null;
         this._touchedElements = {};
         this._touchesForWhichTouchLeaveHasFired = {};
         this._selectedElements = {};
@@ -632,7 +606,6 @@ class ElementInput {
         }
 
         this._touches.clear();
-        this._touchList = null;
         this._touchedElements = {};
         this._touchesForWhichTouchLeaveHasFired = {};
         this._mouseButtons.fill(false);
@@ -802,11 +775,24 @@ class ElementInput {
         this._onElementMouseEvent('mousewheel', event);
     }
 
-    _activeTouches() {
-        if (!this._touchList) {
-            this._touchList = touchList(Array.from(this._touches.values(), t => t.touch));
+    /**
+     * Snapshots all active touches for one pointer event, as a browser TouchEvent does. The
+     * changed touch is the same object in `touches` while it is still active.
+     *
+     * @param {globalThis.PointerEvent} event - The pointer event.
+     * @param {EventTarget} target - The element the changed touch started on.
+     * @returns {{ touch: object, touches: object[], changed: object[] }} The touch that changed,
+     * and the lists for `touches` and `changedTouches`.
+     * @private
+     */
+    _snapshot(event, target) {
+        const touch = createTouch(event, target);
+        const id = event.pointerId;
+        const touches = [];
+        for (const [i, t] of this._touches) {
+            touches.push(i === id ? touch : createTouch(t.event, t.target));
         }
-        return this._touchList;
+        return { touch, touches: touchList(touches), changed: touchList([touch]) };
     }
 
     _determineTouchedElement(touch) {
@@ -832,18 +818,16 @@ class ElementInput {
         if (!isTouch(event) || this._touches.has(id)) return;
 
         // no explicit capture: the browser implicitly captures a touch to its start target
-        const touch = createTouch(event);
-        const changed = touchList([touch]);
-        this._touches.set(id, { touch, changed });
-        this._touchList = null;
+        this._touches.set(id, { target: event.target, event });
 
         if (!this._enabled) return;
 
+        const { touch, touches, changed } = this._snapshot(event, event.target);
         const newTouchInfo = this._determineTouchedElement(touch);
         const oldTouchInfo = this._touchedElements[id];
 
         if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
-            this._fireEvent('touchstart', new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch, this._activeTouches(), changed));
+            this._fireEvent('touchstart', new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch, touches, changed));
             this._touchesForWhichTouchLeaveHasFired[id] = false;
         }
 
@@ -859,10 +843,6 @@ class ElementInput {
         const record = this._touches.get(id);
         if (!record || !isTouch(event)) return;
         this._touches.delete(id);
-        this._touchList = null;
-
-        const { touch, changed } = record;
-        updateTouch(touch, event);
 
         if (!this._enabled) return;
 
@@ -889,7 +869,8 @@ class ElementInput {
         delete this._touchedElements[id];
         delete this._touchesForWhichTouchLeaveHasFired[id];
 
-        const touches = this._activeTouches();
+        // the ended touch is no longer in `touches`
+        const { touch, touches, changed } = this._snapshot(event, record.target);
 
         // check if touch was released over previously touch
         // element in order to fire click event
@@ -914,16 +895,14 @@ class ElementInput {
         const id = event.pointerId;
         const record = this._touches.get(id);
         if (!record || !isTouch(event)) return;
-
-        const { touch, changed } = record;
-        updateTouch(touch, event);
+        record.event = event;
 
         if (!this._enabled) return;
 
         const oldTouchInfo = this._touchedElements[id];
         if (!oldTouchInfo) return;
 
-        const touches = this._activeTouches();
+        const { touch, touches, changed } = this._snapshot(event, record.target);
         const coords = getTouchTargetCoords(touch);
         const newTouchInfo = this._determineTouchedElement(touch);
 

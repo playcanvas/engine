@@ -138,13 +138,23 @@ describe('ElementInput', function () {
             expect([event.x, event.y]).to.deep.equal([50, 60]);
         });
 
-        it('keeps a touch on its start target and updates it as it moves', function () {
+        it('snapshots touches per event, keeping each on its start target', function () {
             pointer('pointerdown', { x: 50, y: 60 });
+            pointer('pointerdown', { pointerId: 2, x: 100, y: 100, isPrimary: false });
             pointer('pointermove', { x: 70, y: 80 });
-            const [start, move] = log.map(e => e.event);
-            expect(move.touch).to.equal(start.touch);
-            expect(move.touch).to.include({ target: canvas, clientX: 70, pageY: 80 });
-            expect([move.x, move.y]).to.deep.equal([70, 80]);
+            const stored = log[2].event.touch;
+            const storedOther = log[2].event.touches.item(1);
+            expect(log[2].event.touches.item(0)).to.equal(stored);
+
+            pointer('pointermove', { x: 90, y: 95 });
+            pointer('pointermove', { pointerId: 2, x: 120, y: 130, isPrimary: false });
+
+            // like a browser Touch, a touch from an earlier event keeps its values
+            expect(stored).to.include({ target: canvas, clientX: 70, clientY: 80, pageX: 70, pageY: 80 });
+            expect(storedOther).to.include({ identifier: 2, clientX: 100, pageX: 100 });
+            expect(log[3].event.touch).to.not.equal(stored);
+            expect(log[3].event.touch).to.include({ target: canvas, clientX: 90, pageX: 90 });
+            expect([log[3].event.x, log[3].event.y]).to.deep.equal([90, 95]);
         });
 
         it('passes the PointerEvent to mouse handlers', function () {
