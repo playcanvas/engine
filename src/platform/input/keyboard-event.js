@@ -20,6 +20,14 @@ class KeyboardEvent {
     key = null;
 
     /**
+     * The layout-independent `KeyboardEvent.code` of the key that has changed, e.g. `'KeyW'`.
+     * Empty if the browser did not provide one.
+     *
+     * @type {string}
+     */
+    code = '';
+
+    /**
      * The element that fired the keyboard event.
      *
      * @type {Element|null}
@@ -50,6 +58,7 @@ class KeyboardEvent {
     constructor(keyboard, event) {
         if (event) {
             this.key = event.keyCode;
+            this.code = event.code ?? '';
             this.element = event.target;
             this.event = event;
         }

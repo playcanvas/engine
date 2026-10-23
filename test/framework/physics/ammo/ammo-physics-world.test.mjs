@@ -3,6 +3,7 @@ import { restore, spy, stub } from 'sinon';
 
 import { Debug } from '../../../../src/core/debug.js';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
+import { BODYMASK_NOT_STATIC } from '../../../../src/framework/components/rigid-body/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { AmmoPhysicsWorld } from '../../../../src/framework/physics/ammo/ammo-physics-world.js';
 import { BoxGeometry } from '../../../../src/scene/geometry/box-geometry.js';
@@ -1606,6 +1607,59 @@ describe('AmmoPhysicsWorld', function () {
             // mirrored and doubled about x = 5 it spans x 2 to 4, not 6 to 8
             expect(hitHeightAt(3)).to.be.closeTo(1.0, 1e-3);
             expect(hitHeightAt(7)).to.equal(null);
+        });
+
+    });
+
+    describe('sweep', function () {
+
+        let box;
+
+        beforeEach(function () {
+            installWorld();
+            box = new Entity();
+            app.root.addChild(box);
+            box.addComponent('rigidbody', { type: 'static' });
+            box.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
+        });
+
+        it('sweeps a sphere onto a box', function () {
+            const hit = app.systems.rigidbody.sweep({ type: 'sphere', radius: 0.25 }, new Vec3(0, 5, 0), new Vec3(0, -5, 0));
+            expect(hit.entity).to.equal(box);
+            expect(hit.normal.y).to.be.closeTo(1, 1e-3);
+            expect(hit.hitFraction).to.be.closeTo(0.425, 0.01);
+        });
+
+        it('sweeps a capsule onto a box', function () {
+            const hit = app.systems.rigidbody.sweep({ type: 'capsule', radius: 0.25, height: 1 }, new Vec3(0, 5, 0), new Vec3(0, -5, 0));
+            expect(hit.entity).to.equal(box);
+            expect(hit.hitFraction).to.be.closeTo(0.4, 0.01);
+        });
+
+        it('misses when the path clears the box', function () {
+            expect(app.systems.rigidbody.sweep({ type: 'sphere', radius: 0.25 }, new Vec3(5, 5, 0), new Vec3(5, -5, 0))).to.equal(null);
+        });
+
+        it('applies the collision mask', function () {
+            const options = { filterCollisionMask: BODYMASK_NOT_STATIC };
+            expect(app.systems.rigidbody.sweep({ type: 'sphere', radius: 0.25 }, new Vec3(0, 5, 0), new Vec3(0, -5, 0), options)).to.equal(null);
+        });
+
+        it('returns null without a backend', function () {
+            world = null;
+            const fresh = createApp();
+            expect(fresh.systems.rigidbody.sweep({ type: 'sphere', radius: 0.25 }, new Vec3(0, 5, 0), new Vec3(0, -5, 0))).to.equal(null);
+            fresh.destroy();
+        });
+
+        it('caches sweep shapes and releases them with the world', function () {
+            const solo = new AmmoPhysicsWorld();
+            const shape = { type: 'capsule', radius: 0.25, height: 1 };
+            solo.sweep(shape, new Vec3(0, 5, 0), new Vec3(0, -5, 0));
+            solo.sweep(shape, new Vec3(0, 4, 0), new Vec3(0, -4, 0));
+            expect(solo._sweepShapes.size).to.equal(1);
+            solo.destroy();
+            expect(solo._sweepShapes.size).to.equal(0);
         });
 
     });

@@ -1,7 +1,9 @@
-import { math, Vec3, Quat, Mat4, KeyboardMouseSource, DualGestureSource } from 'playcanvas';
+import { math, Vec3, Quat, Mat4, Keyboard, Mouse, Gestures } from 'playcanvas';
 
 // Frame-rate independent damping: fraction of the remaining distance to cover this frame.
 const damp = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
+
+const key = (kb, code) => +kb.isPressed(code);
 
 // scratch
 const up = new Vec3();
@@ -32,7 +34,7 @@ const qTmp = new Quat();
  * the axis that makes angular schemes spin out as you approach the center.
  *
  * Controls: keyboard (WASD/arrows move, Q/E or Ctrl/Space down/up, Shift to sprint) + mouse look
- * (pointer lock) on desktop; twin virtual joysticks (left = move, right = look) on touch.
+ * (pointer lock) on desktop; virtual joystick (left = move) and drag (right = look) on touch.
  */
 class CylinderController {
     /**
@@ -76,15 +78,19 @@ class CylinderController {
         this._rotT = new Quat().setFromMat4(mat);
         this._rot = this._rotT.clone();
 
-        // accumulated held-key state (down/up deltas sum to current held state)
-        this._axis = new Vec3();
-        this._shift = 0;
+        // cross-platform input devices (same primitives as FirstPersonController)
+        const canvas = app.graphicsDevice.canvas;
+        this._keyboard = new Keyboard(window);
+        this._mouse = new Mouse(canvas, { capture: true });
+        this._gestures = new Gestures(canvas, { layout: 'joystick-touch' });
 
-        // cross-platform input sources (same primitives as FirstPersonController)
-        this._desktopInput = new KeyboardMouseSource({ pointerLock: true });
-        this._mobileInput = new DualGestureSource();
-        this._desktopInput.attach(app.graphicsDevice.canvas);
-        this._mobileInput.attach(app.graphicsDevice.canvas);
+        // pointer lock on click
+        this._onPointerDown = (event) => {
+            if (event.pointerType === 'mouse' && document.pointerLockElement !== canvas) {
+                canvas.requestPointerLock?.();
+            }
+        };
+        canvas.addEventListener('pointerdown', this._onPointerDown);
 
         this._applyTransform();
     }
@@ -93,25 +99,43 @@ class CylinderController {
      * @param {number} dt - Delta time in seconds.
      */
     update(dt) {
-        const { keyCode } = KeyboardMouseSource;
-        const { key, mouse } = this._desktopInput.read();
-        const { leftInput, rightInput } = this._mobileInput.read();
+        const { _keyboard: kb, _mouse: mouse, _gestures: gestures } = this;
+        const { x: lx, y: ly } = gestures.leftJoystick.value;
+        const [rx, ry] = gestures.right;
         const R = this.radius;
 
-        // accumulate currently-held keyboard state from per-frame deltas
-        this._axis.x += key[keyCode.D] - key[keyCode.A] + (key[keyCode.RIGHT] - key[keyCode.LEFT]);
-        this._axis.y += key[keyCode.E] - key[keyCode.Q] + (key[keyCode.SPACE] - key[keyCode.CTRL]);
-        this._axis.z += key[keyCode.W] - key[keyCode.S] + (key[keyCode.UP] - key[keyCode.DOWN]);
-        this._shift += key[keyCode.SHIFT];
+        // keyboard and mouse only once the pointer is locked
+        const locked = document.pointerLockElement === this.app.graphicsDevice.canvas;
+        const mx = locked ? mouse.movement[0] : 0;
+        const my = locked ? mouse.movement[1] : 0;
+        const shift = locked ? key(kb, 'ShiftLeft') + key(kb, 'ShiftRight') : 0;
 
         // combined move input (keyboard + left joystick), clamped to unit range per axis
-        const moveX = math.clamp(this._axis.x + leftInput[0], -1, 1); // strafe
-        const moveY = math.clamp(this._axis.y, -1, 1); // up (camera up)
-        const moveZ = math.clamp(this._axis.z - leftInput[1], -1, 1); // forward
+        const moveX = math.clamp(
+            (locked ? key(kb, 'KeyD') - key(kb, 'KeyA') + key(kb, 'ArrowRight') - key(kb, 'ArrowLeft') : 0) + lx,
+            -1,
+            1
+        ); // strafe
+        const moveY = math.clamp(
+            locked
+                ? key(kb, 'KeyE') -
+                      key(kb, 'KeyQ') +
+                      key(kb, 'Space') -
+                      key(kb, 'ControlLeft') -
+                      key(kb, 'ControlRight')
+                : 0,
+            -1,
+            1
+        ); // up (camera up)
+        const moveZ = math.clamp(
+            (locked ? key(kb, 'KeyW') - key(kb, 'KeyS') + key(kb, 'ArrowUp') - key(kb, 'ArrowDown') : 0) - ly,
+            -1,
+            1
+        ); // forward
 
         // --- look: apply yaw about the camera's up and pitch about its right (free 6-DOF) ---
-        const yawIn = mouse[0] * this.lookSpeed + rightInput[0] * this.touchLookSpeed * dt;
-        const pitchIn = mouse[1] * this.lookSpeed + rightInput[1] * this.touchLookSpeed * dt;
+        const yawIn = mx * this.lookSpeed + rx * this.touchLookSpeed * dt;
+        const pitchIn = my * this.lookSpeed + ry * this.touchLookSpeed * dt;
         if (yawIn || pitchIn) {
             this._rotT.transformVector(Vec3.UP, up);
             this._rotT.transformVector(Vec3.RIGHT, right);
@@ -122,7 +146,7 @@ class CylinderController {
         }
 
         // --- move: free-fly along the look direction (forward / strafe / camera-up) ---
-        const speed = (this._shift > 0 ? this.moveFastSpeed : this.moveSpeed) * dt;
+        const speed = (shift > 0 ? this.moveFastSpeed : this.moveSpeed) * dt;
         this._rotT.transformVector(Vec3.FORWARD, fwd);
         this._rotT.transformVector(Vec3.RIGHT, right);
         this._rotT.transformVector(Vec3.UP, up);
@@ -176,6 +200,10 @@ class CylinderController {
         this._pos.lerp(this._pos, this._posT, damp(this.moveDamping, dt));
         this._rot.slerp(this._rot, this._rotT, damp(this.rotateDamping, dt));
 
+        this._keyboard.update();
+        this._mouse.update();
+        this._gestures.update();
+
         this._applyTransform();
     }
 
@@ -186,8 +214,10 @@ class CylinderController {
     }
 
     destroy() {
-        this._desktopInput.detach();
-        this._mobileInput.detach();
+        this.app.graphicsDevice.canvas.removeEventListener('pointerdown', this._onPointerDown);
+        this._keyboard.detach();
+        this._mouse.detach();
+        this._gestures.destroy();
     }
 }
 

@@ -623,6 +623,49 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
+     * Sweep a sphere or capsule through the world and return the closest hit. The shape keeps an
+     * identity rotation, so a capsule stays aligned to the Y axis.
+     *
+     * By default the sweep also hits triggers and the caller's own body, so pass a
+     * `filterCollisionMask` that excludes them. A sweep starting overlapping a body reports it
+     * with a `hitFraction` of 0 when moving into it, and may miss it otherwise. A zero-length
+     * sweep reports no hit.
+     *
+     * @param {{ type: 'sphere'|'capsule', radius: number, height?: number }} shape - The swept
+     * shape. For a capsule, `height` is the total height including both caps, as on the collision
+     * component.
+     * @param {Vec3} from - The world space start position of the shape centre.
+     * @param {Vec3} to - The world space end position of the shape centre.
+     * @param {object} [options] - The additional options for the sweep.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the sweep.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the sweep.
+     * @returns {RaycastResult|null} The closest hit (`hitFraction` is the fraction of the path
+     * travelled), or null if there was no hit or no physics backend is installed.
+     * @example
+     * // sweep a capsule down 1 unit to find the ground
+     * const from = entity.getPosition();
+     * const to = from.clone().sub(Vec3.UP);
+     * const hit = app.systems.rigidbody.sweep({ type: 'capsule', radius: 0.3, height: 1.8 }, from, to);
+     * if (hit) {
+     *     console.log('Ground at fraction', hit.hitFraction, 'normal', hit.normal.toString());
+     * }
+     * @example
+     * // sweep a sphere, ignoring static bodies
+     * const hit = app.systems.rigidbody.sweep({ type: 'sphere', radius: 0.5 }, from, to, {
+     *     filterCollisionMask: BODYMASK_NOT_STATIC
+     * });
+     */
+    sweep(shape, from, to, options = {}) {
+        const world = this._world;
+        if (!world) {
+            Debug.warnOnce('RigidBodyComponentSystem#sweep: no physics backend is installed, so the shape cannot hit anything.');
+            return null;
+        }
+
+        return world.sweep(shape, from, to, options);
+    }
+
+    /**
      * Raycast the world and return all entities the ray hits. It returns an array of
      * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
      * of length 0. Results are returned in no particular order unless `options.sort` is true, in

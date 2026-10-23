@@ -1,3 +1,5 @@
+import { platform } from '../../core/platform.js';
+
 import { MOUSEBUTTON_NONE } from './constants.js';
 
 /**
@@ -11,6 +13,18 @@ import { MOUSEBUTTON_NONE } from './constants.js';
  */
 function isMousePointerLocked() {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
+}
+
+/**
+ * Returns true if a pointer event comes from a mouse. A pen counts as a mouse on platforms without
+ * touch support, as their browsers' compatibility mouse events made it, and as a touch otherwise.
+ *
+ * @param {globalThis.PointerEvent} event - The pointer event.
+ * @returns {boolean} True if the pointer is a mouse.
+ * @ignore
+ */
+function isMousePointer(event) {
+    return event.pointerType === 'mouse' || (event.pointerType === 'pen' && !platform.touch);
 }
 
 /**
@@ -104,9 +118,11 @@ class MouseEvent {
     metaKey = false;
 
     /**
-     * The original browser event.
+     * The original browser event: a PointerEvent, or a WheelEvent for
+     * {@link Mouse.EVENT_MOUSEWHEEL}. For a tap, which fires all three of `mousemove`,
+     * `mousedown` and `mouseup`, it is the PointerEvent of the `pointerup`.
      *
-     * @type {globalThis.MouseEvent|globalThis.WheelEvent}
+     * @type {globalThis.PointerEvent|globalThis.WheelEvent}
      */
     event;
 
@@ -114,7 +130,8 @@ class MouseEvent {
      * Create a new MouseEvent instance.
      *
      * @param {Mouse} mouse - The Mouse device that is firing this event.
-     * @param {globalThis.MouseEvent|globalThis.WheelEvent} event - The original browser event that fired.
+     * @param {globalThis.PointerEvent|globalThis.WheelEvent} event - The original browser event
+     * that fired.
      */
     constructor(mouse, event) {
         let coords = {
@@ -160,7 +177,8 @@ class MouseEvent {
             this.dy = this.y - mouse._lastY;
         }
 
-        if (event.type === 'mousedown' || event.type === 'mouseup') {
+        if (event.type === 'mousedown' || event.type === 'mouseup' ||
+            event.type === 'pointerdown' || event.type === 'pointerup') {
             this.button = event.button;
         }
         this.buttons = mouse._buttons.slice(0);
@@ -187,4 +205,4 @@ class MouseEvent {
     }
 }
 
-export { isMousePointerLocked, MouseEvent };
+export { isMousePointer, isMousePointerLocked, MouseEvent };

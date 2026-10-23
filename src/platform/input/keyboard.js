@@ -14,10 +14,14 @@ const _keyboardEvent = new KeyboardEvent();
  */
 function makeKeyboardEvent(event) {
     _keyboardEvent.key = event.keyCode;
+    _keyboardEvent.code = event.code ?? '';
     _keyboardEvent.element = event.target;
     _keyboardEvent.event = event;
     return _keyboardEvent;
 }
+
+// a string longer than one character is a KeyboardEvent.code, otherwise a key character
+const isCode = key => typeof key === 'string' && key.length > 1;
 
 /**
  * Convert a string or keycode to a keycode.
@@ -59,9 +63,11 @@ const _keyCodeToKeyIdentifier = {
  * changes and window blur events by clearing key states. The Keyboard instance must be attached to
  * a DOM element before it can detect key events.
  *
- * Key state is derived from the legacy `KeyboardEvent.keyCode` property. Browsers populate it for
- * real input, but a hand-constructed `new KeyboardEvent(...)` leaves it at 0, so synthesized events
- * must set `keyCode` explicitly in order to be observed.
+ * Key state is tracked by both the legacy `KeyboardEvent.keyCode` and the layout-independent
+ * `KeyboardEvent.code` (e.g. `'KeyW'`, `'Space'`, `'ShiftLeft'`). Query methods accept either a
+ * `KEY_*` constant or single character, or a `code` string. Browsers populate both properties for
+ * real input, but a hand-constructed `new KeyboardEvent(...)` leaves `keyCode` at 0, so synthesized
+ * events must set `keyCode` explicitly to be observed through it.
  *
  * {@link Keyboard#wasPressed} and {@link Keyboard#wasReleased} compare against a snapshot taken
  * once per frame, so a keydown and keyup delivered within the same task are seen by neither. Hold
@@ -69,10 +75,9 @@ const _keyCodeToKeyIdentifier = {
  *
  * Your application's Keyboard instance is managed and accessible via {@link AppBase#keyboard}.
  *
- * For pointer-lock-aware, frame-accumulated input deltas rather than raw events, see
- * {@link KeyboardMouseSource}, {@link GamepadSource} and {@link MultiTouchSource}, which feed
- * {@link InputController}s such as {@link OrbitController}, {@link FlyController} and
- * {@link FocusController}.
+ * To turn key state into camera or character movement, see {@link InputController}s such as
+ * {@link OrbitController}, {@link FlyController}, {@link FocusController} and
+ * {@link CharacterController}, which map it into an {@link InputFrame}.
  *
  * @category Input Devices
  */
@@ -117,6 +122,12 @@ class Keyboard extends EventHandler {
 
     /** @private */
     _lastmap = {};
+
+    /** @private */
+    _codemap = {};
+
+    /** @private */
+    _lastcodemap = {};
 
     /**
      * @type {(event: globalThis.KeyboardEvent) => void}
@@ -279,6 +290,7 @@ class Keyboard extends EventHandler {
         const id = this.toKeyIdentifier(code);
 
         this._keymap[id] = true;
+        if (event.code) this._codemap[event.code] = true;
 
         this.fire('keydown', makeKeyboardEvent(event));
 
@@ -305,6 +317,7 @@ class Keyboard extends EventHandler {
         const id = this.toKeyIdentifier(code);
 
         delete this._keymap[id];
+        if (event.code) delete this._codemap[event.code];
 
         this.fire('keyup', makeKeyboardEvent(event));
 
@@ -352,6 +365,8 @@ class Keyboard extends EventHandler {
     _handleWindowBlur() {
         this._keymap = {};
         this._lastmap = {};
+        this._codemap = {};
+        this._lastcodemap = {};
     }
 
     /**
@@ -370,15 +385,26 @@ class Keyboard extends EventHandler {
                 this._lastmap[prop] = this._keymap[prop];
             }
         }
+
+        for (const prop in this._lastcodemap) {
+            delete this._lastcodemap[prop];
+        }
+
+        for (const prop in this._codemap) {
+            this._lastcodemap[prop] = true;
+        }
     }
 
     /**
      * Return true if the key is currently down.
      *
-     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
+     * @param {number|string} key - The keyCode (see the KEY_* constants) or key character to test,
+     * or a `KeyboardEvent.code` string such as `'KeyW'`.
      * @returns {boolean} True if the key was pressed, false if not.
      */
     isPressed(key) {
+        if (isCode(key)) return !!this._codemap[key];
+
         const keyCode = toKeyCode(key);
         const id = this.toKeyIdentifier(keyCode);
 
@@ -388,10 +414,13 @@ class Keyboard extends EventHandler {
     /**
      * Returns true if the key was pressed since the last update.
      *
-     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
+     * @param {number|string} key - The keyCode (see the KEY_* constants) or key character to test,
+     * or a `KeyboardEvent.code` string such as `'KeyW'`.
      * @returns {boolean} True if the key was pressed.
      */
     wasPressed(key) {
+        if (isCode(key)) return !!this._codemap[key] && !this._lastcodemap[key];
+
         const keyCode = toKeyCode(key);
         const id = this.toKeyIdentifier(keyCode);
 
@@ -401,10 +430,13 @@ class Keyboard extends EventHandler {
     /**
      * Returns true if the key was released since the last update.
      *
-     * @param {number} key - The keyCode of the key to test. See the KEY_* constants.
+     * @param {number|string} key - The keyCode (see the KEY_* constants) or key character to test,
+     * or a `KeyboardEvent.code` string such as `'KeyW'`.
      * @returns {boolean} True if the key was pressed.
      */
     wasReleased(key) {
+        if (isCode(key)) return !this._codemap[key] && !!this._lastcodemap[key];
+
         const keyCode = toKeyCode(key);
         const id = this.toKeyIdentifier(keyCode);
 

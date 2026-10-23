@@ -968,14 +968,13 @@ class ButtonComponent extends Component {
     }
 
     _onTouchEnd(event) {
-        // The default behavior of the browser is to simulate a series of
-        // `mouseenter/down/up` events immediately after the `touchend` event,
-        // in order to ensure that websites that don't explicitly listen for
-        // touch events will still work on mobile (see https://www.html5rocks.com/en/mobile/touchandmouse/
-        // for reference). This leads to an issue whereby buttons will enter
-        // the `hover` state on mobile browsers after the `touchend` event is
-        // received, instead of going back to the `default` state. Calling
-        // preventDefault() here fixes the issue.
+        // As browsers do, ElementInput and Mouse follow a tap with emulated
+        // `mouseenter/down/up` events, so that apps that don't explicitly
+        // listen for touch events still work on mobile. This would leave the
+        // button in the `hover` state after `touchend`, instead of going back
+        // to the `default` state. Calling preventDefault() on the pointerup
+        // here stops the engine's emulated events only: the browser's own
+        // compatibility mouse events and `click` still fire.
         event.event.preventDefault();
 
         this._isPressed = false;

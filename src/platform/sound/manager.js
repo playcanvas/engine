@@ -6,10 +6,11 @@ import { Listener } from './listener.js';
 const CONTEXT_STATE_RUNNING = 'running';
 
 /**
- * List of Window events to listen when AudioContext needs to be unlocked.
+ * List of Window events to listen when AudioContext needs to be unlocked. A `pointerup` carries
+ * user activation for both touch and mouse, unlike a touch `pointerdown`.
  */
 const USER_INPUT_EVENTS = [
-    'click', 'touchstart', 'mousedown'
+    'click', 'pointerup'
 ];
 
 /**

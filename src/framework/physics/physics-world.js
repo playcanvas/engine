@@ -389,6 +389,26 @@ class PhysicsWorld {
     }
 
     /**
+     * Sweep a convex shape through the world and return the closest hit. By default it also hits
+     * triggers and the caller's own body. A sweep starting overlapping a body reports it with a
+     * `hitFraction` of 0 when moving into it, and may miss it otherwise. A zero-length sweep
+     * reports no hit.
+     *
+     * @param {{ type: 'sphere'|'capsule', radius: number, height?: number }} shape - The swept
+     * shape. A capsule is Y-aligned and its height includes the caps.
+     * @param {Vec3} from - The world space start position of the shape centre.
+     * @param {Vec3} to - The world space end position of the shape centre.
+     * @param {object} [options] - The sweep options.
+     * @param {number} [options.filterCollisionGroup] - Collision group to apply to the sweep.
+     * @param {number} [options.filterCollisionMask] - Collision mask to apply to the sweep.
+     * @returns {RaycastResult|null} The hit, or null if there was none.
+     * @ignore
+     */
+    sweep(shape, from, to, options) {
+        return null;
+    }
+
+    /**
      * Raycast the world and return all hits, in backend order.
      *
      * @param {Vec3} start - The world space start point.

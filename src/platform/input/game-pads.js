@@ -1,5 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { platform } from '../../core/platform.js';
 
@@ -775,9 +776,9 @@ class GamePad {
 /**
  * Input handler for accessing GamePad input.
  *
- * For frame-accumulated input deltas rather than raw pad state, see {@link GamepadSource},
- * {@link KeyboardMouseSource} and {@link MultiTouchSource}, which feed {@link InputController}s
- * such as {@link OrbitController}, {@link FlyController} and {@link FocusController}.
+ * To turn stick state into camera or character movement, see {@link InputController}s such as
+ * {@link OrbitController}, {@link FlyController}, {@link FocusController} and
+ * {@link CharacterController}, which map it into an {@link InputFrame}.
  *
  * @category Input Devices
  */
@@ -1090,6 +1091,34 @@ class GamePads extends EventHandler {
             }
         }
         return null;
+    }
+
+    /**
+     * Applies a radial dead zone to a stick. Magnitudes below `low` are zeroed; larger magnitudes
+     * are rescaled so that `low` maps to 0 and `high` maps to 1, preserving direction. The result
+     * is not clamped, so magnitudes above `high` will exceed 1.
+     *
+     * Mutates and returns the given array.
+     *
+     * @param {number[]} stick - The stick as `[x, y]`, with each axis in the range -1 to 1.
+     * @param {number} low - The magnitude below which the stick is zeroed.
+     * @param {number} high - The magnitude that maps to 1 after rescaling. Must be greater than `low`.
+     * @returns {number[]} The same `stick` array, with the dead zone applied.
+     * @example
+     * const stick = GamePads.applyDeadZone([0.5, 0], 0.3, 0.6);
+     * // stick is approximately [0.667, 0]
+     */
+    static applyDeadZone(stick, low, high) {
+        Debug.assert(high > low, 'GamePads.applyDeadZone: high must be greater than low.');
+        const mag = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
+        if (mag <= low) {
+            stick.fill(0);
+            return stick;
+        }
+        const scale = (mag - low) / (high - low) / mag;
+        stick[0] *= scale;
+        stick[1] *= scale;
+        return stick;
     }
 }
 

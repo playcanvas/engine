@@ -127,12 +127,15 @@ export { NullGraphicsDevice } from './platform/graphics/null/null-graphics-devic
 export * from './platform/input/constants.js';
 export { Controller } from './platform/input/controller.js';
 export { GamePads } from './platform/input/game-pads.js';
+export { Gestures } from './platform/input/gestures.js';
+export { InputFrame } from './platform/input/input-frame.js';
 export { Keyboard } from './platform/input/keyboard.js';
 export { KeyboardEvent } from './platform/input/keyboard-event.js';
 export { Mouse } from './platform/input/mouse.js';
 export { MouseEvent } from './platform/input/mouse-event.js';
 export { TouchDevice } from './platform/input/touch-device.js';
 export { getTouchTargetCoords, Touch, TouchEvent } from './platform/input/touch-event.js';
+export { VirtualJoystick } from './platform/input/virtual-joystick.js';
 
 // PLATFORM / NET
 export { http, Http } from './platform/net/http.js';
@@ -394,6 +397,12 @@ export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // FRAMEWORK / INPUT
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './framework/input/element-input.js';
+export { Pose } from './framework/input/pose.js';
+export { InputController } from './framework/input/controllers/input-controller.js';
+export { FlyController } from './framework/input/controllers/fly-controller.js';
+export { OrbitController } from './framework/input/controllers/orbit-controller.js';
+export { FocusController } from './framework/input/controllers/focus-controller.js';
+export { CharacterController, CHARACTER_GROUP } from './framework/input/controllers/character-controller.js';
 
 // FRAMEWORK / PARSERS
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';

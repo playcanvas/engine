@@ -1,6 +1,10 @@
 import { EventHandler } from '../../core/event-handler.js';
 
-import { TouchEvent } from './touch-event.js';
+import { getTouchActionStyle, isTouchPointer, TouchEvent } from './touch-event.js';
+
+/**
+ * @import { Mouse } from './mouse.js'
+ */
 
 /**
  * Manages touch input by handling and dispatching touch events. Extends {@link EventHandler}
@@ -9,6 +13,16 @@ import { TouchEvent } from './touch-event.js';
  * Detects and processes touch interactions with the attached DOM element, allowing applications
  * to respond to common touch gestures. The TouchDevice instance must be attached to a DOM element
  * before it can detect touch events.
+ *
+ * Events are driven by the touch and pen pointer events of the element, though pens are left to
+ * {@link Mouse} on platforms without touch support. Each pointer that goes down, moves, lifts or
+ * is cancelled fires one event, whose {@link TouchEvent#changedTouches} holds that pointer's
+ * touch. A touch keeps the target it started on, and its coordinates stay relative to that
+ * target, as with browser touch events. A touch that leaves the element without lifting or being
+ * cancelled ends with `touchend`. The element's `touch-action` style is `none` while attached so
+ * the browser does not scroll or zoom it, unless the element is `document.body` or
+ * `document.documentElement`, which are left alone so the page still scrolls. Apps attached to the
+ * page should set `touch-action: none` on the canvas themselves to stop browser pan and zoom.
  *
  * Your application's TouchDevice instance is managed and accessible via {@link AppBase#touch}.
  *
@@ -70,25 +84,41 @@ class TouchDevice extends EventHandler {
     _element = null;
 
     /**
-     * @type {(e: globalThis.TouchEvent) => void}
+     * The start target and latest pointer event of each active touch by pointer id, in the order
+     * the touches started.
+     *
+     * @type {Map<number, { target: Element, event: globalThis.PointerEvent }>}
+     * @ignore
+     */
+    _touches = new Map();
+
+    /**
+     * The `touch-action` style of the element before it was attached, restored on detach.
+     *
+     * @private
+     */
+    _touchAction = '';
+
+    /**
+     * @type {(e: globalThis.PointerEvent) => void}
      * @private
      */
     _startHandler;
 
     /**
-     * @type {(e: globalThis.TouchEvent) => void}
+     * @type {(e: globalThis.PointerEvent) => void}
      * @private
      */
     _endHandler;
 
     /**
-     * @type {(e: globalThis.TouchEvent) => void}
+     * @type {(e: globalThis.PointerEvent) => void}
      * @private
      */
     _moveHandler;
 
     /**
-     * @type {(e: globalThis.TouchEvent) => void}
+     * @type {(e: globalThis.PointerEvent) => void}
      * @private
      */
     _cancelHandler;
@@ -111,7 +141,10 @@ class TouchDevice extends EventHandler {
 
     /**
      * Attach a device to an element in the DOM. If the device is already attached to an element
-     * this method will detach it first.
+     * this method will detach it first. The element's `touch-action` style is set to `none` until
+     * it is detached, except on `document.body` and `document.documentElement`, where it is left
+     * alone so the page still scrolls. Apps attached to the page should set `touch-action: none` on
+     * the canvas themselves to stop browser pan and zoom.
      *
      * @param {Element} element - The element to attach to.
      */
@@ -122,42 +155,90 @@ class TouchDevice extends EventHandler {
 
         this._element = element;
 
-        this._element.addEventListener('touchstart', this._startHandler, false);
-        this._element.addEventListener('touchend', this._endHandler, false);
-        this._element.addEventListener('touchmove', this._moveHandler, false);
-        this._element.addEventListener('touchcancel', this._cancelHandler, false);
+        // pointer events cannot prevent default scrolling and zooming, unlike touch events
+        const style = getTouchActionStyle(element);
+        if (style) {
+            this._touchAction = style.touchAction;
+            style.touchAction = 'none';
+        }
+
+        element.addEventListener('pointerdown', this._startHandler, false);
+        element.addEventListener('pointerup', this._endHandler, false);
+        element.addEventListener('pointermove', this._moveHandler, false);
+        element.addEventListener('pointercancel', this._cancelHandler, false);
+        element.addEventListener('pointerleave', this._endHandler, false);
     }
 
     /**
-     * Detach a device from the element it is attached to.
+     * Detach a device from the element it is attached to and restore the element's `touch-action`
+     * style, if it was set. Active touches are forgotten without firing events.
      */
     detach() {
-        if (this._element) {
-            this._element.removeEventListener('touchstart', this._startHandler, false);
-            this._element.removeEventListener('touchend', this._endHandler, false);
-            this._element.removeEventListener('touchmove', this._moveHandler, false);
-            this._element.removeEventListener('touchcancel', this._cancelHandler, false);
+        const element = this._element;
+        if (element) {
+            element.removeEventListener('pointerdown', this._startHandler, false);
+            element.removeEventListener('pointerup', this._endHandler, false);
+            element.removeEventListener('pointermove', this._moveHandler, false);
+            element.removeEventListener('pointercancel', this._cancelHandler, false);
+            element.removeEventListener('pointerleave', this._endHandler, false);
+            const style = getTouchActionStyle(element);
+            if (style) {
+                style.touchAction = this._touchAction;
+            }
         }
+        this._touches.clear();
         this._element = null;
     }
 
     _handleTouchStart(e) {
-        this.fire('touchstart', new TouchEvent(this, e));
+        const { pointerId } = e;
+        if (!isTouchPointer(e) || this._touches.has(pointerId)) {
+            return;
+        }
+
+        // no explicit capture: the browser implicitly captures a touch to its start target, and
+        // capturing here would steal it from that target's own listeners
+        const touch = { target: e.target, event: e };
+        this._touches.set(pointerId, touch);
+        this.fire('touchstart', new TouchEvent(this, e, touch.target));
     }
 
+    // a leave without an up or a cancel ends the touch too, as both touches of a two-handed pinch
+    // do in Safari on Apple Vision Pro
     _handleTouchEnd(e) {
-        this.fire('touchend', new TouchEvent(this, e));
+        this._end('touchend', e);
     }
 
     _handleTouchMove(e) {
-        // call preventDefault to avoid issues in Chrome Android:
-        // http://wilsonpage.co.uk/touch-events-in-chrome-android/
-        e.preventDefault();
-        this.fire('touchmove', new TouchEvent(this, e));
+        const touch = this._touches.get(e.pointerId);
+        if (!touch) {
+            return;
+        }
+        touch.event = e;
+        this.fire('touchmove', new TouchEvent(this, e, touch.target));
     }
 
     _handleTouchCancel(e) {
-        this.fire('touchcancel', new TouchEvent(this, e));
+        this._end('touchcancel', e);
+    }
+
+    /**
+     * Ends a tracked touch once, whichever event ends it, and fires the event without it in the
+     * active touches.
+     *
+     * @param {string} name - The event name.
+     * @param {globalThis.PointerEvent} e - The pointer event.
+     * @private
+     */
+    _end(name, e) {
+        const touch = this._touches.get(e.pointerId);
+
+        // a mouse may share a pointer id with a touch
+        if (!touch || !isTouchPointer(e)) {
+            return;
+        }
+        this._touches.delete(e.pointerId);
+        this.fire(name, new TouchEvent(this, e, touch.target));
     }
 }
 

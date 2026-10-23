@@ -1,12 +1,13 @@
 // Consumer-side type tests for the events ElementInput fires on elements. They carry the browser's
-// own event and Touch objects, so they must use the DOM types rather than the engine's TouchEvent,
-// Touch and MouseEvent classes of the same names.
+// PointerEvent, WheelEvent or XRInputSourceEvent, and touches shaped like the DOM's, so they must
+// use the DOM types rather than the engine's TouchEvent, Touch and MouseEvent classes of the same
+// names.
 import type { ElementInputEvent, ElementTouchEvent } from '../../build/playcanvas.js';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
 type Expect<T extends true> = T;
-type BrowserEvent = MouseEvent | TouchEvent | XRInputSourceEvent | null;
+type BrowserEvent = PointerEvent | WheelEvent | XRInputSourceEvent | null;
 
 type T1 = Expect<Equal<ElementTouchEvent['touch'], Touch>>;
 type T2 = Expect<Equal<ElementTouchEvent['touches'], TouchList>>;
@@ -20,6 +21,7 @@ const id: number = touchEvent.touch.identifier;
 for (const touch of touchEvent.changedTouches) {
     const matches: boolean = touch.identifier === id;
 }
+const first: Touch | null = touchEvent.touches.item(0);
 touchEvent.event?.preventDefault();
 
 // @ts-expect-error The browser Touch has no `id`, which belongs to the engine's Touch.
