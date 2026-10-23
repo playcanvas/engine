@@ -54,7 +54,23 @@ describe('Keyboard', function () {
 
         it('clears code state on blur', function () {
             window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyA', keyCode: 65 }));
+            expect(keyboard.isPressed('KeyA')).to.equal(true);
             window.dispatchEvent(new window.Event('blur'));
+            expect(keyboard.isPressed('KeyA')).to.equal(false);
+        });
+
+        it('clears previous code state on blur', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyA', keyCode: 65 }));
+            keyboard.update();
+            window.dispatchEvent(new window.Event('blur'));
+            expect(keyboard.wasReleased('KeyA')).to.equal(false);
+        });
+
+        it('clears code state on detach', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyA', keyCode: 65 }));
+            expect(keyboard.isPressed('KeyA')).to.equal(true);
+            keyboard.detach();
+            keyboard.attach(window);
             expect(keyboard.isPressed('KeyA')).to.equal(false);
         });
 
