@@ -14,6 +14,7 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
+import { getCanvasNavigatorGpu } from './navigator-gpu.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
@@ -577,7 +578,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.samples = this.backBufferAntialias ? 4 : 1;
 
         // WGSL features
-        const wgslFeatures = window.navigator.gpu.wgslLanguageFeatures;
+        const wgslFeatures = getCanvasNavigatorGpu(this.canvas).wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
         this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
         this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
@@ -592,7 +593,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     async initWebGpu(glslangUrl, twgslUrl) {
 
-        if (!window.navigator.gpu) {
+        if (!getCanvasNavigatorGpu(this.canvas)) {
             warnInsecureContext('WebGPU');
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
@@ -639,7 +640,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             xrCompatible: !!this.initOptions.xrCompatible
         };
 
-        const gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
+        const gpuAdapter = await getCanvasNavigatorGpu(this.canvas).requestAdapter(adapterOptions);
         if (this._destroyed) {
             return null;
         }
@@ -774,8 +775,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxSubgroupSize = gpuAdapter?.info?.subgroupMaxSize ?? 0;
         this.minSubgroupSize = gpuAdapter?.info?.subgroupMinSize ?? 0;
 
-        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
-            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
+        const gpu = getCanvasNavigatorGpu(this.canvas);
+        const wgslFeatureNames = gpu?.wgslLanguageFeatures ?
+            Array.from(gpu.wgslLanguageFeatures) : [];
         Debug.log(
             `WEBGPU${gpuAdapter?.info ?
                 ` (${gpuAdapter.info.vendor || '?'} / ${gpuAdapter.info.architecture || gpuAdapter.info.device || '?'})` :
@@ -809,7 +811,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         let canvasToneMapping = 'standard';
 
         // pixel format of the framebuffer that is the most efficient one on the system
-        let preferredCanvasFormat = window.navigator.gpu.getPreferredCanvasFormat();
+        let preferredCanvasFormat = gpu.getPreferredCanvasFormat();
 
         // display format the user asked for
         const displayFormat = this.initOptions.displayFormat;
