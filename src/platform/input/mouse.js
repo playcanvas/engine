@@ -9,6 +9,9 @@ const BUTTON_BITS = [1, 4, 2];
 // furthest a touch or pen may move, in CSS pixels, and still count as a tap
 const TAP_SLOP = 10;
 
+// longest a touch or pen may be held, in milliseconds, and still count as a tap
+const TAP_MAX_DURATION = 500;
+
 /**
  * @callback LockMouseCallback
  * Callback used by {@link Mouse#enablePointerLock} and {@link Mouse#disablePointerLock}.
@@ -36,12 +39,12 @@ const TAP_SLOP = 10;
  *
  * By default, mouse pointer events are listened for on the window and only fire while over the
  * element. Touch and pen pointers do not drive the mouse, except that a tap (a primary touch or pen
- * that lifts within a few pixels of where it went down, without being cancelled or having its
- * `pointerdown` or `pointerup` default-prevented) fires `mousemove`, `mousedown` and `mouseup`
- * with the left button, as browsers' compatibility mouse events do. Pass `capture: true` to
- * instead listen on the element only, capturing the pointer while a button is held (unless the
- * pointer is locked) and preventing default on wheel and context menu events. In this mode touch
- * and pen input is ignored. In both modes, buttons pressed or released while another is held fire
+ * that lifts within a few pixels of where it went down and within half a second, without being
+ * cancelled, opening the context menu or having its `pointerdown` or `pointerup` default-prevented)
+ * fires `mousemove`, `mousedown` and `mouseup` with the left button, as browsers' compatibility
+ * mouse events do. Pass `capture: true` to instead listen on the element only, capturing the
+ * pointer while a button is held (unless the pointer is locked) and preventing default on wheel
+ * and context menu events. In this mode touch and pen input is ignored. In both modes, buttons pressed or released while another is held fire
  * `mousedown` and `mouseup` too, and `mouseup` only fires for a button the mouse saw pressed, so a
  * `pointerdown` stopped before it reaches the mouse is ignored until the button is released. In
  * default mode on platforms without touch support, a pen is a mouse pointer.
@@ -133,6 +136,9 @@ class Mouse extends EventHandler {
     /** @private */
     _tapY = 0;
 
+    /** @private */
+    _tapTime = 0;
+
     /**
      * @type {Element|null}
      * @private
@@ -195,6 +201,16 @@ class Mouse extends EventHandler {
      * @private
      */
     _cancelHandler;
+
+    /**
+     * A long press opens the context menu, and is not a tap.
+     *
+     * @type {() => void}
+     * @private
+     */
+    _longPressHandler = () => {
+        this._tapId = -1;
+    };
 
     /**
      * Always on in capture mode, unlike the toggleable {@link Mouse#disableContextMenu}.
@@ -277,6 +293,7 @@ class Mouse extends EventHandler {
             window.addEventListener('pointermove', this._moveHandler, options);
             window.addEventListener('pointercancel', this._cancelHandler, options);
             window.addEventListener('wheel', this._wheelHandler, options);
+            window.addEventListener('contextmenu', this._longPressHandler, options);
         }
         document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.addEventListener('blur', this._windowBlurHandler, false);
@@ -302,6 +319,7 @@ class Mouse extends EventHandler {
             window.removeEventListener('pointermove', this._moveHandler, options);
             window.removeEventListener('pointercancel', this._cancelHandler, options);
             window.removeEventListener('wheel', this._wheelHandler, options);
+            window.removeEventListener('contextmenu', this._longPressHandler, options);
         }
         document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.removeEventListener('blur', this._windowBlurHandler, false);
@@ -654,6 +672,7 @@ class Mouse extends EventHandler {
                 this._tapId = event.isPrimary && !event.defaultPrevented ? event.pointerId : -1;
                 this._tapX = event.clientX;
                 this._tapY = event.clientY;
+                this._tapTime = event.timeStamp;
             }
             return;
         }
@@ -684,7 +703,8 @@ class Mouse extends EventHandler {
             this._tapId = -1;
 
             // a default-prevented touch end suppressed the browser's compatibility mouse events too
-            if (event.defaultPrevented || this._tapMoved(event)) return;
+            if (event.defaultPrevented || this._tapMoved(event) ||
+                event.timeStamp - this._tapTime > TAP_MAX_DURATION) return;
 
             this._handleMove(event);
             this._handleDown(event, MOUSEBUTTON_LEFT);

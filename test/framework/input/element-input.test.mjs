@@ -30,7 +30,10 @@ describe('ElementInput', function () {
     // jsdom has no PointerEvent, and does no layout so page coordinates are canvas coordinates
     const pointer = (type, props = {}, target = canvas) => {
         const event = new window.Event(type, { bubbles: true, cancelable: true });
-        const { x = 0, y = 0, ...rest } = props;
+        const { x = 0, y = 0, timeStamp, ...rest } = props;
+
+        // timeStamp is a read-only getter
+        if (timeStamp !== undefined) Object.defineProperty(event, 'timeStamp', { value: timeStamp });
         Object.assign(event, {
             pointerId: 1,
             pointerType: 'touch',
@@ -271,6 +274,21 @@ describe('ElementInput', function () {
         it('does not emulate mouse events for a tap whose pointerdown was default-prevented', function () {
             canvas.addEventListener('pointerdown', e => e.preventDefault(), { once: true });
             pointer('pointerdown', { x: 50, y: 60 });
+            pointer('pointerup', { x: 50, y: 60 });
+
+            expect(names()).to.deep.equal(['touchstart', 'click', 'touchend']);
+        });
+
+        it('does not emulate mouse events for a long press', function () {
+            pointer('pointerdown', { x: 50, y: 60, timeStamp: 1000 });
+            pointer('pointerup', { x: 50, y: 60, timeStamp: 1501 });
+
+            expect(names()).to.deep.equal(['touchstart', 'click', 'touchend']);
+        });
+
+        it('does not emulate mouse events for a touch that opened the context menu', function () {
+            pointer('pointerdown', { x: 50, y: 60 });
+            pointer('contextmenu', { x: 50, y: 60 });
             pointer('pointerup', { x: 50, y: 60 });
 
             expect(names()).to.deep.equal(['touchstart', 'click', 'touchend']);

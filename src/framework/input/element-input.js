@@ -17,6 +17,9 @@ import { getApplication } from '../globals.js';
 // furthest a touch or pen may move, in CSS pixels, and still count as a tap
 const TAP_SLOP = 10;
 
+// longest a touch or pen may be held, in milliseconds, and still count as a tap
+const TAP_MAX_DURATION = 500;
+
 // `PointerEvent#buttons` bits indexed by MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE and MOUSEBUTTON_RIGHT
 const BUTTON_BITS = [1, 4, 2];
 
@@ -410,9 +413,10 @@ class ElementSelectEvent extends ElementInputEvent {
  * Events are driven by pointer events: mouse pointers fire the mouse events, and touch pointers
  * fire the touch events. A pen is a touch on platforms with touch support and a mouse otherwise.
  * As browsers' compatibility mouse events do, a tap (a primary touch that lifts within a few
- * pixels of where it went down) is followed by `mousemove`, `mousedown` and `mouseup`, unless its
- * `pointerdown` or `pointerup` is default-prevented, as {@link ButtonComponent} does by calling
- * `preventDefault()` on the PointerEvent of `touchend`. The tap's `click` fires once.
+ * pixels of where it went down and within half a second, without opening the context menu) is
+ * followed by `mousemove`, `mousedown` and `mouseup`, unless its `pointerdown` or `pointerup` is
+ * default-prevented, as {@link ButtonComponent} does by calling `preventDefault()` on the
+ * PointerEvent of `touchend`. The tap's `click` fires once.
  *
  * Relevant Engine API examples:
  *
@@ -445,6 +449,7 @@ class ElementInput {
         this._tapId = -1;
         this._tapX = 0;
         this._tapY = 0;
+        this._tapTime = 0;
 
         // the mouse buttons held, indexed by MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE and MOUSEBUTTON_RIGHT
         this._mouseButtons = [false, false, false];
@@ -457,6 +462,11 @@ class ElementInput {
         this._moveHandler = this._handlePointerMove.bind(this);
         this._cancelHandler = this._handlePointerCancel.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
+
+        // a long press opens the context menu, and is not a tap
+        this._longPressHandler = () => {
+            this._tapId = -1;
+        };
         this._touchstartHandler = this._handleTouchStart.bind(this);
         this._touchendHandler = e => this._handleTouchEnd(e, 'touchend');
         this._touchcancelHandler = e => this._handleTouchEnd(e, 'touchcancel');
@@ -531,6 +541,7 @@ class ElementInput {
             window.addEventListener('pointermove', this._moveHandler, options);
             window.addEventListener('pointercancel', this._cancelHandler, options);
             window.addEventListener('wheel', this._wheelHandler, options);
+            window.addEventListener('contextmenu', this._longPressHandler, options);
         }
 
         if (this._useTouch) {
@@ -580,6 +591,7 @@ class ElementInput {
             window.removeEventListener('pointermove', this._moveHandler, options);
             window.removeEventListener('pointercancel', this._cancelHandler, options);
             window.removeEventListener('wheel', this._wheelHandler, options);
+            window.removeEventListener('contextmenu', this._longPressHandler, options);
         }
 
         if (this._useTouch) {
@@ -654,6 +666,7 @@ class ElementInput {
         this._tapId = event.isPrimary && !event.defaultPrevented ? event.pointerId : -1;
         this._tapX = event.clientX;
         this._tapY = event.clientY;
+        this._tapTime = event.timeStamp;
     }
 
     _handlePointerMove(event) {
@@ -683,7 +696,8 @@ class ElementInput {
         this._tapId = -1;
 
         // a default-prevented touch end suppressed the browser's compatibility mouse events too
-        if (event.defaultPrevented || this._tapMoved(event)) return;
+        if (event.defaultPrevented || this._tapMoved(event) ||
+            event.timeStamp - this._tapTime > TAP_MAX_DURATION) return;
 
         this._handleMove(event);
         this._handleDown(event);

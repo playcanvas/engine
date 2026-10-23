@@ -9,8 +9,11 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
 
 // jsdom has no PointerEvent. Moves have no button unless a chord changes
-const dispatch = (target, type, props = {}) => {
+const dispatch = (target, type, { timeStamp, ...props } = {}) => {
     const event = new window.Event(type, { bubbles: true, cancelable: true });
+
+    // timeStamp is a read-only getter
+    if (timeStamp !== undefined) Object.defineProperty(event, 'timeStamp', { value: timeStamp });
     Object.assign(event, {
         pointerId: 1,
         pointerType: 'mouse',
@@ -532,6 +535,36 @@ describe('Mouse', function () {
                     touch('pointerdown', { clientX: 20, clientY: 20 });
                     touch('pointerup', { clientX: 26, clientY: 28 });
                     expect(log).to.deep.equal([]);
+                });
+
+                it('ignores a long press', function () {
+                    const log = [];
+                    record(log);
+                    touch('pointerdown', { timeStamp: 1000 });
+                    touch('pointerup', { timeStamp: 1501 });
+                    expect(log).to.deep.equal([]);
+
+                    touch('pointerdown', { timeStamp: 2000 });
+                    touch('pointerup', { timeStamp: 2500 });
+                    expect(log.map(e => e.name)).to.deep.equal(['mousemove', 'mousedown', 'mouseup']);
+                });
+
+                it('ignores a touch that opened the context menu', function () {
+                    const log = [];
+                    record(log);
+                    touch('pointerdown');
+                    pointer('contextmenu');
+                    touch('pointerup');
+                    expect(log).to.deep.equal([]);
+                });
+
+                it('fires nothing for a tap outside the target and leaves no button held', function () {
+                    const log = [];
+                    record(log);
+                    touch('pointerdown', { clientX: 150, clientY: 50 });
+                    touch('pointerup', { clientX: 150, clientY: 50 });
+                    expect(log).to.deep.equal([]);
+                    expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
                 });
 
                 it('ignores a cancelled touch', function () {
