@@ -396,6 +396,11 @@ export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // FRAMEWORK / INPUT
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './framework/input/element-input.js';
+export { Pose } from './framework/input/pose.js';
+export { InputController } from './framework/input/controllers/input-controller.js';
+export { FlyController } from './framework/input/controllers/fly-controller.js';
+export { OrbitController } from './framework/input/controllers/orbit-controller.js';
+export { FocusController } from './framework/input/controllers/focus-controller.js';
 
 // FRAMEWORK / PARSERS
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';

@@ -1,5 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
-import { Pose } from './pose.js';
+import { Pose } from '../../framework/input/pose.js';
 
 /** @import { HandleEventCallback } from '../../core/event-handler.js' */
 

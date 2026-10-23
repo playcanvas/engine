@@ -1,10 +1,7 @@
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import { InputController } from '../input.js';
-import { damp } from '../math.js';
 import { Pose } from '../pose.js';
-
-/** @import { InputFrame } from '../input.js'; */
+import { InputController, damp } from './input-controller.js';
 
 const EPSILON = 0.001;
 
@@ -14,10 +11,10 @@ const position = new Vec3();
 const rotation = new Quat();
 
 /**
- * The focus controller. It ignores the input frame and instead eases the pose from where it was
- * towards the pose given to {@link attach}, smoothed by {@link focusDamping}. Use it to animate a
- * camera onto a new target and then hand over to another controller; {@link complete} reports
- * when the target has been reached.
+ * The focus controller. It reads no input and instead eases the pose from where it was towards
+ * the pose given to {@link attach}, smoothed by {@link focusDamping}. Use it to animate a camera
+ * onto a new target and then hand over to another controller; {@link complete} reports when the
+ * target has been reached.
  *
  * @category Input
  * @alpha
@@ -72,21 +69,21 @@ class FocusController extends InputController {
         this._targetChildPose.copy(this._childPose);
     }
 
+    /**
+     * Checks whether the display pose has reached the target pose.
+     *
+     * @returns {boolean} True once the target has been reached.
+     */
     complete() {
         return this._targetRootPose.equalsApprox(this._rootPose, EPSILON) &&
                this._targetChildPose.equalsApprox(this._childPose, EPSILON);
     }
 
     /**
-     * @param {InputFrame<{ move: number[], rotate: number[] }>} frame - The input frame.
-     * @param {number} dt - The delta time.
-     * @returns {Pose} - The controller pose.
+     * @param {number} dt - The delta time in seconds.
+     * @returns {Pose} The display pose.
      */
-    update(frame, dt) {
-        // discard frame as inputs not used
-        frame.read();
-
-        // smoothing
+    update(dt) {
         this._rootPose.lerp(
             this._rootPose,
             this._targetRootPose,
@@ -102,15 +99,10 @@ class FocusController extends InputController {
             1
         );
 
-        // calculate final pose
         rotation.setFromEulerAngles(this._rootPose.angles)
         .transformVector(this._childPose.position, position)
         .add(this._rootPose.position);
         return this._pose.set(position, this._rootPose.angles, this._childPose.position.length());
-    }
-
-    destroy() {
-        this.detach();
     }
 }
 
