@@ -106,7 +106,9 @@ class InputController {
 
     /**
      * Applies a snapshot to the authoritative pose. Missing or non-finite values are read as zero
-     * and `dt` is clamped to 0.1 seconds.
+     * and `dt` is clamped to 0.1 seconds. The `dt` comes from the client, so an authoritative
+     * server should validate or replace it, for example with its own tick length or the
+     * difference between `ts` values.
      *
      * @param {InputSnapshot} snapshot - The snapshot.
      */
@@ -131,12 +133,17 @@ class InputController {
     }
 
     /**
+     * Starts the controller from a pose, such as the camera's current one.
+     *
      * @param {Pose} pose - The initial pose of the controller.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
     attach(pose, smooth = true) {
     }
 
+    /**
+     * Stops the controller. Smoothing controllers settle at the current display pose.
+     */
     detach() {
     }
 
@@ -150,6 +157,9 @@ class InputController {
         return this._pose;
     }
 
+    /**
+     * Detaches the controller and releases its resources.
+     */
     destroy() {
         this.detach();
     }

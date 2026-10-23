@@ -33,12 +33,15 @@ const isTouch = type => type === 'touch' || type === 'pen';
  * const gestures = new Gestures(app.graphicsDevice.canvas, { layout: 'joystick-touch' });
  *
  * app.on('update', () => {
- *     const [lookX, lookY] = gestures.left;
- *     const { x, y } = gestures.rightJoystick.value;
+ *     // the left side is a joystick and the right side a drag
+ *     const { x, y } = gestures.leftJoystick.value;
+ *     const [dx, dy] = gestures.right;
+ *     console.log(`move ${x}, ${y} look ${dx}, ${dy}`);
  *
  *     gestures.update();
  * });
  * @category Input Devices
+ * @alpha
  */
 class Gestures extends EventHandler {
     /**

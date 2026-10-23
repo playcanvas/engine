@@ -28,6 +28,8 @@ const ZERO = {
  * const frame = new InputFrame({ move: { type: 'vec2' }, look: { type: 'vec2', kind: 'delta' } });
  * frame.input.move[0] = 1;
  * const snapshot = frame.capture(1 / 60, performance.now());
+ * @category Input
+ * @alpha
  */
 class InputFrame {
     /**
@@ -79,6 +81,10 @@ class InputFrame {
     /**
      * Snapshots the current input and zeroes delta fields. The returned input is a copy that later
      * writes to `input` do not affect.
+     *
+     * The `dt` comes from the client, so an authoritative server should validate or replace it,
+     * for example with its own tick length or the difference between `ts` values. Controller
+     * steps clamp it to 0.1 seconds.
      *
      * @param {number} dt - Frame delta time in seconds.
      * @param {number} [ts] - Timestamp to stamp on the snapshot.

@@ -8,6 +8,7 @@ const v = new Vec2();
  * normalized to the range of -1 to 1, as used by {@link Gestures}.
  *
  * @category Input Devices
+ * @alpha
  */
 class VirtualJoystick {
     /** @private */
@@ -37,6 +38,8 @@ class VirtualJoystick {
     }
 
     /**
+     * Places the joystick base at a touch-down position and centres the stick.
+     *
      * @param {number} x - The x position.
      * @param {number} y - The y position.
      * @returns {number[]} - An array containing the base and stick positions.
@@ -48,6 +51,9 @@ class VirtualJoystick {
     }
 
     /**
+     * Moves the stick to a position, clamped to the range from the base, and updates
+     * {@link VirtualJoystick#value}.
+     *
      * @param {number} x - The x position of the stick
      * @param {number} y - The y position of the stick
      * @returns {number[]} - An array containing the base and stick positions.

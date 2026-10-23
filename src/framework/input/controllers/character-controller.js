@@ -386,7 +386,9 @@ class CharacterController extends InputController {
 
     /**
      * Advances the display pose: the eye at `height / 2 - radius` above the capsule centre,
-     * looking along `look`.
+     * looking along `look`. Smoothing only applies to the returned pose, not to the entity, which
+     * {@link step} places directly, so a server correction snaps the body. The controller does
+     * not push the capsule out of bodies it starts inside.
      *
      * @param {number} dt - The delta time in seconds.
      * @returns {Pose} The display pose.
