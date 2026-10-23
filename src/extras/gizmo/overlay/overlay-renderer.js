@@ -260,8 +260,8 @@ class OverlayRenderer {
         this._pickDiscs = pool((base, occluded) => {
             const disc = new ConeShape(device, { ...args(base, occluded), ...CONES.disk });
 
-            // an icon backdrop sits a pixel behind its glyph, which far away is finer than the depth
-            // buffer resolves, so the backdrop leaves the depth to the glyph
+            // icons face the camera a pixel or so apart, finer than the depth buffer resolves far
+            // away, so they don't write depth and draw in placement order instead
             disc.depthWrite = false;
             gizmo.intersectShapes.push(disc);
             return disc;
@@ -291,7 +291,11 @@ class OverlayRenderer {
          */
         this._glyphs = /** @type {Record<OverlayIcon, ShapePool>} */ ({});
         for (const [kind, texture] of Object.entries(textures)) {
-            this._glyphs[/** @type {OverlayIcon} */ (kind)] = pool((base, occluded) => new GlyphShape(device, { ...args(base, occluded), texture }));
+            this._glyphs[/** @type {OverlayIcon} */ (kind)] = pool((base, occluded) => {
+                const glyph = new GlyphShape(device, { ...args(base, occluded), texture });
+                glyph.depthWrite = false;
+                return glyph;
+            });
         }
     }
 
