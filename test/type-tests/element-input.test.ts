@@ -1,27 +1,30 @@
 // Consumer-side type tests for the events ElementInput fires on elements. They carry the browser's
-// PointerEvent, WheelEvent or XRInputSourceEvent, and touch events carry the engine's Touch
-// objects rather than the DOM Touch and TouchList of the same names.
-import type { ElementInputEvent, ElementTouchEvent, Touch as EngineTouch } from '../../build/playcanvas.js';
+// PointerEvent, WheelEvent or XRInputSourceEvent, and touches shaped like the DOM's, so they must
+// use the DOM types rather than the engine's TouchEvent, Touch and MouseEvent classes of the same
+// names.
+import type { ElementInputEvent, ElementTouchEvent } from '../../build/playcanvas.js';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
 type Expect<T extends true> = T;
 type BrowserEvent = PointerEvent | WheelEvent | XRInputSourceEvent | null;
 
-type T1 = Expect<Equal<ElementTouchEvent['touch'], EngineTouch>>;
-type T2 = Expect<Equal<ElementTouchEvent['touches'], EngineTouch[]>>;
-type T3 = Expect<Equal<ElementTouchEvent['changedTouches'], EngineTouch[]>>;
+type T1 = Expect<Equal<ElementTouchEvent['touch'], Touch>>;
+type T2 = Expect<Equal<ElementTouchEvent['touches'], TouchList>>;
+type T3 = Expect<Equal<ElementTouchEvent['changedTouches'], TouchList>>;
 type T4 = Expect<Equal<ElementInputEvent['event'], BrowserEvent>>;
 
 declare const touchEvent: ElementTouchEvent;
 
-// a touch is tracked across events by its `id`, the pointer id
-const id: number = touchEvent.touch.id;
+// a touch is tracked across events by the browser's `identifier`
+const id: number = touchEvent.touch.identifier;
 for (const touch of touchEvent.changedTouches) {
-    const matches: boolean = touch.id === id;
+    const matches: boolean = touch.identifier === id;
 }
-touchEvent.touches.find(touch => touch.id === id);
+const first: Touch | null = touchEvent.touches.item(0);
 touchEvent.event?.preventDefault();
 
-// @ts-expect-error The engine's Touch has no `identifier`, which belongs to the DOM Touch.
-touchEvent.touch.identifier;
+// @ts-expect-error The browser Touch has no `id`, which belongs to the engine's Touch.
+touchEvent.touch.id;
+// @ts-expect-error A TouchList is not an array.
+touchEvent.touches.find(() => true);

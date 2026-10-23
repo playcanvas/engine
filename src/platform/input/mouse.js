@@ -1,7 +1,7 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 import { MOUSEBUTTON_LEFT, MOUSEBUTTON_NONE } from './constants.js';
-import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
+import { isMousePointer, isMousePointerLocked, MouseEvent } from './mouse-event.js';
 
 // `PointerEvent#buttons` bits indexed by MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE and MOUSEBUTTON_RIGHT
 const BUTTON_BITS = [1, 4, 2];
@@ -36,12 +36,14 @@ const TAP_SLOP = 10;
  *
  * By default, mouse pointer events are listened for on the window and only fire while over the
  * element. Touch and pen pointers do not drive the mouse, except that a tap (a primary touch or pen
- * that lifts within a few pixels of where it went down, without being cancelled) fires `mousemove`,
- * `mousedown` and `mouseup` with the left button, as browsers' compatibility mouse events do. Pass
- * `capture: true` to instead listen on the element only, capturing the pointer while a button is
- * held (unless the pointer is locked) and preventing default on wheel and context menu events. In
- * this mode touch and pen input is ignored. In both modes, buttons pressed or released while
- * another is held fire `mousedown` and `mouseup` too.
+ * that lifts within a few pixels of where it went down, without being cancelled or having its
+ * `pointerdown` or `pointerup` default-prevented) fires `mousemove`, `mousedown` and `mouseup`
+ * with the left button, as browsers' compatibility mouse events do. Pass `capture: true` to
+ * instead listen on the element only, capturing the pointer while a button is held (unless the
+ * pointer is locked) and preventing default on wheel and context menu events. In this mode touch
+ * and pen input is ignored. In both modes, buttons pressed or released while another is held fire
+ * `mousedown` and `mouseup` too. In default mode on platforms without touch support, a pen is a
+ * mouse pointer.
  *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
@@ -621,11 +623,24 @@ class Mouse extends EventHandler {
         }
     }
 
+    /**
+     * True if a pointer drives the mouse: mouse pointers, and in default mode also pens on
+     * platforms without touch support.
+     *
+     * @param {globalThis.PointerEvent} event - The pointer event.
+     * @returns {boolean} True if the pointer is a mouse.
+     * @private
+     */
+    _isMouse(event) {
+        return this._capture ? event.pointerType === 'mouse' : isMousePointer(event);
+    }
+
     _handlePointerDown(event) {
-        if (event.pointerType !== 'mouse') {
-            // only the window listeners emulate taps, and a second finger cancels a pending one
+        if (!this._isMouse(event)) {
+            // only the window listeners emulate taps, and a second finger or a default-prevented
+            // pointerdown cancels a pending one
             if (!this._capture) {
-                this._tapId = event.isPrimary ? event.pointerId : -1;
+                this._tapId = event.isPrimary && !event.defaultPrevented ? event.pointerId : -1;
                 this._tapX = event.clientX;
                 this._tapY = event.clientY;
             }
@@ -644,7 +659,7 @@ class Mouse extends EventHandler {
     }
 
     _handlePointerMove(event) {
-        if (event.pointerType !== 'mouse') {
+        if (!this._isMouse(event)) {
             if (event.pointerId === this._tapId && this._tapMoved(event)) this._tapId = -1;
             return;
         }
@@ -655,7 +670,7 @@ class Mouse extends EventHandler {
     }
 
     _handlePointerUp(event) {
-        if (event.pointerType !== 'mouse') {
+        if (!this._isMouse(event)) {
             if (event.pointerId !== this._tapId) return;
             this._tapId = -1;
 
@@ -681,7 +696,7 @@ class Mouse extends EventHandler {
 
     // capture lost or cancelled: no pointerup will arrive, so release without firing mouseup
     _handlePointerCancel(event) {
-        if (event.pointerType !== 'mouse') {
+        if (!this._isMouse(event)) {
             if (event.pointerId === this._tapId) this._tapId = -1;
             return;
         }

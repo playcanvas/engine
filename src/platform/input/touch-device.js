@@ -1,6 +1,11 @@
 import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
 
 import { TouchEvent } from './touch-event.js';
+
+/**
+ * @import { Mouse } from './mouse.js'
+ */
 
 /**
  * Manages touch input by handling and dispatching touch events. Extends {@link EventHandler}
@@ -10,9 +15,9 @@ import { TouchEvent } from './touch-event.js';
  * to respond to common touch gestures. The TouchDevice instance must be attached to a DOM element
  * before it can detect touch events.
  *
- * Events are driven by the touch and pen pointer events of the element. Each pointer that goes
- * down, moves, lifts or is cancelled fires one event, whose {@link TouchEvent#changedTouches}
- * holds that pointer's touch. A touch keeps the target it started on, and its coordinates stay
+ * Events are driven by the touch and pen pointer events of the element, though pens are left to
+ * {@link Mouse} on platforms without touch support. Each pointer that goes down, moves, lifts or
+ * is cancelled fires one event, whose {@link TouchEvent#changedTouches} holds that pointer's touch. A touch keeps the target it started on, and its coordinates stay
  * relative to that target, as with browser touch events. A touch that leaves the element without
  * lifting or being cancelled ends with `touchend`. The element's `touch-action` style is `none`
  * while attached so the browser does not scroll or zoom it.
@@ -183,7 +188,9 @@ class TouchDevice extends EventHandler {
 
     _handleTouchStart(e) {
         const { pointerId, pointerType } = e;
-        if ((pointerType !== 'touch' && pointerType !== 'pen') || this._touches.has(pointerId)) {
+
+        // a pen is a mouse on platforms without touch support
+        if ((pointerType !== 'touch' && (pointerType !== 'pen' || !platform.touch)) || this._touches.has(pointerId)) {
             return;
         }
 

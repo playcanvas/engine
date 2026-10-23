@@ -1,14 +1,15 @@
 import { expect } from 'chai';
-import { restore, spy } from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
+import { platform } from '../../../src/core/platform.js';
 import { Application } from '../../../src/framework/application.js';
+import { ElementDragHelper } from '../../../src/framework/components/element/element-drag-helper.js';
 import { Entity } from '../../../src/framework/entity.js';
 import {
     ElementInput, ElementMouseEvent, ElementTouchEvent
 } from '../../../src/framework/input/element-input.js';
 import { XRSPACE_LOCALFLOOR, XRTYPE_VR } from '../../../src/framework/xr/constants.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
-import { Touch } from '../../../src/platform/input/touch-event.js';
 import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 import { FakeXRSystem } from '../xr/fake-webxr.mjs';
@@ -48,10 +49,11 @@ describe('ElementInput', function () {
 
     const names = () => log.map(e => e.name);
 
-    const createApp = (options) => {
+    const createApp = (options, appOptions) => {
         app = new Application(canvas, {
             graphicsDevice: createGraphicsDevice(canvas),
-            elementInput: new ElementInput(canvas, options)
+            elementInput: new ElementInput(canvas, options),
+            ...appOptions
         });
 
         const camera = new Entity('camera', app);
@@ -97,6 +99,7 @@ describe('ElementInput', function () {
 
     afterEach(function () {
         app.destroy();
+        restore();
         delete global.HTMLElement;
         jsdomTeardown();
     });
@@ -106,17 +109,42 @@ describe('ElementInput', function () {
             createApp();
         });
 
-        it('passes the PointerEvent and Touch objects to touch handlers', function () {
-            const down = pointer('pointerdown', { pointerId: 7, x: 50, y: 60 });
+        it('passes the PointerEvent and DOM Touch shaped touches to touch handlers', function () {
+            const down = pointer('pointerdown', {
+                pointerId: 7, x: 50, y: 60, screenX: 150, screenY: 160, width: 10, height: 6, pressure: 0.5
+            });
 
             const [{ event }] = log;
             expect(event).to.be.an.instanceof(ElementTouchEvent);
             expect(event.event).to.equal(down);
-            expect(event.touch).to.be.an.instanceof(Touch);
-            expect(event.touch).to.include({ id: 7, x: 50, y: 60, target: canvas, touch: down });
-            expect(event.changedTouches).to.deep.equal([event.touch]);
-            expect(event.touches.map(t => t.id)).to.deep.equal([7]);
+            expect(event.touch).to.include({
+                identifier: 7,
+                target: canvas,
+                clientX: 50,
+                clientY: 60,
+                pageX: 50,
+                pageY: 60,
+                screenX: 150,
+                screenY: 160,
+                radiusX: 5,
+                radiusY: 3,
+                rotationAngle: 0,
+                force: 0.5
+            });
+            expect(event.changedTouches.length).to.equal(1);
+            expect(event.changedTouches.item(0)).to.equal(event.touch);
+            expect(event.changedTouches.item(1)).to.equal(null);
+            expect(event.touches.item(0)).to.equal(event.touch);
             expect([event.x, event.y]).to.deep.equal([50, 60]);
+        });
+
+        it('keeps a touch on its start target and updates it as it moves', function () {
+            pointer('pointerdown', { x: 50, y: 60 });
+            pointer('pointermove', { x: 70, y: 80 });
+            const [start, move] = log.map(e => e.event);
+            expect(move.touch).to.equal(start.touch);
+            expect(move.touch).to.include({ target: canvas, clientX: 70, pageY: 80 });
+            expect([move.x, move.y]).to.deep.equal([70, 80]);
         });
 
         it('passes the PointerEvent to mouse handlers', function () {
@@ -126,6 +154,35 @@ describe('ElementInput', function () {
             expect(event).to.be.an.instanceof(ElementMouseEvent);
             expect(event.event).to.equal(down);
             expect([event.x, event.y, event.button]).to.deep.equal([50, 60, 0]);
+        });
+
+        it('fires the mouse button events of chords, with the click on the first release', function () {
+            const sequence = () => log.map(e => `${e.name}${e.event.button}`);
+
+            mouse('pointermove', { x: 50, y: 60, button: -1, buttons: 0 });
+            expect(log.map(e => e.event.button)).to.deep.equal([0, 0]);
+
+            // left down, right down, right up, left up
+            log.length = 0;
+            mouse('pointerdown', { x: 50, y: 60, button: 0, buttons: 1 });
+            mouse('pointermove', { x: 50, y: 60, button: 2, buttons: 3 });
+            mouse('pointermove', { x: 50, y: 60, button: 2, buttons: 1 });
+            mouse('pointerup', { x: 50, y: 60, button: 0, buttons: 0 });
+            expect(sequence()).to.deep.equal(['mousedown0', 'mousedown2', 'mouseup2', 'click2', 'mouseup0']);
+
+            // left down, right down, left up, right up
+            log.length = 0;
+            mouse('pointerdown', { x: 50, y: 60, button: 0, buttons: 1 });
+            mouse('pointermove', { x: 50, y: 60, button: 2, buttons: 3 });
+            mouse('pointermove', { x: 50, y: 60, button: 0, buttons: 2 });
+            mouse('pointerup', { x: 50, y: 60, button: 2, buttons: 0 });
+            expect(sequence()).to.deep.equal(['mousedown0', 'mousedown2', 'mouseup0', 'click0', 'mouseup2']);
+        });
+
+        it('reports the left button on mouse moves', function () {
+            mouse('pointermove', { x: 50, y: 60, button: -1 });
+            mouse('pointermove', { x: 350, y: 60, button: -1 });
+            expect(log.map(e => `${e.name}${e.event.button}`)).to.deep.equal(['mousemove0', 'mouseenter0', 'mouseleave0']);
         });
 
         it('fires enter, down, up, click and leave for a mouse click on a button', function () {
@@ -184,6 +241,55 @@ describe('ElementInput', function () {
             mouseDevice.detach();
         });
 
+        it('does not emulate mouse events for a tap whose pointerdown was default-prevented', function () {
+            canvas.addEventListener('pointerdown', e => e.preventDefault(), { once: true });
+            pointer('pointerdown', { x: 50, y: 60 });
+            pointer('pointerup', { x: 50, y: 60 });
+
+            expect(names()).to.deep.equal(['touchstart', 'click', 'touchend']);
+        });
+
+        it('does not end a touch on a mouse pointerleave with the same pointer id', function () {
+            pointer('pointerdown', { x: 50, y: 60 });
+            pointer('pointerleave', { pointerType: 'mouse', x: 50, y: 60 });
+            pointer('pointermove', { x: 70, y: 60 });
+            pointer('pointerup', { x: 70, y: 60 });
+
+            expect(names()).to.deep.equal(['touchstart', 'touchmove', 'click', 'touchend']);
+        });
+
+        it('forgets touches on detach', function () {
+            pointer('pointerdown', { x: 50, y: 60 });
+            app.elementInput.detach();
+            app.elementInput.attach(canvas);
+            pointer('pointerdown', { x: 50, y: 60 });
+
+            expect(names()).to.deep.equal(['touchstart', 'touchstart']);
+        });
+
+        it('treats a pen as a touch on platforms with touch support', function () {
+            stub(platform, 'touch').value(true);
+            pointer('pointermove', { pointerType: 'pen', x: 50, y: 60, button: -1 });
+            pointer('pointerdown', { pointerType: 'pen', x: 50, y: 60 });
+            pointer('pointerup', { pointerType: 'pen', x: 50, y: 60 });
+
+            expect(names()).to.deep.equal([
+                'touchstart', 'click', 'touchend', 'mousemove', 'mouseenter', 'mousedown', 'mouseup'
+            ]);
+        });
+
+        it('treats a pen as a mouse on platforms without touch support', function () {
+            stub(platform, 'touch').value(false);
+            pointer('pointermove', { pointerType: 'pen', x: 50, y: 60, button: -1 });
+            pointer('pointerdown', { pointerType: 'pen', x: 50, y: 60 });
+            pointer('pointerup', { pointerType: 'pen', x: 50, y: 60 });
+            pointer('pointermove', { pointerType: 'pen', x: 350, y: 60, button: -1 });
+
+            expect(names()).to.deep.equal([
+                'mousemove', 'mouseenter', 'mousedown', 'mouseup', 'click', 'mouseleave'
+            ]);
+        });
+
         it('does not emulate mouse events for a touch that moves too far to be a tap', function () {
             pointer('pointerdown', { x: 50, y: 60 });
             pointer('pointermove', { x: 80, y: 60 });
@@ -205,7 +311,7 @@ describe('ElementInput', function () {
             ]);
 
             const events = log.map(e => e.event);
-            const ids = event => [event.touch.id, event.touches.map(t => t.id)];
+            const ids = event => [event.touch.identifier, Array.from(event.touches, t => t.identifier)];
             expect(ids(events[1])).to.deep.equal([2, [1, 2]]);
             expect(ids(events[2])).to.deep.equal([2, [1, 2]]);
             expect([events[2].x, events[2].y]).to.deep.equal([110, 100]);
@@ -286,6 +392,24 @@ describe('ElementInput', function () {
             mouse('pointerdown', { x: 50, y: 60 });
             expect(log).to.be.empty;
         });
+    });
+
+    it('drags an element with a pen on platforms without touch support', function () {
+        stub(platform, 'touch').value(false);
+        createApp(undefined, { mouse: new Mouse(canvas) });
+        const drag = new ElementDragHelper(element);
+        const events = [];
+        for (const name of ['drag:start', 'drag:move', 'drag:end']) {
+            drag.on(name, () => events.push(name));
+        }
+
+        pointer('pointerdown', { pointerType: 'pen', x: 50, y: 60 });
+        pointer('pointermove', { pointerType: 'pen', x: 80, y: 60, button: -1 });
+        pointer('pointerup', { pointerType: 'pen', x: 80, y: 60 });
+
+        expect(events).to.deep.equal(['drag:start', 'drag:move', 'drag:end']);
+        expect(drag.isDragging).to.equal(false);
+        drag.destroy();
     });
 
     it('fires mouse events and a click for a tap when touch is not used', function () {

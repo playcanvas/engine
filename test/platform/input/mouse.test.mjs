@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
+import { platform } from '../../../src/core/platform.js';
 import { MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_NONE, MOUSEBUTTON_RIGHT } from '../../../src/platform/input/constants.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -444,12 +445,36 @@ describe('Mouse', function () {
                     expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
                 });
 
-                it('emulates a pen tap with the left button', function () {
+                it('emulates a pen tap with the left button on platforms with touch support', function () {
+                    sinon.stub(platform, 'touch').value(true);
                     const log = [];
                     record(log);
                     pointer('pointerdown', { pointerType: 'pen', button: 5 });
                     pointer('pointerup', { pointerType: 'pen', button: 5 });
                     expect(log.map(e => `${e.name}${e.button}`)).to.deep.equal(['mousemove-1', 'mousedown0', 'mouseup0']);
+                });
+
+                it('drives the mouse from a pen like a mouse pointer on platforms without touch support', function () {
+                    sinon.stub(platform, 'touch').value(false);
+                    const log = [];
+                    record(log);
+                    pointer('pointerdown', { pointerType: 'pen', clientX: 20, clientY: 20 });
+                    expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(true);
+                    pointer('pointermove', { pointerType: 'pen', button: -1, clientX: 40, clientY: 20 });
+                    pointer('pointerup', { pointerType: 'pen', clientX: 40, clientY: 20 });
+
+                    // no tap follows the release
+                    expect(log.map(e => `${e.name}${e.button}`)).to.deep.equal(['mousedown0', 'mousemove-1', 'mouseup0']);
+                    expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+                });
+
+                it('does not emulate a tap whose pointerdown was default-prevented', function () {
+                    const log = [];
+                    record(log);
+                    canvas.addEventListener('pointerdown', e => e.preventDefault(), { once: true });
+                    touch('pointerdown', { clientX: 20, clientY: 20 });
+                    touch('pointerup', { clientX: 20, clientY: 20 });
+                    expect(log).to.deep.equal([]);
                 });
 
                 it('ignores a touch that moved too far before lifting', function () {
@@ -530,13 +555,16 @@ describe('Mouse', function () {
                 expect(log).to.deep.equal([]);
             });
 
-            it('ignores touch and pen', function () {
-                const down = sinon.spy();
-                mouse.on('mousedown', down);
-                pointer('pointerdown', { pointerType: 'touch' });
-                pointer('pointerdown', { pointerType: 'pen' });
-                expect(down.callCount).to.equal(0);
-                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            [true, false].forEach((touch) => {
+                it(`ignores touch and pen on platforms ${touch ? 'with' : 'without'} touch support`, function () {
+                    sinon.stub(platform, 'touch').value(touch);
+                    const down = sinon.spy();
+                    mouse.on('mousedown', down);
+                    pointer('pointerdown', { pointerType: 'touch' });
+                    pointer('pointerdown', { pointerType: 'pen', pointerId: 2 });
+                    expect(down.callCount).to.equal(0);
+                    expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+                });
             });
 
             it('ignores events targeting other elements', function () {

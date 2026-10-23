@@ -1,3 +1,5 @@
+import { platform } from '../../core/platform.js';
+
 import { MOUSEBUTTON_NONE } from './constants.js';
 
 /**
@@ -11,6 +13,18 @@ import { MOUSEBUTTON_NONE } from './constants.js';
  */
 function isMousePointerLocked() {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
+}
+
+/**
+ * Returns true if a pointer event comes from a mouse. A pen counts as a mouse on platforms without
+ * touch support, as their browsers' compatibility mouse events made it, and as a touch otherwise.
+ *
+ * @param {globalThis.PointerEvent} event - The pointer event.
+ * @returns {boolean} True if the pointer is a mouse.
+ * @ignore
+ */
+function isMousePointer(event) {
+    return event.pointerType === 'mouse' || (event.pointerType === 'pen' && !platform.touch);
 }
 
 /**
@@ -188,4 +202,4 @@ class MouseEvent {
     }
 }
 
-export { isMousePointerLocked, MouseEvent };
+export { isMousePointer, isMousePointerLocked, MouseEvent };

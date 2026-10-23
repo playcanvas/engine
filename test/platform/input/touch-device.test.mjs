@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
+import { platform } from '../../../src/core/platform.js';
 import { MOUSEBUTTON_LEFT, MOUSEBUTTON_NONE } from '../../../src/platform/input/constants.js';
 import { Gestures } from '../../../src/platform/input/gestures.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
@@ -148,10 +149,19 @@ describe('TouchDevice', function () {
         expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchmove']);
     });
 
-    it('tracks pen pointers', function () {
+    it('tracks pen pointers on platforms with touch support', function () {
+        sinon.stub(platform, 'touch').value(true);
         pointer('pointerdown', { pointerType: 'pen' });
         pointer('pointerup', { pointerType: 'pen' });
         expect(log.map(e => e.name)).to.deep.equal(['touchstart', 'touchend']);
+    });
+
+    it('ignores pen pointers on platforms without touch support', function () {
+        sinon.stub(platform, 'touch').value(false);
+        pointer('pointerdown', { pointerType: 'pen' });
+        pointer('pointermove', { pointerType: 'pen' });
+        pointer('pointerup', { pointerType: 'pen' });
+        expect(log).to.deep.equal([]);
     });
 
     it('ignores mouse pointers', function () {

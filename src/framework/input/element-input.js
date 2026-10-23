@@ -1,8 +1,10 @@
+import { platform } from '../../core/platform.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Mouse } from '../../platform/input/mouse.js';
-import { Touch } from '../../platform/input/touch-event.js';
+import { isMousePointer } from '../../platform/input/mouse-event.js';
+import { getTouchTargetCoords } from '../../platform/input/touch-event.js';
 import { getApplication } from '../globals.js';
 
 /**
@@ -14,6 +16,73 @@ import { getApplication } from '../globals.js';
 
 // furthest a touch or pen may move, in CSS pixels, and still count as a tap
 const TAP_SLOP = 10;
+
+// `PointerEvent#buttons` bits indexed by MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE and MOUSEBUTTON_RIGHT
+const BUTTON_BITS = [1, 4, 2];
+
+// a pen is a touch on platforms with touch support, and a mouse otherwise
+const isTouch = e => e.pointerType === 'touch' || (e.pointerType === 'pen' && platform.touch);
+
+/**
+ * `TouchList#item` for the arrays that stand in for TouchLists.
+ *
+ * @param {number} i - The index.
+ * @returns {object|null} The touch, or null.
+ */
+function item(i) {
+    return this[i] ?? null;
+}
+
+/**
+ * Creates a DOM Touch shaped object for a touch pointer, which {@link updateTouch} keeps current.
+ * Its target stays the element the touch started on.
+ *
+ * @param {globalThis.PointerEvent} e - The pointerdown event.
+ * @returns {object} The touch.
+ */
+function createTouch(e) {
+    return updateTouch({
+        identifier: e.pointerId,
+        target: e.target,
+        clientX: 0,
+        clientY: 0,
+        pageX: 0,
+        pageY: 0,
+        screenX: 0,
+        screenY: 0,
+        radiusX: 0,
+        radiusY: 0,
+        rotationAngle: 0,
+        force: 0
+    }, e);
+}
+
+/**
+ * @param {object} touch - The touch made by {@link createTouch}.
+ * @param {globalThis.PointerEvent} e - The latest pointer event of the touch.
+ * @returns {object} The touch.
+ */
+function updateTouch(touch, e) {
+    touch.clientX = e.clientX;
+    touch.clientY = e.clientY;
+    touch.pageX = e.pageX;
+    touch.pageY = e.pageY;
+    touch.screenX = e.screenX;
+    touch.screenY = e.screenY;
+    touch.radiusX = (e.width || 0) / 2;
+    touch.radiusY = (e.height || 0) / 2;
+    touch.force = e.pressure || 0;
+    return touch;
+}
+
+/**
+ * @param {object[]} touches - The touches.
+ * @returns {object[]} The array, given the `item` method of a TouchList.
+ */
+function touchList(touches) {
+    touches.item = item;
+    return touches;
+}
 
 let targetX, targetY;
 const vecA = new Vec3();
@@ -231,7 +300,7 @@ class ElementMouseEvent extends ElementInputEvent {
          *
          * @type {number}
          */
-        this.button = event.button;
+        this.button = event.button < 0 ? 0 : event.button;
 
         if (Mouse.isPointerLocked()) {
             /**
@@ -270,8 +339,7 @@ class ElementMouseEvent extends ElementInputEvent {
 
 /**
  * Represents a TouchEvent fired on a {@link ElementComponent}. It carries the browser
- * PointerEvent of the touch, and a {@link Touch} for each active touch, whose coordinates are
- * relative to the element the touch started on.
+ * PointerEvent of the touch, and its touches have the shape of the browser's Touch objects.
  *
  * @category User Interface
  */
@@ -287,33 +355,36 @@ class ElementTouchEvent extends ElementInputEvent {
      * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate of the touch that triggered the event.
      * @param {number} y - The y coordinate of the touch that triggered the event.
-     * @param {Touch} touch - The Touch that triggered the event.
-     * @param {Touch[]} [touches] - All active touches. Defaults to the touch that triggered the
-     * event.
+     * @param {globalThis.Touch} touch - The Touch that triggered the event.
+     * @param {globalThis.TouchList} touches - All active touches.
+     * @param {globalThis.TouchList} changedTouches - The touches whose states changed.
      */
-    constructor(event, element, camera, x, y, touch, touches = [touch]) {
+    constructor(event, element, camera, x, y, touch, touches, changedTouches) {
         super(event, element, camera);
 
         /**
-         * The Touch objects representing all active points of contact with the element, regardless
-         * of changed status. A touch that ended is no longer in the list.
+         * The Touch objects representing all current points of contact with the element,
+         * regardless of changed status. A touch that ended is no longer in the list. Touches are
+         * plain objects with the fields of the browser's Touch, and the list is an array with a
+         * TouchList `item` method.
          *
-         * @type {Touch[]}
+         * @type {globalThis.TouchList}
          */
         this.touches = touches;
         /**
-         * The Touch objects representing the points of contact whose states changed: the one
-         * touch that triggered the event.
+         * The Touch objects representing individual points of contact whose states changed between
+         * the previous touch event and this one: the touch that triggered the event.
          *
-         * @type {Touch[]}
+         * @type {globalThis.TouchList}
          */
-        this.changedTouches = [touch];
+        this.changedTouches = changedTouches;
         this.x = x;
         this.y = y;
         /**
-         * The Touch that triggered the event. Match a touch across events by its `id`.
+         * The Touch that triggered the event. Match a touch across events by its `identifier`,
+         * which is the `pointerId` of its pointer events.
          *
-         * @type {Touch}
+         * @type {globalThis.Touch}
          */
         this.touch = touch;
     }
@@ -353,11 +424,12 @@ class ElementSelectEvent extends ElementInputEvent {
  * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
  * ElementComponent this fires the appropriate events on the ElementComponent.
  *
- * Events are driven by pointer events: mouse pointers fire the mouse events, and touch and pen
- * pointers fire the touch events. As browsers' compatibility mouse events do, a tap (a primary
- * touch or pen that lifts within a few pixels of where it went down) is followed by `mousemove`,
- * `mousedown` and `mouseup`, unless a handler of its `touchend` calls `preventDefault()` on the
- * event's PointerEvent, as {@link ButtonComponent} does. The tap's `click` fires once.
+ * Events are driven by pointer events: mouse pointers fire the mouse events, and touch pointers
+ * fire the touch events. A pen is a touch on platforms with touch support and a mouse otherwise.
+ * As browsers' compatibility mouse events do, a tap (a primary touch that lifts within a few
+ * pixels of where it went down) is followed by `mousemove`, `mousedown` and `mouseup`, unless its
+ * `pointerdown` or `pointerup` is default-prevented, as {@link ButtonComponent} does by calling
+ * `preventDefault()` on the PointerEvent of `touchend`. The tap's `click` fires once.
  *
  * Relevant Engine API examples:
  *
@@ -391,6 +463,9 @@ class ElementInput {
         this._tapX = 0;
         this._tapY = 0;
 
+        // the mouse buttons held, indexed by MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE and MOUSEBUTTON_RIGHT
+        this._mouseButtons = [false, false, false];
+
         // the `touch-action` style of the target before it was attached, restored on detach
         this._touchAction = '';
 
@@ -410,13 +485,22 @@ class ElementInput {
         this._pressedElement = null;
 
         /**
-         * The start target and latest pointer event of each active touch by pointer id, in the
-         * order the touches started.
+         * The touch of each active touch pointer by pointer id, in the order the touches started,
+         * with the list holding just that touch for `changedTouches`. Both are reused while the
+         * touch lasts.
          *
-         * @type {Map<number, { target: Element, event: globalThis.PointerEvent }>}
+         * @type {Map<number, { touch: object, changed: object[] }>}
          * @private
          */
         this._touches = new Map();
+
+        /**
+         * The list of all active touches, rebuilt when a touch starts or ends.
+         *
+         * @type {object[]|null}
+         * @private
+         */
+        this._touchList = null;
         this._touchedElements = {};
         this._touchesForWhichTouchLeaveHasFired = {};
         this._selectedElements = {};
@@ -548,6 +632,10 @@ class ElementInput {
         }
 
         this._touches.clear();
+        this._touchList = null;
+        this._touchedElements = {};
+        this._touchesForWhichTouchLeaveHasFired = {};
+        this._mouseButtons.fill(false);
         this._tapId = -1;
         this._target = null;
     }
@@ -579,23 +667,29 @@ class ElementInput {
         }
     }
 
-    // touch and pen pointers reach the mouse path only as an emulated tap, as the browser's
-    // compatibility mouse events did
+    // touch pointers reach the mouse path only as an emulated tap, as the browser's compatibility
+    // mouse events did
     _handlePointerDown(event) {
-        if (event.pointerType === 'mouse') {
+        if (isMousePointer(event)) {
+            if (event.button < 3) this._mouseButtons[event.button] = true;
             this._handleDown(event);
+            this._syncButtons(event);
             return;
         }
 
-        // a second finger cancels a pending tap
-        this._tapId = event.isPrimary ? event.pointerId : -1;
+        // a second finger, or a default-prevented pointerdown, cancels a pending tap
+        this._tapId = event.isPrimary && !event.defaultPrevented ? event.pointerId : -1;
         this._tapX = event.clientX;
         this._tapY = event.clientY;
     }
 
     _handlePointerMove(event) {
-        if (event.pointerType === 'mouse') {
-            this._handleMove(event);
+        if (isMousePointer(event)) {
+
+            // a button pressed or released while another is held changes `buttons` on a move
+            if (event.button < 0 || !this._syncButtons(event)) {
+                this._handleMove(event);
+            }
             return;
         }
 
@@ -605,8 +699,10 @@ class ElementInput {
     }
 
     _handlePointerUp(event) {
-        if (event.pointerType === 'mouse') {
+        if (isMousePointer(event)) {
+            if (event.button < 3) this._mouseButtons[event.button] = false;
             this._handleUp(event);
+            this._syncButtons(event);
             return;
         }
 
@@ -633,19 +729,37 @@ class ElementInput {
         return dx * dx + dy * dy >= TAP_SLOP * TAP_SLOP;
     }
 
-    _handleUp(event) {
-        if (!this._enabled) return;
+    /**
+     * Fires `mousedown` and `mouseup` for buttons whose state in `event.buttons` differs from the
+     * held ones, as pointer events only fire down and up for the first and last button held.
+     *
+     * @param {globalThis.PointerEvent} event - The pointer event.
+     * @returns {boolean} True if any button changed.
+     * @private
+     */
+    _syncButtons(event) {
+        const mask = event.buttons;
 
-        if (Mouse.isPointerLocked()) {
-            return;
+        // synthetic events may omit buttons
+        if (typeof mask !== 'number') return false;
+
+        let changed = false;
+        for (let i = 0; i < 3; i++) {
+            const down = (mask & BUTTON_BITS[i]) !== 0;
+            if (down === this._mouseButtons[i]) continue;
+
+            this._mouseButtons[i] = down;
+            changed = true;
+            if (down) {
+                this._handleDown(event, i);
+            } else {
+                this._handleUp(event, i);
+            }
         }
-
-        this._calcMouseCoords(event);
-
-        this._onElementMouseEvent('mouseup', event);
+        return changed;
     }
 
-    _handleDown(event) {
+    _handleUp(event, button) {
         if (!this._enabled) return;
 
         if (Mouse.isPointerLocked()) {
@@ -654,7 +768,19 @@ class ElementInput {
 
         this._calcMouseCoords(event);
 
-        this._onElementMouseEvent('mousedown', event);
+        this._onElementMouseEvent('mouseup', event, button);
+    }
+
+    _handleDown(event, button) {
+        if (!this._enabled) return;
+
+        if (Mouse.isPointerLocked()) {
+            return;
+        }
+
+        this._calcMouseCoords(event);
+
+        this._onElementMouseEvent('mousedown', event, button);
     }
 
     _handleMove(event) {
@@ -677,20 +803,24 @@ class ElementInput {
     }
 
     _activeTouches() {
-        return Array.from(this._touches.values(), t => new Touch(t.event, t.target));
+        if (!this._touchList) {
+            this._touchList = touchList(Array.from(this._touches.values(), t => t.touch));
+        }
+        return this._touchList;
     }
 
     _determineTouchedElement(touch) {
         const cameras = this.app.systems.camera.cameras;
+        const coords = getTouchTargetCoords(touch);
 
         // check cameras from last to front
         // so that elements that are drawn above others
         // receive events first
         for (let i = cameras.length - 1; i >= 0; i--) {
             const camera = cameras[i];
-            const element = this._getTargetElementByCoords(camera, touch.x, touch.y);
+            const element = this._getTargetElementByCoords(camera, coords.x, coords.y);
             if (element) {
-                return { element, camera, x: touch.x, y: touch.y };
+                return { element, camera, x: coords.x, y: coords.y };
             }
         }
 
@@ -699,19 +829,21 @@ class ElementInput {
 
     _handleTouchStart(event) {
         const id = event.pointerId;
-        if ((event.pointerType !== 'touch' && event.pointerType !== 'pen') || this._touches.has(id)) return;
+        if (!isTouch(event) || this._touches.has(id)) return;
 
         // no explicit capture: the browser implicitly captures a touch to its start target
-        this._touches.set(id, { target: event.target, event });
+        const touch = createTouch(event);
+        const changed = touchList([touch]);
+        this._touches.set(id, { touch, changed });
+        this._touchList = null;
 
         if (!this._enabled) return;
 
-        const touch = new Touch(event);
         const newTouchInfo = this._determineTouchedElement(touch);
         const oldTouchInfo = this._touchedElements[id];
 
         if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
-            this._fireEvent('touchstart', new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch, this._activeTouches()));
+            this._fireEvent('touchstart', new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch, this._activeTouches(), changed));
             this._touchesForWhichTouchLeaveHasFired[id] = false;
         }
 
@@ -724,9 +856,13 @@ class ElementInput {
     // two-handed pinch do in Safari on Apple Vision Pro
     _handleTouchEnd(event, eventType) {
         const id = event.pointerId;
-        const start = this._touches.get(id);
-        if (!start) return;
+        const record = this._touches.get(id);
+        if (!record || !isTouch(event)) return;
         this._touches.delete(id);
+        this._touchList = null;
+
+        const { touch, changed } = record;
+        updateTouch(touch, event);
 
         if (!this._enabled) return;
 
@@ -753,44 +889,47 @@ class ElementInput {
         delete this._touchedElements[id];
         delete this._touchesForWhichTouchLeaveHasFired[id];
 
-        const touch = new Touch(event, start.target);
         const touches = this._activeTouches();
 
         // check if touch was released over previously touch
         // element in order to fire click event
+        const coords = getTouchTargetCoords(touch);
+
         for (let c = cameras.length - 1; c >= 0; c--) {
-            const hovered = this._getTargetElementByCoords(cameras[c], touch.x, touch.y);
+            const hovered = this._getTargetElementByCoords(cameras[c], coords.x, coords.y);
             if (hovered === element) {
 
                 if (!this._clickedEntities[element.entity.guid]) {
-                    this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch, touches));
+                    this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch, touches, changed));
                     this._clickedEntities[element.entity.guid] = Date.now();
                 }
 
             }
         }
 
-        this._fireEvent(eventType, new ElementTouchEvent(event, element, camera, x, y, touch, touches));
+        this._fireEvent(eventType, new ElementTouchEvent(event, element, camera, x, y, touch, touches, changed));
     }
 
     _handleTouchMove(event) {
         const id = event.pointerId;
-        const start = this._touches.get(id);
-        if (!start) return;
-        start.event = event;
+        const record = this._touches.get(id);
+        if (!record || !isTouch(event)) return;
+
+        const { touch, changed } = record;
+        updateTouch(touch, event);
 
         if (!this._enabled) return;
 
         const oldTouchInfo = this._touchedElements[id];
         if (!oldTouchInfo) return;
 
-        const touch = new Touch(event, start.target);
         const touches = this._activeTouches();
+        const coords = getTouchTargetCoords(touch);
         const newTouchInfo = this._determineTouchedElement(touch);
 
         // Fire touchleave if we've left the previously touched element
         if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[id]) {
-            this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, touch.x, touch.y, touch, touches));
+            this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch, touches, changed));
 
             // Flag that touchleave has been fired for this touch, so that we don't
             // re-fire it on the next touchmove. This is required because touchmove
@@ -801,10 +940,10 @@ class ElementInput {
             this._touchesForWhichTouchLeaveHasFired[id] = true;
         }
 
-        this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, touch.x, touch.y, touch, touches));
+        this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch, touches, changed));
     }
 
-    _onElementMouseEvent(eventType, event) {
+    _onElementMouseEvent(eventType, event, button) {
         let element = null;
 
         const lastHovered = this._hoveredElement;
@@ -830,10 +969,10 @@ class ElementInput {
 
         // if there was a pressed element, it takes full priority of 'move' and 'up' events
         if ((eventType === 'mousemove' || eventType === 'mouseup') && this._pressedElement) {
-            this._fireEvent(eventType, new ElementMouseEvent(event, this._pressedElement, camera, targetX, targetY, this._lastX, this._lastY));
+            this._fireEvent(eventType, this._createMouseEvent(event, this._pressedElement, camera, button));
         } else if (element) {
             // otherwise, fire it to the currently hovered event
-            this._fireEvent(eventType, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
+            this._fireEvent(eventType, this._createMouseEvent(event, element, camera, button));
 
             if (eventType === 'mousedown') {
                 this._pressedElement = element;
@@ -843,12 +982,12 @@ class ElementInput {
         if (lastHovered !== this._hoveredElement) {
             // mouseleave event
             if (lastHovered) {
-                this._fireEvent('mouseleave', new ElementMouseEvent(event, lastHovered, camera, targetX, targetY, this._lastX, this._lastY));
+                this._fireEvent('mouseleave', this._createMouseEvent(event, lastHovered, camera, button));
             }
 
             // mouseenter event
             if (this._hoveredElement) {
-                this._fireEvent('mouseenter', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
+                this._fireEvent('mouseenter', this._createMouseEvent(event, this._hoveredElement, camera, button));
             }
         }
 
@@ -869,11 +1008,25 @@ class ElementInput {
                     delete this._clickedEntities[guid];
                 }
                 if (fireClick) {
-                    this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
+                    this._fireEvent('click', this._createMouseEvent(event, this._hoveredElement, camera, button));
                 }
             }
             this._pressedElement = null;
         }
+    }
+
+    /**
+     * @param {globalThis.PointerEvent|globalThis.WheelEvent} event - The browser event.
+     * @param {ElementComponent} element - The element.
+     * @param {CameraComponent} camera - The camera.
+     * @param {number} [button] - The button, when it is not the event's own, as for chords.
+     * @returns {ElementMouseEvent} The event.
+     * @private
+     */
+    _createMouseEvent(event, element, camera, button) {
+        const evt = new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY);
+        if (button !== undefined) evt.button = button;
+        return evt;
     }
 
     _onXrStart() {
