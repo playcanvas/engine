@@ -268,7 +268,7 @@ collisionRoot.findComponents('render').forEach((/** @type {RenderComponent} */ r
 sceneRoot.addChild(collisionRoot);
 
 // ---- Character ----
-// The third-person controller acts on `characterController` (capsule + dynamic
+// The third-person controller acts on `characterController` (capsule + kinematic
 // rigidbody). The visible bitmoji mesh is a child entity (`characterModel`) so
 // the controller can rotate it independently from the capsule.
 const characterController = new Entity('character-controller');
@@ -279,12 +279,7 @@ characterController.addComponent('collision', {
     height: 2
 });
 characterController.addComponent('rigidbody', {
-    type: 'dynamic',
-    mass: 100,
-    linearDamping: 0,
-    angularDamping: 0,
-    linearFactor: Vec3.ONE,
-    angularFactor: Vec3.ZERO,
+    type: 'kinematic',
     friction: 0.5,
     restitution: 0
 });

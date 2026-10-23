@@ -239,12 +239,7 @@ characterController.addComponent('collision', {
     height: 0.9
 });
 characterController.addComponent('rigidbody', {
-    type: 'dynamic',
-    mass: 100,
-    linearDamping: 0,
-    angularDamping: 0,
-    linearFactor: Vec3.ONE,
-    angularFactor: Vec3.ZERO,
+    type: 'kinematic',
     friction: 0.5,
     restitution: 0
 });
