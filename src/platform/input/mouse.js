@@ -24,6 +24,14 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * position, so re-entry reports zero delta. Pointer-locked movement uses the browser's relative
  * movement deltas.
  *
+ * Movement and wheel deltas are also summed per tick in {@link Mouse#movement} and
+ * {@link Mouse#wheel} and cleared by {@link Mouse#update}.
+ *
+ * By default, mouse events are listened for on the window. Pass `pointer: true` to instead listen
+ * for pointer events on the element only, capturing the pointer while a button is held and
+ * preventing default on wheel and context menu events. In this mode touch and pen input is
+ * ignored.
+ *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
  * For pointer-lock-aware, frame-accumulated input deltas rather than raw events, see
@@ -78,6 +86,32 @@ class Mouse extends EventHandler {
      */
     static EVENT_MOUSEWHEEL = 'mousewheel';
 
+    /**
+     * The mouse movement `[dx, dy]` summed since the last call to {@link Mouse#update}.
+     *
+     * @type {number[]}
+     */
+    movement = [0, 0];
+
+    /**
+     * The raw wheel `deltaY` summed since the last call to {@link Mouse#update}.
+     *
+     * @type {number}
+     */
+    wheel = 0;
+
+    /** @private */
+    _pointer;
+
+    /** @private */
+    _captureId = -1;
+
+    /**
+     * @type {Element|null}
+     * @private
+     */
+    _bound = null;
+
     /** @private */
     _lastX = 0;
 
@@ -130,6 +164,20 @@ class Mouse extends EventHandler {
     _contextMenuHandler;
 
     /**
+     * @type {(event: globalThis.PointerEvent) => void}
+     * @private
+     */
+    _lostHandler;
+
+    /**
+     * Always on in pointer mode, unlike the toggleable {@link Mouse#disableContextMenu}.
+     *
+     * @type {(event: Event) => void}
+     * @private
+     */
+    _pointerContextHandler = event => event.preventDefault();
+
+    /**
      * @type {() => void}
      * @private
      */
@@ -145,9 +193,14 @@ class Mouse extends EventHandler {
      * Create a new Mouse instance.
      *
      * @param {Element} [element] - The Element that the mouse events are attached to.
+     * @param {object} [options] - Optional settings.
+     * @param {boolean} [options.pointer] - Listen for pointer events on the element instead of
+     * mouse events on the window. Defaults to false.
      */
-    constructor(element) {
+    constructor(element, { pointer = false } = {}) {
         super();
+
+        this._pointer = pointer;
 
         // Setup event handlers so they are bound to the correct 'this'
         this._upHandler = this._handleUp.bind(this);
@@ -159,6 +212,14 @@ class Mouse extends EventHandler {
         this._contextMenuHandler = (event) => {
             event.preventDefault();
         };
+
+        if (pointer) {
+            this._downHandler = this._handlePointerDown.bind(this);
+            this._moveHandler = this._handlePointerMove.bind(this);
+            this._upHandler = this._handlePointerUp.bind(this);
+            this._wheelHandler = this._handlePointerWheel.bind(this);
+            this._lostHandler = this._handlePointerLost.bind(this);
+        }
 
         this.attach(element);
     }
@@ -181,15 +242,19 @@ class Mouse extends EventHandler {
     attach(element) {
         this._target = element;
 
+        if (this._pointer) this._bindElement(element);
+
         if (this._attached) return;
         this._attached = true;
 
-        /** @type {AddEventListenerOptions} */
-        const options = { passive: false };
-        window.addEventListener('mouseup', this._upHandler, options);
-        window.addEventListener('mousedown', this._downHandler, options);
-        window.addEventListener('mousemove', this._moveHandler, options);
-        window.addEventListener('wheel', this._wheelHandler, options);
+        if (!this._pointer) {
+            /** @type {AddEventListenerOptions} */
+            const options = { passive: false };
+            window.addEventListener('mouseup', this._upHandler, options);
+            window.addEventListener('mousedown', this._downHandler, options);
+            window.addEventListener('mousemove', this._moveHandler, options);
+            window.addEventListener('wheel', this._wheelHandler, options);
+        }
         document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.addEventListener('blur', this._windowBlurHandler, false);
     }
@@ -204,16 +269,61 @@ class Mouse extends EventHandler {
         this._attached = false;
         this._target = null;
 
-        /** @type {AddEventListenerOptions} */
-        const options = { passive: false };
-        window.removeEventListener('mouseup', this._upHandler, options);
-        window.removeEventListener('mousedown', this._downHandler, options);
-        window.removeEventListener('mousemove', this._moveHandler, options);
-        window.removeEventListener('wheel', this._wheelHandler, options);
+        if (this._pointer) {
+            this._bindElement(null);
+        } else {
+            /** @type {AddEventListenerOptions} */
+            const options = { passive: false };
+            window.removeEventListener('mouseup', this._upHandler, options);
+            window.removeEventListener('mousedown', this._downHandler, options);
+            window.removeEventListener('mousemove', this._moveHandler, options);
+            window.removeEventListener('wheel', this._wheelHandler, options);
+        }
         document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.removeEventListener('blur', this._windowBlurHandler, false);
 
         this._handleWindowBlur();
+    }
+
+    /**
+     * True if this mouse listens for pointer events on its element instead of mouse events on the
+     * window.
+     *
+     * @type {boolean}
+     */
+    get pointer() {
+        return this._pointer;
+    }
+
+    /**
+     * Moves the pointer-mode listeners from the previously bound element to a new one.
+     *
+     * @param {Element|null} element - The element to bind, or null to unbind.
+     * @private
+     */
+    _bindElement(element) {
+        const old = this._bound;
+        if (old === element) return;
+
+        if (old) {
+            old.removeEventListener('pointerdown', this._downHandler);
+            old.removeEventListener('pointermove', this._moveHandler);
+            old.removeEventListener('pointerup', this._upHandler);
+            old.removeEventListener('pointercancel', this._lostHandler);
+            old.removeEventListener('lostpointercapture', this._lostHandler);
+            old.removeEventListener('wheel', this._wheelHandler);
+            old.removeEventListener('contextmenu', this._pointerContextHandler);
+        }
+        this._bound = element ?? null;
+        if (element) {
+            element.addEventListener('pointerdown', this._downHandler);
+            element.addEventListener('pointermove', this._moveHandler);
+            element.addEventListener('pointerup', this._upHandler);
+            element.addEventListener('pointercancel', this._lostHandler);
+            element.addEventListener('lostpointercapture', this._lostHandler);
+            element.addEventListener('wheel', this._wheelHandler, { passive: false });
+            element.addEventListener('contextmenu', this._pointerContextHandler);
+        }
     }
 
     /**
@@ -298,9 +408,14 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * Update method, should be called once per frame.
+     * Update method, should be called once per frame. Clears {@link Mouse#movement} and
+     * {@link Mouse#wheel} and records the current button states.
      */
     update() {
+        this.movement[0] = 0;
+        this.movement[1] = 0;
+        this.wheel = 0;
+
         // Copy current button state
         this._lastbuttons[0] = this._buttons[0];
         this._lastbuttons[1] = this._buttons[1];
@@ -372,6 +487,7 @@ class Mouse extends EventHandler {
         this._buttons.fill(false);
         this._lastbuttons.fill(false);
         this._lastPositionValid = false;
+        this._captureId = -1;
     }
 
     _handleUp(event) {
@@ -392,6 +508,13 @@ class Mouse extends EventHandler {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
+        // pointer mode has no prior hover event to baseline a drag from
+        if (this._pointer) {
+            this._lastX = e.x;
+            this._lastY = e.y;
+            this._lastPositionValid = !isMousePointerLocked();
+        }
+
         this.fire('mousedown', e);
     }
 
@@ -407,6 +530,8 @@ class Mouse extends EventHandler {
         this._lastX = e.x;
         this._lastY = e.y;
         this._lastPositionValid = !isMousePointerLocked();
+        this.movement[0] += e.dx;
+        this.movement[1] += e.dy;
 
         this.fire('mousemove', e);
     }
@@ -415,7 +540,48 @@ class Mouse extends EventHandler {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
+        this.wheel += event.deltaY;
+
         this.fire('mousewheel', e);
+    }
+
+    _isMouseTarget(event) {
+        return event.pointerType === 'mouse' && event.target === this._target;
+    }
+
+    _handlePointerDown(event) {
+        if (!this._isMouseTarget(event)) return;
+
+        this._target.setPointerCapture(event.pointerId);
+        this._captureId = event.pointerId;
+        this._handleDown(event);
+    }
+
+    _handlePointerMove(event) {
+        if (this._isMouseTarget(event)) this._handleMove(event);
+    }
+
+    _handlePointerUp(event) {
+        if (!this._isMouseTarget(event)) return;
+
+        this._target.releasePointerCapture(event.pointerId);
+        this._captureId = -1;
+        this._handleUp(event);
+    }
+
+    _handlePointerWheel(event) {
+        if (event.target !== this._target) return;
+
+        event.preventDefault();
+        this._handleWheel(event);
+    }
+
+    // capture lost or cancelled: no pointerup will arrive, so release without firing mouseup
+    _handlePointerLost(event) {
+        if (event.pointerType !== 'mouse') return;
+
+        this._buttons.fill(false);
+        this._captureId = -1;
     }
 
     _getTargetCoords(event) {
@@ -423,11 +589,11 @@ class Mouse extends EventHandler {
         const left = Math.floor(rect.left);
         const top = Math.floor(rect.top);
 
-        // mouse is outside of canvas
-        if (event.clientX < left ||
+        // mouse is outside of canvas, unless a captured drag continues past the edge
+        if (this._captureId === -1 && (event.clientX < left ||
             event.clientX >= left + this._target.clientWidth ||
             event.clientY < top ||
-            event.clientY >= top + this._target.clientHeight) {
+            event.clientY >= top + this._target.clientHeight)) {
 
             return null;
         }

@@ -285,4 +285,197 @@ describe('Mouse', function () {
 
     });
 
+    describe('per-tick totals and pointer mode', function () {
+
+        /** @type {HTMLCanvasElement} */
+        let canvas;
+
+        const makeCanvas = () => {
+            const el = document.createElement('canvas');
+            document.body.appendChild(el);
+            el.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 });
+            Object.defineProperty(el, 'clientWidth', { value: 100 });
+            Object.defineProperty(el, 'clientHeight', { value: 100 });
+            el.setPointerCapture = sinon.stub();
+            el.releasePointerCapture = sinon.stub();
+            return el;
+        };
+
+        const dispatchMouse = (type, x, y) => {
+            window.dispatchEvent(new MouseEvent(type, { clientX: x, clientY: y }));
+        };
+
+        const dispatchWheel = (deltaY) => {
+            window.dispatchEvent(new window.WheelEvent('wheel', { deltaY }));
+        };
+
+        // jsdom has no PointerEvent
+        const pointer = (type, props = {}, target = canvas) => {
+            const event = new window.Event(type, { bubbles: true, cancelable: true });
+            Object.assign(event, {
+                pointerId: 1,
+                pointerType: 'mouse',
+                button: MOUSEBUTTON_LEFT,
+                clientX: 50,
+                clientY: 50,
+                screenX: 50,
+                screenY: 50
+            }, props);
+            target.dispatchEvent(event);
+            return event;
+        };
+
+        beforeEach(function () {
+            mouse.detach();
+            canvas = makeCanvas();
+        });
+
+        describe('default mode', function () {
+
+            beforeEach(function () {
+                mouse = new Mouse(canvas);
+            });
+
+            it('sums movement until update()', function () {
+                dispatchMouse('mousemove', 10, 10);
+                dispatchMouse('mousemove', 13, 14);
+                dispatchMouse('mousemove', 15, 15);
+                expect(mouse.movement).to.deep.equal([5, 5]);
+                mouse.update();
+                expect(mouse.movement).to.deep.equal([0, 0]);
+            });
+
+            it('sums raw wheel deltaY until update()', function () {
+                dispatchWheel(120);
+                dispatchWheel(-40);
+                expect(mouse.wheel).to.equal(80);
+                mouse.update();
+                expect(mouse.wheel).to.equal(0);
+            });
+
+            it('is not in pointer mode and ignores pointer events', function () {
+                const down = sinon.spy();
+                mouse.on('mousedown', down);
+                pointer('pointerdown');
+                expect(mouse.pointer).to.equal(false);
+                expect(down.callCount).to.equal(0);
+            });
+
+        });
+
+        describe('pointer mode', function () {
+
+            beforeEach(function () {
+                mouse = new Mouse(canvas, { pointer: true });
+            });
+
+            it('ignores window mouse events', function () {
+                dispatchMouse('mousedown', 10, 10);
+                expect(mouse.pointer).to.equal(true);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
+            it('ignores touch and pen in pointer mode', function () {
+                const down = sinon.spy();
+                mouse.on('mousedown', down);
+                pointer('pointerdown', { pointerType: 'touch' });
+                pointer('pointerdown', { pointerType: 'pen' });
+                expect(down.callCount).to.equal(0);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
+            it('ignores events targeting other elements', function () {
+                const overlay = document.createElement('div');
+                canvas.appendChild(overlay);
+                const down = sinon.spy();
+                mouse.on('mousedown', down);
+                pointer('pointerdown', {}, overlay);
+                expect(down.callCount).to.equal(0);
+                expect(canvas.setPointerCapture.called).to.equal(false);
+            });
+
+            it('captures the pointer and fires mousedown with the button', function () {
+                const down = sinon.spy();
+                mouse.on('mousedown', down);
+                pointer('pointerdown', { button: MOUSEBUTTON_RIGHT });
+                expect(canvas.setPointerCapture.calledOnceWith(1)).to.equal(true);
+                expect(down.calledOnce).to.equal(true);
+                expect(down.firstCall.args[0].button).to.equal(MOUSEBUTTON_RIGHT);
+                expect(mouse.isPressed(MOUSEBUTTON_RIGHT)).to.equal(true);
+            });
+
+            it('releases capture and fires mouseup', function () {
+                const up = sinon.spy();
+                mouse.on('mouseup', up);
+                pointer('pointerdown');
+                pointer('pointerup');
+                expect(canvas.releasePointerCapture.calledOnceWith(1)).to.equal(true);
+                expect(up.firstCall.args[0].button).to.equal(MOUSEBUTTON_LEFT);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
+            it('keeps counting moves outside the element while captured', function () {
+                pointer('pointerdown');
+                pointer('pointermove', { clientX: 150, clientY: 50 });
+                expect(mouse.movement).to.deep.equal([100, 0]);
+            });
+
+            it('drops moves outside the element when not captured', function () {
+                pointer('pointermove', { clientX: 150, clientY: 50 });
+                expect(mouse.movement).to.deep.equal([0, 0]);
+            });
+
+            it('sums movement and wheel until update()', function () {
+                pointer('pointermove', { clientX: 10, clientY: 10 });
+                pointer('pointermove', { clientX: 13, clientY: 14 });
+                const wheel = new window.Event('wheel', { cancelable: true });
+                wheel.deltaY = 120;
+                canvas.dispatchEvent(wheel);
+                expect(mouse.movement).to.deep.equal([3, 4]);
+                expect(mouse.wheel).to.equal(120);
+                mouse.update();
+                expect(mouse.movement).to.deep.equal([0, 0]);
+                expect(mouse.wheel).to.equal(0);
+            });
+
+            it('prevents default on wheel and contextmenu', function () {
+                const wheel = new window.Event('wheel', { cancelable: true });
+                wheel.deltaY = 1;
+                canvas.dispatchEvent(wheel);
+                expect(wheel.defaultPrevented).to.equal(true);
+                expect(pointer('contextmenu').defaultPrevented).to.equal(true);
+            });
+
+            it('keeps preventing contextmenu after enableContextMenu', function () {
+                mouse.enableContextMenu();
+                expect(pointer('contextmenu').defaultPrevented).to.equal(true);
+            });
+
+            it('clears buttons on lostpointercapture in pointer mode', function () {
+                pointer('pointerdown');
+                pointer('lostpointercapture');
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+            });
+
+            it('moves element listeners when attached to another element', function () {
+                const other = makeCanvas();
+                mouse.attach(other);
+                pointer('pointerdown');
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(false);
+                pointer('pointerdown', {}, other);
+                expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.equal(true);
+            });
+
+            it('removes element listeners on detach', function () {
+                const down = sinon.spy();
+                mouse.on('mousedown', down);
+                mouse.detach();
+                pointer('pointerdown');
+                expect(down.callCount).to.equal(0);
+            });
+
+        });
+
+    });
+
 });

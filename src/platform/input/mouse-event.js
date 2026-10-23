@@ -160,7 +160,8 @@ class MouseEvent {
             this.dy = this.y - mouse._lastY;
         }
 
-        if (event.type === 'mousedown' || event.type === 'mouseup') {
+        if (event.type === 'mousedown' || event.type === 'mouseup' ||
+            event.type === 'pointerdown' || event.type === 'pointerup') {
             this.button = event.button;
         }
         this.buttons = mouse._buttons.slice(0);
