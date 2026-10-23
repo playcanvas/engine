@@ -806,6 +806,7 @@ class OverlayRenderer {
      * @param {Vec3} size - The size along each axis of the rotation.
      * @param {number} [alpha] - The alpha factor.
      * @param {boolean} [volume] - Whether to use the theme fill color.
+     * @returns {Shape} The box.
      */
     box(center, rotation, size, alpha = 1, volume = true) {
         this._colors(alpha, volume);
@@ -813,6 +814,7 @@ class OverlayRenderer {
         box.entity.setLocalPosition(this._local(center, tmpV1));
         box.entity.setLocalRotation(rotation);
         box.entity.setLocalScale(size);
+        return box;
     }
 
     /**

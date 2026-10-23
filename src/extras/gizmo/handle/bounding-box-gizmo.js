@@ -270,7 +270,8 @@ class BoundingBoxGizmo extends HandleGizmo {
             const corners = this._boxCorners(c, Quat.IDENTITY, h);
             this._drawBrackets(corners);
             if (this._theme.fill.a > 0) {
-                renderer.box(c, Quat.IDENTITY, tmpV1.copy(h).mulScalar(2));
+                // the bounds enclose other gizmos' shapes, so the fill leaves the depth to them
+                renderer.box(c, Quat.IDENTITY, tmpV1.copy(h).mulScalar(2)).depthWrite = false;
             }
             this._boxHandles(c, h, this, this.padding);
         }
