@@ -297,9 +297,10 @@ class OverlayRenderer {
     begin() {
         const camera = this._gizmo.camera;
         const { width, height } = camera.system.app.graphicsDevice.clientRect;
+        const { z, w } = camera.rect;
         this._perspective = camera.projection === PROJECTION_PERSPECTIVE;
         const span = this._perspective ? 2 * Math.tan(0.5 * camera.fov * math.DEG_TO_RAD) : 2 * camera.orthoHeight;
-        this._pixel = span / Math.max(this._perspective && camera.horizontalFov ? width : height, 1);
+        this._pixel = span / Math.max(this._perspective && camera.horizontalFov ? width * z : height * w, 1);
 
         const layer = this._fixedLayer ?? this._gizmo.layer;
         if (layer !== this._layer) {

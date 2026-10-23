@@ -1,7 +1,7 @@
 import { math } from '../../../core/math/math.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../scene/constants.js';
+import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE, PROJECTION_PERSPECTIVE } from '../../../scene/constants.js';
 import { HandleGizmo } from './handle-gizmo.js';
 
 /**
@@ -41,6 +41,7 @@ const MIN_SIZE = 0.01;
  * Draws the shape of each attached light entity: an arrow for a directional light, sized by
  * {@link Gizmo#size}, the range of an omni light, the cone of a spot light, and the shape of an area
  * light. Handles drag the range, cone angles or area size, which sets the entity's local scale.
+ * Disabled entities are skipped, but a disabled light component is still drawn.
  *
  * ```javascript
  * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
@@ -354,8 +355,11 @@ class LightGizmo extends HandleGizmo {
         this._rays(entity, rays, RAYS, 0.58 * scale, 0.7, 0.75);
         renderer.arrow(pos, tmpQ1.copy(rot).mul(FLIP), scale);
 
-        // keep the icon clear of the arrow
-        this._icon('light', tmpV3.copy(entity.up).mulScalar(0.18 * scale).add(pos), entity);
+        // the icon sits on the light, moved toward the camera past the arrow so it draws on top
+        const camera = this._camera.entity;
+        const toward = this._camera.projection === PROJECTION_PERSPECTIVE ?
+            tmpV3.sub2(camera.getPosition(), pos).normalize() : tmpV3.copy(camera.forward).mulScalar(-1);
+        this._icon('light', toward.mulScalar(scale).add(pos), entity);
     }
 
     /**
@@ -385,7 +389,7 @@ class LightGizmo extends HandleGizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             const entity = /** @type {Entity} */ (this.nodes[i]);
             const light = entity.light;
-            if (!entity.enabled || !light?.enabled) {
+            if (!entity.enabled || !light) {
                 continue;
             }
             this._renderer.tint = this.useLightColor ? light.color : null;

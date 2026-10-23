@@ -37,7 +37,8 @@ const MIN_CLIP = 1e-3;
 /**
  * Draws the view frustum of each attached camera entity, with a triangle marking its up direction.
  * Handles drag the near and far clip planes and the field of view or orthographic height. The
- * camera viewing the gizmo is skipped.
+ * camera viewing the gizmo and disabled entities are skipped, but a disabled camera component is
+ * still drawn.
  *
  * ```javascript
  * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
@@ -156,7 +157,7 @@ class CameraGizmo extends HandleGizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             const entity = /** @type {Entity} */ (this.nodes[i]);
             const { camera } = entity;
-            if (entity.enabled && camera?.enabled && camera !== this._camera) {
+            if (entity.enabled && camera && camera !== this._camera) {
                 this._draw(entity);
             }
         }

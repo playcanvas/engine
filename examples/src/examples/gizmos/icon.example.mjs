@@ -3,6 +3,7 @@
 // Icons mark entities that have nothing else to see or click, such as lights, cameras and sounds; click one to focus on it
 
 import {
+    AnimComponentSystem,
     AppBase,
     AppOptions,
     AudioListenerComponentSystem,
@@ -59,7 +60,8 @@ createOptions.componentSystems = [
     ScriptComponentSystem,
     AudioListenerComponentSystem,
     SoundComponentSystem,
-    ParticleSystemComponentSystem
+    ParticleSystemComponentSystem,
+    AnimComponentSystem
 ];
 createOptions.resourceHandlers = [ScriptHandler];
 
@@ -109,7 +111,9 @@ const subjects = {
     light: { light: { type: 'omni', range: 2, color: new Color(1, 0.85, 0.6) } },
     audiolistener: { audiolistener: {} },
     sound: { sound: {} },
-    particlesystem: { particlesystem: { autoPlay: false } }
+    particlesystem: { particlesystem: { autoPlay: false } },
+    anim: { anim: {} },
+    script: { script: {} }
 };
 /**
  * @type {Record<string, Entity>}

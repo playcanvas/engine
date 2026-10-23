@@ -89,6 +89,9 @@ const BOX_FACES = 6;
 const BOX_MIN_HALF = 0.005;
 const BOX_MIN_FACTOR = 0.01;
 
+// a box axis no longer than this, padding left out, is flat and keeps its size and center
+const BOX_FLAT_HALF = 1e-6;
+
 const RINGS_SIZE = 40;
 
 const DETAIL_FADE_START = 60;
@@ -739,6 +742,9 @@ class HandleGizmo extends DragGizmo {
         if (options.faceHandles) {
             for (let i = 0; i < BOX_FACES; i++) {
                 const k = i >> 1;
+                if (halfExtents[BOX_AXES[k]] - pad <= BOX_FLAT_HALF) {
+                    continue;
+                }
                 const dir = tmpV2.copy(boxAxes[k]).mulScalar(i & 1 ? -1 : 1);
                 const pos = tmpV1.copy(dir).mulScalar(halfExtents[BOX_AXES[k]]).add(center);
                 if (this._handle(pos, this._faceColors[k], null, 'size', i, center, dir)) {
@@ -821,11 +827,20 @@ class HandleGizmo extends DragGizmo {
         const mid = tmpMid.set(0, 0, 0);
         const { centered } = options;
 
+        // a corner moves in the view plane, so a flat axis ignores its drag
+        const corner = handle.index - BOX_FACES;
+        if (corner >= 0) {
+            for (let k = 0; k < 3; k++) {
+                const a = BOX_AXES[k];
+                if (start[a] - pad <= BOX_FLAT_HALF) {
+                    local[a] = boxSide(corner, k) * start[a];
+                }
+            }
+        }
+
         if (handle.index < BOX_FACES) {
             this._resizeBoxAxis(handle.index >> 1, handle.index & 1 ? -1 : 1, local, start, centered, pad, half, mid);
         } else if (options.uniform) {
-
-            const corner = handle.index - BOX_FACES;
             const anchor = tmpAnchor.set(-boxSide(corner, 0) * start.x, -boxSide(corner, 1) * start.y, -boxSide(corner, 2) * start.z);
             if (centered) {
                 anchor.set(0, 0, 0);
@@ -840,9 +855,19 @@ class HandleGizmo extends DragGizmo {
             half.mulScalar(factor);
             mid.copy(anchor).mulScalar(1 - factor);
         } else {
-            const corner = handle.index - BOX_FACES;
             for (let k = 0; k < 3; k++) {
                 this._resizeBoxAxis(k, boxSide(corner, k), local, start, centered, pad, half, mid);
+            }
+        }
+
+        // a flat axis can't scale, so it keeps its size and center
+        if (corner >= 0) {
+            for (let k = 0; k < 3; k++) {
+                const a = BOX_AXES[k];
+                if (start[a] - pad <= BOX_FLAT_HALF) {
+                    half[a] = start[a];
+                    mid[a] = 0;
+                }
             }
         }
 

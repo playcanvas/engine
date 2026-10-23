@@ -1,8 +1,13 @@
 /**
  * The glyph of an icon, named for the component it marks.
  *
- * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem'} OverlayIcon
+ * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem' | 'anim' | 'animation' | 'script'} OverlayIcon
  */
+
+// the glyph of the anim and animation components
+const PLAY = `
+        <circle r="9"/>
+        <path d="M-2.5 -4.5L4.5 0L-2.5 4.5Z" fill="white" stroke="none"/>`;
 
 /**
  * The icon glyphs as SVG content in a 24 by 24 CSS pixel box centered on the origin, y down. They
@@ -29,11 +34,10 @@ const ICON_GLYPHS = {
         <path d="M-3 -1V-5A3 3 0 0 1 3 -5V-1A3 3 0 0 1 -3 -1Z"/>
         <path d="M-6 -1A6 6 0 0 0 6 -1M0 5V8.5M-4 8.5H4"/>`,
 
-    // a speaker, a box and its cone, with two sound waves
+    // a speaker, a box and its cone in one outline, with two sound waves
     sound: `
-        <rect x="-7.5" y="-3" width="3.5" height="6"/>
-        <path d="M-4 -3L0.5 -7.5V7.5L-4 3"/>
-        <path d="M2.851 -3.236A4 4 0 0 1 2.851 3.236M5.202 -6.472A8 8 0 0 1 5.202 6.472"/>`,
+        <path d="M-7.5 -3H-4L0.5 -7V7L-4 3H-7.5Z" stroke-linejoin="round"/>
+        <path d="M2.75 -2.681A3.5 3.5 0 0 1 2.75 2.681M5 -5.362A7 7 0 0 1 5 5.362" stroke-linecap="round"/>`,
 
     // a cluster of dots around a larger one
     particlesystem: `
@@ -45,7 +49,17 @@ const ICON_GLYPHS = {
             <circle cy="7.5" r="1.6"/>
             <circle cx="6.495" cy="3.75" r="2.2"/>
             <circle cx="6.495" cy="-3.75" r="1.6"/>
-        </g>`
+        </g>`,
+
+    // a play button, a triangle in a circle
+    anim: PLAY,
+
+    // the legacy animation component, drawn as anim
+    animation: PLAY,
+
+    // code brackets around a slash
+    script: `
+        <path d="M-4.5 -5.5L-10 0L-4.5 5.5M4.5 -5.5L10 0L4.5 5.5M1.8 -8L-1.8 8"/>`
 };
 
 export { ICON_GLYPHS };

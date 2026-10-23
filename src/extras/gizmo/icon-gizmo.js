@@ -20,7 +20,8 @@ import { OverlayRenderer } from './overlay/overlay-renderer.js';
 
 /**
  * Draws an icon at each attached entity with nothing else to see, such as a light, camera or sound.
- * Entities with an enabled render, model, sprite or element component show none. Clicking an icon
+ * Entities with an enabled render, model, sprite or element component show none, and a disabled
+ * component still shows its icon. Clicking an icon
  * fires {@link IconGizmo.EVENT_ICONSELECT}. The icons are {@link IconGizmo#iconSize} CSS pixels
  * square.
  *
@@ -171,7 +172,7 @@ class IconGizmo extends Gizmo {
             return null;
         }
         for (const kind in ICON_GLYPHS) {
-            if (entity.c[kind]?.enabled) {
+            if (entity.c[kind]) {
                 return /** @type {OverlayIcon} */ (kind);
             }
         }
