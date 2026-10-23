@@ -147,6 +147,10 @@ app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.minPixelSize = 2;
 app.scene.gsplat.minContribution = 2;
 
+// re-evaluate the view-dependent color (spherical harmonics or spherical beta lobes) on every frame
+// the camera moves, so highlights follow the camera exactly when inspecting quality
+app.scene.gsplat.colorUpdateAngle = 0;
+
 /**
  * Calculate the bounding box of an entity.
  *

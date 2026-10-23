@@ -67,13 +67,15 @@ void main(void) {
         clr.a *= corner.aaFactor;
     #endif
 
-    // evaluate spherical harmonics
-    #if SH_BANDS > 0
+    #if SH_BANDS > 0 || defined(SB_LOBES)
         // calculate the model-space view direction. Orthographic view rays are all parallel to the
         // camera forward, rather than running from the camera position to the splat.
         vec3 viewDir = camera_params.w == 1.0 ? vec3(0.0, 0.0, -1.0) : center.view;
         vec3 dir = normalize(viewDir * mat3(center.modelView));
+    #endif
 
+    // evaluate spherical harmonics
+    #if SH_BANDS > 0
         // read sh coefficients
         vec3 sh[SH_COEFFS];
         float scale;
@@ -81,6 +83,11 @@ void main(void) {
 
         // evaluate
         clr.xyz += evalSH(sh, dir) * scale;
+    #endif
+
+    // add the spherical beta lobes to the clamped color, matching the trainers
+    #ifdef SB_LOBES
+        clr.xyz = max(clr.xyz, 0.0) + evalSB(dir);
     #endif
 
     modifySplatColor(modelCenter, clr);

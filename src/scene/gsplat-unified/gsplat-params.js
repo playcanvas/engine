@@ -694,10 +694,11 @@ class GSplatParams {
     }
 
     /**
-     * Viewing angle threshold in degrees for triggering spherical harmonics color updates.
-     * When the camera translates enough to change the viewing angle to an octree node or
-     * splat by this amount, its SH colors are re-evaluated. Distant nodes naturally update
-     * less frequently since they require more camera movement to reach the angle threshold.
+     * Viewing angle threshold in degrees for triggering view-dependent color updates, from
+     * spherical harmonics or spherical beta lobes. When the camera translates enough to change
+     * the viewing angle to an octree node or splat by this amount, its view-dependent colors are
+     * re-evaluated. Distant nodes naturally update less frequently since they require more camera
+     * movement to reach the angle threshold.
      * An orthographic camera views all splats along its forward direction, so their colors are
      * re-evaluated together once the camera rotates by this amount, and moving it has no effect.
      * Set to 0 to update every frame where camera moves. Defaults to 10.

@@ -70,8 +70,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         clr.a = clr.a * corner.aaFactor;
     #endif
 
-    // evaluate spherical harmonics
-    #if SH_BANDS > 0
+    #if SH_BANDS > 0 || defined(SB_LOBES)
         // calculate the model-space view direction. Orthographic view rays are all parallel to the
         // camera forward, rather than running from the camera position to the splat.
         // Firefox on Windows (D3D12) returns a transposed matrix when a struct member is indexed
@@ -81,7 +80,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         let modelView3x3 = mat3x3f(modelView[0].xyz, modelView[1].xyz, modelView[2].xyz);
         let viewDir = select(center.view, vec3f(0.0, 0.0, -1.0), uniform.camera_params.w == 1.0);
         let dir = normalize(viewDir * modelView3x3);
+    #endif
 
+    // evaluate spherical harmonics
+    #if SH_BANDS > 0
         // read sh coefficients
         var sh: array<half3, SH_COEFFS>;
         var scale: f32;
@@ -89,6 +91,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
         // evaluate (SH coefficients and result are half precision)
         clr = half4(clr.xyz + evalSH(&sh, dir) * half(scale), clr.a);
+    #endif
+
+    // add the spherical beta lobes to the clamped color, matching the trainers. The lobes are
+    // evaluated in f32, as half precision is too coarse for the power of a sharp lobe.
+    #ifdef SB_LOBES
+        clr = half4(half3(max(vec3f(clr.xyz), vec3f(0.0)) + evalSB(dir)), clr.a);
     #endif
 
     // user hook operates in f32

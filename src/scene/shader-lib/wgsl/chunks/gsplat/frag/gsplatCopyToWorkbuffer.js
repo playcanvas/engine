@@ -32,7 +32,7 @@ varying @interpolate(flat, either) vSubDraw: vec4i;
 
 uniform uColorMultiply: vec3f;
 
-#if SH_BANDS > 0
+#if SH_BANDS > 0 || defined(SB_LOBES)
     // 1 for an orthographic camera, whose view rays are all parallel to the camera forward
     uniform uCameraOrtho: u32;
 #endif
@@ -56,7 +56,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var worldCenter: vec3f;
     var worldRotation = vec4f(0.0, 0.0, 0.0, 1.0);
     var worldScale = vec3f(1.0);
-    #if SH_BANDS > 0
+    #if SH_BANDS > 0 || defined(SB_LOBES)
         var dir: vec3f;   // model-space view direction
     #endif
 
@@ -68,7 +68,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         initWorkBufferGeometry(vec2i(input.position.xy));
         worldCenter = workBufferWorldCenter();
 
-        #if SH_BANDS > 0
+        #if SH_BANDS > 0 || defined(SB_LOBES)
             // model-space view direction (matches the source path up to non-uniform model scale).
             // Orthographic uses the world-space camera forward, (0, 0, -1) taken out of view space.
             let view = uniform.matrix_view;
@@ -108,7 +108,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         // Apply custom rotation/scale modification
         modifySplatRotationScale(originalCenter, worldCenter, &worldRotation, &worldScale);
 
-        #if SH_BANDS > 0
+        #if SH_BANDS > 0 || defined(SB_LOBES)
             // calculate the model-space view direction. Orthographic view rays are all parallel to
             // the camera forward, rather than running from the camera position to the splat.
             // Firefox on Windows (D3D12) returns a transposed matrix when a struct member is indexed
@@ -133,6 +133,12 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         // evaluate
         color = vec4f(color.xyz + vec3f(evalSH(&sh, dir) * half(scale)), color.w);
+    #endif
+
+    // add the spherical beta lobes. Matching the trainers, the color they are added to is clamped
+    // first, as a negative base would otherwise absorb part of the highlight.
+    #ifdef SB_LOBES
+        color = vec4f(max(color.xyz, vec3f(0.0)) + evalSB(dir), color.w);
     #endif
 
     // Apply custom color modification
