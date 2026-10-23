@@ -401,6 +401,7 @@ export { InputController } from './framework/input/controllers/input-controller.
 export { FlyController } from './framework/input/controllers/fly-controller.js';
 export { OrbitController } from './framework/input/controllers/orbit-controller.js';
 export { FocusController } from './framework/input/controllers/focus-controller.js';
+export { CharacterController, CHARACTER_GROUP } from './framework/input/controllers/character-controller.js';
 
 // FRAMEWORK / PARSERS
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';
