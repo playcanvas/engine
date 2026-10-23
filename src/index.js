@@ -128,6 +128,7 @@ export * from './platform/input/constants.js';
 export { Controller } from './platform/input/controller.js';
 export { GamePads } from './platform/input/game-pads.js';
 export { Gestures } from './platform/input/gestures.js';
+export { InputFrame } from './platform/input/input-frame.js';
 export { Keyboard } from './platform/input/keyboard.js';
 export { KeyboardEvent } from './platform/input/keyboard-event.js';
 export { Mouse } from './platform/input/mouse.js';

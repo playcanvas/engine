@@ -776,9 +776,9 @@ class GamePad {
 /**
  * Input handler for accessing GamePad input.
  *
- * For frame-accumulated input deltas rather than raw pad state, see {@link GamepadSource},
- * {@link KeyboardMouseSource} and {@link MultiTouchSource}, which feed {@link InputController}s
- * such as {@link OrbitController}, {@link FlyController} and {@link FocusController}.
+ * To turn stick state into camera or character movement, see {@link InputController}s such as
+ * {@link OrbitController}, {@link FlyController}, {@link FocusController} and
+ * {@link CharacterController}, which map it into an {@link InputFrame}.
  *
  * @category Input Devices
  */

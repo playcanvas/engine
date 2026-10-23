@@ -75,10 +75,9 @@ const _keyCodeToKeyIdentifier = {
  *
  * Your application's Keyboard instance is managed and accessible via {@link AppBase#keyboard}.
  *
- * For pointer-lock-aware, frame-accumulated input deltas rather than raw events, see
- * {@link KeyboardMouseSource}, {@link GamepadSource} and {@link MultiTouchSource}, which feed
- * {@link InputController}s such as {@link OrbitController}, {@link FlyController} and
- * {@link FocusController}.
+ * To turn key state into camera or character movement, see {@link InputController}s such as
+ * {@link OrbitController}, {@link FlyController}, {@link FocusController} and
+ * {@link CharacterController}, which map it into an {@link InputFrame}.
  *
  * @category Input Devices
  */

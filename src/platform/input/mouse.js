@@ -34,10 +34,10 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
- * For pointer-lock-aware, frame-accumulated input deltas rather than raw events, see
- * {@link KeyboardMouseSource}, {@link GamepadSource} and {@link MultiTouchSource}, which feed
- * {@link InputController}s such as {@link OrbitController}, {@link FlyController} and
- * {@link FocusController}.
+ * For touch input, see {@link Gestures}. To turn mouse movement into camera or character
+ * movement, see {@link InputController}s such as {@link OrbitController}, {@link FlyController},
+ * {@link FocusController} and {@link CharacterController}, which map it into an
+ * {@link InputFrame}.
  *
  * @category Input Devices
  */
