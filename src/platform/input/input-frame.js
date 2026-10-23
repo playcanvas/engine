@@ -54,7 +54,9 @@ class InputFrame {
     _deltas = [];
 
     /**
-     * Creates a frame with every field zeroed.
+     * Creates a frame with every field zeroed. The `fields` object is frozen in place rather than
+     * copied. Values written to {@link InputFrame#input} must stay plain numbers, booleans or
+     * arrays of numbers, so snapshots can be copied and serialized.
      *
      * @param {Record<string, { type: 'bool'|'number'|'vec2'|'vec3', kind?: 'held'|'delta' }>} fields - Field
      * descriptions keyed by name. Bool fields cannot be `delta`.
@@ -64,8 +66,10 @@ class InputFrame {
 
         for (const key of Object.keys(fields)) {
             const { type, kind } = fields[key];
+            Debug.assert(ZERO[type], `InputFrame: field '${key}' has unknown type '${type}', expected 'bool', 'number', 'vec2' or 'vec3'.`);
+            Debug.assert(kind === undefined || kind === 'held' || kind === 'delta', `InputFrame: field '${key}' has unknown kind '${kind}', expected 'held' or 'delta'.`);
             Debug.assert(type !== 'bool' || kind !== 'delta', `InputFrame: bool field '${key}' cannot be a delta.`);
-            this.input[key] = ZERO[type]();
+            this.input[key] = ZERO[type]?.() ?? 0;
             if (kind === 'delta') {
                 this._deltas.push(key);
             }
@@ -81,6 +85,7 @@ class InputFrame {
      * @returns {InputSnapshot} The snapshot for this tick.
      */
     capture(dt, ts = 0) {
+        /** @type {InputSnapshot['input']} */
         const input = {};
         for (const key of Object.keys(this.input)) {
             const value = this.input[key];

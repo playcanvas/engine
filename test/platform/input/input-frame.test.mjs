@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 
 import { InputFrame } from '../../../src/platform/input/input-frame.js';
 
@@ -70,5 +71,15 @@ describe('InputFrame', function () {
         const frame = new InputFrame(fields);
         expect(frame.fields).to.equal(fields);
         expect(Object.isFrozen(frame.fields)).to.equal(true);
+    });
+
+    it('asserts unknown field types and kinds', function () {
+        const error = sinon.stub(console, 'error');
+        const frame = new InputFrame({ a: { type: 'vec4' }, b: { type: 'number', kind: 'pulse' } });
+        const messages = error.getCalls().map(call => call.args.join(' '));
+        error.restore();
+        expect(messages.some(m => m.includes('unknown type') && m.includes('vec4'))).to.equal(true);
+        expect(messages.some(m => m.includes('unknown kind') && m.includes('pulse'))).to.equal(true);
+        expect(frame.input).to.deep.equal({ a: 0, b: 0 });
     });
 });
