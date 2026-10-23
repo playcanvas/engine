@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
-import { platform } from '../../../src/core/platform.js';
 import { Application } from '../../../src/framework/application.js';
 import { Entity } from '../../../src/framework/entity.js';
 import {
@@ -23,7 +22,6 @@ describe('ElementInput', function () {
     let app;
     let canvas;
     let element;
-    let platformTouch;
 
     /** @type {{ name: string, event: object }[]} */
     let log;
@@ -84,9 +82,7 @@ describe('ElementInput', function () {
     beforeEach(function () {
         jsdomSetup();
 
-        // getTouchTargetCoords needs the HTMLElement global, which jsdomSetup does not copy
-        platformTouch = platform.touch;
-        platform.touch = true;
+        // touch coordinates need the HTMLElement global, which jsdomSetup does not copy
         global.HTMLElement = window.HTMLElement;
 
         // jsdom does no layout, so give the canvas the client size that hit testing scales by. It
@@ -101,7 +97,6 @@ describe('ElementInput', function () {
 
     afterEach(function () {
         app.destroy();
-        platform.touch = platformTouch;
         delete global.HTMLElement;
         jsdomTeardown();
     });
@@ -263,12 +258,29 @@ describe('ElementInput', function () {
         });
 
         it('sets touch-action to none while attached', function () {
-            canvas.style.touchAction = 'pan-y';
-            app.elementInput.attach(canvas);
-            expect(canvas.style.touchAction).to.equal('none');
+            const other = document.createElement('div');
+            other.style.touchAction = 'pan-y';
+            const input = new ElementInput(other);
+            expect(other.style.touchAction).to.equal('none');
 
+            input.detach();
+            expect(other.style.touchAction).to.equal('pan-y');
+        });
+
+        it('leaves the previous element when attached to another', function () {
+            const other = document.createElement('div');
+            document.body.appendChild(other);
+            app.elementInput.attach(other);
+
+            expect(canvas.style.touchAction).to.equal('');
+            expect(other.style.touchAction).to.equal('none');
+
+            pointer('pointerdown', { x: 50, y: 60 });
+            expect(log).to.be.empty;
+        });
+
+        it('fires nothing once detached', function () {
             app.elementInput.detach();
-            expect(canvas.style.touchAction).to.equal('pan-y');
 
             pointer('pointerdown', { x: 50, y: 60 });
             mouse('pointerdown', { x: 50, y: 60 });
