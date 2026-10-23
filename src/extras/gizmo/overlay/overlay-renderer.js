@@ -862,7 +862,7 @@ class OverlayRenderer {
     cone(kind, center, rotation, size, alpha = 1, volume = true, peak = 0) {
         this._colors(alpha, volume);
         const cone = /** @type {ConeShape} */ (this._next(this._cones[kind]));
-        if (kind === 'frustum' && Math.abs(cone.peakRadius - peak) > PEAK_TOLERANCE) {
+        if (kind === 'frustum' && Math.abs(cone.peakRadius - peak) > PEAK_TOLERANCE * peak) {
             cone.peakRadius = peak;
         }
         cone.entity.setLocalPosition(this._local(center, tmpV1));
