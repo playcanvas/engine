@@ -17,10 +17,11 @@ import { isTouchPointer, TouchEvent } from './touch-event.js';
  *
  * Events are driven by the touch and pen pointer events of the element, though pens are left to
  * {@link Mouse} on platforms without touch support. Each pointer that goes down, moves, lifts or
- * is cancelled fires one event, whose {@link TouchEvent#changedTouches} holds that pointer's touch. A touch keeps the target it started on, and its coordinates stay
- * relative to that target, as with browser touch events. A touch that leaves the element without
- * lifting or being cancelled ends with `touchend`. The element's `touch-action` style is `none`
- * while attached so the browser does not scroll or zoom it.
+ * is cancelled fires one event, whose {@link TouchEvent#changedTouches} holds that pointer's
+ * touch. A touch keeps the target it started on, and its coordinates stay relative to that
+ * target, as with browser touch events. A touch that leaves the element without lifting or being
+ * cancelled ends with `touchend`. The element's `touch-action` style is `none` while attached so
+ * the browser does not scroll or zoom it.
  *
  * Your application's TouchDevice instance is managed and accessible via {@link AppBase#touch}.
  *

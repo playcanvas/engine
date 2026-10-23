@@ -118,9 +118,11 @@ class MouseEvent {
     metaKey = false;
 
     /**
-     * The original browser event.
+     * The original browser event: a PointerEvent, or a WheelEvent for
+     * {@link Mouse.EVENT_MOUSEWHEEL}. For a tap, which fires all three of `mousemove`,
+     * `mousedown` and `mouseup`, it is the PointerEvent of the `pointerup`.
      *
-     * @type {globalThis.MouseEvent|globalThis.WheelEvent}
+     * @type {globalThis.PointerEvent|globalThis.WheelEvent}
      */
     event;
 
@@ -128,7 +130,8 @@ class MouseEvent {
      * Create a new MouseEvent instance.
      *
      * @param {Mouse} mouse - The Mouse device that is firing this event.
-     * @param {globalThis.MouseEvent|globalThis.WheelEvent} event - The original browser event that fired.
+     * @param {globalThis.PointerEvent|globalThis.WheelEvent} event - The original browser event
+     * that fired.
      */
     constructor(mouse, event) {
         let coords = {

@@ -257,7 +257,6 @@ class Mouse extends EventHandler {
             event.preventDefault();
         };
 
-
         this.attach(element);
     }
 
