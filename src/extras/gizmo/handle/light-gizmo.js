@@ -41,6 +41,7 @@ const MIN_SIZE = 0.01;
  * Draws the shape of each attached light entity: an arrow for a directional light, sized by
  * {@link Gizmo#size}, the range of an omni light, the cone of a spot light, and the shape of an area
  * light. Handles drag the range, cone angles or area size, which sets the entity's local scale.
+ * Disabled entities are skipped, but a disabled light component is still drawn.
  *
  * ```javascript
  * const layer = Gizmo.createLayer(app, 'Overlays', undefined, true);
@@ -70,13 +71,6 @@ class LightGizmo extends HandleGizmo {
      */
     useLightColor = false;
 
-    /**
-     * Whether to also draw lights whose light component is disabled. Lights of disabled entities
-     * are never drawn. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    drawDisabled = false;
 
     /**
      * The local scale of the dragged light at the start of the drag.
@@ -391,7 +385,7 @@ class LightGizmo extends HandleGizmo {
         for (let i = 0; i < this.nodes.length; i++) {
             const entity = /** @type {Entity} */ (this.nodes[i]);
             const light = entity.light;
-            if (!entity.enabled || !light || !(light.enabled || this.drawDisabled)) {
+            if (!entity.enabled || !light) {
                 continue;
             }
             this._renderer.tint = this.useLightColor ? light.color : null;
