@@ -249,7 +249,7 @@ characterController.addComponent('rigidbody', {
     restitution: 0
 });
 characterController.addComponent('script');
-const fpc = /** @type {any} */ (
+const fpc = /** @type {FirstPersonController} */ (
     characterController.script.create(FirstPersonController, {
         properties: {
             camera,
@@ -259,9 +259,8 @@ const fpc = /** @type {any} */ (
         }
     })
 );
-// Seed the initial look direction (pitch, yaw) - the controller keeps both in the camera's
-// local euler angles, matching the values logged from the camera
-fpc._angles.set(-10.2, 35.3, 0);
+// Seed the initial look direction (pitch, yaw), matching the values logged from the camera
+fpc.look(-10.2, 35.3);
 app.root.addChild(characterController);
 
 // ------ Camera frame with Depth of Field ------

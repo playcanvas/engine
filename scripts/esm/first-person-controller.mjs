@@ -9,7 +9,8 @@ import {
     Keyboard,
     Mouse,
     PAD_FACE_1,
-    Script
+    Script,
+    Vec3
 } from 'playcanvas';
 
 /** @import { Entity, RigidBodyComponent } from 'playcanvas' */
@@ -18,6 +19,8 @@ const EPSILON = 0.0001;
 
 // the mass of the former dynamic body, so a jump force gives the same jump velocity
 const MASS = 100;
+
+const tmpV = new Vec3();
 
 const leftStick = [0, 0];
 const rightStick = [0, 0];
@@ -271,6 +274,10 @@ class FirstPersonController extends Script {
 
         this._controller = new CharacterController(this.entity);
 
+        // start looking where the camera faces
+        const forward = this.camera.getLocalRotation().transformVector(Vec3.FORWARD, tmpV);
+        this.look(Math.asin(math.clamp(forward.y, -1, 1)) * math.RAD_TO_DEG, Math.atan2(-forward.x, -forward.z) * math.RAD_TO_DEG);
+
         this.on('destroy', this.destroy, this);
     }
 
@@ -383,6 +390,29 @@ class FirstPersonController extends Script {
     }
 
     /**
+     * Sets the look direction. The camera faces it right away and input turns from it.
+     *
+     * @param {number} pitch - The pitch in degrees, clamped to -90 to 90.
+     * @param {number} yaw - The yaw in degrees.
+     * @example
+     * playerEntity.script.firstPersonController.look(-10, 35);
+     */
+    look(pitch, yaw) {
+        pitch = math.clamp(pitch, -90, 90);
+        const look = /** @type {number[]} */ (this._frame.input.look);
+        look[0] = pitch;
+        look[1] = yaw;
+        this.camera?.setLocalEulerAngles(pitch, yaw, 0);
+
+        const controller = this._controller;
+        if (controller) {
+            const state = controller.state;
+            state.look = [pitch, yaw];
+            controller.state = state;
+        }
+    }
+
+    /**
      * Writes the device input into the frame. The look is absolute, so turn rates and drags are
      * accumulated into it here.
      *
@@ -475,9 +505,8 @@ class FirstPersonController extends Script {
         this._map(dt);
         controller.step(this._frame.capture(dt));
 
-        const pose = controller.update(dt);
-        this.camera.setPosition(pose.position);
-        this.camera.setEulerAngles(pose.angles);
+        // step moves the entity, so the camera keeps its authored offset and only takes the look
+        this.camera.setLocalEulerAngles(controller.update(dt).angles);
 
         this._keyboard.update();
         this._mouse.update();
