@@ -259,6 +259,10 @@ class OverlayRenderer {
         });
         this._pickDiscs = pool((base, occluded) => {
             const disc = new ConeShape(device, { ...args(base, occluded), ...CONES.disk });
+
+            // an icon backdrop sits a pixel behind its glyph, which far away is finer than the depth
+            // buffer resolves, so the backdrop leaves the depth to the glyph
+            disc.depthWrite = false;
             gizmo.intersectShapes.push(disc);
             return disc;
         });
