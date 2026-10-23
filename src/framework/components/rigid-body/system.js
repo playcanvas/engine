@@ -626,6 +626,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Sweep a sphere or capsule through the world and return the closest hit. The shape keeps an
      * identity rotation, so a capsule stays aligned to the Y axis.
      *
+     * By default the sweep also hits triggers and the caller's own body, so pass a
+     * `filterCollisionMask` that excludes them. A sweep starting overlapping a body reports it
+     * with a `hitFraction` of 0 when moving into it, and may miss it otherwise. A zero-length
+     * sweep reports no hit.
+     *
      * @param {{ type: 'sphere'|'capsule', radius: number, height?: number }} shape - The swept
      * shape. For a capsule, `height` is the total height including both caps, as on the collision
      * component.

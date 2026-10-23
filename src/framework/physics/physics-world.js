@@ -389,7 +389,10 @@ class PhysicsWorld {
     }
 
     /**
-     * Sweep a convex shape through the world and return the closest hit.
+     * Sweep a convex shape through the world and return the closest hit. By default it also hits
+     * triggers and the caller's own body. A sweep starting overlapping a body reports it with a
+     * `hitFraction` of 0 when moving into it, and may miss it otherwise. A zero-length sweep
+     * reports no hit.
      *
      * @param {{ type: 'sphere'|'capsule', radius: number, height?: number }} shape - The swept
      * shape. A capsule is Y-aligned and its height includes the caps.
