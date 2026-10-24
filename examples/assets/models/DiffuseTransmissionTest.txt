@@ -1,0 +1,9 @@
+Model Information:
+* title:	Diffuse Transmission Test
+* source:	https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DiffuseTransmissionTest
+* author:	Eric Chadwick / Darmstadt Graphics Group GmbH, 2025
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed. The Khronos and glTF logos are
+	trademarks of The Khronos Group Inc. and are not covered by this license.

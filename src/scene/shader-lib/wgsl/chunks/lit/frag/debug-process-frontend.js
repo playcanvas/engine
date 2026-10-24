@@ -1,6 +1,9 @@
 export default /* wgsl */`
 #ifdef DEBUG_LIGHTING_PASS
     litArgs_albedo = vec3f(0.5);
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        litArgs_diffuseTransmission_color = vec3f(0.5);
+    #endif
 #endif
 
 #ifdef DEBUG_UV0_PASS

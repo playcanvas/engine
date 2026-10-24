@@ -2,6 +2,9 @@ export default /* glsl */`
 vec3 combineColor(vec3 albedo, vec3 sheenSpecularity, float clearcoatSpecularity) {
     vec3 ret = vec3(0);
     ret += albedo * dDiffuseLight;
+#ifdef LIT_DIFFUSE_TRANSMISSION
+    ret += litArgs_diffuseTransmission_color * dDiffuseTransmissionLight;
+#endif
 #ifdef LIT_SPECULAR
     ret += dSpecularLight;
 #endif

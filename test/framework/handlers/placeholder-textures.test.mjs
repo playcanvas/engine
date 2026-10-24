@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { stub } from 'sinon';
 
 import { PlaceholderTextures } from '../../../src/framework/handlers/placeholder-textures.js';
 import {
@@ -6,6 +7,9 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import {
+    standardMaterialTextureParameters
+} from '../../../src/scene/materials/standard-material-parameters.js';
 import { createGraphicsDevice } from '../../device.mjs';
 
 describe('PlaceholderTextures', function () {
@@ -63,6 +67,19 @@ describe('PlaceholderTextures', function () {
         expect(placeholders.has(new Texture(device, { width: 1, height: 1 }))).to.equal(false);
         expect(placeholders.has(null)).to.equal(false);
         expect(placeholders.has(undefined)).to.equal(false);
+    });
+
+    it('has a color for each texture parameter of a standard material', function () {
+        // a parameter missing from the table asserts, and gets a gray placeholder
+        const error = stub(console, 'error');
+        try {
+            for (const name of standardMaterialTextureParameters) {
+                placeholders.get(one(name), false, TEXTURETYPE_DEFAULT);
+            }
+        } finally {
+            error.restore();
+        }
+        expect(error.called).to.equal(false);
     });
 
     it('decodes like a texture of the same color space and type', function () {
