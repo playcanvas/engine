@@ -72,6 +72,11 @@ class WebglTexture {
 
     _glCreated;
 
+    // size of the storage allocated for an HTML element source, which texElementSubImage2D draws into
+    _elementWidth = 0;
+
+    _elementHeight = 0;
+
     dirtyParameterFlags = 0;
 
     constructor(texture) {
@@ -711,8 +716,9 @@ class WebglTexture {
 
                         if (gl.texElementSubImage2D) {
                             // the element is drawn into existing storage, so allocate it for a new
-                            // source or size
-                            if (!this._glCreated || texture._levelsUpdated[0] || texture._width !== w || texture._height !== h) {
+                            // source or size. Compare against the allocated size, as setSource has
+                            // already set the texture size to the element's new size.
+                            if (!this._glCreated || texture._levelsUpdated[0] || this._elementWidth !== w || this._elementHeight !== h) {
                                 Debug.assert(this._glFormat === gl.RGBA && this._glPixelType === gl.UNSIGNED_BYTE,
                                     `Texture '${texture.name}' has a format texElementSubImage2D cannot write. Use an 8-bit RGBA format for an HTML element source.`, texture);
 
@@ -726,6 +732,8 @@ class WebglTexture {
                                     this._glPixelType,
                                     null
                                 );
+                                this._elementWidth = w;
+                                this._elementHeight = h;
                             }
 
                             // draw the element at the texture size, not its default canvas grid
