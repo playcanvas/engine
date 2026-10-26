@@ -110,6 +110,12 @@ class LightRenderData {
         // On directional face 0, the cascades requested by this camera's scheduled shadow passes.
         this.shadowCascadeMask = 0;
 
+        // On directional face 0, the cascade split distances the cull fitted to this camera. All
+        // cameras are culled before any of them renders, so the camera's shadow pass copies them to
+        // the light when it renders the shared shadow map, as it does with the cascade matrices.
+        /** @type {Float32Array|null} */
+        this.shadowCascadeDistances = null;
+
         // Retain PCSS caster bounds so cached cascades remain part of the depth-fitting union.
         /** @type {BoundingBox|null} */
         this.shadowCasterAabb = null;
