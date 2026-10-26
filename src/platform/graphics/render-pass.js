@@ -92,6 +92,18 @@ class ColorAttachmentOps {
      * True if the attachment needs to have mipmaps generated.
      */
     genMipmaps = false;
+
+    /**
+     * Resets the operations to their defaults, the values the properties are initialized with.
+     */
+    reset() {
+        this.clearValue.set(0, 0, 0, 1);
+        this.clearValueLinear.set(0, 0, 0, 1);
+        this.clear = false;
+        this.store = false;
+        this.resolve = true;
+        this.genMipmaps = false;
+    }
 }
 
 /**
@@ -140,6 +152,19 @@ class DepthStencilAttachmentOps {
      * if it can be discarded.
      */
     storeStencil = false;
+
+    /**
+     * Resets the operations to their defaults, the values the properties are initialized with.
+     */
+    reset() {
+        this.clearDepthValue = 1;
+        this.clearStencilValue = 0;
+        this.clearDepth = false;
+        this.clearStencil = false;
+        this.storeDepth = false;
+        this.resolveDepth = false;
+        this.storeStencil = false;
+    }
 }
 
 /**
@@ -411,7 +436,9 @@ class RenderPass extends FramePass {
     }
 
     /**
-     * Allocates the operations of the attachments of the render target, with their defaults.
+     * Allocates the operations of the attachments of the render target, with their defaults. The
+     * operations allocated by a previous initialization are reset and reused, as a pass can be
+     * initialized every frame, for example to render to a different render target.
      *
      * @ignore
      */
@@ -420,27 +447,31 @@ class RenderPass extends FramePass {
         const rt = this.renderTarget;
 
         // depth
-        this.depthStencilOps = new DepthStencilAttachmentOps();
+        const depthStencilOps = this.depthStencilOps ?? new DepthStencilAttachmentOps();
+        depthStencilOps.reset();
+        this.depthStencilOps = depthStencilOps;
 
         // if an RT is used (so not a backbuffer) that was created with a user supplied depth buffer,
         // assume the user wants to use its content, and so store it by default
         if (rt?.depthBuffer) {
-            this.depthStencilOps.storeDepth = true;
+            depthStencilOps.storeDepth = true;
 
             // a depth resolve buffer is the output of the shader-based depth resolve, which runs
             // after the pass - resolve by default (the multisampled depth is stored either way, as
             // the resolve reads it after the pass has finished)
             if (rt.depthResolveBuffer) {
-                this.depthStencilOps.resolveDepth = true;
+                depthStencilOps.resolveDepth = true;
             }
         }
 
         // color
         const numColorOps = rt ? (rt._colorBuffers?.length ?? 0) : 1;
-        this.colorArrayOps.length = 0;
+        const colorArrayOps = this.colorArrayOps;
+        colorArrayOps.length = numColorOps;
         for (let i = 0; i < numColorOps; i++) {
-            const colorOps = new ColorAttachmentOps();
-            this.colorArrayOps[i] = colorOps;
+            const colorOps = colorArrayOps[i] ?? new ColorAttachmentOps();
+            colorOps.reset();
+            colorArrayOps[i] = colorOps;
 
             const colorBuffer = rt?._colorBuffers?.[i];
 
