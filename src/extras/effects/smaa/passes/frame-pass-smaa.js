@@ -1,99 +1,27 @@
 import { Color } from '../../../../core/math/color.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RG8, PIXELFORMAT_RGBA8, SEMANTIC_POSITION,
-    SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
+    ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RG8, PIXELFORMAT_RGBA8, SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../../../../platform/graphics/constants.js';
 import { FramePass } from '../../../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../../../platform/graphics/render-target.js';
 import { Texture } from '../../../../platform/graphics/texture.js';
 import { TONEMAP_LINEAR, TONEMAP_NONE } from '../../../../scene/constants.js';
-import { RenderPassShaderQuad } from '../../../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderChunks } from '../../../../scene/shader-lib/shader-chunks.js';
-import { ShaderUtils } from '../../../../scene/shader-lib/shader-utils.js';
 import glslBlendPS from '../glsl/blend-ps.js';
 import glslEdgePS from '../glsl/edge-ps.js';
 import glslWeightsPS from '../glsl/weights-ps.js';
 import wgslBlendPS from '../wgsl/blend-ps.js';
 import wgslEdgePS from '../wgsl/edge-ps.js';
 import wgslWeightsPS from '../wgsl/weights-ps.js';
+import { RenderPassSmaa } from './render-pass-smaa.js';
 
 /**
  * @import { GraphicsDevice } from '../../../../platform/graphics/graphics-device.js'
- * @import { ScopeId } from '../../../../platform/graphics/scope-id.js'
  */
 
 // the edge and the weight targets are cleared, the pixels without an edge left as they are
 const clearColor = new Color(0, 0, 0, 0);
-
-/**
- * One of the passes of SMAA, rendering a full screen quad with the textures and the parameters it
- * reads.
- *
- * @ignore
- */
-class RenderPassSmaa extends RenderPassShaderQuad {
-    /**
-     * The frame pass the pass belongs to, holding the scene and the parameters.
-     *
-     * @type {FramePassSmaa}
-     */
-    smaa;
-
-    /**
-     * The textures the pass reads, and the uniforms they are bound to.
-     *
-     * @type {{ scopeId: ScopeId, texture: Texture|null }[]}
-     * @private
-     */
-    _textures = [];
-
-    /**
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {FramePassSmaa} smaa - The frame pass the pass belongs to.
-     * @param {string} name - The name of the pass, which its shader is named after.
-     * @param {string} chunk - The name of the fragment shader chunk.
-     */
-    constructor(device, smaa, name, chunk) {
-        super(device);
-        this.name = `RenderPassSmaa${name}`;
-        this.smaa = smaa;
-        this.shader = ShaderUtils.createShader(device, {
-            uniqueName: `SmaaShader${name}`,
-            attributes: { aPosition: SEMANTIC_POSITION },
-            vertexChunk: 'quadVS',
-            fragmentChunk: chunk
-        });
-    }
-
-    /**
-     * Sets the texture bound to a uniform when the pass renders.
-     *
-     * @param {string} name - The name of the uniform.
-     * @param {Texture|null} texture - The texture.
-     */
-    setTexture(name, texture) {
-        let entry = this._textures.find(item => item.scopeId.name === name);
-        if (!entry) {
-            entry = { scopeId: this.device.scope.resolve(name), texture: null };
-            this._textures.push(entry);
-        }
-        entry.texture = texture;
-    }
-
-    execute() {
-        const textures = this._textures;
-        for (let i = 0; i < textures.length; i++) {
-            textures[i].scopeId.setValue(textures[i].texture);
-        }
-        this.smaa.bindParameters();
-        super.execute();
-    }
-
-    destroy() {
-        this._textures.length = 0;
-        super.destroy();
-    }
-}
 
 /**
  * Subpixel Morphological Anti-Aliasing (SMAA 1x), in three passes over the scene: the edges are
