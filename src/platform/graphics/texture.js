@@ -1273,6 +1273,8 @@ class Texture {
 
         let invalid = false;
         let width, height;
+        const prevWidth = this._width;
+        const prevHeight = this._height;
 
         if (this._cubemap) {
             if (source[0]) {
@@ -1355,6 +1357,11 @@ class Texture {
             }
 
             this._levels[mipLevel] = source;
+        }
+
+        // the mip chain follows the size of the base level, which the source may have changed
+        if (this._width !== prevWidth || this._height !== prevHeight) {
+            this._updateNumLevels();
         }
 
         // valid or changed state of validity
