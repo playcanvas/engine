@@ -460,6 +460,12 @@ class FramePassCameraFrame extends FramePass {
             this.scenePass.scaleX = value;
             this.scenePass.scaleY = value;
         }
+
+        // the prepass renders at the size of the scene pass
+        if (this.prePass) {
+            this.prePass.scaleX = value;
+            this.prePass.scaleY = value;
+        }
     }
 
     get renderTargetScale() {
@@ -979,7 +985,7 @@ class FramePassCameraFrame extends FramePass {
         // the render target still has the previous size - this evaluates the size the same way the
         // scene pass does when it resizes it, for what needs it before that pass has updated.
         const { scenePass } = this;
-        const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
+        const resizeSource = scenePass.resizeSource ?? this.device.backBuffer;
         const renderWidth = Math.floor(resizeSource.width * scenePass.scaleX);
         const renderHeight = Math.floor(resizeSource.height * scenePass.scaleY);
 
