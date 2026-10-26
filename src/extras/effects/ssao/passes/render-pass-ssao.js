@@ -67,6 +67,15 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
     _blueNoise = new BlueNoise(19);
 
+    // the values of the vector uniforms, reused every frame
+    _invResolution = new Float32Array(2);
+
+    _sampleCount = new Float32Array(2);
+
+    _angleIncCosSin = new Float32Array(2);
+
+    _ssaoTextureSizeInv = new Float32Array(2);
+
     constructor(device, sourceTexture, cameraComponent, blurEnabled) {
         super(device);
         this.sourceTexture = sourceTexture;
@@ -123,8 +132,24 @@ class RenderPassSsao extends RenderPassShaderQuad {
             this.afterPasses.push(blurPassVertical);
         }
 
-        this.ssaoTextureId = device.scope.resolve('ssaoTexture');
-        this.ssaoTextureSizeInvId = device.scope.resolve('ssaoTextureSizeInv');
+        // the uniforms, resolved once
+        const scope = device.scope;
+        this.ssaoTextureId = scope.resolve('ssaoTexture');
+        this.ssaoTextureSizeInvId = scope.resolve('ssaoTextureSizeInv');
+        this.aspectId = scope.resolve('uAspect');
+        this.invResolutionId = scope.resolve('uInvResolution');
+        this.sampleCountId = scope.resolve('uSampleCount');
+        this.minHorizonAngleSineSquaredId = scope.resolve('uMinHorizonAngleSineSquared');
+        this.spiralTurnsId = scope.resolve('uSpiralTurns');
+        this.angleIncCosSinId = scope.resolve('uAngleIncCosSin');
+        this.maxLevelId = scope.resolve('uMaxLevel');
+        this.invRadiusSquaredId = scope.resolve('uInvRadiusSquared');
+        this.biasId = scope.resolve('uBias');
+        this.peak2Id = scope.resolve('uPeak2');
+        this.intensityId = scope.resolve('uIntensity');
+        this.powerId = scope.resolve('uPower');
+        this.projectionScaleRadiusId = scope.resolve('uProjectionScaleRadius');
+        this.randomizeId = scope.resolve('uRandomize');
     }
 
     destroy() {
@@ -169,17 +194,23 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
     execute() {
 
-        const { device, sampleCount, minAngle } = this;
+        const { sampleCount, minAngle } = this;
         const { width, height } = this.renderTarget.colorBuffer;
-        const scope = device.scope;
 
-        scope.resolve('uAspect').setValue(width / height);
-        scope.resolve('uInvResolution').setValue([1.0 / width, 1.0 / height]);
+        this.aspectId.setValue(width / height);
 
-        scope.resolve('uSampleCount').setValue([sampleCount, 1.0 / sampleCount]);
+        const invResolution = this._invResolution;
+        invResolution[0] = 1.0 / width;
+        invResolution[1] = 1.0 / height;
+        this.invResolutionId.setValue(invResolution);
+
+        const sampleCountValue = this._sampleCount;
+        sampleCountValue[0] = sampleCount;
+        sampleCountValue[1] = 1.0 / sampleCount;
+        this.sampleCountId.setValue(sampleCountValue);
 
         const minAngleSin = Math.sin(minAngle * math.DEG_TO_RAD);
-        scope.resolve('uMinHorizonAngleSineSquared').setValue(minAngleSin * minAngleSin);
+        this.minHorizonAngleSineSquaredId.setValue(minAngleSin * minAngleSin);
 
         const spiralTurns = 10.0;
         const step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
@@ -195,16 +226,21 @@ class RenderPassSsao extends RenderPassShaderQuad {
         // scale the projection based on the actual (possibly scaled) render target height, so the
         // sampling disk covers the same screen area regardless of the scale
         const projectionScale = 0.5 * height;
-        scope.resolve('uSpiralTurns').setValue(spiralTurns);
-        scope.resolve('uAngleIncCosSin').setValue([Math.cos(step), Math.sin(step)]);
-        scope.resolve('uMaxLevel').setValue(0.0);
-        scope.resolve('uInvRadiusSquared').setValue(1.0 / (radius * radius));
-        scope.resolve('uBias').setValue(bias);
-        scope.resolve('uPeak2').setValue(peak * peak);
-        scope.resolve('uIntensity').setValue(intensity);
-        scope.resolve('uPower').setValue(this.power);
-        scope.resolve('uProjectionScaleRadius').setValue(projectionScale * radius);
-        scope.resolve('uRandomize').setValue(this.randomize ? this._blueNoise.value() : 0);
+        this.spiralTurnsId.setValue(spiralTurns);
+
+        const angleIncCosSin = this._angleIncCosSin;
+        angleIncCosSin[0] = Math.cos(step);
+        angleIncCosSin[1] = Math.sin(step);
+        this.angleIncCosSinId.setValue(angleIncCosSin);
+
+        this.maxLevelId.setValue(0.0);
+        this.invRadiusSquaredId.setValue(1.0 / (radius * radius));
+        this.biasId.setValue(bias);
+        this.peak2Id.setValue(peak * peak);
+        this.intensityId.setValue(intensity);
+        this.powerId.setValue(this.power);
+        this.projectionScaleRadiusId.setValue(projectionScale * radius);
+        this.randomizeId.setValue(this.randomize ? this._blueNoise.value() : 0);
 
         super.execute();
     }
@@ -213,7 +249,10 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.ssaoTextureId.setValue(this.ssaoTexture);
 
         const srcTexture = this.sourceTexture;
-        this.ssaoTextureSizeInvId.setValue([1.0 / srcTexture.width, 1.0 / srcTexture.height]);
+        const sizeInv = this._ssaoTextureSizeInv;
+        sizeInv[0] = 1.0 / srcTexture.width;
+        sizeInv[1] = 1.0 / srcTexture.height;
+        this.ssaoTextureSizeInvId.setValue(sizeInv);
     }
 }
 
