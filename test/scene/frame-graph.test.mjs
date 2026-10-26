@@ -61,7 +61,7 @@ describe('FrameGraph', function () {
         jsdomTeardown();
     });
 
-    describe('#addRenderPass', function () {
+    describe('#addPass', function () {
 
         it('schedules the before-passes, the pass and the after-passes in order', function () {
             const frameGraph = new FrameGraph();
@@ -69,9 +69,9 @@ describe('FrameGraph', function () {
             const after = new TestPass(device, 'After');
             const pass = new TestPass(device, 'Pass', { before: [before], after: [after] });
 
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
-            expect(frameGraph.renderPasses).to.deep.equal([before, pass, after]);
+            expect(frameGraph.passes).to.deep.equal([before, pass, after]);
             expect([before, pass, after].map(p => p.frameUpdateCount)).to.deep.equal([1, 1, 1]);
         });
 
@@ -81,9 +81,9 @@ describe('FrameGraph', function () {
             const after = new TestPass(device, 'After');
             const pass = new TestPass(device, 'Pass', { enabled: false, before: [before], after: [after] });
 
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
-            expect(frameGraph.renderPasses).to.be.empty;
+            expect(frameGraph.passes).to.be.empty;
             expect([before, pass, after].map(p => p.frameUpdateCount)).to.deep.equal([0, 0, 0]);
         });
 
@@ -93,9 +93,9 @@ describe('FrameGraph', function () {
             const before = new TestPass(device, 'Before');
             const pass = new TestPass(device, 'Pass', { internalBefore: [internal], before: [before] });
 
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
-            expect(frameGraph.renderPasses).to.deep.equal([internal, before, pass]);
+            expect(frameGraph.passes).to.deep.equal([internal, before, pass]);
         });
 
         it('skips the internal before-passes of a disabled pass', function () {
@@ -103,9 +103,9 @@ describe('FrameGraph', function () {
             const internal = new TestPass(device, 'Internal');
             const pass = new TestPass(device, 'Pass', { enabled: false, internalBefore: [internal] });
 
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
-            expect(frameGraph.renderPasses).to.be.empty;
+            expect(frameGraph.passes).to.be.empty;
             expect(internal.frameUpdateCount).to.equal(0);
         });
 
@@ -117,9 +117,9 @@ describe('FrameGraph', function () {
             const sibling = new TestPass(device, 'Sibling');
             const pass = new TestPass(device, 'Pass', { before: [child, sibling] });
 
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
-            expect(frameGraph.renderPasses).to.deep.equal([sibling, pass]);
+            expect(frameGraph.passes).to.deep.equal([sibling, pass]);
             expect([nestedBefore, child, nestedAfter].map(p => p.frameUpdateCount)).to.deep.equal([0, 0, 0]);
         });
 
@@ -131,9 +131,9 @@ describe('FrameGraph', function () {
                 child.enabled = true;
             };
 
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
-            expect(frameGraph.renderPasses).to.deep.equal([child, pass]);
+            expect(frameGraph.passes).to.deep.equal([child, pass]);
         });
 
         it('skips a child the pass disables in its frameUpdate', function () {
@@ -144,9 +144,9 @@ describe('FrameGraph', function () {
                 child.enabled = false;
             };
 
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
-            expect(frameGraph.renderPasses).to.deep.equal([pass]);
+            expect(frameGraph.passes).to.deep.equal([pass]);
             expect(child.frameUpdateCount).to.equal(0);
         });
 
@@ -158,10 +158,10 @@ describe('FrameGraph', function () {
             };
 
             const assertion = stub(Debug, 'assert');
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
             expect(assertion.getCalls().some(call => !call.args[0])).to.equal(true);
-            expect(frameGraph.renderPasses).to.be.empty;
+            expect(frameGraph.passes).to.be.empty;
             expect(pass.frameUpdateCount).to.equal(1);
         });
 
@@ -174,10 +174,10 @@ describe('FrameGraph', function () {
             };
 
             const assertion = stub(Debug, 'assert');
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
             expect(assertion.getCalls().some(call => !call.args[0])).to.equal(true);
-            expect(frameGraph.renderPasses).to.deep.equal([before]);
+            expect(frameGraph.passes).to.deep.equal([before]);
         });
 
         it('does not assert a pass whose frameUpdate disables its before-passes', function () {
@@ -189,10 +189,10 @@ describe('FrameGraph', function () {
             };
 
             const assertion = stub(Debug, 'assert');
-            frameGraph.addRenderPass(pass);
+            frameGraph.addPass(pass);
 
             expect(assertion.getCalls().some(call => !call.args[0])).to.equal(false);
-            expect(frameGraph.renderPasses).to.deep.equal([pass]);
+            expect(frameGraph.passes).to.deep.equal([pass]);
         });
 
         it('reports a destroyed pass added to the frame, once', function () {
@@ -200,8 +200,8 @@ describe('FrameGraph', function () {
             pass.destroy();
 
             const error = stub(console, 'error');
-            new FrameGraph().addRenderPass(pass);
-            new FrameGraph().addRenderPass(pass);
+            new FrameGraph().addPass(pass);
+            new FrameGraph().addPass(pass);
 
             expect(error.callCount).to.equal(1);
             expect(error.firstCall.args.join(' ')).to.include('DestroyedPassAddedToFrame');
@@ -214,11 +214,11 @@ describe('FrameGraph', function () {
 
             const error = stub(console, 'error');
             const frameGraph = new FrameGraph();
-            frameGraph.addRenderPass(live);
-            frameGraph.addRenderPass(disabled);
+            frameGraph.addPass(live);
+            frameGraph.addPass(disabled);
 
             expect(error.called).to.equal(false);
-            expect(frameGraph.renderPasses).to.deep.equal([live]);
+            expect(frameGraph.passes).to.deep.equal([live]);
         });
     });
 
@@ -240,7 +240,7 @@ describe('FrameGraph', function () {
 
         const compile = (...passes) => {
             const frameGraph = new FrameGraph();
-            passes.forEach(pass => frameGraph.addRenderPass(pass));
+            passes.forEach(pass => frameGraph.addPass(pass));
             frameGraph.compile();
             return frameGraph;
         };

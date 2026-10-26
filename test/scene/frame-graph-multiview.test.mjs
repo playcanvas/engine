@@ -65,12 +65,12 @@ describe('FrameGraph', function () {
             const second = new CountingPass(device, 'Second');
 
             frameGraph.beginMultiView(device);
-            frameGraph.addRenderPass(first);
-            frameGraph.addRenderPass(second);
+            frameGraph.addPass(first);
+            frameGraph.addPass(second);
             frameGraph.endMultiView();
 
-            expect(frameGraph.renderPasses).to.have.lengthOf(1);
-            const wrapper = frameGraph.renderPasses[0];
+            expect(frameGraph.passes).to.have.lengthOf(1);
+            const wrapper = frameGraph.passes[0];
             expect(wrapper).to.be.an.instanceOf(FramePassMultiView);
             expect(wrapper.children).to.deep.equal([first, second]);
         });
@@ -81,14 +81,14 @@ describe('FrameGraph', function () {
             const view = new CountingPass(device, 'View');
             const once = new CountingPass(device, 'Once', false);
 
-            frameGraph.addRenderPass(earlier);
+            frameGraph.addPass(earlier);
             frameGraph.beginMultiView(device);
-            frameGraph.addRenderPass(view);
-            frameGraph.addRenderPass(once);
+            frameGraph.addPass(view);
+            frameGraph.addPass(once);
             frameGraph.endMultiView();
 
-            const [first, second, wrapper] = frameGraph.renderPasses;
-            expect(frameGraph.renderPasses).to.have.lengthOf(3);
+            const [first, second, wrapper] = frameGraph.passes;
+            expect(frameGraph.passes).to.have.lengthOf(3);
             expect(first).to.equal(earlier);
             expect(second).to.equal(once);
             expect(wrapper.children).to.deep.equal([view]);
@@ -101,13 +101,13 @@ describe('FrameGraph', function () {
             const second = new CountingPass(device, 'Second', false);
 
             frameGraph.beginMultiView(device);
-            frameGraph.addRenderPass(view);
-            frameGraph.addRenderPass(first);
-            frameGraph.addRenderPass(second);
+            frameGraph.addPass(view);
+            frameGraph.addPass(first);
+            frameGraph.addPass(second);
             frameGraph.endMultiView();
 
-            const [movedFirst, movedSecond, wrapper] = frameGraph.renderPasses;
-            expect(frameGraph.renderPasses).to.have.lengthOf(3);
+            const [movedFirst, movedSecond, wrapper] = frameGraph.passes;
+            expect(frameGraph.passes).to.have.lengthOf(3);
             expect(movedFirst).to.equal(first);
             expect(movedSecond).to.equal(second);
             expect(wrapper.children).to.deep.equal([view]);
@@ -122,11 +122,11 @@ describe('FrameGraph', function () {
             forward.beforePasses.push(shadow, cameraBefore);
 
             frameGraph.beginMultiView(device);
-            frameGraph.addRenderPass(forward);
+            frameGraph.addPass(forward);
             frameGraph.endMultiView();
 
-            const [first, wrapper] = frameGraph.renderPasses;
-            expect(frameGraph.renderPasses).to.have.lengthOf(2);
+            const [first, wrapper] = frameGraph.passes;
+            expect(frameGraph.passes).to.have.lengthOf(2);
             expect(first).to.equal(shadow);
             expect(wrapper.children).to.deep.equal([cameraBefore, forward]);
         });
@@ -143,7 +143,7 @@ describe('FrameGraph', function () {
             const xrDevice = { xrSubImages: [view, view], backBuffer: null };
 
             frameGraph.beginMultiView(xrDevice);
-            frameGraph.addRenderPass(forward);
+            frameGraph.addPass(forward);
             frameGraph.endMultiView();
             frameGraph.render(device);
 
@@ -164,8 +164,8 @@ describe('FrameGraph', function () {
                 const shadowB = new CountingTargetPass(device, 'ShadowB', shadowMapB);
                 forwardB.beforePasses.push(shadowB);
 
-                frameGraph.addRenderPass(forwardA);
-                frameGraph.addRenderPass(forwardB);
+                frameGraph.addPass(forwardA);
+                frameGraph.addPass(forwardB);
                 return { forwardA, shadowA, forwardB, shadowB };
             };
 
@@ -178,8 +178,8 @@ describe('FrameGraph', function () {
                 const { forwardA, shadowA, forwardB, shadowB } = addCameras(frameGraph, shadowMap, shadowMap);
                 frameGraph.endMultiView();
 
-                expect(frameGraph.renderPasses).to.have.lengthOf(1);
-                expect(frameGraph.renderPasses[0].children).to.deep.equal([shadowA, forwardA, shadowB, forwardB]);
+                expect(frameGraph.passes).to.have.lengthOf(1);
+                expect(frameGraph.passes[0].children).to.deep.equal([shadowA, forwardA, shadowB, forwardB]);
             });
 
             it('moves the shadow passes of different lights ahead of the captured passes', function () {
@@ -189,8 +189,8 @@ describe('FrameGraph', function () {
                 const { forwardA, shadowA, forwardB, shadowB } = addCameras(frameGraph, {}, {});
                 frameGraph.endMultiView();
 
-                const [first, second, wrapper] = frameGraph.renderPasses;
-                expect(frameGraph.renderPasses).to.have.lengthOf(3);
+                const [first, second, wrapper] = frameGraph.passes;
+                expect(frameGraph.passes).to.have.lengthOf(3);
                 expect(first).to.equal(shadowA);
                 expect(second).to.equal(shadowB);
                 expect(wrapper.children).to.deep.equal([forwardA, forwardB]);
