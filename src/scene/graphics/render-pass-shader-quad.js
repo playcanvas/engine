@@ -46,6 +46,14 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
  * {@link RenderPassShaderQuad#depthState} or the stencil parameters. To draw into a part of the
  * render target only, set its {@link RenderPassShaderQuad#viewport}.
  *
+ * ## Drawing several quads
+ *
+ * To draw many quads which differ only by the data each reads for its index, such as sprites, set
+ * {@link RenderPassShaderQuad#numInstances} to draw them in a single instanced draw. To draw
+ * several quads with different parameters, for example one for each light, override
+ * {@link FramePass#execute}, and for each quad set its parameters, or its viewport, and call
+ * `super.execute()`, which draws it with the render states of the pass.
+ *
  * @example
  * ```javascript
  * // A pass drawing a texture into its render target, multiplied by a color
@@ -195,6 +203,16 @@ class RenderPassShaderQuad extends RenderPass {
     scissor;
 
     /**
+     * The number of instances of the quad to draw, using instanced drawing, or undefined to draw a
+     * single quad without instancing. Each instance can read its index, `gl_InstanceID` in GLSL
+     * and `pcInstanceIndex` in WGSL, to fetch the data of its quad, for example to place it.
+     * Defaults to undefined.
+     *
+     * @type {number|undefined}
+     */
+    numInstances;
+
+    /**
      * Sets the shader used to render the quad, or null to render nothing. The vertex shader
      * receives the quad corners in an attribute using {@link SEMANTIC_POSITION}, and the `quadVS`
      * shader chunk can be used for it.
@@ -246,7 +264,7 @@ class RenderPassShaderQuad extends RenderPass {
         const quadRender = this.quadRender;
         if (quadRender) {
             DebugGraphics.pushGpuMarker(device, `${this.name}:${this._shader?.name}`);
-            quadRender.render(this.viewport, this.scissor);
+            quadRender.render(this.viewport, this.scissor, this.numInstances);
             DebugGraphics.popGpuMarker(device);
         }
     }

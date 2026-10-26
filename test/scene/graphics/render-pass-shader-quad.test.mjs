@@ -69,6 +69,27 @@ describe('RenderPassShaderQuad', function () {
 
     });
 
+    describe('#numInstances', function () {
+
+        it('draws a single quad by default, and the instances when set', function () {
+            const device = app.graphicsDevice;
+            const pass = new RenderPassShaderQuad(device);
+            pass.shader = createShader(device);
+            const render = sinon.stub(pass.quadRender, 'render');
+
+            expect(pass.numInstances).to.equal(undefined);
+            pass.execute();
+            expect(render.lastCall.args[2]).to.equal(undefined);
+
+            pass.numInstances = 5;
+            pass.execute();
+            expect(render.lastCall.args[2]).to.equal(5);
+
+            pass.destroy();
+        });
+
+    });
+
     describe('#destroy', function () {
 
         it('releases the quad, but not the shader', function () {

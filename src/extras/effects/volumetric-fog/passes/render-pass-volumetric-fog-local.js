@@ -389,10 +389,6 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         this._marchParams[3] = this.extinction;
         this.marchParamsId.setValue(this._marchParams);
 
-        // render state, shared by all the lights
-        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace,
-            this.stencilFront, this.stencilBack);
-
         // a quad per light, covering the screen space bounds of its volume. Index 0 of the cluster
         // lights is reserved for 'no light'.
         const { shadowsEnabled, cookiesEnabled } = lighting;
@@ -406,7 +402,7 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
                 (light._type === LIGHTTYPE_SPOT ? spotLights : omniLights);
 
             if (enabled && this._setupLight(light, shadowsEnabled, cookiesEnabled)) {
-                this.quadRender.render();
+                super.execute();
             }
         }
     }

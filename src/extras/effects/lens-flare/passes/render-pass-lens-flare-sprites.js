@@ -101,8 +101,8 @@ class RenderPassLensFlareSprites extends RenderPassShaderQuad {
         this.visibilityId.setValue(visibilityTexture);
         this.dataId.setValue(flareData);
 
-        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
-        this.quadRender.render(undefined, undefined, numInstances);
+        // the quads of the elements, one instance each, see numInstances
+        super.execute();
     }
 }
 
