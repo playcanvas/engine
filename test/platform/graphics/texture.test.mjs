@@ -199,6 +199,60 @@ describe('Texture', function () {
         });
     });
 
+    describe('#setSource', function () {
+
+        let hadImageBitmap;
+
+        before(function () {
+            // Node has no ImageBitmap: the WebGPU test harness installs a stand-in, else provide one
+            hadImageBitmap = typeof globalThis.ImageBitmap !== 'undefined';
+            if (!hadImageBitmap) {
+                globalThis.ImageBitmap = class {
+                    constructor(width, height) {
+                        this.width = width;
+                        this.height = height;
+                    }
+                };
+            }
+        });
+
+        after(function () {
+            if (!hadImageBitmap) {
+                delete globalThis.ImageBitmap;
+            }
+        });
+
+        const createBitmap = (width, height) => new globalThis.ImageBitmap(width, height, new Uint8ClampedArray(width * height * 4));
+
+        it('sizes the mip chain to a source larger than the texture', function () {
+            // created at the default 4x4 size, with 3 mip levels
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8 });
+            texture.setSource(createBitmap(64, 64));
+
+            expect(texture.width).to.equal(64);
+            expect(texture.numLevels).to.equal(7);
+            texture.destroy();
+        });
+
+        it('sizes the mip chain to a source smaller than the texture', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 64, height: 64 });
+            texture.setSource(createBitmap(16, 16));
+
+            expect(texture.width).to.equal(16);
+            expect(texture.numLevels).to.equal(5);
+            texture.destroy();
+        });
+
+        it('sizes the mip chain to the 4x4 fallback when the source is rejected', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 64, height: 64 });
+            texture.setSource(/** @type {any} */ ({ width: 64, height: 64 }));
+
+            expect(texture.width).to.equal(4);
+            expect(texture.numLevels).to.equal(3);
+            texture.destroy();
+        });
+    });
+
     describe('#lock: cubemap', function () {
 
         const createCubemap = (options = {}) => new Texture(device, {
