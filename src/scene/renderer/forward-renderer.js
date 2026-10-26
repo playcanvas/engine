@@ -672,7 +672,7 @@ class ForwardRenderer extends Renderer {
             // clustered lighting passes
             const { shadowsEnabled, cookiesEnabled } = scene.lighting;
             this._renderPassUpdateClustered.update(shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
-            frameGraph.addRenderPass(this._renderPassUpdateClustered);
+            frameGraph.addPass(this._renderPassUpdateClustered);
 
         } else {
 
@@ -704,7 +704,7 @@ class ForwardRenderer extends Renderer {
                 // wrapper if the camera needs per-view replication
                 if (mv) frameGraph.beginMultiView(this.device);
                 camera.camera.framePasses.forEach((renderPass) => {
-                    frameGraph.addRenderPass(renderPass);
+                    frameGraph.addPass(renderPass);
                 });
                 if (mv) frameGraph.endMultiView();
 
@@ -754,18 +754,18 @@ class ForwardRenderer extends Renderer {
                         if (camera.renderSceneColorMap) {
                             const colorGrabPass = camera.camera.renderPassColorGrab;
                             colorGrabPass.source = camera.renderTarget;
-                            frameGraph.addRenderPass(colorGrabPass);
+                            frameGraph.addPass(colorGrabPass);
                         }
 
                         if (camera.renderSceneDepthMap) {
-                            frameGraph.addRenderPass(camera.camera.renderPassDepthGrab);
+                            frameGraph.addPass(camera.camera.renderPassDepthGrab);
                         }
                     }
 
                     // postprocessing
                     if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
                         const renderPass = new FramePassPostprocessing(this.device, this, renderAction);
-                        frameGraph.addRenderPass(renderPass);
+                        frameGraph.addPass(renderPass);
                     }
 
                     if (mv) frameGraph.endMultiView();
@@ -793,7 +793,7 @@ class ForwardRenderer extends Renderer {
     addCameraAfterPasses(frameGraph, camera) {
         const { afterPasses } = camera.camera;
         for (let i = 0; i < afterPasses.length; i++) {
-            frameGraph.addRenderPass(afterPasses[i]);
+            frameGraph.addPass(afterPasses[i]);
         }
     }
 
@@ -827,7 +827,7 @@ class ForwardRenderer extends Renderer {
             renderPass.addLayerRenderStep(this._layerRenderStepFromRenderAction(renderActions[i]));
         }
 
-        frameGraph.addRenderPass(renderPass);
+        frameGraph.addPass(renderPass);
     }
 
     /**

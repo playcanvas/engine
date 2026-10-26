@@ -43,7 +43,7 @@ describe('Camera passes', function () {
     // the passes the frame rendered
     const renderFrame = () => {
         app.render();
-        return app.frameGraph.renderPasses;
+        return app.frameGraph.passes;
     };
 
     // whether the pass renders the camera

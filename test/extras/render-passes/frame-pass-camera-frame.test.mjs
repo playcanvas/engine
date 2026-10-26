@@ -856,7 +856,7 @@ describe('FramePassCameraFrame', function () {
                 postrender.resetHistory();
                 app.render();
 
-                const passes = app.frameGraph.renderPasses;
+                const passes = app.frameGraph.passes;
                 const { scenePass, scenePassTransparent } = cameraFrame.renderPassCamera;
                 expect(scenePassTransparent).to.exist;
                 expect(passes.filter(pass => pass === before)).to.have.lengthOf(1);

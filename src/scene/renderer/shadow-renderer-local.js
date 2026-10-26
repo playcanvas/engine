@@ -147,7 +147,7 @@ class ShadowRendererLocal {
                 const faceCount = light.numShadowFaces;
                 for (let face = 0; face < faceCount; face++) {
                     const renderPass = new RenderPassShadowLocalNonClustered(this.device, this.shadowRenderer, light, face, applyVsm);
-                    frameGraph.addRenderPass(renderPass);
+                    frameGraph.addPass(renderPass);
                 }
             }
         }
