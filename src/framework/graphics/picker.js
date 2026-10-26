@@ -524,7 +524,7 @@ class Picker {
 
         // set up clears - setClearColor handles MRT and clears all color buffers
         renderPass.setClearColor(Color.WHITE);
-        renderPass.depthStencilOps.clearDepth = true;
+        renderPass.setClearDepth(1);
 
         // render the pass to update the render target
         renderPass.update(camera, scene, layers, this.mapping, this.depth);

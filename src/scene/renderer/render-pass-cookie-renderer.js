@@ -72,8 +72,6 @@ class RenderPassCookieRenderer extends RenderPass {
         // prepare a single render pass to render all quads to the render target
         const renderPass = new RenderPassCookieRenderer(renderTarget.device, cubeSlotsOffsets);
         renderPass.init(renderTarget);
-        renderPass.colorOps.clear = false;
-        renderPass.depthStencilOps.clearDepth = false;
 
         return renderPass;
     }

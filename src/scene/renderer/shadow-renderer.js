@@ -702,19 +702,17 @@ class ShadowRenderer {
         const rt = shadowCamera.renderTarget;
         renderPass.init(rt);
 
-        renderPass.depthStencilOps.clearDepthValue = 1;
-        renderPass.depthStencilOps.clearDepth = clearRenderTarget;
+        renderPass.setClearDepth(clearRenderTarget ? 1 : undefined);
 
         // if rendering to depth buffer
         if (rt.depthBuffer) {
 
-            renderPass.depthStencilOps.storeDepth = true;
+            renderPass.setStoreDepth(true);
 
         } else { // rendering to color buffer
 
-            renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
-            renderPass.colorOps.clear = clearRenderTarget;
-            renderPass.depthStencilOps.storeDepth = false;
+            renderPass.setClearColor(clearRenderTarget ? shadowCamera.clearColor : undefined);
+            renderPass.setStoreDepth(false);
         }
     }
 
