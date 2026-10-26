@@ -2,10 +2,10 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { WebglGraphicsDevice } from '../../../src/platform/graphics/webgl/webgl-graphics-device.js';
 import { WebglTexture } from '../../../src/platform/graphics/webgl/webgl-texture.js';
-import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('WebglTexture upload during context loss', function () {
@@ -63,7 +63,7 @@ describe('WebglTexture upload during context loss', function () {
 
 describe('WebglTexture upload of an HTML element', function () {
 
-    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
+    /** @type {NullGraphicsDevice} */
     let device;
 
     let hadHTMLElement;
@@ -75,7 +75,9 @@ describe('WebglTexture upload of an HTML element', function () {
         if (!hadHTMLElement) {
             globalThis.HTMLElement = class {};
         }
-        device = createGraphicsDevice(document.createElement('canvas'));
+        // a null device on every backend, so the texture's own upload does not reach a real GPU
+        // backend before the WebglTexture under test
+        device = new NullGraphicsDevice(document.createElement('canvas'));
         device.supportsHtmlTextures = true;
     });
 
