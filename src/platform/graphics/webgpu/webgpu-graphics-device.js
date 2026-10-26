@@ -449,6 +449,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         super.destroy();
 
+        // Released after the destroy event, so a listener reaching the lazy getters cannot
+        // allocate them again. A device supplied by the host would otherwise keep them alive.
+        this._indirectDrawBuffer?.destroy();
+        this._indirectDrawBuffer = null;
+        this._indirectDispatchBuffer?.destroy();
+        this._indirectDispatchBuffer = null;
+
         // Destroy listeners can enqueue more resources, and no further submit will drain them.
         this.destroyDeferredResources();
         this.clearDeviceState();
