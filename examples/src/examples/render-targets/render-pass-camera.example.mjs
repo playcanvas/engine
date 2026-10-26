@@ -50,6 +50,7 @@ window.focus();
 class RenderPassTint extends RenderPassShaderQuad {
     constructor(device, sourceTexture) {
         super(device);
+        this.name = 'RenderPassTint';
         this.sourceTexture = sourceTexture;
         this.tint = Color.WHITE.clone();
 
@@ -84,11 +85,21 @@ class RenderPassTint extends RenderPassShaderQuad {
                 }
             `
         });
+
+        // resolve the parameters once, and reuse the array the tint is passed in
+        this.sourceTextureId = device.scope.resolve('sourceTexture');
+        this.tintId = device.scope.resolve('tint');
+        this.tintValue = new Float32Array(3);
     }
 
     execute() {
-        this.device.scope.resolve('sourceTexture').setValue(this.sourceTexture);
-        this.device.scope.resolve('tint').setValue([this.tint.r, this.tint.g, this.tint.b]);
+        // set the parameters right before the quad is drawn
+        this.sourceTextureId.setValue(this.sourceTexture);
+        const { tint, tintValue } = this;
+        tintValue[0] = tint.r;
+        tintValue[1] = tint.g;
+        tintValue[2] = tint.b;
+        this.tintId.setValue(tintValue);
         super.execute();
     }
 }
@@ -198,6 +209,8 @@ const renderPass = new RenderPassForward(
     app.renderer,
     cameraEntity.camera
 );
+
+renderPass.name = 'RenderPassScene';
 
 // This render pass resizes the texture to match the size of are on the scene we render to
 renderPass.init(rt, {
