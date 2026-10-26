@@ -1,7 +1,6 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { QuadRender } from './quad-render.js';
-import { RenderPassQuad } from './render-pass-quad.js';
+import { RenderPassShaderQuad } from './render-pass-shader-quad.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -9,12 +8,12 @@ import { RenderPassQuad } from './render-pass-quad.js';
  * @import { Shader } from '../../platform/graphics/shader.js'
  */
 
-const _tempRect = new Vec4();
+const _viewport = new Vec4();
 
 /**
  * Draws a quad with a shader into a render target, covering the whole render target, or the
- * viewport rectangle. It draws immediately, outside of the frame graph: each call creates a render
- * pass and the quad, renders the pass, and destroys the quad, so it allocates on every call. This
+ * viewport rectangle. It draws immediately, outside of the frame graph: each call creates a
+ * {@link RenderPassShaderQuad}, renders it, and destroys it, so it allocates on every call. This
  * suits a single draw, for example to generate a texture once. To draw a quad every frame, as part
  * of a frame, or with its own render states, use a {@link RenderPassShaderQuad} instead, which is
  * created once and reused.
@@ -32,10 +31,10 @@ const _tempRect = new Vec4();
  * chunk implements, see {@link RenderPassShaderQuad}.
  * @param {Vec4} [rect] - The viewport rectangle of the quad, in pixels. Defaults to fullscreen:
  * `[0, 0, target.width, target.height]`.
- * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to fullscreen:
- * `[0, 0, target.width, target.height]`.
- * @param {string} [name] - The render pass name used for GPU profiling and debugging in debug
- * builds. Defaults to 'RenderPassQuad'.
+ * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to the
+ * viewport rectangle.
+ * @param {string} [name] - The render pass name used for GPU profiling and debugging. Defaults to
+ * 'RenderPassQuad'.
  * @example
  * // generate a texture once, by drawing a shader into its render target
  * device.scope.resolve('uScale').setValue(4);
@@ -47,24 +46,21 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, name) {
     // a valid target or a null target (framebuffer) are supported
     Debug.assert(target !== undefined);
 
-    // prepare the quad for rendering with the shader
-    const quad = new QuadRender(shader);
-
-    // by default render to the whole render target
-    if (!rect) {
-        rect = _tempRect;
-        rect.x = 0;
-        rect.y = 0;
-        rect.z = target ? target.width : device.width;
-        rect.w = target ? target.height : device.height;
-    }
-
-    // prepare a render pass to render the quad to the render target
-    const renderPass = new RenderPassQuad(device, quad, rect, scissorRect);
-    DebugHelper.setName(renderPass, name ?? 'RenderPassQuad');
+    const renderPass = new RenderPassShaderQuad(device);
+    renderPass.name = name ?? 'RenderPassQuad';
+    renderPass.shader = shader;
     renderPass.init(target);
-    renderPass.colorOps.clear = false;
-    renderPass.depthStencilOps.clearDepth = false;
+
+    // the quad is drawn with the blend state currently set on the device
+    renderPass.blendState = device.blendState;
+
+    // by default render to the whole render target. The viewport is always set, as the pass uses the
+    // scissor rectangle only together with it
+    if (!rect) {
+        rect = _viewport.set(0, 0, target ? target.width : device.width, target ? target.height : device.height);
+    }
+    renderPass.viewport = rect;
+    renderPass.scissor = scissorRect;
 
     // TODO: This is a workaround for the case where post-effects are used together with multi-sampled framebuffer. Last post-effect
     // renders into multi-sampled framebuffer (render pass A), which is typically followed by further rendering to this framebuffer,
@@ -72,12 +68,11 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, name) {
     // the same framebuffer. The workaround here is to store multi-sampled color buffer, instead of only resolving it, which is wasted
     // memory bandwidth. Without this we end up with a black result (or just UI), as multi-sampled color buffer is never written to.
     if (device.isWebGPU && target === null && device.samples > 1) {
-        renderPass.colorOps.store = true;
+        renderPass.setStoreColor(true);
     }
 
     renderPass.render();
-
-    quad.destroy();
+    renderPass.destroy();
 }
 
 export { drawQuadWithShader };
