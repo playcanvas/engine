@@ -89,10 +89,22 @@ describe('Primitive counting', function () {
                 expect(device._primitiveCount).to.equal(17);
             });
 
-            it('matches the backend behavior for a zero instance argument', function () {
+            it('draws nothing for a zero instance argument', function () {
+                const glDraws = [spy(device.gl, 'drawArrays'), spy(device.gl, 'drawArraysInstanced')];
                 draw(PRIMITIVE_TRIANGLES, 6, 0);
-                // WebGL uses zero as its legacy non-instanced draw path; WebGPU draws no instances.
-                expect(device._primitiveCount).to.equal(backend === 'WebGL' ? 2 : 0);
+                expect(device._primitiveCount).to.equal(0);
+                if (backend === 'WebGL') {
+                    expect(glDraws.some(glDraw => glDraw.called)).to.equal(false);
+                }
+            });
+
+            it('draws once without instancing when the instance count is not specified', function () {
+                const glDraw = spy(device.gl, 'drawArrays');
+                draw(PRIMITIVE_TRIANGLES, 6, undefined);
+                expect(device._primitiveCount).to.equal(2);
+                if (backend === 'WebGL') {
+                    expect(glDraw.calledOnce).to.equal(true);
+                }
             });
 
             it('counts each multi-draw command independently and ignores zero instances', function () {
