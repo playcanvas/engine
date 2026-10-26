@@ -998,9 +998,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
-        // HTML-in-Canvas support (texElementImage2D). Not an extension, so it needs hiding
-        // explicitly on a bare device - it is still experimental and behind an origin trial.
-        this.supportsHtmlTextures = !this.bare && typeof gl.texElementImage2D === 'function';
+        // HTML-in-Canvas support (texElementSubImage2D, or texElementImage2D before Chrome 155).
+        // Not an extension, so it needs hiding explicitly on a bare device.
+        this.supportsHtmlTextures = !this.bare && (typeof gl.texElementSubImage2D === 'function' ||
+            typeof gl.texElementImage2D === 'function');
     }
 
     /**

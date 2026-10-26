@@ -610,8 +610,9 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
-     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
-     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     * API. When supported, an HTML element with the `drawable` attribute, appended to a canvas with
+     * the `content="drawable"` attribute, can be passed to {@link Texture#setSource} and rendered as
+     * a live texture in the 3D scene.
      *
      * @type {boolean}
      * @readonly
@@ -1675,7 +1676,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
-     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     * Used for the HTML-in-Canvas API.
      *
      * @param {*} texture - Texture source data.
      * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or
