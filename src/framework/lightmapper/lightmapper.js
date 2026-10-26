@@ -1111,8 +1111,7 @@ class Lightmapper {
                             clusteredLightingEnabled ? this.worldClusters : null,
                             rcv, lightList);
                         renderPass.init(tempRT);
-                        renderPass.colorOps.clear = true;
-                        renderPass.colorOps.clearValue.copy(this.camera.clearColor);
+                        renderPass.setClearColor(this.camera.clearColor);
                         renderPass.render();
                         renderPass.destroy();
 

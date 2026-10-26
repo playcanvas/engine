@@ -411,8 +411,6 @@ class GSplatSogData {
         renderPass.quadRender = quad;
         renderPass.name = 'SogGenerateCenters';
         renderPass.init(renderTarget);
-        renderPass.colorOps.clear = false;
-        renderPass.depthStencilOps.clearDepth = false;
         renderPass.render();
         quad.destroy();
 

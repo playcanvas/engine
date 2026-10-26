@@ -777,7 +777,7 @@ class FramePassCameraFrame extends FramePass {
             if (this.scenePassTransparent) {
                 // if prepass is enabled, we need to store the depth, as by default it gets discarded
                 if (options.prepassEnabled) {
-                    this.scenePassTransparent.depthStencilOps.storeDepth = true;
+                    this.scenePassTransparent.setStoreDepth(true);
                 }
             }
         }

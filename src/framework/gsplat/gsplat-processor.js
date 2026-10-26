@@ -267,8 +267,6 @@ class GSplatProcessor {
         this._renderPass = new RenderPassShaderQuad(device);
         this._renderPass.quadRender = this._quadRender;
         this._renderPass.init(this._renderTarget);
-        this._renderPass.colorOps.clear = false;
-        this._renderPass.depthStencilOps.clearDepth = false;
     }
 
     /**
