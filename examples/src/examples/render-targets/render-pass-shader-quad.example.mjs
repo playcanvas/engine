@@ -249,7 +249,7 @@ const canvasTarget = new RenderTarget({
 // brush pass, which renders last.
 const fadePass = new RenderPassFade(device);
 fadePass.init(canvasTarget);
-fadePass.colorOps.genMipmaps = false;
+fadePass.setGenerateMipmaps(false);
 
 // the canvas is cleared when the fade pass renders for the first time
 fadePass.setClearColor(Color.BLACK);

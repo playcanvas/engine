@@ -262,7 +262,6 @@ class CameraComponent extends Component {
      * them: whoever adds a pass destroys it.
      *
      * @type {FramePass[]}
-     * @ignore
      */
     get beforePasses() {
         return this._camera.beforePasses;
@@ -276,7 +275,6 @@ class CameraComponent extends Component {
      * adds a pass destroys it.
      *
      * @type {FramePass[]}
-     * @ignore
      */
     get afterPasses() {
         return this._camera.afterPasses;

@@ -1362,13 +1362,13 @@ class GraphicsDevice extends EventHandler {
     // ---- deprecated block end ----
 
     /**
-     * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
-     * operation is disabled.
+     * Sets the specified stencil state. If both stencilFront and stencilBack are null or not
+     * specified, stencil operation is disabled.
      *
-     * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
-     * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
+     * @param {StencilParameters|null} [stencilFront] - The front stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilBack is.
+     * @param {StencilParameters|null} [stencilBack] - The back stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilFront is.
      */
     setStencilState(stencilFront, stencilBack) {
         Debug.assert(false);
@@ -1442,8 +1442,10 @@ class GraphicsDevice extends EventHandler {
      * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
      * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
      * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
-     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
-     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     * @param {StencilParameters|null} [stencilFront] - Front stencil parameters. When neither the
+     * front nor the back stencil parameters are specified, stencil operation is disabled, see
+     * {@link GraphicsDevice#setStencilState}.
+     * @param {StencilParameters|null} [stencilBack] - Back stencil parameters.
      */
     setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
         cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
