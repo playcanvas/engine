@@ -210,7 +210,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
     setSourceTexture(texture) {
         this.sourceTexture = texture;
         if (!this.upscale) {
-            this.options.resizeSource = texture;
+            this.resizeSource = texture;
         }
     }
 

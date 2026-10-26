@@ -173,6 +173,80 @@ describe('RenderPass', function () {
 
     });
 
+    describe('#resizeSource', function () {
+
+        afterEach(function () {
+            restore();
+        });
+
+        const sizeOf = (width, height) => ({ width, height });
+
+        it('does not resize the render target by default', function () {
+            const resize = stub(renderTarget, 'resize');
+            renderPass.frameUpdate();
+
+            expect(renderPass.resizeSource).to.equal(undefined);
+            expect(resize.called).to.equal(false);
+        });
+
+        it('resizes the render target to the resize source, scaled', function () {
+            const resize = stub(renderTarget, 'resize');
+            renderPass.init(renderTarget, { resizeSource: sizeOf(200, 100), scaleX: 0.5, scaleY: 0.25 });
+            renderPass.frameUpdate();
+
+            expect(resize.calledOnceWith(100, 25)).to.equal(true);
+        });
+
+        it('resizes the render target to the back buffer when null', function () {
+            const resize = stub(renderTarget, 'resize');
+            renderPass.resizeSource = null;
+            renderPass.frameUpdate();
+
+            expect(renderPass.resizeSource).to.equal(null);
+            expect(resize.calledOnceWith(device.backBuffer.width, device.backBuffer.height)).to.equal(true);
+        });
+
+        it('follows a changed resize source, and stops resizing when undefined', function () {
+            const resize = stub(renderTarget, 'resize');
+            renderPass.init(renderTarget, { resizeSource: sizeOf(200, 100), scaleX: 0.5 });
+
+            renderPass.resizeSource = sizeOf(64, 32);
+            renderPass.frameUpdate();
+            expect(resize.calledOnceWith(32, 32)).to.equal(true);
+
+            renderPass.resizeSource = undefined;
+            renderPass.frameUpdate();
+            expect(resize.calledOnce).to.equal(true);
+            expect(renderPass.scaleX).to.equal(1);
+        });
+
+        it('copies the options of init', function () {
+            const resize = stub(renderTarget, 'resize');
+            const options = { resizeSource: sizeOf(200, 100), scaleX: 0.5, scaleY: 0.5 };
+            renderPass.init(renderTarget, options);
+
+            options.resizeSource = sizeOf(8, 8);
+            options.scaleX = 1;
+            renderPass.frameUpdate();
+
+            expect(renderPass.scaleX).to.equal(0.5);
+            expect(resize.calledOnceWith(100, 50)).to.equal(true);
+        });
+
+        it('has scale factors of 1 while not resizing, and asserts when they are set', function () {
+            expect(renderPass.scaleX).to.equal(1);
+            expect(renderPass.scaleY).to.equal(1);
+
+            const assertion = stub(Debug, 'assert');
+            expect(() => {
+                renderPass.scaleX = 0.5;
+            }).to.not.throw();
+            expect(assertion.getCalls().some(c => !c.args[0])).to.equal(true);
+            expect(renderPass.scaleX).to.equal(1);
+        });
+
+    });
+
     describe('#init again', function () {
 
         it('reuses the attachment operations, reset to their defaults', function () {

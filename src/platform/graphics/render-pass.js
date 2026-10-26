@@ -180,7 +180,7 @@ class DepthStencilAttachmentOps {
  * into, or with null to draw into the back buffer. The pass does not own its render target, and
  * does not destroy it. When init is given options, the pass also resizes its render target each
  * frame, to the size of a texture, a render target or the back buffer, scaled by
- * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}.
+ * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, see {@link RenderPass#resizeSource}.
  *
  * ## Loading and clearing the attachments
  *
@@ -279,9 +279,10 @@ class RenderPass extends FramePass {
     renderTarget;
 
     /**
-     * The options specified when the render target was initialized.
+     * How the render target is resized: what to, null for the back buffer, and the scale factors.
+     * Undefined when the render target is not resized.
      *
-     * @type {object|undefined}
+     * @type {{ resizeSource: Texture|RenderTarget|null, scaleX: number, scaleY: number }|undefined}
      * @private
      */
     _options;
@@ -329,65 +330,107 @@ class RenderPass extends FramePass {
     fullSizeClearRect = true;
 
     /**
-     * Sets the scale factor of the width of the render target, relative to the size of the resize
-     * source, see {@link RenderPass#init}. Only valid for a pass initialized with options.
+     * Sets what the render target of the pass is resized to each frame: a texture or a render
+     * target, whose size, scaled by {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, the
+     * render target takes, or null to take the size of the back buffer. Undefined, the default,
+     * leaves the size of the render target as it is. The options of {@link RenderPass#init} set
+     * it, and init resets it, so set it once the pass is initialized. Change it when the size is to
+     * follow another texture, for example when the texture a pass processes is replaced.
      *
-     * @type {number}
-     */
-    set scaleX(value) {
-        Debug.assert(this._options, 'The render pass needs to be initialized first.');
-        this._options.scaleX = value;
-    }
-
-    /**
-     * Gets the scale factor of the width of the render target.
+     * The render target is resized while the frame is built, in {@link RenderPass#frameUpdate}, and
+     * has the new size only once the pass is updated for the frame. On a frame the size changes,
+     * the passes updated before it in the frame still see the previous size, including the pass it
+     * is a before pass of, which is updated before its before passes.
      *
-     * @type {number}
+     * @type {Texture|RenderTarget|null|undefined}
      */
-    get scaleX() {
-        return this._options.scaleX;
-    }
-
-    /**
-     * Sets the scale factor of the height of the render target, relative to the size of the resize
-     * source, see {@link RenderPass#init}. Only valid for a pass initialized with options.
-     *
-     * @type {number}
-     */
-    set scaleY(value) {
-        Debug.assert(this._options, 'The render pass needs to be initialized first.');
-        this._options.scaleY = value;
-    }
-
-    /**
-     * Gets the scale factor of the height of the render target.
-     *
-     * @type {number}
-     */
-    get scaleY() {
-        return this._options.scaleY;
-    }
-
-    /**
-     * Sets the options the pass was initialized with.
-     *
-     * @type {object|undefined}
-     * @ignore
-     */
-    set options(value) {
-        this._options = value;
-
-        // sanitize options
-        if (value) {
-            this.scaleX = this.scaleX ?? 1;
-            this.scaleY = this.scaleY ?? 1;
+    set resizeSource(value) {
+        if (value === undefined) {
+            this._options = undefined;
+        } else if (this._options) {
+            this._options.resizeSource = value;
+        } else {
+            this._options = { resizeSource: value, scaleX: 1, scaleY: 1 };
         }
     }
 
     /**
-     * Gets the options the pass was initialized with.
+     * Gets what the render target of the pass is resized to.
      *
-     * @type {object|undefined}
+     * @type {Texture|RenderTarget|null|undefined}
+     */
+    get resizeSource() {
+        return this._options ? this._options.resizeSource : undefined;
+    }
+
+    /**
+     * Sets the scale factor of the width of the render target, relative to the size of its resize
+     * source, see {@link RenderPass#resizeSource}. Only valid while the render target is resized.
+     * Defaults to 1.
+     *
+     * @type {number}
+     */
+    set scaleX(value) {
+        Debug.assert(this._options, `The scaleX of the render pass '${this.name}' is set, but the pass does not resize its render target. Set its resizeSource first.`, this);
+        if (this._options) {
+            this._options.scaleX = value;
+        }
+    }
+
+    /**
+     * Gets the scale factor of the width of the render target. It is 1 while the render target is
+     * not resized.
+     *
+     * @type {number}
+     */
+    get scaleX() {
+        return this._options?.scaleX ?? 1;
+    }
+
+    /**
+     * Sets the scale factor of the height of the render target, relative to the size of its resize
+     * source, see {@link RenderPass#resizeSource}. Only valid while the render target is resized.
+     * Defaults to 1.
+     *
+     * @type {number}
+     */
+    set scaleY(value) {
+        Debug.assert(this._options, `The scaleY of the render pass '${this.name}' is set, but the pass does not resize its render target. Set its resizeSource first.`, this);
+        if (this._options) {
+            this._options.scaleY = value;
+        }
+    }
+
+    /**
+     * Gets the scale factor of the height of the render target. It is 1 while the render target
+     * is not resized.
+     *
+     * @type {number}
+     */
+    get scaleY() {
+        return this._options?.scaleY ?? 1;
+    }
+
+    /**
+     * Sets how the render target is resized, from the options of {@link RenderPass#init}, which
+     * are copied, so the object passed in is not kept.
+     *
+     * @param {{ resizeSource?: Texture|RenderTarget|null, scaleX?: number, scaleY?: number }|undefined} value - The
+     * options, or undefined to not resize the render target.
+     * @ignore
+     */
+    set options(value) {
+        this._options = value ? {
+            resizeSource: value.resizeSource ?? null,
+            scaleX: value.scaleX ?? 1,
+            scaleY: value.scaleY ?? 1
+        } : undefined;
+    }
+
+    /**
+     * Gets how the render target is resized.
+     *
+     * @type {{ resizeSource: Texture|RenderTarget|null, scaleX: number, scaleY: number }|undefined}
      * @ignore
      */
     get options() {
@@ -409,12 +452,14 @@ class RenderPass extends FramePass {
      * When options are provided, the render target is resized each frame, in
      * {@link RenderPass#frameUpdate}, to the size of the resize source scaled by
      * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}. Without options, it is not resized.
+     * The options are copied, so later changes to the object passed in have no effect - change
+     * them with {@link RenderPass#resizeSource}, scaleX and scaleY instead.
      *
      * @param {RenderTarget|null} [renderTarget] - The render target to draw into, or null to draw
      * into the back buffer. Defaults to null. The render pass does not own the render target.
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {Texture|RenderTarget} [options.resizeSource] - The texture or render target whose
-     * size the render target is resized to. Defaults to the back buffer.
+     * @param {Texture|RenderTarget|null} [options.resizeSource] - The texture or render target whose
+     * size the render target is resized to, or null for the back buffer. Defaults to null.
      * @param {number} [options.scaleX] - The scale factor for the render target width. Defaults to 1.
      * @param {number} [options.scaleY] - The scale factor for the render target height. Defaults to 1.
      */
@@ -505,17 +550,18 @@ class RenderPass extends FramePass {
     }
 
     /**
-     * Resizes the render target to the size of the resize source, scaled by
-     * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, when the pass was initialized with
-     * options. See {@link FramePass#frameUpdate}. Subclasses overriding it call
-     * `super.frameUpdate()` to keep the resize.
+     * Resizes the render target to the size of its resize source, scaled by
+     * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, while the pass resizes its render
+     * target, see {@link RenderPass#resizeSource}. See {@link FramePass#frameUpdate}. Subclasses
+     * overriding it call `super.frameUpdate()` to keep the resize.
      */
     frameUpdate() {
         // resize the render target if needed
-        if (this._options && this.renderTarget) {
-            const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
-            const width = Math.floor(resizeSource.width * this.scaleX);
-            const height = Math.floor(resizeSource.height * this.scaleY);
+        const options = this._options;
+        if (options && this.renderTarget) {
+            const resizeSource = /** @type {Texture|RenderTarget} */ (options.resizeSource ?? this.device.backBuffer);
+            const width = Math.floor(resizeSource.width * options.scaleX);
+            const height = Math.floor(resizeSource.height * options.scaleY);
             this.renderTarget.resize(width, height);
         }
     }

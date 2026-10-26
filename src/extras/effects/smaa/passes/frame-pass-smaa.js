@@ -209,7 +209,7 @@ class FramePassSmaa extends FramePass {
         this.edgePass.setTexture('smaaColorTexture', texture);
         this.blendPass.setTexture('smaaColorTexture', texture);
         for (let i = 0; i < this.beforePasses.length; i++) {
-            this.beforePasses[i].options.resizeSource = texture;
+            this.beforePasses[i].resizeSource = texture;
         }
     }
 

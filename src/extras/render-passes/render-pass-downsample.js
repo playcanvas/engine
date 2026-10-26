@@ -105,7 +105,7 @@ class RenderPassDownsample extends RenderPassShaderQuad {
         this.sourceTexture = value;
 
         // change resize source
-        this.options.resizeSource = value;
+        this.resizeSource = value;
     }
 
     execute() {
