@@ -88,6 +88,23 @@ describe('RenderPassShaderQuad', function () {
             pass.destroy();
         });
 
+        it('draws nothing for zero instances', function () {
+            const device = app.graphicsDevice;
+            const pass = new RenderPassShaderQuad(device);
+            pass.shader = createShader(device);
+            const render = sinon.stub(pass.quadRender, 'render');
+
+            pass.numInstances = 0;
+            pass.execute();
+            expect(render.called).to.equal(false);
+
+            pass.numInstances = undefined;
+            pass.execute();
+            expect(render.calledOnce).to.equal(true);
+
+            pass.destroy();
+        });
+
     });
 
     describe('#destroy', function () {

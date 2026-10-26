@@ -205,7 +205,8 @@ class RenderPassShaderQuad extends RenderPass {
     /**
      * The number of instances of the quad to draw, using instanced drawing, or undefined to draw a
      * single quad without instancing. Each instance can read its index, `gl_InstanceID` in GLSL
-     * and `pcInstanceIndex` in WGSL, to fetch the data of its quad, for example to place it.
+     * and `pcInstanceIndex` in WGSL, to fetch the data of its quad, for example to place it. Zero
+     * draws nothing, while the pass still renders, so it still clears its render target.
      * Defaults to undefined.
      *
      * @type {number|undefined}
@@ -261,8 +262,9 @@ class RenderPassShaderQuad extends RenderPass {
         // render state
         device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
 
+        // zero instances draws nothing - the device would draw a single quad without instancing
         const quadRender = this.quadRender;
-        if (quadRender) {
+        if (quadRender && this.numInstances !== 0) {
             DebugGraphics.pushGpuMarker(device, `${this.name}:${this._shader?.name}`);
             quadRender.render(this.viewport, this.scissor, this.numInstances);
             DebugGraphics.popGpuMarker(device);
