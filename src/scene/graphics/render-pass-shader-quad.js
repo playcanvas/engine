@@ -1,6 +1,7 @@
 import { QuadRender } from './quad-render.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
@@ -232,11 +233,17 @@ class RenderPassShaderQuad extends RenderPass {
     }
 
     execute() {
+        const device = this.device;
 
         // render state
-        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
+        device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
 
-        this.quadRender?.render(this.viewport, this.scissor);
+        const quadRender = this.quadRender;
+        if (quadRender) {
+            DebugGraphics.pushGpuMarker(device, `${this.name}:${this._shader?.name}`);
+            quadRender.render(this.viewport, this.scissor);
+            DebugGraphics.popGpuMarker(device);
+        }
     }
 }
 
