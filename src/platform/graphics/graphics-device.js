@@ -1623,7 +1623,7 @@ class GraphicsDevice extends EventHandler {
      * using the currently set index buffer and false otherwise.
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
-     * Defaults to 1.
+     * Zero renders nothing, unless draw commands are provided. Defaults to 1.
      * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.

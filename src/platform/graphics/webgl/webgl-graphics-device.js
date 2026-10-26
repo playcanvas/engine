@@ -2280,7 +2280,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         // multi-draw extension is not supported, use fallback loop
                         this._multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands);
                     }
-                } else {
+                } else if (numInstances !== 0) { // single draw - zero instances draws nothing, as on WebGPU
                     if (primitive.indexed) {
                         Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
@@ -2319,7 +2319,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type, numInstances > 0);
                 } else {
                     // single draw
-                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances > 0 ? numInstances : 1);
+                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances ?? 1);
                 }
                 // #endif
             }
