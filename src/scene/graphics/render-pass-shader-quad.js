@@ -203,6 +203,11 @@ class RenderPassShaderQuad extends RenderPass {
      */
     set shader(shader) {
 
+        // keep the quad of the shader, as a pass rendering repeatedly can set it each time
+        if (shader === this._shader) {
+            return;
+        }
+
         // destroy old
         this.quadRender?.destroy();
         this.quadRender = null;

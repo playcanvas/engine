@@ -439,6 +439,7 @@ class Renderer {
     }
 
     destroy() {
+        this.shadowRenderer.destroy();
         this.shadowRenderer = null;
         this._shadowRendererLocal = null;
         this._shadowRendererDirectional = null;

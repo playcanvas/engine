@@ -11,7 +11,7 @@ import {
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_MAT4, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+import { RenderPassShaderQuad } from '../graphics/render-pass-shader-quad.js';
 import {
     BLUR_GAUSSIAN,
     EVENT_POSTCULL,
@@ -37,6 +37,8 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
  * @import { Light } from '../light.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { Renderer } from './renderer.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { ShaderPassInfo } from '../shader-pass.js'
  */
 
@@ -108,6 +110,14 @@ class ShadowRenderer {
      * @private
      */
     _casterLists = [];
+
+    /**
+     * The passes blurring VSM shadow maps, one for each blur shader, reused every frame.
+     *
+     * @type {Map<Shader, RenderPassShaderQuad>}
+     * @private
+     */
+    _vsmBlurPasses = new Map();
 
     /**
      * @param {Renderer} renderer - The renderer.
@@ -801,6 +811,40 @@ class ShadowRenderer {
         return blurShader;
     }
 
+    /**
+     * Releases the resources of the shadow renderer.
+     */
+    destroy() {
+        this._vsmBlurPasses.forEach(pass => pass.destroy());
+        this._vsmBlurPasses.clear();
+    }
+
+    /**
+     * Renders the VSM blur of a shadow map into a render target, within the blur scissor rectangle.
+     *
+     * @param {Shader} blurShader - The blur shader.
+     * @param {RenderTarget} target - The render target to render into.
+     * @private
+     */
+    _renderVsmBlur(blurShader, target) {
+        let pass = this._vsmBlurPasses.get(blurShader);
+        if (!pass) {
+            pass = new RenderPassShaderQuad(this.device);
+            pass.name = 'VSMShadowBlur';
+            pass.shader = blurShader;
+
+            // the viewport is set to the whole render target, as the pass uses the scissor rectangle
+            // only together with it
+            pass.viewport = new Vec4();
+            pass.scissor = blurScissorRect;
+            this._vsmBlurPasses.set(blurShader, pass);
+        }
+
+        pass.init(target);
+        pass.viewport.set(0, 0, target.width, target.height);
+        pass.render();
+    }
+
     applyVsmBlur(light, camera, cascadeMask) {
 
         const device = this.device;
@@ -833,7 +877,7 @@ class ShadowRenderer {
         pixelOffset[1] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
         if (blurMode === BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
-        drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+        this._renderVsmBlur(blurShader, tempRt);
 
         // Blur vertical
         this.sourceId.setValue(tempRt.colorBuffer);
@@ -852,10 +896,10 @@ class ShadowRenderer {
                 const right = Math.min(resolution - 1, (viewport.x + viewport.z) * resolution);
                 const top = Math.min(resolution - 1, (viewport.y + viewport.w) * resolution);
                 blurScissorRect.set(x, y, right - x, top - y);
-                drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+                this._renderVsmBlur(blurShader, origShadowMap);
             }
         } else {
-            drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+            this._renderVsmBlur(blurShader, origShadowMap);
         }
 
         // return the temporary shadow map back to the cache

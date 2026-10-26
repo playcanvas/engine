@@ -51,6 +51,22 @@ describe('RenderPassShaderQuad', function () {
             expect(pass.quadRender).to.equal(null);
         });
 
+        it('keeps the quad when the same shader is set again', function () {
+            const device = app.graphicsDevice;
+            const pass = new RenderPassShaderQuad(device);
+            const shader = createShader(device);
+
+            pass.shader = shader;
+            const quadRender = pass.quadRender;
+            const quadDestroy = sinon.spy(quadRender, 'destroy');
+
+            pass.shader = shader;
+            expect(pass.quadRender).to.equal(quadRender);
+            expect(quadDestroy.called).to.equal(false);
+
+            pass.destroy();
+        });
+
     });
 
     describe('#destroy', function () {

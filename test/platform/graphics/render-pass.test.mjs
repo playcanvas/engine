@@ -173,6 +173,53 @@ describe('RenderPass', function () {
 
     });
 
+    describe('#init again', function () {
+
+        it('reuses the attachment operations, reset to their defaults', function () {
+            const colorOps = renderPass.colorArrayOps.slice();
+            const depthStencilOps = renderPass.depthStencilOps;
+            const defaults = new RenderPass(device);
+            defaults.init(renderTarget);
+
+            renderPass.setClearColor(new Color(1, 0.5, 0.25, 1));
+            renderPass.setClearDepth(0.5);
+            renderPass.setClearStencil(3);
+            renderPass.setStoreColor(false);
+            renderPass.setStoreDepth(true);
+            renderPass.setStoreStencil(true);
+            renderPass.colorArrayOps[1].resolve = false;
+            renderPass.colorArrayOps[1].genMipmaps = true;
+            renderPass.depthStencilOps.resolveDepth = true;
+
+            renderPass.init(renderTarget);
+
+            expect(renderPass.colorArrayOps).to.have.lengthOf(2);
+            expect(renderPass.colorArrayOps[0]).to.equal(colorOps[0]);
+            expect(renderPass.colorArrayOps[1]).to.equal(colorOps[1]);
+            expect(renderPass.depthStencilOps).to.equal(depthStencilOps);
+            expect(renderPass.colorArrayOps).to.deep.equal(defaults.colorArrayOps);
+            expect(renderPass.depthStencilOps).to.deep.equal(defaults.depthStencilOps);
+        });
+
+        it('matches the number of color attachments of the new render target', function () {
+            const first = renderPass.colorArrayOps[0];
+            const single = new RenderTarget({ colorBuffer: createTexture('single'), depth: false });
+
+            renderPass.init(single);
+            expect(renderPass.colorArrayOps).to.have.lengthOf(1);
+            expect(renderPass.colorArrayOps[0]).to.equal(first);
+
+            renderPass.init(renderTarget);
+            expect(renderPass.colorArrayOps).to.have.lengthOf(2);
+            expect(renderPass.colorArrayOps[0]).to.equal(first);
+            expect(renderPass.colorArrayOps[1].store).to.equal(true);
+
+            single.destroyTextureBuffers();
+            single.destroy();
+        });
+
+    });
+
     describe('#allocateAttachments: explicit multisampled attachments', function () {
 
         const createMsTexture = (name, format = PIXELFORMAT_RGBA8) => {

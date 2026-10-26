@@ -16,7 +16,7 @@ import { LAYERID_SKYBOX, PROJECTION_PERSPECTIVE, SKYTYPE_INFINITE } from '../../
 import { GraphNode } from '../../../scene/graph-node.js';
 import { EnvLighting } from '../../../scene/graphics/env-lighting.js';
 import { getBlueNoiseTexture } from '../../../scene/graphics/noise-textures.js';
-import { drawQuadWithShader } from '../../../scene/graphics/quad-render-utils.js';
+import { RenderPassShaderQuad } from '../../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderMaterial } from '../../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { ChunkUtils } from '../../../scene/shader-lib/chunk-utils.js';
@@ -729,6 +729,23 @@ class DynamicSkyEffect extends CameraFrameEffect {
     _envAtlasTarget = null;
 
     /**
+     * The pass rendering the sky to the faces of the lighting cubemap, created when first needed.
+     *
+     * @type {RenderPassShaderQuad|null}
+     * @private
+     */
+    _bakePass = null;
+
+    /**
+     * The pass blending the lighting into the environment atlas, every frame of a blend, created
+     * when first needed.
+     *
+     * @type {RenderPassShaderQuad|null}
+     * @private
+     */
+    _blendPass = null;
+
+    /**
      * The progress of the blend of the lighting, 0-1, where 1 has it done, and its duration in
      * seconds.
      *
@@ -880,6 +897,11 @@ class DynamicSkyEffect extends CameraFrameEffect {
 
         // releases the passes
         super.destroy();
+
+        this._bakePass?.destroy();
+        this._bakePass = null;
+        this._blendPass?.destroy();
+        this._blendPass = null;
 
         this._meshInstance?.destroy();
         this._meshInstance = null;
@@ -1717,7 +1739,15 @@ class DynamicSkyEffect extends CameraFrameEffect {
         device.scope.resolve('dynSkyBlendPrevious').setValue(this._atlasPrevious);
         device.scope.resolve('dynSkyBlendLatest').setValue(this._atlasLatest);
         device.scope.resolve('dynSkyBlendWeight').setValue(this._blendWeight);
-        drawQuadWithShader(device, this._envAtlasTarget, this._getBlendShader());
+
+        let blendPass = this._blendPass;
+        if (!blendPass) {
+            blendPass = this._blendPass = new RenderPassShaderQuad(device);
+            blendPass.name = 'DynamicSkyLightingBlend';
+        }
+        blendPass.shader = this._getBlendShader();
+        blendPass.init(this._envAtlasTarget);
+        blendPass.render();
     }
 
     /**
@@ -1745,10 +1775,16 @@ class DynamicSkyEffect extends CameraFrameEffect {
         device.setBlendState(BlendState.NOBLEND);
         device.scope.resolve('uvMod').setValue(UV_MOD);
         const faceId = device.scope.resolve('dynSkyFace');
-        const shader = this._getBakeShader();
+        let bakePass = this._bakePass;
+        if (!bakePass) {
+            bakePass = this._bakePass = new RenderPassShaderQuad(device);
+            bakePass.name = 'DynamicSkyLightingBake';
+        }
+        bakePass.shader = this._getBakeShader();
         for (let face = 0; face < 6; face++) {
             faceId.setValue(face);
-            drawQuadWithShader(device, this._faceTargets[face], shader);
+            bakePass.init(this._faceTargets[face]);
+            bakePass.render();
         }
 
         EnvLighting.generateAtlas(this._lightingSource, {
