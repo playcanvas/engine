@@ -790,8 +790,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } features [${this.initOptions.featureLevel === 'bare' ? 'bare' : 'full'}]: ${enabledFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
         );
 
-        // HTML-in-Canvas support (copyElementImageToTexture)
-        this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
+        // HTML-in-Canvas support (drawElementImageToTexture, or copyElementImageToTexture before
+        // Chrome 155)
+        const queue = this.wgpu.queue;
+        this.supportsHtmlTextures = typeof queue?.drawElementImageToTexture === 'function' ||
+            typeof queue?.copyElementImageToTexture === 'function';
 
         // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
         this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
