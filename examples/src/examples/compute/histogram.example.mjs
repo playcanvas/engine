@@ -187,8 +187,10 @@ app.on('destroy', () => {
     onDeviceLost.off();
 });
 
-// Before the compute pass dispatches, clear the storage buffer, to avoid the accumulation buildup
+// Right before the compute pass dispatches, set up the size of the dispatch, a thread for each
+// pixel, and clear the storage buffer, to avoid the accumulation buildup
 computePass.onBefore = () => {
+    compute.setupDispatchThreads(device.width, device.height);
     histogramStorageBuffer.clear();
 };
 
@@ -221,12 +223,7 @@ computePass.onAfter = () => {
         });
 };
 
-app.on('update', (/** @type {number} */ _dt) => {
-    if (device.supportsCompute) {
-        // The size of the dispatch, a thread for each pixel, which the compute pass uses
-        compute.setupDispatchThreads(app.graphicsDevice.width, app.graphicsDevice.height);
-    }
-
+app.on('update', () => {
     // Render the most recently read histogram using lines
     if (histogramPositions) {
         app.drawLineArrays(histogramPositions, Color.YELLOW);

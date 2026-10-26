@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { RenderPass } from '../../../src/platform/graphics/render-pass.js';
@@ -105,6 +106,69 @@ describe('RenderPass', function () {
 
             expect(renderPass.colorArrayOps[0].clear).to.equal(false);
             expect(renderPass.colorArrayOps[1].clear).to.equal(false);
+        });
+
+    });
+
+    describe('#setStoreColor', function () {
+
+        it('sets the store of all attachments when no index is specified', function () {
+            renderPass.setStoreColor(false);
+            expect(renderPass.colorArrayOps[0].store).to.equal(false);
+            expect(renderPass.colorArrayOps[1].store).to.equal(false);
+        });
+
+        it('sets the store of a single attachment when an index is specified', function () {
+            renderPass.setStoreColor(false, 1);
+            expect(renderPass.colorArrayOps[0].store).to.equal(true);
+            expect(renderPass.colorArrayOps[1].store).to.equal(false);
+        });
+
+        it('is reset to the default by init', function () {
+            renderPass.setStoreColor(false);
+            renderPass.init(renderTarget);
+            expect(renderPass.colorArrayOps[0].store).to.equal(true);
+        });
+
+    });
+
+    describe('#setStoreDepth and #setStoreStencil', function () {
+
+        it('set the store of the depth and the stencil', function () {
+            expect(renderPass.depthStencilOps.storeDepth).to.equal(false);
+            expect(renderPass.depthStencilOps.storeStencil).to.equal(false);
+
+            renderPass.setStoreDepth(true);
+            renderPass.setStoreStencil(true);
+            expect(renderPass.depthStencilOps.storeDepth).to.equal(true);
+            expect(renderPass.depthStencilOps.storeStencil).to.equal(true);
+        });
+
+    });
+
+    describe('#setGenerateMipmaps', function () {
+
+        it('disables and restores the mipmaps of a color buffer with mipmaps', function () {
+            const texture = new Texture(device, { name: 'mips', width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: true });
+            const rt = new RenderTarget({ colorBuffer: texture, depth: false });
+            const pass = new RenderPass(device);
+            pass.init(rt);
+            expect(pass.colorOps.genMipmaps).to.equal(true);
+
+            pass.setGenerateMipmaps(false);
+            expect(pass.colorOps.genMipmaps).to.equal(false);
+
+            pass.setGenerateMipmaps(true);
+            expect(pass.colorOps.genMipmaps).to.equal(true);
+
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('does not generate the mipmaps of color buffers without mipmaps', function () {
+            renderPass.setGenerateMipmaps(true);
+            expect(renderPass.colorArrayOps[0].genMipmaps).to.equal(false);
+            expect(renderPass.colorArrayOps[1].genMipmaps).to.equal(false);
         });
 
     });
@@ -243,6 +307,60 @@ describe('RenderPass', function () {
             renderPass.destroy();
 
             expect([renderPass.onBefore, renderPass.onAfter]).to.deep.equal([null, null]);
+        });
+    });
+
+    describe('before #init', function () {
+
+        afterEach(function () {
+            restore();
+        });
+
+        const setters = {
+            setClearColor: pass => pass.setClearColor(new Color(1, 0, 0, 1)),
+            setClearDepth: pass => pass.setClearDepth(1),
+            setClearStencil: pass => pass.setClearStencil(0),
+            setStoreColor: pass => pass.setStoreColor(true),
+            setStoreDepth: pass => pass.setStoreDepth(true),
+            setStoreStencil: pass => pass.setStoreStencil(true),
+            setGenerateMipmaps: pass => pass.setGenerateMipmaps(false)
+        };
+
+        Object.entries(setters).forEach(([name, call]) => {
+            it(`asserts, and does not throw, when ${name} is called`, function () {
+                const pass = new RenderPass(device);
+                const assertion = stub(Debug, 'assert');
+
+                expect(() => call(pass)).to.not.throw();
+                expect(assertion.getCalls().some(c => !c.args[0])).to.equal(true);
+            });
+        });
+
+        it('asserts when the pass renders, and executes it without a GPU render pass', function () {
+            const pass = new RenderPass(device);
+            const start = stub(device, 'startRenderPass');
+            const execute = stub(pass, 'execute');
+            const assertion = stub(Debug, 'assert');
+
+            pass.render();
+
+            expect(assertion.getCalls().some(c => !c.args[0])).to.equal(true);
+            expect(execute.calledOnce).to.equal(true);
+            expect(start.called).to.equal(false);
+        });
+
+        it('does not assert once the pass is initialized for the back buffer', function () {
+            const pass = new RenderPass(device);
+            pass.init(null);
+            stub(device, 'startRenderPass');
+            stub(device, 'endRenderPass');
+            const assertion = stub(Debug, 'assert');
+
+            pass.setClearColor(new Color(1, 0, 0, 1));
+            pass.setClearDepth(1);
+            pass.render();
+
+            expect(assertion.getCalls().some(c => !c.args[0])).to.equal(false);
         });
     });
 

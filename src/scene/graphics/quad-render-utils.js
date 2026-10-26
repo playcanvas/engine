@@ -12,19 +12,34 @@ import { RenderPassQuad } from './render-pass-quad.js';
 const _tempRect = new Vec4();
 
 /**
- * Draws a screen-space quad using a specific shader.
+ * Draws a quad with a shader into a render target, covering the whole render target, or the
+ * viewport rectangle. It draws immediately, outside of the frame graph: each call creates a render
+ * pass and the quad, renders the pass, and destroys the quad, so it allocates on every call. This
+ * suits a single draw, for example to generate a texture once. To draw a quad every frame, as part
+ * of a frame, or with its own render states, use a {@link RenderPassShaderQuad} instead, which is
+ * created once and reused.
+ *
+ * The content of the render target is loaded, and not cleared. The quad is drawn with the blend
+ * state currently set on the graphics device, see {@link GraphicsDevice#setBlendState}, and
+ * without depth test, face culling or stencil. The parameters of the shader are set on the scope
+ * of the graphics device before the call, see {@link GraphicsDevice#scope}.
  *
  * @param {GraphicsDevice} device - The graphics device used to draw the quad.
- * @param {RenderTarget|null} target - The destination render target. If undefined, target is the
- * frame buffer.
- * @param {Shader} shader - The shader used for rendering the quad. Vertex shader should contain
- * `attribute vec2 vertex_position`.
+ * @param {RenderTarget|null} target - The render target to draw into, or null to draw into the
+ * back buffer.
+ * @param {Shader} shader - The shader used for rendering the quad. Its vertex shader receives the
+ * corners of the quad in an attribute using {@link SEMANTIC_POSITION}, which the `quadVS` shader
+ * chunk implements, see {@link RenderPassShaderQuad}.
  * @param {Vec4} [rect] - The viewport rectangle of the quad, in pixels. Defaults to fullscreen:
  * `[0, 0, target.width, target.height]`.
  * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to fullscreen:
  * `[0, 0, target.width, target.height]`.
  * @param {string} [name] - The render pass name used for GPU profiling and debugging in debug
  * builds. Defaults to 'RenderPassQuad'.
+ * @example
+ * // generate a texture once, by drawing a shader into its render target
+ * device.scope.resolve('uScale').setValue(4);
+ * drawQuadWithShader(device, renderTarget, shader);
  * @category Graphics
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect, name) {
