@@ -543,7 +543,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * @param {WGSLLanguageFeatures} [wgslFeatures] - The WGSL language features reported by the
      * canvas's WebGPU entry point, if the browser reports them.
-     * @ignore
+     * @private
      */
     initDeviceCaps(wgslFeatures) {
 
