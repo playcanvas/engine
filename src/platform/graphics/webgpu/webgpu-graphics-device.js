@@ -540,7 +540,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    initDeviceCaps() {
+    /**
+     * @param {WGSLLanguageFeatures} [wgslFeatures] - The WGSL language features reported by the
+     * canvas's WebGPU entry point, if the browser reports them.
+     * @ignore
+     */
+    initDeviceCaps(wgslFeatures) {
 
         const limits = this.wgpu?.limits;
         this.limits = limits;
@@ -578,7 +583,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.samples = this.backBufferAntialias ? 4 : 1;
 
         // WGSL features
-        const wgslFeatures = getCanvasNavigatorGpu(this.canvas).wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
         this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
         this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
@@ -775,9 +779,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxSubgroupSize = gpuAdapter?.info?.subgroupMaxSize ?? 0;
         this.minSubgroupSize = gpuAdapter?.info?.subgroupMinSize ?? 0;
 
+        // the WebGPU entry point of the canvas, which reports the WGSL features and canvas format
         const gpu = getCanvasNavigatorGpu(this.canvas);
-        const wgslFeatureNames = gpu?.wgslLanguageFeatures ?
-            Array.from(gpu.wgslLanguageFeatures) : [];
+        const wgslFeatures = gpu.wgslLanguageFeatures;
+        const wgslFeatureNames = wgslFeatures ? Array.from(wgslFeatures) : [];
         Debug.log(
             `WEBGPU${gpuAdapter?.info ?
                 ` (${gpuAdapter.info.vendor || '?'} / ${gpuAdapter.info.architecture || gpuAdapter.info.device || '?'})` :
@@ -803,7 +808,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         };
         this.wgpu.addEventListener?.('uncapturederror', this._uncapturedErrorHandler);
 
-        this.initDeviceCaps();
+        this.initDeviceCaps(wgslFeatures);
 
         this.gpuContext = this.canvas.getContext('webgpu');
 

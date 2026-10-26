@@ -4,9 +4,11 @@ import { getCanvasNavigatorGpu } from '../../../../src/platform/graphics/webgpu/
 
 describe('getCanvasNavigatorGpu', function () {
     let windowDescriptor;
+    let navigatorDescriptor;
 
     beforeEach(function () {
         windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+        navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
     });
 
     afterEach(function () {
@@ -14,6 +16,11 @@ describe('getCanvasNavigatorGpu', function () {
             Object.defineProperty(globalThis, 'window', windowDescriptor);
         } else {
             delete globalThis.window;
+        }
+        if (navigatorDescriptor) {
+            Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
+        } else {
+            delete globalThis.navigator;
         }
     });
 
@@ -41,6 +48,19 @@ describe('getCanvasNavigatorGpu', function () {
             value: { navigator: { gpu } }
         });
         const canvas = { ownerDocument: { defaultView: null } };
+
+        expect(getCanvasNavigatorGpu(canvas)).to.equal(gpu);
+    });
+
+    it('uses the global navigator for a canvas without a document when there is no window', function () {
+        // as in a worker, where an OffscreenCanvas has no owner document and there is no window
+        delete globalThis.window;
+        const gpu = {};
+        Object.defineProperty(globalThis, 'navigator', {
+            configurable: true,
+            value: { gpu }
+        });
+        const canvas = { width: 1, height: 1 };
 
         expect(getCanvasNavigatorGpu(canvas)).to.equal(gpu);
     });

@@ -6,8 +6,9 @@
  * throwing, which also prevents fallback to WebGL2. If the canvas has an associated window, this
  * deliberately returns that window's `navigator.gpu` even when it is undefined.
  *
- * Canvases without an associated window, such as those created using `createHTMLDocument()` or
- * supplied by a headless host, use the current window's WebGPU entry point.
+ * Canvases without an associated window, such as an `OffscreenCanvas` in a worker, a canvas
+ * created using `createHTMLDocument()` or one supplied by a headless host, use the WebGPU entry
+ * point of the current window, or of the global scope when there is no window.
  *
  * @param {HTMLCanvasElement} canvas - The canvas the device will draw to.
  * @returns {GPU|undefined} The WebGPU entry point to use for the canvas, if available.
@@ -17,7 +18,7 @@ const getCanvasNavigatorGpu = (canvas) => {
     if (view) {
         return view.navigator?.gpu;
     }
-    return window.navigator?.gpu;
+    return (typeof window !== 'undefined' ? window : globalThis).navigator?.gpu;
 };
 
 export { getCanvasNavigatorGpu };
