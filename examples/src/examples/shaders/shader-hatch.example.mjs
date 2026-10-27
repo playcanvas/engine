@@ -46,10 +46,12 @@ import {
     ScriptHandler,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     WasmModule,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
 import { data, deviceType } from 'examples/context';
@@ -65,7 +67,6 @@ WasmModule.setConfig('DracoDecoderModule', {
 });
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     board: new Asset('board', 'container', { url: './assets/models/chess-board.glb' }),
 
     bitmoji: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
@@ -217,19 +218,18 @@ const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.4, 0.45, 0.5)
 });
-camera.setLocalPosition(30, 30, 30);
+camera.setLocalPosition(140.02, 85.42, 204.07);
 
-// Add orbit camera script to the camera
+// Add camera controls to the camera
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: entity,
-        distanceMax: 250
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(11.04, 20.45, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 250)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Update things each frame

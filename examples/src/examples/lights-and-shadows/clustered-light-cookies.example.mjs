@@ -34,11 +34,13 @@ import {
     TextureHandler,
     TextureRenderer,
     TouchDevice,
+    Vec2,
     Vec3,
     WasmModule,
     createGraphicsDevice,
     math
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -57,7 +59,6 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     board: new Asset('board', 'container', { url: './assets/models/chess-board.glb' })
 };
 
@@ -256,18 +257,16 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(0, 50, 70);
 
-// Add orbit camera script with mouse and touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: board,
-        distanceMax: 200,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(2.76, 5.11, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 200)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 let frame = 0;

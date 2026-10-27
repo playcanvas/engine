@@ -27,8 +27,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -36,7 +39,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -95,22 +97,21 @@ const testEntity = assets.model.resource.instantiateRenderEntity();
 testEntity.setLocalEulerAngles(0, 90, 0);
 app.root.addChild(testEntity);
 
-// Create a camera with an orbit camera script
+// Create a camera with camera controls
 const camera = new Entity();
 camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES
 });
+camera.setLocalPosition(27, 0, 3);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(2, 0, 3),
+        pitchRange: new Vec2(-90, 90)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
-camera.script.orbitCamera.yaw = 90;
-camera.script.orbitCamera.distance = 25;
 
 const directionalLight = new Entity();
 directionalLight.addComponent('light', {

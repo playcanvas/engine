@@ -38,9 +38,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatFlipbook } from 'playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
@@ -97,8 +99,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    apartment: new Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    apartment: new Asset('apartment', 'container', { url: './assets/models/apartment.glb' })
 };
 
 await new Promise((resolve) => {
@@ -129,23 +130,18 @@ camera.addComponent('camera', {
     fov: 80
 });
 
-const focusPoint = new Entity();
-focusPoint.setLocalPosition(-80, 80, -20);
+camera.setLocalPosition(-50, 100, 220);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: focusPoint,
-        distanceMax: 500,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 500)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-camera.setLocalPosition(-50, 100, 220);
-camera.lookAt(0, 0, 100);
 app.root.addChild(camera);
 
 // Create player flipbook

@@ -20,9 +20,11 @@ import {
     TextureHandler,
     TextureRenderer,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -34,7 +36,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
     xmas_negx: new Asset('xmas_negx', 'texture', {
         url: './assets/cubemaps/xmas_faces/xmas_negx.png'
@@ -259,18 +260,16 @@ camera.addComponent('camera', {
 // and position it in the world
 camera.setLocalPosition(300, 120, 25);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: app.root,
-        distanceMax: 1200,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, 190.71, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 1200)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Handle HUD changes - update properties on the scene

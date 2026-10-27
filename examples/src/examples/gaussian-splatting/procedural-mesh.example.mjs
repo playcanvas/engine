@@ -32,8 +32,11 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
 import { GSplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
@@ -47,7 +50,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -224,9 +226,6 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 // Shuffle the clouds array for random order (same as shadow-cascades)
 clouds.sort(() => Math.random() - 0.5);
 
-// Find a tree to use as focus point (same as shadow-cascades)
-const tree = terrain.findOne('name', 'Arbol 2.002');
-
 // Create camera with orbit controls (same setup as shadow-cascades)
 const camera = new Entity('Camera');
 camera.addComponent('camera', {
@@ -235,33 +234,26 @@ camera.addComponent('camera', {
 });
 
 // Position camera in the world
-camera.setLocalPosition(-500, 160, 300);
+camera.setLocalPosition(-406.96, 136.93, 248.86);
 
-// Add orbit camera script with mouse and touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: tree,
-        distanceMax: 600
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(-4.47, 37.15, 27.63),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 600)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Animate clouds (same as shadow-cascades)
 const cloudSpeed = 0.2;
-let frameNumber = 0;
 let time = 0;
 
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
-
-    // On the first frame, move camera further away
-    if (frameNumber === 0) {
-        camera.script.orbitCamera.distance = 470;
-    }
 
     // Disable reveal effect when complete
     if (revealScript.enabled && revealScript.effectTime >= revealScript.duration) {
@@ -279,6 +271,4 @@ app.on('update', (/** @type {number} */ dt) => {
             -5 + radius * Math.cos(cloudTime * cloudSpeed)
         );
     });
-
-    frameNumber++;
 });

@@ -48,9 +48,11 @@ import {
     TONEMAP_NEUTRAL,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -58,7 +60,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     house: new Asset('house', 'container', { url: './assets/models/house.glb' }),
     spark: new Asset('spark', 'texture', { url: './assets/textures/spark.png' }, { srgb: true }),
     helipad: new Asset(
@@ -227,20 +228,18 @@ cameraEntity.addComponent('camera', {
     fov: 50
 });
 
-// Add orbit camera script with a mouse and a touch support
+cameraEntity.setLocalPosition(28, 14, 28);
+
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: house,
-        distanceMax: 120,
-        frameOnStart: false
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, 9.17, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 120)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
-cameraEntity.setLocalPosition(28, 14, 28);
 app.root.addChild(cameraEntity);
 
 // ------ The ink outline effect ------

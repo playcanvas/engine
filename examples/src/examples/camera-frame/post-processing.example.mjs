@@ -42,11 +42,13 @@ import {
     TextureHandler,
     TouchDevice,
     Vec2,
+    Vec3,
     Vec4,
     WasmModule,
     createGraphicsDevice,
     math
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -61,7 +63,6 @@ WasmModule.setConfig('DracoDecoderModule', {
 });
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     platform: new Asset('statue', 'container', { url: './assets/models/scifi-platform.glb' }),
     mosquito: new Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
     font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
@@ -186,23 +187,18 @@ cameraEntity.addComponent('camera', {
     fov: 80
 });
 
-// Add orbit camera script with a mouse and a touch support
-cameraEntity.addComponent('script');
+cameraEntity.setLocalPosition(-0.07, 37.64, -193.53);
 
-// Add orbit camera script with a mouse and a touch support
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: mosquitoEntity,
-        distanceMax: 190,
-        frameOnStart: false
+// Add camera controls
+cameraEntity.addComponent('script');
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(-0.59, 20.78, -4.28),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 190)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
-cameraEntity.setLocalPosition(0, 40, -220);
-cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
 // Create a 2D screen to place UI on

@@ -64,9 +64,11 @@ import {
     UNIFORMTYPE_VEC3,
     UniformBufferFormat,
     UniformFormat,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -78,8 +80,7 @@ window.focus();
 
 const assets = {
     statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    hdri: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false }),
-    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
+    hdri: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
 };
 
 const gfxOptions = {
@@ -302,21 +303,18 @@ rtCamera.addComponent('camera', {
     renderTarget: renderTarget
 });
 
-// Add orbit camera script
+rtCamera.setLocalPosition(-4, 5, 22);
+
+// Add camera controls
 rtCamera.addComponent('script');
-rtCamera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: statueEntity,
-        distanceMax: 500,
-        frameOnStart: false
+rtCamera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0.17, 7.52, 0.02),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 500)
     }
 });
-rtCamera.script.create('orbitCameraInputMouse');
-rtCamera.script.create('orbitCameraInputTouch');
-
-rtCamera.setLocalPosition(-4, 5, 22);
-rtCamera.lookAt(0, 0, 1);
 app.root.addChild(rtCamera);
 
 // Create main camera (for final view - only the Immediate layer for texture previews)

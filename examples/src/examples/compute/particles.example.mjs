@@ -29,9 +29,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -44,7 +46,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -103,17 +104,17 @@ cameraEntity.addComponent('camera', {
 app.root.addChild(cameraEntity);
 cameraEntity.setPosition(-150, -60, 190);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        frameOnStart: false,
-        distanceMax: 500
-    }
-});
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
+const cameraControls = /** @type {CameraControls} */ (
+    cameraEntity.script.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            pitchRange: new Vec2(-90, 90),
+            zoomRange: new Vec2(0.01, 500)
+        }
+    })
+);
 
 // ------- Particle simulation -------
 
@@ -214,7 +215,7 @@ const s1 = addSphere(1, -38, -130, 0, 35);
 addSphere(2, 45, -210, 35, 70);
 
 // Camera focuses on one of the spheres
-cameraEntity.script.orbitCamera.focusEntity = s1;
+cameraControls.focusPoint = s1.getPosition();
 
 // Upload the sphere data to the buffer
 const sphereStorageBuffer = new StorageBuffer(device, numSpheres * 16, BUFFERUSAGE_COPY_DST);

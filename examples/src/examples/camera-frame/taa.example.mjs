@@ -27,8 +27,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -36,7 +39,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     house: new Asset('house', 'container', { url: './assets/models/pbr-house.glb' }),
     cube: new Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
     envatlas: new Asset(
@@ -108,20 +110,18 @@ cameraEntity.addComponent('camera', {
     fov: 80
 });
 
-// Add orbit camera script with a mouse and a touch support
+cameraEntity.setLocalPosition(0, 43.33, -237.13);
+
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: houseEntity,
-        distanceMax: 400,
-        frameOnStart: true
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, -1.15, -8.05),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 400)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-cameraEntity.setLocalPosition(0, 40, -220);
-cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
 // Add a shadow casting directional light

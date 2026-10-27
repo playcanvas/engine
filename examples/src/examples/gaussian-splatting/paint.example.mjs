@@ -42,15 +42,17 @@ import {
     TONEMAP_LINEAR,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     WORKBUFFER_UPDATE_ONCE,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { GSplatResource, Script } from 'playcanvas'
+ * @import { GSplatResource } from 'playcanvas'
  */
 
 // Shader options for GSplatProcessor - paints splats inside brush sphere
@@ -179,7 +181,6 @@ data.set('paintIntensity', 0.5);
 data.set('brushSize', 0.15);
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     biker: new Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
     apartment: new Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
@@ -266,7 +267,7 @@ createPaintableSplat('apartment', assets.apartment, [0, -0.5, -3], [180, 0, 0], 
 const cameraPos = new Vec3(-0.98, 0.28, -2.31);
 const focusPos = new Vec3(-1.1, 0.13, -1.56);
 
-// Create camera with orbit camera script
+// Create camera with camera controls
 const camera = new Entity('Camera');
 camera.addComponent('camera', {
     fov: 90,
@@ -277,18 +278,17 @@ camera.setLocalPosition(cameraPos);
 camera.lookAt(focusPos);
 app.root.addChild(camera);
 
-// Add orbit camera script with native mouse input (LMB orbit, MMB pan, wheel zoom)
+// Add camera controls (LMB orbit, MMB pan, wheel zoom)
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        frameOnStart: false,
-        inertiaFactor: 0.07
-    }
-});
-const orbitInput = /** @type {Script & { panButtonDown: boolean }} */ (camera.script.create('orbitCameraInputMouse'));
-
-// Initialize orbit camera to match current camera position and focus
-camera.script.orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            focusPoint: focusPos,
+            pitchRange: new Vec2(-90, 90)
+        }
+    })
+);
 
 // Paint state
 let isPainting = false;
@@ -374,13 +374,12 @@ const paintAt = (x, y) => {
     });
 };
 
-// RMB paint - disable orbit input while painting (orbit-camera handles LMB/MMB/wheel natively)
+// RMB paint - disable camera controls while painting
 app.mouse.on(EVENT_MOUSEDOWN, (e) => {
     if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = true;
         pickerDirty = true;
-        orbitInput.enabled = false;
-        orbitInput.panButtonDown = false; // Cancel pan that orbit-camera started
+        cameraControls.enabled = false;
         paintAt(e.x, e.y);
     }
 });
@@ -392,13 +391,13 @@ app.mouse.on(EVENT_MOUSEMOVE, (e) => {
 app.mouse.on(EVENT_MOUSEUP, (e) => {
     if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = false;
-        orbitInput.enabled = true;
+        cameraControls.enabled = true;
     }
 });
 
 window.addEventListener('mouseup', () => {
     isPainting = false;
-    orbitInput.enabled = true;
+    cameraControls.enabled = true;
 });
 
 // Cleanup on destroy

@@ -36,8 +36,11 @@ import {
     TONEMAP_NEUTRAL,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -45,7 +48,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     envAtlas: new Asset(
         'env-atlas',
         'texture',
@@ -108,23 +110,19 @@ modelEntity.findComponents('light').forEach((light) => {
 });
 app.root.addChild(modelEntity);
 
-// Create a camera with an orbit camera script, framing the model
+// Create a camera with camera controls, looking at the model straight from the front
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.1, 0.1, 0.1),
     toneMapping: TONEMAP_NEUTRAL
 });
+camera.setLocalPosition(1.18, -1.57, 9.47);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: modelEntity
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(1.18, -1.57, -0.25),
+        pitchRange: new Vec2(-90, 90)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
-
-// Look at the model straight from the front, closer than the framing of its bounds
-const orbitCamera = camera.script.orbitCamera;
-orbitCamera.reset(0, 0, orbitCamera.distance * 0.6);
