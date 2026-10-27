@@ -22,7 +22,7 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from 'playcanvas';
  */
 export function Controls({ observer }) {
     const [proj, setProj] = useState(/** @type {number} */ (PROJECTION_PERSPECTIVE));
-    const [type, setType] = useState('box');
+    const [type, setType] = useState('capsule');
 
     return (
         <>
