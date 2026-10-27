@@ -51,7 +51,6 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * still have the size of the previous frame - see {@link CameraFrameEffectContext}. An effect
  * resolving the scene to another resolution sets this, and the height, to that resolution.
  * @property {number} height - The height of the scene color this frame, in pixels.
- * @ignore
  */
 
 /**
@@ -67,7 +66,6 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * `getLinearScreenDepth` needs. Shared by the effects, so copy them rather than change them.
  * @property {string} key - A key identifying those defines, to add to the unique name of such a
  * shader, so that differently stored depths do not share a compiled shader.
- * @ignore
  */
 
 /**
@@ -86,7 +84,6 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * resizes, which the handle always identifies, and it is published to the `uSceneColorMap`
  * texture the shaders sample before the passes at the postOpaque stage run.
  * @property {RenderTarget} [sceneTarget] - The scene render target, see FRAMERESOURCE_SCENETARGET.
- * @ignore
  */
 
 /**
@@ -107,7 +104,6 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * The effect hands over the texture they render to in {@link CameraFrameEffect#resolveScene}.
  * @property {FramePass[]} postResolve - Passes running after the scene is resolved and its half
  * resolution copy is made, before the composition.
- * @ignore
  */
 
 // capitalizes the first character of a name, to derive the identifiers an effect's chunk uses
@@ -134,7 +130,16 @@ let uid = 0;
  * the entry function, by a `debug<Name>()` function in the chunk.
  *
  * All effects registered to a compose slot are called in registration order from within the single
- * compose pass, so an effect never costs an additional full-screen pass.
+ * compose pass, so contributing to the composition never costs an additional full-screen pass.
+ *
+ * An effect can also own passes, for work the composition cannot do in a single sample per pixel,
+ * such as a blur at a lower resolution or rendering into the scene. It creates them in
+ * {@link CameraFrameEffect#createPasses}, from the frame resources it
+ * {@link CameraFrameEffect#requires}, adding each to the stage of the frame it runs at, and its
+ * chunk reads what they render through the uniforms it sets with
+ * {@link CameraFrameEffect#setUniform}. An effect whose passes resolve the scene, such as an
+ * anti-aliasing, replaces the scene color the rest of the frame reads in
+ * {@link CameraFrameEffect#resolveScene}. An effect owning passes does not need a compose slot.
  *
  * Every chunk can read what the composition provides: the scene color, `sceneTexture`, and
  * `sceneTextureSize` - the width, height, 1 / width and 1 / height of the scene texture. Use the
@@ -152,15 +157,21 @@ let uid = 0;
  *   parameters as fields. Resources the effect keeps for its whole life - a lookup texture, a noise
  *   texture - are created here, and fixed defines can be set with
  *   {@link CameraFrameEffect#setDefine}.
- * - **On {@link CameraFrame#update}, while {@link CameraFrameEffect#active}** -
+ * - **On {@link CameraFrame#update}, while {@link CameraFrameEffect#active}** - an effect owning
+ *   passes creates them in {@link CameraFrameEffect#createPasses} when the camera frame builds its
+ *   passes: the first time, and again each time it rebuilds them, after
+ *   {@link CameraFrameEffect#destroyPasses} released them - when the
+ *   {@link CameraFrameEffect#buildKey} or the {@link CameraFrameEffect#requires} of an effect
+ *   owning passes change, or the options of the camera frame do. Then
  *   {@link CameraFrameEffect#update} applies the parameters: the values of the uniforms with
  *   {@link CameraFrameEffect#setUniform}, and the defines that depend on them.
- * - **Each frame while it takes part** - {@link CameraFrameEffect#frameUpdate} is called with the
- *   values of the frame being prepared, for the few effects which depend on them. Most effects do
- *   not need it.
- * - **Destroy** - {@link CameraFrameEffect#destroy} releases what the constructor created. Whoever
- *   constructs an effect destroys it: the camera frame destroys its built-in effects, and an effect
- *   you add is yours to destroy.
+ * - **Each frame while it takes part** - an effect whose passes resolve the scene hands them the
+ *   scene color in {@link CameraFrameEffect#resolveScene}, and then
+ *   {@link CameraFrameEffect#frameUpdate} is called with the values of the frame being prepared,
+ *   for the few effects which depend on them. Most effects need neither.
+ * - **Destroy** - {@link CameraFrameEffect#destroy} releases what the constructor created, and the
+ *   passes. Whoever constructs an effect destroys it: the camera frame destroys its built-in
+ *   effects, and an effect you add is yours to destroy.
  *
  * @example
  * // A tint applied in display space, after tone mapping. The chunk declares its uniform and the
@@ -204,6 +215,60 @@ let uid = 0;
  * tint.setUniform('tintColor', new Float32Array([1, 0.9, 0.8]));
  * cameraFrame.addEffect(tint);
  * cameraFrame.update();
+ * @example
+ * // A glow owning a pass: the pass blurs the half resolution scene into a render target of the
+ * // effect, which the chunk adds to the scene. GlowPass is a RenderPassShaderQuad blurring the
+ * // texture it is given, see RenderPassShaderQuad.
+ * class GlowEffect extends CameraFrameEffect {
+ *     constructor(device) {
+ *         super(device, 'glow', {
+ *             slot: COMPOSESLOT_HDR,
+ *             requires: [FRAMERESOURCE_SCENECOLORHALF],
+ *             glsl: `
+ *                 uniform sampler2D glowTexture;
+ *                 vec3 applyGlow(vec3 color, vec2 uv) {
+ *                     return color + texture2DLod(glowTexture, uv, 0.0).rgb;
+ *                 }
+ *             `,
+ *             wgsl: `
+ *                 var glowTexture: texture_2d<f32>;
+ *                 var glowTextureSampler: sampler;
+ *                 fn applyGlow(color: vec3f, uv: vec2f) -> vec3f {
+ *                     return color + textureSampleLevel(glowTexture, glowTextureSampler, uv, 0.0).rgb;
+ *                 }
+ *             `
+ *         });
+ *     }
+ *
+ *     createPasses(resources, passes) {
+ *         // the render target of the pass is resized to the half resolution scene every frame
+ *         const { sceneColorHalf } = resources;
+ *         this._target = new RenderTarget({
+ *             colorBuffer: new Texture(this.device, {
+ *                 name: 'GlowTexture',
+ *                 width: 1,
+ *                 height: 1,
+ *                 format: this.cameraFrame.hdrFormat,
+ *                 mipmaps: false
+ *             }),
+ *             depth: false
+ *         });
+ *
+ *         this._pass = new GlowPass(this.device, sceneColorHalf);
+ *         this._pass.init(this._target, { resizeSource: sceneColorHalf });
+ *         passes.postResolve.push(this._pass);
+ *
+ *         this.setUniform('glowTexture', this._target.colorBuffer);
+ *     }
+ *
+ *     destroyPasses() {
+ *         this._pass?.destroy();
+ *         this._pass = null;
+ *         this._target?.destroyTextureBuffers();
+ *         this._target?.destroy();
+ *         this._target = null;
+ *     }
+ * }
  * @category Graphics
  */
 class CameraFrameEffect {
@@ -491,7 +556,6 @@ class CameraFrameEffect {
      * @param {CameraFrameEffectResources} resources - The frame resources the effect requires.
      * @param {CameraFrameEffectPasses} passes - An empty array for each stage of the frame, to add
      * the passes to.
-     * @ignore
      */
     createPasses(resources, passes) {
     }
@@ -511,19 +575,27 @@ class CameraFrameEffect {
      *     this._pass = null;
      * }
      * ```
-     *
-     * @ignore
      */
     destroyPasses() {
     }
 
     /**
      * Returns a string which changes whenever the effect's passes need recreating - the parameters
-     * which alter the pass graph rather than just its uniforms. Effects without passes do not
+     * which alter the pass graph rather than just its uniforms. Read on each
+     * {@link CameraFrame#update} while the effect is active: when it differs from the previous
+     * update, the camera frame releases the passes with {@link CameraFrameEffect#destroyPasses} and
+     * creates them again with {@link CameraFrameEffect#createPasses}. Parameters the passes pick up
+     * in {@link CameraFrameEffect#update} do not belong in it. Effects without passes do not
      * implement this.
      *
+     * ```javascript
+     * buildKey() {
+     *     // a pass more renders at the high quality
+     *     return `${this.highQuality}`;
+     * }
+     * ```
+     *
      * @returns {string} The key.
-     * @ignore
      */
     buildKey() {
         return '';
@@ -549,7 +621,6 @@ class CameraFrameEffect {
      * default implementation leaves the scene unchanged.
      *
      * @param {CameraFrameEffectScene} scene - The scene being resolved.
-     * @ignore
      */
     resolveScene(scene) {
     }
