@@ -984,8 +984,8 @@ class StandardMaterial extends Material {
     }
 
     /**
-     * The glossiness of the sheen (fabric) microfiber structure. This color value is a single value
-     * between 0 and 1.
+     * The glossiness of the sheen (fabric) microfiber structure, from 0 (rough, a broad sheen) to 1
+     * (smooth, a sheen concentrated at grazing angles).
      *
      * @type {number}
      */
