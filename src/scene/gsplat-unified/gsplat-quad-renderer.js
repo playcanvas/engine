@@ -28,6 +28,10 @@ class GSplatQuadRenderer extends GSplatRenderer {
     /** @type {MeshInstance} */
     meshInstance;
 
+    // The native quad remains the picking and shadow mesh when a subclass composites forward color.
+    /** @type {MeshInstance} */
+    _quadMeshInstance;
+
     /** @type {number} */
     originalBlendType = BLEND_ADDITIVE;
 
@@ -84,7 +88,8 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_OVERDRAW');
 
-        this.meshInstance = this.createMeshInstance();
+        this._quadMeshInstance = this.createMeshInstance();
+        this.meshInstance = this._quadMeshInstance;
     }
 
     /**
@@ -102,14 +107,14 @@ class GSplatQuadRenderer extends GSplatRenderer {
         const isShadow = (renderMode & GSPLAT_SHADOW) !== 0;
 
         // Update mesh instance castShadow state FIRST, before adding to arrays
-        this.meshInstance.castShadow = isShadow;
+        this._quadMeshInstance.castShadow = isShadow;
 
         // Remove from old arrays if needed
         if (wasForward && !isForward) {
             this.layer.removeMeshInstances([this.meshInstance], true);
         }
         if (wasShadow && !isShadow) {
-            this.layer.removeShadowCasters([this.meshInstance]);
+            this.layer.removeShadowCasters([this._quadMeshInstance]);
         }
 
         // Add to new arrays if needed
@@ -117,7 +122,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
             this.layer.addMeshInstances([this.meshInstance], true);
         }
         if (!wasShadow && isShadow) {
-            this.layer.addShadowCasters([this.meshInstance]);
+            this.layer.addShadowCasters([this._quadMeshInstance]);
         }
 
         super.setRenderMode(renderMode);
@@ -130,12 +135,12 @@ class GSplatQuadRenderer extends GSplatRenderer {
                 this.layer.removeMeshInstances([this.meshInstance], true);
             }
             if (this.renderMode & GSPLAT_SHADOW) {
-                this.layer.removeShadowCasters([this.meshInstance]);
+                this.layer.removeShadowCasters([this._quadMeshInstance]);
             }
         }
 
         this._material.destroy();
-        this.meshInstance.destroy();
+        this._quadMeshInstance.destroy();
 
         super.destroy();
     }
@@ -218,14 +223,14 @@ class GSplatQuadRenderer extends GSplatRenderer {
     update(count, textureSize) {
 
         // limit splat render count to exclude those behind the camera
-        this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
+        this._quadMeshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
 
         // update splat count on the material
         this._material.setParameter('numSplats', count);
         this._material.setParameter('splatTextureSize', textureSize);
 
         // disable rendering if no splats to render
-        this.meshInstance.visible = count > 0;
+        this._quadMeshInstance.visible = count > 0;
     }
 
     /**
@@ -237,7 +242,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
      * @param {number} textureSize - The work buffer texture size.
      */
     setGpuSortedRendering(drawSlot, sortedIds, numSplatsBuffer, textureSize) {
-        this.meshInstance.setIndirect(null, drawSlot, 1);
+        this._quadMeshInstance.setIndirect(null, drawSlot, 1);
 
         // Bind compaction buffers for vertex shader
         this._material.setParameter('compactedSplatIds', sortedIds);
@@ -250,12 +255,12 @@ class GSplatQuadRenderer extends GSplatRenderer {
         }
 
         this._material.setParameter('splatTextureSize', textureSize);
-        this.meshInstance.visible = true;
+        this._quadMeshInstance.visible = true;
 
         // Ensure instancingCount is non-zero so the forward/shadow renderers don't
         // skip this draw call. The actual instance count is GPU-driven via indirect args.
-        if (this.meshInstance.instancingCount <= 0) {
-            this.meshInstance.instancingCount = 1;
+        if (this._quadMeshInstance.instancingCount <= 0) {
+            this._quadMeshInstance.instancingCount = 1;
         }
     }
 
@@ -263,7 +268,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
      * Switches the renderer to CPU-sorted rendering mode.
      */
     setCpuSortedRendering() {
-        this.meshInstance.setIndirect(null, -1);
+        this._quadMeshInstance.setIndirect(null, -1);
 
         if (this._material.getDefine('GSPLAT_INDIRECT_DRAW')) {
             this._material.setDefine('GSPLAT_INDIRECT_DRAW', false);
@@ -274,7 +279,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this.setOrderData();
 
         // Hide until update() is called with valid CPU sort data
-        this.meshInstance.visible = false;
+        this._quadMeshInstance.visible = false;
     }
 
     setOrderData() {

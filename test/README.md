@@ -24,6 +24,25 @@ This runs the same tests with the engine's WebGPU device instead of the null dev
 
 Tests obtain their device from `createGraphicsDevice()` in `test/device.mjs`, which returns whichever device the run uses. A test that checks the behaviour of one specific device constructs that device directly. Tests that need the GLSL transpilers, which are not available in Node, are excluded from this run.
 
+## Running SteadySplats Tests on WebGL2
+
+```sh
+npm run test:webgl
+```
+
+Open the printed localhost URL in a browser with WebGL2. The page runs the engine against an actual WebGL2 context and reports its results to the local test runner, which exits with a failing status if a test fails. These tests cover stochastic sampling, spatial probability ratios, temporal rejection, stationary convergence, multiple cameras, picking, shadows, CameraFrame, transparent layer composition, oblique projections, fallback transitions with omitted CPU center data, the compressed Biker asset, and resource cleanup.
+
+Sampling checks exercise the full texture lookup and primitive phases at low opacities. Refinement checks cover the finite frame budget, image retention after completion, and `frame:request` scheduling for applications that render on demand.
+
+Set `PC_WEBGL_BROWSER` to a Chrome or Chromium executable to run automatically in an isolated headless browser profile. For example, in PowerShell:
+
+```powershell
+$env:PC_WEBGL_BROWSER = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+npm run test:webgl
+```
+
+`PC_WEBGL_TEST_PORT` overrides the default port, 5557. Pass `-- --output=results.json` to save the result, including the actual renderer and device capabilities. The runner uses the repository's existing dependencies and does not download a browser.
+
 ## Code Coverage
 
 PlayCanvas uses [C8](https://github.com/bcoe/c8) to analyze and report unit test code coverage. To print a code coverage report, do:

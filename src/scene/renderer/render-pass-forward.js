@@ -390,6 +390,7 @@ class RenderPassForward extends RenderPass {
         this.updateCameraUse();
         this.updateDirectionalShadows();
         this.updateCameraBeforePasses();
+        this.renderer.gsplatDirector?.collectRenderPasses(this.cameraComponent.camera, this.internalBeforePasses, this);
         this.updateClears();
 
         // the camera's directional shadow map is shared with the other cameras, and is rendered

@@ -139,3 +139,17 @@ Now you can run various build options:
 | ------- | ----------- | ---------- |
 | `npm run build` | Build all engine flavors and type declarations | `build` |
 | `npm run docs` | Build engine [API reference docs](https://api.playcanvas.com/engine/) | `docs` |
+
+## SteadySplats attribution
+
+SteadySplats rendering follows [*SteadySplats: Resampling of Low-Variance Gaussians for
+High-Fidelity Stochastic Rendering*](https://arxiv.org/abs/2610.05576) by Felix Windisch,
+Thomas Köhler, Lukas Radl, Chris Wyman, Georgios Kopanas, Bernhard Kerbl and Markus
+Steinberger (2026). See the [authors' project and original web viewer](https://derthomy.github.io/SteadySplats/).
+
+Related LichtFeld-Studio work by Yehe Liu includes
+[viewport resampling (PR #3728)](https://github.com/MrNeRF/LichtFeld-Studio/pull/3728)
+and [color-variance training (PR #3726)](https://github.com/MrNeRF/LichtFeld-Studio/pull/3726).
+This PlayCanvas integration covers rendering. PR #3726 implements the paper's
+color-variance training objective and merged into LichtFeld-Studio's `master` branch
+on October 23, 2026.

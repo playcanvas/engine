@@ -12,6 +12,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @import { GSplatWorldState } from './gsplat-world-state.js'
  * @import { GSplatVaryings } from './gsplat-varyings.js'
  * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { FramePass } from '../../platform/graphics/frame-pass.js'
  */
 
 /**
@@ -23,7 +24,12 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @ignore
  * @property {GraphNode} cameraNode - The camera node for this view.
  * @property {boolean} stochastic - Whether the forward view uses unsorted stochastic alpha.
+ * @property {boolean} overdraw - Whether the view uses additive overdraw visualization.
  * @property {string} dither - The noise pattern stochastic coverage is dithered against.
+ * @property {number} steadyHistoryWeight - Nominal SteadySplats temporal retention.
+ * @property {boolean} steadyConvergence - Whether animated stationary views progressively converge.
+ * @property {number} steadyConvergenceFrames - Maximum stationary refinement frames.
+ * @property {number} historyVersion - Explicit history invalidation version.
  * @property {boolean} radialSorting - Whether radial (vs linear) depth sorting is used.
  * @property {number} alphaClip - Alpha threshold for shadow/pick/prepass rendering.
  * @property {number} alphaClipForward - Alpha floor for the forward pass.
@@ -35,8 +41,10 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @property {number} fisheye - Fisheye projection strength.
  * @property {ShaderMaterial} material - The scene gsplat template material.
  * @property {GSplatVaryings} varyings - User varying streams (provides the cache `words` count).
- * @property {number} [width] - Pick viewport width in pixels (picking only).
- * @property {number} [height] - Pick viewport height in pixels (picking only).
+ * @property {number} [width] - Render viewport width in pixels.
+ * @property {number} [height] - Render viewport height in pixels.
+ * @property {number} [gammaCorrection] - Effective forward-pass gamma correction.
+ * @property {number} [toneMapping] - Effective forward-pass tone mapping.
  */
 
 /**
@@ -128,8 +136,9 @@ class GSplatRenderer {
     }
 
     /**
-     * Whether this renderer runs the GPU sort/projection/cull pipeline itself (true) rather than
-     * relying on the manager's CPU worker sorter (false). Drives the manager's per-frame branching.
+     * Whether this renderer owns the GPU sort/projection/cull pipeline. Such renderers share its
+     * scratch with a separate shadow renderer. Unsorted raster paths can return false here and
+     * also return false from {@link requiresCpuSort}.
      *
      * @type {boolean}
      */
@@ -157,12 +166,47 @@ class GSplatRenderer {
     }
 
     /**
+     * Whether the forward pipeline needs the actual render pass's target before preparation.
+     *
+     * @type {boolean}
+     */
+    get deferForwardPreparation() {
+        return false;
+    }
+
+    /**
+     * Selects a view's rendering path before the manager schedules work-buffer updates or sorting.
+     *
+     * @param {GSplatRenderViewParams} params - Current view settings.
+     */
+    prepareFrame(params) {
+    }
+
+    /**
      * Returns the material used by this renderer, or null if not applicable.
      *
      * @type {ShaderMaterial|null}
      */
     get material() {
         return null;
+    }
+
+    /**
+     * Passes which must execute before this renderer's forward mesh is drawn.
+     *
+     * @type {FramePass[]|null}
+     */
+    get renderPasses() {
+        return null;
+    }
+
+    /**
+     * Whether another rendered frame would advance progressive refinement.
+     *
+     * @type {boolean}
+     */
+    get needsRender() {
+        return false;
     }
 
     /**
@@ -252,15 +296,15 @@ class GSplatRenderer {
      * @param {GSplatWorld} world - The world providing the work buffer, bounds, and states.
      * @param {GSplatWorldState} worldState - The render-ready world state to draw.
      * @param {GSplatRenderViewParams} params - Per-call parameters for this view.
-     * @returns {boolean} True if a GPU dispatch ran this call.
+     * @returns {boolean} True if the view contains active splats to draw.
      */
     prepareRenderView(world, worldState, params) {
         return false;
     }
 
     /**
-     * Prepares a pick view and returns the configured pick mesh instance. Only meaningful for
-     * renderers with a GPU pipeline; others return null.
+     * Prepares a pick view and returns its configured mesh instance. The default returns null
+     * so picking uses the renderer's regular forward mesh.
      *
      * @param {GSplatWorld} world - The world providing the work buffer, bounds, and states.
      * @param {GSplatWorldState} worldState - The render-ready world state.

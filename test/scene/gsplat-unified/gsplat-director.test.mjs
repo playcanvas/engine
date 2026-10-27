@@ -117,6 +117,7 @@ describe('GSplatDirector#updateStreaming', function () {
     const makeManager = calls => ({
         reconciled: [],
         hasPendingSort: false,
+        hasPendingRefinement: false,
         reconcile(placements) {
             calls.push('reconcile');
             this.reconciled.push([...placements]);
@@ -187,5 +188,17 @@ describe('GSplatDirector#updateStreaming', function () {
 
         director.updateStreaming();
         expect(calls).to.deep.equal(['updateStreaming']);
+    });
+
+    it('requests rendering only while a manager has progressive refinement pending', function () {
+        const { director, layerData } = makeScene();
+        let requested = 0;
+        director.eventHandler.fire = () => requested++;
+        layerData.gsplatManager.hasPendingRefinement = true;
+        director.updateStreaming();
+        expect(requested).to.equal(1);
+        layerData.gsplatManager.hasPendingRefinement = false;
+        director.updateStreaming();
+        expect(requested).to.equal(1);
     });
 });
