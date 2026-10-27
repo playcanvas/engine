@@ -263,6 +263,15 @@ class CameraFrame {
     options = new CameraFrameOptions();
 
     /**
+     * The camera component the camera frame renders, for example for the passes of an effect
+     * which depend on the camera.
+     *
+     * @type {CameraComponent}
+     * @readonly
+     */
+    cameraComponent;
+
+    /**
      * @type {FramePassCameraFrame|null}
      * @ignore
      */
