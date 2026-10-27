@@ -45,11 +45,13 @@ import {
     TextureHandler,
     TouchDevice,
     TranslateGizmo,
+    Vec2,
     Vec3,
     WORKBUFFER_UPDATE_ONCE,
     WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -103,7 +105,6 @@ app.on('destroy', () => {
 data.set('boxSize', 0.67);
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     biker: new Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
     apartment: new Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
@@ -551,23 +552,24 @@ gizmoLayer = Gizmo.createLayer(app);
 gizmo = new TranslateGizmo(camera.camera, gizmoLayer);
 
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        frameOnStart: false,
-        inertiaFactor: 0.07
-    }
-});
-const orbitInput = camera.script.create('orbitCameraInputMouse');
-camera.script.orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            focusPoint: focusPos,
+            pitchRange: new Vec2(-90, 90)
+        }
+    })
+);
 
 // Gizmo interaction - disable camera when using gizmo
 gizmo.on('pointer:down', (_x, _y, meshInstance) => {
     if (meshInstance) {
-        orbitInput.enabled = false;
+        cameraControls.enabled = false;
     }
 });
 gizmo.on('pointer:up', () => {
-    orbitInput.enabled = true;
+    cameraControls.enabled = true;
 });
 
 app.mouse.disableContextMenu();

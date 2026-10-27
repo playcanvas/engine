@@ -20,18 +20,21 @@ import {
     Mesh,
     MeshInstance,
     Mouse,
-    RenderComponentSystem,
     RESOLUTION_AUTO,
+    RenderComponentSystem,
     ScriptComponentSystem,
     ScriptHandler,
     SphereGeometry,
     StandardMaterial,
+    TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
-    TONEMAP_ACES,
+    Vec2,
+    Vec3,
     basisInitialize,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -55,8 +58,7 @@ const assets = {
         'texture',
         { url: './assets/cubemaps/yokohama-cubemap.ktx2' },
         { srgb: true }
-    ),
-    orbit: new Asset('orbit-camera', 'script', { url: './scripts/camera/orbit-camera.js' })
+    )
 };
 
 const createOptions = new AppOptions();
@@ -114,15 +116,13 @@ camera.addComponent('camera', {
 });
 camera.setPosition(0, 0, 3);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        focusEntity: sphere,
-        frameOnStart: false,
-        inertiaFactor: 0.2
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 app.start();

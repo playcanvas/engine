@@ -36,9 +36,12 @@ import {
     TONEMAP_LINEAR,
     TextureHandler,
     TouchDevice,
+    Vec2,
     WasmModule,
-    createGraphicsDevice
+    createGraphicsDevice,
+    math
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -129,9 +132,8 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-// Load orbit camera script and HDRI
+// Load HDRI
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     hdri: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
 };
 
@@ -486,16 +488,28 @@ canvas.addEventListener('drop', async (e) => {
     camera.camera.farClip = size * 10;
     camera.setLocalPosition(center.x, center.y + size * 0.3, center.z + cameraDistance);
 
-    // Add orbit camera script
+    // frame the world space bounds from that direction, at the distance where they fill the view
+    const bounds = new BoundingBox();
+    if (entity.gsplat) {
+        bounds.setFromTransformedAabb(aabb, entity.getWorldTransform());
+    } else {
+        bounds.copy(aabb);
+    }
+    const { halfExtents } = bounds;
+    const radius = Math.max(halfExtents.x, halfExtents.y, halfExtents.z);
+    const fitDistance = (radius * 1.5) / Math.sin(0.5 * camera.camera.fov * math.DEG_TO_RAD);
+    camera.setPosition(
+        camera.getPosition().clone().sub(bounds.center).normalize().mulScalar(fitDistance).add(bounds.center)
+    );
+
+    // Add camera controls
     camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: entity,
-            distanceMax: size * 5,
-            frameOnStart: true
+    camera.script.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            focusPoint: bounds.center,
+            pitchRange: new Vec2(-90, 90),
+            zoomRange: new Vec2(0.01, size * 5)
         }
     });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
 });

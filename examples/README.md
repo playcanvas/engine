@@ -257,18 +257,18 @@ Any other file you wish to include in your example can be added to the same fold
 
 ```js
 import { Asset } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import shaderVert from './shader.vert';
 import shaderFrag from './shader.frag';
 import data from './data.json';
 
 const assets = {
-    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 ```
 
-Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine script asset URLs use `./scripts/...`, and local `.mjs` files are imported as standard JavaScript modules. When using these modules outside the examples browser, configure your bundler to load text extensions as strings.
+Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine ESM scripts are imported from `playcanvas/scripts/esm/...`, and local `.mjs` files are imported as standard JavaScript modules. Classic scripts are loaded as script assets from `./scripts/...`. When using these modules outside the examples browser, configure your bundler to load text extensions as strings.
 
 ### Testing your example
 Run `npm run dev` from the `Local examples browser development` section to serve the examples browser with Vite. Use `npm run develop` when automatic reloads should be disabled.

@@ -29,6 +29,7 @@ import {
     AppOptions,
     Asset,
     AssetListLoader,
+    BoundingBox,
     CameraComponentSystem,
     Color,
     ContainerHandler,
@@ -54,8 +55,10 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    math
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -63,7 +66,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -164,7 +166,8 @@ const createVisual = (resource, pos, scale) => {
     return entity;
 };
 
-let currentAssetIndex = 0;
+// Focus on mosquito, which the camera controls start on
+let currentAssetIndex = 3;
 
 // Create the scene by instantiating glbs
 const mosquito = createVisual(assets.mosquito.resource, new Vec3(0, 0.5, 0), 25);
@@ -219,19 +222,20 @@ const camera = new Entity();
 camera.addComponent('camera', {
     toneMapping: TONEMAP_NEUTRAL
 });
-camera.setLocalPosition(0, 55, 160);
+camera.setLocalPosition(-0.025, 3.096, 7.4);
 
 camera.camera.requestSceneColorMap(true);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 8,
-        distanceMax: 50
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            focusPoint: new Vec3(-0.025, 0.532, -0.178),
+            pitchRange: new Vec2(-90, 90),
+            zoomRange: new Vec2(8, 50)
+        }
+    })
+);
 app.root.addChild(camera);
 
 const directionalLight = new Entity();
@@ -269,6 +273,8 @@ window.addEventListener(
     },
     false
 );
+const bounds = new BoundingBox();
+
 /**
  * @param {number} offset - The offset to jump to.
  */
@@ -279,15 +285,18 @@ function jumpToAsset(offset) {
     if (currentAssetIndex < 0) currentAssetIndex = count;
     if (currentAssetIndex > count) currentAssetIndex = 0;
 
-    const pos = assetList[currentAssetIndex].getLocalPosition();
-    const newPos = new Vec3(0, 2.0, 6.0).add(pos);
-    camera.setLocalPosition(newPos);
-
-    camera.script.orbitCamera.focusEntity = assetList[currentAssetIndex];
+    // frame the bounds of the asset, keeping the view direction
+    const meshInstances = assetList[currentAssetIndex]
+        .findComponents('render')
+        .flatMap((render) => render.meshInstances);
+    bounds.copy(meshInstances[0].aabb);
+    meshInstances.forEach((mi) => bounds.add(mi.aabb));
+    const { center, halfExtents } = bounds;
+    const radius = Math.max(halfExtents.x, halfExtents.y, halfExtents.z);
+    const { x: min, y: max } = cameraControls.zoomRange;
+    const distance = math.clamp((radius * 1.5) / Math.sin(0.5 * camera.camera.fov * math.DEG_TO_RAD), min, max);
+    cameraControls.reset(center, camera.forward.clone().mulScalar(-distance).add(center));
 }
-
-// Focus on mosquito
-jumpToAsset(3);
 
 data.on('previous', () => {
     jumpToAsset(-1);

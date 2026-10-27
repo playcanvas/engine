@@ -19,15 +19,18 @@ import {
     GSplatHandler,
     LightComponentSystem,
     Mouse,
+    Quat,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     ScriptComponentSystem,
     ScriptHandler,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatDissolveShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-dissolve.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -74,8 +77,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' })
 };
 
 await new Promise((resolve) => {
@@ -308,18 +310,18 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(3, 1, 0.5);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script?.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: hotel,
-        distanceMax: 2,
-        frameOnStart: false
-    }
-});
-camera.script?.create('orbitCameraInputMouse');
-camera.script?.create('orbitCameraInputTouch');
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script?.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            focusPoint: new Vec3(0, -0.009, 0.034),
+            pitchRange: new Vec2(-90, 90),
+            zoomRange: new Vec2(0.01, 2)
+        }
+    })
+);
 app.root.addChild(camera);
 
 // Auto-rotate camera when idle
@@ -327,6 +329,9 @@ let autoRotateEnabled = true;
 let lastInteractionTime = 0;
 const autoRotateDelay = 2; // seconds of inactivity before auto-rotate resumes
 const autoRotateSpeed = 10; // degrees per second
+const autoRotation = new Quat();
+const autoRotateFocus = new Vec3();
+const autoRotateOffset = new Vec3();
 
 // Detect user interaction (click/touch only, not mouse movement)
 const onUserInteraction = () => {
@@ -352,9 +357,10 @@ app.on('update', (dt) => {
 
     // Apply auto-rotation
     if (autoRotateEnabled) {
-        const orbitCamera = camera.script?.orbitCamera;
-        if (orbitCamera) {
-            orbitCamera.yaw += autoRotateSpeed * dt;
-        }
+        autoRotateFocus.copy(cameraControls.focusPoint);
+        autoRotateOffset.sub2(camera.getPosition(), autoRotateFocus);
+        autoRotation.setFromEulerAngles(0, autoRotateSpeed * dt, 0).transformVector(autoRotateOffset, autoRotateOffset);
+        camera.setPosition(autoRotateOffset.add(autoRotateFocus));
+        cameraControls.focusPoint = autoRotateFocus;
     }
 });

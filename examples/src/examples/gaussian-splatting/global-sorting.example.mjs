@@ -25,9 +25,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -75,8 +77,7 @@ app.on('destroy', () => {
 const assets = {
     hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
     biker: new Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    guitar: new Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    guitar: new Asset('gsplat', 'gsplat', { url: './assets/splats/guitar.compressed.ply' })
 };
 
 await new Promise((resolve) => {
@@ -137,20 +138,18 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(3, 1, 0.5);
 
-// Add orbit camera script with a mouse and a touch support
-camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 3.2,
-        frameOnStart: false
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
-
 // Orbit around the statue's world-space center
 const orbitPivot = new Vec3();
 hotel.getWorldTransform().transformPoint(new Vec3(0, 0.2, 0), orbitPivot);
-camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(3, 1, 0.5), orbitPivot);
+
+// Add camera controls
+camera.addComponent('script');
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: orbitPivot,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 3.2)
+    }
+});
+app.root.addChild(camera);

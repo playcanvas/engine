@@ -25,9 +25,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -73,8 +75,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    biker: new Asset('gsplat-glb', 'container', { url: './assets/splats/biker.glb' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    biker: new Asset('gsplat-glb', 'container', { url: './assets/splats/biker.glb' })
 };
 
 await new Promise((resolve) => {
@@ -113,22 +114,17 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 
 camera.addComponent('script');
-const orbitCam = /** @type {any} */ (
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            distanceMax: 60,
-            frameOnStart: false
-        }
-    })
-);
-if (orbitCam) {
-    orbitCam.pivotPoint.copy(ORBIT_PIVOT);
-    orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
-    orbitCam._updatePosition();
-}
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
+// place the camera at the initial yaw, pitch and distance around the pivot
+camera.setLocalEulerAngles(ORBIT_INITIAL_PITCH, ORBIT_INITIAL_YAW, 0);
+camera.setLocalPosition(camera.forward.clone().mulScalar(-ORBIT_DISTANCE).add(ORBIT_PIVOT));
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: ORBIT_PIVOT,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 60)
+    }
+});
 
 // Create ground to receive shadows
 const material = new StandardMaterial();

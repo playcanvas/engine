@@ -44,12 +44,14 @@ import {
     Texture,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     VertexBuffer,
     VertexFormat,
     createGraphicsDevice,
     math
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -63,7 +65,6 @@ window.focus();
 
 const assets = {
     statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -339,15 +340,11 @@ camera.setPosition(
 app.root.addChild(camera);
 
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: statue,
-        frameOnStart: false,
-        distanceMax: spacing * gridSize,
-        pitchAngleMin: 0,
-        pitchAngleMax: 85
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0.35, 15.05, 0.04),
+        pitchRange: new Vec2(-85, -0),
+        zoomRange: new Vec2(0.01, spacing * gridSize)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');

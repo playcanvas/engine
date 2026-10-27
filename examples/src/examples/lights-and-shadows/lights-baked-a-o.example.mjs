@@ -29,8 +29,11 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -48,8 +51,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    house: new Asset('house', 'container', { url: './assets/models/house.glb' }),
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    house: new Asset('house', 'container', { url: './assets/models/house.glb' })
 };
 
 const gfxOptions = {
@@ -185,19 +187,18 @@ camera.addComponent('camera', {
     farClip: 100,
     nearClip: 1
 });
-camera.setLocalPosition(40, 20, 40);
+camera.setLocalPosition(41.67, 20.45, 41.67);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: house,
-        distanceMax: 60
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, 9.17, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 60)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // lightmap baking properties

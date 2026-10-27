@@ -48,6 +48,7 @@ import {
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -187,7 +188,6 @@ class RenderPassNormalMap extends RenderPass {
 }
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -384,20 +384,17 @@ camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES,
     farClip: 100
 });
+camera.setLocalPosition(0.4, 2.2, 4.6);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 2,
-        distanceMax: 12,
-        pitchAngleMin: 5,
-        pitchAngleMax: 80
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0.4, 0.9, 0),
+        pitchRange: new Vec2(-80, -5),
+        zoomRange: new Vec2(2, 12)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
-camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(0.4, 2.2, 4.6), new Vec3(0.4, 0.9, 0));
 
 // ------ Rendering the textures ------
 
