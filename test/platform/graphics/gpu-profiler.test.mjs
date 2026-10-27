@@ -54,6 +54,23 @@ describe('GpuProfiler frame timing', function () {
         expect(profiler.frameTime).to.equal(2);
     });
 
+    it('keeps the passes apart in the order they ran, where passTimings sums those sharing a name', function () {
+        profiler.getSlot('RenderPassDownsample');
+        profiler.getSlot('RenderPassDownsample');
+        profiler.getSlot('Compose');
+        profiler.request(1);
+        profiler.report(1, [1, 2, 3], 6);
+        expect(profiler.passTimings.get('Downsample')).to.equal(3);
+        expect(profiler.passTimingsInOrder).to.deep.equal({ names: ['Downsample', 'Downsample', 'Compose'], times: [1, 2, 3] });
+        // a frame of fewer passes leaves none of the last one's behind
+        profiler.getSlot('Compose');
+        profiler.request(2);
+        profiler.report(2, [4], 4);
+        expect(profiler.passTimingsInOrder).to.deep.equal({ names: ['Compose'], times: [4] });
+        profiler.loseContext();
+        expect(profiler.passTimingsInOrder).to.deep.equal({ names: [], times: [] });
+    });
+
     it('names the render version the latest timings describe', function () {
         expect(profiler.renderVersion).to.equal(-1);
         request(profiler, 1);

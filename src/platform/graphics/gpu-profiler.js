@@ -61,6 +61,16 @@ class GpuProfiler {
     _passTimings = new Map();
 
     /**
+     * The timed passes of the frame the latest timings describe, in the order they ran: their
+     * names, as {@link passTimings} names them, and their timings, passes sharing a name kept
+     * apart. Rewritten in place as timings arrive, so a frame makes no garbage.
+     *
+     * @type {{ names: string[], times: number[] }}
+     * @private
+     */
+    _passTimingsInOrder = { names: [], times: [] };
+
+    /**
      * The {@link GraphicsDevice#renderVersion} of the frame the latest timings describe, or -1.
      *
      * @private
@@ -96,6 +106,8 @@ class GpuProfiler {
         this._renderVersion = -1;
         this.pastFrameAllocations.clear();
         this._passTimings.clear();
+        this._passTimingsInOrder.names.length = 0;
+        this._passTimingsInOrder.times.length = 0;
     }
 
     /**
@@ -132,6 +144,19 @@ class GpuProfiler {
      */
     get passTimings() {
         return this._passTimings;
+    }
+
+    /**
+     * The timed passes of the frame {@link renderVersion} names, in the order they ran: the name
+     * of each, as {@link passTimings} names it, and its GPU time in milliseconds. Unlike
+     * {@link passTimings}, passes sharing a name, such as the steps of a blur, stay apart. Both
+     * lists are empty while no timings have arrived, and are reused as timings arrive.
+     *
+     * @type {{ names: readonly string[], times: readonly number[] }}
+     * @ignore
+     */
+    get passTimingsInOrder() {
+        return this._passTimingsInOrder;
     }
 
     /**
@@ -206,6 +231,7 @@ class GpuProfiler {
 
             // clear old pass timings
             this._passTimings.clear();
+            const { names, times } = this._passTimingsInOrder;
 
             // accumulate per-pass timings
             for (let i = 0; i < allocations.length; ++i) {
@@ -215,6 +241,15 @@ class GpuProfiler {
 
                 // accumulate timings for passes with the same name
                 this._passTimings.set(parsedName, (this._passTimings.get(parsedName) || 0) + timing);
+
+                // and keep each pass apart, in the order they ran. Written in place rather than
+                // emptied and pushed to, as emptying an array frees its storage
+                names[i] = parsedName;
+                times[i] = timing;
+            }
+            if (names.length !== allocations.length) {
+                names.length = allocations.length;
+                times.length = allocations.length;
             }
 
             // log out timings
