@@ -554,14 +554,12 @@ class GltfExporter extends CoreExporter {
             }
         }
 
-        // KHR_materials_sheen
-        if (mat.useSheen) {
-            const sheenExt = {};
-
-            if (!mat.sheen.equals(Color.BLACK)) {
-                const { r, g, b } = mat.sheen.clone().linear();
-                sheenExt.sheenColorFactor = [r, g, b];
-            }
+        // KHR_materials_sheen, skipped for a black sheen color, which disables the layer
+        if (mat.useSheen && !mat.sheen.equals(Color.BLACK)) {
+            const { r, g, b } = mat.sheen.clone().linear();
+            const sheenExt = {
+                sheenColorFactor: [r, g, b]
+            };
 
             // sheenGloss holds roughness when inverted, as the parser sets it, and gloss otherwise
             const sheenRoughness = mat.sheenGlossInvert ? mat.sheenGloss : 1 - mat.sheenGloss;
@@ -572,9 +570,7 @@ class GltfExporter extends CoreExporter {
             this.attachTexture(resources, mat, sheenExt, 'sheenColorTexture', 'sheenMap', json);
             this.attachRoughnessTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGloss', json);
 
-            if (Object.keys(sheenExt).length > 0) {
-                this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
-            }
+            this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
         }
 
         // KHR_materials_specular
