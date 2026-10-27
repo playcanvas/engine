@@ -125,7 +125,7 @@ const show = (/** @type {string} */ type) => {
         gizmos[name].enabled = name === type;
     }
 };
-show('box');
+show('capsule');
 
 for (const key in gizmos) {
     const gizmo = gizmos[key];
@@ -141,7 +141,7 @@ for (const key in gizmos) {
 
 const settings = gizmos.box;
 data.set('shape', {
-    type: 'box'
+    type: 'capsule'
 });
 data.set('gizmo', {
     theme: {
