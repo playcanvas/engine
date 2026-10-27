@@ -48,6 +48,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent, ScriptComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -128,7 +132,7 @@ app.scene.exposure = 1;
 
 /**
  * helper function to create a 3d primitive including its material
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position (unused).
  * @param {Vec3} scale - The scale.
  * @param {number} brightness - The brightness (unused).
@@ -299,7 +303,9 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // Set the focus distance to the bokeh effect
     // - it's a negative distance between the camera and the focus sphere
-    camera.script.bokeh.focus = -focusPosition.sub(camera.getPosition()).length();
+    /** @type {ScriptComponent & { bokeh: { focus: number } }} */ (camera.script).bokeh.focus = -focusPosition
+        .sub(camera.getPosition())
+        .length();
 
     // Orbit the camera around
     camera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));

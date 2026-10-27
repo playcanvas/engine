@@ -184,12 +184,14 @@ app.on('update', (dt) => {
 
     // Display the picker's buffers side by side in the bottom right corner
     // color buffer (left) and depth buffer (right), with equal margins from edges
-    if (picker.colorBuffer) {
-        textures.draw(picker.colorBuffer, 0.725, 0.835, 0.1, 0.1);
+    // @ts-expect-error the picker's buffers are internal, read here only to display them
+    const { colorBuffer, depthBuffer } = picker;
+    if (colorBuffer) {
+        textures.draw(colorBuffer, 0.725, 0.835, 0.1, 0.1);
     }
 
-    if (picker.depthBuffer) {
-        textures.draw(picker.depthBuffer, 0.835, 0.835, 0.1, 0.1);
+    if (depthBuffer) {
+        textures.draw(depthBuffer, 0.835, 0.835, 0.1, 0.1);
     }
 });
 

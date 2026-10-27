@@ -152,7 +152,7 @@ torches.forEach((torch) => {
         intensity: 3,
         range: 100
     });
-    light.setLocalPosition(torch.children[0].render.meshInstances[0].aabb.center);
+    light.setLocalPosition(/** @type {Entity} */ (torch.children[0]).render.meshInstances[0].aabb.center);
     app.root.addChild(light);
 });
 

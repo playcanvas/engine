@@ -199,6 +199,7 @@ const cameraFrame = new CameraFrame(app, camera.camera);
 // but is not something an application should rely on.
 const setBackBufferSamples = (enabled) => {
     device.backBufferAntialias = enabled;
+    // @ts-expect-error samples is read-only, overridden here to test the back buffer
     device.samples = enabled ? device.maxSamples : 1;
     device.backBufferSize.set(-1, -1);
 };

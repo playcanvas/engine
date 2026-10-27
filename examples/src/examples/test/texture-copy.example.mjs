@@ -224,7 +224,7 @@ const results = [];
  * @param {Texture} source - Source texture (shown left).
  * @param {Texture} dest - Destination texture (shown right).
  * @param {object} options - Copy options.
- * @param {Uint8Array} expected - Expected destination pixels (mip 0 of the copied region).
+ * @param {ArrayLike<number>} expected - Expected destination pixels (mip 0 of the copied region).
  * @param {number} readW - Width to read back from dest.
  * @param {number} readH - Height to read back from dest.
  */

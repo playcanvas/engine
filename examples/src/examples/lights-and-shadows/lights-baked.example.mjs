@@ -23,6 +23,10 @@ import {
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -92,6 +96,7 @@ ground.setLocalPosition(0, 0, 0);
 ground.setLocalScale(20, 20, 20);
 
 // All render component primitive shape types
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule', 'torus'];
 
 // Create objects in an 8x8 grid

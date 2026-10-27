@@ -31,6 +31,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -90,7 +94,7 @@ app.start();
 
 /**
  * helper function to create a primitive with shape type, position, scale, color
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {any} assetManifest - The asset manifest.
@@ -146,7 +150,7 @@ function createPrimitive(primitiveType, position, scale, assetManifest, id = fal
 app.scene.lighting.areaLightsEnabled = true;
 
 // Set the loaded area light LUT data
-const luts = assets.luts.resource;
+const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // Setup skydome

@@ -124,17 +124,18 @@ terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // Get the clouds so that we can animate them
-/** @type {Array<Entity>} */
-const srcClouds = terrain.find((node) => {
-    const isCloud = node.name.includes('Icosphere');
+const srcClouds = /** @type {Entity[]} */ (
+    terrain.find((/** @type {Entity} */ node) => {
+        const isCloud = node.name.includes('Icosphere');
 
-    if (isCloud) {
-        // No shadow receiving for clouds
-        node.render.receiveShadows = false;
-    }
+        if (isCloud) {
+            // No shadow receiving for clouds
+            node.render.receiveShadows = false;
+        }
 
-    return isCloud;
-});
+        return isCloud;
+    })
+);
 
 // Clone some additional clouds
 /** @type {Array<Entity>} */
@@ -258,11 +259,8 @@ app.on('update', (/** @type {number} */ dt) => {
     // On the first frame, when camera is updated, frame the view looking towards the low sun,
     // where the light shafts through the fog are the most visible
     if (frameNumber === 0) {
-        // @ts-ignore engine-tsd
         camera.script.orbitCamera.distance = 420;
-        // @ts-ignore engine-tsd
         camera.script.orbitCamera.yaw = 304;
-        // @ts-ignore engine-tsd
         camera.script.orbitCamera.pitch = -5;
     }
 

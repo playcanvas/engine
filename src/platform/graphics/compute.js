@@ -233,7 +233,7 @@ class Compute {
      * declares needs a value set this way.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|TextureView} value
+     * @param {number|number[]|Float32Array|Int32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|TextureView} value
      * The value for the specified parameter.
      */
     setParameter(name, value) {

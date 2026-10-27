@@ -44,7 +44,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -117,9 +117,9 @@ app.scene.exposure = 4.5;
 /**
  * Helper function to create a primitive with shape type, position, scale, color and layer.
  *
- * @param {string} primitiveType - The primitive type.
- * @param {number | Vec3} position - The position.
- * @param {number | Vec3} scale - The scale.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
  * @param {Color} color - The color.
  * @returns {Material} The returned entity.
  */

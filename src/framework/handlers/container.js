@@ -3,6 +3,7 @@ import { initializeGlbResourceExtensions } from '../parsers/glb-resource-extensi
 import { ResourceHandler } from './handler.js';
 
 /**
+ * @import { AnimTrack } from '../anim/evaluator/anim-track.js'
  * @import { AppBase } from '../app-base.js'
  * @import { Asset } from '../asset/asset.js'
  * @import { Entity } from '../entity.js'
@@ -44,7 +45,7 @@ class ContainerResource {
     /**
      * An array of the animation assets. Each resource is an {@link AnimTrack}.
      *
-     * @type {Asset<'animation'>[]}
+     * @type {Asset<'animation', AnimTrack>[]}
      */
     animations = [];
 

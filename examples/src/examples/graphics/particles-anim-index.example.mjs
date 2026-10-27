@@ -55,10 +55,7 @@ createOptions.componentSystems = [
     ScreenComponentSystem,
     ElementComponentSystem
 ];
-createOptions.resourceHandlers = [
-    // @ts-ignore
-    TextureHandler
-];
+createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

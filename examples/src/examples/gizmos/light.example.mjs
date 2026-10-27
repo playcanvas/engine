@@ -79,7 +79,8 @@ app.start();
 // Scene settings, with area lights so the light can take a shape
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 app.scene.lighting.areaLightsEnabled = true;
-app.setAreaLightLuts(assets.luts.resource.LTC_MAT_1, assets.luts.resource.LTC_MAT_2);
+const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
+app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // Create entities
 const box = new Entity('box');
@@ -217,7 +218,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 return;
             }
 
-            // @ts-ignore
             light.light[key] = value;
             break;
         }
@@ -229,7 +229,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 return;
             }
 
-            // @ts-ignore
             gizmo[key] = value;
             break;
         }

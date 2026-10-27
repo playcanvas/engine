@@ -37,7 +37,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+// requestPaint is part of the HTML-in-Canvas proposal, which the DOM types don't declare yet
+const canvas = /** @type {HTMLCanvasElement & { requestPaint: () => void }} */ (
+    document.getElementById('application-canvas')
+);
 
 // Enable HTML-in-Canvas support. Chrome 154 and earlier use the layoutsubtree
 // attribute instead of content="drawable".

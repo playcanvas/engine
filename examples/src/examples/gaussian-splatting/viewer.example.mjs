@@ -373,6 +373,7 @@ canvas.addEventListener('drop', async (e) => {
             },
             null,
             {
+                // @ts-expect-error mapUrl is an internal option of the sog parser
                 mapUrl: (filename) => blobMap.get(filename)
             }
         );

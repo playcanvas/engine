@@ -196,7 +196,7 @@ difficulty.setLocalPosition(0, -56, 0);
         0
     );
 });
-const options = difficulty.children;
+const options = /** @type {Entity[]} */ (difficulty.children);
 for (const option of options) {
     option.button.on('click', () => {
         for (const other of options) {

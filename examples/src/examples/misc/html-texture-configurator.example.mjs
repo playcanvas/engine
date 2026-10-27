@@ -56,6 +56,17 @@ import { deviceType } from 'examples/context';
  * @import { CameraComponent } from 'playcanvas'
  */
 
+/**
+ * The HTML-in-Canvas proposal API, which the DOM types don't declare yet.
+ *
+ * @typedef {object} HtmlInCanvas
+ * @property {() => void} requestPaint - Requests a 'paint' event for the canvas children.
+ * @property {(element: Element, options: { canvasTransform: DOMMatrix }) => void} [updateElementGeometry] -
+ * Registers the canvas transform of a canvas child for hit testing (Chrome 157 and later).
+ * @property {(element: Element, transform: DOMMatrix) => void} [getElementTransform] - Registers
+ * the draw transform of a canvas child for hit testing (Chrome 154 and earlier).
+ */
+
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
 // Copy this class into any PlayCanvas project that uses the HTML-in-Canvas
@@ -166,7 +177,7 @@ class HtmlSync {
 // lay out child HTML elements of the canvas, making them available as texture
 // sources and enabling hit testing through updateElementGeometry. Chrome 154 and
 // earlier use the layoutsubtree attribute instead.
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+const canvas = /** @type {HTMLCanvasElement & HtmlInCanvas} */ (document.getElementById('application-canvas'));
 canvas.setAttribute('content', 'drawable');
 canvas.setAttribute('layoutsubtree', 'true');
 window.focus();
@@ -267,7 +278,7 @@ if (supportsHtmlInCanvas) {
     // Blur the scene behind the overlay. A drawable element has no backdrop,
     // and Chrome 157 blurs its content instead.
     htmlPanel.style.backdropFilter = 'blur(12px)';
-    htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
+    htmlPanel.style.setProperty('-webkit-backdrop-filter', 'blur(12px)');
 }
 
 const updatePanel = () => {

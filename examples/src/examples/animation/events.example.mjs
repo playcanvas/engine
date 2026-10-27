@@ -196,7 +196,7 @@ modelEntity.anim.on('foot_step', (event) => {
 app.on('update', () => {
     // On update, iterate over any currently highlighted boxes and reduce their emissive property
     highlightedBoxes.forEach((box) => {
-        const material = box.render.material;
+        const material = /** @type {StandardMaterial} */ (box.render.material);
         material.emissiveIntensity *= 0.95;
         material.update();
     });

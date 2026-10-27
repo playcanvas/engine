@@ -130,7 +130,7 @@ app.scene.clusteredLightingEnabled = false;
 app.scene.skyboxIntensity = 0.1;
 
 // Set the loaded area light LUT data
-const luts = assets.luts.resource;
+const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 const planeMaterial = new StandardMaterial();
@@ -348,7 +348,6 @@ let timeDiff = 0;
 let index = 0;
 app.on('update', (dt) => {
     if (time === 0) {
-        // @ts-ignore engine-tsd
         camera.script.orbitCamera.distance = 25;
     }
     timeDiff += dt;

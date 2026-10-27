@@ -28,7 +28,7 @@ import {
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -175,7 +175,7 @@ cubeMaterial.update();
 
 /**
  * Helper function to create a 3d primitive including its material.
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {Material} mat - The material.
@@ -333,7 +333,6 @@ data.on('*:set', (/** @type {string} */ path, value) => {
             spotLightList[i].light.cookieIntensity = value;
         }
     } else {
-        // @ts-ignore
         lighting[pathArray[1]] = value;
     }
 });

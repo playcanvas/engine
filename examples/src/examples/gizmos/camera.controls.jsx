@@ -21,8 +21,8 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from 'playcanvas';
  * @returns {ReactElement} The control panel.
  */
 export function Controls({ observer }) {
-    const [proj, setProj] = useState(PROJECTION_PERSPECTIVE);
-    const [subjectProj, setSubjectProj] = useState(PROJECTION_PERSPECTIVE);
+    const [proj, setProj] = useState(/** @type {number} */ (PROJECTION_PERSPECTIVE));
+    const [subjectProj, setSubjectProj] = useState(/** @type {number} */ (PROJECTION_PERSPECTIVE));
 
     return (
         <>

@@ -21,7 +21,7 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from 'playcanvas';
  */
 export function Controls({ observer }) {
     const [type, setType] = useState('translate');
-    const [proj, setProj] = useState(PROJECTION_PERSPECTIVE);
+    const [proj, setProj] = useState(/** @type {number} */ (PROJECTION_PERSPECTIVE));
 
     // observe changes to the camera and gizmo type
     observer.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {

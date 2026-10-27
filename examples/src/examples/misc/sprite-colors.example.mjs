@@ -163,9 +163,10 @@ const texture = new Texture(device, {
 texture.setSource(atlasCanvas);
 const atlas = new TextureAtlas();
 atlas.texture = texture;
-atlas.frames = {};
+/** @type {Record<string, { rect: Vec4, pivot: Vec2, border: Vec4 }>} */
+const frames = {};
 for (let frame = 0; frame < frameCount; frame++) {
-    atlas.frames[String(frame)] = {
+    frames[String(frame)] = {
         rect: new Vec4(
             (frame % columns) * frameWidth,
             atlasCanvas.height - (Math.floor(frame / columns) + 1) * frameHeight,
@@ -176,11 +177,12 @@ for (let frame = 0; frame < frameCount; frame++) {
         border: new Vec4()
     };
 }
-atlas.frames.backdrop = {
+frames.backdrop = {
     rect: new Vec4(1, 1, atlasCanvas.width - 2, 254),
     pivot: new Vec2(0.5, 0.5),
     border: new Vec4()
 };
+atlas.frames = frames;
 
 const sprite = new Sprite(device, {
     atlas,

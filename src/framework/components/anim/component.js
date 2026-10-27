@@ -375,8 +375,9 @@ class AnimComponent extends Component {
      *
      * @param {string} name - The name of the layer to create.
      * @param {number} [weight] - The blending weight of the layer. Defaults to 1.
-     * @param {object[]} [mask] - A list of paths to bones in the model which should be animated in
-     * this layer. If omitted the full model is used. Defaults to null.
+     * @param {object} [mask] - The mask of bones in the model which should be animated in this
+     * layer, keyed by bone path (see {@link AnimComponentLayer#mask}). If omitted the full model is
+     * used. Defaults to null.
      * @param {string} [blendType] - Defines how properties animated by this layer blend with
      * animations of those properties in previous layers. Defaults to ANIM_LAYER_OVERWRITE.
      * @returns {AnimComponentLayer} The created anim component layer.

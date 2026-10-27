@@ -204,7 +204,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
  */
 const drawSkeleton = (entity) => {
     entity.children.forEach((/** @type {Entity} */ c) => {
-        const target = modelEntity.anim._targets[`${entity.path}/graph/localPosition`];
+        const target = modelEntity.anim.targets[`${entity.path}/graph/localPosition`];
         if (target) {
             app.drawLine(
                 entity.getPosition(),

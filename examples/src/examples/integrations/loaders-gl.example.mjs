@@ -87,7 +87,6 @@ app.on('destroy', () => {
  */
 async function loadModel(url) {
     // Load the url using the draco format loader
-    // @ts-ignore: cannot find CORE and DRACO
     const modelData = await CORE.load(url, DRACO.DracoLoader);
 
     // Loaded colors only contain RGB, convert it to an array of RGBA with alpha of 255
