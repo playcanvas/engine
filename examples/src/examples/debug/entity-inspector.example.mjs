@@ -5,7 +5,10 @@
 // hierarchy, the frame graph of the last frame, the render targets on the device and the physics
 // bodies, with the Ammo world drawn over the scene. Toggle entities on and off, watch the properties
 // of the selected item update live, pause and single-step the app, and pop the panel out into its
-// own window. Toggle the panel with the backquote key, pause with F9 and step with F10.
+// own window. Record frames on the Performance tab: with Script timing on, the swarm script and
+// twenty more script types, there to demonstrate profiling, show updates and post-updates whose
+// costs differ, some rising and falling over time. Toggle the panel with the backquote key, pause
+// with F9 and step with F10.
 
 import { Inspector } from '@playcanvas/inspector';
 
@@ -30,6 +33,7 @@ import {
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RigidBodyComponentSystem,
+    Script,
     ScriptComponentSystem,
     StandardMaterial,
     TONEMAP_NEUTRAL,
@@ -41,6 +45,7 @@ import {
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
+import { Swarm } from 'examples/assets/scripts/misc/swarm.mjs';
 import { deviceType } from 'examples/context';
 
 /**
@@ -285,6 +290,87 @@ app.on('update', (dt) => {
         material.destroy();
     }
 });
+
+// a swarm of orbs circling the scene, whose script's update and post-update take a time that rises
+// and falls, each at its own pace: something for the script timing of the Performance tab to show
+const swarm = new Entity('swarm');
+swarm.addComponent('script');
+swarm.script.create(Swarm);
+app.root.addChild(swarm);
+
+// twenty more script types, there to demonstrate profiling: each runs a plain loop standing in for
+// the work of a game script, of a size of its own, a few on several entities and some rising and
+// falling over time, so the Performance tab's script timing has many types of different cost to
+// show, more than its Scripts chart gives a band of their own at first. Each is its name, its loop
+// size, the seconds its cost takes to rise and fall (0 for steady), how many entities run it and
+// whether it post-updates too
+const workloads = new Entity('workloads');
+app.root.addChild(workloads);
+
+/** @type {[string, number, number, number, boolean][]} */
+const WORKLOADS = [
+    ['enemyAi', 9000, 0, 4, false],
+    ['pathfinder', 42000, 5, 1, false],
+    ['inventory', 4500, 0, 1, false],
+    ['weather', 12000, 11, 1, false],
+    ['spawner', 7500, 0, 1, false],
+    ['scoreBoard', 3000, 0, 1, false],
+    ['minimap', 18000, 0, 1, true],
+    ['dialogue', 2400, 0, 1, false],
+    ['audioMixer', 10500, 4, 1, false],
+    ['questLog', 3600, 0, 1, false],
+    ['damageNumbers', 7500, 2, 2, false],
+    ['cameraShake', 5400, 0, 1, true],
+    ['lootTable', 6600, 0, 1, false],
+    ['footsteps', 3000, 0, 3, false],
+    ['tutorial', 1800, 0, 1, false],
+    ['networkSync', 36000, 9, 1, true],
+    ['achievements', 2700, 0, 1, false],
+    ['particleLod', 13500, 6, 1, false],
+    ['saveGame', 2100, 0, 1, false],
+    ['crowd', 60000, 13, 1, false]
+];
+
+/**
+ * @param {number} time - Mixed into the loop, so it is not optimized away.
+ * @param {number} size - How many steps it takes.
+ * @returns {number} What it added up.
+ */
+const busyLoop = (time, size) => {
+    let sum = 0;
+    for (let i = 0; i < size; i++) sum += Math.sin(i * 0.01 + time);
+    return sum;
+};
+
+for (const [name, size, period, instances, post] of WORKLOADS) {
+    class Workload extends Script {
+        static scriptName = name;
+
+        time = 0;
+
+        sink = 0;
+
+        update(dt) {
+            this.time += dt;
+            const scale = period ? 1 + 0.8 * Math.sin((2 * Math.PI * this.time) / period) : 1;
+            this.sink = busyLoop(this.time, size * scale);
+        }
+    }
+    // a type that post-updates too, declaring its own name as a script type has to
+    class PostUpdatingWorkload extends Workload {
+        static scriptName = name;
+
+        postUpdate() {
+            this.sink += busyLoop(this.time, size / 2);
+        }
+    }
+    for (let i = 0; i < instances; i++) {
+        const entity = new Entity(`${name} ${i + 1}`);
+        entity.addComponent('script');
+        entity.script.create(post ? PostUpdatingWorkload : Workload);
+        workloads.addChild(entity);
+    }
+}
 
 // an animated character: a deep, skinned hierarchy with an anim component
 const character = assets.character.resource.instantiateRenderEntity({ castShadows: true });
