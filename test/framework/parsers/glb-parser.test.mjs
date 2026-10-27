@@ -1,7 +1,13 @@
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
+import { Color } from '../../../src/core/math/color.js';
+import {
+    KHR_materials_diffuse_transmission
+} from '../../../src/framework/parsers/glb/extensions/khr-materials-diffuse-transmission.js';
 import { GlbParser } from '../../../src/framework/parsers/glb-parser.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -21,12 +27,12 @@ describe('GlbParser', function () {
         jsdomTeardown();
     });
 
-    const parseMaterial = (occlusionTexture) => {
+    const parseMaterial = (occlusionTexture, extensions) => {
         const gltf = {
             asset: { version: '2.0' },
             scenes: [],
             nodes: [],
-            materials: [{ occlusionTexture }]
+            materials: [{ occlusionTexture, extensions }]
         };
         const data = new TextEncoder().encode(JSON.stringify(gltf));
 
@@ -109,6 +115,65 @@ describe('GlbParser', function () {
         } finally {
             app2.destroy();
         }
+    });
+
+    describe('KHR_materials_diffuse_transmission', function () {
+
+        const parseExtension = (extension) => {
+            return parseMaterial(undefined, { KHR_materials_diffuse_transmission: extension });
+        };
+
+        it('imports the transmission and its color, which is converted to sRGB', async function () {
+            const material = await parseExtension({
+                diffuseTransmissionFactor: 0.25,
+                diffuseTransmissionColorFactor: [1, 0.5, 0.25]
+            });
+
+            expect(material.diffuseTransmission).to.equal(0.25);
+            const expected = new Color(1, 0.5, 0.25).gamma();
+            expect(material.diffuseTransmissionColor.r).to.be.closeTo(expected.r, 1e-6);
+            expect(material.diffuseTransmissionColor.g).to.be.closeTo(expected.g, 1e-6);
+            expect(material.diffuseTransmissionColor.b).to.be.closeTo(expected.b, 1e-6);
+        });
+
+        it('uses the defaults of the extension for the values it omits', async function () {
+            const material = await parseExtension({});
+
+            expect(material.diffuseTransmission).to.equal(0);
+            expect(material.diffuseTransmissionColor.equals(Color.WHITE)).to.equal(true);
+        });
+
+        it('reads the transmission from the alpha channel of its texture', function () {
+            const material = new StandardMaterial();
+            const textures = [new Texture(app.graphicsDevice), new Texture(app.graphicsDevice)];
+            KHR_materials_diffuse_transmission.apply({
+                diffuseTransmissionFactor: 1,
+                diffuseTransmissionTexture: { index: 0, texCoord: 1 },
+                diffuseTransmissionColorTexture: {
+                    index: 1,
+                    extensions: { KHR_texture_transform: { scale: [2, 3] } }
+                }
+            }, material, textures);
+
+            expect(material.diffuseTransmissionMap).to.equal(textures[0]);
+            expect(material.diffuseTransmissionMapChannel).to.equal('a');
+            expect(material.diffuseTransmissionMapUv).to.equal(1);
+            expect(material.diffuseTransmissionColorMap).to.equal(textures[1]);
+            expect(material.diffuseTransmissionColorMapChannel).to.equal('rgb');
+            expect(material.diffuseTransmissionColorMapTiling.x).to.equal(2);
+            expect(material.diffuseTransmissionColorMapTiling.y).to.equal(3);
+        });
+
+        it('loads only the color texture as sRGB', function () {
+            const colorTexture = { index: 1 };
+            expect(KHR_materials_diffuse_transmission.getColorTextures({
+                diffuseTransmissionTexture: { index: 0 },
+                diffuseTransmissionColorTexture: colorTexture
+            })).to.deep.equal([colorTexture]);
+            expect(KHR_materials_diffuse_transmission.getColorTextures({
+                diffuseTransmissionTexture: { index: 0 }
+            })).to.deep.equal([]);
+        });
     });
 
     describe('flat shading of primitives without normals', function () {
