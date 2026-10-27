@@ -278,7 +278,7 @@ if (supportsHtmlInCanvas) {
     // Blur the scene behind the overlay. A drawable element has no backdrop,
     // and Chrome 157 blurs its content instead.
     htmlPanel.style.backdropFilter = 'blur(12px)';
-    htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
+    htmlPanel.style.setProperty('-webkit-backdrop-filter', 'blur(12px)');
 }
 
 const updatePanel = () => {
