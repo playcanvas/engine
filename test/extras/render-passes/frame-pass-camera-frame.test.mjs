@@ -902,6 +902,18 @@ describe('FramePassCameraFrame', function () {
             cameraFrame.removeEffect(effect);
         });
 
+        it('gives the handle of the copy the size the scene renders at, not the size of the canvas', function () {
+            cameraFrame.rendering.sceneColorMap = true;
+            cameraFrame.rendering.renderTargetScale = 0.5;
+            cameraFrame.update();
+            app.render();
+
+            const handle = cameraFrame.cameraComponent.sceneColorMapHandle;
+            const { rt } = cameraFrame.renderPassCamera;
+            expect([handle.width, handle.height]).to.deep.equal([rt.width, rt.height]);
+            expect(handle.width).to.not.equal(app.graphicsDevice.width);
+        });
+
         it('keeps the copy of the scene color the rendering options request', function () {
             cameraFrame.rendering.sceneColorMap = true;
             const effect = createEffect('grabber', [FRAMERESOURCE_SCENECOLORGRAB]);

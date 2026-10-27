@@ -188,9 +188,11 @@ app.on('destroy', () => {
 });
 
 // Right before the compute pass dispatches, set up the size of the dispatch, a thread for each
-// pixel, and clear the storage buffer, to avoid the accumulation buildup
+// texel of the color map the camera just rendered, and clear the storage buffer, to avoid the
+// accumulation buildup
 computePass.onBefore = () => {
-    compute.setupDispatchThreads(device.width, device.height);
+    const { width, height } = camera.camera.sceneColorMapHandle;
+    compute.setupDispatchThreads(width, height);
     histogramStorageBuffer.clear();
 };
 
