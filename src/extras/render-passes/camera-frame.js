@@ -20,7 +20,6 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { LightComponent } from '../../framework/components/light/component.js'
  */
 
 /**
@@ -544,6 +543,7 @@ class CameraFrame {
      * pass, typically one that extends `FramePassCameraFrame`.
      *
      * @returns {FramePassCameraFrame} - The frame pass.
+     * @ignore
      */
     createRenderPass() {
         return new FramePassCameraFrame(this.app, this, this.cameraComponent, this.options);
