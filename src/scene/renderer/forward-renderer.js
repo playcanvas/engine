@@ -820,7 +820,8 @@ class ForwardRenderer extends Renderer {
 
         // the render actions of the range use a single camera
         const renderActions = layerComposition._renderActions;
-        const renderPass = new RenderPassForward(this.device, layerComposition, this.scene, this, renderActions[startIndex].camera);
+        const renderPass = new RenderPassForward(this.device, this.scene, renderActions[startIndex].camera);
+        renderPass.layerComposition = layerComposition;
         renderPass.init(renderTarget);
 
         for (let i = startIndex; i <= endIndex; i++) {

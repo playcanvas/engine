@@ -22,6 +22,14 @@ describe('Renderer destruction', function () {
         device.destroy();
     });
 
+    it('is the renderer of its scene until it is destroyed', function () {
+        expect(scene.renderer).to.equal(renderer);
+
+        renderer.destroy();
+        renderer = null;
+        expect(scene.renderer).to.be.null;
+    });
+
     it('releases the empty and shared layer cluster textures before device destruction', function () {
         const allocator = renderer.worldClustersAllocator;
         const empty = allocator.empty;

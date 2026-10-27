@@ -202,13 +202,7 @@ const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
 
 // Use the render pass to render the world and ui layers with the camera to the created texture
-const renderPass = new RenderPassForward(
-    app.graphicsDevice,
-    app.scene.layers,
-    app.scene,
-    app.renderer,
-    cameraEntity.camera
-);
+const renderPass = new RenderPassForward(app.graphicsDevice, app.scene, cameraEntity.camera);
 
 renderPass.name = 'RenderPassScene';
 

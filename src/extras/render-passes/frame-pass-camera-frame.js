@@ -729,13 +729,12 @@ class FramePassCameraFrame extends FramePass {
     setupScenePass(options) {
 
         const { app, device } = this;
-        const { scene, renderer } = app;
-        const composition = scene.layers;
+        const { scene } = app;
 
         // render pass that renders the scene to the render target. Render target size automatically
         // matches the back-buffer size with the optional scale. Note that the scale parameters
         // allow us to render the 3d scene at lower resolution, improving performance.
-        this.scenePass = new RenderPassForward(device, composition, scene, renderer, this.cameraComponent);
+        this.scenePass = new RenderPassForward(device, scene, this.cameraComponent);
         this.setupScenePassSettings(this.scenePass);
         this.scenePass.init(this.rt, this.sceneOptions);
 
@@ -769,7 +768,7 @@ class FramePassCameraFrame extends FramePass {
             }
 
             // render the remaining layers after the split (otherwise they were already rendered)
-            this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer, this.cameraComponent);
+            this.scenePassTransparent = new RenderPassForward(device, scene, this.cameraComponent);
             this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.addCameraLayers(this.scenePassTransparent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
@@ -938,12 +937,11 @@ class FramePassCameraFrame extends FramePass {
     setupAfterPass(options, scenePassesInfo) {
 
         const { app, cameraComponent } = this;
-        const { scene, renderer } = app;
-        const composition = scene.layers;
+        const { scene } = app;
         const targetRenderTarget = cameraComponent.renderTarget;
 
         // final pass renders directly to the target renderTarget on top of the bloomed scene, and it renders a transparent UI layer
-        this.afterPass = new RenderPassForward(this.device, composition, scene, renderer, this.cameraComponent);
+        this.afterPass = new RenderPassForward(this.device, scene, this.cameraComponent);
         this.afterPass.init(targetRenderTarget);
 
         // add all remaining layers the camera renders
