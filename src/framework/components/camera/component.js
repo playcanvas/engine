@@ -228,12 +228,13 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the frame passes the camera uses for rendering, instead of its default rendering.
-     * Set this to null to return to the default behavior. The camera does not destroy the passes:
-     * whoever adds a pass removes it from the list, and destroys it.
+     * Sets the frame passes the camera uses for rendering, instead of its default rendering. They
+     * execute in the order of the array, and a {@link RenderPassForward} among them renders layers
+     * of the scene with the camera, see its example. Set this to null to return to the default
+     * behavior. The camera does not destroy the passes: whoever adds a pass removes it from the
+     * list, and destroys it.
      *
-     * @type {FramePass[]|null}
-     * @ignore
+     * @param {FramePass[]|null} passes - The frame passes, or null for the default behavior.
      */
     set framePasses(passes) {
         this._camera.framePasses = passes || [];
@@ -245,7 +246,6 @@ class CameraComponent extends Component {
      * Gets the frame passes the camera uses for rendering, instead of its default rendering.
      *
      * @type {FramePass[]}
-     * @ignore
      */
     get framePasses() {
         return this._camera.framePasses;

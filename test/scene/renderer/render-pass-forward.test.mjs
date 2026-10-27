@@ -4,6 +4,7 @@ import { restore, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
+import { LayerComposition } from '../../../src/scene/composition/layer-composition.js';
 import { LayerRenderStep } from '../../../src/scene/renderer/layer-render-step.js';
 import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
 import { createApp } from '../../app.mjs';
@@ -33,7 +34,7 @@ describe('RenderPassForward', function () {
 
     // a pass rendering the world opaque and the ui transparent sublayers with the camera
     const createPass = (camera) => {
-        const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, camera);
+        const pass = new RenderPassForward(app.graphicsDevice, app.scene, camera);
         pass.init(null);
         pass.addLayer(app.scene.layers.getLayerByName('World'), false);
         pass.addLayer(app.scene.layers.getLayerByName('UI'), true);
@@ -86,11 +87,37 @@ describe('RenderPassForward', function () {
 
     describe('#constructor', function () {
 
+        it('renders with the renderer of the scene', function () {
+            const pass = createPass(first);
+
+            expect(pass.renderer).to.equal(app.renderer);
+            expect(pass.scene).to.equal(app.scene);
+        });
+
         it('asserts a missing camera component', function () {
             const assertion = stub(Debug, 'assert');
 
-            new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer); // eslint-disable-line no-new
+            new RenderPassForward(app.graphicsDevice, app.scene); // eslint-disable-line no-new
             expect(assertFailed(assertion)).to.equal(true);
+        });
+
+        it('asserts the layer composition and the renderer passed before the scene', function () {
+            const assertion = stub(Debug, 'assert');
+
+            new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first); // eslint-disable-line no-new
+            expect(assertFailed(assertion)).to.equal(true);
+        });
+    });
+
+    describe('#layerComposition', function () {
+
+        it('renders the layers of the scene, unless the forward renderer sets another composition', function () {
+            const pass = createPass(first);
+            expect(pass.layerComposition).to.equal(app.scene.layers);
+
+            const composition = new LayerComposition('Other');
+            pass.layerComposition = composition;
+            expect(pass.layerComposition).to.equal(composition);
         });
     });
 
