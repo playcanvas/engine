@@ -199,6 +199,9 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             switch (key) {
                 case 'proj': {
                     camera.camera.projection = value - 1;
+
+                    // orthographic views have no depth cue, so keep what lies behind the camera visible
+                    camera.camera.nearClip = value - 1 === PROJECTION_PERSPECTIVE ? 0.1 : -camera.camera.farClip;
                     break;
                 }
                 case 'fov': {
