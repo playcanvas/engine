@@ -116,7 +116,7 @@ class FramePass {
      * pass is disabled. A render pass with this callback is not merged with the pass before it into
      * a single GPU render pass, so the callback runs outside of one.
      *
-     * @type {((pass: this) => void)|null}
+     * @type {((pass: FramePass) => void)|null}
      */
     onBefore = null;
 
@@ -129,7 +129,7 @@ class FramePass {
      * is disabled. A render pass with this callback is not merged with the pass after it into a
      * single GPU render pass, so the callback runs outside of one.
      *
-     * @type {((pass: this) => void)|null}
+     * @type {((pass: FramePass) => void)|null}
      */
     onAfter = null;
 

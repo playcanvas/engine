@@ -234,7 +234,7 @@ class CameraComponent extends Component {
      * behavior. The camera does not destroy the passes: whoever adds a pass removes it from the
      * list, and destroys it.
      *
-     * @type {FramePass[]|null}
+     * @param {FramePass[]|null} passes - The frame passes, or null for the default behavior.
      */
     set framePasses(passes) {
         this._camera.framePasses = passes || [];
