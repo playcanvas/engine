@@ -1,0 +1,65 @@
+/**
+ * The glyph of an icon, named for the component it marks.
+ *
+ * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem' | 'anim' | 'animation' | 'script'} OverlayIcon
+ */
+
+// the glyph of the anim and animation components
+const PLAY = `
+        <circle r="9"/>
+        <path d="M-2.5 -4.5L4.5 0L-2.5 4.5Z" fill="white" stroke="none"/>`;
+
+/**
+ * The icon glyphs as SVG content in a 24 by 24 CSS pixel box centered on the origin, y down. They
+ * are stroked white, 1.6 pixels wide, and drawn in the theme color by their alpha. An entity with
+ * several of the components shows the first glyph in this order.
+ *
+ * @type {Record<OverlayIcon, string>}
+ */
+const ICON_GLYPHS = {
+    // an outlined body with a lens widening to the right
+    camera: `
+        <rect x="-8" y="-5" width="11" height="10"/>
+        <path d="M4 0L9 -4V4Z" fill="white" stroke="none"/>`,
+
+    // a sun, a dot with eight spokes
+    light: `
+        <circle r="4.5" fill="white" stroke="none"/>
+        <path d="M7.5 0H10.5M-7.5 0H-10.5M0 7.5V10.5M0 -7.5V-10.5
+                 M5.303 5.303L7.425 7.425M-5.303 5.303L-7.425 7.425
+                 M5.303 -5.303L7.425 -7.425M-5.303 -5.303L-7.425 -7.425"/>`,
+
+    // a microphone, its rounded head held in a cradle on a stand
+    audiolistener: `
+        <path d="M-3 -1V-5A3 3 0 0 1 3 -5V-1A3 3 0 0 1 -3 -1Z"/>
+        <path d="M-6 -1A6 6 0 0 0 6 -1M0 5V8.5M-4 8.5H4"/>`,
+
+    // a speaker, a box and its cone in one outline, with two sound waves
+    sound: `
+        <path d="M-7.5 -3H-4L0.5 -7V7L-4 3H-7.5Z" stroke-linejoin="round"/>
+        <path d="M2.75 -2.681A3.5 3.5 0 0 1 2.75 2.681M5 -5.362A7 7 0 0 1 5 5.362" stroke-linecap="round"/>`,
+
+    // a cluster of dots around a larger one
+    particlesystem: `
+        <g fill="white" stroke="none">
+            <circle r="3.2"/>
+            <circle cy="-7.5" r="2.2"/>
+            <circle cx="-6.495" cy="-3.75" r="1.6"/>
+            <circle cx="-6.495" cy="3.75" r="2.2"/>
+            <circle cy="7.5" r="1.6"/>
+            <circle cx="6.495" cy="3.75" r="2.2"/>
+            <circle cx="6.495" cy="-3.75" r="1.6"/>
+        </g>`,
+
+    // a play button, a triangle in a circle
+    anim: PLAY,
+
+    // the legacy animation component, drawn as anim
+    animation: PLAY,
+
+    // code brackets around a slash
+    script: `
+        <path d="M-4.5 -5.5L-10 0L-4.5 5.5M4.5 -5.5L10 0L4.5 5.5M1.8 -8L-1.8 8"/>`
+};
+
+export { ICON_GLYPHS };

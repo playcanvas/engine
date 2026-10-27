@@ -2,7 +2,7 @@
 //
 // 3D product configurator with an HTML UI panel rendered as a GPU texture via
 // the {accent:HTML-in-Canvas} API, supported on both {accent:WebGL} and
-// {accent:WebGPU}. Uses {accent:getElementTransform} for interactive hit
+// {accent:WebGPU}. Uses {accent:updateElementGeometry} for interactive hit
 // testing — clicks and hovers on the 3D panel are handled by the browser's
 // native DOM event system. {accent:Click} to switch shoe material variants.
 
@@ -10,8 +10,8 @@
 // This example demonstrates a 3D product configurator where an interactive HTML
 // panel (styled with CSS glassmorphism) is rendered as a GPU texture on a 3D
 // plane next to a shoe model with glTF KHR_materials_variants. The HtmlSync
-// class keeps the DOM element's CSS transform in sync with the 3D projection so
-// the browser can hit-test clicks and hovers on the HTML buttons.
+// class keeps the DOM element's geometry in sync with the 3D projection so the
+// browser can hit-test clicks and hovers on the HTML buttons.
 //
 // Fallback: when device.supportsHtmlTextures is false, the HTML panel is shown
 // as a fixed DOM overlay on top of the canvas instead of a 3D textured plane.
@@ -59,8 +59,7 @@ import { deviceType } from 'examples/context';
 // ---------------------------------------------------------------------------
 // HtmlSync — self-contained helper class for HTML-in-Canvas hit testing.
 // Copy this class into any PlayCanvas project that uses the HTML-in-Canvas
-// proposal (layoutsubtree + getElementTransform) to render interactive HTML
-// elements on 3D plane entities.
+// API to render interactive HTML elements on 3D plane entities.
 //
 // Usage:
 //   const sync = new HtmlSync(canvas, htmlElement, planeEntity, width, height);
@@ -69,8 +68,8 @@ import { deviceType } from 'examples/context';
 // ---------------------------------------------------------------------------
 class HtmlSync {
     /**
-     * @param {HTMLCanvasElement} canvas - The canvas with layoutsubtree="true".
-     * @param {HTMLElement} element - The HTML element appended to the canvas.
+     * @param {HTMLCanvasElement} canvas - The canvas with content="drawable".
+     * @param {HTMLElement} element - The drawable HTML element appended to the canvas.
      * @param {Entity} planeEntity - The plane entity displaying the texture.
      * @param {number} width - HTML element width in CSS pixels.
      * @param {number} height - HTML element height in CSS pixels.
@@ -90,10 +89,14 @@ class HtmlSync {
         this._t1 = new Mat4();
         this._t2 = new Mat4();
         this._drawTransform = new Mat4();
+
+        // Chrome 156 and earlier, which still have the layoutSubtree property,
+        // hit-test the element at its CSS transform
+        this._cssHitTest = 'layoutSubtree' in canvas;
     }
 
     /**
-     * Recompute the draw_transform and sync the element's CSS transform so the
+     * Recompute the draw_transform and sync the element's geometry so the
      * browser can hit-test it at the correct screen position.
      *
      * @param {CameraComponent} cameraComponent - The active camera component.
@@ -116,34 +119,11 @@ class HtmlSync {
         this._t2.mul2(this._t1, this._drawTransform);
 
         const d = this._t2.data;
-        const domDrawTransform = new DOMMatrix([
-            d[0],
-            d[1],
-            d[2],
-            d[3],
-            d[4],
-            d[5],
-            d[6],
-            d[7],
-            d[8],
-            d[9],
-            d[10],
-            d[11],
-            d[12],
-            d[13],
-            d[14],
-            d[15]
-        ]);
 
-        // Register the element for hit testing via the browser API.
-        /** @type {any} */ (canvas).getElementTransform(this.element, domDrawTransform);
-
-        // Apply the CSS transform ourselves. The browser's internal S^-1·T·S
-        // formula doesn't handle perspective projections correctly — it scales
-        // the w row via S, distorting the perspective divide for non-origin
-        // points. The fix: scale only the output x,y rows by 1/DPR.
+        // Map the element to the canvas in CSS pixels. Scaling only the output
+        // x,y rows by 1/DPR keeps the perspective divide intact.
         const dpr = w / canvas.clientWidth;
-        this.element.style.transform = new DOMMatrix([
+        const cssTransform = new DOMMatrix([
             d[0] / dpr,
             d[1] / dpr,
             d[2],
@@ -160,14 +140,34 @@ class HtmlSync {
             d[13] / dpr,
             d[14],
             d[15]
-        ]).toString();
+        ]);
+
+        // Register the element for hit testing. Chrome 157 and later hit-test
+        // it at this canvas transform.
+        if (/** @type {any} */ (canvas).updateElementGeometry) {
+            /** @type {any} */ (canvas).updateElementGeometry(this.element, { canvasTransform: cssTransform });
+        } else {
+            // Chrome 154 and earlier
+            /** @type {any} */ (canvas).getElementTransform(this.element, new DOMMatrix(Array.from(d)));
+        }
+
+        // Older versions hit-test the element at its CSS transform instead.
+        // Apply it ourselves, as the browser's internal S^-1·T·S
+        // formula doesn't handle perspective projections correctly — it scales
+        // the w row via S, distorting the perspective divide for non-origin
+        // points.
+        if (this._cssHitTest) {
+            this.element.style.transform = cssTransform.toString();
+        }
     }
 }
 
-// Enable HTML-in-Canvas: the "layoutsubtree" attribute tells the browser to
-// composite any child HTML elements into the canvas, making them available as
-// texture sources and enabling hit testing through getElementTransform.
+// Enable HTML-in-Canvas: the content="drawable" attribute tells the browser to
+// lay out child HTML elements of the canvas, making them available as texture
+// sources and enabling hit testing through updateElementGeometry. Chrome 154 and
+// earlier use the layoutsubtree attribute instead.
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+canvas.setAttribute('content', 'drawable');
 canvas.setAttribute('layoutsubtree', 'true');
 window.focus();
 
@@ -233,12 +233,11 @@ const variantColors = {
 const supportsHtmlInCanvas = device.supportsHtmlTextures;
 
 const htmlPanel = document.createElement('div');
+htmlPanel.setAttribute('drawable', '');
 htmlPanel.style.width = `${PANEL_WIDTH}px`;
 htmlPanel.style.height = `${PANEL_HEIGHT}px`;
 htmlPanel.style.padding = '20px';
 htmlPanel.style.background = 'rgba(15, 15, 25, 0.375)';
-htmlPanel.style.backdropFilter = 'blur(12px)';
-htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
 htmlPanel.style.borderRadius = '20px';
 htmlPanel.style.fontFamily = "'Segoe UI', Arial, sans-serif";
 htmlPanel.style.color = 'white';
@@ -264,6 +263,11 @@ if (supportsHtmlInCanvas) {
     htmlPanel.style.top = '50%';
     htmlPanel.style.transform = 'translateY(-50%)';
     htmlPanel.style.zIndex = '100';
+
+    // Blur the scene behind the overlay. A drawable element has no backdrop,
+    // and Chrome 157 blurs its content instead.
+    htmlPanel.style.backdropFilter = 'blur(12px)';
+    htmlPanel.style.webkitBackdropFilter = 'blur(12px)';
 }
 
 const updatePanel = () => {
@@ -321,11 +325,11 @@ updatePanel();
 
 // --- HTML-to-GPU texture pipeline ---
 // When HTML-in-Canvas is available, the HTML panel is appended as a child of
-// the canvas and captured into a GPU texture (texElementImage2D on WebGL,
-// copyElementImageToTexture on WebGPU). The
-// browser fires a "paint" event whenever the panel's visual content changes;
-// we respond by re-uploading the texture. The first paint uses setSource() to
-// bind the element, subsequent paints just call upload().
+// the canvas and captured into a GPU texture (texElementSubImage2D on WebGL,
+// drawElementImageToTexture on WebGPU). The browser fires a "paint" event
+// whenever the panel's visual content changes; we respond by re-uploading the
+// texture. The first paint uses setSource() to bind the element, subsequent
+// paints just call upload().
 /** @type {Texture|null} */
 let panelTexture = null;
 
@@ -519,7 +523,7 @@ light.setEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
 // Click handling — the HTML panel receives real DOM click events in both
-// modes: via getElementTransform hit testing (HTML-in-Canvas) or via
+// modes: via updateElementGeometry hit testing (HTML-in-Canvas) or via
 // standard DOM events (overlay fallback). When a variant button is clicked
 // we apply the glTF KHR_materials_variants extension and repaint.
 htmlPanel.addEventListener('click', (e) => {
@@ -537,11 +541,11 @@ htmlPanel.addEventListener('click', (e) => {
 });
 
 // Per-frame sync: HtmlSync projects the 3D panel position into screen
-// space and sets the HTML element's CSS transform so the browser's hit
+// space and updates the HTML element's geometry so the browser's hit
 // testing aligns with where the panel appears in the 3D scene.
-const supportsGetElementTransform = typeof canvas.getElementTransform === 'function';
-const htmlSync =
-    panel && supportsGetElementTransform ? new HtmlSync(canvas, htmlPanel, panel, PANEL_WIDTH, PANEL_HEIGHT) : null;
+const supportsHitTesting =
+    typeof canvas.updateElementGeometry === 'function' || typeof canvas.getElementTransform === 'function';
+const htmlSync = panel && supportsHitTesting ? new HtmlSync(canvas, htmlPanel, panel, PANEL_WIDTH, PANEL_HEIGHT) : null;
 
 app.on('update', (/** @type {number} */ dt) => {
     // Smooth camera sway — orbit at constant radius

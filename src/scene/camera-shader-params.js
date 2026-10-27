@@ -24,6 +24,14 @@ class CameraShaderParams {
     /** @private */
     _fog = FOG_NONE;
 
+    /**
+     * True when the camera has clipping planes, see {@link Camera#clippingPlanes}. Their number is
+     * a uniform, so only whether there are any takes part in the shader variant key.
+     *
+     * @private
+     */
+    _clipPlanes = false;
+
     /** @private */
     _sceneDepthMapLinear = false;
 
@@ -95,7 +103,7 @@ class CameraShaderParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}_${this.sceneDepthMapReciprocal}_${this._sceneTextures.join('-')}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this._clipPlanes}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}_${this.sceneDepthMapReciprocal}_${this._sceneTextures.join('-')}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -128,6 +136,13 @@ class CameraShaderParams {
             });
             if (this.shaderOutputGamma === GAMMA_SRGB) defines.set('SCENE_COLORMAP_GAMMA', '');
             defines.set('FOG', this._fog.toUpperCase());
+
+            // CLIP_PLANES enables clipping in the shaders that support it, which with
+            // CLIP_PLANES_CAMERA read the planes of the camera, see the clipPlanesPS chunk
+            if (this._clipPlanes) {
+                defines.set('CLIP_PLANES', '');
+                defines.set('CLIP_PLANES_CAMERA', '');
+            }
             defines.set('TONEMAP', tonemapNames[this._toneMapping]);
             defines.set('GAMMA', gammaNames[this.shaderOutputGamma]);
         }
@@ -148,6 +163,17 @@ class CameraShaderParams {
 
     get fog() {
         return this._fog;
+    }
+
+    set clipPlanes(value) {
+        if (this._clipPlanes !== value) {
+            this._clipPlanes = value;
+            this.markDirty();
+        }
+    }
+
+    get clipPlanes() {
+        return this._clipPlanes;
     }
 
     set ssaoEnabled(value) {

@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { spy } from 'sinon';
 
 import { FramePassBloom } from '../../../src/extras/effects/bloom/passes/frame-pass-bloom.js';
 import { PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
@@ -78,5 +79,26 @@ describe('FramePassBloom', function () {
 
         expect(pass.prefilterPass).to.equal(null);
         expect(pass.beforePasses[0].prefilter).to.equal(false);
+    });
+
+    it('destroys the bloom texture when destroyed while disabled', function () {
+        pass.frameUpdate();
+        pass.enabled = false;
+
+        const destroyTarget = spy(pass.bloomRenderTarget, 'destroy');
+        const destroyTexture = spy(pass.bloomTexture, 'destroy');
+        pass.destroy();
+
+        expect(destroyTarget.calledOnce).to.equal(true);
+        expect(destroyTexture.calledOnce).to.equal(true);
+    });
+
+    it('destroys the bloom texture when destroyed before the first update', function () {
+        const destroyTarget = spy(pass.bloomRenderTarget, 'destroy');
+        const destroyTexture = spy(pass.bloomTexture, 'destroy');
+        pass.destroy();
+
+        expect(destroyTarget.calledOnce).to.equal(true);
+        expect(destroyTexture.calledOnce).to.equal(true);
     });
 });

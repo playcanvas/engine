@@ -31,6 +31,13 @@ export function Controls({ observer }) {
                     ]}
                 />
             </LabelGroup>
+            <LabelGroup text='Auto Cycle'>
+                <BooleanInput
+                    type='toggle'
+                    binding={new BindingTwoWay()}
+                    link={{ observer, path: 'autoCycle' }}
+                />
+            </LabelGroup>
             <LabelGroup text='Effect'>
                 <SelectInput
                     options={[

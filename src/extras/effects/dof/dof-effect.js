@@ -129,7 +129,7 @@ class DofEffect extends CameraFrameEffect {
         this._highQuality = this.highQuality;
         this._pass = new FramePassDof(this.device, this.cameraFrame.cameraComponent, resources.depth.texture,
             resources.sceneColorHalf, this.highQuality, this.nearBlur);
-        passes.postTemporal.push(this._pass);
+        passes.postResolve.push(this._pass);
     }
 
     /**

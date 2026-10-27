@@ -39,7 +39,13 @@ export default /* wgsl */`
 
             var positionInShadowSpace: vec4f = shadowTransform * vec4f(surfacePosition, 1.0);
             #ifdef LIGHT{i}_SHADOW_SAMPLE_ORTHO
-                positionInShadowSpace.z = saturate(positionInShadowSpace.z) - 0.0001;
+                #if LIGHT{i}SHADOWTYPE == PCSS_32F
+                    // PCSS needs the depth of the receivers beyond the far plane, for their distance to
+                    // the blockers, and clamps the depth itself where it samples the shadow map
+                    positionInShadowSpace.z = positionInShadowSpace.z - 0.0001;
+                #else
+                    positionInShadowSpace.z = saturate(positionInShadowSpace.z) - 0.0001;
+                #endif
             #else
                 #ifdef LIGHT{i}_SHADOW_SAMPLE_SOURCE_ZBUFFER
                     positionInShadowSpace.xyz = positionInShadowSpace.xyz / positionInShadowSpace.w;

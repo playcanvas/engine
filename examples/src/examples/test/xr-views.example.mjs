@@ -87,6 +87,7 @@ class CompositeArrayPass extends RenderPassShaderQuad {
         super(graphicsDevice);
         this.name = 'CompositeArrayPass';
         this.sourceTexture = sourceTexture;
+        this.sourceTextureId = graphicsDevice.scope.resolve('sourceTexture');
         this.numViews = numViews;
 
         this.shader = ShaderUtils.createShader(graphicsDevice, {
@@ -153,7 +154,7 @@ class CompositeArrayPass extends RenderPassShaderQuad {
     }
 
     execute() {
-        this.device.scope.resolve('sourceTexture').setValue(this.sourceTexture);
+        this.sourceTextureId.setValue(this.sourceTexture);
         super.execute();
     }
 }

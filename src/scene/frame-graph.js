@@ -6,7 +6,6 @@ import { FramePassMultiView } from './renderer/frame-pass-multi-view.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderPass } from '../platform/graphics/render-pass.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
- * @import { Texture } from '../platform/graphics/texture.js'
  */
 
 /**
@@ -16,7 +15,7 @@ import { FramePassMultiView } from './renderer/frame-pass-multi-view.js';
  */
 class FrameGraph {
     /** @type {FramePass[]} */
-    renderPasses = [];
+    passes = [];
 
     /**
      * Map used during frame graph compilation. It maps a render target to its previous occurrence.
@@ -27,8 +26,8 @@ class FrameGraph {
 
     /**
      * Active multi-view capture wrapper. When non-null, passes scheduled via
-     * {@link FrameGraph#addRenderPass} are appended as children of this wrapper instead of being
-     * pushed directly into {@link FrameGraph#renderPasses}. Set/cleared via
+     * {@link FrameGraph#addPass} are appended as children of this wrapper instead of being
+     * pushed directly into {@link FrameGraph#passes}. Set/cleared via
      * {@link FrameGraph#beginMultiView} / {@link FrameGraph#endMultiView}.
      *
      * @type {FramePassMultiView|null}
@@ -37,7 +36,7 @@ class FrameGraph {
 
     /**
      * Open a multi-view capture scope. Subsequent passes added through
-     * {@link FrameGraph#addRenderPass} are captured as children of a single
+     * {@link FrameGraph#addPass} are captured as children of a single
      * {@link FramePassMultiView} until {@link FrameGraph#endMultiView} is called.
      *
      * @param {GraphicsDevice} device - The graphics device used to construct the wrapper.
@@ -48,7 +47,7 @@ class FrameGraph {
     }
 
     /**
-     * Close the multi-view capture scope. Pushes the wrapper into the frame graph render passes
+     * Close the multi-view capture scope. Pushes the wrapper into the frame graph passes
      * unless it captured no children (in which case it is dropped).
      *
      * A captured pass which does not render per view (see {@link FramePass#perView}), such as the
@@ -73,7 +72,7 @@ class FrameGraph {
         for (let i = 0; i < children.length; i++) {
             const pass = children[i];
             if (!pass.perView && !this._sharesTarget(children, pass)) {
-                this.renderPasses.push(pass);
+                this.passes.push(pass);
             } else {
                 children[kept++] = pass;
             }
@@ -82,7 +81,7 @@ class FrameGraph {
 
         // drop the wrapper when no pass renders per view
         if (kept) {
-            this.renderPasses.push(wrap);
+            this.passes.push(wrap);
         }
     }
 
@@ -111,50 +110,66 @@ class FrameGraph {
     }
 
     /**
-     * Add a frame pass to the frame.
+     * Add a frame pass to the frame, together with its before and after passes. A disabled pass
+     * is skipped with all of them, and its {@link FramePass#frameUpdate} is not called.
      *
-     * @param {FramePass} renderPass - The frame pass to add.
+     * @param {FramePass} pass - The frame pass to add.
      */
-    addRenderPass(renderPass) {
-        Debug.assert(renderPass);
-        renderPass.frameUpdate();
+    addPass(pass) {
+        Debug.assert(pass);
 
-        const beforePasses = renderPass.beforePasses;
+        if (!pass.enabled) {
+            return;
+        }
+
+        // a destroyed pass is not used again, see FramePass#destroy
+        Debug.assertDestroyed(pass);
+
+        // can add or remove before and after passes, and enable or disable them, but not disable the
+        // pass itself
+        pass.frameUpdate();
+
+        // the passes the engine added for the frame execute first, as the passes set up by the user
+        // can depend on them
+        const internalBeforePasses = pass.internalBeforePasses;
+        for (let i = 0; i < internalBeforePasses.length; i++) {
+            this.addPass(internalBeforePasses[i]);
+        }
+
+        const beforePasses = pass.beforePasses;
         for (let i = 0; i < beforePasses.length; i++) {
-            const pass = beforePasses[i];
-            if (pass.enabled) {
-                this.addRenderPass(pass);
-            }
+            this.addPass(beforePasses[i]);
         }
 
-        if (renderPass.enabled) {
+        // a pass disabled while it is scheduled, by its frameUpdate or by its before-passes, is not
+        // supported, as it has already set itself up for the frame, for example as the first or the
+        // last pass rendering a camera. It stays out of the compile step
+        Debug.assert(pass.enabled, `The frame pass '${pass.name}' was disabled while it was added to the frame, by its frameUpdate or by its before-passes, which is not supported. Disable it before the frame is built, or set its executeEnabled to false instead.`, pass);
+        if (pass.enabled) {
             if (this.multiview) {
-                this.multiview.addChild(renderPass);
+                this.multiview.addChild(pass);
             } else {
-                this.renderPasses.push(renderPass);
+                this.passes.push(pass);
             }
         }
 
-        const afterPasses = renderPass.afterPasses;
+        const afterPasses = pass.afterPasses;
         for (let i = 0; i < afterPasses.length; i++) {
-            const pass = afterPasses[i];
-            if (pass.enabled) {
-                this.addRenderPass(pass);
-            }
+            this.addPass(afterPasses[i]);
         }
     }
 
     reset() {
-        this.renderPasses.length = 0;
+        this.passes.length = 0;
     }
 
     compile() {
-        this._compilePasses(this.renderPasses);
+        this._compilePasses(this.passes);
 
-        // apply the same pass-merging / cube-mipmap optimizations to each multi-view wrapper's
-        // children so within-eye sequences benefit from the same optimizations as top-level passes
-        for (let i = 0; i < this.renderPasses.length; i++) {
-            const pass = this.renderPasses[i];
+        // apply the same pass-merging optimizations to each multi-view wrapper's children so
+        // within-eye sequences benefit from the same optimizations as top-level passes
+        for (let i = 0; i < this.passes.length; i++) {
+            const pass = this.passes[i];
             if (pass instanceof FramePassMultiView) {
                 this._compilePasses(pass.children);
             }
@@ -162,8 +177,8 @@ class FrameGraph {
     }
 
     /**
-     * Run the frame-graph compile optimizations (store-on-no-clear, pass merging, cube mipmap
-     * skipping) over a flat list of passes.
+     * Run the frame-graph compile optimizations (store-on-no-clear, pass merging) over a flat list
+     * of passes.
      *
      * @param {FramePass[]} passes - Passes to optimize.
      * @private
@@ -173,37 +188,39 @@ class FrameGraph {
         const renderTargetMap = this.renderTargetMap;
 
         for (let i = 0; i < passes.length; i++) {
-            const renderPass = passes[i];
-            renderPass._skipStart = false;
-            renderPass._skipEnd = false;
+            const pass = passes[i];
+            pass._skipStart = false;
+            pass._skipEnd = false;
 
-            const renderTarget = renderPass.renderTarget;
+            const renderTarget = pass.renderTarget;
 
-            // if using a target, or null which represents the default back-buffer
-            if (renderTarget !== undefined) {
+            // if using a target, or null which represents the default back-buffer. A pass which does
+            // not execute does not touch its target, so the store request of the next pass using it
+            // goes to the last pass which writes it
+            if (renderTarget !== undefined && pass.executeEnabled) {
 
                 // previous pass using the same render target
                 const prevPass = renderTargetMap.get(renderTarget);
                 if (prevPass) {
 
                     // if we use the RT without clearing, make sure the previous pass stores data
-                    const count = renderPass.colorArrayOps.length;
+                    const count = pass.colorArrayOps.length;
                     for (let j = 0; j < count; j++) {
-                        const colorOps = renderPass.colorArrayOps[j];
+                        const colorOps = pass.colorArrayOps[j];
                         if (!colorOps.clear) {
                             prevPass.colorArrayOps[j].store = true;
                         }
                     }
-                    if (!renderPass.depthStencilOps.clearDepth) {
+                    if (!pass.depthStencilOps.clearDepth) {
                         prevPass.depthStencilOps.storeDepth = true;
                     }
-                    if (!renderPass.depthStencilOps.clearStencil) {
+                    if (!pass.depthStencilOps.clearStencil) {
                         prevPass.depthStencilOps.storeStencil = true;
                     }
                 }
 
                 // add the pass to the map
-                renderTargetMap.set(renderTarget, renderPass);
+                renderTargetMap.set(renderTarget, pass);
             }
         }
 
@@ -220,6 +237,12 @@ class FrameGraph {
                 continue;
             }
 
+            // a pass which does not execute does not start or end its GPU render pass either, which
+            // the other merged pass would depend on
+            if (!firstPass.executeEnabled || !secondPass.executeEnabled) {
+                continue;
+            }
+
             // do not merge if the second pass clears any of the attachments
             if (secondPass.depthStencilOps.clearDepth ||
                 secondPass.depthStencilOps.clearStencil ||
@@ -233,47 +256,19 @@ class FrameGraph {
             }
 
             // second pass cannot contain before passes
-            if (secondPass.beforePasses.length > 0) {
+            if (secondPass.beforePasses.length > 0 || secondPass.internalBeforePasses.length > 0) {
+                continue;
+            }
+
+            // the callbacks running between the passes run outside of a GPU render pass, for example
+            // to read back what the first pass rendered
+            if (firstPass.onAfter || secondPass.onBefore) {
                 continue;
             }
 
             // merge the passes
             firstPass._skipEnd = true;
             secondPass._skipStart = true;
-        }
-
-        // Walk over render passes to find passes rendering to the same cubemap texture.
-        // If those passes are separated only by passes not requiring cubemap (shadows ..),
-        // we skip the mipmap generation till the last rendering to the cubemap, to avoid
-        // mipmaps being generated after each face.
-        /** @type {Texture} */
-        let lastCubeTexture = null;
-        /** @type {RenderPass|null} */
-        let lastCubeRenderPass = null;
-        for (let i = 0; i < passes.length; i++) {
-            const renderPass = passes[i];
-            const renderTarget = renderPass.renderTarget;
-            const thisTexture = renderTarget?.colorBuffer;
-
-            if (thisTexture?.cubemap) {
-
-                // if previous pass used the same cubemap texture, it does not need mipmaps generated
-                if (lastCubeTexture === thisTexture) {
-                    const count = lastCubeRenderPass.colorArrayOps.length;
-                    for (let j = 0; j < count; j++) {
-                        lastCubeRenderPass.colorArrayOps[j].mipmaps = false;
-                    }
-                }
-
-                lastCubeTexture = renderTarget.colorBuffer;
-                lastCubeRenderPass = renderPass;
-
-            } else if (renderPass.requiresCubemaps) {
-
-                // if the cubemap is required, break the cubemap rendering chain
-                lastCubeTexture = null;
-                lastCubeRenderPass = null;
-            }
         }
 
         renderTargetMap.clear();
@@ -283,9 +278,9 @@ class FrameGraph {
 
         this.compile();
 
-        const renderPasses = this.renderPasses;
-        for (let i = 0; i < renderPasses.length; i++) {
-            renderPasses[i].render();
+        const passes = this.passes;
+        for (let i = 0; i < passes.length; i++) {
+            passes[i].render();
         }
     }
 }

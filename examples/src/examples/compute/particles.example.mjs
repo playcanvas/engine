@@ -14,6 +14,7 @@ import {
     FILLMODE_FILL_WINDOW,
     Mesh,
     MeshInstance,
+    MiniStats,
     Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -70,6 +71,9 @@ createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -272,3 +276,5 @@ app.on('update', (/** @type {number} */ dt) => {
         device.computeDispatch([compute], 'ComputeParticlesDispatch');
     }
 });
+
+export { miniStats };

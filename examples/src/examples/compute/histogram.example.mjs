@@ -22,6 +22,7 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     LightComponentSystem,
+    MiniStats,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     SHADERLANGUAGE_WGSL,
@@ -78,6 +79,9 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -183,8 +187,10 @@ app.on('destroy', () => {
     onDeviceLost.off();
 });
 
-// Before the compute pass dispatches, clear the storage buffer, to avoid the accumulation buildup
+// Right before the compute pass dispatches, set up the size of the dispatch, a thread for each
+// pixel, and clear the storage buffer, to avoid the accumulation buildup
 computePass.onBefore = () => {
+    compute.setupDispatchThreads(device.width, device.height);
     histogramStorageBuffer.clear();
 };
 
@@ -217,14 +223,11 @@ computePass.onAfter = () => {
         });
 };
 
-app.on('update', (/** @type {number} */ _dt) => {
-    if (device.supportsCompute) {
-        // The size of the dispatch, a thread for each pixel, which the compute pass uses
-        compute.setupDispatchThreads(app.graphicsDevice.width, app.graphicsDevice.height);
-    }
-
+app.on('update', () => {
     // Render the most recently read histogram using lines
     if (histogramPositions) {
         app.drawLineArrays(histogramPositions, Color.YELLOW);
     }
 });
+
+export { miniStats };

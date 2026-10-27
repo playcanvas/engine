@@ -36,6 +36,7 @@ import {
     GAMMA_SRGB,
     Layer,
     LightComponentSystem,
+    MiniStats,
     Mouse,
     PIXELFORMAT_DEPTH,
     PIXELFORMAT_RGBA8,
@@ -106,6 +107,9 @@ app.init(createOptions);
 
 const textures = new TextureRenderer(app);
 app.start();
+
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -467,3 +471,5 @@ if (device.supportsCompute) {
         textures.draw(outputTexture, gap * 0.5, 0.5 + gap * 0.25, 1 - gap, 0.5 - gap);
     });
 }
+
+export { miniStats };

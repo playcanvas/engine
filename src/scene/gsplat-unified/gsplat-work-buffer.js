@@ -384,6 +384,16 @@ class GSplatWorkBuffer {
         const size = this.textureSize;
         if (this.device.isWebGPU) {
             Debug.assert(data.length <= size * size);
+
+            // grow here rather than on resize: only the CPU sort uploads an order, so with GPU
+            // sorting the buffer is never used and stays at its minimal size
+            const newByteSize = size * size * 4;
+            if (this.orderBuffer.byteSize < newByteSize) {
+                this.orderBuffer.destroy();
+                this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
+                DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
+            }
+
             this.uploadStream.upload(data, this.orderBuffer, 0, data.length);
         } else {
             Debug.assert(data.length === size * size);
@@ -400,14 +410,8 @@ class GSplatWorkBuffer {
         this.colorRenderTarget.resize(textureSize, textureSize);
         this.streams.resize(textureSize, textureSize);
 
-        if (this.device.isWebGPU) {
-            const newByteSize = textureSize * textureSize * 4;
-            if (this.orderBuffer.byteSize < newByteSize) {
-                this.orderBuffer.destroy();
-                this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
-                DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
-            }
-        } else {
+        // the WebGPU order buffer grows on upload, in setOrderData
+        if (!this.device.isWebGPU) {
             this.orderTexture.resize(textureSize, textureSize);
         }
     }

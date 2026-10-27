@@ -135,7 +135,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats']));
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'compute']));
 
 // The sun climbs from the horizon at 06:00 to this elevation at noon
 const MAX_SUN_ELEVATION = 65;

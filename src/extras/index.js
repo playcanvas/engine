@@ -21,41 +21,46 @@ export {
 export { LINEWIDTH_SCREEN, LINEWIDTH_WORLD, WideLineRenderer } from './renderers/wide-line-renderer.js';
 export { WireRenderer } from './renderers/wire-renderer.js';
 
+// GRID
+export { Grid } from './grid/grid.js';
+
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';
 
 // RENDER PASSES
 export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/constants.js';
+export { CLOUDTYPE_NONE, CLOUDTYPE_FLAT, CLOUDTYPE_VOLUMETRIC } from './render-passes/constants.js';
 export { COMPOSESLOT_SCENE, COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_OUTPUT } from './render-passes/constants.js';
 export {
     FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, FRAMERESOURCE_SCENECOLORGRAB,
     FRAMERESOURCE_SCENETARGET
 } from './render-passes/constants.js';
+export { CameraFrame } from './render-passes/camera-frame.js';
 export { CameraFrameEffect } from './render-passes/camera-frame-effect.js';
+export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
+export { RenderPassCompose } from './render-passes/render-pass-compose.js';
+export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
+export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
+export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
+
+// EFFECTS
+export { AutoExposureEffect } from './effects/auto-exposure/auto-exposure-effect.js';
 export { BloomEffect } from './effects/bloom/bloom-effect.js';
 export { CasEffect } from './effects/cas/cas-effect.js';
 export { ColorEnhanceEffect } from './effects/color-enhance/color-enhance-effect.js';
 export { ColorLutEffect } from './effects/color-lut/color-lut-effect.js';
 export { DofEffect } from './effects/dof/dof-effect.js';
+export { DynamicSkyEffect } from './effects/dynamic-sky/dynamic-sky-effect.js';
 export { FringingEffect } from './effects/fringing/fringing-effect.js';
 export { GradingEffect } from './effects/grading/grading-effect.js';
-export { LensFlareEffect } from './effects/lens-flare/lens-flare-effect.js';
 export { LensFlare } from './effects/lens-flare/lens-flare.js';
+export { LensFlareEffect } from './effects/lens-flare/lens-flare-effect.js';
+export { SmaaEffect } from './effects/smaa/smaa-effect.js';
 export { SsaoEffect } from './effects/ssao/ssao-effect.js';
+export { TaaEffect } from './effects/taa/taa-effect.js';
 export { VignetteEffect } from './effects/vignette/vignette-effect.js';
 export { VolumetricFogEffect } from './effects/volumetric-fog/volumetric-fog-effect.js';
-export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
-export { RenderPassCompose } from './render-passes/render-pass-compose.js';
-export { RenderPassDepthAwareBlur } from './effects/ssao/passes/render-pass-depth-aware-blur.js';
-export { FramePassDof } from './effects/dof/passes/frame-pass-dof.js';
-export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
-export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
-export { FramePassBloom } from './effects/bloom/passes/frame-pass-bloom.js';
-export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
-export { RenderPassSsao } from './effects/ssao/passes/render-pass-ssao.js';
-export { RenderPassTAA } from './render-passes/render-pass-taa.js';
-export { CameraFrame } from './render-passes/camera-frame.js';
 
 // INPUT
 export { InputDelta, InputFrame, InputSource, InputConsumer, InputController } from './input/input.js';
@@ -87,8 +92,20 @@ export {
     GIZMOAXIS_FACE
 } from './gizmo/constants.js';
 export { Gizmo } from './gizmo/gizmo.js';
-export { TransformGizmo } from './gizmo/transform-gizmo.js';
-export { TranslateGizmo } from './gizmo/translate-gizmo.js';
-export { RotateGizmo } from './gizmo/rotate-gizmo.js';
-export { ScaleGizmo } from './gizmo/scale-gizmo.js';
+export { DragGizmo } from './gizmo/drag-gizmo.js';
+export { TransformGizmo } from './gizmo/transform/transform-gizmo.js';
+export { TranslateGizmo } from './gizmo/transform/translate-gizmo.js';
+export { RotateGizmo } from './gizmo/transform/rotate-gizmo.js';
+export { ScaleGizmo } from './gizmo/transform/scale-gizmo.js';
+export { HandleGizmo } from './gizmo/handle/handle-gizmo.js';
+export { ShapeGizmo } from './gizmo/handle/shape-gizmo.js';
+export { BoxGizmo } from './gizmo/handle/box-gizmo.js';
+export { SphereGizmo } from './gizmo/handle/sphere-gizmo.js';
+export { CapsuleGizmo } from './gizmo/handle/capsule-gizmo.js';
+export { ConeGizmo } from './gizmo/handle/cone-gizmo.js';
+export { CylinderGizmo } from './gizmo/handle/cylinder-gizmo.js';
+export { BoundingBoxGizmo } from './gizmo/handle/bounding-box-gizmo.js';
+export { CameraGizmo } from './gizmo/handle/camera-gizmo.js';
+export { LightGizmo } from './gizmo/handle/light-gizmo.js';
+export { IconGizmo } from './gizmo/icon-gizmo.js';
 export { ViewCube } from './gizmo/view-cube.js';

@@ -518,10 +518,11 @@ class InkOutlineEffect extends CameraFrameEffect {
         pass.color.copy(this.color);
     }
 
-    // called every frame, with the size of the scene this frame
+    // called every frame, with the resolution the scene renders at this frame, which the pass
+    // rendering into the scene has
     frameUpdate(frame) {
-        this._pass.texelWidth = 1 / frame.sceneWidth;
-        this._pass.texelHeight = 1 / frame.sceneHeight;
+        this._pass.texelWidth = 1 / frame.renderWidth;
+        this._pass.texelHeight = 1 / frame.renderHeight;
     }
 }
 

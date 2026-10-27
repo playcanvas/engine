@@ -46,6 +46,7 @@ describe('CameraFrameEffect', function () {
     const createCameraFrame = () => {
         const cameraFrame = Object.create(CameraFrame.prototype);
         cameraFrame.app = { graphicsDevice: device };
+        cameraFrame.cameraComponent = { jitter: 0, camera: { skyVisible: true } };
         cameraFrame.effects = [];
         cameraFrame._activeEffects = [];
         cameraFrame.renderPassCamera = null;
@@ -328,10 +329,10 @@ describe('CameraFrameEffect', function () {
 
         // the passes it creates after the temporal anti-aliasing, the only stage it uses
         const createPasses = (bloom, resources = createResources()) => {
-            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            const passes = { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] };
             bloom.createPasses(resources, passes);
             expect(passes.preScene.length + passes.postOpaque.length + passes.postScene.length).to.equal(0);
-            return passes.postTemporal;
+            return passes.postResolve;
         };
 
         it('owns passes, which read the half resolution scene', function () {
@@ -449,10 +450,10 @@ describe('CameraFrameEffect', function () {
         };
 
         const createPasses = (dof, resources = createResources()) => {
-            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            const passes = { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] };
             dof.createPasses(resources, passes);
             expect(passes.preScene.length + passes.postOpaque.length + passes.postScene.length).to.equal(0);
-            return passes.postTemporal;
+            return passes.postResolve;
         };
 
         it('is disabled by default, and active once enabled', function () {
@@ -561,7 +562,7 @@ describe('CameraFrameEffect', function () {
         };
 
         const createPasses = (ssao, resources = createResources()) => {
-            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            const passes = { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] };
             ssao.createPasses(resources, passes);
             return passes;
         };
@@ -687,7 +688,7 @@ describe('CameraFrameEffect', function () {
         };
 
         const createPasses = (fog, resources = createResources()) => {
-            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            const passes = { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] };
             fog.createPasses(resources, passes);
             return passes;
         };
@@ -768,7 +769,7 @@ describe('CameraFrameEffect', function () {
             const passes = createPasses(fog, resources);
             expect(passes.postScene).to.have.lengthOf(1);
             expect(passes.preScene).to.have.lengthOf(0);
-            expect(passes.postTemporal).to.have.lengthOf(0);
+            expect(passes.postResolve).to.have.lengthOf(0);
 
             const [pass] = passes.postScene;
             expect(pass).to.be.an.instanceOf(FramePassVolumetricFog);

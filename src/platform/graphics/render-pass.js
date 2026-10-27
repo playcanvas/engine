@@ -46,15 +46,25 @@ const validateClearValues = (renderPass) => {
     });
 };
 
+/**
+ * The operations a {@link RenderPass} performs on one of its color attachments: whether it is
+ * cleared before the pass renders, and whether it is stored, resolved and has its mipmaps
+ * generated after. {@link RenderPass#init} allocates them with defaults matching the render
+ * target.
+ *
+ * @ignore
+ */
 class ColorAttachmentOps {
     /**
-     * A color used to clear the color attachment when the clear is enabled, specified in sRGB space.
+     * A color used to clear the color attachment when the clear is enabled, specified in sRGB
+     * space. Set it with {@link RenderPass#setClearColor}, which also updates the linear value
+     * used to clear sRGB attachments.
      */
     clearValue = new Color(0, 0, 0, 1);
 
     /**
      * A color used to clear the color attachment when the clear is enabled, specified in linear
-     * space.
+     * space. Kept in sync with the clearValue by {@link RenderPass#setClearColor}.
      */
     clearValueLinear = new Color(0, 0, 0, 1);
 
@@ -82,8 +92,27 @@ class ColorAttachmentOps {
      * True if the attachment needs to have mipmaps generated.
      */
     genMipmaps = false;
+
+    /**
+     * Resets the operations to their defaults, the values the properties are initialized with.
+     */
+    reset() {
+        this.clearValue.set(0, 0, 0, 1);
+        this.clearValueLinear.set(0, 0, 0, 1);
+        this.clear = false;
+        this.store = false;
+        this.resolve = true;
+        this.genMipmaps = false;
+    }
 }
 
+/**
+ * The operations a {@link RenderPass} performs on its depth and stencil attachment: whether they
+ * are cleared before the pass renders, and whether they are stored and resolved after.
+ * {@link RenderPass#init} allocates them with defaults matching the render target.
+ *
+ * @ignore
+ */
 class DepthStencilAttachmentOps {
     /**
      * A depth value used to clear the depth attachment when the clear is enabled.
@@ -123,35 +152,146 @@ class DepthStencilAttachmentOps {
      * if it can be discarded.
      */
     storeStencil = false;
+
+    /**
+     * Resets the operations to their defaults, the values the properties are initialized with.
+     */
+    reset() {
+        this.clearDepthValue = 1;
+        this.clearStencilValue = 0;
+        this.clearDepth = false;
+        this.clearStencil = false;
+        this.storeDepth = false;
+        this.resolveDepth = false;
+        this.storeStencil = false;
+    }
 }
 
 /**
- * A render pass represents a node in the frame graph that renders to a render target using a GPU
- * render pass. It extends {@link FramePass} with render target management, color/depth/stencil
- * attachment operations, and GPU render pass lifecycle (start/end).
+ * A render pass is a {@link FramePass} which draws into a render target. Its draw calls are
+ * recorded inside a GPU render pass, which starts right before the pass executes and ends right
+ * after. It is the base class for passes which draw, for example a pass rendering a quad with a
+ * shader, see {@link RenderPassShaderQuad}. For work which does not draw, such as compute
+ * dispatches, use {@link FramePass} or {@link ComputePass} instead.
  *
- * @ignore
+ * ## Setting up the pass
+ *
+ * Once the pass is created, call {@link RenderPass#init} with the {@link RenderTarget} to draw
+ * into, or with null to draw into the back buffer. The pass does not own its render target, and
+ * does not destroy it. When init is given options, the pass also resizes its render target each
+ * frame, to the size of a texture, a render target or the back buffer, scaled by
+ * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, see {@link RenderPass#resizeSource}.
+ *
+ * ## Loading and clearing the attachments
+ *
+ * The attachments of the render target are its color buffers, and its depth and stencil buffers.
+ * By default, the GPU render pass loads their content, and the pass draws over it. To start from a
+ * single value instead, clear them with {@link RenderPass#setClearColor},
+ * {@link RenderPass#setClearDepth} and {@link RenderPass#setClearStencil}. When the pass covers an
+ * attachment completely, clearing it is also faster than loading it on tiled mobile GPUs, which
+ * then do not read the previous content from memory.
+ *
+ * ## Storing the attachments
+ *
+ * When the GPU render pass ends, the pass keeps what it rendered into the textures of its render
+ * target, so they can be sampled, or loaded by a later pass: its color buffers, resolved when the
+ * render target is multisampled, and its depth buffer texture. Other attachments are discarded:
+ * the samples of a multisampled color buffer which is resolved, the stencil, and a depth buffer
+ * the render target creates internally. When a later pass of the same frame draws into the same
+ * render target and loads them, the frame graph stores them automatically. Otherwise, store them
+ * with {@link RenderPass#setStoreColor},
+ * {@link RenderPass#setStoreDepth} and {@link RenderPass#setStoreStencil}. The mipmaps of color
+ * buffers with mipmaps are generated at this point too, which
+ * {@link RenderPass#setGenerateMipmaps} can turn off, for example when another pass draws into
+ * the same render target after this one.
+ *
+ * ## Writing a pass
+ *
+ * A subclass records its draw calls in {@link FramePass#execute}, which is called while the GPU
+ * render pass is active. It can also override {@link RenderPass#postInit} to set up its clears
+ * once the pass is initialized, and {@link RenderPass#frameUpdate} to update the pass before each
+ * frame renders, calling `super.frameUpdate()` to keep the resize. It releases what it created in
+ * {@link FramePass#destroy}, calling `super.destroy()`.
+ *
+ * ## Rendering the pass
+ *
+ * A pass renders in one of two ways:
+ *
+ * - As part of a frame, for example as a frame pass of a camera, or as a before or after pass of
+ * another pass. The frame graph then calls its {@link RenderPass#frameUpdate}, and merges
+ * consecutive passes drawing into the same render target into a single GPU render pass, unless
+ * something separates them, for example a clear of the later pass.
+ * - On its own, by calling {@link RenderPass#render}, for example to render into a texture each
+ * time its content needs to change. See {@link FramePass#render} for the steps a frame performs,
+ * which are skipped then.
+ *
+ * @example
+ * // A pass drawing a quad with a shader, covering its whole render target
+ * class MyPass extends RenderPass {
+ *     constructor(device, shader) {
+ *         super(device);
+ *         this.quadRender = new QuadRender(shader);
+ *     }
+ *
+ *     execute() {
+ *         // the default draw states suit a quad: no blending, and no depth test or write
+ *         this.device.setDrawStates();
+ *         this.quadRender.render();
+ *     }
+ *
+ *     destroy() {
+ *         this.quadRender.destroy();
+ *         super.destroy();
+ *     }
+ * }
+ *
+ * const renderTarget = new RenderTarget({ colorBuffer: texture, depth: false });
+ * const pass = new MyPass(device, shader);
+ * pass.name = 'MyPass';
+ * pass.init(renderTarget);
+ *
+ * // the quad covers the whole target, so clear it instead of loading its content
+ * pass.setClearColor(Color.BLACK);
+ *
+ * // draw into the texture
+ * pass.render();
+ *
+ * // destroy the pass, and then the render target, which the pass does not own
+ * pass.destroy();
+ * renderTarget.destroy();
+ *
+ * @category Graphics
  */
 class RenderPass extends FramePass {
     /**
-     * The render target for this render pass:
-     *
-     * - `undefined`: render pass does not render to any render target
-     * - `null`: render pass renders to the backbuffer
-     * - Otherwise, renders to the provided RT.
+     * The render target the pass draws into, or null when it draws into the back buffer. It is set
+     * by {@link RenderPass#init}, which sets up the pass for the attachments of the render target,
+     * and which is called again to switch the pass to a render target with different attachments.
+     * Assigning a render target directly is only supported for a render target with the same
+     * layout: the same color buffers and their formats, the same depth and stencil buffers, and the
+     * same number of samples. For example, a pass can alternate between two such render targets
+     * each frame. For work which does not draw into a render target, use {@link FramePass}
+     * instead. It is undefined until the pass is initialized. The render pass does not own the
+     * render target, and does not destroy it.
      *
      * @type {RenderTarget|null|undefined}
      */
     renderTarget;
 
     /**
-     * The options specified when the render target was initialized.
+     * How the render target is resized: what to, null for the back buffer, and the scale factors.
+     * Undefined when the render target is not resized.
+     *
+     * @type {{ resizeSource: Texture|RenderTarget|null, scaleX: number, scaleY: number }|undefined}
+     * @private
      */
     _options;
 
     /**
      * Number of samples. 0 if no render target, otherwise number of samples from the render target,
      * or the main framebuffer if render target is null.
+     *
+     * @ignore
      */
     samples = 0;
 
@@ -160,6 +300,7 @@ class RenderPass extends FramePass {
      * 0, and so on.
      *
      * @type {Array<ColorAttachmentOps>}
+     * @ignore
      */
     colorArrayOps = [];
 
@@ -167,66 +308,158 @@ class RenderPass extends FramePass {
      * Color attachment operations for the first color attachment.
      *
      * @type {ColorAttachmentOps}
+     * @ignore
      */
     get colorOps() {
         return this.colorArrayOps[0];
     }
 
-    /** @type {DepthStencilAttachmentOps} */
+    /**
+     * Depth and stencil attachment operations.
+     *
+     * @type {DepthStencilAttachmentOps}
+     * @ignore
+     */
     depthStencilOps;
 
     /**
-     * If true, this pass might use dynamically rendered cubemaps. Use for a case where rendering to cubemap
-     * faces is interleaved with rendering to shadows, to avoid generating cubemap mipmaps. This will likely
-     * be retired when render target dependency tracking gets implemented.
-     */
-    requiresCubemaps = true;
-
-    /**
      * True if the render pass uses the full viewport / scissor for rendering into the render target.
+     *
+     * @ignore
      */
     fullSizeClearRect = true;
 
-    set scaleX(value) {
-        Debug.assert(this._options, 'The render pass needs to be initialized first.');
-        this._options.scaleX = value;
-    }
-
-    get scaleX() {
-        return this._options.scaleX;
-    }
-
-    set scaleY(value) {
-        Debug.assert(this._options, 'The render pass needs to be initialized first.');
-        this._options.scaleY = value;
-    }
-
-    get scaleY() {
-        return this._options.scaleY;
-    }
-
-    set options(value) {
-        this._options = value;
-
-        // sanitize options
-        if (value) {
-            this.scaleX = this.scaleX ?? 1;
-            this.scaleY = this.scaleY ?? 1;
+    /**
+     * Sets what the render target of the pass is resized to each frame: a texture or a render
+     * target, whose size, scaled by {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, the
+     * render target takes, or null to take the size of the back buffer. Undefined, the default,
+     * leaves the size of the render target as it is. The options of {@link RenderPass#init} set
+     * it, and init resets it, so set it once the pass is initialized. Change it when the size is to
+     * follow another texture, for example when the texture a pass processes is replaced.
+     *
+     * The render target is resized while the frame is built, in {@link RenderPass#frameUpdate}, and
+     * has the new size only once the pass is updated for the frame. On a frame the size changes,
+     * the passes updated before it in the frame still see the previous size, including the pass it
+     * is a before pass of, which is updated before its before passes.
+     *
+     * @type {Texture|RenderTarget|null|undefined}
+     */
+    set resizeSource(value) {
+        if (value === undefined) {
+            this._options = undefined;
+        } else if (this._options) {
+            this._options.resizeSource = value;
+        } else {
+            this._options = { resizeSource: value, scaleX: 1, scaleY: 1 };
         }
     }
 
+    /**
+     * Gets what the render target of the pass is resized to.
+     *
+     * @type {Texture|RenderTarget|null|undefined}
+     */
+    get resizeSource() {
+        return this._options ? this._options.resizeSource : undefined;
+    }
+
+    /**
+     * Sets the scale factor of the width of the render target, relative to the size of its resize
+     * source, see {@link RenderPass#resizeSource}. Only valid while the render target is resized.
+     * Defaults to 1.
+     *
+     * @type {number}
+     */
+    set scaleX(value) {
+        Debug.assert(this._options, `The scaleX of the render pass '${this.name}' is set, but the pass does not resize its render target. Set its resizeSource first.`, this);
+        if (this._options) {
+            this._options.scaleX = value;
+        }
+    }
+
+    /**
+     * Gets the scale factor of the width of the render target. It is 1 while the render target is
+     * not resized.
+     *
+     * @type {number}
+     */
+    get scaleX() {
+        return this._options?.scaleX ?? 1;
+    }
+
+    /**
+     * Sets the scale factor of the height of the render target, relative to the size of its resize
+     * source, see {@link RenderPass#resizeSource}. Only valid while the render target is resized.
+     * Defaults to 1.
+     *
+     * @type {number}
+     */
+    set scaleY(value) {
+        Debug.assert(this._options, `The scaleY of the render pass '${this.name}' is set, but the pass does not resize its render target. Set its resizeSource first.`, this);
+        if (this._options) {
+            this._options.scaleY = value;
+        }
+    }
+
+    /**
+     * Gets the scale factor of the height of the render target. It is 1 while the render target
+     * is not resized.
+     *
+     * @type {number}
+     */
+    get scaleY() {
+        return this._options?.scaleY ?? 1;
+    }
+
+    /**
+     * Sets how the render target is resized, from the options of {@link RenderPass#init}, which
+     * are copied, so the object passed in is not kept.
+     *
+     * @param {{ resizeSource?: Texture|RenderTarget|null, scaleX?: number, scaleY?: number }|undefined} value - The
+     * options, or undefined to not resize the render target.
+     * @ignore
+     */
+    set options(value) {
+        this._options = value ? {
+            resizeSource: value.resizeSource ?? null,
+            scaleX: value.scaleX ?? 1,
+            scaleY: value.scaleY ?? 1
+        } : undefined;
+    }
+
+    /**
+     * Gets how the render target is resized.
+     *
+     * @type {{ resizeSource: Texture|RenderTarget|null, scaleX: number, scaleY: number }|undefined}
+     * @ignore
+     */
     get options() {
         return this._options;
     }
 
     /**
-     * @param {RenderTarget|null} [renderTarget] - The render target to render into (output). This
-     * function should be called only for render passes which use render target, or passes which
-     * render directly into the default framebuffer, in which case a null or undefined render
-     * target is expected.
+     * Initializes the pass to draw into a render target, or into the back buffer. A render pass
+     * needs to be initialized before it renders, and before its clears, stores and mipmaps are set
+     * with {@link RenderPass#setClearColor}, {@link RenderPass#setStoreColor},
+     * {@link RenderPass#setGenerateMipmaps} and the related setters. It sets up the operations of
+     * the attachments of the render target with their defaults, so the attachments are not
+     * cleared until a clear is set.
+     *
+     * Call it again to switch the pass to a render target with different attachments, which resets
+     * its clears, stores and mipmaps to the defaults. A render target with the same layout can
+     * also be assigned to {@link RenderPass#renderTarget} directly.
+     *
+     * When options are provided, the render target is resized each frame, in
+     * {@link RenderPass#frameUpdate}, to the size of the resize source scaled by
+     * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}. Without options, it is not resized.
+     * The options are copied, so later changes to the object passed in have no effect - change
+     * them with {@link RenderPass#resizeSource}, scaleX and scaleY instead.
+     *
+     * @param {RenderTarget|null} [renderTarget] - The render target to draw into, or null to draw
+     * into the back buffer. Defaults to null. The render pass does not own the render target.
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {Texture} [options.resizeSource] - A texture to use as a source for the automatic
-     * render target resize operation. If not provided, no automatic resizing takes place.
+     * @param {Texture|RenderTarget|null} [options.resizeSource] - The texture or render target whose
+     * size the render target is resized to, or null for the back buffer. Defaults to null.
      * @param {number} [options.scaleX] - The scale factor for the render target width. Defaults to 1.
      * @param {number} [options.scaleY] - The scale factor for the render target height. Defaults to 1.
      */
@@ -247,32 +480,43 @@ class RenderPass extends FramePass {
         this.postInit();
     }
 
+    /**
+     * Allocates the operations of the attachments of the render target, with their defaults. The
+     * operations allocated by a previous initialization are reset and reused, as a pass can be
+     * initialized every frame, for example to render to a different render target.
+     *
+     * @ignore
+     */
     allocateAttachments() {
 
         const rt = this.renderTarget;
 
         // depth
-        this.depthStencilOps = new DepthStencilAttachmentOps();
+        const depthStencilOps = this.depthStencilOps ?? new DepthStencilAttachmentOps();
+        depthStencilOps.reset();
+        this.depthStencilOps = depthStencilOps;
 
         // if an RT is used (so not a backbuffer) that was created with a user supplied depth buffer,
         // assume the user wants to use its content, and so store it by default
         if (rt?.depthBuffer) {
-            this.depthStencilOps.storeDepth = true;
+            depthStencilOps.storeDepth = true;
 
             // a depth resolve buffer is the output of the shader-based depth resolve, which runs
             // after the pass - resolve by default (the multisampled depth is stored either way, as
             // the resolve reads it after the pass has finished)
             if (rt.depthResolveBuffer) {
-                this.depthStencilOps.resolveDepth = true;
+                depthStencilOps.resolveDepth = true;
             }
         }
 
         // color
         const numColorOps = rt ? (rt._colorBuffers?.length ?? 0) : 1;
-        this.colorArrayOps.length = 0;
+        const colorArrayOps = this.colorArrayOps;
+        colorArrayOps.length = numColorOps;
         for (let i = 0; i < numColorOps; i++) {
-            const colorOps = new ColorAttachmentOps();
-            this.colorArrayOps[i] = colorOps;
+            const colorOps = colorArrayOps[i] ?? new ColorAttachmentOps();
+            colorOps.reset();
+            colorArrayOps[i] = colorOps;
 
             const colorBuffer = rt?._colorBuffers?.[i];
 
@@ -298,15 +542,26 @@ class RenderPass extends FramePass {
         }
     }
 
+    /**
+     * Called at the end of {@link RenderPass#init}, once the pass is set up for its render
+     * target. Override to finish the setup, for example to set the clears the pass uses.
+     */
     postInit() {
     }
 
+    /**
+     * Resizes the render target to the size of its resize source, scaled by
+     * {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, while the pass resizes its render
+     * target, see {@link RenderPass#resizeSource}. See {@link FramePass#frameUpdate}. Subclasses
+     * overriding it call `super.frameUpdate()` to keep the resize.
+     */
     frameUpdate() {
         // resize the render target if needed
-        if (this._options && this.renderTarget) {
-            const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
-            const width = Math.floor(resizeSource.width * this.scaleX);
-            const height = Math.floor(resizeSource.height * this.scaleY);
+        const options = this._options;
+        if (options && this.renderTarget) {
+            const resizeSource = /** @type {Texture|RenderTarget} */ (options.resizeSource ?? this.device.backBuffer);
+            const width = Math.floor(resizeSource.width * options.scaleX);
+            const height = Math.floor(resizeSource.height * options.scaleY);
             this.renderTarget.resize(width, height);
         }
     }
@@ -321,6 +576,7 @@ class RenderPass extends FramePass {
      */
     setClearColor(color, index) {
 
+        Debug.assert(this.renderTarget !== undefined, `RenderPass#setClearColor is called on the render pass '${this.name}' before it is initialized with init.`, this);
         const count = this.colorArrayOps.length;
         Debug.assert(index === undefined || (index >= 0 && index < count),
             `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);
@@ -346,10 +602,14 @@ class RenderPass extends FramePass {
      * the existing content.
      */
     setClearDepth(depthValue) {
-        if (depthValue !== undefined) {
-            this.depthStencilOps.clearDepthValue = depthValue;
+        Debug.assert(this.renderTarget !== undefined, `RenderPass#setClearDepth is called on the render pass '${this.name}' before it is initialized with init.`, this);
+        const ops = this.depthStencilOps;
+        if (ops) {
+            if (depthValue !== undefined) {
+                ops.clearDepthValue = depthValue;
+            }
+            ops.clearDepth = depthValue !== undefined;
         }
-        this.depthStencilOps.clearDepth = depthValue !== undefined;
     }
 
     /**
@@ -359,27 +619,141 @@ class RenderPass extends FramePass {
      * preserve the existing content.
      */
     setClearStencil(stencilValue) {
-        if (stencilValue !== undefined) {
-            this.depthStencilOps.clearStencilValue = stencilValue;
+        Debug.assert(this.renderTarget !== undefined, `RenderPass#setClearStencil is called on the render pass '${this.name}' before it is initialized with init.`, this);
+        const ops = this.depthStencilOps;
+        if (ops) {
+            if (stencilValue !== undefined) {
+                ops.clearStencilValue = stencilValue;
+            }
+            ops.clearStencil = stencilValue !== undefined;
         }
-        this.depthStencilOps.clearStencil = stencilValue !== undefined;
     }
 
     /**
-     * Render the render pass
+     * Sets whether the pass stores its color attachments once it renders, so that a later pass
+     * can load them. By default, single-sampled color buffers are stored, while the samples of a
+     * multisampled color buffer are stored only when it has no resolve buffer, as the resolved
+     * color is the output of the pass. Within a frame, the frame graph also stores the attachments
+     * a later pass on the same render target loads, so this is needed for passes rendered on
+     * their own, see {@link FramePass#render}. Not storing a single-sampled color buffer discards
+     * what the pass renders into it. Set it once the pass is initialized, as
+     * {@link RenderPass#init} resets it.
+     *
+     * @param {boolean} store - True to store the attachments, false to discard them.
+     * @param {number} [index] - The index of the color attachment to modify. When not specified,
+     * all color attachments are modified.
+     */
+    setStoreColor(store, index) {
+
+        Debug.assert(this.renderTarget !== undefined, `RenderPass#setStoreColor is called on the render pass '${this.name}' before it is initialized with init.`, this);
+        const count = this.colorArrayOps.length;
+        Debug.assert(index === undefined || (index >= 0 && index < count),
+            `setStoreColor index ${index} is out of range, the render pass has ${count} color attachments.`);
+
+        const start = index ?? 0;
+        const end = index === undefined ? count : index + 1;
+        for (let i = start; i < end; i++) {
+            const colorOps = this.colorArrayOps[i];
+            if (colorOps) {
+                colorOps.store = store;
+            }
+        }
+    }
+
+    /**
+     * Sets whether the pass stores its depth attachment once it renders, so that a later pass can
+     * load it. By default, the depth buffer texture of the render target is stored, while a depth
+     * buffer the render target creates internally is discarded. Within a frame, the frame graph
+     * also stores the depth a later pass on the same render target loads, so this is needed for
+     * passes rendered on their own, see {@link FramePass#render}. Set it once the pass is
+     * initialized, as {@link RenderPass#init} resets it.
+     *
+     * @param {boolean} store - True to store the depth, false to discard it.
+     */
+    setStoreDepth(store) {
+        Debug.assert(this.renderTarget !== undefined, `RenderPass#setStoreDepth is called on the render pass '${this.name}' before it is initialized with init.`, this);
+        if (this.depthStencilOps) {
+            this.depthStencilOps.storeDepth = store;
+        }
+    }
+
+    /**
+     * Sets whether the pass stores its stencil attachment once it renders, so that a later pass
+     * can load it. By default, the stencil is discarded. Within a frame, the frame graph also
+     * stores the stencil a later pass on the same render target loads, so this is needed for
+     * passes rendered on their own, see {@link FramePass#render}. Set it once the pass is
+     * initialized, as {@link RenderPass#init} resets it.
+     *
+     * @param {boolean} store - True to store the stencil, false to discard it.
+     */
+    setStoreStencil(store) {
+        Debug.assert(this.renderTarget !== undefined, `RenderPass#setStoreStencil is called on the render pass '${this.name}' before it is initialized with init.`, this);
+        if (this.depthStencilOps) {
+            this.depthStencilOps.storeStencil = store;
+        }
+    }
+
+    /**
+     * Sets whether the pass generates the mipmaps of its color attachments once it renders. By
+     * default, they are generated for color buffers with mipmaps, unless the render target renders
+     * into a single mip level, see {@link RenderTarget#mipLevel}, or the buffer uses an integer
+     * format. When several passes render to the same render target, the mipmaps are only needed
+     * after the last of them, so disabling them for the others avoids generating them more than
+     * once. Set it once the pass is initialized, as {@link RenderPass#init} resets it.
+     *
+     * @param {boolean} generate - True to generate the mipmaps of the color buffers which support
+     * them, false to not generate them.
+     * @param {number} [index] - The index of the color attachment to modify. When not specified,
+     * all color attachments are modified.
+     */
+    setGenerateMipmaps(generate, index) {
+
+        Debug.assert(this.renderTarget !== undefined, `RenderPass#setGenerateMipmaps is called on the render pass '${this.name}' before it is initialized with init.`, this);
+        const count = this.colorArrayOps.length;
+        Debug.assert(index === undefined || (index >= 0 && index < count),
+            `setGenerateMipmaps index ${index} is out of range, the render pass has ${count} color attachments.`);
+
+        const rt = this.renderTarget;
+        const start = index ?? 0;
+        const end = index === undefined ? count : index + 1;
+        for (let i = start; i < end; i++) {
+            const colorOps = this.colorArrayOps[i];
+            if (colorOps) {
+                const colorBuffer = rt?.getColorBuffer(i);
+                const supported = !!(rt?.mipmaps && colorBuffer?.mipmaps && !isIntegerPixelFormat(colorBuffer.format));
+                Debug.assert(!generate || supported || index === undefined,
+                    `Render pass '${this.name}' cannot generate the mipmaps of the color attachment ${i} of render target '${rt?.name}', as it has no mipmaps or uses an integer format.`, this);
+                colorOps.genMipmaps = generate && supported;
+            }
+        }
+    }
+
+    /**
+     * Renders the pass, as {@link FramePass#render} describes, starting its GPU render pass right
+     * before {@link FramePass#execute} and ending it right after. A pass the frame graph merged
+     * with a neighbouring pass on the same render target shares a single GPU render pass with it.
+     * The pass needs to be initialized with {@link RenderPass#init} before it renders.
      */
     render() {
 
         if (this.enabled) {
 
             const device = this.device;
+
+            // a pass which was not initialized executes without a GPU render pass
             const realPass = this.renderTarget !== undefined;
+            Debug.assert(realPass, `The render pass '${this.name}' renders before it is initialized. Call its init with the render target to draw into, or with null for the back buffer. For work which does not draw into a render target, use a FramePass instead.`, this);
 
             Debug.call(() => {
                 this.log(device, device.renderPassIndex);
             });
 
             this.before();
+            this.onBefore?.(this);
+
+            // the frame graph merged this pass with a neighbouring one, sharing its GPU render pass,
+            // only if both execute
+            Debug.assert(this.executeEnabled || !(this._skipStart || this._skipEnd), `The render pass '${this.name}' was merged with a neighbouring pass, but its executeEnabled was set to false after the frame graph was compiled, for example in its before() or onBefore. Set it before the frame renders, at the latest in its frameUpdate.`, this);
 
             if (this.executeEnabled) {
 
@@ -395,6 +769,7 @@ class RenderPass extends FramePass {
             }
 
             this.after();
+            this.onAfter?.(this);
 
             device.renderPassIndex++;
         }

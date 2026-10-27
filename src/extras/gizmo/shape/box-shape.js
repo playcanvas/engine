@@ -1,20 +1,24 @@
 import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * @typedef {object} BoxShapeArgs
  * @property {number} [size] - The size of the box.
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class BoxShape extends Shape {
     /**
-     * The internal size of the box.
+     * The size.
      *
      * @private
      */
@@ -31,22 +35,19 @@ class BoxShape extends Shape {
 
         this._size = args.size ?? this._size;
 
-        // intersect
         this.triData = [
             new TriData(new BoxGeometry(), 2)
         ];
 
-        // render
         this._createRenderComponent(this.entity, [
             Mesh.fromGeometry(this.device, new BoxGeometry())
         ]);
 
-        // update transform
         this._update();
     }
 
     /**
-     * Set the rendered size of the box.
+     * Set the rendered size.
      *
      * @param {number} value - The new size of the box.
      */
@@ -56,7 +57,7 @@ class BoxShape extends Shape {
     }
 
     /**
-     * Get the rendered size of the box.
+     * Get the rendered size.
      *
      * @returns {number} The size of the box.
      */
@@ -65,13 +66,12 @@ class BoxShape extends Shape {
     }
 
     /**
-     * Update the shapes's transform.
+     * Updates the transform.
      *
      * @protected
      * @override
      */
     _update() {
-        // intersect/render
         this.entity.setLocalScale(this._size, this._size, this._size);
     }
 }

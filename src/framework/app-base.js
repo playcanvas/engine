@@ -297,8 +297,11 @@ class AppBase extends EventHandler {
 
     /**
      * Scales the global time delta. Defaults to 1. Scripts, animation and physics all receive
-     * the scaled delta, so 0 stops them together. To pause or slow down physics alone while the
-     * rest of the application keeps running, use {@link RigidBodyComponentSystem#timeScale}.
+     * the scaled delta, so 0 freezes everything that advances with time. It does not pause
+     * scripts: their update and postUpdate methods are still called every frame with a dt of 0,
+     * so input handling, spawning, impulses and any other logic that is not multiplied by dt
+     * carry on. Give gameplay code its own pause check. To pause or slow down physics alone while
+     * the rest of the application keeps running, use {@link RigidBodyComponentSystem#timeScale}.
      *
      * @example
      * // Set the app to run at half speed
@@ -807,8 +810,9 @@ class AppBase extends EventHandler {
      *
      * Container-backed render assets wait for their referenced containers to be registered and
      * loaded. If a preloaded render asset's `data.containerAsset` refers to a container that is
-     * never registered, this method never calls its callback or fires `preload:end`. Debug builds
-     * warn when a render asset starts waiting for an unregistered container.
+     * never registered, this method never calls its callback or fires `preload:end`. Containers
+     * can be registered in any order before this method is called. Debug builds warn about
+     * preloaded render assets whose container is still unregistered when this method is called.
      *
      * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
@@ -841,6 +845,15 @@ class AppBase extends EventHandler {
         // for each asset
         assets.forEach((asset) => {
             if (!asset.loaded) {
+                // A container registered after this point is still picked up, but one that is never
+                // registered keeps preload from completing.
+                Debug.call(() => {
+                    const containerId = asset.type === 'render' && asset.data.containerAsset;
+                    if (containerId && !this.assets.get(containerId)) {
+                        Debug.warnOnce(`Preloaded render asset '${asset.name}' (${asset.id}) is waiting for container asset ${containerId}, which is not registered. Preload completes only after it is registered and loaded.`);
+                    }
+                });
+
                 asset.once('load', onAssetLoadOrError);
                 asset.once('error', onAssetLoadOrError);
                 this.assets.load(asset);

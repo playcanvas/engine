@@ -219,7 +219,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy', 'compute']));
 
 // Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;

@@ -14,6 +14,7 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
+import { getCanvasNavigatorGpu } from './navigator-gpu.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
@@ -448,6 +449,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         super.destroy();
 
+        // Released after the destroy event, so a listener reaching the lazy getters cannot
+        // allocate them again. A device supplied by the host would otherwise keep them alive.
+        this._indirectDrawBuffer?.destroy();
+        this._indirectDrawBuffer = null;
+        this._indirectDispatchBuffer?.destroy();
+        this._indirectDispatchBuffer = null;
+
         // Destroy listeners can enqueue more resources, and no further submit will drain them.
         this.destroyDeferredResources();
         this.clearDeviceState();
@@ -539,7 +547,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    initDeviceCaps() {
+    /**
+     * @param {WGSLLanguageFeatures} [wgslFeatures] - The WGSL language features reported by the
+     * canvas's WebGPU entry point, if the browser reports them.
+     * @private
+     */
+    initDeviceCaps(wgslFeatures) {
 
         const limits = this.wgpu?.limits;
         this.limits = limits;
@@ -577,7 +590,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.samples = this.backBufferAntialias ? 4 : 1;
 
         // WGSL features
-        const wgslFeatures = window.navigator.gpu.wgslLanguageFeatures;
         this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
         this.supportsSubgroupUniformity = wgslFeatures?.has('subgroup_uniformity');
         this.supportsSubgroupId = wgslFeatures?.has('subgroup_id');
@@ -592,7 +604,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     async initWebGpu(glslangUrl, twgslUrl) {
 
-        if (!window.navigator.gpu) {
+        if (!getCanvasNavigatorGpu(this.canvas)) {
             warnInsecureContext('WebGPU');
             throw new Error('Unable to retrieve GPU. Ensure you are using a browser that supports WebGPU rendering.');
         }
@@ -639,7 +651,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             xrCompatible: !!this.initOptions.xrCompatible
         };
 
-        const gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
+        const gpuAdapter = await getCanvasNavigatorGpu(this.canvas).requestAdapter(adapterOptions);
         if (this._destroyed) {
             return null;
         }
@@ -774,8 +786,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxSubgroupSize = gpuAdapter?.info?.subgroupMaxSize ?? 0;
         this.minSubgroupSize = gpuAdapter?.info?.subgroupMinSize ?? 0;
 
-        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
-            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
+        // the WebGPU entry point of the canvas, which reports the WGSL features and canvas format
+        const gpu = getCanvasNavigatorGpu(this.canvas);
+        const wgslFeatures = gpu.wgslLanguageFeatures;
+        const wgslFeatureNames = wgslFeatures ? Array.from(wgslFeatures) : [];
         Debug.log(
             `WEBGPU${gpuAdapter?.info ?
                 ` (${gpuAdapter.info.vendor || '?'} / ${gpuAdapter.info.architecture || gpuAdapter.info.device || '?'})` :
@@ -783,8 +797,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } features [${this.initOptions.featureLevel === 'bare' ? 'bare' : 'full'}]: ${enabledFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
         );
 
-        // HTML-in-Canvas support (copyElementImageToTexture)
-        this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
+        // HTML-in-Canvas support (drawElementImageToTexture, or copyElementImageToTexture before
+        // Chrome 155)
+        const queue = this.wgpu.queue;
+        this.supportsHtmlTextures = typeof queue?.drawElementImageToTexture === 'function' ||
+            typeof queue?.copyElementImageToTexture === 'function';
 
         // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
         this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
@@ -801,7 +818,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         };
         this.wgpu.addEventListener?.('uncapturederror', this._uncapturedErrorHandler);
 
-        this.initDeviceCaps();
+        this.initDeviceCaps(wgslFeatures);
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
@@ -809,7 +826,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         let canvasToneMapping = 'standard';
 
         // pixel format of the framebuffer that is the most efficient one on the system
-        let preferredCanvasFormat = window.navigator.gpu.getPreferredCanvasFormat();
+        let preferredCanvasFormat = gpu.getPreferredCanvasFormat();
 
         // display format the user asked for
         const displayFormat = this.initOptions.displayFormat;
@@ -1786,6 +1803,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         this.endComputePass();
+
+        // track the dispatches and the compute pass recording them
+        this._computeDispatchesPerFrame += computes.length;
+        this._computePassesPerFrame++;
     }
 
     getCommandEncoder() {

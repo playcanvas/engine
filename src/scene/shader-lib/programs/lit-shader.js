@@ -490,8 +490,8 @@ class LitShader {
                 if (light._normalOffsetBias && !light._isVsm) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_NORMAL_OFFSET`, true);
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_ORTHO`, true);
-                    if (light.cascadeBlend > 0) fDefines.set(`LIGHT${i}_SHADOW_CASCADE_BLEND`, true);
-                    if (light.numCascades > 1) fDefines.set(`LIGHT${i}_SHADOW_CASCADES`, true);
+                    if (light.usesCascadeBlend) fDefines.set(`LIGHT${i}_SHADOW_CASCADE_BLEND`, true);
+                    if (light.shadowCascadeCount > 1) fDefines.set(`LIGHT${i}_SHADOW_CASCADES`, true);
                 }
                 if (shadowInfo.pcf || shadowInfo.pcss || this.device.isWebGPU) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_SOURCE_ZBUFFER`, true);
                 if (lightType === LIGHTTYPE_OMNI) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_POINT`, true);
@@ -614,6 +614,13 @@ class LitShader {
         // generated code is exposed as an include
         this.includes.set('frontendDeclPS', frontendDecl ?? '');
         this.includes.set('frontendCodePS', frontendCode ?? '');
+
+        // the planes of the mesh instance clip all passes, so that what they clip neither renders,
+        // casts shadows, writes depth nor gets picked. The planes of the camera are enabled by
+        // the defines of the camera shader params instead, so they do not clip the shadow passes,
+        // which render with the shadow camera
+        this.fDefineSet(options.useClipPlanes, 'CLIP_PLANES');
+        this.fDefineSet(options.useClipPlanes, 'CLIP_PLANES_MESH');
 
         if (options.pass === SHADER_PICK) {
             // nothing to prepare currently

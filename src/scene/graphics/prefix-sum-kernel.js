@@ -228,12 +228,10 @@ class PrefixSumKernel {
      * @param {number} count - New element count.
      */
     resize(dataBuffer, count) {
-        // Check if we need more passes (count grew beyond current capacity)
-        const requiredPasses = this._countPassesNeeded(count);
-        const currentPasses = this.passes.length;
-
-        if (requiredPasses > currentPasses) {
-            // Need more passes - destroy old and recreate with new capacity
+        // The block sum buffers of every level are sized for the count the passes were created
+        // with, so any growth past it needs new passes - even when the number of levels stays the
+        // same, as a level then needs more block sums than its buffer holds
+        if (count > (this.passes[0]?.allocatedCount ?? 0)) {
             this.destroyPasses();
             this.createPassesRecursive(dataBuffer, count);
             return;
@@ -270,25 +268,6 @@ class PrefixSumKernel {
             pass.blockSumBuffer?.destroy();
         }
         this.passes.length = 0;
-    }
-
-    /**
-     * Counts how many recursive passes are needed for a given element count.
-     *
-     * @param {number} count - Element count.
-     * @returns {number} Number of passes needed.
-     * @private
-     */
-    _countPassesNeeded(count) {
-        let passes = 0;
-        let levelCount = count;
-        while (levelCount > 0) {
-            passes++;
-            const workgroupCount = Math.ceil(levelCount / ITEMS_PER_WORKGROUP);
-            if (workgroupCount <= 1) break;
-            levelCount = workgroupCount;
-        }
-        return passes;
     }
 
     /**

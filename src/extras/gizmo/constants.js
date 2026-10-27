@@ -1,6 +1,5 @@
 /**
- * The gizmo space defines the coordinate system in which the gizmo operates. This can be one of the
- * following:
+ * The coordinate space a gizmo operates in:
  *
  * - 'local': The local coordinate space
  * - 'world': The world coordinate space
@@ -9,8 +8,7 @@
  */
 
 /**
- * The gizmo axis defines the direction in which the gizmo operates. This can be one of the
- * following:
+ * The axis or plane a gizmo operates along:
  *
  * - 'x': The X axis
  * - 'y': The Y axis
@@ -25,8 +23,7 @@
  */
 
 /**
- * The gizmo drag mode defines how the gizmo is rendered while being dragged. This can be one of the
- * following:
+ * How a gizmo renders while dragged:
  *
  * - 'show': always show the shapes
  * - 'hide': hide the shapes when dragging
@@ -117,7 +114,7 @@ export const GIZMOAXIS_XY = 'xy';
 export const GIZMOAXIS_XYZ = 'xyz';
 
 /**
- * Gizmo axis for facing the camera (facing the camera).
+ * Gizmo axis facing the camera.
  *
  * @category Gizmo
  * @deprecated Use the literal 'f' instead - {@link GizmoAxis}.

@@ -94,7 +94,15 @@ class FramePassBloom extends FramePass {
 
     destroy() {
         this.destroyRenderPasses();
-        this.destroyRenderTargets();
+        this.destroyRenderTargets(1);
+
+        // the persistent render target is in renderTargets only while the passes exist
+        this.bloomRenderTarget?.destroyTextureBuffers();
+        this.bloomRenderTarget?.destroy();
+        this.bloomRenderTarget = null;
+        this.bloomTexture = null;
+
+        super.destroy();
     }
 
     destroyRenderTargets(startIndex = 0) {

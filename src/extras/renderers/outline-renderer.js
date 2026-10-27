@@ -11,8 +11,8 @@ import {
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
+import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**
@@ -246,6 +246,11 @@ class OutlineRenderer {
         });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
+
+        // the pass extending the outlines, reused for both of its passes every frame
+        this.extendPass = new RenderPassShaderQuad(device);
+        this.extendPass.name = 'OutlineExpand';
+        this.extendPass.shader = this.shaderExtend;
     }
 
     /**
@@ -275,6 +280,9 @@ class OutlineRenderer {
 
         this.quadRenderer?.destroy();
         this.quadRenderer = null;
+
+        this.extendPass.destroy();
+        this.extendPass = null;
     }
 
     /**
@@ -424,8 +432,11 @@ class OutlineRenderer {
         const uOffset = device.scope.resolve('uOffset');
         const uColorBuffer = device.scope.resolve('source');
         const uSrcMultiplier = device.scope.resolve('uSrcMultiplier');
-        const { rt, tempRt, shaderExtend } = this;
+        const { rt, tempRt, extendPass } = this;
         const { width, height } = rt;
+
+        // the passes render with the blend state set on the device, as the quads they replaced did
+        extendPass.blendState = device.blendState;
 
         // horizontal extend pass
         _tempFloatArray[0] = 1.0 / width / 2.0;
@@ -433,7 +444,8 @@ class OutlineRenderer {
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(rt.colorBuffer);
         uSrcMultiplier.setValue(0.0);
-        drawQuadWithShader(device, tempRt, shaderExtend, undefined, undefined, 'OutlineExpand');
+        extendPass.init(tempRt);
+        extendPass.render();
 
         // vertical extend pass
         _tempFloatArray[0] = 0;
@@ -441,7 +453,8 @@ class OutlineRenderer {
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(tempRt.colorBuffer);
         uSrcMultiplier.setValue(1.0);
-        drawQuadWithShader(device, rt, shaderExtend, undefined, undefined, 'OutlineExpand');
+        extendPass.init(rt);
+        extendPass.render();
     }
 
     createRenderTarget(name, width, height, depth) {

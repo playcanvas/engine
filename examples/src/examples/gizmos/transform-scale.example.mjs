@@ -152,6 +152,7 @@ data.set('gizmo', {
         disabled: gizmo.theme.disabled.toArray()
     },
     coordSpace: gizmo.coordSpace,
+    guideThickness: gizmo.guideThickness,
     axisLineTolerance: gizmo.axisLineTolerance,
     axisGap: gizmo.axisGap,
     axisLineThickness: gizmo.axisLineThickness,
@@ -159,12 +160,14 @@ data.set('gizmo', {
     axisBoxSize: gizmo.axisBoxSize,
     axisPlaneSize: gizmo.axisPlaneSize,
     axisPlaneGap: gizmo.axisPlaneGap,
+    axisPlaneOpacity: gizmo.axisPlaneOpacity,
+    axisPlaneOutlineThickness: gizmo.axisPlaneOutlineThickness,
+    axisFadeAngle: gizmo.axisFadeAngle,
     axisCenterSize: gizmo.axisCenterSize
 });
 
 // Create grid
 const gridEntity = new Entity('grid');
-gridEntity.setLocalScale(4, 1, 4);
 app.root.addChild(gridEntity);
 gridEntity.addComponent('script');
 gridEntity.script.create(Grid);
@@ -176,12 +179,14 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     switch (category) {
         case 'camera': {
             switch (key) {
-                case 'proj':
+                case 'proj': {
                     camera.camera.projection = value - 1;
                     break;
-                case 'fov':
+                }
+                case 'fov': {
                     camera.camera.fov = value;
                     break;
+                }
             }
             break;
         }
@@ -200,6 +205,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 gizmo.setTheme(theme);
                 return;
             }
+
             // @ts-ignore
             gizmo[key] = value;
             break;

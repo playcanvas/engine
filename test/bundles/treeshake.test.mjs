@@ -76,6 +76,46 @@ describe('build / treeshake', function () {
         expect(retained, 'retained gsplat resource modules').to.deep.equal([]);
     });
 
+    it('CameraFrame does not retain the SMAA effect, which is only bundled when imported', async function () {
+        const smaaModules = async (contents) => {
+            const result = await bundle(contents);
+            const output = Object.values(result.metafile.outputs)[0];
+            return Object.keys(output.inputs).filter(path => path.includes('/effects/smaa/'));
+        };
+
+        const withoutSmaa = await smaaModules(`
+            import { CameraFrame } from "playcanvas";
+            globalThis.__cameraFrame = CameraFrame;
+        `);
+        expect(withoutSmaa, 'retained SMAA modules').to.deep.equal([]);
+
+        const withSmaa = await smaaModules(`
+            import { CameraFrame, SmaaEffect } from "playcanvas";
+            globalThis.__cameraFrame = [CameraFrame, SmaaEffect];
+        `);
+        expect(withSmaa.some(path => path.endsWith('/effects/smaa/smaa-effect.js')), 'bundled SMAA effect').to.equal(true);
+    });
+
+    it('CameraFrame does not retain the auto exposure effect, which is only bundled when imported', async function () {
+        const autoExposureModules = async (contents) => {
+            const result = await bundle(contents);
+            const output = Object.values(result.metafile.outputs)[0];
+            return Object.keys(output.inputs).filter(path => path.includes('/effects/auto-exposure/'));
+        };
+
+        const withoutAutoExposure = await autoExposureModules(`
+            import { CameraFrame } from "playcanvas";
+            globalThis.__cameraFrame = CameraFrame;
+        `);
+        expect(withoutAutoExposure, 'retained auto exposure modules').to.deep.equal([]);
+
+        const withAutoExposure = await autoExposureModules(`
+            import { CameraFrame, AutoExposureEffect } from "playcanvas";
+            globalThis.__cameraFrame = [CameraFrame, AutoExposureEffect];
+        `);
+        expect(withAutoExposure.some(path => path.endsWith('/effects/auto-exposure/auto-exposure-effect.js')), 'bundled auto exposure effect').to.equal(true);
+    });
+
     it('deprecated shims survive tree-shaking and still apply', async function () {
         // representative shims of each kind: class members (shininess), the computed-name alias
         // and tint loops (sheenGlossiness, diffuseTint), the options forwarding loop (refraction)

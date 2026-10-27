@@ -61,6 +61,13 @@ class GpuProfiler {
     _passTimings = new Map();
 
     /**
+     * The {@link GraphicsDevice#renderVersion} of the frame the latest timings describe, or -1.
+     *
+     * @private
+     */
+    _renderVersion = -1;
+
+    /**
      * Cache for parsed pass names to avoid repeated string operations.
      *
      * @type {Map<string, string>}
@@ -86,6 +93,7 @@ class GpuProfiler {
     invalidateTimings() {
         this._frameTime = 0;
         this._frameTimeValid = false;
+        this._renderVersion = -1;
         this.pastFrameAllocations.clear();
         this._passTimings.clear();
     }
@@ -124,6 +132,19 @@ class GpuProfiler {
      */
     get passTimings() {
         return this._passTimings;
+    }
+
+    /**
+     * The {@link GraphicsDevice#renderVersion} of the frame that {@link frameTime} and
+     * {@link passTimings} describe, or -1 when no timings have arrived. Timings resolve
+     * asynchronously, so this is usually a few frames behind the device, and not every frame
+     * reports.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get renderVersion() {
+        return this._renderVersion;
     }
 
     processEnableRequest() {
@@ -171,6 +192,7 @@ class GpuProfiler {
                 return;
             }
             Debug.assert(allocations.length === timings.length);
+            this._renderVersion = renderVersion;
 
             // Store frame duration. When the caller supplies an explicit frameTime (the WebGPU
             // profiler passes the span from the first begin to the last end timestamp), use it -

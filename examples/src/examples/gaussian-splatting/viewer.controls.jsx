@@ -49,6 +49,15 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.antialias' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='SH Update Angle'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.colorUpdateAngle' }}
+                        min={0}
+                        max={30}
+                        precision={1}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Scene'>
                 <LabelGroup text='Skydome'>

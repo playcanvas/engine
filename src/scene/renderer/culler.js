@@ -77,8 +77,9 @@ class Culler {
      * A mapping of a directional light to a camera, for which the shadow is currently valid. This
      * is cleared each frame, and updated each time a directional light shadow is rendered for a
      * camera, and allows us to manually schedule shadow passes when a new camera needs a shadow.
+     * A light with shadow bounds maps to null, as its shadow is valid for all cameras.
      *
-     * @type {Map<Light, Camera>}
+     * @type {Map<Light, Camera|null>}
      */
     dirLightShadows = new Map();
 
@@ -112,7 +113,9 @@ class Culler {
             const drawCall = drawCalls[i];
             if (drawCall.visible) {
 
-                const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
+                // a custom visibility function is evaluated even when the camera does not frustum
+                // cull, as it can decide which cameras render the mesh instance at all
+                const visible = (!doCull && !drawCall.isVisibleFunc) || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
                     drawCall.visibleThisFrame = true;
 
@@ -202,11 +205,16 @@ class Culler {
             renderer._shadowRendererLocal.cull(localRequests[i].light, comp);
         }
 
-        // Only scheduled directional shadow passes need caster culling and cascade fitting.
+        // Only scheduled directional shadow passes need caster culling and cascade fitting. A light
+        // with shadow bounds requests a single cull for all cameras, without a camera.
         const requests = this._directionalShadowCullRequests;
         for (let i = 0; i < requests.length; i++) {
             const { light, camera, shadowCascadeMask } = requests[i];
-            renderer._shadowRendererDirectional.cull(light, comp, camera, null, shadowCascadeMask);
+            if (camera) {
+                renderer._shadowRendererDirectional.cull(light, comp, camera, null, shadowCascadeMask);
+            } else {
+                renderer._shadowRendererDirectional.cullBounds(light, comp);
+            }
         }
     }
 
@@ -251,7 +259,8 @@ class Culler {
      * the same light and camera share one cull; their render passes remain independently scheduled.
      *
      * @param {Light} light - The shadow-casting light.
-     * @param {Camera} camera - The camera the shadow is fitted to.
+     * @param {Camera|null} camera - The camera the shadow is fitted to, or null for a light with
+     * shadow bounds, whose shadow is fitted to the bounds.
      * @param {number} cascadeMask - Bit mask of cascades the pass will render.
      */
     requestDirectionalShadowCull(light, camera, cascadeMask) {

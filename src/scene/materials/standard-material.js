@@ -9,6 +9,7 @@ import {
     CUBEPROJ_NONE,
     DETAILMODE_MUL,
     DITHER_NONE,
+    FRESNEL_NONE,
     FRESNEL_SCHLICK,
     PARALLAX_OFFSET,
     SHADER_PICK,
@@ -1021,8 +1022,8 @@ class StandardMaterial extends Material {
     }
 
     /**
-     * The glossiness of the sheen (fabric) microfiber structure. This color value is a single value
-     * between 0 and 1.
+     * The glossiness of the sheen (fabric) microfiber structure, from 0 (rough, a broad sheen) to 1
+     * (smooth, a sheen concentrated at grazing angles).
      *
      * @type {number}
      */
@@ -2042,6 +2043,12 @@ class StandardMaterial extends Material {
 
         // this is derived from the blend state and cannot be overridden by onUpdateShader
         options.useDualSourceBlending = useDualSourceBlending;
+
+        // FRESNEL_NONE is not supported, and the Schlick model is used in its place. This is set
+        // before the key of the options is generated, as they are shared by all materials
+        if (options.litOptions.fresnelModel === FRESNEL_NONE) {
+            options.litOptions.fresnelModel = FRESNEL_SCHLICK;
+        }
 
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat, getViewTextures(params.viewUniformFormat));
 

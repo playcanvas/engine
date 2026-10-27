@@ -12,6 +12,10 @@ export default /* glsl */`
 
 void main(void) {
 
+    #ifdef CLIP_PLANES
+        applyClipPlanes(vPositionW);
+    #endif
+
     #include "litUserMainStartPS"
 
     evaluateFrontend();

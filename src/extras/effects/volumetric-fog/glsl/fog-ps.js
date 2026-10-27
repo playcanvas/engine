@@ -35,7 +35,9 @@ export default /* glsl */`
             int cascadeIndex = int(min(dot(comparisons, vec4(1.0)), uFogShadowParams.x - 1.0));
 
             vec3 shadowCoord = (uFogShadowMatrixPalette[cascadeIndex] * vec4(worldPos, 1.0)).xyz;
-            float z = shadowCoord.z - uFogShadowParams.y;
+            // the biased depth beyond the far plane of the shadow stays below the cleared depth of the
+            // shadow map, so only the casters in the shadow map shadow it
+            float z = min(shadowCoord.z - uFogShadowParams.y, 0.9999);
 
             #ifdef FOG_SHADOW_PCF
                 // hardware comparison on the depth format shadow map

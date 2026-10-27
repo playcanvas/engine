@@ -54,6 +54,20 @@ describe('GpuProfiler frame timing', function () {
         expect(profiler.frameTime).to.equal(2);
     });
 
+    it('names the render version the latest timings describe', function () {
+        expect(profiler.renderVersion).to.equal(-1);
+        request(profiler, 1);
+        request(profiler, 2);
+        profiler.report(1, [3, 4], 5);
+        expect(profiler.renderVersion).to.equal(1);
+        profiler.report(2, [1, 1], 2);
+        expect(profiler.renderVersion).to.equal(2);
+        profiler.report(7, [1, 1], 2);
+        expect(profiler.renderVersion).to.equal(2);
+        profiler.loseContext();
+        expect(profiler.renderVersion).to.equal(-1);
+    });
+
     it('keeps a valid result when enablement is unchanged', function () {
         request(profiler, 1);
         profiler.report(1, [3, 4], 5);

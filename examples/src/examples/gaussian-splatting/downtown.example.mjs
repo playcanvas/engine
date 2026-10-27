@@ -147,7 +147,7 @@ await new Promise((resolve) => {
 app.start();
 
 // Custom mini stats showing gsplat counts
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy', 'compute']));
 
 // --- scene-wide gsplat defaults ---
 app.scene.gsplat.lodUpdateAngle = 90;

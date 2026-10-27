@@ -468,6 +468,16 @@ class GltfExporter extends CoreExporter {
         }
     }
 
+    // Attaches the map of a gloss property as a glTF roughness texture. The texels are exported
+    // unchanged, so they only hold roughness when the material inverts that gloss.
+    attachRoughnessTexture(resources, material, destination, name, gloss, json) {
+        this.attachTexture(resources, material, destination, name, `${gloss}Map`, json);
+
+        if (destination[name] && !material[`${gloss}Invert`]) {
+            console.warn(`Material '${material.name}' has ${gloss}Invert set to false, so its ${gloss}Map is exported as ${name} without converting gloss to roughness.`);
+        }
+    }
+
     addExtension(json, output, name, data = {}) {
         output.extensions = output.extensions || {};
         output.extensions[name] = data;
@@ -545,13 +555,14 @@ class GltfExporter extends CoreExporter {
                 clearcoatFactor: Math.min(mat.clearCoat * 4, 1)
             };
 
-            // clearcoatRoughnessFactor: parser sets clearCoatGlossInvert=true, so gloss is roughness
-            if (mat.clearCoatGloss !== 0) {
-                clearcoatExt.clearcoatRoughnessFactor = mat.clearCoatGloss;
+            // clearCoatGloss holds roughness when inverted, as the parser sets it, and gloss otherwise
+            const clearcoatRoughness = mat.clearCoatGlossInvert ? mat.clearCoatGloss : 1 - mat.clearCoatGloss;
+            if (clearcoatRoughness !== 0) {
+                clearcoatExt.clearcoatRoughnessFactor = clearcoatRoughness;
             }
 
             this.attachTexture(resources, mat, clearcoatExt, 'clearcoatTexture', 'clearCoatMap', json);
-            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatRoughnessTexture', 'clearCoatGlossMap', json);
+            this.attachRoughnessTexture(resources, mat, clearcoatExt, 'clearcoatRoughnessTexture', 'clearCoatGloss', json);
 
             // clearcoatNormalTexture with scale
             if (mat.clearCoatNormalMap) {
@@ -634,25 +645,23 @@ class GltfExporter extends CoreExporter {
             }
         }
 
-        // KHR_materials_sheen
-        if (mat.useSheen) {
-            const sheenExt = {};
+        // KHR_materials_sheen, skipped for a black sheen color, which disables the layer
+        if (mat.useSheen && !mat.sheen.equals(Color.BLACK)) {
+            const { r, g, b } = mat.sheen.clone().linear();
+            const sheenExt = {
+                sheenColorFactor: [r, g, b]
+            };
 
-            if (!mat.sheen.equals(Color.BLACK)) {
-                const { r, g, b } = mat.sheen.clone().linear();
-                sheenExt.sheenColorFactor = [r, g, b];
-            }
-
-            if (mat.sheenGloss !== 0) {
-                sheenExt.sheenRoughnessFactor = mat.sheenGloss;
+            // sheenGloss holds roughness when inverted, as the parser sets it, and gloss otherwise
+            const sheenRoughness = mat.sheenGlossInvert ? mat.sheenGloss : 1 - mat.sheenGloss;
+            if (sheenRoughness !== 0) {
+                sheenExt.sheenRoughnessFactor = sheenRoughness;
             }
 
             this.attachTexture(resources, mat, sheenExt, 'sheenColorTexture', 'sheenMap', json);
-            this.attachTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGlossMap', json);
+            this.attachRoughnessTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGloss', json);
 
-            if (Object.keys(sheenExt).length > 0) {
-                this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
-            }
+            this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
         }
 
         // KHR_materials_specular
@@ -1188,7 +1197,10 @@ class GltfExporter extends CoreExporter {
     }
 
     /**
-     * Converts a hierarchy of entities to GLB format.
+     * Converts a hierarchy of entities to GLB format. Clearcoat and sheen gloss maps are exported
+     * unchanged as roughness textures, which is only correct for materials that enable
+     * {@link StandardMaterial#clearCoatGlossInvert} or {@link StandardMaterial#sheenGlossInvert},
+     * such as materials imported from glTF.
      *
      * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.

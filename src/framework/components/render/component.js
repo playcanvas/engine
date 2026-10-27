@@ -1,6 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { LAYERID_WORLD, RENDERSTYLE_SOLID, SHADOW_CASCADE_ALL } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
+import { ClipPlanes, MAX_CLIP_PLANES } from '../../../scene/clip-planes.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { MorphInstance } from '../../../scene/morph-instance.js';
 import { getShapePrimitive } from '../../graphics/primitive-cache.js';
@@ -15,6 +16,7 @@ import { Component } from '../component.js';
  * @import { Entity } from '../../entity.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Material } from '../../../scene/materials/material.js'
+ * @import { Plane } from '../../../core/shape/plane.js'
  * @import { RenderComponentSystem } from './system.js'
  */
 
@@ -96,6 +98,15 @@ class RenderComponent extends Component {
 
     /** @private */
     _renderStyle = RENDERSTYLE_SOLID;
+
+    /**
+     * The clipping of the component, see {@link RenderComponent#clippingPlanes}, which is given to
+     * the mesh instances, including those created later. Created on first use.
+     *
+     * @type {ClipPlanes|null}
+     * @ignore
+     */
+    _clipPlanes = null;
 
     /**
      * @type {MeshInstance[]}
@@ -354,6 +365,9 @@ class RenderComponent extends Component {
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setCustomAabb(this._customAabb);
+
+                // the clipping of the component replaces that of the mesh instance
+                mi[i]._setClipPlanes(this._clipPlanes);
             }
 
             if (this.enabled && this.entity.enabled) {
@@ -518,6 +532,102 @@ class RenderComponent extends Component {
     }
 
     /**
+     * Sets the planes that clip the attached meshes, in world space. The parts of the meshes behind
+     * any of the planes - on the side opposite to the plane normal - are not rendered, which cuts
+     * the meshes open along the planes. Use {@link clipIntersection} to clip only the parts behind
+     * all of the planes instead. Up to 8 planes are supported, and any more are ignored. Defaults
+     * to an empty array.
+     *
+     * The planes are given to the mesh instances of the component together with
+     * {@link clipIntersection}, also to ones it gets later, and replace their own, even when the
+     * component has none. Planes assigned to a mesh instance directly last until the component next
+     * gives it its clipping. The planes are copied, so changing a plane after the assignment has no
+     * effect until the array is assigned again. To clip an entity together with its descendants,
+     * such as an entity instantiated from a {@link ContainerResource}, assign the planes to all of
+     * their render components. To clip everything a camera renders, see
+     * {@link CameraComponent#clippingPlanes} instead. Meshes with clipping planes are excluded from
+     * batching. See {@link MeshInstance#clippingPlanes} for more details.
+     *
+     * @type {Plane[]}
+     * @example
+     * // cut away the parts of an entity and its descendants where x is positive
+     * const plane = new Plane().setFromPointNormal(Vec3.ZERO, Vec3.LEFT);
+     * for (const render of entity.findComponents('render')) {
+     *     render.clippingPlanes = [plane];
+     * }
+     */
+    set clippingPlanes(value) {
+        Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
+            `RenderComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
+            'are ignored.');
+
+        // the assigned planes can be the ones the getter returned, changed since. Without planes
+        // assigned before or now, the component has none to keep
+        if (this._clipPlanes || value?.length) {
+            (this._clipPlanes ??= new ClipPlanes()).set(value);
+        }
+        this._updateClipPlanes();
+    }
+
+    /**
+     * Gets the planes that clip the attached meshes, in world space. These are copies of the
+     * assigned planes, and changing them has no effect until the array is assigned again.
+     *
+     * @type {Plane[]}
+     */
+    get clippingPlanes() {
+        return (this._clipPlanes ??= new ClipPlanes()).returned;
+    }
+
+    /**
+     * Sets whether only the parts of the attached meshes behind all of the {@link clippingPlanes}
+     * are clipped, instead of the parts behind any of them. With two planes this cuts a wedge out
+     * of the meshes, and with three a corner, as a cutaway does. As with {@link clippingPlanes},
+     * the mesh instances are given the planes and the mode together. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this._clipPlanes || value) {
+            (this._clipPlanes ??= new ClipPlanes()).intersection = value;
+        }
+        this._updateClipPlanes();
+    }
+
+    /**
+     * Gets whether only the parts of the attached meshes behind all of the {@link clippingPlanes}
+     * are clipped.
+     *
+     * @type {boolean}
+     */
+    get clipIntersection() {
+        return this._clipPlanes?.intersection ?? false;
+    }
+
+    /**
+     * Gives the mesh instances the clipping of the component, its planes and mode together,
+     * replacing theirs, and rebuilds the batch group when that changes whether they are clipped.
+     *
+     * @private
+     */
+    _updateClipPlanes() {
+        // whether the mesh instances are clipped, also by planes assigned to them directly
+        const mi = this._meshInstances;
+        let wasClipped = false;
+        for (let i = 0; i < mi.length; i++) {
+            wasClipped ||= mi[i].clipped;
+            mi[i]._setClipPlanes(this._clipPlanes);
+        }
+
+        // clipped meshes are excluded from batching, so the batch is rebuilt without them, or with
+        // them once they are no longer clipped
+        const clipped = (this._clipPlanes?.assigned.length ?? 0) > 0;
+        if (this._batchGroupId >= 0 && wasClipped !== clipped) {
+            this.system.app.batcher?.markGroupDirty(this._batchGroupId);
+        }
+    }
+
+    /**
      * Sets whether meshes instances will cast shadows when rendering lightmaps.
      *
      * @type {boolean}
@@ -609,10 +719,11 @@ class RenderComponent extends Component {
     set batchGroupId(value) {
         if (this._batchGroupId !== value) {
 
-            if (this.entity.enabled && this._batchGroupId >= 0) {
+            // a disabled component is not in its batch group, onEnable inserts it
+            if (this.enabled && this.entity.enabled && this._batchGroupId >= 0) {
                 this.system.app.batcher?.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
             }
-            if (this.entity.enabled && value >= 0) {
+            if (this.enabled && this.entity.enabled && value >= 0) {
                 this.system.app.batcher?.insert(BatchGroup.RENDER, value, this.entity);
             }
 

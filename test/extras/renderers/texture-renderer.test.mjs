@@ -65,9 +65,9 @@ describe('TextureRenderer', function () {
     }
 
     function createPass(camera, target) {
-        const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+        const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, camera);
         pass.init(target);
-        pass.addLayer(camera, layer, true);
+        pass.addLayer(layer, true);
         return pass;
     }
 

@@ -12,7 +12,8 @@ import { GAMMA_SRGB } from '../constants.js';
  */
 
 /**
- * A render pass implementing grab of a color buffer.
+ * A frame pass grabbing the color buffer a camera renders into: it copies the color buffer to a
+ * texture with mipmaps, and publishes the texture as the scene color map of the camera.
  *
  * @ignore
  */

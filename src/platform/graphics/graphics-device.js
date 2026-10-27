@@ -610,8 +610,9 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
-     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
-     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     * API. When supported, an HTML element with the `drawable` attribute, appended to a canvas with
+     * the `content="drawable"` attribute, can be passed to {@link Texture#setSource} and rendered as
+     * a live texture in the 3D scene.
      *
      * @type {boolean}
      * @readonly
@@ -835,6 +836,8 @@ class GraphicsDevice extends EventHandler {
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
+        this._computeDispatchesPerFrame = 0;
+        this._computePassesPerFrame = 0;
 
         this._primitiveCount = 0;
         this._renderTargetCreationTime = 0;
@@ -1360,13 +1363,13 @@ class GraphicsDevice extends EventHandler {
     // ---- deprecated block end ----
 
     /**
-     * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
-     * operation is disabled.
+     * Sets the specified stencil state. If both stencilFront and stencilBack are null or not
+     * specified, stencil operation is disabled.
      *
-     * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
-     * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
+     * @param {StencilParameters|null} [stencilFront] - The front stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilBack is.
+     * @param {StencilParameters|null} [stencilBack] - The back stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilFront is.
      */
     setStencilState(stencilFront, stencilBack) {
         Debug.assert(false);
@@ -1440,8 +1443,10 @@ class GraphicsDevice extends EventHandler {
      * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
      * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
      * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
-     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
-     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     * @param {StencilParameters|null} [stencilFront] - Front stencil parameters. When neither the
+     * front nor the back stencil parameters are specified, stencil operation is disabled, see
+     * {@link GraphicsDevice#setStencilState}.
+     * @param {StencilParameters|null} [stencilBack] - Back stencil parameters.
      */
     setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
         cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
@@ -1618,7 +1623,7 @@ class GraphicsDevice extends EventHandler {
      * using the currently set index buffer and false otherwise.
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
-     * Defaults to 1.
+     * Zero renders nothing, unless draw commands are provided. Defaults to 1.
      * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
@@ -1671,7 +1676,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
-     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     * Used for the HTML-in-Canvas API.
      *
      * @param {*} texture - Texture source data.
      * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or

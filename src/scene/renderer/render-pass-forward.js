@@ -5,20 +5,27 @@ import { Tracing } from '../../core/tracing.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { SceneDepthMapHandle } from '../../platform/graphics/scene-depth-map-handle.js';
+import { Layer } from '../layer.js';
 import { LayerRenderStep } from './layer-render-step.js';
 import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SCENETEXTURE_DEPTH, SHADER_FORWARD, sceneTextureUniformNames } from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { FramePass } from '../../platform/graphics/frame-pass.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Camera } from '../camera.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
- * @import { Layer } from '../layer.js'
  * @import { Renderer } from './renderer.js'
  * @import { Scene } from '../scene.js'
  */
 
 /**
- * A render pass used render a set of layers using a camera.
+ * A render pass rendering a set of layers with a single camera.
+ *
+ * A RenderPassForward cannot be nested under another one, which is among its before-passes or
+ * after-passes, or among the before-passes of its camera, which it executes before itself. To
+ * render the layers with another camera first, render the passes one after the other, for example
+ * as the before-passes of a {@link FramePass}, or render them with a camera of a lower priority.
  *
  * @ignore
  */
@@ -27,6 +34,30 @@ class RenderPassForward extends RenderPass {
      * @type {LayerComposition}
      */
     layerComposition;
+
+    /**
+     * The camera component used to render the layers.
+     *
+     * @type {CameraComponent}
+     */
+    cameraComponent;
+
+    /**
+     * True if this is the first pass rendering its camera in the frame, set when the pass is
+     * scheduled. The first pass collects the before-passes of the camera, and fires
+     * {@link Scene.EVENT_PRERENDER}.
+     *
+     * @type {boolean}
+     */
+    firstCameraUse = false;
+
+    /**
+     * True if this is the last pass rendering its camera in the frame, set when the passes are
+     * scheduled. The last pass fires {@link Scene.EVENT_POSTRENDER}.
+     *
+     * @type {boolean}
+     */
+    lastCameraUse = false;
 
     /**
      * @type {Scene}
@@ -110,12 +141,22 @@ class RenderPassForward extends RenderPass {
      */
     noDepthClear = false;
 
-    constructor(device, layerComposition, scene, renderer) {
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {LayerComposition} layerComposition - The layer composition.
+     * @param {Scene} scene - The scene.
+     * @param {Renderer} renderer - The renderer.
+     * @param {CameraComponent} cameraComponent - The camera component used to render the layers.
+     */
+    constructor(device, layerComposition, scene, renderer, cameraComponent) {
         super(device);
+
+        Debug.assert(cameraComponent, 'RenderPassForward needs the camera component it renders the layers with.');
 
         this.layerComposition = layerComposition;
         this.scene = scene;
         this.renderer = renderer;
+        this.cameraComponent = cameraComponent;
     }
 
     get rendersAnything() {
@@ -123,22 +164,22 @@ class RenderPassForward extends RenderPass {
     }
 
     addLayerRenderStep(layerRenderStep) {
+        Debug.assert(layerRenderStep.cameraComponent === this.cameraComponent, 'The layer render step needs to use the camera of the RenderPassForward.');
         this.layerRenderSteps.push(layerRenderStep);
     }
 
     /**
      * Adds a layer to be rendered by this render pass.
      *
-     * @param {CameraComponent} cameraComponent - The camera component that is used to render the
-     * layers.
      * @param {Layer} layer - The layer to be added.
      * @param {boolean} transparent - True if the layer is transparent.
      * @param {boolean} autoClears - True if the render target should be cleared based on the camera
      * and layer clear flags. Defaults to true.
      */
-    addLayer(cameraComponent, layer, transparent, autoClears = true) {
+    addLayer(layer, transparent, autoClears = true) {
 
-        Debug.assert(cameraComponent);
+        const { cameraComponent } = this;
+        Debug.assert(layer instanceof Layer, 'RenderPassForward#addLayer takes the layer as its first argument. The camera component is passed to the RenderPassForward constructor.');
         Debug.assert(this.renderTarget !== undefined, 'Render pass needs to be initialized before adding layers');
         Debug.assert(cameraComponent.camera.layersSet.has(layer.id), `Camera ${cameraComponent.entity.name} does not render layer ${layer.name}.`);
 
@@ -154,53 +195,62 @@ class RenderPassForward extends RenderPass {
     }
 
     updateDirectionalShadows() {
-        // add directional shadow passes if needed for the cameras used in this render pass
-        const { renderer, layerRenderSteps } = this;
-        for (let i = 0; i < layerRenderSteps.length; i++) {
-            const step = layerRenderSteps[i];
-            const cameraComponent = step.cameraComponent;
-            const camera = cameraComponent.camera;
+        // add directional shadow passes if needed for the camera of this render pass
+        const { renderer } = this;
+        const camera = this.cameraComponent.camera;
 
-            // if this camera uses directional shadow lights
-            const shadowDirLights = this.renderer.culler.cameraDirShadowLights.get(camera);
-            if (shadowDirLights) {
+        // if this camera uses directional shadow lights
+        const shadowDirLights = renderer.culler.cameraDirShadowLights.get(camera);
+        if (shadowDirLights) {
 
-                for (let l = 0; l < shadowDirLights.length; l++) {
-                    const light = shadowDirLights[l];
+            for (let l = 0; l < shadowDirLights.length; l++) {
+                const light = shadowDirLights[l];
 
-                    // the shadow map is not already rendered for this light
-                    if (renderer.culler.dirLightShadows.get(light) !== camera) {
-                        renderer.culler.dirLightShadows.set(light, camera);
+                // a light with shadow bounds renders one shadow for all cameras, before the first
+                // pass using it in the frame
+                const shadowCamera = light._shadowBounds ? null : camera;
 
-                        // render the shadow before this render pass
-                        const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, camera);
-                        if (shadowPass) {
-                            this.beforePasses.push(shadowPass);
-                        }
+                // the shadow map is not already rendered for this light
+                if (renderer.culler.dirLightShadows.get(light) !== shadowCamera) {
+                    renderer.culler.dirLightShadows.set(light, shadowCamera);
+
+                    // render the shadow before this render pass
+                    const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, shadowCamera);
+                    if (shadowPass) {
+                        this.internalBeforePasses.push(shadowPass);
                     }
                 }
             }
         }
     }
 
-    // Collect before-passes from cameras whose first render step lives in this
-    // RenderPassForward. Uses the existing firstCameraUse flag (set by LayerComposition)
-    // to guarantee each camera's before-passes are scheduled exactly once, even when
-    // multiple RenderPassForward instances reference the same camera (e.g. CameraFrame's
-    // scenePass vs afterPass). Called after updateDirectionalShadows, so camera
-    // before-passes execute after the directional shadow passes and can render into the
-    // freshly updated shadow maps.
+    // Mark this pass as the first and the last one rendering its camera in the frame, keeping the last
+    // pass of each camera in the renderer. As no RenderPassForward is nested under another one, the
+    // passes execute in the order they are scheduled in, so the flags are final when before() and
+    // after() read them. A pass scheduled again, before the next frame, keeps its flags.
+    updateCameraUse() {
+        const lastPasses = this.renderer.cameraLastPasses;
+        const camera = this.cameraComponent.camera;
+        const prevPass = lastPasses.get(camera);
+        if (prevPass !== this) {
+            if (prevPass) {
+                prevPass.lastCameraUse = false;
+            }
+            this.firstCameraUse = !prevPass;
+            this.lastCameraUse = true;
+            lastPasses.set(camera, this);
+        }
+    }
+
+    // Collect the before-passes of the camera in the first pass rendering it, so they are scheduled
+    // once, even when multiple RenderPassForward instances render the same camera (e.g. CameraFrame's
+    // scenePass vs afterPass). Called after updateDirectionalShadows, so camera before-passes execute
+    // after the directional shadow passes and can render into the freshly updated shadow maps.
     updateCameraBeforePasses() {
-        for (let i = 0; i < this.layerRenderSteps.length; i++) {
-            const step = this.layerRenderSteps[i];
-            if (step.firstCameraUse) {
-                const camera = step.cameraComponent?.camera;
-                if (camera) {
-                    const { beforePasses } = camera;
-                    for (let j = 0; j < beforePasses.length; j++) {
-                        this.beforePasses.push(beforePasses[j]);
-                    }
-                }
+        if (this.firstCameraUse) {
+            const { beforePasses } = this.cameraComponent.camera;
+            for (let i = 0; i < beforePasses.length; i++) {
+                this.internalBeforePasses.push(beforePasses[i]);
             }
         }
     }
@@ -212,8 +262,7 @@ class RenderPassForward extends RenderPass {
         if (step) {
 
             // set up clear params if the camera covers the full viewport
-            const cameraComponent = step.cameraComponent;
-            const camera = cameraComponent.camera;
+            const camera = this.cameraComponent.camera;
             const fullSizeClearRect = camera.fullSizeClearRect;
 
             // when this pass renders the scene textures, the camera's clear color describes the scene
@@ -236,9 +285,34 @@ class RenderPassForward extends RenderPass {
 
     frameUpdate() {
         super.frameUpdate();
+
+        // the passes this pass depends on in the frame (shadows, camera before-passes) are collected
+        // again each time the pass is scheduled, so they do not accumulate when the pass does not
+        // render. They go to the internal before-passes, so the before-passes set up by the user stay
+        this.internalBeforePasses.length = 0;
+
+        this.updateCameraUse();
         this.updateDirectionalShadows();
         this.updateCameraBeforePasses();
         this.updateClears();
+
+        // the camera's directional shadow map is shared with the other cameras, and is rendered
+        // before the passes nested under this one, which could render another camera into it
+        Debug.call(() => {
+            const findForwardPass = (passes) => {
+                for (let i = 0; i < passes.length; i++) {
+                    const pass = passes[i];
+                    const found = pass instanceof RenderPassForward ? pass :
+                        findForwardPass(pass.internalBeforePasses) ?? findForwardPass(pass.beforePasses) ?? findForwardPass(pass.afterPasses);
+                    if (found) {
+                        return found;
+                    }
+                }
+                return null;
+            };
+            const nested = findForwardPass(this.internalBeforePasses) ?? findForwardPass(this.beforePasses) ?? findForwardPass(this.afterPasses);
+            Debug.assert(!nested, `The RenderPassForward rendering camera '${this.cameraComponent.entity.name}' has a RenderPassForward nested under it, among its before-passes or after-passes, or the before-passes of its camera, which is not supported. Render the passes one after the other instead, for example as the before-passes of a FramePass.`, this);
+        });
 
         // Per step, request the frame setup its layer needs so it is ready when the pass executes:
         // under clustered lighting, a light cluster for the layer (shared between steps with the same
@@ -247,6 +321,7 @@ class RenderPassForward extends RenderPass {
         // a persistent CameraFrame pass) is neither culled nor rendered. The same (camera, layer) as
         // both an opaque and a transparent step is de-duplicated by each request.
         const { renderer, scene, layerComposition, layerRenderSteps } = this;
+        const camera = this.cameraComponent.camera;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
         for (let i = 0; i < layerRenderSteps.length; i++) {
             const step = layerRenderSteps[i];
@@ -256,13 +331,12 @@ class RenderPassForward extends RenderPass {
             }
 
             if (layerComposition.isEnabled(step.layer, step.transparent)) {
-                renderer.culler.requestMeshInstanceCull(step.cameraComponent.camera, step.layer);
+                renderer.culler.requestMeshInstanceCull(camera, step.layer);
             }
         }
     }
 
     before() {
-        const { layerRenderSteps } = this;
 
         // Clear the uniforms the scene textures are published to, so that a material sampling them
         // reports that they are not available - which is the case, as nothing has produced them for this
@@ -280,12 +354,9 @@ class RenderPassForward extends RenderPass {
             });
         }
 
-        // onPreRender events
-        for (let i = 0; i < layerRenderSteps.length; i++) {
-            const step = layerRenderSteps[i];
-            if (step.firstCameraUse) {
-                this.scene.fire(EVENT_PRERENDER, step.cameraComponent);
-            }
+        // onPreRender event
+        if (this.firstCameraUse) {
+            this.scene.fire(EVENT_PRERENDER, this.cameraComponent);
         }
     }
 
@@ -338,16 +409,10 @@ class RenderPassForward extends RenderPass {
             }
         }
 
-        // onPostRender events
-        for (let i = 0; i < this.layerRenderSteps.length; i++) {
-            const step = this.layerRenderSteps[i];
-            if (step.lastCameraUse) {
-                this.scene.fire(EVENT_POSTRENDER, step.cameraComponent);
-            }
+        // onPostRender event
+        if (this.lastCameraUse) {
+            this.scene.fire(EVENT_POSTRENDER, this.cameraComponent);
         }
-
-        // remove dynamically added before-passes (camera before-passes, shadows)
-        this.beforePasses.length = 0;
     }
 
     /**
@@ -360,7 +425,8 @@ class RenderPassForward extends RenderPass {
         const device = renderer.device;
 
         // layer
-        const { layer, transparent, cameraComponent } = step;
+        const { layer, transparent } = step;
+        const { cameraComponent } = this;
 
         DebugGraphics.pushGpuMarker(this.device, `Camera: ${cameraComponent ? cameraComponent.entity.name : 'Unnamed'}, Layer: ${layer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`);
 
@@ -443,21 +509,20 @@ class RenderPassForward extends RenderPass {
 
         if (Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
-            const { layerComposition } = this;
-            this.layerRenderSteps.forEach((step, index) => {
+            const { layerComposition, cameraComponent, layerRenderSteps } = this;
+            layerRenderSteps.forEach((step, index) => {
 
                 const layer = step.layer;
                 const enabled = layer.enabled && layerComposition.isEnabled(layer, step.transparent);
-                const cameraComponent = step.cameraComponent;
 
                 Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    ${index}:${
-                    (` Cam: ${cameraComponent ? cameraComponent.entity.name : '-'}`).padEnd(22, ' ')
+                    (` Cam: ${cameraComponent.entity.name}`).padEnd(22, ' ')
                 }${(` Lay: ${layer.name}`).padEnd(22, ' ')
                 }${step.transparent ? ' TRANSP' : ' OPAQUE'
                 }${enabled ? ' ENABLED' : ' DISABLED'
                 }${(` Meshes: ${layer.meshInstances.length}`).padEnd(5, ' ')
-                }${step.firstCameraUse ? ' CAM-FIRST' : ''
-                }${step.lastCameraUse ? ' CAM-LAST' : ''}`
+                }${index === 0 && this.firstCameraUse ? ' CAM-FIRST' : ''
+                }${index === layerRenderSteps.length - 1 && this.lastCameraUse ? ' CAM-LAST' : ''}`
                 );
             });
         }
