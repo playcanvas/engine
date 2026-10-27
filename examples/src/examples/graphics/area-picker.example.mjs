@@ -178,6 +178,9 @@ const stopAutoRotate = () => {
 data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
     camera.camera.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
     camera.camera.orthoHeight = 15;
+
+    // orthographic views have no depth cue, so keep what lies behind the camera visible
+    camera.camera.nearClip = value ? -camera.camera.farClip : 0.1;
 });
 
 // ------ Custom render passes with bloom ------
