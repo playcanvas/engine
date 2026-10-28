@@ -10,6 +10,7 @@ import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_FORWARD,
     GSPLAT_SHADOW,
@@ -100,6 +101,19 @@ class GSplatManager {
      * @type {number|undefined}
      */
     activeRenderer;
+
+    /**
+     * Set once the GPU-sort renderer reports that the active splats do not fit its storage buffer
+     * bindings on this device. The manager then uses the CPU-sort renderer for the rest of its
+     * lifetime, also when the splat count drops again: switching renderers rebuilds the world state
+     * and the work buffer, so a streamed scene hovering around the limit would rebuild each time it
+     * crossed it. The director destroys the manager once its layer has no splats or the camera stops
+     * rendering the layer, which is what resets this.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _gpuSortExceedsLimits = false;
 
     /**
      * CPU-based sorter (used by the quad renderer; the hybrid renderer owns its own GPU sort).
@@ -483,12 +497,17 @@ class GSplatManager {
 
     /**
      * Checks whether the resolved renderer mode has changed and transitions to the new mode
-     * (CPU raster quad <-> hybrid GPU sort).
+     * (CPU raster quad <-> hybrid GPU sort). Falls back to CPU sort for good once the GPU-sort
+     * renderer reports that the active splats exceed its storage buffer bindings.
      *
      * @private
      */
     prepareRendererMode() {
-        const requested = this.gsplat.currentRenderer;
+        if (this.renderer.usesGpuSort && /** @type {GSplatHybridRenderer} */ (this.renderer).bindingLimitExceeded) {
+            this._gpuSortExceedsLimits = true;
+        }
+
+        const requested = this._gpuSortExceedsLimits ? GSPLAT_RENDERER_RASTER_CPU_SORT : this.gsplat.currentRenderer;
         if (requested === this.activeRenderer) return;
 
         // CPU raster sort vs GPU paths differ on which placements need centers; force a full
