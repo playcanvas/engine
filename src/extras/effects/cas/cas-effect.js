@@ -14,7 +14,7 @@ import { COMPOSESLOT_SCENE } from '../../render-passes/constants.js';
  * sharpness of the rendered image, often to counteract the blurriness of the TAA effect, or of
  * rendering to a lower resolution render target.
  *
- * Applied to the scene image, ahead of the other effects.
+ * Applied to the scene image, after the fringing and ahead of the other effects.
  *
  * Every {@link CameraFrame} constructs and registers one, whose sharpness is set through
  * {@link CameraFrame#rendering}, and which is available as `cameraFrame.getEffect('cas')`.

@@ -152,8 +152,8 @@ describe('CameraFrameEffect', function () {
 
         it('is used by the built-in effects, each at the slot matching its place in the composition', function () {
             const builtIns = [
-                [CasEffect, 'cas', COMPOSESLOT_SCENE],
                 [FringingEffect, 'fringing', COMPOSESLOT_SCENE],
+                [CasEffect, 'cas', COMPOSESLOT_SCENE],
                 [DofEffect, 'dof', COMPOSESLOT_HDR],
                 [SsaoEffect, 'ssao', COMPOSESLOT_HDR],
                 [BloomEffect, 'bloom', COMPOSESLOT_HDR],
