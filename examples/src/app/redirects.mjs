@@ -8,6 +8,7 @@
  * @type {Record<string, string>}
  */
 export const exampleRedirects = {
+    'debug/entity-inspector': 'debug/inspector',
     'graphics-advanced/custom-msaa-resolve': 'render-targets/custom-msaa-resolve',
     'graphics-advanced/msaa-depth-fog': 'render-targets/msaa-depth-fog',
     'graphics/ambient-occlusion': 'camera-frame/ambient-occlusion',
