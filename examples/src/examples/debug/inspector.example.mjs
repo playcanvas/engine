@@ -7,8 +7,9 @@
 // of the selected item update live, pause and single-step the app, and pop the panel out into its
 // own window. Record frames on the Performance tab: with Script timing on, the swarm script and
 // twenty more script types, there to demonstrate profiling, show updates and post-updates whose
-// costs differ, some rising and falling over time. Toggle the panel with the backquote key, pause
-// with F9 and step with F10.
+// costs differ, some rising and falling over time. Turn on Profile from start to record from the
+// start of the next load of the example, the assets loading included. Toggle the panel with the
+// backquote key, pause with F9 and step with F10.
 
 import { Inspector } from '@playcanvas/inspector';
 
@@ -46,7 +47,7 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { Rotator } from 'examples/assets/scripts/misc/rotator.mjs';
 import { Swarm } from 'examples/assets/scripts/misc/swarm.mjs';
-import { deviceType } from 'examples/context';
+import { data, deviceType } from 'examples/context';
 
 /**
  * @import { RenderComponent } from 'playcanvas'
@@ -90,6 +91,24 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHand
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// Profile from start is kept between loads of the example, and takes effect on the next one: the
+// inspector records from the start of the app, before its assets load, when it is on
+const PROFILE_FROM_START = 'pc-examples-inspector-profile-from-start';
+data.set('settings', { profileFromStart: localStorage.getItem(PROFILE_FROM_START) === 'true' });
+data.on('settings.profileFromStart:set', (/** @type {boolean} */ value) => {
+    localStorage.setItem(PROFILE_FROM_START, `${value}`);
+});
+
+// the inspector, docked left under the toolbar so it leaves the example controls alone, made before
+// anything loads so it can record the start of the app. The example owns this instance, so the
+// toolbar button is switched off with NO_INSPECTOR above.
+const inspector = new Inspector(app, {
+    dock: 'left',
+    top: 52,
+    width: 440,
+    record: data.get('settings.profileFromStart')
+});
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -289,6 +308,8 @@ app.on('update', (dt) => {
         entity.destroy();
         material.destroy();
     }
+    // a counter of the app, which the Counters section of the inspector's Performance tab charts
+    app.stats.user.set('crates', falling.length);
 });
 
 // a swarm of orbs circling the scene, whose script's update and post-update take a time that rises
@@ -342,6 +363,12 @@ const busyLoop = (time, size) => {
     return sum;
 };
 
+// a counter of the steps the workloads took this frame, counted afresh as each frame begins
+app.stats.user.set('workloadSteps', 0);
+app.on('frameupdate', () => app.stats.user.set('workloadSteps', 0));
+const countSteps = (/** @type {number} */ steps) =>
+    app.stats.user.set('workloadSteps', app.stats.user.get('workloadSteps') + steps);
+
 for (const [name, size, period, instances, post] of WORKLOADS) {
     class Workload extends Script {
         static scriptName = name;
@@ -354,6 +381,7 @@ for (const [name, size, period, instances, post] of WORKLOADS) {
             this.time += dt;
             const scale = period ? 1 + 0.8 * Math.sin((2 * Math.PI * this.time) / period) : 1;
             this.sink = busyLoop(this.time, size * scale);
+            countSteps(Math.ceil(size * scale));
         }
     }
     // a type that post-updates too, declaring its own name as a script type has to
@@ -362,6 +390,7 @@ for (const [name, size, period, instances, post] of WORKLOADS) {
 
         postUpdate() {
             this.sink += busyLoop(this.time, size / 2);
+            countSteps(Math.ceil(size / 2));
         }
     }
     for (let i = 0; i < instances; i++) {
@@ -379,9 +408,5 @@ character.addComponent('anim', { activate: true });
 character.anim.assignAnimation('Idle', assets.idle.resource.animations[0].resource);
 character.setLocalScale(1.5, 1.5, 1.5);
 app.root.addChild(character);
-
-// the inspector, docked left under the toolbar so it leaves the example controls alone. The example
-// owns this instance, so the toolbar button is switched off with NO_INSPECTOR above.
-const inspector = new Inspector(app, { dock: 'left', top: 52, width: 440 });
 
 export { app, inspector };
