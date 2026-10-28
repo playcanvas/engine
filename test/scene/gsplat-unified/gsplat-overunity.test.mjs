@@ -1,7 +1,10 @@
 import { expect } from 'chai';
 
+import { FloatPacking } from '../../../src/core/math/float-packing.js';
 import { PIXELFORMAT_R8 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
+import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
 import { GSplatSogResource } from '../../../src/scene/gsplat/gsplat-sog-resource.js';
 import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
 import { GSplatWorkBuffer } from '../../../src/scene/gsplat-unified/gsplat-work-buffer.js';
@@ -51,6 +54,42 @@ describe('GSplatSogResource#hasOverUnity', function () {
         expect(resource({ version: 3, opacity: { codebook: [0, 0.5, 1, 2.5] } }).hasOverUnity).to.equal(true);
         expect(resource({ version: 3, opacity: { codebook: [0, 0.5, 1] } }).hasOverUnity).to.equal(false);
         expect(resource({ version: 2 }).hasOverUnity).to.equal(false);
+    });
+});
+
+describe('GSplatResource opacity_excess', function () {
+    // Two PLY-style gaussians: logit opacity 0 (= 0.5), with an optional opacity_excess column.
+    const makeData = (excess) => {
+        const props = { x: 0, y: 0, z: 0, rot_0: 1, rot_1: 0, rot_2: 0, rot_3: 0, scale_0: 0, scale_1: 0, scale_2: 0, f_dc_0: 0, f_dc_1: 0, f_dc_2: 0, opacity: 0 };
+        const properties = Object.entries(props).map(([name, v]) => ({ type: 'float', name, storage: new Float32Array(2).fill(v), byteSize: 4 }));
+        if (excess) {
+            properties.push({ type: 'float', name: 'opacity_excess', storage: Float32Array.from(excess), byteSize: 4 });
+        }
+        return new GSplatData([{ name: 'vertex', count: 2, properties }]);
+    };
+    const alphas = (resource) => {
+        const levels = resource.streams.getTexture('splatColor')._levels[0];
+        return [levels[3], levels[7]];
+    };
+
+    it('adds opacity_excess to the uploaded opacity and reports over-unity', function () {
+        const device = new NullGraphicsDevice({ width: 1, height: 1 });
+        const resource = new GSplatResource(device, makeData([2.5, 0]));
+        expect(resource.hasOverUnity).to.equal(true);
+        expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(3), FloatPacking.float2Half(0.5)]);
+        resource.destroy();
+        device.destroy();
+    });
+
+    it('is unchanged without excess', function () {
+        const device = new NullGraphicsDevice({ width: 1, height: 1 });
+        for (const data of [makeData(null), makeData([0, 0])]) {
+            const resource = new GSplatResource(device, data);
+            expect(resource.hasOverUnity).to.equal(false);
+            expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(0.5), FloatPacking.float2Half(0.5)]);
+            resource.destroy();
+        }
+        device.destroy();
     });
 });
 
