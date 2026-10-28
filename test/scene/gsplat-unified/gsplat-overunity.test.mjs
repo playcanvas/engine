@@ -91,6 +91,17 @@ describe('GSplatResource opacity_excess', function () {
         }
         device.destroy();
     });
+
+    it('exposes the extras carried by the data (as decompressed SOG data sets them)', function () {
+        const device = new NullGraphicsDevice({ width: 1, height: 1 });
+        const data = makeData(null);
+        const extras = { author: 'test' };
+        data.extras = extras;
+        const resource = new GSplatResource(device, data);
+        expect(resource.extras).to.equal(extras);
+        resource.destroy();
+        device.destroy();
+    });
 });
 
 describe('GSplatWorkBuffer#syncWithFormat', function () {

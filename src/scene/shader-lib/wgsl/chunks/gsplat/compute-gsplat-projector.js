@@ -253,7 +253,7 @@ fn main(
         #endif
 
         #ifdef GSPLAT_OVERUNITY
-            plateau = exp2(loadSplatPlateau().r * 6.0);
+            plateau = projected.plateau;
         #endif
 
         valid = true;

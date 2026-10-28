@@ -179,17 +179,21 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #else
         let alphaClipValue = half(uniform.alphaClipForward);
     #endif
-    let clip = min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5));
-    var cornerClipped = cornerUV * f32(clip);
+    var clip = f32(min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5)));
 
     #ifdef GSPLAT_OVERUNITY
-        // grow the quad to the plateau profile's extent, exactly as gsplatVS does
+        // trim to where the plateau profile falls to alphaClip, capped at its extent, exactly as
+        // gsplatVS does
         let plateau = bitcast<f32>(projCache[base + {CACHE_STRIDE}u - 1u]);
         if (plateau > 1.0) {
-            cornerClipped = cornerClipped * (((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271);
+            let grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
+            let edge = (plateau - 1.0) + sqrt(max(0.0, 2.0 * log(f32(alpha) / f32(alphaClipValue)) / plateau));
+            clip = min(grow, edge / 2.8284271);
         }
         output.gaussianPlateau = plateau;
     #endif
+
+    var cornerClipped = cornerUV * clip;
 
     // Convert pixel-space offset into clip-space. proj.w is the real clipPos.w,
     // so c == clip.w / viewport matches gsplatCorner.js line 97 for both

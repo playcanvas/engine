@@ -723,6 +723,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
             this._pickMaterial.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
             this._pickMaterial.setDefine('{CACHE_STRIDE}', this._cacheStride);
+            this._pickMaterial.setDefine('GSPLAT_OVERUNITY', !!this._material.getDefine('GSPLAT_OVERUNITY'));
             this._pickMaterial.setDefine('SH_BANDS', '0');
             this._pickMaterial.setDefine('GSPLAT_INDIRECT_DRAW', true);
             this._pickMaterial.setDefine('DITHER_NONE', '');
@@ -850,6 +851,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this._material.update();
             if (this._pickMaterial) {
                 this._pickMaterial.setDefine('{CACHE_STRIDE}', cacheStride);
+                this._pickMaterial.setDefine('GSPLAT_OVERUNITY', overUnity);
                 this._pickMaterial.update();
             }
         }

@@ -120,6 +120,14 @@ class GSplatData {
     activated = false;
 
     /**
+     * Application-defined data stored with the splat file, as in glTF's `extras`: the `extras`
+     * value of a decompressed SOG's meta.json. Undefined when the source has none.
+     *
+     * @type {*}
+     */
+    extras;
+
+    /**
      * @param {PlyElement[]} elements - The elements.
      * @param {string[]} comments - File header comments.
      */

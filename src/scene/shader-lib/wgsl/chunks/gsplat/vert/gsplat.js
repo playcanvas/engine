@@ -56,6 +56,14 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
+    #ifdef GSPLAT_OVERUNITY
+        // over-unity plateau shape, read before initCorner, which culls by the grown footprint
+        cornerPlateau = exp2(loadSplatPlateau().r * 6.0);
+        if (cornerPlateau > 1.0) {
+            cornerGrow = ((cornerPlateau - 1.0) + 2.8284271 / sqrt(cornerPlateau)) / 2.8284271;
+        }
+    #endif
+
     // project center to screen space
     var corner: SplatCorner;
     if (!initCorner(&source, &center, &corner)) {
@@ -112,18 +120,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
+    // trim the quad to where alpha falls to the clip threshold (grown to the plateau profile's
+    // extent for over-unity opacity)
     clipCorner(&corner, clr.w);
 
     #ifdef GSPLAT_OVERUNITY
-        // grow the quad from the gaussian's 2.83 sigma to the plateau profile's extent,
-        // (D'-1) + 2.83 / sqrt(D') sigma; uv keeps measuring distance in units of 2.83 sigma
-        let plateau = exp2(loadSplatPlateau().r * 6.0);
-        if (plateau > 1.0) {
-            let grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
-            corner.offset = corner.offset * grow;
-            corner.uv = corner.uv * half(grow);
-        }
-        output.gaussianPlateau = plateau;
+        output.gaussianPlateau = cornerPlateau;
     #endif
 
     // write output

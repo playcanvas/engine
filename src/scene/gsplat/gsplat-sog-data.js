@@ -419,11 +419,13 @@ class GSplatSogData {
             properties.push({ name: meta.blind.name, type: 'uint', byteSize: 4, storage: values });
         }
 
-        return new GSplatData([{
+        const result = new GSplatData([{
             name: 'vertex',
             count: this.numSplats,
             properties
         }]);
+        result.extras = meta.extras;
+        return result;
     }
 
     async generateCenters() {

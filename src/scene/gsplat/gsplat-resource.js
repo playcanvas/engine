@@ -98,6 +98,10 @@ class GSplatResource extends GSplatResourceBase {
         return this._hasOverUnity;
     }
 
+    get extras() {
+        return this.gsplatData.extras;
+    }
+
     /**
      * Updates pixel data of splatColor texture based on the supplied color components and opacity.
      * Assumes that the texture is using an RGBA format where RGB are color components influenced
