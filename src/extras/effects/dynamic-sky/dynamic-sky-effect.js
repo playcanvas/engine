@@ -143,8 +143,11 @@ const UV_MOD = [1, 1, 0, 0];
  * The effect also generates the lighting of the scene from its sky: the environment atlas lighting
  * the materials, assigned to {@link Scene#envAtlas}, see {@link DynamicSkyEffect#lighting}. The
  * cameras without the effect, such as the cameras rendering planar reflections, render the sky of
- * the scene from that environment atlas - a still image of this sky. The effect is not supported in
- * XR.
+ * the scene from that environment atlas - a still image of this sky.
+ *
+ * In XR, the sky and the flat clouds render for each view, like the rest of the scene. The
+ * volumetric clouds render to their texture for the view of the camera alone, so they streak where
+ * the view of an eye extends past it - use {@link CLOUDTYPE_FLAT} clouds in XR.
  *
  * The sky does not work together with the volumetric fog of the camera frame,
  * {@link CameraFrame#volumetricFog}: the clouds cast no shadows into the fog, and the fog is not lit
