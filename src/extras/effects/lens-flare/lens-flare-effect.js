@@ -4,7 +4,6 @@ import { Mat4 } from '../../../core/math/mat4.js';
 import { math } from '../../../core/math/math.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { now } from '../../../core/time.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../../../scene/constants.js';
@@ -136,9 +135,6 @@ class LensFlareEffect extends CameraFrameEffect {
 
     /** @private */
     _occlusionData = new Float32Array(LENSFLARE_MAX_FLARES * 8);
-
-    /** @private */
-    _lastTime = 0;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -384,10 +380,9 @@ class LensFlareEffect extends CameraFrameEffect {
      */
     frameUpdate(frame) {
 
-        // the time since the last frame, for the occlusion fade
-        const time = now();
-        const dt = this._lastTime > 0 ? math.clamp((time - this._lastTime) / 1000, 0, 0.1) : 0;
-        this._lastTime = time;
+        // the time of the application since the last frame, for the occlusion fade, so the fade
+        // follows the time scale of the application and stops while it is paused
+        const dt = frame.dt;
 
         // the camera of the passes, as the effect can be removed from its camera frame while the
         // frame still renders them, until the camera frame updates
