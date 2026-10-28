@@ -7,6 +7,11 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 flat varying mediump vec4 gaussianColor;
 
+#ifdef GSPLAT_OVERUNITY
+    // plateau shape D' of over-unity opacity, 1 for a plain gaussian (see gsplatCopyToWorkbuffer)
+    flat varying float gaussianPlateau;
+#endif
+
 #ifndef DITHER_NONE
     flat varying float id;
 #endif
@@ -97,6 +102,18 @@ void main(void) {
     }
 
     clipCorner(corner, clr.w);
+
+    #ifdef GSPLAT_OVERUNITY
+        // grow the quad from the gaussian's 2.83 sigma to the plateau profile's extent,
+        // (D'-1) + 2.83 / sqrt(D') sigma; uv keeps measuring distance in units of 2.83 sigma
+        float plateau = exp2(loadSplatPlateau().r * 6.0);
+        if (plateau > 1.0) {
+            float grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
+            corner.offset *= grow;
+            corner.uv *= grow;
+        }
+        gaussianPlateau = plateau;
+    #endif
 
     // write output
     #if GSPLAT_2DGS

@@ -69,6 +69,11 @@ var<storage, read> numSplatsStorage: array<u32>;
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
+#ifdef GSPLAT_OVERUNITY
+    // plateau shape D' of over-unity opacity (see gsplatVS)
+    varying @interpolate(flat, either) gaussianPlateau: f32;
+#endif
+
 // Must match the fragment side exactly (see gsplatPS) - the dither id is the only consumer.
 #if defined(GSPLAT_STOCHASTIC) && !defined(DITHER_NONE)
     varying @interpolate(flat, either) stochasticId: u32;
@@ -175,7 +180,16 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         let alphaClipValue = half(uniform.alphaClipForward);
     #endif
     let clip = min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5));
-    let cornerClipped = cornerUV * f32(clip);
+    var cornerClipped = cornerUV * f32(clip);
+
+    #ifdef GSPLAT_OVERUNITY
+        // grow the quad to the plateau profile's extent, exactly as gsplatVS does
+        let plateau = bitcast<f32>(projCache[base + {CACHE_STRIDE}u - 1u]);
+        if (plateau > 1.0) {
+            cornerClipped = cornerClipped * (((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271);
+        }
+        output.gaussianPlateau = plateau;
+    #endif
 
     // Convert pixel-space offset into clip-space. proj.w is the real clipPos.w,
     // so c == clip.w / viewport matches gsplatCorner.js line 97 for both

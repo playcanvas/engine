@@ -17,11 +17,12 @@ const float SH_C0 = 0.28209479177387814;
 const float norm = sqrt(2.0);
 
 #ifdef SOG_V2
-    // 256x1 RGBA32F LUT:
-    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a unused
-    float lutScales(int b) { return texelFetch(sogCodebook, ivec2(b, 0), 0).r; }
-    float lutSh0(int b)    { return texelFetch(sogCodebook, ivec2(b, 0), 0).g; }
-    float lutShN(int b)    { return texelFetch(sogCodebook, ivec2(b, 0), 0).b; }
+    // 256x1 RGBA32F LUT (V2 and V3):
+    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a = opacity codebook (V3)
+    float lutScales(int b)  { return texelFetch(sogCodebook, ivec2(b, 0), 0).r; }
+    float lutSh0(int b)     { return texelFetch(sogCodebook, ivec2(b, 0), 0).g; }
+    float lutShN(int b)     { return texelFetch(sogCodebook, ivec2(b, 0), 0).b; }
+    float lutOpacity(int b) { return texelFetch(sogCodebook, ivec2(b, 0), 0).a; }
 #endif
 
 // geometry getters are provided by gsplatWorkBufferGeometryPS when sourcing from the work buffer
@@ -36,6 +37,22 @@ vec3 getCenter() {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
+#ifdef SOG_V3
+// decode rotation quaternion from a 24-bit exponential map, one byte in each of the means_l,
+// means_u and scales alpha channels: p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
+vec4 getRotation() {
+    vec3 b = floor(vec3(
+        texelFetch(means_l, splat.uv, 0).w,
+        texelFetch(means_u, splat.uv, 0).w,
+        texelFetch(scales, splat.uv, 0).w
+    ) * 255.0 + 0.5);
+    vec3 p = (b - 128.0) / 127.0;
+    float len = length(p);
+    float t = len * 1.5707963267948966;
+    vec3 v = (len > 1e-6) ? p * (sin(t) / len) : p * 1.5707963267948966;
+    return vec4(cos(t), v);
+}
+#else
 // decode rotation quaternion (3 components + 2-bit mode selecting the omitted axis)
 vec4 getRotation() {
     vec4 q = texelFetch(quats, splat.uv, 0);
@@ -46,6 +63,7 @@ vec4 getRotation() {
            ((qmode == 1u) ? vec4(abc.x, d, abc.yz) :
            ((qmode == 2u) ? vec4(abc.xy, d, abc.z) : vec4(abc, d)));
 }
+#endif
 
 vec3 getScale() {
     vec3 s = texelFetch(scales, splat.uv, 0).xyz;
@@ -65,7 +83,17 @@ vec4 getColor() {
     #ifdef SOG_V2
         ivec3 i = ivec3(c.xyz * 255.0 + 0.5);
         vec3 rgb = vec3(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
-        float alpha = c.w;
+        #ifdef SOG_V3
+            // true opacity, may exceed 1 for merged (decimated) gaussians; carried
+            // through only when the renderer draws over-unity opacity (GSPLAT_OVERUNITY)
+            #ifdef GSPLAT_OVERUNITY
+                float alpha = lutOpacity(int(c.w * 255.0 + 0.5));
+            #else
+                float alpha = min(lutOpacity(int(c.w * 255.0 + 0.5)), 1.0);
+            #endif
+        #else
+            float alpha = c.w;
+        #endif
     #else
         vec3 rgb = mix(sh0_mins.xyz, sh0_maxs.xyz, c.xyz);
         float logitAlpha = mix(sh0_mins.w, sh0_maxs.w, c.w);
@@ -73,6 +101,24 @@ vec4 getColor() {
     #endif
     return vec4(vec3(0.5) + rgb * SH_C0, alpha);
 }
+
+#ifdef SOG_BLIND
+// per-gaussian user data: SOG_BLIND_BYTES little-endian bytes of the blind texture
+uint getBlind() {
+    uvec4 b = uvec4(texelFetch(blind, splat.uv, 0) * 255.0 + 0.5);
+    uint v = b.x;
+    #if SOG_BLIND_BYTES > 1
+        v |= b.y << 8u;
+    #endif
+    #if SOG_BLIND_BYTES > 2
+        v |= b.z << 16u;
+    #endif
+    #if SOG_BLIND_BYTES > 3
+        v |= b.w << 24u;
+    #endif
+    return v;
+}
+#endif
 
 #include "gsplatSogSHVS"
 `;

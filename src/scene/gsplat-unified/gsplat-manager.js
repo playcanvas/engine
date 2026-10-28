@@ -70,6 +70,14 @@ class GSplatManager {
     /** @type {GSplatParams} */
     gsplat;
 
+    /**
+     * World state version and compensation setting last checked for over-unity resources.
+     *
+     * @type {string}
+     * @private
+     */
+    _overUnityCheckKey = '';
+
     /** @type {GSplatRenderer} */
     renderer;
 
@@ -623,6 +631,7 @@ class GSplatManager {
 
         // World LOD / streaming / world-state creation.
         this.world.update(this.cameraNode, allowLodUpdate, !!this.cpuSorter, this._updateResult);
+        this._checkOverUnity();
         if (this._updateResult.overdrawDirty) this.renderer.updateOverdrawMode(this.gsplat);
         if (this._updateResult.sortNeeded) this.sortNeeded = true;
         if (this._updateResult.newVersion) this._feedCpuSorterCenters();
@@ -632,6 +641,27 @@ class GSplatManager {
 
         this._streamAdvanced = this._updateResult.newVersion || this._formatResult.bufferRecreated;
         return this._streamAdvanced;
+    }
+
+    /**
+     * Enables the over-unity work buffer stream once a resource that needs it is in the world
+     * (the format change is picked up by the next syncFormat).
+     *
+     * @private
+     */
+    _checkOverUnity() {
+        const gsplat = this.gsplat;
+        if (!gsplat.compensation || gsplat.format.getStream('splatPlateau')) return;
+
+        // only re-scan when the world's splats or the compensation setting changed
+        const key = `${this.world.lastWorldStateVersion}:${gsplat._compensationVersion}`;
+        if (key === this._overUnityCheckKey) return;
+        this._overUnityCheckKey = key;
+
+        const state = this.world.getState(this.world.lastWorldStateVersion);
+        if (state?.splats.some(splat => splat.resource.hasOverUnity)) {
+            gsplat._enableOverUnity(true);
+        }
     }
 
     update() {

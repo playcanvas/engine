@@ -30,6 +30,10 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 flat varying mediump vec4 gaussianColor;
 
+#ifdef GSPLAT_OVERUNITY
+    flat varying float gaussianPlateau;
+#endif
+
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     flat varying uint vPickId;
 #endif
@@ -56,11 +60,35 @@ float normExp(float x) {
 
 void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
-    if (A > 1.0) {
-        discard;
-    }
+
+    #ifdef GSPLAT_OVERUNITY
+        // over-unity opacity: the quad was grown to the plateau extent (see gsplatVS)
+        float plateau = gaussianPlateau;
+        float extent2 = 1.0;
+        if (plateau > 1.0) {
+            float grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
+            extent2 = grow * grow;
+        }
+        if (A > extent2) {
+            discard;
+        }
+    #else
+        if (A > 1.0) {
+            discard;
+        }
+    #endif
 
     mediump float alpha = normExp(A) * gaussianColor.a;
+
+    #ifdef GSPLAT_OVERUNITY
+        if (plateau > 1.0) {
+            // exp(-D'/2 * max(0, r - (D'-1))^2) with r in sigma: an opaque core of radius
+            // (D'-1) sigma, reaching the same exp(-4) floor as the gaussian at the quad edge
+            float r = 2.8284271 * sqrt(A);
+            float s = max(0.0, r - (plateau - 1.0));
+            alpha = (exp(-0.5 * plateau * s * s) - EXP4) * INV_EXP4 * gaussianColor.a;
+        }
+    #endif
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < alphaClip) {

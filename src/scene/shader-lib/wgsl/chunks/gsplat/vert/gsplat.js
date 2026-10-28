@@ -7,6 +7,11 @@ export default /* wgsl */`
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
+#ifdef GSPLAT_OVERUNITY
+    // plateau shape D' of over-unity opacity, 1 for a plain gaussian (see gsplatCopyToWorkbuffer)
+    varying @interpolate(flat, either) gaussianPlateau: f32;
+#endif
+
 #ifndef DITHER_NONE
     varying @interpolate(flat, either) id: f32;
 #endif
@@ -108,6 +113,18 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     }
 
     clipCorner(&corner, clr.w);
+
+    #ifdef GSPLAT_OVERUNITY
+        // grow the quad from the gaussian's 2.83 sigma to the plateau profile's extent,
+        // (D'-1) + 2.83 / sqrt(D') sigma; uv keeps measuring distance in units of 2.83 sigma
+        let plateau = exp2(loadSplatPlateau().r * 6.0);
+        if (plateau > 1.0) {
+            let grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
+            corner.offset = corner.offset * grow;
+            corner.uv = corner.uv * half(grow);
+        }
+        output.gaussianPlateau = plateau;
+    #endif
 
     // write output
     #if GSPLAT_2DGS

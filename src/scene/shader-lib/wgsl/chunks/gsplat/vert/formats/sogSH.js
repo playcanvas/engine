@@ -45,6 +45,17 @@ export default /* wgsl */`
             sh[13] = readSHTexel(u + 13, v);
             sh[14] = readSHTexel(u + 14, v);
         #endif
+        #if SH_BANDS > 3
+            sh[15] = readSHTexel(u + 15, v);
+            sh[16] = readSHTexel(u + 16, v);
+            sh[17] = readSHTexel(u + 17, v);
+            sh[18] = readSHTexel(u + 18, v);
+            sh[19] = readSHTexel(u + 19, v);
+            sh[20] = readSHTexel(u + 20, v);
+            sh[21] = readSHTexel(u + 21, v);
+            sh[22] = readSHTexel(u + 22, v);
+            sh[23] = readSHTexel(u + 23, v);
+        #endif
 
         *scale = 1.0;
     }

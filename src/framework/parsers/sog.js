@@ -128,14 +128,19 @@ class SogParser {
         const gsplatCentersEnabledAtLoad = this.app.scene?.gsplatCentersEnabled !== false;
 
         // transform meta to latest shape
-        if (meta.version !== 2) {
+        if (meta.version === undefined) {
             Debug.deprecated('Loading SOG v1 data which is deprecated. Please recompress your scene with latest tools.');
             meta = upgradeMeta(meta);
+        } else if (meta.version !== 2 && meta.version !== 3) {
+            callback(`Error loading gsplat: unsupported SOG version ${meta.version} in ${url.original}`);
+            return;
         }
 
         const { assets } = this.app;
 
-        const subs = ['means', 'quats', 'scales', 'sh0', 'shN'];
+        // v3 has no quats texture (the rotation lives in the alpha channels of means_l, means_u
+        // and scales) and may carry per-gaussian blind data
+        const subs = ['means', 'quats', 'scales', 'sh0', 'shN', 'blind'];
 
         const textures = {};
         const promises = [];
@@ -222,11 +227,12 @@ class SogParser {
         data.numSplats = meta.count;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
-        data.quats = textures.quats[0].resource;
+        data.quats = textures.quats[0]?.resource ?? null;
         data.scales = textures.scales[0].resource;
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
+        data.blind = textures.blind?.[0]?.resource ?? null;
         data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
         const decompress = asset.data?.decompress;

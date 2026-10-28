@@ -253,6 +253,28 @@ class GSplatResourceBase {
         return false;
     }
 
+    /**
+     * Application-defined data stored with the splat file, as in glTF's `extras`: the `extras`
+     * value of a SOG's meta.json. The engine attaches no meaning to it. Undefined when the file
+     * has none, and for formats that cannot carry it.
+     *
+     * @type {*}
+     */
+    get extras() {
+        return undefined;
+    }
+
+    /**
+     * Whether the resource carries gaussians with a true opacity above 1 (see
+     * {@link GSplatParams#compensation}).
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get hasOverUnity() {
+        return false;
+    }
+
     static createMesh(device) {
         // number of quads to combine into a single instance. this is to increase occupancy
         // in the vertex shader.

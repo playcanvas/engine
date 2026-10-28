@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import {
-    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
+    PIXELFORMAT_R8, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
     PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
@@ -404,6 +404,65 @@ class GSplatParams {
      */
     get enableIds() {
         return this._enableIds;
+    }
+
+    /** @private */
+    _compensation = true;
+
+    /**
+     * Incremented whenever {@link GSplatParams#compensation} changes, so managers re-check
+     * whether their resources need the over-unity stream.
+     *
+     * @ignore
+     */
+    _compensationVersion = 0;
+
+    /**
+     * Whether to draw over-unity opacity. Decimated splat data (SOG v3) can carry gaussians whose
+     * true opacity exceeds 1 - the mass of several merged gaussians that an opacity of at most 1
+     * cannot hold. When enabled, these are drawn with a flat-topped (plateau) profile that carries
+     * that mass: an opaque core joined smoothly to a gaussian edge, with a correspondingly larger
+     * footprint. When disabled, their opacity is clamped to 1. The extra work buffer stream this
+     * needs (1 byte per splat) is only allocated once such data is rendered. Defaults to true.
+     *
+     * Intended mainly for debugging and comparison.
+     *
+     * @type {boolean}
+     */
+    set compensation(value) {
+        if (this._compensation !== value) {
+            this._compensation = value;
+            this._compensationVersion++;
+            if (!value) {
+                this._enableOverUnity(false);
+            }
+        }
+    }
+
+    /**
+     * Gets whether over-unity opacity is drawn.
+     *
+     * @type {boolean}
+     */
+    get compensation() {
+        return this._compensation;
+    }
+
+    /**
+     * Adds or removes the work buffer stream carrying the per-splat plateau shape of over-unity
+     * opacity (see {@link GSplatParams#compensation}). The stream is R8 and holds log2(D') / 6,
+     * so 0 is an ordinary gaussian and the plateau shape D' ranges up to 64.
+     *
+     * @param {boolean} enable - Whether the stream should exist.
+     * @ignore
+     */
+    _enableOverUnity(enable) {
+        const has = !!this._format.getStream('splatPlateau');
+        if (enable && !has && this._compensation) {
+            this._format.addExtraStreams([{ name: 'splatPlateau', format: PIXELFORMAT_R8 }]);
+        } else if (!enable && has) {
+            this._format.removeExtraStreams(['splatPlateau']);
+        }
     }
 
     /**

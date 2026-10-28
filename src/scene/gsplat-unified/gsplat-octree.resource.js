@@ -51,6 +51,17 @@ class GSplatOctreeResource {
     }
 
     /**
+     * Application-defined data stored with the streamed splat scene, as in glTF's `extras`: the
+     * `extras` value of its lod-meta.json. The engine attaches no meaning to it. Undefined when
+     * the manifest has none.
+     *
+     * @type {*}
+     */
+    get extras() {
+        return this.data?.extras;
+    }
+
+    /**
      * Total number of splats across all leaf nodes at the highest LOD (LOD 0) — the full-detail
      * splat count of the captured scene. Not all of these are resident at runtime: the LOD
      * streaming system selects a subset per node based on view distance and the configured
