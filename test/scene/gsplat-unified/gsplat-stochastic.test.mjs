@@ -37,6 +37,8 @@ describe('GSplat stochastic rendering', function () {
                 numSplatsBuffer: {}
             },
             device: {
+                // the WebGPU default, which every device supports
+                limits: { maxStorageBufferBindingSize: 134217728 },
                 submit: sinon.spy(),
                 getIndirectDrawSlot: sinon.stub().returns(0),
                 getIndirectDispatchSlot: sinon.stub().returns(0)
@@ -74,6 +76,19 @@ describe('GSplat stochastic rendering', function () {
         expect(render(renderer, true)).to.equal(renderer.projector.sortKeys);
         expect(renderer.gpuSorter).to.equal(null);
         expect(renderer.device.getIndirectDispatchSlot.calledWith(1)).to.equal(true);
+    });
+
+    it('dispatches and draws nothing once the projection cache exceeds the storage binding limit', function () {
+        const renderer = pipeline();
+        renderer.meshInstance = { visible: true };
+
+        // 1000 splats at 8 cache words each need 32000 bytes
+        renderer.device.limits.maxStorageBufferBindingSize = 31999;
+        expect(render(renderer, false)).to.equal(null);
+        expect(renderer.bindingLimitExceeded).to.equal(true);
+        expect(renderer.meshInstance.visible).to.equal(false);
+        expect(renderer._ensureGpuPipeline.called).to.equal(false);
+        expect(renderer.projector.dispatch.called).to.equal(false);
     });
 
     it('creates the sorter only when needed and retains it across mode changes', function () {
