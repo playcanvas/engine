@@ -1,8 +1,8 @@
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
 // FidelityFX CAS, WebGL implementation: https://www.shadertoy.com/view/wtlSWB. It sharpens the
-// rendered image itself, so it runs on the scene sample at COMPOSESLOT_SCENE, ahead of the other
-// effects, which avoids a separate render pass. CAS expects LDR input, so an HDR scene is mapped to
-// LDR around it (CAS_HDR).
+// rendered image itself, so it runs on the scene sample at COMPOSESLOT_SCENE, after the fringing
+// and ahead of the other effects, which avoids a separate render pass. CAS expects LDR input, so
+// an HDR scene is mapped to LDR around it (CAS_HDR).
 export default /* wgsl */`
     uniform sharpness: f32;
 

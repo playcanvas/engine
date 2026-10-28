@@ -111,8 +111,8 @@ describe('RenderPassCompose shader snapshot', function () {
         // combinations drive their state; only getShaderVariant is exercised, so the camera frame
         // behind the effects is a stub supplying the scene format the sharpening reads, and the
         // camera the occlusion is generated for
-        pass.cas = new CasEffect(device);
         pass.fringing = new FringingEffect(device);
+        pass.cas = new CasEffect(device);
         pass.dof = new DofEffect(device);
         pass.ssao = new SsaoEffect(device);
         pass.bloom = new BloomEffect(device);
@@ -120,7 +120,7 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.grading = new GradingEffect(device);
         pass.colorLut = new ColorLutEffect(device);
         pass.vignette = new VignetteEffect(device);
-        const effects = [pass.cas, pass.fringing, pass.dof, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const effects = [pass.fringing, pass.cas, pass.dof, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
         const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F, cameraComponent };
         effects.forEach((effect) => {
             effect.cameraFrame = cameraFrame;

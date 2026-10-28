@@ -288,11 +288,13 @@ class CameraFrame {
         Debug.assert(cameraComponent, 'CameraFrame: cameraComponent must be defined');
 
         // the built-in effects, registered in the order they are applied within their slot. The
-        // camera frame constructs them and so destroys them, unlike the effects added to it.
+        // camera frame constructs them and so destroys them, unlike the effects added to it. The
+        // fringing applies before the sharpening, as it replaces the red and blue channels with new
+        // samples of the scene texture, which would discard the sharpening of those channels.
         const device = app.graphicsDevice;
         this.taa = new TaaEffect(device);
-        this._cas = new CasEffect(device);
         this.fringing = new FringingEffect(device);
+        this._cas = new CasEffect(device);
         this.dof = new DofEffect(device);
         this.ssao = new SsaoEffect(device);
         this.volumetricFog = new VolumetricFogEffect(device);
@@ -301,7 +303,7 @@ class CameraFrame {
         this.grading = new GradingEffect(device);
         this.colorLUT = new ColorLutEffect(device);
         this.vignette = new VignetteEffect(device);
-        this._builtInEffects = [this.taa, this._cas, this.fringing, this.dof, this.ssao, this.volumetricFog, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
+        this._builtInEffects = [this.taa, this.fringing, this._cas, this.dof, this.ssao, this.volumetricFog, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
 
         // rendering.sharpness is the sharpening effect's parameter, forwarded to it so that the
