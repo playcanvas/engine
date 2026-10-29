@@ -229,8 +229,6 @@ class AppBase extends EventHandler {
             this.frameRequestId = null;
         }
 
-        this._inFrameUpdate = true;
-
         setApplication(this);
 
         // have current application pointer in pc
@@ -250,6 +248,11 @@ class AppBase extends EventHandler {
         if (this.graphicsDevice.contextLost) {
             return;
         }
+
+        // set after the context lost check, which returns before the end of the frame where a
+        // deferred destroy runs. While the context is lost no frame work runs, so destroy() acts
+        // at once instead of waiting for a restore that may never come.
+        this._inFrameUpdate = true;
 
         this.stats.updateBasic(currentTime, dt, ms, this.renderer, this.graphicsDevice);
 
