@@ -18,11 +18,27 @@ export default /* glsl */`
     #ifdef FOG_SHADOWS
         uniform mat4 uFogShadowMatrixPalette[4];
         uniform vec4 uFogShadowCascadeDistances;
-        uniform vec4 uFogShadowParams; // x: cascade count, y: bias, z: unused, w: max shadow distance
+        uniform vec4 uFogShadowParams; // x: cascade count, y: bias, z: VSM bias, w: max shadow distance
         #ifdef FOG_SHADOW_PCF
             uniform sampler2DShadow uFogShadowMap;
         #else
             uniform sampler2D uFogShadowMap;
+        #endif
+
+        #ifdef FOG_SHADOW_VSM
+            // helper used by the EVSM chunk, which is normally provided by the lit shader
+            float saturate(float x) {
+                return clamp(x, 0.0, 1.0);
+            }
+
+            #include "shadowEVSMPS"
+
+            // the exponent of the depth warp, matching the one used to render the shadow map
+            #ifdef FOG_SHADOW_VSM_32F
+                const float fogVsmExponent = 15.0;
+            #else
+                const float fogVsmExponent = 5.54;
+            #endif
         #endif
 
         float sampleFogShadow(vec3 worldPos, float viewDepth) {
@@ -39,11 +55,15 @@ export default /* glsl */`
             // shadow map, so only the casters in the shadow map shadow it
             float z = min(shadowCoord.z - uFogShadowParams.y, 0.9999);
 
-            #ifdef FOG_SHADOW_PCF
+            #if defined(FOG_SHADOW_PCF)
                 // hardware comparison on the depth format shadow map
                 return textureShadow(uFogShadowMap, vec3(shadowCoord.xy, z));
+            #elif defined(FOG_SHADOW_VSM)
+                // Chebyshev test on the blurred moments of the exponentially warped depth
+                vec3 moments = texture2DLod(uFogShadowMap, shadowCoord.xy, 0.0).xyz;
+                return calculateEVSM(moments, z, uFogShadowParams.z, fogVsmExponent);
             #else
-                // manual comparison on the color format shadow map storing depth (PCSS / VSM)
+                // manual comparison on the color format shadow map storing depth (PCSS)
                 return step(z, texture2D(uFogShadowMap, shadowCoord.xy).r);
             #endif
         }
