@@ -13,20 +13,32 @@ describe('WebgpuXrBridge', function () {
     // does whether or not the layer asked for one, or null for none
     let depthTexture;
 
+    // the projection layers made so far, and whether a new one is lost from the start: a lost
+    // layer's texture cannot be acquired, as the Quest Browser's after the headset sleeps and wakes
+    let layers;
+    let newLayersLost;
+
     beforeEach(function () {
         previousBinding = globalThis.XRGPUBinding;
         depthTexture = null;
+        layers = [];
+        newLayersLost = false;
         globalThis.XRGPUBinding = class {
             getPreferredColorFormat() {
                 return 'bgra8unorm';
             }
 
             createProjectionLayer(options) {
-                return { options };
+                const layer = { options, lost: newLayersLost };
+                layers.push(layer);
+                return layer;
             }
 
             // a view's sub-image: a slice of the layer's color, and the depth
             getViewSubImage(layer, view) {
+                if (layer.lost) {
+                    throw new Error('Unable to acquire the WebGPU projection layer texture.');
+                }
                 return {
                     colorTexture: { width: 64, height: 64, format: 'bgra8unorm' },
                     depthStencilTexture: depthTexture,
@@ -66,8 +78,8 @@ describe('WebgpuXrBridge', function () {
         const bridge = new XrBridge(device, new EventHandler());
         bridge.attachPresentation({
             renderState: { depthNear: 0.1, depthFar: 1000 },
-            updateRenderState() {}
-        }, { framebufferScaleFactor: 1, depthNear: 0.1, depthFar: 1000 });
+            updateRenderState: sinon.spy()
+        }, { framebufferScaleFactor: 1, depthNear: 0.1, depthFar: 1000, onBindingError: sinon.spy() });
         return bridge;
     };
 
@@ -129,5 +141,54 @@ describe('WebgpuXrBridge', function () {
         bridge.impl.beginFrame(frame(1), {});
         expect(bridge.device.xrSubImages).to.have.length(1);
         expect(bridge.device.commandEncoder.beginRenderPass.called).to.be.false;
+    });
+
+    it('makes the projection layer again when its texture can no longer be acquired', function () {
+        const bridge = createBridge();
+        const session = bridge._session;
+        const lost = bridge.impl.presentationLayer;
+        lost.lost = true;
+
+        // the frame the layer is lost in reports the error and has no views
+        bridge.impl.beginFrame(frame(2), {});
+        expect(bridge._onBindingError.calledOnce).to.be.true;
+        expect(bridge.device.xrSubImages).to.have.length(0);
+
+        // a new layer replaces it in the session, with the session's own settings
+        const layer = bridge.impl.presentationLayer;
+        expect(layer).to.not.equal(lost);
+        expect(layers).to.have.length(2);
+        expect(session.updateRenderState.lastCall.args[0]).to.deep.equal({
+            layers: [layer],
+            depthNear: 0.1,
+            depthFar: 1000
+        });
+
+        // and the next frame draws into it
+        bridge.impl.beginFrame(frame(2), {});
+        expect(bridge.device.xrSubImages).to.have.length(2);
+        expect(bridge._onBindingError.calledOnce).to.be.true;
+    });
+
+    it('makes the projection layer again once while the new one fails as well', function () {
+        const bridge = createBridge();
+        bridge.impl.presentationLayer.lost = true;
+        newLayersLost = true;
+
+        for (let i = 0; i < 3; i++) bridge.impl.beginFrame(frame(1), {});
+        expect(layers).to.have.length(2);
+        expect(bridge._onBindingError.callCount).to.equal(3);
+    });
+
+    it('makes the projection layer again for a later loss, once a frame has drawn', function () {
+        const bridge = createBridge();
+        bridge.impl.presentationLayer.lost = true;
+        bridge.impl.beginFrame(frame(1), {});
+        bridge.impl.beginFrame(frame(1), {});
+        expect(bridge.device.xrSubImages).to.have.length(1);
+
+        bridge.impl.presentationLayer.lost = true;
+        bridge.impl.beginFrame(frame(1), {});
+        expect(layers).to.have.length(3);
     });
 });

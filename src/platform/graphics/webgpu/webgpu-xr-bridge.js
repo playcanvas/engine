@@ -34,6 +34,15 @@ class WebgpuXrBridge {
     _cachedFramebufferSize = new Vec2();
 
     /**
+     * True once the projection layer has been made again after its texture could not be acquired,
+     * until a frame acquires one from it, so a layer that fails again is not made again every frame.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _layerRecreated = false;
+
+    /**
      * @param {XrBridge} xrBridge - The XR bridge.
      */
     constructor(xrBridge) {
@@ -47,6 +56,7 @@ class WebgpuXrBridge {
     destroy(device) {
         this._binding = null;
         this._layer = null;
+        this._layerRecreated = false;
         this._cachedFramebufferSize.set(0, 0);
         device._clearXrState();
     }
@@ -76,6 +86,15 @@ class WebgpuXrBridge {
                 sub = this._binding.getViewSubImage(this._layer, pose.views[i]);
             } catch (e) {
                 this.xrBridge._onBindingError?.(e);
+                // A runtime can lose the projection layer's textures, after which every
+                // getViewSubImage fails to acquire one and nothing reaches the display: the Quest
+                // Browser does when the headset sleeps and wakes. A new binding and layer, as after
+                // a lost device, take effect from the next frame; one made this way that fails as
+                // well is left, until a frame acquires a texture again
+                if (!this._layerRecreated) {
+                    this._layerRecreated = true;
+                    this._recreatePresentation();
+                }
                 return;
             }
 
@@ -126,6 +145,7 @@ class WebgpuXrBridge {
         // caches texture size for getFramebufferSize when the projection layer omits dimensions.
         const first = subImages[0];
         if (first) {
+            this._layerRecreated = false;
             device.xrColorTexture = first.colorTexture;
             device.xrColorTextureViewFormat = first.viewFormat;
             // align the engine-level backbuffer format with the runtime's projection-layer format so
@@ -135,6 +155,28 @@ class WebgpuXrBridge {
             device.setXrBackBufferFormat(first.viewFormat);
             this._cachedFramebufferSize.set(first.colorTexture.width, first.colorTexture.height);
         }
+    }
+
+    /**
+     * Makes the WebXR WebGPU binding and projection layer again for the current session, with the
+     * session's own framebuffer scale and depth range.
+     *
+     * @private
+     */
+    _recreatePresentation() {
+        const bridge = this.xrBridge;
+        const session = bridge._session;
+        if (!session) {
+            return;
+        }
+
+        const rs = session.renderState;
+        bridge.attachPresentation(session, {
+            framebufferScaleFactor: bridge._framebufferScaleFactor,
+            depthNear: rs.depthNear,
+            depthFar: rs.depthFar,
+            onBindingError: bridge._onBindingError
+        });
     }
 
     /**
