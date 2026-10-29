@@ -344,6 +344,8 @@ class CameraComponent extends Component {
      * - {@link TONEMAP_ACES}
      * - {@link TONEMAP_ACES2}
      * - {@link TONEMAP_NEUTRAL}
+     * - {@link TONEMAP_AGX}
+     * - {@link TONEMAP_AGX_PUNCHY}
      *
      * Defaults to {@link TONEMAP_LINEAR}.
      *

@@ -143,6 +143,7 @@ import thicknessPS from '../chunks/standard/frag/thickness.js';
 import tonemappingPS from '../chunks/common/frag/tonemapping/tonemapping.js';
 import tonemappingAcesPS from '../chunks/common/frag/tonemapping/tonemappingAces.js';
 import tonemappingAces2PS from '../chunks/common/frag/tonemapping/tonemappingAces2.js';
+import tonemappingAgxPS from '../chunks/common/frag/tonemapping/tonemappingAgx.js';
 import tonemappingFilmicPS from '../chunks/common/frag/tonemapping/tonemappingFilmic.js';
 import tonemappingHejlPS from '../chunks/common/frag/tonemapping/tonemappingHejl.js';
 import tonemappingLinearPS from '../chunks/common/frag/tonemapping/tonemappingLinear.js';
@@ -327,6 +328,7 @@ const shaderChunksGLSL = {
     tonemappingPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
+    tonemappingAgxPS,
     tonemappingFilmicPS,
     tonemappingHejlPS,
     tonemappingLinearPS,

@@ -11,6 +11,8 @@ import {
 import {
     TONEMAP_ACES,
     TONEMAP_ACES2,
+    TONEMAP_AGX,
+    TONEMAP_AGX_PUNCHY,
     TONEMAP_FILMIC,
     TONEMAP_HEJL,
     TONEMAP_LINEAR,
@@ -75,7 +77,9 @@ export function Controls({ observer }) {
                             { v: TONEMAP_HEJL, t: 'HEJL' },
                             { v: TONEMAP_ACES, t: 'ACES' },
                             { v: TONEMAP_ACES2, t: 'ACES2' },
-                            { v: TONEMAP_NEUTRAL, t: 'NEUTRAL' }
+                            { v: TONEMAP_NEUTRAL, t: 'NEUTRAL' },
+                            { v: TONEMAP_AGX, t: 'AGX' },
+                            { v: TONEMAP_AGX_PUNCHY, t: 'AGX_PUNCHY' }
                         ]}
                     />
                 </LabelGroup>
