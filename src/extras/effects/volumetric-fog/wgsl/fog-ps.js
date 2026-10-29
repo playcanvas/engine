@@ -18,13 +18,24 @@ export default /* wgsl */`
     #ifdef FOG_SHADOWS
         uniform uFogShadowMatrixPalette: array<mat4x4f, 4>;
         uniform uFogShadowCascadeDistances: vec4f;
-        uniform uFogShadowParams: vec4f; // x: cascade count, y: bias, z: unused, w: max shadow distance
+        uniform uFogShadowParams: vec4f; // x: cascade count, y: bias, z: VSM bias, w: max shadow distance
         #ifdef FOG_SHADOW_PCF
             var uFogShadowMap: texture_depth_2d;
             var uFogShadowMapSampler: sampler_comparison;
         #else
             var uFogShadowMap: texture_2d<f32>;
             var uFogShadowMapSampler: sampler;
+        #endif
+
+        #ifdef FOG_SHADOW_VSM
+            #include "shadowEVSMPS"
+
+            // the exponent of the depth warp, matching the one used to render the shadow map
+            #ifdef FOG_SHADOW_VSM_32F
+                const fogVsmExponent: f32 = 15.0;
+            #else
+                const fogVsmExponent: f32 = 5.54;
+            #endif
         #endif
 
         fn sampleFogShadow(worldPos: vec3f, viewDepth: f32) -> f32 {
@@ -43,11 +54,15 @@ export default /* wgsl */`
             // shadow map, so only the casters in the shadow map shadow it
             let z: f32 = min(shadowCoord.z - uniform.uFogShadowParams.y, 0.9999);
 
-            #ifdef FOG_SHADOW_PCF
+            #if defined(FOG_SHADOW_PCF)
                 // hardware comparison on the depth format shadow map
                 return textureSampleCompareLevel(uFogShadowMap, uFogShadowMapSampler, shadowCoord.xy, z);
+            #elif defined(FOG_SHADOW_VSM)
+                // Chebyshev test on the blurred moments of the exponentially warped depth
+                let moments: vec3f = textureSampleLevel(uFogShadowMap, uFogShadowMapSampler, shadowCoord.xy, 0.0).xyz;
+                return calculateEVSM(moments, z, uniform.uFogShadowParams.z, fogVsmExponent);
             #else
-                // manual comparison on the color format shadow map storing depth (PCSS / VSM)
+                // manual comparison on the color format shadow map storing depth (PCSS)
                 return step(z, textureSampleLevel(uFogShadowMap, uFogShadowMapSampler, shadowCoord.xy, 0.0).r);
             #endif
         }

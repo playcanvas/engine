@@ -6,7 +6,6 @@ import {
 import { FramePass } from '../../../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../../../platform/graphics/render-target.js';
 import { Texture } from '../../../../platform/graphics/texture.js';
-import { shadowTypeInfo } from '../../../../scene/constants.js';
 import { ShaderChunks } from '../../../../scene/shader-lib/shader-chunks.js';
 import glslVolumetricFogPS from '../glsl/fog-ps.js';
 import wgslVolumetricFogPS from '../wgsl/fog-ps.js';
@@ -49,10 +48,11 @@ import { RenderPassVolumetricFogLocal } from './render-pass-volumetric-fog-local
  * and decays exponentially above it, controlled by heightFalloff. At each step, the light
  * visibility is evaluated with a single tap of the directional light's cascaded shadow map -
  * the cascade is selected from the sample's view depth, and the tap uses hardware depth
- * comparison for depth-format shadow maps (PCF) or a manual comparison for color-format maps
- * storing depth (PCSS / VSM). The in-scattered radiance combines the light color scaled by the
- * Henyey-Greenstein phase function (evaluated once per ray, as the light direction is constant)
- * with an ambient term that keeps fog in shadowed areas visible. The scattering is accumulated
+ * comparison for depth-format shadow maps (PCF), a manual comparison for color-format maps
+ * storing depth (PCSS), or the same Chebyshev test the lit shader applies to the moments of the
+ * exponentially warped depth (VSM). The in-scattered radiance combines the light color scaled by
+ * the Henyey-Greenstein phase function (evaluated once per ray, as the light direction is
+ * constant) with an ambient term that keeps fog in shadowed areas visible. The scattering is accumulated
  * front-to-back weighted by the current transmittance, and the transmittance is attenuated per
  * step using Beer-Lambert extinction, with an early out once it becomes negligible.
  *
@@ -293,17 +293,13 @@ class FramePassVolumetricFog extends FramePass {
         // shadow sampling variant - only used when the shadow map already exists, as for a newly
         // enabled light the shadow map is created by the shadow rendering later in the frame
         let shadows = false;
-        let pcf = false;
         let lightRenderData = null;
         if (light && light.castShadows && light.shadowIntensity > 0) {
             // a light with shadow bounds renders one shadow for all cameras
             lightRenderData = light.getRenderData(light.shadowBounds ? null : camera, 0);
-            if (lightRenderData.shadowBuffer) {
-                shadows = true;
-                pcf = !!shadowTypeInfo.get(light._shadowType)?.pcf;
-            }
+            shadows = !!lightRenderData.shadowBuffer;
         }
-        fogPass.updateShaderVariant(shadows, pcf);
+        fogPass.updateShaderVariant(shadows, light?._shadowType);
         fogPass.shadowsEnabled = shadows;
         fogPass.lightRenderData = shadows ? lightRenderData : null;
 
