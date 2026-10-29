@@ -611,6 +611,14 @@ class PlyParser {
                     }
                 );
 
+                // nothing cancels the download, so it can complete after the application was
+                // destroyed. Skip processing the data - the loader drops the result anyway.
+                const device = this.app.graphicsDevice;
+                if (!device || device._destroyed) {
+                    callback(null, null);
+                    return;
+                }
+
                 // allow application to process the data
                 asset.fire('load:data', data);
 
