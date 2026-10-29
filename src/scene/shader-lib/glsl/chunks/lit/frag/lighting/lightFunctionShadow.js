@@ -109,11 +109,11 @@ export default /* glsl */`
         #if LIGHT{i}TYPE == DIRECTIONAL // ----- directional light -----
 
             #if LIGHT{i}SHADOWTYPE == VSM_16F
-                return getShadowVSM16(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 5.54);
+                return getShadowVSM16(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, VSM_EXPONENT_16F);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == VSM_32F
-                return getShadowVSM32(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 15.0);
+                return getShadowVSM32(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, VSM_EXPONENT_32F);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCSS_32F
@@ -150,11 +150,11 @@ export default /* glsl */`
         #if LIGHT{i}TYPE == SPOT // ----- spot light -----
 
             #if LIGHT{i}SHADOWTYPE == VSM_16F
-                return getShadowSpotVSM16(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 5.54, lightDirW);
+                return getShadowSpotVSM16(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, VSM_EXPONENT_16F, lightDirW);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == VSM_32F
-                return getShadowSpotVSM32(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, 15.0, lightDirW);
+                return getShadowSpotVSM32(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, VSM_EXPONENT_32F, lightDirW);
             #endif
 
             #if LIGHT{i}SHADOWTYPE == PCSS_32F

@@ -28,13 +28,14 @@ export default /* wgsl */`
         #endif
 
         #ifdef FOG_SHADOW_VSM
+            #include "shadowEVSMExponentPS"
             #include "shadowEVSMPS"
 
             // the exponent of the depth warp, matching the one used to render the shadow map
             #ifdef FOG_SHADOW_VSM_32F
-                const fogVsmExponent: f32 = 15.0;
+                const fogVsmExponent: f32 = VSM_EXPONENT_32F;
             #else
-                const fogVsmExponent: f32 = 5.54;
+                const fogVsmExponent: f32 = VSM_EXPONENT_16F;
             #endif
         #endif
 
