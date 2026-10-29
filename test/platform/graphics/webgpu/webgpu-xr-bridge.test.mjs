@@ -161,18 +161,14 @@ describe('WebgpuXrBridge', function () {
         expect(bridge.device.xrSubImages).to.have.length(0);
         expect(layers).to.have.length(1);
 
-        // the second replaces it in the session with a new layer, with the session's own settings,
-        // and destroys it
+        // the second replaces it in the session with a new layer, leaving the depth range as it is
+        // (one changed earlier in the frame is not yet in the render state), and destroys it
         bridge.impl.beginFrame(frame(2), {});
         expect(bridge._onBindingError.calledTwice).to.be.true;
         const layer = bridge.impl.presentationLayer;
         expect(layer).to.not.equal(lost);
         expect(layers).to.have.length(2);
-        expect(session.updateRenderState.lastCall.args[0]).to.deep.equal({
-            layers: [layer],
-            depthNear: 0.1,
-            depthFar: 1000
-        });
+        expect(session.updateRenderState.lastCall.args[0]).to.deep.equal({ layers: [layer] });
         expect(lost.destroy.calledOnce).to.be.true;
 
         // and the next frame draws into it
@@ -196,14 +192,26 @@ describe('WebgpuXrBridge', function () {
         expect(layer.destroy.called).to.be.false;
     });
 
-    it('makes the projection layer again once while the new one fails as well', function () {
+    it('makes the projection layer again about once a second while the new one fails as well', function () {
         const bridge = createBridge();
         bridge.impl.presentationLayer.lost = true;
         newLayersLost = true;
 
-        for (let i = 0; i < 4; i++) bridge.impl.beginFrame(frame(1), {});
+        // once on the second failing frame, and not again for the next 59
+        for (let i = 0; i < 61; i++) bridge.impl.beginFrame(frame(1), {});
         expect(layers).to.have.length(2);
-        expect(bridge._onBindingError.callCount).to.equal(4);
+        expect(bridge._onBindingError.callCount).to.equal(61);
+
+        // and again on the 60th after it
+        bridge.impl.beginFrame(frame(1), {});
+        expect(layers).to.have.length(3);
+
+        // a layer that works then recovers the session
+        newLayersLost = false;
+        for (let i = 0; i < 60; i++) bridge.impl.beginFrame(frame(1), {});
+        expect(layers).to.have.length(4);
+        bridge.impl.beginFrame(frame(1), {});
+        expect(bridge.device.xrSubImages).to.have.length(1);
     });
 
     it('makes the projection layer again for a later loss, once a frame has drawn', function () {
@@ -241,5 +249,27 @@ describe('WebgpuXrBridge', function () {
         expect(bridge._onBindingError.callCount).to.equal(3);
         expect(bridge._onBindingError.lastCall.args[0].message).to.equal('Unable to create the WebGPU projection layer.');
         expect(lost.destroy.called).to.be.false;
+    });
+
+    it('keeps the binding and the layer together when the new layer cannot be made', function () {
+        const bridge = createBridge();
+        const binding = bridge.impl.graphicsBinding;
+        const lost = bridge.impl.presentationLayer;
+        lost.lost = true;
+        newLayersFail = true;
+
+        for (let i = 0; i < 2; i++) bridge.impl.beginFrame(frame(1), {});
+        expect(bridge.impl.graphicsBinding).to.equal(binding);
+        expect(bridge.impl.presentationLayer).to.equal(lost);
+    });
+
+    it('counts the failing frames again after the graphics device is lost', function () {
+        const bridge = createBridge();
+        bridge.impl.presentationLayer.lost = true;
+        bridge.impl.beginFrame(frame(1), {});
+        expect(bridge.impl._acquireFailures).to.equal(1);
+
+        bridge.impl.onGraphicsDeviceLost();
+        expect(bridge.impl._acquireFailures).to.equal(0);
     });
 });
