@@ -1,5 +1,9 @@
 import { expect } from 'chai';
 
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
@@ -271,6 +275,99 @@ describe('AnimationComponent', function () {
             entity.animation.assets = [];
 
             expect(app.assets.hasEvent(`add:${pending.id}`)).to.be.false;
+        });
+
+    });
+
+    describe('anim tracks', function () {
+
+        beforeEach(function () {
+            jsdomSetup();
+            app = createApp();
+        });
+
+        afterEach(function () {
+            app?.destroy();
+            app = null;
+            jsdomTeardown();
+        });
+
+        const positionTrack = (name, nodeName, x) => {
+            const curve = new AnimCurve([{
+                entityPath: ['root', nodeName],
+                component: 'graph',
+                propertyPath: ['localPosition']
+            }], 0, 0, INTERPOLATION_LINEAR);
+            return new AnimTrack(name, 1, [new AnimData(1, [0, 1])], [new AnimData(3, [x, 0, 0, x, 0, 0])], [curve]);
+        };
+
+        it('stops writing the targets of an animation that is no longer playing', function () {
+            const root = new Entity('root', app);
+            const a = new Entity('a', app);
+            const b = new Entity('b', app);
+            root.addChild(a);
+            root.addChild(b);
+            app.root.addChild(root);
+
+            root.addComponent('model', { type: 'box' });
+            root.addComponent('animation');
+            root.animation.animations = {
+                A: positionTrack('A', 'a', 1),
+                B: positionTrack('B', 'b', 2)
+            };
+
+            root.animation.play('A');
+            app.systems.animation.onUpdate(0.1);
+            expect(a.getLocalPosition().x).to.be.closeTo(1, 1e-5);
+
+            root.animation.play('B');
+            a.setLocalPosition(5, 0, 0);
+            app.systems.animation.onUpdate(0.1);
+            expect(a.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+            expect(b.getLocalPosition().x).to.be.closeTo(2, 1e-5);
+
+            // blending keeps B and adds A
+            root.animation.play('A', 0.2);
+            app.systems.animation.onUpdate(0.3);
+            expect(a.getLocalPosition().x).to.be.closeTo(1, 1e-5);
+
+            root.animation.play('B');
+            a.setLocalPosition(6, 0, 0);
+            app.systems.animation.onUpdate(0.1);
+            expect(a.getLocalPosition().x).to.be.closeTo(6, 1e-5);
+            expect(b.getLocalPosition().x).to.be.closeTo(2, 1e-5);
+        });
+
+        it('stops writing the targets of an animation that a blend removes', function () {
+            const root = new Entity('root', app);
+            const a = new Entity('a', app);
+            const b = new Entity('b', app);
+            root.addChild(a);
+            root.addChild(b);
+            app.root.addChild(root);
+
+            root.addComponent('model', { type: 'box' });
+            root.addComponent('animation');
+            root.animation.animations = {
+                A: positionTrack('A', 'a', 1),
+                B: positionTrack('B', 'b', 2)
+            };
+
+            root.animation.play('A');
+            app.systems.animation.onUpdate(0.1);
+            root.animation.play('B', 0.2);
+            app.systems.animation.onUpdate(0.3);
+            expect(a.getLocalPosition().x).to.be.closeTo(1, 1e-5);
+            expect(b.getLocalPosition().x).to.be.closeTo(2, 1e-5);
+
+            // blending keeps only the last clip, so A's clip is removed
+            root.animation.play('B', 0.2);
+            a.setLocalPosition(6, 0, 0);
+            app.systems.animation.onUpdate(0.1);
+            expect(a.getLocalPosition().x).to.be.closeTo(6, 1e-5);
+            app.systems.animation.onUpdate(0.3);
+            expect(a.getLocalPosition().x).to.be.closeTo(6, 1e-5);
+            expect(b.getLocalPosition().x).to.be.closeTo(2, 1e-5);
         });
 
     });

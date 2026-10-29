@@ -337,4 +337,230 @@ describe('AnimComponent', function () {
             expect(() => app.systems.anim.onAnimationUpdate(0.5)).to.not.throw();
         });
     });
+
+    describe('layer blending', function () {
+
+        const positionTrack = (x = 10) => {
+            const curve = new AnimCurve([{
+                entityPath: ['root'],
+                component: 'entity',
+                propertyPath: ['localPosition']
+            }], 0, 0, INTERPOLATION_LINEAR);
+
+            return new AnimTrack('Move', 1, [new AnimData(1, [0, 1])], [new AnimData(3, [x, 0, 0, x, 0, 0])], [curve]);
+        };
+
+        it('keeps a partially weighted layer stable after assigning another animation', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Move', positionTrack());
+            root.anim.baseLayer.weight = 0.5;
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+
+            // assigning an animation rebinds the clips that are already playing
+            root.anim.assignAnimation('Idle', track('Idle'));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+        });
+
+        it('keeps a partially weighted layer stable after the layer is rebound', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Move', positionTrack());
+            root.anim.baseLayer.weight = 0.5;
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+
+            root.anim.baseLayer.rebind();
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+        });
+
+        it('stops blending a layer once it no longer animates the target', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            root.anim.assignAnimation('Idle', track('Idle'));
+            root.anim.baseLayer.weight = 0.5;
+            const upperLayer = root.anim.addLayer('Upper', 0.5);
+            upperLayer.assignAnimation('Move', positionTrack(20));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+
+            root.anim.baseLayer.transition('Idle');
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+        });
+
+        it('stops blending a layer with normalized weights once it no longer animates the target', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true, normalizeWeights: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            const upperLayer = root.anim.addLayer('Upper', 1, null, ANIM_LAYER_ADDITIVE);
+            upperLayer.assignAnimation('Move', positionTrack(20));
+            upperLayer.assignAnimation('Idle', track('Idle'));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            upperLayer.transition('Idle');
+            // the upper layer removes its clips during this update, after the base layer was blended
+            app.systems.anim.onAnimationUpdate(0.1);
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+        });
+
+        it('keeps two layers animating the same target stable after rebinding', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            root.anim.baseLayer.weight = 0.5;
+            const upperLayer = root.anim.addLayer('Upper', 0.5);
+            upperLayer.assignAnimation('Move', positionTrack(20));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+
+            upperLayer.rebind();
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+
+            // the component recreates its target values, which take the animated position as their
+            // base value, so the result moves away from 12.5 and only has to stay stable
+            root.anim.rebind();
+            app.systems.anim.onAnimationUpdate(0.1);
+            const x = root.getLocalPosition().x;
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(x, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(x, 1e-5);
+        });
+
+        it('stops blending a layer that plays a state without a transition to it', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            root.anim.assignAnimation('Idle', track('Idle'));
+            root.anim.baseLayer.weight = 0.5;
+            const upperLayer = root.anim.addLayer('Upper', 0.5);
+            upperLayer.assignAnimation('Move', positionTrack(20));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+
+            root.anim.baseLayer.play('Idle');
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+        });
+
+        it('keeps a lower layer masked by an overwrite layer with normalized weights after it changes state', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true, normalizeWeights: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            root.anim.assignAnimation('Idle', track('Idle'));
+            const upperLayer = root.anim.addLayer('Upper', 1, null, ANIM_LAYER_OVERWRITE);
+            upperLayer.assignAnimation('Move', positionTrack(20));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+
+            root.anim.baseLayer.transition('Idle');
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+
+            root.anim.baseLayer.transition('Move');
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+        });
+
+        it('masks a lower layer by the highest overwrite layer that animates the target with normalized weights', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true, normalizeWeights: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            root.anim.assignAnimation('Idle', track('Idle'));
+            const middleLayer = root.anim.addLayer('Middle', 1, null, ANIM_LAYER_OVERWRITE);
+            middleLayer.assignAnimation('Move', positionTrack(20));
+            const upperLayer = root.anim.addLayer('Upper', 1, null, ANIM_LAYER_OVERWRITE);
+            upperLayer.assignAnimation('Move', positionTrack(30));
+            upperLayer.assignAnimation('Idle', track('Idle'));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(30, 1e-5);
+
+            upperLayer.transition('Idle');
+            // the upper layer removes its clips during this update, after the lower layers were blended
+            app.systems.anim.onAnimationUpdate(0.1);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+
+            root.anim.baseLayer.transition('Idle');
+            app.systems.anim.onAnimationUpdate(0.1);
+            root.anim.baseLayer.transition('Move');
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+        });
+
+        it('lets a lower layer take over once an overwrite layer above stops animating the target with normalized weights', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true, normalizeWeights: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            const upperLayer = root.anim.addLayer('Upper', 1, null, ANIM_LAYER_OVERWRITE);
+            upperLayer.assignAnimation('Move', positionTrack(20));
+            upperLayer.assignAnimation('Idle', track('Idle'));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(20, 1e-5);
+
+            upperLayer.transition('Idle');
+            // the upper layer removes its clips during this update, after the base layer was blended
+            app.systems.anim.onAnimationUpdate(0.1);
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+        });
+    });
 });

@@ -165,4 +165,128 @@ describe('AnimEvaluator', function () {
         animEvaluator.update(1.0, false);
         expect(clip.time).to.equal(0.5);
     });
+
+    it('AnimEvaluator: removeClip stops animating the targets of the removed clip', function () {
+        const parent = new GraphNode('parent');
+        const child1 = new GraphNode('child1');
+        app.root.addChild(parent);
+        parent.addChild(child1);
+
+        const keys = new AnimData(1, [0, 1]);
+        const translations = new AnimData(3, [0, 0, 0, 1, 0, 0]);
+        const curvePath = {
+            entityPath: ['child1'],
+            component: 'graph',
+            propertyPath: ['localPosition']
+        };
+        const curve = new AnimCurve([curvePath], 0, 0, INTERPOLATION_LINEAR);
+        const track = new AnimTrack('test track', 1, [keys], [translations], [curve]);
+        const clip = new AnimClip(track, 0.0, 1.0, true, true);
+
+        const animEvaluator = new AnimEvaluator(new DefaultAnimBinder(parent));
+        animEvaluator.addClip(clip);
+        animEvaluator.update(0.5);
+        expect(child1.localPosition.x).to.equal(0.5);
+
+        animEvaluator.removeClip(0);
+        child1.setLocalPosition(5, 0, 0);
+        animEvaluator.update(0.5);
+
+        expect(child1.localPosition.x).to.equal(5);
+    });
+
+    it('AnimEvaluator: removeClip keeps updating the world transform of nodes still animated', function () {
+        const parent = new GraphNode('parent');
+        const child1 = new GraphNode('child1');
+        const child2 = new GraphNode('child2');
+        app.root.addChild(parent);
+        parent.addChild(child1);
+        parent.addChild(child2);
+
+        const keys = new AnimData(1, [0, 1]);
+        const translations = new AnimData(3, [0, 0, 0, 1, 0, 0]);
+        const createClip = (name) => {
+            const curvePath = {
+                entityPath: [name],
+                component: 'graph',
+                propertyPath: ['localPosition']
+            };
+            const curve = new AnimCurve([curvePath], 0, 0, INTERPOLATION_LINEAR);
+            const track = new AnimTrack(name, 1, [keys], [translations], [curve]);
+            return new AnimClip(track, 0.0, 1.0, true, true);
+        };
+
+        const animEvaluator = new AnimEvaluator(new DefaultAnimBinder(parent));
+        animEvaluator.addClip(createClip('child1'));
+        animEvaluator.addClip(createClip('child2'));
+        animEvaluator.update(0.5);
+        expect(child2.getPosition().x).to.equal(0.5);
+
+        animEvaluator.removeClip(0);
+        animEvaluator.update(0.25);
+        expect(child2.getPosition().x).to.equal(0.75);
+    });
+
+    it('AnimEvaluator: removeClip keeps animating a node driven by another clip until both are removed', function () {
+        const parent = new GraphNode('parent');
+        const child1 = new GraphNode('child1');
+        app.root.addChild(parent);
+        parent.addChild(child1);
+
+        const keys = new AnimData(1, [0, 1]);
+        const translations = new AnimData(3, [0, 0, 0, 1, 0, 0]);
+        // both paths resolve to child1
+        const createClip = (entityPath) => {
+            const curvePath = {
+                entityPath: entityPath,
+                component: 'graph',
+                propertyPath: ['localPosition']
+            };
+            const curve = new AnimCurve([curvePath], 0, 0, INTERPOLATION_LINEAR);
+            const track = new AnimTrack(entityPath.join('/'), 1, [keys], [translations], [curve]);
+            return new AnimClip(track, 0.0, 1.0, true, true);
+        };
+
+        const animEvaluator = new AnimEvaluator(new DefaultAnimBinder(parent));
+        animEvaluator.addClip(createClip(['child1']));
+        animEvaluator.addClip(createClip(['parent', 'child1']));
+        animEvaluator.update(0.5);
+        expect(child1.getPosition().x).to.equal(0.5);
+
+        animEvaluator.removeClip(0);
+        animEvaluator.update(0.25);
+        expect(child1.getPosition().x).to.equal(0.75);
+
+        animEvaluator.removeClip(0);
+        child1.setLocalPosition(5, 0, 0);
+        animEvaluator.update(0.25);
+        expect(child1.localPosition.x).to.equal(5);
+    });
+
+    it('AnimEvaluator: a clip added again after removeClips updates the world transform', function () {
+        const parent = new GraphNode('parent');
+        const child1 = new GraphNode('child1');
+        app.root.addChild(parent);
+        parent.addChild(child1);
+
+        const keys = new AnimData(1, [0, 1]);
+        const translations = new AnimData(3, [0, 0, 0, 1, 0, 0]);
+        const curvePath = {
+            entityPath: ['child1'],
+            component: 'graph',
+            propertyPath: ['localPosition']
+        };
+        const curve = new AnimCurve([curvePath], 0, 0, INTERPOLATION_LINEAR);
+        const track = new AnimTrack('test track', 1, [keys], [translations], [curve]);
+
+        const animEvaluator = new AnimEvaluator(new DefaultAnimBinder(parent));
+        animEvaluator.addClip(new AnimClip(track, 0.0, 1.0, true, true));
+        animEvaluator.update(0.5);
+        expect(child1.getPosition().x).to.equal(0.5);
+
+        animEvaluator.removeClips();
+        animEvaluator.addClip(new AnimClip(track, 0.0, 1.0, true, true));
+        animEvaluator.update(0.25);
+        expect(child1.getPosition().x).to.equal(0.25);
+    });
 });
