@@ -31,11 +31,17 @@ import {
     TextureHandler,
     TextureRenderer,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -56,8 +62,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true }),
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -115,9 +120,9 @@ app.start();
 
 /**
  * helper function to create a primitive with shape type, position, scale, color and layer
- * @param {string} primitiveType - The primitive type.
- * @param {number | Vec3} position - The position.
- * @param {number | Vec3} scale - The scale.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
  * @param {Color} color - The color.
  * @param {number[]} layer - The render component's layers.
  * @returns {Entity} The returned entity.
@@ -224,8 +229,7 @@ const immediateLayer = app.scene.layers.getLayerByName('Immediate');
 
 // Create ground plane and 3 primitives, visible in world layer
 const plane = createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), new Color(3, 4, 2), [worldLayer.id]);
-/** @type {StandardMaterial} */
-const planeMaterial = plane.render.meshInstances[0].material;
+const planeMaterial = /** @type {StandardMaterial} */ (plane.render.meshInstances[0].material);
 
 // Make the texture tiles and use anisotropic filtering to prevent blurring
 planeMaterial.diffuseMap = assets.checkerboard.resource;
@@ -249,18 +253,16 @@ camera.translate(0, 9, 15);
 camera.lookAt(1, 4, 0);
 app.root.addChild(camera);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: plane,
-        distanceMax: 20,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 20)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 
 // Create texture camera, which renders entities in world and skybox layers into the texture
 const textureCamera = new Entity('TextureCamera');
@@ -301,8 +303,7 @@ tv.setLocalEulerAngles(90, 0, 0);
 tv.render.castShadows = false;
 tv.render.receiveShadows = false;
 
-/** @type {StandardMaterial} */
-const material = tv.render.material;
+const material = /** @type {StandardMaterial} */ (tv.render.material);
 material.emissiveMap = texture; // assign the rendered texture as an emissive texture
 material.emissive = Color.WHITE;
 material.update();

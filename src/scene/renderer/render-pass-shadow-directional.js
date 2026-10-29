@@ -35,6 +35,13 @@ class RenderPassShadowDirectional extends RenderPass {
         const faceCount = light.numShadowFaces;
         const shadowUpdateOverrides = light.shadowUpdateOverrides;
 
+        // the shadow map is shared by the cameras, which are all culled before any of them renders,
+        // so the split distances this camera's cascades are fitted to are set as the map renders.
+        // A light with shadow bounds has no camera and no split distances
+        if (camera) {
+            light._shadowCascadeDistances.set(light.getRenderData(camera, 0).shadowCascadeDistances);
+        }
+
         // Use the scheduled cascades even if an earlier camera consumed their one-shot overrides.
         for (let face = 0; face < faceCount; face++) {
             if (cascadeMask & (1 << face)) {

@@ -29,8 +29,8 @@ import {
  */
 export function Controls({ observer }) {
     const [type, setType] = useState('spot');
-    const [shape, setShape] = useState(LIGHTSHAPE_PUNCTUAL);
-    const [proj, setProj] = useState(PROJECTION_PERSPECTIVE);
+    const [shape, setShape] = useState(/** @type {number} */ (LIGHTSHAPE_PUNCTUAL));
+    const [proj, setProj] = useState(/** @type {number} */ (PROJECTION_PERSPECTIVE));
 
     // the gizmo draws area shapes in place of punctual ones, and no handles for a directional
     const area = shape !== LIGHTSHAPE_PUNCTUAL;

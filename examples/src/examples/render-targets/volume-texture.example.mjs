@@ -41,10 +41,12 @@ import {
     Texture,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice,
     drawQuadWithShader
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -59,7 +61,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -346,10 +347,6 @@ fog.addComponent('render', {
 });
 app.root.addChild(fog);
 
-// Find a tree in the middle to use as a focus point
-// @ts-ignore
-const tree = terrain.findOne('name', 'Arbol 2.002');
-
 // the camera, with the scene depth map the fog stops at
 const camera = new Entity();
 camera.addComponent('camera', {
@@ -361,16 +358,14 @@ camera.camera.requestSceneDepthMap(true);
 camera.setLocalPosition(600, 320, 50);
 
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: tree,
-        frameOnStart: false,
-        distanceMax: 1800
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(-4.47, 37.15, 27.63),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 1800)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // the inverse view-projection matrix of the camera, used to compute the view rays

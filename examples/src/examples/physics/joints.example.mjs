@@ -29,6 +29,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { RigidBodyComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -106,7 +110,7 @@ const red = createMaterial(new Color(1, 0.3, 0.3));
  * @param {Vec3} size - The box dimensions.
  * @param {Vec3} position - The world position.
  * @param {StandardMaterial} material - The render material.
- * @param {string} bodyType - The rigidbody type.
+ * @param {RigidBodyComponent['type']} bodyType - The rigidbody type.
  * @param {number} mass - The body mass.
  * @returns {Entity} The new entity.
  */

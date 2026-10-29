@@ -28,21 +28,22 @@ import {
     TextureHandler,
     TextureRenderer,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script1: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     script2: new Asset('script', 'script', { url: './scripts/utils/cubemap-renderer.js' }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
 };
@@ -131,7 +132,6 @@ roomMaterial.normalMapTiling.set(5, 5);
 roomMaterial.bumpiness = 0.1;
 roomMaterial.gloss = 0.9;
 roomMaterial.reflectivity = 0.3;
-// @ts-ignore
 roomMaterial.envAtlas = envAtlas; // use reflection from env atlas
 roomMaterial.metalness = 0.5;
 
@@ -163,7 +163,6 @@ sphereMaterial.bumpiness = 0.7;
 sphereMaterial.gloss = 0.3;
 sphereMaterial.metalness = 0.7;
 sphereMaterial.reflectivity = 0.3;
-// @ts-ignore
 sphereMaterial.envAtlas = envAtlas; // use reflection from env atlas
 sphereMaterial.update();
 // Set up video playback into a texture
@@ -210,7 +209,7 @@ screenMaterial.update();
 /**
  * Helper function to create a 3d primitive including its material.
  *
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {Material} material - The material.
@@ -296,17 +295,16 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(270, 90, -260);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 390,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, 200, 1.25),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 390)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create a probe object with cubemapRenderer script which takes care of rendering dynamic cubemap

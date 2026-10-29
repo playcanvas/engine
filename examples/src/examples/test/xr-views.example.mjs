@@ -36,17 +36,22 @@ import {
     Texture,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
+
+/**
+ * @import { WebgpuGraphicsDevice } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -87,6 +92,7 @@ class CompositeArrayPass extends RenderPassShaderQuad {
         super(graphicsDevice);
         this.name = 'CompositeArrayPass';
         this.sourceTexture = sourceTexture;
+        this.sourceTextureId = graphicsDevice.scope.resolve('sourceTexture');
         this.numViews = numViews;
 
         this.shader = ShaderUtils.createShader(graphicsDevice, {
@@ -148,12 +154,12 @@ class CompositeArrayPass extends RenderPassShaderQuad {
                     viewFormat
                 });
             }
-            this.device.xrSubImages = subImages;
+            /** @type {WebgpuGraphicsDevice} */ (this.device).xrSubImages = subImages;
         }
     }
 
     execute() {
-        this.device.scope.resolve('sourceTexture').setValue(this.sourceTexture);
+        this.sourceTextureId.setValue(this.sourceTexture);
         super.execute();
     }
 }
@@ -209,19 +215,18 @@ camera.addComponent('camera', {
 });
 
 // and position it in the world
-camera.setLocalPosition(-500, 160, 300);
+camera.setLocalPosition(-518.96, 161.55, 311.33);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: terrain,
-        distanceMax: 600
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(-5.14, 119.57, 4.36),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 600)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create mock XR views using a loop. The number of views differs between backends because

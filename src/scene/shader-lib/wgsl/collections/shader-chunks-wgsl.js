@@ -31,6 +31,8 @@ import debugProcessFrontendPS from '../chunks/lit/frag/debug-process-frontend.js
 import decodePS from '../chunks/common/frag/decode.js';
 import detailModesPS from '../chunks/standard/frag/detailModes.js';
 import diffusePS from '../chunks/standard/frag/diffuse.js';
+import diffuseTransmissionPS from '../chunks/standard/frag/diffuseTransmission.js';
+import diffuseTransmissionColorPS from '../chunks/standard/frag/diffuseTransmissionColor.js';
 import emissivePS from '../chunks/standard/frag/emissive.js';
 import encodePS from '../chunks/common/frag/encode.js';
 import endPS from '../chunks/lit/frag/end.js';
@@ -119,6 +121,7 @@ import screenDepthPS from '../chunks/common/frag/screenDepth.js';
 import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
 import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
 import shadowEVSMPS from '../chunks/lit/frag/lighting/shadowEVSM.js';
+import shadowEVSMExponentPS from '../chunks/common/frag/shadow-evsm-exponent.js';
 import shadowPCF1PS from '../chunks/lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from '../chunks/lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
@@ -203,6 +206,8 @@ const shaderChunksWGSL = {
     debugProcessFrontendPS,
     detailModesPS,
     diffusePS,
+    diffuseTransmissionPS,
+    diffuseTransmissionColorPS,
     decodePS,
     emissivePS,
     encodePS,
@@ -302,6 +307,7 @@ const shaderChunksWGSL = {
     shadowCascadesPS,
     shadowCasterPS,
     shadowEVSMPS,
+    shadowEVSMExponentPS,
     shadowPCF1PS,
     shadowPCF3PS,
     shadowPCF5PS,

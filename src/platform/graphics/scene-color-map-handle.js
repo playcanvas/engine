@@ -61,6 +61,29 @@ class SceneColorMapHandle {
      * @ignore
      */
     destroyed = false;
+
+    /**
+     * Gets the width of the color map the camera rendered most recently, in texels, or 0 when the
+     * camera has not rendered one. A compute shader processing each texel of the color map is
+     * dispatched over this size, see {@link Compute#setupDispatchThreads}. It changes with the
+     * color map, so read it right before the dispatch: once the camera renders in the frame, it is
+     * the width of the color map of this frame, and before that, of the previous frame.
+     *
+     * @type {number}
+     */
+    get width() {
+        return this.texture?.width ?? 0;
+    }
+
+    /**
+     * Gets the height of the color map the camera rendered most recently, in texels, or 0 when the
+     * camera has not rendered one. See {@link SceneColorMapHandle#width}.
+     *
+     * @type {number}
+     */
+    get height() {
+        return this.texture?.height ?? 0;
+    }
 }
 
 export { SceneColorMapHandle };

@@ -7,9 +7,9 @@
 
 //
 // This example demonstrates the HTML-in-Canvas API: a styled HTML element with
-// CSS animations is appended to a canvas marked with the "layoutsubtree"
-// Attribute, then captured into a GPU texture (texElementImage2D on WebGL,
-// copyElementImageToTexture on WebGPU).
+// CSS animations is appended to a canvas marked with content="drawable", then
+// captured into a GPU texture (texElementSubImage2D on WebGL,
+// drawElementImageToTexture on WebGPU).
 //
 // Fallback: when device.supportsHtmlTextures is false, a static 2D canvas with
 // hand-drawn placeholder graphics is used as the texture source instead.
@@ -37,9 +37,14 @@ import {
 
 import { deviceType } from 'examples/context';
 
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+// requestPaint is part of the HTML-in-Canvas proposal, which the DOM types don't declare yet
+const canvas = /** @type {HTMLCanvasElement & { requestPaint: () => void }} */ (
+    document.getElementById('application-canvas')
+);
 
-// Enable layoutsubtree for HTML-in-Canvas support
+// Enable HTML-in-Canvas support. Chrome 154 and earlier use the layoutsubtree
+// attribute instead of content="drawable".
+canvas.setAttribute('content', 'drawable');
 canvas.setAttribute('layoutsubtree', 'true');
 
 window.focus();
@@ -75,11 +80,13 @@ app.setCanvasResolution(RESOLUTION_AUTO);
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 
-// Create an HTML element to use as texture source.
-// Per the HTML-in-Canvas proposal, the element must be a direct child of the canvas.
+// Create an HTML element to use as texture source. It must be a child of the
+// canvas and have the 'drawable' attribute to be drawn into the texture.
 // The 'inert' attribute prevents hit testing on the element.
 const htmlElement = document.createElement('div');
+htmlElement.setAttribute('drawable', '');
 htmlElement.setAttribute('inert', '');
+htmlElement.style.boxSizing = 'border-box';
 htmlElement.style.width = '512px';
 htmlElement.style.height = '512px';
 htmlElement.style.padding = '10px';
@@ -98,7 +105,7 @@ htmlElement.style.justifyContent = 'center';
 htmlElement.style.alignItems = 'center';
 htmlElement.innerHTML = `
     <h1 style="margin: 0 0 20px 0; animation: glow 3s ease-in-out infinite;">HTML in Canvas!</h1>
-    <p style="margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">This texture is rendered from HTML using texElementImage2D</p>
+    <p style="margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">This texture is rendered live from HTML</p>
     <div style="margin-top: 20px; width: 50px; height: 50px; border-radius: 50%; animation: pulse 2s infinite;"></div>
 `;
 
@@ -133,7 +140,7 @@ const htmlTexture = new Texture(device, {
     name: 'htmlTexture'
 });
 
-// Fallback canvas texture for browsers without texElementImage2D support
+// Fallback canvas texture for browsers without HTML-in-Canvas support
 const createFallbackTexture = () => {
     const fallbackCanvas = document.createElement('canvas');
     fallbackCanvas.width = 512;
@@ -160,7 +167,7 @@ const createFallbackTexture = () => {
 
     ctx.font = '20px Arial';
     ctx.fillText('(Canvas Fallback)', 256, 220);
-    ctx.fillText('texElementImage2D not available', 256, 260);
+    ctx.fillText('HTML-in-Canvas not available', 256, 260);
 
     ctx.beginPath();
     ctx.arc(256, 320, 25, 0, 2 * Math.PI);
@@ -189,7 +196,7 @@ app.on('destroy', () => {
 });
 
 if (device.supportsHtmlTextures) {
-    // The browser must paint the HTML element before texElementImage2D can use it.
+    // The browser must paint the HTML element before it can be uploaded.
     // Wait for the 'paint' event, then set the HTML element as the texture source.
     canvas.addEventListener(
         'paint',

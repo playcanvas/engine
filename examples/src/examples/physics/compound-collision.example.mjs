@@ -94,8 +94,19 @@ function createMaterial(color) {
 const red = createMaterial(new Color(0.7, 0.3, 0.3));
 const gray = createMaterial(new Color(0.7, 0.7, 0.7));
 
+/**
+ * @typedef {object} EntityData
+ * @property {string} name - The entity name.
+ * @property {number[]} [pos] - The local position.
+ * @property {number[]} [rot] - The local euler angles.
+ * @property {number[]} [scl] - The local scale.
+ * @property {{ type: string, options: object }[]} [components] - The components to add.
+ * @property {EntityData[]} [children] - The child entities.
+ */
+
 // Define a scene hierarchy in JSON format. This is loaded/parsed in
 // the parseScene function below
+/** @type {EntityData[]} */
 const scene = [
     {
         // The Chair entity has a collision component of type 'compound' and a
@@ -366,7 +377,7 @@ const scene = [
 /**
  * Convert an entity definition in the structure above to a Entity object
  *
- * @param {typeof scene} e - The scene definition.
+ * @param {EntityData} e - The scene definition.
  * @returns {Entity} The entity.
  */
 function parseEntity(e) {
@@ -389,7 +400,7 @@ function parseEntity(e) {
     }
 
     if (e.children) {
-        e.children.forEach((/** @type {typeof scene} */ child) => {
+        e.children.forEach((child) => {
             entity.addChild(parseEntity(child));
         });
     }
@@ -410,8 +421,7 @@ let numChairs = 0;
 
 // Clone the chair entity hierarchy and add it to the scene root
 function spawnChair() {
-    /** @type {Entity} */
-    const chair = app.root.findByName('Chair');
+    const chair = /** @type {Entity} */ (app.root.findByName('Chair'));
     const clone = chair.clone();
     clone.setLocalPosition(Math.random() * 1 - 0.5, Math.random() * 2 + 1, Math.random() * 1 - 0.5);
     app.root.addChild(clone);

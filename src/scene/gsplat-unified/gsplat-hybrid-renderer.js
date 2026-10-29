@@ -186,6 +186,14 @@ class GSplatHybridRenderer extends GSplatRenderer {
     lastCompactedNumIntervals = 0;
 
     /**
+     * Set once the active splats need a projection cache too large to bind on this device. From
+     * then on this renderer dispatches nothing, and the manager falls back to the CPU-sort renderer.
+     *
+     * @type {boolean}
+     */
+    bindingLimitExceeded = false;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GraphNode} node - The graph node.
      * @param {GraphNode} cameraNode - The camera node.
@@ -463,6 +471,21 @@ class GSplatHybridRenderer extends GSplatRenderer {
     sortAndProjectForCamera(world, worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, isPicking, isStereo, params) {
         const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return null;
+
+        // The projection cache holds an entry per active splat and is bound whole, so it has to fit
+        // a single storage buffer binding. Past that every bind group using it is invalid and
+        // nothing renders, so dispatch nothing and let the manager fall back to CPU sorting. The
+        // draw is hidden as well, as its storage buffers are never assigned on this path.
+        const cacheBytes = elementCount * (CACHE_STRIDE + params.varyings.words) * 4;
+        const maxBindingSize = this.device.limits.maxStorageBufferBindingSize;
+        if (cacheBytes > maxBindingSize) {
+            if (!this.bindingLimitExceeded) {
+                this.bindingLimitExceeded = true;
+                Debug.warn(`GSplatHybridRenderer: ${elementCount} active splats need a ${cacheBytes} byte projection cache, over the device's maxStorageBufferBindingSize of ${maxBindingSize} bytes. Falling back to CPU sorting.`);
+            }
+            this.meshInstance.visible = false;
+            return null;
+        }
 
         // Depth / opacity picking still needs sorting and the pre-sort submission below, even
         // when the work buffer has no per-splat IDs for the projector's PICK_MODE shader variant.

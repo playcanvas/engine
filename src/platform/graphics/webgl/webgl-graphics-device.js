@@ -998,9 +998,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
-        // HTML-in-Canvas support (texElementImage2D). Not an extension, so it needs hiding
-        // explicitly on a bare device - it is still experimental and behind an origin trial.
-        this.supportsHtmlTextures = !this.bare && typeof gl.texElementImage2D === 'function';
+        // HTML-in-Canvas support (texElementSubImage2D, or texElementImage2D before Chrome 155).
+        // Not an extension, so it needs hiding explicitly on a bare device.
+        this.supportsHtmlTextures = !this.bare && (typeof gl.texElementSubImage2D === 'function' ||
+            typeof gl.texElementImage2D === 'function');
     }
 
     /**
@@ -2279,7 +2280,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         // multi-draw extension is not supported, use fallback loop
                         this._multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands);
                     }
-                } else {
+                } else if (numInstances !== 0) { // single draw - zero instances draws nothing, as on WebGPU
                     if (primitive.indexed) {
                         Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
@@ -2318,7 +2319,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type, numInstances > 0);
                 } else {
                     // single draw
-                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances > 0 ? numInstances : 1);
+                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances ?? 1);
                 }
                 // #endif
             }

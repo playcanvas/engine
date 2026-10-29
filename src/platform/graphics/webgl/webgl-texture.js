@@ -72,6 +72,11 @@ class WebglTexture {
 
     _glCreated;
 
+    // size of the storage allocated for an HTML element source, which texElementSubImage2D draws into
+    _elementWidth = 0;
+
+    _elementHeight = 0;
+
     dirtyParameterFlags = 0;
 
     constructor(texture) {
@@ -700,7 +705,7 @@ class WebglTexture {
                 // ----- 2D -----
                 if (device._isBrowserInterface(mipObject)) {
 
-                    // Handle HTML elements via texElementImage2D if supported
+                    // Handle HTML elements via the HTML-in-Canvas API if supported
                     if (device._isHTMLElementInterface(mipObject) && device.supportsHtmlTextures) {
                         device.setUnpackFlipY(texture._flipY);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
@@ -709,11 +714,45 @@ class WebglTexture {
                         const w = Math.floor(rect.width) || texture._width;
                         const h = Math.floor(rect.height) || texture._height;
 
-                        gl.texElementImage2D(
-                            gl.TEXTURE_2D,
-                            this._glInternalFormat,
-                            mipObject
-                        );
+                        if (gl.texElementSubImage2D) {
+                            // the element is drawn into existing storage, so allocate it for a new
+                            // source or size. Compare against the allocated size, as setSource has
+                            // already set the texture size to the element's new size.
+                            if (!this._glCreated || texture._levelsUpdated[0] || this._elementWidth !== w || this._elementHeight !== h) {
+                                Debug.assert(this._glFormat === gl.RGBA && this._glPixelType === gl.UNSIGNED_BYTE,
+                                    `Texture '${texture.name}' has a format texElementSubImage2D cannot write. Use an 8-bit RGBA format for an HTML element source.`, texture);
+
+                                gl.texImage2D(
+                                    gl.TEXTURE_2D,
+                                    mipLevel,
+                                    this._glInternalFormat,
+                                    w, h,
+                                    0,
+                                    this._glFormat,
+                                    this._glPixelType,
+                                    null
+                                );
+                                this._elementWidth = w;
+                                this._elementHeight = h;
+                            }
+
+                            // draw the element at the texture size, not its default canvas grid
+                            // size, which differs with the device pixel ratio
+                            gl.texElementSubImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                0, 0,
+                                mipObject,
+                                { width: w, height: h }
+                            );
+                        } else {
+                            // Chrome 154 and earlier
+                            gl.texElementImage2D(
+                                gl.TEXTURE_2D,
+                                this._glInternalFormat,
+                                mipObject
+                            );
+                        }
 
                         if (mipLevel === 0) {
                             texture._width = w;

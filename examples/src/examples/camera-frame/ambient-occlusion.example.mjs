@@ -34,10 +34,12 @@ import {
     TONEMAP_NEUTRAL,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     WasmModule,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -53,7 +55,6 @@ WasmModule.setConfig('DracoDecoderModule', {
 
 const assets = {
     laboratory: new Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
-    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' }),
     ssao: new Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -122,7 +123,7 @@ laboratoryEntity.findComponents('render').forEach((render) => {
         meshInstance.material.blendType = BLEND_NONE;
 
         // Disable baked AO map as we want to use SSAO only
-        meshInstance.material.aoMap = null;
+        /** @type {StandardMaterial} */ (meshInstance.material).aoMap = null;
         meshInstance.material.update();
     });
 });
@@ -141,7 +142,7 @@ torches.forEach((torch) => {
         normalOffsetBias: 0.2,
         shadowUpdateMode: SHADOWUPDATE_THISFRAME
     });
-    light.setLocalPosition(torch.children[0].render.meshInstances[0].aabb.center);
+    light.setLocalPosition(/** @type {Entity} */ (torch.children[0]).render.meshInstances[0].aabb.center);
     app.root.addChild(light);
 });
 
@@ -183,20 +184,19 @@ cameraEntity.addComponent('camera', {
     toneMapping: TONEMAP_NEUTRAL
 });
 
-// Add orbit camera script
+// Position the camera in the world
+cameraEntity.setLocalPosition(-233.33, 116.67, 233.33);
+
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: laboratoryEntity,
-        distanceMax: 350
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 350)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
-// Position the camera in the world
-cameraEntity.setLocalPosition(-60, 30, 60);
 app.root.addChild(cameraEntity);
 
 // ------ Custom render passes set up ------

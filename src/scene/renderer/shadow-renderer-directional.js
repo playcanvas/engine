@@ -221,9 +221,10 @@ class ShadowRendererDirectional {
 
         Debug.assert(light._shadowMap, 'ShadowRendererDirectional.cull requires prepareShadowMap() to have been called for the light first.');
 
-        // generate splits for the cascades
+        // generate splits for the cascades, stored per camera
         const nearDist = camera._nearClip;
-        this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance));
+        const splitDistances = light.getRenderData(camera, 0).shadowCascadeDistances ??= new Float32Array(4);
+        this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance), splitDistances);
 
         // PASS 1: per-cascade culling + per-cascade visible-caster AABB building. Defers the depth-range
         // tightening (which moves the shadow camera and sets farClip) until pass 2 so that PCSS
@@ -253,8 +254,8 @@ class ShadowRendererDirectional {
             shadowCamNode.rotateLocal(-90, 0, 0);
 
             // get camera's frustum corners for the cascade, convert them to world space and find their center
-            const frustumNearDist = cascade === 0 ? nearDist : light._shadowCascadeDistances[cascade - 1];
-            const frustumFarDist = light._shadowCascadeDistances[cascade];
+            const frustumNearDist = cascade === 0 ? nearDist : splitDistances[cascade - 1];
+            const frustumFarDist = splitDistances[cascade];
             const frustumPoints = camera.getFrustumCorners(frustumNearDist, frustumFarDist);
             center.set(0, 0, 0);
             const cameraWorldMat = camera.node.getWorldTransform();
@@ -389,10 +390,10 @@ class ShadowRendererDirectional {
         }
     }
 
-    // function to generate frustum split distances
-    generateSplitDistances(light, nearDist, farDist) {
+    // function to generate frustum split distances into the array of 4 distances
+    generateSplitDistances(light, nearDist, farDist, distances) {
 
-        light._shadowCascadeDistances.fill(farDist);
+        distances.fill(farDist);
         for (let i = 1; i < light.numCascades; i++) {
 
             //  lerp between linear and logarithmic distance, called practical split distance
@@ -400,7 +401,7 @@ class ShadowRendererDirectional {
             const linearDist = nearDist + (farDist - nearDist) * fraction;
             const logDist = nearDist * (farDist / nearDist) ** fraction;
             const dist = math.lerp(linearDist, logDist, light.cascadeDistribution);
-            light._shadowCascadeDistances[i - 1] = dist;
+            distances[i - 1] = dist;
         }
     }
 

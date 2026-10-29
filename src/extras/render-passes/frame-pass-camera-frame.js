@@ -460,6 +460,12 @@ class FramePassCameraFrame extends FramePass {
             this.scenePass.scaleX = value;
             this.scenePass.scaleY = value;
         }
+
+        // the prepass renders at the size of the scene pass
+        if (this.prePass) {
+            this.prePass.scaleX = value;
+            this.prePass.scaleY = value;
+        }
     }
 
     get renderTargetScale() {
@@ -723,13 +729,12 @@ class FramePassCameraFrame extends FramePass {
     setupScenePass(options) {
 
         const { app, device } = this;
-        const { scene, renderer } = app;
-        const composition = scene.layers;
+        const { scene } = app;
 
         // render pass that renders the scene to the render target. Render target size automatically
         // matches the back-buffer size with the optional scale. Note that the scale parameters
         // allow us to render the 3d scene at lower resolution, improving performance.
-        this.scenePass = new RenderPassForward(device, composition, scene, renderer, this.cameraComponent);
+        this.scenePass = new RenderPassForward(device, scene, this.cameraComponent);
         this.setupScenePassSettings(this.scenePass);
         this.scenePass.init(this.rt, this.sceneOptions);
 
@@ -763,7 +768,7 @@ class FramePassCameraFrame extends FramePass {
             }
 
             // render the remaining layers after the split (otherwise they were already rendered)
-            this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer, this.cameraComponent);
+            this.scenePassTransparent = new RenderPassForward(device, scene, this.cameraComponent);
             this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.addCameraLayers(this.scenePassTransparent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
@@ -777,7 +782,7 @@ class FramePassCameraFrame extends FramePass {
             if (this.scenePassTransparent) {
                 // if prepass is enabled, we need to store the depth, as by default it gets discarded
                 if (options.prepassEnabled) {
-                    this.scenePassTransparent.depthStencilOps.storeDepth = true;
+                    this.scenePassTransparent.setStoreDepth(true);
                 }
             }
         }
@@ -932,12 +937,11 @@ class FramePassCameraFrame extends FramePass {
     setupAfterPass(options, scenePassesInfo) {
 
         const { app, cameraComponent } = this;
-        const { scene, renderer } = app;
-        const composition = scene.layers;
+        const { scene } = app;
         const targetRenderTarget = cameraComponent.renderTarget;
 
         // final pass renders directly to the target renderTarget on top of the bloomed scene, and it renders a transparent UI layer
-        this.afterPass = new RenderPassForward(this.device, composition, scene, renderer, this.cameraComponent);
+        this.afterPass = new RenderPassForward(this.device, scene, this.cameraComponent);
         this.afterPass.init(targetRenderTarget);
 
         // add all remaining layers the camera renders
@@ -979,7 +983,7 @@ class FramePassCameraFrame extends FramePass {
         // the render target still has the previous size - this evaluates the size the same way the
         // scene pass does when it resizes it, for what needs it before that pass has updated.
         const { scenePass } = this;
-        const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
+        const resizeSource = scenePass.resizeSource ?? this.device.backBuffer;
         const renderWidth = Math.floor(resizeSource.width * scenePass.scaleX);
         const renderHeight = Math.floor(resizeSource.height * scenePass.scaleY);
 

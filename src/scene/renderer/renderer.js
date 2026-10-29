@@ -355,6 +355,9 @@ class Renderer {
         this.device = graphicsDevice;
         this.scene = scene;
 
+        // the render passes rendering the scene find the renderer through it
+        scene.renderer = this;
+
         // TODO: allocate only when the scene has clustered lighting enabled
         this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
 
@@ -439,6 +442,7 @@ class Renderer {
     }
 
     destroy() {
+        this.shadowRenderer.destroy();
         this.shadowRenderer = null;
         this._shadowRendererLocal = null;
         this._shadowRendererDirectional = null;
@@ -459,6 +463,10 @@ class Renderer {
         this._viewTextureBindGroups.length = 0;
 
         this.meshInstanceSorter = null;
+
+        if (this.scene.renderer === this) {
+            this.scene.renderer = null;
+        }
     }
 
     /**

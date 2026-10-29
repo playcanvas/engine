@@ -34,9 +34,11 @@ import {
     TextureHandler,
     TextureRenderer,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -84,7 +86,6 @@ app.on('destroy', () => {
 
 const assets = {
     logo: new Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -142,28 +143,24 @@ camera.addComponent('camera', {
     clearColor: new Color(0.2, 0.2, 0.2),
     toneMapping: TONEMAP_ACES
 });
-camera.setLocalPosition(-2, -0.5, 2);
+camera.setLocalPosition(10, 4, 10);
 
 data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
     camera.camera.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
     camera.camera.orthoHeight = 6;
 });
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 14,
-        distanceMax: 50
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(14, 50)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
-
-// Set camera position looking at origin
-camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(10, 4, 10), Vec3.ZERO);
 
 // Custom render passes set up with bloom
 const cameraFrame = new CameraFrame(app, camera.camera);
@@ -202,12 +199,14 @@ app.on('update', (dt) => {
 
     // Display the picker's buffers side by side in the bottom right corner
     // color buffer (left) and depth buffer (right), with equal margins from edges
-    if (picker.colorBuffer) {
-        textures.draw(picker.colorBuffer, 0.725, 0.835, 0.1, 0.1);
+    // @ts-expect-error the picker's buffers are internal, read here only to display them
+    const { colorBuffer, depthBuffer } = picker;
+    if (colorBuffer) {
+        textures.draw(colorBuffer, 0.725, 0.835, 0.1, 0.1);
     }
 
-    if (picker.depthBuffer) {
-        textures.draw(picker.depthBuffer, 0.835, 0.835, 0.1, 0.1);
+    if (depthBuffer) {
+        textures.draw(depthBuffer, 0.835, 0.835, 0.1, 0.1);
     }
 });
 

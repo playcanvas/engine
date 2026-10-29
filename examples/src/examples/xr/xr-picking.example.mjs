@@ -188,8 +188,9 @@ if (app.xr.supported) {
         // If we have picked candidate
         if (candidate) {
             // Randomize its color
-            candidate.material.diffuse.set(Math.random(), Math.random(), Math.random());
-            candidate.material.update();
+            const material = /** @type {StandardMaterial} */ (candidate.material);
+            material.diffuse.set(Math.random(), Math.random(), Math.random());
+            material.update();
         }
     });
 

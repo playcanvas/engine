@@ -28,10 +28,12 @@ import {
     TONEMAP_NONE,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -39,7 +41,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
 };
 
@@ -244,18 +245,16 @@ camera.addComponent('camera', {
 camera.setLocalPosition(140, 140, 140);
 camera.lookAt(new Vec3(0, 40, 0));
 
-// Add orbit camera script with mouse and touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: app.root,
-        distanceMax: 400,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(13.73, 48.75, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 400)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Set an update function on the app's update event

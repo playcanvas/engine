@@ -30,8 +30,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -39,7 +42,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -117,17 +119,18 @@ terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // Get the clouds so that we can animate them
-/** @type {Array<Entity>} */
-const srcClouds = terrain.find((node) => {
-    const isCloud = node.name.includes('Icosphere');
+const srcClouds = /** @type {Entity[]} */ (
+    terrain.find((/** @type {Entity} */ node) => {
+        const isCloud = node.name.includes('Icosphere');
 
-    if (isCloud) {
-        // No shadow receiving for clouds
-        node.render.receiveShadows = false;
-    }
+        if (isCloud) {
+            // No shadow receiving for clouds
+            node.render.receiveShadows = false;
+        }
 
-    return isCloud;
-});
+        return isCloud;
+    })
+);
 
 // Clone some additional clouds
 /** @type {Array<Entity>} */
@@ -146,10 +149,6 @@ srcClouds.forEach((cloud) => {
 // Shuffle the array to give clouds random order
 clouds.sort(() => Math.random() - 0.5);
 
-// Find a tree in the middle to use as a focus point
-// @ts-ignore
-const tree = terrain.findOne('name', 'Arbol 2.002');
-
 // Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
@@ -159,19 +158,18 @@ camera.addComponent('camera', {
 });
 
 // And position it in the world
-camera.setLocalPosition(300, 160, 25);
+camera.setLocalPosition(431.37, 213, 23.86);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: tree,
-        distanceMax: 1800
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(-4.47, 37.15, 27.63),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 1800)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create a directional light casting cascaded shadows
@@ -204,7 +202,6 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     if (pathArray[2] === 'everyFrame') {
         updateEveryFrame = value;
     } else {
-        // @ts-ignore
         dirLight.light[pathArray[2]] = value;
     }
 });
@@ -214,12 +211,6 @@ let frameNumber = 0;
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
-
-    // On the first frame, when camera is updated, move it further away from the focus tree
-    if (frameNumber === 0) {
-        // @ts-ignore engine-tsd
-        camera.script.orbitCamera.distance = 470;
-    }
 
     if (updateEveryFrame) {
         // No per cascade rendering control

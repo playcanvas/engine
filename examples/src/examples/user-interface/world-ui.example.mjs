@@ -90,8 +90,8 @@ const MUTED = new Color(0.6, 0.64, 0.72);
  *
  * @param {string} name - The entity name.
  * @param {number[]} color - The color.
- * @param {number[]} position - The position of its center, in meters.
- * @param {number[]} size - Its size, in meters.
+ * @param {[number, number, number]} position - The position of its center, in meters.
+ * @param {[number, number, number]} size - Its size, in meters.
  * @returns {Entity} The entity.
  */
 const createBox = (name, color, position, size) => {

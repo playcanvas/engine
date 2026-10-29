@@ -218,8 +218,8 @@ describe('ComputePass', function () {
         const renderViews = (xrDevice, passes) => {
             const frameGraph = new FrameGraph();
             frameGraph.beginMultiView(xrDevice);
-            frameGraph.addRenderPass(new FramePass(xrDevice));
-            passes.forEach(pass => frameGraph.addRenderPass(pass));
+            frameGraph.addPass(new FramePass(xrDevice));
+            passes.forEach(pass => frameGraph.addPass(pass));
             frameGraph.endMultiView();
             frameGraph.render(xrDevice);
             return frameGraph;
@@ -266,7 +266,7 @@ describe('ComputePass', function () {
             const frameGraph = renderViews(xrDevice, [first, second]);
 
             // both are moved ahead of the passes rendering the views, in order
-            const [movedFirst, movedSecond, wrapper] = frameGraph.renderPasses;
+            const [movedFirst, movedSecond, wrapper] = frameGraph.passes;
             expect(movedFirst).to.equal(first);
             expect(movedSecond).to.equal(second);
             expect(wrapper.children).to.have.lengthOf(1);
@@ -295,9 +295,9 @@ describe('ComputePass', function () {
                 const frameGraph = new FrameGraph();
                 const before = new TargetPass(device, renderTarget);
                 const after = new TargetPass(device, renderTarget);
-                frameGraph.addRenderPass(before);
-                if (between) frameGraph.addRenderPass(between);
-                frameGraph.addRenderPass(after);
+                frameGraph.addPass(before);
+                if (between) frameGraph.addPass(between);
+                frameGraph.addPass(after);
                 frameGraph.compile();
                 return { before, after };
             };
@@ -325,7 +325,7 @@ describe('ComputePass', function () {
             app.render();
             expect(dispatch.calledWith([compute])).to.equal(true);
 
-            const passes = app.frameGraph.renderPasses;
+            const passes = app.frameGraph.passes;
             const lastForward = passes.findLastIndex(p => p instanceof RenderPassForward);
             expect(lastForward).to.be.at.least(0);
             expect(passes.indexOf(pass)).to.be.greaterThan(lastForward);
@@ -346,7 +346,7 @@ describe('ComputePass', function () {
             pass.destroy();
 
             const error = sinon.stub(console, 'error');
-            new FrameGraph().addRenderPass(pass);
+            new FrameGraph().addPass(pass);
             expect(error.callCount).to.equal(1);
         });
     });

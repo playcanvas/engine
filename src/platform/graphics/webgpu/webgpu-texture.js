@@ -562,7 +562,7 @@ class WebgpuTexture {
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
 
-    // upload a generic HTML element via the HTML-in-Canvas API (copyElementImageToTexture)
+    // upload a generic HTML element via the HTML-in-Canvas API
     uploadElementImage(device, element, mipLevel, index) {
 
         Debug.assert(mipLevel < this.desc.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`, this);
@@ -586,8 +586,13 @@ class WebgpuTexture {
 
         // scale the element's rendered image to the mip level's dimensions
         const source = { source: element };
-        const destination = { destination: dst, width, height };
-        device.wgpu.queue.copyElementImageToTexture(source, destination);
+        const queue = device.wgpu.queue;
+        if (queue.drawElementImageToTexture) {
+            queue.drawElementImageToTexture(source, { ...dst, size: { width, height } });
+        } else {
+            // Chrome 154 and earlier
+            queue.copyElementImageToTexture(source, { destination: dst, width, height });
+        }
     }
 
     uploadTypedArrayData(device, data, mipLevel, index) {

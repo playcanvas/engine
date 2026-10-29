@@ -315,9 +315,19 @@ export class Script extends EventHandler {
     static __getScriptName = getScriptName;
 
     /**
-     * Sets the unique name of the script.
+     * Sets the unique name of the script. A base class which other scripts extend, but which is
+     * not a script itself, sets it to `null`, so that it is not registered as a script when a
+     * script file exports it.
      *
      * @type {string|null}
+     * @example
+     * export class EffectScriptBase extends Script {
+     *     static scriptName = null;
+     * }
+     *
+     * export class TintEffectScript extends EffectScriptBase {
+     *     static scriptName = 'tintEffect';
+     * }
      */
     static set scriptName(value) {
         this.__name = value;
@@ -398,6 +408,26 @@ export function getScriptName(constructorFn) {
     if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
     const match = (`${constructorFn}`).match(funcNameRegex);
     return match ? match[1] : undefined;
+}
+
+/**
+ * Returns the name a script class declares itself: a `scriptName` defined on the class, or one
+ * assigned to it through the `scriptName` setter, which stores it as an own `__name` (this is also
+ * what a static `scriptName` field compiles to without define semantics for class fields). A name
+ * inherited from a base class is ignored.
+ *
+ * @param {Function} constructorFn - The constructor function of the script type.
+ * @returns {string|null|undefined} The declared name, null for a base class which declares that it
+ * is not a script itself, or undefined when the class declares no name.
+ */
+export function getDeclaredScriptName(constructorFn) {
+    if (Object.prototype.hasOwnProperty.call(constructorFn, 'scriptName')) {
+        return constructorFn.scriptName;
+    }
+    if (Object.prototype.hasOwnProperty.call(constructorFn, '__name')) {
+        return constructorFn.__name;
+    }
+    return undefined;
 }
 
 /**

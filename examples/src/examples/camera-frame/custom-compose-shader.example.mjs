@@ -42,16 +42,22 @@ import {
     TONEMAP_NEUTRAL,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     apartment: new Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
     love: new Asset('love', 'container', { url: './assets/models/love.glb' }),
     helipad: new Asset(
@@ -125,7 +131,9 @@ loveEntity.rotate(0, -90, 0);
 app.root.addChild(loveEntity);
 
 // Make the love sign emissive to bloom
-const loveMaterial = loveEntity.findByName('s.0009_Standard_FF00BB_0').render.meshInstances[0].material;
+const loveMaterial = /** @type {StandardMaterial} */ (
+    /** @type {Entity} */ (loveEntity.findByName('s.0009_Standard_FF00BB_0')).render.meshInstances[0].material
+);
 loveMaterial.emissive = Color.YELLOW;
 loveMaterial.emissiveIntensity = 200;
 loveMaterial.update();
@@ -133,7 +141,7 @@ loveMaterial.update();
 // Adjust all materials of the love sign to disable dynamic refraction
 loveEntity.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((meshInstance) => {
-        meshInstance.material.useDynamicRefraction = false;
+        /** @type {StandardMaterial} */ (meshInstance.material).useDynamicRefraction = false;
     });
 });
 
@@ -144,24 +152,18 @@ cameraEntity.addComponent('camera', {
     fov: 80
 });
 
-const focusPoint = new Entity();
-focusPoint.setLocalPosition(-80, 80, -20);
+cameraEntity.setLocalPosition(-50, 100, 220);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: focusPoint,
-        distanceMax: 500,
-        frameOnStart: false
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 500)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
-cameraEntity.setLocalPosition(-50, 100, 220);
-cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
 // ------ Custom compose effect ------

@@ -856,7 +856,7 @@ describe('FramePassCameraFrame', function () {
                 postrender.resetHistory();
                 app.render();
 
-                const passes = app.frameGraph.renderPasses;
+                const passes = app.frameGraph.passes;
                 const { scenePass, scenePassTransparent } = cameraFrame.renderPassCamera;
                 expect(scenePassTransparent).to.exist;
                 expect(passes.filter(pass => pass === before)).to.have.lengthOf(1);
@@ -900,6 +900,18 @@ describe('FramePassCameraFrame', function () {
             cameraFrame.update();
             expect(cameraFrame.renderPassCamera.colorGrabPass).to.not.exist;
             cameraFrame.removeEffect(effect);
+        });
+
+        it('gives the handle of the copy the size the scene renders at, not the size of the canvas', function () {
+            cameraFrame.rendering.sceneColorMap = true;
+            cameraFrame.rendering.renderTargetScale = 0.5;
+            cameraFrame.update();
+            app.render();
+
+            const handle = cameraFrame.cameraComponent.sceneColorMapHandle;
+            const { rt } = cameraFrame.renderPassCamera;
+            expect([handle.width, handle.height]).to.deep.equal([rt.width, rt.height]);
+            expect(handle.width).to.not.equal(app.graphicsDevice.width);
         });
 
         it('keeps the copy of the scene color the rendering options request', function () {

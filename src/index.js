@@ -206,6 +206,7 @@ export { DomeGeometry } from './scene/geometry/dome-geometry.js';
 export { Geometry } from './scene/geometry/geometry.js';
 export { BoxGeometry } from './scene/geometry/box-geometry.js';
 export { PlaneGeometry } from './scene/geometry/plane-geometry.js';
+export { RoundedBoxGeometry } from './scene/geometry/rounded-box-geometry.js';
 export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 

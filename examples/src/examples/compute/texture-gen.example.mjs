@@ -198,7 +198,7 @@ const createCubeInstance = (/** @type {Vec3} */ position) => {
     material.update();
 
     const solid = assets.solid.resource.instantiateRenderEntity();
-    solid.findByName('Object_3').render.meshInstances[0].material = material;
+    /** @type {Entity} */ (solid.findByName('Object_3')).render.meshInstances[0].material = material;
 
     // Add the script to rotate the object
     solid.addComponent('script');
@@ -239,8 +239,8 @@ app.on('update', (/** @type {number} */ dt) => {
         device.computeDispatch([compute1, compute2], 'ComputeModifyTextureDispatch');
 
         // debug render the generated textures
-        textures.draw(compute1.getParameter('outTexture'), 0.65, 0.175, 0.3, 0.15);
-        textures.draw(compute2.getParameter('outTexture'), 0.65, 0.675, 0.3, 0.15);
+        textures.draw(/** @type {Texture} */ (compute1.getParameter('outTexture')), 0.65, 0.175, 0.3, 0.15);
+        textures.draw(/** @type {Texture} */ (compute2.getParameter('outTexture')), 0.65, 0.675, 0.3, 0.15);
     }
 });
 

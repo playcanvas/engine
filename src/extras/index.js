@@ -37,7 +37,8 @@ export {
     FRAMERESOURCE_SCENETARGET
 } from './render-passes/constants.js';
 export { CameraFrame } from './render-passes/camera-frame.js';
-export { CameraFrameEffect } from './render-passes/camera-frame-effect.js';
+// export * rather than the class alone, so the effect's typedefs reach the type declarations
+export * from './render-passes/camera-frame-effect.js';
 export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
 export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';

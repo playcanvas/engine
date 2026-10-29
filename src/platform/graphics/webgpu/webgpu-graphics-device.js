@@ -449,6 +449,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         super.destroy();
 
+        // Released after the destroy event, so a listener reaching the lazy getters cannot
+        // allocate them again. A device supplied by the host would otherwise keep them alive.
+        this._indirectDrawBuffer?.destroy();
+        this._indirectDrawBuffer = null;
+        this._indirectDispatchBuffer?.destroy();
+        this._indirectDispatchBuffer = null;
+
         // Destroy listeners can enqueue more resources, and no further submit will drain them.
         this.destroyDeferredResources();
         this.clearDeviceState();
@@ -790,8 +797,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } features [${this.initOptions.featureLevel === 'bare' ? 'bare' : 'full'}]: ${enabledFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
         );
 
-        // HTML-in-Canvas support (copyElementImageToTexture)
-        this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
+        // HTML-in-Canvas support (drawElementImageToTexture, or copyElementImageToTexture before
+        // Chrome 155)
+        const queue = this.wgpu.queue;
+        this.supportsHtmlTextures = typeof queue?.drawElementImageToTexture === 'function' ||
+            typeof queue?.copyElementImageToTexture === 'function';
 
         // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
         this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;

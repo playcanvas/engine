@@ -35,6 +35,7 @@ import {
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -43,7 +44,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     rocks: new Asset('rocks', 'texture', { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' }, { srgb: true })
 };
 
@@ -273,23 +273,16 @@ cameraEntity.addComponent('camera', {
 });
 cameraEntity.setLocalPosition(2, 4, 22);
 
-// Add orbit camera script with a mouse and a touch support
-const focusPoint = new Entity('Focus');
-focusPoint.setLocalPosition(0, 3, 0);
-app.root.addChild(focusPoint);
-
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: focusPoint,
-        distanceMax: 60,
-        distanceMin: 2,
-        frameOnStart: false
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(2, 60)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
 app.root.addChild(cameraEntity);
 
 // ------ Lens flares ------

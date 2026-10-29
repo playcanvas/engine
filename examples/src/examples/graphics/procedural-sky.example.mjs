@@ -53,6 +53,10 @@ import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -121,7 +125,7 @@ laboratoryEntity.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((meshInstance) => {
         meshInstance.material.depthState = DepthState.DEFAULT;
         meshInstance.material.blendType = BLEND_NONE;
-        meshInstance.material.aoMap = null;
+        /** @type {StandardMaterial} */ (meshInstance.material).aoMap = null;
         meshInstance.material.update();
     });
 });
@@ -133,7 +137,7 @@ const torchLights = [];
 laboratoryEntity
     .find((node) => node.name.indexOf('Fackel') !== -1)
     .forEach((torch) => {
-        const render = torch.findComponent('render');
+        const render = /** @type {Entity} */ (torch).findComponent('render');
         if (!render) return;
 
         const light = new Entity('Torch');
@@ -180,7 +184,7 @@ terrain.setLocalPosition(-tc.x * terrainScale - 71.6, groundLevel - terrainTop +
 const dimmedTerrainMaterials = new Set();
 terrain.findComponents('render').forEach((render) => {
     render.meshInstances.forEach((mi) => {
-        const material = mi.material;
+        const material = /** @type {StandardMaterial} */ (mi.material);
         if (dimmedTerrainMaterials.has(material)) return;
         dimmedTerrainMaterials.add(material);
         material.diffuse.set(material.diffuse.r * 0.5, material.diffuse.g * 0.5, material.diffuse.b * 0.5);

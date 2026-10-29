@@ -216,6 +216,14 @@ class GSplatParams {
      * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
      * can be queried via {@link currentRenderer}.
      *
+     * GPU-side sorting also falls back to {@link GSPLAT_RENDERER_RASTER_CPU_SORT} when the splats a
+     * camera renders on a layer need larger storage buffers than the device can bind - past about
+     * 4 million splats at the 128 MiB `maxStorageBufferBindingSize` WebGPU guarantees, which some
+     * devices are limited to. The fallback applies to that camera and layer, and stays in place
+     * while the camera renders splats on the layer, also when their number drops again. It ends
+     * once the layer has no splats left or the camera stops rendering the layer, and splats added
+     * after that start on GPU-side sorting again.
+     *
      * @type {number}
      */
     set renderer(value) {
@@ -243,7 +251,8 @@ class GSplatParams {
     /**
      * The current rendering pipeline in effect after platform-based fallback resolution. When
      * {@link renderer} is set to a mode requiring WebGPU on a WebGL device, this returns the
-     * fallback mode actually being used.
+     * fallback mode actually being used. It does not reflect the per camera fallback to CPU-side
+     * sorting when the splats exceed the device's storage buffer limits, see {@link renderer}.
      *
      * @type {number}
      */

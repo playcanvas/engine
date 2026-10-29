@@ -61,6 +61,23 @@ class GpuProfiler {
     _passTimings = new Map();
 
     /**
+     * The timed passes of the frame the latest timings describe, in the order they ran: their
+     * names, as {@link passTimings} names them, and their timings, passes sharing a name kept
+     * apart. Rewritten in place as timings arrive, so a frame makes no garbage.
+     *
+     * @type {{ names: string[], times: number[] }}
+     * @private
+     */
+    _passTimingsInOrder = { names: [], times: [] };
+
+    /**
+     * The {@link GraphicsDevice#renderVersion} of the frame the latest timings describe, or -1.
+     *
+     * @private
+     */
+    _renderVersion = -1;
+
+    /**
      * Cache for parsed pass names to avoid repeated string operations.
      *
      * @type {Map<string, string>}
@@ -86,8 +103,11 @@ class GpuProfiler {
     invalidateTimings() {
         this._frameTime = 0;
         this._frameTimeValid = false;
+        this._renderVersion = -1;
         this.pastFrameAllocations.clear();
         this._passTimings.clear();
+        this._passTimingsInOrder.names.length = 0;
+        this._passTimingsInOrder.times.length = 0;
     }
 
     /**
@@ -124,6 +144,32 @@ class GpuProfiler {
      */
     get passTimings() {
         return this._passTimings;
+    }
+
+    /**
+     * The timed passes of the frame {@link renderVersion} names, in the order they ran: the name
+     * of each, as {@link passTimings} names it, and its GPU time in milliseconds. Unlike
+     * {@link passTimings}, passes sharing a name, such as the steps of a blur, stay apart. Both
+     * lists are empty while no timings have arrived, and are reused as timings arrive.
+     *
+     * @type {{ names: readonly string[], times: readonly number[] }}
+     * @ignore
+     */
+    get passTimingsInOrder() {
+        return this._passTimingsInOrder;
+    }
+
+    /**
+     * The {@link GraphicsDevice#renderVersion} of the frame that {@link frameTime} and
+     * {@link passTimings} describe, or -1 when no timings have arrived. Timings resolve
+     * asynchronously, so this is usually a few frames behind the device, and not every frame
+     * reports.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get renderVersion() {
+        return this._renderVersion;
     }
 
     processEnableRequest() {
@@ -171,6 +217,7 @@ class GpuProfiler {
                 return;
             }
             Debug.assert(allocations.length === timings.length);
+            this._renderVersion = renderVersion;
 
             // Store frame duration. When the caller supplies an explicit frameTime (the WebGPU
             // profiler passes the span from the first begin to the last end timestamp), use it -
@@ -184,6 +231,7 @@ class GpuProfiler {
 
             // clear old pass timings
             this._passTimings.clear();
+            const { names, times } = this._passTimingsInOrder;
 
             // accumulate per-pass timings
             for (let i = 0; i < allocations.length; ++i) {
@@ -193,6 +241,15 @@ class GpuProfiler {
 
                 // accumulate timings for passes with the same name
                 this._passTimings.set(parsedName, (this._passTimings.get(parsedName) || 0) + timing);
+
+                // and keep each pass apart, in the order they ran. Written in place rather than
+                // emptied and pushed to, as emptying an array frees its storage
+                names[i] = parsedName;
+                times[i] = timing;
+            }
+            if (names.length !== allocations.length) {
+                names.length = allocations.length;
+                times.length = allocations.length;
             }
 
             // log out timings

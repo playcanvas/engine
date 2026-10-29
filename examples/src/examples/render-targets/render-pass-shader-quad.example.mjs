@@ -43,11 +43,13 @@ import {
     TextureHandler,
     TextureRenderer,
     TouchDevice,
+    Vec2,
     Vec3,
     Vec4,
     createGraphicsDevice,
     math
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -159,7 +161,6 @@ class RenderPassBrush extends RenderPassShaderQuad {
 }
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     studio: new Asset(
         'studio-env-atlas',
         'texture',
@@ -310,18 +311,17 @@ camera.addComponent('camera', {
     toneMapping: TONEMAP_NEUTRAL,
     farClip: 100
 });
+camera.setLocalPosition(0.85, 1.25, 5.08);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 2.5,
-        distanceMax: 12
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(2.5, 12)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
-camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(0.85, 1.25, 5.08), Vec3.ZERO);
 
 // ------ The brushes ------
 

@@ -22,12 +22,12 @@ import { Asset } from './asset.js';
  */
 
 /**
- * @template {AssetType | (string & {})} [K=string]
+ * @template {AssetType | (string & {})} [Type=string]
  * @callback LoadAssetCallback
  * Callback used by {@link AssetRegistry#loadFromUrl} and called when an asset is loaded (or an
  * error occurs).
  * @param {string|null} err - The error message is null if no errors were encountered.
- * @param {Asset<K>} [asset] - The loaded asset if no errors were encountered. Its type follows the
+ * @param {Asset<Type>} [asset] - The loaded asset if no errors were encountered. Its type follows the
  * `type` passed to {@link AssetRegistry#loadFromUrl}.
  * @returns {void}
  */
@@ -589,10 +589,10 @@ class AssetRegistry extends EventHandler {
      * An asset already registered for the URL is reused, whatever its type, so load a URL as one
      * type only; otherwise the callback can receive an asset of another type than requested.
      *
-     * @template {AssetType | (string & {})} K
+     * @template {AssetType | (string & {})} Type
      * @param {string} url - The url to load.
-     * @param {K} type - The type of asset to load (an {@link AssetType}).
-     * @param {LoadAssetCallback<K>} callback - Function called when asset is loaded, passed (err,
+     * @param {Type} type - The type of asset to load (an {@link AssetType}).
+     * @param {LoadAssetCallback<Type>} callback - Function called when asset is loaded, passed (err,
      * asset), where err is null if no errors were encountered.
      * @example
      * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
@@ -608,11 +608,11 @@ class AssetRegistry extends EventHandler {
      * example, use this function when loading BLOB assets, where the URL does not adequately
      * identify the file.
      *
-     * @template {AssetType | (string & {})} K
+     * @template {AssetType | (string & {})} Type
      * @param {string} url - The url to load.
      * @param {string} filename - The filename of the asset to load.
-     * @param {K} type - The type of asset to load (an {@link AssetType}).
-     * @param {LoadAssetCallback<K>} callback - Function called when asset is loaded, passed (err,
+     * @param {Type} type - The type of asset to load (an {@link AssetType}).
+     * @param {LoadAssetCallback<Type>} callback - Function called when asset is loaded, passed (err,
      * asset), where err is null if no errors were encountered.
      * @example
      * const file = magicallyObtainAFile();
@@ -630,7 +630,7 @@ class AssetRegistry extends EventHandler {
 
         // the URL index holds one asset per URL regardless of type, so this hands back whichever
         // asset is registered for the URL; indexing by URL and type is tracked in #8489
-        let asset = /** @type {Asset<K> | undefined} */ (this.getByUrl(url));
+        let asset = /** @type {Asset<Type> | undefined} */ (this.getByUrl(url));
         if (!asset) {
             asset = new Asset(name, type, file);
             this.add(asset);
@@ -839,11 +839,11 @@ class AssetRegistry extends EventHandler {
      * The `type` also types the result: `find('brick', 'texture')` returns
      * `Asset<'texture'> | null`, whose `resource` is a {@link Texture}. See {@link AssetMap}.
      *
-     * @template {AssetType | (string & {})} K
+     * @template {AssetType | (string & {})} Type
      * @overload
      * @param {string} name - The name of the Asset to find.
-     * @param {K} type - The type of the Asset to find (an {@link AssetType}).
-     * @returns {Asset<K>|null} A single Asset or null if no Asset is found.
+     * @param {Type} type - The type of the Asset to find (an {@link AssetType}).
+     * @returns {Asset<Type>|null} A single Asset or null if no Asset is found.
      * @example
      * const asset = app.assets.find("myTextureAsset", "texture");
      * if (asset) {
@@ -885,11 +885,11 @@ class AssetRegistry extends EventHandler {
      * The `type` also types the result, as for {@link AssetRegistry#find}:
      * `findAll('brick', 'texture')` returns `Asset<'texture'>[]`.
      *
-     * @template {AssetType | (string & {})} K
+     * @template {AssetType | (string & {})} Type
      * @overload
      * @param {string} name - The name of the Assets to find.
-     * @param {K} type - The type of the Assets to find (an {@link AssetType}).
-     * @returns {Asset<K>[]} A list of all Assets found.
+     * @param {Type} type - The type of the Assets to find (an {@link AssetType}).
+     * @returns {Asset<Type>[]} A list of all Assets found.
      * @example
      * const assets = app.assets.findAll('brick', 'texture');
      * console.log(`Found ${assets.length} texture assets named 'brick'`);

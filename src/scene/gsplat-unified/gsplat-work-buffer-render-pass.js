@@ -14,7 +14,6 @@ import { lodDebugColorIndex } from './gsplat-lod-colors.js';
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
  * @import { GraphNode } from '../graph-node.js'
- * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
  */
 
@@ -103,17 +102,6 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         this.splats.length = 0;
         this._subDrawTexture.destroy();
         super.destroy();
-    }
-
-    /**
-     * Initialize the render pass with the specified render target.
-     *
-     * @param {RenderTarget} renderTarget - The target to render to.
-     */
-    init(renderTarget) {
-        super.init(renderTarget);
-        this.colorOps.clear = false;
-        this.depthStencilOps.clearDepth = false;
     }
 
     /**

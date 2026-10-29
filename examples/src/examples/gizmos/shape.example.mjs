@@ -125,7 +125,7 @@ const show = (/** @type {string} */ type) => {
         gizmos[name].enabled = name === type;
     }
 };
-show('box');
+show('capsule');
 
 for (const key in gizmos) {
     const gizmo = gizmos[key];
@@ -141,7 +141,7 @@ for (const key in gizmos) {
 
 const settings = gizmos.box;
 data.set('shape', {
-    type: 'box'
+    type: 'capsule'
 });
 data.set('gizmo', {
     theme: {
@@ -182,6 +182,9 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             switch (key) {
                 case 'proj': {
                     camera.camera.projection = value - 1;
+
+                    // orthographic views have no depth cue, so keep what lies behind the camera visible
+                    camera.camera.nearClip = value - 1 === PROJECTION_PERSPECTIVE ? 0.1 : -camera.camera.farClip;
                     break;
                 }
                 case 'fov': {
@@ -196,7 +199,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             break;
         }
         case 'box': {
-            // @ts-ignore
             gizmos.box[key] = value;
             break;
         }
@@ -210,7 +212,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     continue;
                 }
 
-                // @ts-ignore
                 gizmo[key] = value;
             }
             break;

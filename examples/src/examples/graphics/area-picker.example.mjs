@@ -35,6 +35,10 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -126,7 +130,7 @@ const picker = new Picker(app, canvas.clientWidth * pickerScale, canvas.clientHe
 /**
  * Helper function to create a primitive with shape type, position, scale.
  *
- * @param {string} primitiveType - The primitive type.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @returns {Entity} The returned entity.
@@ -178,6 +182,9 @@ const stopAutoRotate = () => {
 data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
     camera.camera.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
     camera.camera.orthoHeight = 15;
+
+    // orthographic views have no depth cue, so keep what lies behind the camera visible
+    camera.camera.nearClip = value ? -camera.camera.farClip : 0.1;
 });
 
 // ------ Custom render passes with bloom ------
@@ -341,8 +348,7 @@ app.on('update', (/** @type {number} */ dt) => {
 
             for (let s = 0; s < meshInstances.length; s++) {
                 if (meshInstances[s]) {
-                    /** @type {StandardMaterial} */
-                    const material = meshInstances[s].material;
+                    const material = /** @type {StandardMaterial} */ (meshInstances[s].material);
                     highlightMaterial(material, areas[i].color);
                     highlights.push(material);
                 }
@@ -367,11 +373,13 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // Display the picker's buffers side by side in the bottom right corner
     // color buffer (left) and depth buffer (right), with equal margins from edges
-    if (picker.colorBuffer) {
-        textures.draw(picker.colorBuffer, 0.725, 0.835, 0.1, 0.1);
+    // @ts-expect-error the picker's buffers are internal, read here only to display them
+    const { colorBuffer, depthBuffer } = picker;
+    if (colorBuffer) {
+        textures.draw(colorBuffer, 0.725, 0.835, 0.1, 0.1);
     }
 
-    if (picker.depthBuffer) {
-        textures.draw(picker.depthBuffer, 0.835, 0.835, 0.1, 0.1);
+    if (depthBuffer) {
+        textures.draw(depthBuffer, 0.835, 0.835, 0.1, 0.1);
     }
 });

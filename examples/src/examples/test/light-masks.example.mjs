@@ -30,7 +30,6 @@
 import {
     AppBase,
     AppOptions,
-    Asset,
     AssetListLoader,
     BAKE_COLOR,
     CameraComponentSystem,
@@ -47,18 +46,22 @@ import {
     ScriptHandler,
     StandardMaterial,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
-};
+const assets = {};
 
 const gfxOptions = {
     deviceTypes: [deviceType]
@@ -124,6 +127,7 @@ ground.setLocalScale(13, 1, 13);
 
 // Two rows of otherwise identical objects, differing only in whether they are lightmapped. The
 // back row takes the lightmap (and so MASK_AFFECT_LIGHTMAPPED), the front row stays dynamic.
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'sphere', 'capsule', 'cone', 'cylinder'];
 const rowSpacing = 2.4;
 
@@ -247,18 +251,16 @@ camera.addComponent('camera', {
     farClip: 100,
     nearClip: 0.05
 });
-camera.setLocalPosition(0, 5, 12);
+camera.setLocalPosition(0, 9.8, 23.52);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 40,
-        focusEntity: ground,
-        pivotPoint: new Vec3(0, 0.5, 0)
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 40)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // lightmap baking properties

@@ -327,6 +327,24 @@ describe('Camera', function () {
             second.destroy();
         });
 
+        it('gives the size of the depth map published most recently, and 0 before one is', function () {
+            const camera = new Camera(app.graphicsDevice);
+            const handle = camera.sceneDepthMapHandle;
+            expect([handle.width, handle.height]).to.deep.equal([0, 0]);
+
+            const first = new Texture(app.graphicsDevice, { width: 4, height: 2 });
+            const second = new Texture(app.graphicsDevice, { width: 8, height: 6 });
+
+            camera.publishSceneDepthMap(first, 3, true, false, false);
+            expect([handle.width, handle.height]).to.deep.equal([4, 2]);
+
+            camera.publishSceneDepthMap(second, 4, true, false, false);
+            expect([handle.width, handle.height]).to.deep.equal([8, 6]);
+
+            first.destroy();
+            second.destroy();
+        });
+
         it('sets the global uniform, which the static helper can clear', function () {
             const camera = new Camera(app.graphicsDevice);
             const texture = new Texture(app.graphicsDevice, { width: 4, height: 4 });
@@ -411,6 +429,24 @@ describe('Camera', function () {
             expect(handle.gamma).to.equal(false);
 
             texture.destroy();
+        });
+
+        it('gives the size of the color map published most recently, and 0 before one is', function () {
+            const camera = new Camera(app.graphicsDevice);
+            const handle = camera.sceneColorMapHandle;
+            expect([handle.width, handle.height]).to.deep.equal([0, 0]);
+
+            const first = new Texture(app.graphicsDevice, { width: 4, height: 2 });
+            const second = new Texture(app.graphicsDevice, { width: 8, height: 6 });
+
+            camera.publishSceneColorMap(first, true);
+            expect([handle.width, handle.height]).to.deep.equal([4, 2]);
+
+            camera.publishSceneColorMap(second, true);
+            expect([handle.width, handle.height]).to.deep.equal([8, 6]);
+
+            first.destroy();
+            second.destroy();
         });
 
         it('sets the global uniform, which the static helper can clear', function () {

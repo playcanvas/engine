@@ -253,18 +253,18 @@ const math = {
      *
      * See https://en.wikipedia.org/wiki/Smoothstep for more details.
      *
-     * @param {number} min - The lower bound of the interpolation range.
-     * @param {number} max - The upper bound of the interpolation range.
+     * @param {number} min - The value of x at which the result is 0. Can be greater than max for a
+     * falling ramp.
+     * @param {number} max - The value of x at which the result is 1.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
      * @example
      * math.smoothstep(0, 10, 5); // returns 0.5
      */
     smoothstep(min, max, x) {
-        if (x <= min) return 0;
-        if (x >= max) return 1;
+        if (min === max) return x <= min ? 0 : 1;
 
-        x = (x - min) / (max - min);
+        x = math.clamp((x - min) / (max - min), 0, 1);
 
         return x * x * (3 - 2 * x);
     },
@@ -275,18 +275,18 @@ const math = {
      *
      * See https://en.wikipedia.org/wiki/Smoothstep#Variations for more details.
      *
-     * @param {number} min - The lower bound of the interpolation range.
-     * @param {number} max - The upper bound of the interpolation range.
+     * @param {number} min - The value of x at which the result is 0. Can be greater than max for a
+     * falling ramp.
+     * @param {number} max - The value of x at which the result is 1.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
      * @example
      * math.smootherstep(0, 10, 5); // returns 0.5
      */
     smootherstep(min, max, x) {
-        if (x <= min) return 0;
-        if (x >= max) return 1;
+        if (min === max) return x <= min ? 0 : 1;
 
-        x = (x - min) / (max - min);
+        x = math.clamp((x - min) / (max - min), 0, 1);
 
         return x * x * x * (x * (x * 6 - 15) + 10);
     },

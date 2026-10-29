@@ -75,7 +75,7 @@ await new Promise((resolve) => {
 app.start();
 
 // The localization data is already here, so it is added directly rather than loaded
-app.i18n.addData(localization);
+app.i18n.addData(/** @type {object} */ (localization));
 
 const ORANGE = new Color(1, 0.55, 0.2);
 const LIGHT = new Color(0.95, 0.96, 0.98);

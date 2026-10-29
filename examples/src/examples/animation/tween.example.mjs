@@ -24,6 +24,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -123,7 +127,7 @@ for (let i = 0; i < easingFunctions.length; i++) {
     sphere.addComponent('render', {
         type: 'sphere'
     });
-    const material = sphere.render.material;
+    const material = /** @type {StandardMaterial} */ (sphere.render.material);
     material.diffuse.set(1, 0, 0);
     material.specular.set(0.6, 0.6, 0.6);
     material.gloss = 0.2;

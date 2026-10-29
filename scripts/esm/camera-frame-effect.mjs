@@ -35,6 +35,9 @@ import { CameraFrame as CameraFrameScript } from './camera-frame.mjs';
  * @category Post-Processing
  */
 class CameraFrameEffectScript extends Script {
+    // a base class, not a script itself: the scripts extending it declare their own name
+    static scriptName = null;
+
     /**
      * The effect this script drives, created in `initialize`.
      *

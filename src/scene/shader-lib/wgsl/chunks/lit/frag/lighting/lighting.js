@@ -50,6 +50,7 @@ export default /* wgsl */`
 #endif
 
 #if defined(SHADOW_KIND_VSM)
+    #include "shadowEVSMExponentPS"
     #include "shadowEVSMPS"
 #endif
 

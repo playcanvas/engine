@@ -105,12 +105,12 @@ describe('Local shadow cull requests', function () {
                     it(`keeps THISFRAME pending when the shadow pass has ${property} disabled`, function () {
                         // disable the shadow pass as it is added to the frame, before its frameUpdate
                         const ShadowPass = clustered ? RenderPassShadowLocalClustered : RenderPassShadowLocalNonClustered;
-                        const addRenderPass = FrameGraph.prototype.addRenderPass;
-                        sinon.stub(FrameGraph.prototype, 'addRenderPass').callsFake(function (pass) {
+                        const addPass = FrameGraph.prototype.addPass;
+                        sinon.stub(FrameGraph.prototype, 'addPass').callsFake(function (pass) {
                             if (pass instanceof ShadowPass) {
                                 pass[property] = false;
                             }
-                            addRenderPass.call(this, pass);
+                            addPass.call(this, pass);
                         });
                         light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                         app.render();

@@ -240,7 +240,7 @@ const choose = (/** @type {Entity|null} */ slot) => {
     const lines = item ? [item.name, ...item.stats] : ['Tap an item'];
     rows.forEach((row, i) => {
         row.enabled = i < lines.length;
-        row.findByName('text').element.text = lines[i] ?? '';
+        /** @type {Entity} */ (row.findByName('text')).element.text = lines[i] ?? '';
     });
     if (slot) {
         slot.findByName('ring').enabled = true;
@@ -260,7 +260,7 @@ const add = (/** @type {string} */ kind) => {
 };
 // The bag starts with the first five kinds of item
 kinds.slice(0, 5).forEach(add);
-choose(grid.children[0]);
+choose(/** @type {Entity} */ (grid.children[0]));
 
 // Loot adds the next kind of item. Sort adds the slots again in the order of their names, which is
 // the order the grid follows. Drop removes the chosen item

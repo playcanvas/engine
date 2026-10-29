@@ -1,6 +1,7 @@
 import { QuadRender } from './quad-render.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { CULLFACE_NONE, FRONTFACE_CCW } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
@@ -44,6 +45,14 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
  * it against the depth or the stencil of the render target, set a
  * {@link RenderPassShaderQuad#depthState} or the stencil parameters. To draw into a part of the
  * render target only, set its {@link RenderPassShaderQuad#viewport}.
+ *
+ * ## Drawing several quads
+ *
+ * To draw many quads which differ only by the data each reads for its index, such as sprites, set
+ * {@link RenderPassShaderQuad#numInstances} to draw them in a single instanced draw. To draw
+ * several quads with different parameters, for example one for each light, override
+ * {@link FramePass#execute}, and for each quad set its parameters, or its viewport, and call
+ * `super.execute()`, which draws it with the render states of the pass.
  *
  * @example
  * ```javascript
@@ -194,6 +203,17 @@ class RenderPassShaderQuad extends RenderPass {
     scissor;
 
     /**
+     * The number of instances of the quad to draw, using instanced drawing, or undefined to draw a
+     * single quad without instancing. Each instance can read its index, `gl_InstanceID` in GLSL
+     * and `pcInstanceIndex` in WGSL, to fetch the data of its quad, for example to place it. Zero
+     * draws nothing, while the pass still renders, so it still clears its render target.
+     * Defaults to undefined.
+     *
+     * @type {number|undefined}
+     */
+    numInstances;
+
+    /**
      * Sets the shader used to render the quad, or null to render nothing. The vertex shader
      * receives the quad corners in an attribute using {@link SEMANTIC_POSITION}, and the `quadVS`
      * shader chunk can be used for it.
@@ -201,6 +221,11 @@ class RenderPassShaderQuad extends RenderPass {
      * @type {Shader|null}
      */
     set shader(shader) {
+
+        // keep the quad of the shader, as a pass rendering repeatedly can set it each time
+        if (shader === this._shader) {
+            return;
+        }
 
         // destroy old
         this.quadRender?.destroy();
@@ -232,11 +257,18 @@ class RenderPassShaderQuad extends RenderPass {
     }
 
     execute() {
+        const device = this.device;
 
         // render state
-        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
+        device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
 
-        this.quadRender?.render(this.viewport, this.scissor);
+        // zero instances draws nothing - the device would draw a single quad without instancing
+        const quadRender = this.quadRender;
+        if (quadRender && this.numInstances !== 0) {
+            DebugGraphics.pushGpuMarker(device, `${this.name}:${this._shader?.name}`);
+            quadRender.render(this.viewport, this.scissor, this.numInstances);
+            DebugGraphics.popGpuMarker(device);
+        }
     }
 }
 

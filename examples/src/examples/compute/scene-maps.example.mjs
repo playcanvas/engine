@@ -51,11 +51,13 @@ import {
     Texture,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     WasmModule,
     createGraphicsDevice,
     math
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -75,7 +77,6 @@ const assets = {
     laboratory: new Asset('laboratory', 'container', { url: './assets/models/laboratory.glb' }),
     bitmoji: new Asset('bitmoji', 'container', { url: './assets/models/bitmoji.glb' }),
     walk: new Asset('walk', 'container', { url: './assets/animations/bitmoji/walk.glb' }),
-    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -152,7 +153,7 @@ torches.forEach((torch) => {
         intensity: 3,
         range: 100
     });
-    light.setLocalPosition(torch.children[0].render.meshInstances[0].aabb.center);
+    light.setLocalPosition(/** @type {Entity} */ (torch.children[0]).render.meshInstances[0].aabb.center);
     app.root.addChild(light);
 });
 
@@ -223,17 +224,17 @@ cameraEntity.addComponent('camera', {
     farClip: 600,
     toneMapping: TONEMAP_NEUTRAL
 });
+cameraEntity.setLocalPosition(-233.33, 116.67, 233.33);
+
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: laboratoryEntity,
-        distanceMax: 350
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 350)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-cameraEntity.setLocalPosition(-60, 30, 60);
 app.root.addChild(cameraEntity);
 
 // The camera renders its scene maps either with the forward renderer, which renders them on request,

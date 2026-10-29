@@ -51,6 +51,60 @@ describe('RenderPassShaderQuad', function () {
             expect(pass.quadRender).to.equal(null);
         });
 
+        it('keeps the quad when the same shader is set again', function () {
+            const device = app.graphicsDevice;
+            const pass = new RenderPassShaderQuad(device);
+            const shader = createShader(device);
+
+            pass.shader = shader;
+            const quadRender = pass.quadRender;
+            const quadDestroy = sinon.spy(quadRender, 'destroy');
+
+            pass.shader = shader;
+            expect(pass.quadRender).to.equal(quadRender);
+            expect(quadDestroy.called).to.equal(false);
+
+            pass.destroy();
+        });
+
+    });
+
+    describe('#numInstances', function () {
+
+        it('draws a single quad by default, and the instances when set', function () {
+            const device = app.graphicsDevice;
+            const pass = new RenderPassShaderQuad(device);
+            pass.shader = createShader(device);
+            const render = sinon.stub(pass.quadRender, 'render');
+
+            expect(pass.numInstances).to.equal(undefined);
+            pass.execute();
+            expect(render.lastCall.args[2]).to.equal(undefined);
+
+            pass.numInstances = 5;
+            pass.execute();
+            expect(render.lastCall.args[2]).to.equal(5);
+
+            pass.destroy();
+        });
+
+        it('draws nothing for zero instances', function () {
+            const device = app.graphicsDevice;
+            const pass = new RenderPassShaderQuad(device);
+            pass.shader = createShader(device);
+            const render = sinon.stub(pass.quadRender, 'render');
+
+            pass.numInstances = 0;
+            pass.execute();
+            expect(render.called).to.equal(false);
+
+            pass.numInstances = undefined;
+            pass.execute();
+            expect(render.calledOnce).to.equal(true);
+
+            pass.destroy();
+        });
+
     });
 
     describe('#destroy', function () {

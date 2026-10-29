@@ -579,7 +579,6 @@ applySplatBudgetMode();
 data.on('splatBudgetMode:set', applySplatBudgetMode);
 
 const applyLodDistanceShrink = () => {
-    // @ts-ignore - experimental, not part of the public API
     app.scene.gsplat.lodDistanceShrink = data.get('lodDistanceShrink');
 };
 applyLodDistanceShrink();

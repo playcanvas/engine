@@ -43,7 +43,7 @@ describe('Camera passes', function () {
     // the passes the frame rendered
     const renderFrame = () => {
         app.render();
-        return app.frameGraph.renderPasses;
+        return app.frameGraph.passes;
     };
 
     // whether the pass renders the camera
@@ -172,7 +172,7 @@ describe('Camera passes', function () {
             const before = createPass('Before');
             first.beforePasses.push(before);
 
-            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
+            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene, first);
             scenePass.init(null);
             scenePass.addLayer(app.scene.layers.getLayerByName('World'), false);
             scenePass.enabled = false;
@@ -208,7 +208,7 @@ describe('Camera passes', function () {
             const cameraBefore = createPass('CameraBefore');
             first.beforePasses.push(cameraBefore);
 
-            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
+            const scenePass = new RenderPassForward(app.graphicsDevice, app.scene, first);
             scenePass.init(null);
             scenePass.addLayer(app.scene.layers.getLayerByName('World'), false);
             const own = createPass('Own');
@@ -234,10 +234,10 @@ describe('Camera passes', function () {
             first.beforePasses.push(before);
 
             const world = app.scene.layers.getLayerByName('World');
-            const opaquePass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
+            const opaquePass = new RenderPassForward(app.graphicsDevice, app.scene, first);
             opaquePass.init(null);
             opaquePass.addLayer(world, false);
-            const transparentPass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, first);
+            const transparentPass = new RenderPassForward(app.graphicsDevice, app.scene, first);
             transparentPass.init(null);
             transparentPass.addLayer(world, true, false);
             first.framePasses = [opaquePass, transparentPass];
@@ -278,7 +278,7 @@ describe('Camera passes', function () {
             // the second camera renders into a texture the first one could use, before it, sharing
             // the shadow map of the light
             const createScenePass = (camera, renderTarget) => {
-                const pass = new RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer, camera);
+                const pass = new RenderPassForward(app.graphicsDevice, app.scene, camera);
                 pass.init(renderTarget);
                 pass.addLayer(app.scene.layers.getLayerByName('World'), false);
                 return pass;

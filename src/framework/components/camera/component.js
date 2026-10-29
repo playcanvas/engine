@@ -228,12 +228,13 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the frame passes the camera uses for rendering, instead of its default rendering.
-     * Set this to null to return to the default behavior. The camera does not destroy the passes:
-     * whoever adds a pass removes it from the list, and destroys it.
+     * Sets the frame passes the camera uses for rendering, instead of its default rendering. They
+     * execute in the order of the array, and a {@link RenderPassForward} among them renders layers
+     * of the scene with the camera, see its example. Set this to null to return to the default
+     * behavior. The camera does not destroy the passes: whoever adds a pass removes it from the
+     * list, and destroys it.
      *
-     * @type {FramePass[]|null}
-     * @ignore
+     * @param {FramePass[]|null} passes - The frame passes, or null for the default behavior.
      */
     set framePasses(passes) {
         this._camera.framePasses = passes || [];
@@ -245,7 +246,6 @@ class CameraComponent extends Component {
      * Gets the frame passes the camera uses for rendering, instead of its default rendering.
      *
      * @type {FramePass[]}
-     * @ignore
      */
     get framePasses() {
         return this._camera.framePasses;
@@ -1285,6 +1285,13 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 2D screen space to 3D world space.
      *
+     * Screen space is measured in CSS pixels of the application's canvas element, the units of
+     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
+     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
+     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
+     * `display: none`, or not laid out yet - measures zero, and the returned coordinate is then not
+     * finite.
+     *
      * @param {number} screenx - X coordinate on PlayCanvas' canvas element. Should be in the range
      * 0 to `canvas.offsetWidth` of the application's canvas element.
      * @param {number} screeny - Y coordinate on PlayCanvas' canvas element. Should be in the range
@@ -1312,6 +1319,12 @@ class CameraComponent extends Component {
 
     /**
      * Convert a point from 3D world space to 2D screen space.
+     *
+     * The returned `x` and `y` are in CSS pixels of the application's canvas element, the units of
+     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
+     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
+     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
+     * `display: none`, or not laid out yet - measures zero, and `x` and `y` are then zero.
      *
      * The returned `z` is the unnormalized clip space depth, not a behind-the-camera flag: it also
      * goes negative for points in front of a perspective camera that are nearer than twice the
@@ -1497,6 +1510,9 @@ class CameraComponent extends Component {
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
+     * @param {boolean} [options.meshDetection] - Set to true to attempt to enable {@link XrMeshDetection}.
+     * @param {boolean} [options.cameraColor] - Set to true to attempt to enable camera color
+     * access, see {@link XrViews#availableColor}.
      * @param {XrErrorCallback} [options.callback] - Optional callback function called once the
      * session is started. The callback has one argument Error - it is null if the XR session
      * started successfully.

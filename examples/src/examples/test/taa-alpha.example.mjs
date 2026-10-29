@@ -8,7 +8,6 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     AppBase,
     AppOptions,
-    Asset,
     AssetListLoader,
     BLEND_NORMAL,
     CULLFACE_NONE,
@@ -40,22 +39,22 @@ import {
     TextureHandler,
     TextureRenderer,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
-};
+const assets = {};
 
 const vertGLSL = /* glsl */ `
     attribute vec3 vertex_position;
@@ -156,7 +155,7 @@ cubeMaterial.useMetalness = true;
 cubeMaterial.update();
 
 /**
- * @param {string} primitiveType - Primitive mesh type (e.g. `'box'`).
+ * @param {RenderComponent['type']} primitiveType - Primitive mesh type (e.g. `'box'`).
  * @param {Vec3} position - World-space position for the new entity.
  * @param {Vec3} scale - Local scale of the primitive.
  * @param {Material} mat - Material assigned to the render component.
@@ -247,16 +246,14 @@ app.root.addChild(sceneCamera);
 sceneCamera.setLocalPosition(300 * Math.sin(0.3), 150, 300 * Math.cos(0.3));
 
 sceneCamera.addComponent('script');
-sceneCamera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: orbitFocus,
-        distanceMax: 1200,
-        frameOnStart: false
+sceneCamera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 1200)
     }
 });
-sceneCamera.script.create('orbitCameraInputMouse');
-sceneCamera.script.create('orbitCameraInputTouch');
 
 const cameraFrame = new CameraFrame(app, sceneCamera.camera);
 cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA8];

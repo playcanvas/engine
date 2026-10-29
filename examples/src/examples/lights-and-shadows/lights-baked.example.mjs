@@ -1,7 +1,6 @@
 import {
     AppBase,
     AppOptions,
-    Asset,
     AssetListLoader,
     BAKE_COLOR,
     CameraComponentSystem,
@@ -18,17 +17,22 @@ import {
     ScriptHandler,
     StandardMaterial,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
-};
+const assets = {};
 
 const gfxOptions = {
     deviceTypes: [deviceType]
@@ -92,6 +96,7 @@ ground.setLocalPosition(0, 0, 0);
 ground.setLocalScale(20, 20, 20);
 
 // All render component primitive shape types
+/** @type {RenderComponent['type'][]} */
 const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule', 'torus'];
 
 // Create objects in an 8x8 grid
@@ -246,18 +251,18 @@ camera.addComponent('camera', {
     farClip: 100,
     nearClip: 0.05
 });
-camera.setLocalPosition(1, 3, -1);
+camera.setLocalPosition(9.37, 9.28, -9.37);
 
-// Add orbit camera script with mouse and touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 15
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, 2.25, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 15)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // lightmap baking properties

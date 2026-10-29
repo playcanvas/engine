@@ -48,9 +48,10 @@ import { FramePass } from './frame-pass.js';
  * const pass = new ComputePass(device, [compute]);
  * pass.name = 'HistogramPass';
  *
- * // right before the dispatch: a thread for each pixel, and an empty buffer
+ * // right before the dispatch: a thread for each texel of the color map, and an empty buffer
  * pass.onBefore = () => {
- *     compute.setupDispatchThreads(device.width, device.height);
+ *     const { width, height } = cameraComponent.sceneColorMapHandle;
+ *     compute.setupDispatchThreads(width, height);
  *     histogramBuffer.clear();
  * };
  *

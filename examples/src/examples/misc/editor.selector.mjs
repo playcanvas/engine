@@ -1,7 +1,7 @@
 import { EventHandler, Picker, Vec2 } from 'playcanvas';
 
 /**
- * @import { AppBase, CameraComponent, Layer, Scene } from 'playcanvas'
+ * @import { AppBase, CameraComponent, Layer, MeshInstance, Scene } from 'playcanvas'
  */
 
 const EPSILON = 1;
@@ -72,7 +72,7 @@ class Selector extends EventHandler {
             return;
         }
 
-        const device = this._picker.device;
+        const device = this._scene.device;
         this._picker.resize(device.canvas.clientWidth, device.canvas.clientHeight);
         this._picker.prepare(this._camera, this._scene, this._layers);
 
@@ -83,7 +83,7 @@ class Selector extends EventHandler {
             return;
         }
 
-        this.fire('select', selection[0].node, !e.ctrlKey && !e.metaKey);
+        this.fire('select', /** @type {MeshInstance} */ (selection[0]).node, !e.ctrlKey && !e.metaKey);
     }
 
     bind() {

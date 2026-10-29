@@ -123,6 +123,7 @@ const createBoxMesh = (uvSetCount) => {
 
     // interleave the streams by hand: the Mesh stream API stores each one in its own vertex buffer,
     // and WebGPU allows at most 8 of those - fewer than position, normal and eight uv sets need
+    /** @type {{ semantic: string, components: number, type: number }[]} */
     const elements = [
         { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
         { semantic: SEMANTIC_NORMAL, components: 3, type: TYPE_FLOAT32 }
@@ -157,7 +158,7 @@ const createBoxMesh = (uvSetCount) => {
         BUFFER_STATIC,
         new Uint16Array(indices)
     );
-    mesh.primitive[0] = { type: PRIMITIVE_TRIANGLES, base: 0, count: indices.length, indexed: true };
+    mesh.primitive[0] = { type: PRIMITIVE_TRIANGLES, base: 0, baseVertex: 0, count: indices.length, indexed: true };
     mesh.aabb.compute(positions);
     return mesh;
 };

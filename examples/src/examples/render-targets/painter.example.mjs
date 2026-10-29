@@ -29,6 +29,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
+
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -71,9 +75,9 @@ app.on('destroy', () => {
 
 /**
  * helper function to create a primitive with shape type, position, scale, color and layer
- * @param {string} primitiveType - The primitive type.
- * @param {number | Vec3} position - The entity's position.
- * @param {number | Vec3} scale - The entity's scale.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
+ * @param {Vec3} position - The entity's position.
+ * @param {Vec3} scale - The entity's scale.
  * @param {number[]} layer - The render component's layers.
  * @param {StandardMaterial} material - The render component's material.
  * @returns {Entity} The returned entity.

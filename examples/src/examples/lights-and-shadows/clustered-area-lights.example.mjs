@@ -26,11 +26,17 @@ import {
     TONEMAP_NONE,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -43,7 +49,6 @@ data.set('settings', {
 });
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
@@ -121,7 +126,7 @@ groundMaterial.useMetalness = true;
 /**
  * Helper function to create a primitive with shape type, position, scale and color.
  *
- * @param {string} primitiveType - The type of the primitive.
+ * @param {RenderComponent['type']} primitiveType - The type of the primitive.
  * @param {Vec3} position - The position.
  * @param {Vec3} scale - The scale.
  * @param {*} assetManifest - The asset manifest.
@@ -226,11 +231,11 @@ function createAreaLight(type, shape, position, scale, color, intensity, range) 
 }
 
 // Set the loaded area light LUT data
-const luts = assets.luts.resource;
+const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // Create ground plane
-const ground = createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(45, 1, 45), assets);
+createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(45, 1, 45), assets);
 
 // Create the camera, which renders entities
 const camera = new Entity();
@@ -241,18 +246,16 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(3, 3, 12);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: ground,
-        distanceMax: 60,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 60)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Custom render passes

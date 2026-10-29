@@ -31,9 +31,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -41,7 +43,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -128,17 +129,18 @@ terrain.setLocalScale(30, 30, 30);
 app.root.addChild(terrain);
 
 // Get the clouds so that we can animate them
-/** @type {Array<Entity>} */
-const srcClouds = terrain.find((node) => {
-    const isCloud = node.name.includes('Icosphere');
+const srcClouds = /** @type {Entity[]} */ (
+    terrain.find((/** @type {Entity} */ node) => {
+        const isCloud = node.name.includes('Icosphere');
 
-    if (isCloud) {
-        // No shadow receiving for clouds
-        node.render.receiveShadows = false;
-    }
+        if (isCloud) {
+            // No shadow receiving for clouds
+            node.render.receiveShadows = false;
+        }
 
-    return isCloud;
-});
+        return isCloud;
+    })
+);
 
 // Clone some additional clouds
 /** @type {Array<Entity>} */
@@ -169,9 +171,6 @@ pillar.setLocalScale(10, 130, 10);
 pillar.setLocalPosition(180, 50, 110);
 app.root.addChild(pillar);
 
-// Find a tree in the middle to use as a focus point
-const tree = terrain.findOne('name', 'Arbol 2.002');
-
 // Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
@@ -179,20 +178,19 @@ camera.addComponent('camera', {
     farClip: 1000
 });
 
-// And position it in the world
-camera.setLocalPosition(-500, 160, 300);
+// And position it in the world, framing the view over the lit valley
+camera.setLocalPosition(-391.99, 86.28, 289.01);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: tree,
-        distanceMax: 600
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(-4.47, 37.15, 27.63),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 600)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // A dim directional light acting as the moon, still casting long shafts through the fog
@@ -310,23 +308,12 @@ data.on('*:set', () => applySettings());
 
 const cloudSpeed = 0.2;
 const lightTarget = new Vec3();
-let frameNumber = 0;
 let time = 0;
 let lightTime = 0;
 app.on('update', (/** @type {number} */ dt) => {
     time += dt;
     if (data.get('settings.local.animate')) {
         lightTime += dt;
-    }
-
-    // On the first frame, when camera is updated, frame the view over the lit valley
-    if (frameNumber === 0) {
-        // @ts-ignore engine-tsd
-        camera.script.orbitCamera.distance = 470;
-        // @ts-ignore engine-tsd
-        camera.script.orbitCamera.yaw = 304;
-        // @ts-ignore engine-tsd
-        camera.script.orbitCamera.pitch = -6;
     }
 
     // Move the clouds around
@@ -363,6 +350,4 @@ app.on('update', (/** @type {number} */ dt) => {
             195 * Math.cos(phase + lightTime * 0.25)
         );
     });
-
-    frameNumber++;
 });

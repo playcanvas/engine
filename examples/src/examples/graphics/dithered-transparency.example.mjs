@@ -37,14 +37,16 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
 /**
- * @import { Material } from 'playcanvas'
+ * @import { Material, RenderComponent } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -58,7 +60,6 @@ const assets = {
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
     table: new Asset('table', 'container', { url: './assets/models/glass-table.glb' }),
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     diffuse: new Asset('color', 'texture', { url: './assets/textures/playcanvas.png' }, { srgb: true })
 };
 
@@ -117,9 +118,9 @@ app.scene.exposure = 4.5;
 /**
  * Helper function to create a primitive with shape type, position, scale, color and layer.
  *
- * @param {string} primitiveType - The primitive type.
- * @param {number | Vec3} position - The position.
- * @param {number | Vec3} scale - The scale.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
  * @param {Color} color - The color.
  * @returns {Material} The returned entity.
  */
@@ -205,17 +206,16 @@ cameraEntity.translate(-14, 12, 20);
 cameraEntity.lookAt(0, 4, 0);
 app.root.addChild(cameraEntity);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 40,
-        frameOnStart: false
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, 1.88, 0),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 40)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
 
 // ------ Custom render passes set up ------
 

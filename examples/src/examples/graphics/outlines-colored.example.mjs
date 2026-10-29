@@ -33,11 +33,18 @@ import {
     TONEMAP_NEUTRAL,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     WasmModule,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { StandardMaterial } from 'playcanvas'
+ */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -51,7 +58,6 @@ WasmModule.setConfig('DracoDecoderModule', {
 
 const assets = {
     laboratory: new Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
-    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -119,7 +125,7 @@ laboratoryEntity.findComponents('render').forEach((render) => {
         meshInstance.material.blendType = BLEND_NONE;
 
         // Disable baked AO map as we want to use SSAO only
-        meshInstance.material.aoMap = null;
+        /** @type {StandardMaterial} */ (meshInstance.material).aoMap = null;
         meshInstance.material.update();
     });
 });
@@ -150,20 +156,19 @@ cameraEntity.addComponent('camera', {
     toneMapping: TONEMAP_NEUTRAL
 });
 
-// Add orbit camera script
+// Position the camera in the world
+cameraEntity.setLocalPosition(-200, 100, 200);
+
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: laboratoryEntity,
-        distanceMax: 300
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 300)
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
-// Position the camera in the world
-cameraEntity.setLocalPosition(-60, 30, 60);
 app.root.addChild(cameraEntity);
 
 // Set up the camera frame rendering, using the settings of the ambient occlusion example
@@ -225,9 +230,9 @@ applySettings();
 const outlineRenderer = new OutlineRenderer(app);
 
 // Add entities to the outline renderer
-outlineRenderer.addEntity(laboratoryEntity.findByName('Weltkugel'), Color.RED);
-outlineRenderer.addEntity(laboratoryEntity.findByName('Stuhl'), Color.WHITE);
-outlineRenderer.addEntity(laboratoryEntity.findByName('Teleskop'), Color.GREEN);
+outlineRenderer.addEntity(/** @type {Entity} */ (laboratoryEntity.findByName('Weltkugel')), Color.RED);
+outlineRenderer.addEntity(/** @type {Entity} */ (laboratoryEntity.findByName('Stuhl')), Color.WHITE);
+outlineRenderer.addEntity(/** @type {Entity} */ (laboratoryEntity.findByName('Teleskop')), Color.GREEN);
 
 // The camera frame renders the UI layer after the post-processing. Compositing the outlines before
 // it keeps them unaffected by the tone mapping and the volumetric fog. Without the camera frame, the
