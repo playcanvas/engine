@@ -1954,7 +1954,10 @@ class AppBase extends EventHandler {
 
         script.app = null;
 
-        AppBase._applications[canvasId] = null;
+        // another application registered under the same canvas id since keeps its entry
+        if (AppBase._applications[canvasId] === this) {
+            AppBase._applications[canvasId] = null;
+        }
 
         if (getApplication() === this) {
             setApplication(null);
