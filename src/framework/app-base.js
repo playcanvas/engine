@@ -1456,6 +1456,8 @@ class AppBase extends EventHandler {
      * - {@link TONEMAP_ACES}
      * - {@link TONEMAP_ACES2}
      * - {@link TONEMAP_NEUTRAL}
+     * - {@link TONEMAP_AGX}
+     * - {@link TONEMAP_AGX_PUNCHY}
      *
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness
      * of the scene.

@@ -133,7 +133,9 @@ export function Controls({ observer }) {
                             { v: 3, t: 'ACES' },
                             { v: 4, t: 'ACES2' },
                             { v: 5, t: 'Neutral' },
-                            { v: 6, t: 'None' }
+                            { v: 6, t: 'None' },
+                            { v: 7, t: 'AgX' },
+                            { v: 8, t: 'AgX Punchy' }
                         ]}
                     />
                 </LabelGroup>

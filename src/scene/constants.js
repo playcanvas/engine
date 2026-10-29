@@ -696,6 +696,25 @@ export const TONEMAP_NEUTRAL = 5;
  */
 export const TONEMAP_NONE = 6;
 
+/**
+ * AgX tonemapping curve, the default view transform of Blender since version 4.0. Bright,
+ * saturated colors desaturate towards white, and the result is lower in contrast and saturation
+ * than {@link TONEMAP_ACES2}. This neutral, flat look is often used as a base for color grading.
+ * See {@link TONEMAP_AGX_PUNCHY} for a higher contrast version. Based on Filament's implementation
+ * of Blender's AgX.
+ *
+ * @category Graphics
+ */
+export const TONEMAP_AGX = 7;
+
+/**
+ * AgX tonemapping curve with its Punchy look, which raises the contrast and saturation of
+ * {@link TONEMAP_AGX}. Uses the parameters of Filament's Punchy look.
+ *
+ * @category Graphics
+ */
+export const TONEMAP_AGX_PUNCHY = 8;
+
 // names of the tonemaps
 export const tonemapNames = [
     'LINEAR',
@@ -704,7 +723,9 @@ export const tonemapNames = [
     'ACES',
     'ACES2',
     'NEUTRAL',
-    'NONE'
+    'NONE',
+    'AGX',
+    'AGX_PUNCHY'
 ];
 
 /**

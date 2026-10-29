@@ -2,7 +2,7 @@
 
 import {
     CameraFrame as EngineCameraFrame, Script, Color,
-    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL,
+    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY,
     PIXELFORMAT_RGBA8, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from 'playcanvas';
 
@@ -17,7 +17,9 @@ const ToneMapping = {
     HEJL: 'hejl',
     ACES: 'aces',
     ACES2: 'aces2',
-    NEUTRAL: 'neutral'
+    NEUTRAL: 'neutral',
+    AGX: 'agx',
+    AGX_PUNCHY: 'agx-punchy'
 };
 
 /** @enum {string} */
@@ -41,7 +43,9 @@ const toneMappingMap = new Map([
     [ToneMapping.HEJL, TONEMAP_HEJL],
     [ToneMapping.ACES, TONEMAP_ACES],
     [ToneMapping.ACES2, TONEMAP_ACES2],
-    [ToneMapping.NEUTRAL, TONEMAP_NEUTRAL]
+    [ToneMapping.NEUTRAL, TONEMAP_NEUTRAL],
+    [ToneMapping.AGX, TONEMAP_AGX],
+    [ToneMapping.AGX_PUNCHY, TONEMAP_AGX_PUNCHY]
 ]);
 
 const renderFormatMap = new Map([

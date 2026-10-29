@@ -62,6 +62,8 @@ const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
  * - {@link TONEMAP_ACES}
  * - {@link TONEMAP_ACES2}
  * - {@link TONEMAP_NEUTRAL}
+ * - {@link TONEMAP_AGX}
+ * - {@link TONEMAP_AGX_PUNCHY}
  *
  * Defaults to {@link TONEMAP_LINEAR}.
  * @property {number} sharpness - The sharpening intensity, 0-1 range. This can be used to increase
