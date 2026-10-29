@@ -85,6 +85,12 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     float offDiagonal = cov[0][1];
     float diagonal2 = cov[1][1] + 0.3;
 
+    // early-out gaussians smaller than minPixelSize, before paying for the eigen-decomposition
+    // (the vmin cap below is left out: it only matters on a viewport under minPixelSize / 2 pixels)
+    if (gsplatFootprintSmallerThan(diagonal1, offDiagonal, diagonal2, minPixelSize)) {
+        return false;
+    }
+
     float mid = 0.5 * (diagonal1 + diagonal2);
     float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
     float lambda1 = mid + radius;
@@ -96,15 +102,11 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
-    // early-out gaussians smaller than minPixelSize
-    if (max(l1, l2) < minPixelSize) {
-        return false;
-    }
-
     vec2 c = center.proj.ww * viewport_size.zw;
 
-    // cull against frustum x/y axes
-    if (any(greaterThan(abs(center.proj.xy) - vec2(max(l1, l2)) * c, center.proj.ww))) {
+    // cull against frustum x/y axes (l1 >= l2: lambda1 = mid + radius bounds both mid - radius
+    // and the 0.1 floor of lambda2, as mid >= 0.3)
+    if (any(greaterThan(abs(center.proj.xy) - vec2(l1) * c, center.proj.ww))) {
         return false;
     }
 
