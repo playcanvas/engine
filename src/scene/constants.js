@@ -664,14 +664,19 @@ export const TONEMAP_FILMIC = 1;
 export const TONEMAP_HEJL = 2;
 
 /**
- * ACES filmic tonemapping curve.
+ * ACES filmic tonemapping curve, using Krzysztof Narkowicz's fit. A single curve is applied to each
+ * color channel, without the color space conversions of the ACES transforms. See
+ * {@link TONEMAP_ACES2} for a fit that includes them.
  *
  * @category Graphics
  */
 export const TONEMAP_ACES = 3;
 
 /**
- * ACES v2 filmic tonemapping curve.
+ * ACES filmic tonemapping curve, using Stephen Hill's fit of the ACES 1.x Reference Rendering
+ * Transform (RRT) and Output Device Transform (ODT), including their color space conversions. It
+ * follows the ACES reference more closely than {@link TONEMAP_ACES}. Despite the name, this is not
+ * ACES 2.0.
  *
  * @category Graphics
  */

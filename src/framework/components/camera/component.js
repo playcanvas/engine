@@ -1285,6 +1285,13 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 2D screen space to 3D world space.
      *
+     * Screen space is measured in CSS pixels of the application's canvas element, the units of
+     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
+     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
+     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
+     * `display: none`, or not laid out yet - measures zero, and the returned coordinate is then not
+     * finite.
+     *
      * @param {number} screenx - X coordinate on PlayCanvas' canvas element. Should be in the range
      * 0 to `canvas.offsetWidth` of the application's canvas element.
      * @param {number} screeny - Y coordinate on PlayCanvas' canvas element. Should be in the range
@@ -1312,6 +1319,12 @@ class CameraComponent extends Component {
 
     /**
      * Convert a point from 3D world space to 2D screen space.
+     *
+     * The returned `x` and `y` are in CSS pixels of the application's canvas element, the units of
+     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
+     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
+     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
+     * `display: none`, or not laid out yet - measures zero, and `x` and `y` are then zero.
      *
      * The returned `z` is the unnormalized clip space depth, not a behind-the-camera flag: it also
      * goes negative for points in front of a perspective camera that are nearer than twice the
