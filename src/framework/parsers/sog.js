@@ -147,7 +147,8 @@ class SogParser {
         const base = window.document?.baseURI ?? window.location.href;
 
         subs.forEach((sub) => {
-            const files = meta[sub]?.files ?? [];
+            // blind is a list of textures, each with its own file
+            const files = sub === 'blind' ? (meta.blind ?? []).map(t => t.files[0]) : (meta[sub]?.files ?? []);
             textures[sub] = files.map((filename) => {
                 const texture = new Asset(filename, 'texture', {
                     url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, base).toString())).toString(),
@@ -232,7 +233,7 @@ class SogParser {
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
-        data.blind = textures.blind?.[0]?.resource ?? null;
+        data.blind = textures.blind.map(t => t.resource);
         data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
         const decompress = asset.data?.decompress;

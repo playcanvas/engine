@@ -110,23 +110,5 @@ fn getColor() -> vec4f {
     return vec4f(vec3f(0.5) + rgb * SH_C0, alpha);
 }
 
-#ifdef SOG_BLIND
-// per-gaussian user data: SOG_BLIND_BYTES little-endian bytes of the blind texture
-fn getBlind() -> u32 {
-    let b = vec4u(textureLoad(blind, splat.uv, 0) * 255.0 + 0.5);
-    var v = b.x;
-    #if SOG_BLIND_BYTES > 1
-        v = v | (b.y << 8u);
-    #endif
-    #if SOG_BLIND_BYTES > 2
-        v = v | (b.z << 16u);
-    #endif
-    #if SOG_BLIND_BYTES > 3
-        v = v | (b.w << 24u);
-    #endif
-    return v;
-}
-#endif
-
 #include "gsplatSogSHVS"
 `;

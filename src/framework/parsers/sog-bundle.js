@@ -264,7 +264,10 @@ class SogBundleParser {
             }
 
             // extract filenames from meta.json (v3 has no quats and may carry blind data)
-            const filenames = ['means', 'scales', 'quats', 'sh0', 'shN', 'blind'].map(key => meta[key]?.files ?? []).flat();
+            const filenames = [
+                ...['means', 'scales', 'quats', 'sh0', 'shN'].map(key => meta[key]?.files ?? []).flat(),
+                ...(meta.blind ?? []).map(t => t.files[0])
+            ];
 
             const promises = [];
             for (const filename of filenames) {
@@ -343,7 +346,7 @@ class SogBundleParser {
             data.sh0 = textures[meta.sh0.files[0]].resource;
             data.sh_centroids = textures[meta.shN?.files[0]]?.resource;
             data.sh_labels = textures[meta.shN?.files[1]]?.resource;
-            data.blind = meta.blind ? textures[meta.blind.files[0]]?.resource ?? null : null;
+            data.blind = (meta.blind ?? []).map(t => textures[t.files[0]].resource);
             data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
             if (!decompress) {

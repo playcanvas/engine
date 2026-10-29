@@ -3,6 +3,7 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
+import { blindFields, decodeBlindField, isIntegerType } from './gsplat-sog-blind.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import {
@@ -206,11 +207,11 @@ class GSplatSogData {
     sh_labels;
 
     /**
-     * V3 per-gaussian blind data (RGBA8, little-endian bytes), or null.
+     * V3 per-gaussian blind data textures (RGBA8), one per `meta.blind` entry.
      *
-     * @type {Texture|null}
+     * @type {Texture[]}
      */
-    blind = null;
+    blind = [];
 
     /**
      * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
@@ -257,7 +258,7 @@ class GSplatSogData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
-        this.blind?.destroy();
+        this.blind.forEach(t => t.destroy());
         this.codebookTexture?.destroy();
         this.codebookTexture = null;
     }
@@ -346,7 +347,7 @@ class GSplatSogData {
         if (quats) quats._levels[0] = await readImageDataAsync(quats);
         scales._levels[0] = await readImageDataAsync(scales);
         sh0._levels[0] = await readImageDataAsync(sh0);
-        const blindData = blind ? await readImageDataAsync(blind) : null;
+        const blindData = await Promise.all(blind.map(t => readImageDataAsync(t)));
 
         // allocate spherical harmonics data
         if (shBands > 0) {
@@ -421,18 +422,10 @@ class GSplatSogData {
             };
         });
 
-        // v3 blind data: little-endian bytes, as an unsigned integer column under its own name
-        if (blindData) {
-            const bytes = meta.blind.bytes;
-            const values = new Uint32Array(this.numSplats);
-            for (let i = 0; i < this.numSplats; ++i) {
-                let v = blindData[i * 4];
-                if (bytes > 1) v |= blindData[i * 4 + 1] << 8;
-                if (bytes > 2) v |= blindData[i * 4 + 2] << 16;
-                if (bytes > 3) v |= blindData[i * 4 + 3] << 24;
-                values[i] = v >>> 0;
-            }
-            properties.push({ name: meta.blind.name, type: 'uint', byteSize: 4, storage: values });
+        // v3 blind data: each field as a column under its own name (uint for integer encodings)
+        for (const f of blindFields(meta).fields) {
+            const storage = decodeBlindField(blindData[f.texture], f, this.numSplats);
+            properties.push({ name: f.name, type: isIntegerType(f.type) ? 'uint' : 'float', byteSize: 4, storage });
         }
 
         const result = new GSplatData([{
