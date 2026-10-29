@@ -25,6 +25,11 @@ class GlbContainerParser {
         Asset.fetchArrayBuffer(url.load, (err, result) => {
             if (err) {
                 callback(err);
+            } else if (this._device._destroyed) {
+                // nothing cancels the download, so it can complete after the application was
+                // destroyed. Skip the parse, which needs the destroyed asset registry and device -
+                // the loader drops the result anyway.
+                callback(null, null);
             } else {
                 GlbParser.parse(
                     this._getUrlWithoutParams(url.original),
