@@ -11,7 +11,6 @@ export default [
             sourceType: 'module',
             globals: {
                 ...globals.browser,
-                ...globals.mocha,
                 ...globals.node,
                 'Ammo': 'readonly',
                 'earcut': 'readonly',
@@ -50,9 +49,7 @@ export default [
     {
         files: ['test/**/*.mjs'],
         rules: {
-            'import/order': 'error',
-            'no-unused-expressions': 'off',
-            'prefer-arrow-callback': 'off' // Mocha uses function callbacks
+            'import/order': 'error'
         }
     },
     {
