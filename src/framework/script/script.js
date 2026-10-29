@@ -315,9 +315,19 @@ export class Script extends EventHandler {
     static __getScriptName = getScriptName;
 
     /**
-     * Sets the unique name of the script.
+     * Sets the unique name of the script. A base class which other scripts extend, but which is
+     * not a script itself, sets it to `null`, so that it is not registered as a script when a
+     * script file exports it.
      *
      * @type {string|null}
+     * @example
+     * export class EffectScriptBase extends Script {
+     *     static scriptName = null;
+     * }
+     *
+     * export class TintEffectScript extends EffectScriptBase {
+     *     static scriptName = 'tintEffect';
+     * }
      */
     static set scriptName(value) {
         this.__name = value;

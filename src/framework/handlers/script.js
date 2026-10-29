@@ -144,7 +144,14 @@ class ScriptHandler extends ResourceHandler {
                 if (extendsScriptType) {
 
                     // a `scriptName` declared on THIS class; an inherited one belongs to a base
-                    const ownScriptName = Object.prototype.hasOwnProperty.call(scriptClass, 'scriptName') && scriptClass.scriptName;
+                    const declaresScriptName = Object.prototype.hasOwnProperty.call(scriptClass, 'scriptName');
+
+                    // a base class extended by scripts declares a null name, and is not a script itself
+                    if (declaresScriptName && scriptClass.scriptName === null) {
+                        continue;
+                    }
+
+                    const ownScriptName = declaresScriptName && scriptClass.scriptName;
 
                     if (!ownScriptName) {
                         Debug.warnOnce(`The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${toLowerCamelCase(scriptClass.name)}";\`. This will be an error in future versions of PlayCanvas.`);
