@@ -34,13 +34,14 @@ class WebgpuXrBridge {
     _cachedFramebufferSize = new Vec2();
 
     /**
-     * True once the projection layer has been made again after its texture could not be acquired,
-     * until a frame acquires one from it, so a layer that fails again is not made again every frame.
+     * The number of frames in a row that could not acquire a texture from the projection layer. The
+     * layer is made again on the second of them, so a single failure does not make it again, and a
+     * layer made this way that fails as well is not made again until a frame acquires a texture.
      *
-     * @type {boolean}
+     * @type {number}
      * @private
      */
-    _layerRecreated = false;
+    _acquireFailures = 0;
 
     /**
      * @param {XrBridge} xrBridge - The XR bridge.
@@ -56,7 +57,7 @@ class WebgpuXrBridge {
     destroy(device) {
         this._binding = null;
         this._layer = null;
-        this._layerRecreated = false;
+        this._acquireFailures = 0;
         this._cachedFramebufferSize.set(0, 0);
         device._clearXrState();
     }
@@ -88,11 +89,10 @@ class WebgpuXrBridge {
                 this.xrBridge._onBindingError?.(e);
                 // A runtime can lose the projection layer's textures, after which every
                 // getViewSubImage fails to acquire one and nothing reaches the display: the Quest
-                // Browser does when the headset sleeps and wakes. A new binding and layer, as after
-                // a lost device, take effect from the next frame; one made this way that fails as
-                // well is left, until a frame acquires a texture again
-                if (!this._layerRecreated) {
-                    this._layerRecreated = true;
+                // Browser does when the headset sleeps and wakes. Once a second frame in a row fails,
+                // a new binding and layer, as after a lost device, take effect from the next frame;
+                // one made this way that fails as well is left, until a frame acquires a texture.
+                if (++this._acquireFailures === 2) {
                     this._recreatePresentation();
                 }
                 return;
@@ -145,7 +145,7 @@ class WebgpuXrBridge {
         // caches texture size for getFramebufferSize when the projection layer omits dimensions.
         const first = subImages[0];
         if (first) {
-            this._layerRecreated = false;
+            this._acquireFailures = 0;
             device.xrColorTexture = first.colorTexture;
             device.xrColorTextureViewFormat = first.viewFormat;
             // align the engine-level backbuffer format with the runtime's projection-layer format so
@@ -159,7 +159,8 @@ class WebgpuXrBridge {
 
     /**
      * Makes the WebXR WebGPU binding and projection layer again for the current session, with the
-     * session's own framebuffer scale and depth range.
+     * session's own framebuffer scale and depth range, and the lost layer's fixed foveation, and
+     * destroys the lost layer. Reports, rather than throws, a failure to make them.
      *
      * @private
      */
@@ -170,13 +171,31 @@ class WebgpuXrBridge {
             return;
         }
 
+        const lost = this._layer;
         const rs = session.renderState;
-        bridge.attachPresentation(session, {
-            framebufferScaleFactor: bridge._framebufferScaleFactor,
-            depthNear: rs.depthNear,
-            depthFar: rs.depthFar,
-            onBindingError: bridge._onBindingError
-        });
+        try {
+            bridge.attachPresentation(session, {
+                framebufferScaleFactor: bridge._framebufferScaleFactor,
+                depthNear: rs.depthNear,
+                depthFar: rs.depthFar,
+                onBindingError: bridge._onBindingError
+            });
+        } catch (ex) {
+            // this runs inside the XR frame, which an exception would abandon
+            bridge._onBindingError?.(ex);
+            return;
+        }
+
+        const layer = this._layer;
+        if (layer !== lost) {
+            // keep the fixed foveation the application set on the lost layer
+            if ((lost.fixedFoveation ?? null) !== null && (layer.fixedFoveation ?? null) !== null) {
+                layer.fixedFoveation = lost.fixedFoveation;
+            }
+
+            // free the lost layer's textures now rather than once it is garbage collected
+            lost.destroy?.();
+        }
     }
 
     /**
