@@ -3,7 +3,7 @@ name: Release
 run-name: Release ${{ inputs.type }} on ${{ github.ref_name }}
 
 # Run from the Actions tab with "Use workflow from" set to:
-# - main, type 'branch': creates release-X.Y from main, bumps main to the next minor beta
+# - main, type 'minor': creates release-X.Y from main, bumps main to the next minor beta
 #   ('Branch X.Y' commit) and tags vX.Y.0-preview.0 on release-X.Y
 # - release-X.Y, type 'patch' or 'preview': bumps release-X.Y and tags vX.Y.Z or vX.Y.Z-preview.N
 # The tag triggers the Publish workflow.
@@ -12,9 +12,9 @@ on:
   workflow_dispatch:
     inputs:
       type:
-        description: "branch (on main), patch or preview (on release-X.Y)"
+        description: "minor (on main), patch or preview (on release-X.Y)"
         type: choice
-        options: [patch, preview, branch]
+        options: [patch, preview, minor]
         default: patch
 
 permissions:
@@ -33,9 +33,9 @@ jobs:
       - name: Check type
         run: |
           if [[ "$GITHUB_REF_NAME" == "main" ]]; then
-            [[ "$TYPE" == "branch" ]] || { echo "::error::Use type 'branch' on main; 'patch' and 'preview' run on a release-X.Y branch"; exit 1; }
+            [[ "$TYPE" == "minor" ]] || { echo "::error::Use type 'minor' on main; 'patch' and 'preview' run on a release-X.Y branch"; exit 1; }
           elif [[ "$GITHUB_REF_NAME" =~ ^release-[0-9]+\.[0-9]+$ ]]; then
-            [[ "$TYPE" != "branch" ]] || { echo "::error::Use type 'patch' or 'preview' on $GITHUB_REF_NAME; 'branch' runs on main"; exit 1; }
+            [[ "$TYPE" != "minor" ]] || { echo "::error::Use type 'patch' or 'preview' on $GITHUB_REF_NAME; 'minor' runs on main"; exit 1; }
           else
             echo "::error::Unrecognized branch '$GITHUB_REF_NAME'"
             exit 1
