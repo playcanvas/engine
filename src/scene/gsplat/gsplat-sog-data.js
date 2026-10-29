@@ -148,7 +148,9 @@ class GSplatSogIterator {
             }
 
             if (sh) {
-                const n = sh_labels_data[i * 4 + 0] + (sh_labels_data[i * 4 + 1] << 8);
+                // palette index: 16-bit, 24-bit in v3
+                const n = sh_labels_data[i * 4 + 0] + (sh_labels_data[i * 4 + 1] << 8) +
+                    (v3 ? sh_labels_data[i * 4 + 2] << 16 : 0);
                 const u = (n % 64) * coeffs;
                 const v = Math.floor(n / 64);
 
