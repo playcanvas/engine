@@ -411,6 +411,26 @@ export function getScriptName(constructorFn) {
 }
 
 /**
+ * Returns the name a script class declares itself: a `scriptName` defined on the class, or one
+ * assigned to it through the `scriptName` setter, which stores it as an own `__name` (this is also
+ * what a static `scriptName` field compiles to without define semantics for class fields). A name
+ * inherited from a base class is ignored.
+ *
+ * @param {Function} constructorFn - The constructor function of the script type.
+ * @returns {string|null|undefined} The declared name, null for a base class which declares that it
+ * is not a script itself, or undefined when the class declares no name.
+ */
+export function getDeclaredScriptName(constructorFn) {
+    if (Object.prototype.hasOwnProperty.call(constructorFn, 'scriptName')) {
+        return constructorFn.scriptName;
+    }
+    if (Object.prototype.hasOwnProperty.call(constructorFn, '__name')) {
+        return constructorFn.__name;
+    }
+    return undefined;
+}
+
+/**
  * Returns the name a script class should be registered (and looked up) under. Considers only
  * properties declared on the class itself - never inherited from a base class - so that a subclass
  * does not adopt (and then overwrite in the registry) the name already registered for its base

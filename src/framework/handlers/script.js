@@ -5,7 +5,7 @@ import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
 import { ResourceHandler } from './handler.js';
-import { Script, getScriptRegistryName, toLowerCamelCase } from '../script/script.js';
+import { Script, getDeclaredScriptName, getScriptRegistryName, toLowerCamelCase } from '../script/script.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -143,17 +143,16 @@ class ScriptHandler extends ResourceHandler {
 
                 if (extendsScriptType) {
 
-                    // a `scriptName` declared on THIS class; an inherited one belongs to a base
-                    const declaresScriptName = Object.prototype.hasOwnProperty.call(scriptClass, 'scriptName');
+                    // the name declared on THIS class, as a static field or through the setter; an
+                    // inherited one belongs to a base
+                    const declaredName = getDeclaredScriptName(scriptClass);
 
                     // a base class extended by scripts declares a null name, and is not a script itself
-                    if (declaresScriptName && scriptClass.scriptName === null) {
+                    if (declaredName === null) {
                         continue;
                     }
 
-                    const ownScriptName = declaresScriptName && scriptClass.scriptName;
-
-                    if (!ownScriptName) {
+                    if (!declaredName) {
                         Debug.warnOnce(`The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${toLowerCamelCase(scriptClass.name)}";\`. This will be an error in future versions of PlayCanvas.`);
                     }
 
