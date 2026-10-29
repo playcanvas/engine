@@ -85,7 +85,7 @@
     "@webgpu/types": "^0.1.70"
   },
   "devDependencies": {
-    "@playcanvas/eslint-config": "3.0.0-beta.8",
+    "@playcanvas/eslint-config": "3.0.0-beta.9",
     "@rollup/plugin-strip": "3.0.4",
     "@types/node": "24.13.5",
     "acorn": "8.18.0",
