@@ -1,0 +1,95 @@
+name: Release
+
+run-name: Release ${{ inputs.type }} on ${{ github.ref_name }}
+
+# Run from the Actions tab with "Use workflow from" set to:
+# - main, type 'branch': creates release-X.Y from main, bumps main to the next minor beta
+#   ('Branch X.Y' commit) and tags vX.Y.0-preview.0 on release-X.Y
+# - release-X.Y, type 'patch' or 'preview': bumps release-X.Y and tags vX.Y.Z or vX.Y.Z-preview.N
+# The tag triggers the Publish workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "branch (on main), patch or preview (on release-X.Y)"
+        type: choice
+        options: [patch, preview, branch]
+        default: patch
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: github.repository == 'playcanvas/engine' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-'))
+    # queue releases instead of racing them
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - name: Check type
+        run: |
+          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            [[ "$TYPE" == "branch" ]] || { echo "::error::Use type 'branch' on main; 'patch' and 'preview' run on a release-X.Y branch"; exit 1; }
+          elif [[ "$GITHUB_REF_NAME" =~ ^release-[0-9]+\.[0-9]+$ ]]; then
+            [[ "$TYPE" != "branch" ]] || { echo "::error::Use type 'patch' or 'preview' on $GITHUB_REF_NAME; 'branch' runs on main"; exit 1; }
+          else
+            echo "::error::Unrecognized branch '$GITHUB_REF_NAME'"
+            exit 1
+          fi
+        env:
+          TYPE: ${{ inputs.type }}
+
+      # tags pushed with GITHUB_TOKEN don't trigger the publish workflow
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_KEY }}
+
+      - name: Check out code
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+
+      - name: Configure git
+        run: |
+          id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)
+          git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config user.email "${id}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Create release branch
+        if: github.ref_name == 'main'
+        run: |
+          IFS=. read -r major minor _ <<< "$(npm pkg get version | tr -d '"')"
+          branch="release-$major.$minor"
+          git branch "$branch"
+          npm version preminor --preid=beta --no-git-tag-version
+          git commit -m "Branch $major.$minor" -- package.json package-lock.json
+          main=$(git rev-parse HEAD)
+          git switch "$branch"
+          tag=$(npm version prerelease --preid=preview)
+          git push --atomic origin "$main:refs/heads/main" "refs/heads/$branch" "refs/tags/$tag"
+          echo "Created $branch and released $tag" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Tag release
+        if: github.ref_name != 'main'
+        run: |
+          [[ "$TYPE" == "preview" ]] && TYPE=prerelease
+          tag=$(npm version "$TYPE" --preid=preview)
+          git push --atomic origin "HEAD:refs/heads/$GITHUB_REF_NAME" "refs/tags/$tag"
+          echo "Released $tag" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          TYPE: ${{ inputs.type }}
