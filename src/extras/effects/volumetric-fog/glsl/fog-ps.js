@@ -31,13 +31,14 @@ export default /* glsl */`
                 return clamp(x, 0.0, 1.0);
             }
 
+            #include "shadowEVSMExponentPS"
             #include "shadowEVSMPS"
 
             // the exponent of the depth warp, matching the one used to render the shadow map
             #ifdef FOG_SHADOW_VSM_32F
-                const float fogVsmExponent = 15.0;
+                const float fogVsmExponent = VSM_EXPONENT_32F;
             #else
-                const float fogVsmExponent = 5.54;
+                const float fogVsmExponent = VSM_EXPONENT_16F;
             #endif
         #endif
 

@@ -1,7 +1,5 @@
 export default /* wgsl */`
 
-#include "shadowEVSMExponentPS"
-
 // ------ VSM Shared ------
 
 fn linstep(a: f32, b: f32, v: f32) -> f32 {
