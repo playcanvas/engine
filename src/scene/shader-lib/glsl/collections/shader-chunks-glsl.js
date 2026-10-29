@@ -120,6 +120,7 @@ import screenDepthPS from '../chunks/common/frag/screenDepth.js';
 import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
 import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
 import shadowEVSMPS from '../chunks/lit/frag/lighting/shadowEVSM.js';
+import shadowEVSMExponentPS from '../chunks/common/frag/shadow-evsm-exponent.js';
 import shadowPCF1PS from '../chunks/lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from '../chunks/lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
@@ -303,6 +304,7 @@ const shaderChunksGLSL = {
     shadowCascadesPS,
     shadowCasterPS,
     shadowEVSMPS,
+    shadowEVSMExponentPS,
     shadowPCF1PS,
     shadowPCF3PS,
     shadowPCF5PS,

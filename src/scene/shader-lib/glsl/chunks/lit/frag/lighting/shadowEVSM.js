@@ -1,5 +1,7 @@
 export default /* glsl */`
 
+#include "shadowEVSMExponentPS"
+
 // ------ VSM Shared ------
 
 float linstep(float a, float b, float v) {
