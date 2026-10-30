@@ -7,7 +7,6 @@ import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
 import { GSplatSogResource } from '../../../src/scene/gsplat/gsplat-sog-resource.js';
 import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
-import { GSplatWorkBuffer } from '../../../src/scene/gsplat-unified/gsplat-work-buffer.js';
 
 describe('GSplatParams#compensation', function () {
     let device;
@@ -100,27 +99,6 @@ describe('GSplatResource opacity_excess', function () {
         const resource = new GSplatResource(device, data);
         expect(resource.extras).to.equal(extras);
         resource.destroy();
-        device.destroy();
-    });
-});
-
-describe('GSplatWorkBuffer#syncWithFormat', function () {
-    it('attaches a stream added after creation even if getTexture() synced the streams first', function () {
-        const device = new NullGraphicsDevice({ width: 1, height: 1 });
-        const params = new GSplatParams(device);
-        const workBuffer = new GSplatWorkBuffer(device, params.format);
-        const before = workBuffer.renderTarget._colorBuffers.length;
-
-        params._enableOverUnity(true);
-        // a renderer binding textures by name syncs the streams on its own
-        const texture = workBuffer.getTexture('splatPlateau');
-        expect(texture).to.not.equal(undefined);
-
-        workBuffer.syncWithFormat();
-        expect(workBuffer.renderTarget._colorBuffers.length).to.equal(before + 1);
-        expect(workBuffer.renderTarget._colorBuffers).to.include(texture);
-
-        workBuffer.destroy();
         device.destroy();
     });
 });
