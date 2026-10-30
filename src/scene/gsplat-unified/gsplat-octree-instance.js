@@ -825,7 +825,7 @@ class GSplatOctreeInstance {
                     if (!this._isTreeWithinLimit(c, underfillLimit) && !this._isTreeNodeLoaded(c)) {
                         this._requestCutNode(c, LOAD_TIER_SWITCH);
                     }
-                    this._retainRegion(c, underfillLimit);
+                    this._retainRegion(c);
                 }
             } else if (allWithinLimit || allCoverable) {
                 // refine, each child region rendering by its own LOD, or from the finer data below
@@ -909,27 +909,26 @@ class GSplatOctreeInstance {
     }
 
     /**
-     * Retains the loaded data a region refines to while a coarser node renders in its place: the
-     * nodes that would render it within the underfill limit, following the nodes the cut refines,
-     * the way {@link GSplatOctreeInstance#_isTreeWithinLimit} does.
+     * Retains the loaded data of a region a coarser node renders in place of until the rest of the
+     * region loads: every loaded node the cut reaches in it. Once the rest loads, the cut can render
+     * any of them - the nodes it refines to, or coarser ones in place of those still loading.
      *
      * @param {number} n - A node the cut reached.
-     * @param {number} underfillLimit - See GSplatParams#lodUnderfillLimit.
      * @private
      */
-    _retainRegion(n, underfillLimit) {
+    _retainRegion(n) {
         const { nodes, nodeLevel, childStart, childCount } = this.octree;
-        const refines = this.treeRefined[n] === this.treeStamp;
-        if (this._isTreeNodeLoaded(n) && (!refines || nodeLevel[n] - this._treeBand(n) <= underfillLimit)) {
+        if (this._isTreeNodeLoaded(n)) {
             const fileIndex = nodes[n].lods[nodeLevel[n]].fileIndex;
             const retainStamp = /** @type {Uint32Array} */ (this._retainStamp);
             if (fileIndex !== -1 && retainStamp[fileIndex] !== this.treeStamp) {
                 retainStamp[fileIndex] = this.treeStamp;
                 /** @type {Int32Array} */ (this._retainedNext)[this._retainedNextCount++] = fileIndex;
             }
-        } else if (refines) {
+        }
+        if (this.treeRefined[n] === this.treeStamp) {
             for (let c = childStart[n], end = c + childCount[n]; c < end; c++) {
-                this._retainRegion(c, underfillLimit);
+                this._retainRegion(c);
             }
         }
     }

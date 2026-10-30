@@ -238,6 +238,25 @@ describe('GSplatOctreeInstance#_applyTreeCut', function () {
         expect(instance._retainedCount).to.equal(0);
     });
 
+    it('holds a loaded child coarser than asked for, which renders once its siblings load', function () {
+        // the cut asks for level 0 with no underfill allowed: A0 is a level too coarse, but A
+        // renders until A1 loads, and then A0 renders until A00 loads
+        const loaded = new Set([A, B, A0]);
+        const instance = cut(loaded, () => 0);
+        const { octree } = instance;
+        expect(drawnNodes(instance)).to.deep.equal([A, B]);
+        expect(octree.fileRefCounts[A0]).to.equal(1);
+        expect(octree.cooldowns.has(A0)).to.be.false;
+
+        loaded.add(A1);
+        octree.pollFileResource(A1);
+        setBands(instance, () => 0);
+        instance._applyTreeCut(0);
+        expect(drawnNodes(instance)).to.deep.equal([B, A0, A1]);
+        expect(octree.fileRefCounts[A0]).to.equal(1);
+        expect(instance._retainedCount).to.equal(0);
+    });
+
     it('releases the held children into their cooldown when the cut no longer refines to them', function () {
         const instance = cut(new Set([A, B, A0]), () => 1);
         const { octree } = instance;
