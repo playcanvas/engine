@@ -238,10 +238,10 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'lodPreset' }}
                         value={observer.get('lodPreset') || 'desktop'}
                         options={[
-                            { v: 'desktop-max', t: 'Desktop Max (0-5)' },
-                            { v: 'desktop', t: 'Desktop (1-5)' },
-                            { v: 'mobile-max', t: 'Mobile Max (2-5)' },
-                            { v: 'mobile', t: 'Mobile (3-5)' }
+                            { v: 'desktop-max', t: 'Desktop Max (0-20)' },
+                            { v: 'desktop', t: 'Desktop (1-20)' },
+                            { v: 'mobile-max', t: 'Mobile Max (2-20)' },
+                            { v: 'mobile', t: 'Mobile (3-20)' }
                         ]}
                     />
                 </LabelGroup>
@@ -273,16 +273,6 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'lodMultiplier' }}
                         min={1.2}
                         max={10}
-                        precision={2}
-                        step={0.01}
-                    />
-                </LabelGroup>
-                <LabelGroup text='LOD Box Shrink'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodDistanceShrink' }}
-                        min={0}
-                        max={1}
                         precision={2}
                         step={0.01}
                     />

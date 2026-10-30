@@ -1391,8 +1391,8 @@ export const GSPLAT_DEBUG_HEATMAP = 3;
 export const GSPLAT_DEBUG_AABBS = 4;
 
 /**
- * Debug rendering that draws world-space AABBs for each octree node of streamed GSplats,
- * colorized by the currently selected LOD.
+ * Debug rendering that draws world-space AABBs for the octree nodes streamed GSplats currently
+ * render, colorized by their LOD, and in gray the nodes still loading for the current view.
  *
  * @type {number}
  * @category Graphics
