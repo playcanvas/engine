@@ -119,6 +119,10 @@ const readEntries = (node, lodLevels, entries) => {
  * many small ones, the leaves holding the levels no node above them holds. A node holding several
  * levels becomes a chain of nodes with the same bounds, one per level.
  *
+ * A level is rendered as the data holds it: a leaf with no splats in a level renders nothing for
+ * its region there, even with splats in the levels around it. Levels trained separately can place
+ * a region's splats in its neighbors at one level and not at another.
+ *
  * @param {object} data - The parsed manifest, `lod-meta.json`.
  * @param {number} [nodeSplats] - The most splats a node may hold in a level it takes over from its
  * leaves. Defaults to 4096.

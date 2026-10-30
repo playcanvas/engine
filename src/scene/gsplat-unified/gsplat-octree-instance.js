@@ -308,6 +308,41 @@ class GSplatOctreeInstance {
     _drawStamp = null;
 
     /**
+     * The loaded files the last cut holds a reference to without rendering them: the finer data
+     * of a region a coarser node renders in place of until the rest of that data loads. So data
+     * that loads first is not unloaded by its cooldown while it waits for the rest.
+     *
+     * @type {Int32Array|null}
+     * @private
+     */
+    _retained = null;
+
+    /** @private */
+    _retainedCount = 0;
+
+    /** @private */
+    _retainedNext = null;
+
+    /** @private */
+    _retainedNextCount = 0;
+
+    /**
+     * Per file, the {@link GSplatOctreeInstance#treeStamp} of the last cut that retained it.
+     *
+     * @type {Uint32Array|null}
+     * @private
+     */
+    _retainStamp = null;
+
+    /**
+     * Per file, 1 while this instance holds a reference to it in {@link GSplatOctreeInstance#_retained}.
+     *
+     * @type {Uint8Array|null}
+     * @private
+     */
+    _retainHeld = null;
+
+    /**
      * Returns the count of resources pending load or prefetch, including environment if loading.
      *
      * @type {number}
@@ -385,6 +420,10 @@ class GSplatOctreeInstance {
             // another camera for example, keeps loading. Without deferred ref counting nothing
             // releases an unreferenced download later, so it is unloaded right away.
             this.octree.removeRequests(this, !skipRefCounting);
+
+            // The retained files are not rendered, so they are released at once. With deferred ref
+            // counting the octree's cooldowns keep running and unload them, without it nothing does.
+            this._releaseRetained(skipRefCounting ? this.octree.cooldownTicks : 0);
         }
         this._fileRequests.clear();
 
@@ -422,6 +461,7 @@ class GSplatOctreeInstance {
      */
     _onDeviceLost() {
         // Decrement ref counts for all currently loaded file resources
+        this._releaseRetained(0);
         for (let i = 0; i < this.filePlacements.length; i++) {
             if (this.filePlacements[i]) {
                 // zero cooldown, immediate unload
@@ -516,6 +556,12 @@ class GSplatOctreeInstance {
             this._drawn = new Int32Array(count);
             this._drawnNext = new Int32Array(count);
             this._drawStamp = new Uint32Array(count);
+
+            const fileCount = this.octree.files.length;
+            this._retained = new Int32Array(fileCount);
+            this._retainedNext = new Int32Array(fileCount);
+            this._retainStamp = new Uint32Array(fileCount);
+            this._retainHeld = new Uint8Array(fileCount);
         }
         this.treeStamp++;
         this.treeStep = step;
@@ -713,6 +759,7 @@ class GSplatOctreeInstance {
         const stackState = /** @type {Uint8Array} */ (this._treeStackState);
         const drawn = /** @type {Int32Array} */ (this._drawnNext);
         let drawnCount = 0;
+        this._retainedNextCount = 0;
 
         Debug.call(() => {
             this._debugWaitingCount = 0;
@@ -732,8 +779,10 @@ class GSplatOctreeInstance {
             const end = first + childCount[n];
             const loaded = this._isTreeNodeLoaded(n);
 
-            // a region with no node loaded yet renders whatever is loaded below it
+            // a region with no node loaded yet renders whatever is loaded below it, measured as the
+            // allocator measures the nodes it reaches, for the distance others read off it
             if (nodeState === CUT_FALLBACK) {
+                this.measureTreeNode(n);
                 if (loaded) {
                     drawn[drawnCount++] = n;
                 } else if (loadedBelow[n] > 0) {
@@ -769,12 +818,14 @@ class GSplatOctreeInstance {
             }
 
             if (!allWithinLimit && loaded && (nodeLevel[n] - this._treeBand(n) <= underfillLimit || !allCoverable)) {
-                // the node renders coarser than asked for while the children it refines to load
+                // the node renders coarser than asked for while the children it refines to load, and
+                // holds what of them is loaded already
                 drawn[drawnCount++] = n;
                 for (let c = first; c < end; c++) {
                     if (!this._isTreeWithinLimit(c, underfillLimit) && !this._isTreeNodeLoaded(c)) {
                         this._requestCutNode(c, LOAD_TIER_SWITCH);
                     }
+                    this._retainRegion(c, underfillLimit);
                 }
             } else if (allWithinLimit || allCoverable) {
                 // refine, each child region rendering by its own LOD, or from the finer data below
@@ -829,6 +880,76 @@ class GSplatOctreeInstance {
         this._drawn = drawn;
         this._drawnNext = previous;
         this._drawnCount = drawnCount;
+
+        // Hold the files this cut retains, and release those only the previous one did. They are not
+        // rendered, so a release needs no world state to retire it first.
+        const retained = /** @type {Int32Array} */ (this._retainedNext);
+        const retainStamp = /** @type {Uint32Array} */ (this._retainStamp);
+        const retainHeld = /** @type {Uint8Array} */ (this._retainHeld);
+        for (let i = 0; i < this._retainedNextCount; i++) {
+            const fileIndex = retained[i];
+            if (!retainHeld[fileIndex]) {
+                retainHeld[fileIndex] = 1;
+                octree.incRefCount(fileIndex);
+            }
+        }
+
+        const previousRetained = /** @type {Int32Array} */ (this._retained);
+        for (let i = 0; i < this._retainedCount; i++) {
+            const fileIndex = previousRetained[i];
+            if (retainStamp[fileIndex] !== stamp) {
+                retainHeld[fileIndex] = 0;
+                octree.decRefCount(fileIndex, octree.cooldownTicks);
+            }
+        }
+
+        this._retained = retained;
+        this._retainedNext = previousRetained;
+        this._retainedCount = this._retainedNextCount;
+    }
+
+    /**
+     * Retains the loaded data a region refines to while a coarser node renders in its place: the
+     * nodes that would render it within the underfill limit, following the nodes the cut refines,
+     * the way {@link GSplatOctreeInstance#_isTreeWithinLimit} does.
+     *
+     * @param {number} n - A node the cut reached.
+     * @param {number} underfillLimit - See GSplatParams#lodUnderfillLimit.
+     * @private
+     */
+    _retainRegion(n, underfillLimit) {
+        const { nodes, nodeLevel, childStart, childCount } = this.octree;
+        const refines = this.treeRefined[n] === this.treeStamp;
+        if (this._isTreeNodeLoaded(n) && (!refines || nodeLevel[n] - this._treeBand(n) <= underfillLimit)) {
+            const fileIndex = nodes[n].lods[nodeLevel[n]].fileIndex;
+            const retainStamp = /** @type {Uint32Array} */ (this._retainStamp);
+            if (fileIndex !== -1 && retainStamp[fileIndex] !== this.treeStamp) {
+                retainStamp[fileIndex] = this.treeStamp;
+                /** @type {Int32Array} */ (this._retainedNext)[this._retainedNextCount++] = fileIndex;
+            }
+        } else if (refines) {
+            for (let c = childStart[n], end = c + childCount[n]; c < end; c++) {
+                this._retainRegion(c, underfillLimit);
+            }
+        }
+    }
+
+    /**
+     * Releases the files the cut retains.
+     *
+     * @param {number} cooldownTicks - See GSplatOctree#decRefCount.
+     * @private
+     */
+    _releaseRetained(cooldownTicks) {
+        const retained = this._retained;
+        const retainHeld = this._retainHeld;
+        if (retained && retainHeld) {
+            for (let i = 0; i < this._retainedCount; i++) {
+                retainHeld[retained[i]] = 0;
+                this.octree.decRefCount(retained[i], cooldownTicks);
+            }
+        }
+        this._retainedCount = 0;
     }
 
     /**

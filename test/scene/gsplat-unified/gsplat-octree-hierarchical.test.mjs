@@ -135,7 +135,8 @@ const makeInstance = (loaded = new Set()) => {
         treeOffset: 0,
         treeCutStop: Infinity,
         _drawn: null,
-        _drawnCount: 0
+        _drawnCount: 0,
+        _retainedCount: 0
     });
     return instance;
 };
@@ -208,6 +209,44 @@ describe('GSplatOctreeInstance#_applyTreeCut', function () {
         const loaded = new Set([A, B, A00, A10, A11, B00]);
         expect(drawnNodes(cut(loaded, twoTier(0, 1), 1))).to.deep.equal([A00, A10, A11, B00]);
         expect(drawnNodes(cut(loaded, twoTier(0, 1), 2))).to.deep.equal([A, B]);
+    });
+
+    it('measures the finer nodes it renders in place of the nodes still loading', function () {
+        // the allocator reached A0, A1 and B0 only, the leaves render in their place
+        const instance = cut(new Set([A, B, A00, A10, A11, B00]), twoTier(0, 1), 1);
+        expect(drawnNodes(instance)).to.deep.equal([A00, A10, A11, B00]);
+        expect([A10, A11, B00].map(n => instance.nodeInfos[n].worldDistanceSq)).to.deep.equal([4, 16, 36]);
+    });
+
+    it('holds the loaded children of a node rendering coarser until the rest of them load', function () {
+        const loaded = new Set([A, B, A0]);
+        const instance = cut(loaded, () => 1);
+        const { octree } = instance;
+
+        // A renders until A1 loads, holding A0, which loaded first, out of its cooldown
+        expect(drawnNodes(instance)).to.deep.equal([A, B]);
+        expect(octree.fileRefCounts[A0]).to.equal(1);
+        expect(octree.cooldowns.has(A0)).to.be.false;
+
+        // A1 loads and A refines: A0 renders, and the hold on it is released
+        loaded.add(A1);
+        octree.pollFileResource(A1);
+        setBands(instance, () => 1);
+        instance._applyTreeCut(0);
+        expect(drawnNodes(instance)).to.deep.equal([B, A0, A1]);
+        expect(octree.fileRefCounts[A0]).to.equal(1);
+        expect(instance._retainedCount).to.equal(0);
+    });
+
+    it('releases the held children into their cooldown when the cut no longer refines to them', function () {
+        const instance = cut(new Set([A, B, A0]), () => 1);
+        const { octree } = instance;
+        expect(octree.fileRefCounts[A0]).to.equal(1);
+
+        setBands(instance, () => 2);
+        instance._applyTreeCut(0);
+        expect(octree.fileRefCounts[A0]).to.equal(0);
+        expect(octree.cooldowns.has(A0)).to.be.true;
     });
 
     it('mixes regions, each rendering coarser where that is loaded and finer where it is not', function () {
