@@ -197,10 +197,13 @@ omniLight.addComponent('light', {
 omniLight.setPosition(2.5, 2, -2.5);
 app.root.addChild(omniLight);
 
-// A second camera, shown by its frustum, which renders no layers
+// A second camera, shown by its frustum, which renders into the top left corner while it is selected
 const shotCamera = new Entity('shot camera');
 shotCamera.addComponent('camera', {
-    layers: [],
+    enabled: false,
+    clearColor: new Color(0.2, 0.2, 0.25),
+    priority: 1,
+    rect: new Vec4(0.02, 0.7, 0.28, 0.28),
     fov: 40,
     nearClip: 0.5,
     farClip: 5
@@ -208,6 +211,26 @@ shotCamera.addComponent('camera', {
 shotCamera.setPosition(-3, 1.5, -3.5);
 shotCamera.lookAt(Vec3.ZERO);
 app.root.addChild(shotCamera);
+
+// Frame and label the shot camera's view, matching its rect, which is measured from the bottom left
+const { x, y, z, w } = shotCamera.camera.rect;
+const frame = document.createElement('div');
+frame.style.cssText = `
+    position: absolute; left: ${x * 100}%; bottom: ${y * 100}%; width: ${z * 100}%; height: ${w * 100}%;
+    box-sizing: border-box; border: 1px solid rgba(255, 255, 255, 0.6);
+    pointer-events: none;`;
+frame.hidden = true;
+const label = document.createElement('div');
+label.style.cssText = `
+    position: absolute; bottom: 6px; left: 6px; padding: 2px 6px; border-radius: 3px;
+    font-family: Arial, sans-serif; font-size: 12px; color: white; background: rgba(0, 0, 0, 0.5);`;
+label.textContent = 'Shot camera';
+frame.appendChild(label);
+document.body.appendChild(frame);
+const preview = (/** @type {boolean} */ show) => {
+    shotCamera.camera.enabled = show;
+    frame.hidden = !show;
+};
 
 // Gizmos
 let skipObserverFire = false;
@@ -263,6 +286,7 @@ selector.on('select', (/** @type {Entity} */ node, /** @type {boolean} */ clear)
         outlineRenderer.removeAllEntities();
     }
     outlineRenderer.addEntity(node, Color.WHITE);
+    preview(node === shotCamera || (!clear && shotCamera.camera.enabled));
 });
 app.on('gizmo:select', (/** @type {Entity} */ node) => {
     selector.fire('select', node, true);
@@ -275,6 +299,7 @@ selector.on('deselect', () => {
     }
     gizmoHandler.clear();
     outlineRenderer.removeAllEntities();
+    preview(false);
 });
 
 // Ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
@@ -441,6 +466,7 @@ app.on('destroy', () => {
     window.removeEventListener('keydown', keydown);
     window.removeEventListener('keyup', keyup);
     window.removeEventListener('keypress', keypress);
+    frame.remove();
 });
 
 // Initial selection

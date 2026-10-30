@@ -31,7 +31,8 @@ import { ShaderDefinitionUtils } from '../../../src/platform/graphics/shader-def
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
-    GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL
+    GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_AGX, TONEMAP_AGX_PUNCHY, TONEMAP_FILMIC,
+    TONEMAP_HEJL, TONEMAP_NEUTRAL
 } from '../../../src/scene/constants.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
@@ -253,7 +254,7 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'depth-effect-double-include', set: pass => addDepthEffect(pass, { includeChunk: true }) },
         { name: 'all', all: true },
         { name: 'all-gamma-none', all: true, set: () => ({ _gammaCorrection: GAMMA_NONE }) },
-        ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL].map(toneMapping => ({
+        ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY].map(toneMapping => ({
             name: `all-tonemap-${toneMapping}`, all: true, set: () => ({ toneMapping })
         })),
         ...['scene', 'bloom', 'dofcoc', 'dofblur', 'ssao', 'vignette'].map(debug => ({

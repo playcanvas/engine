@@ -10,6 +10,8 @@ import {
 import {
     TONEMAP_ACES,
     TONEMAP_ACES2,
+    TONEMAP_AGX,
+    TONEMAP_AGX_PUNCHY,
     TONEMAP_FILMIC,
     TONEMAP_HEJL,
     TONEMAP_LINEAR,
@@ -74,6 +76,16 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.compact' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Splat Budget'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.splatBudget' }}
+                        min={0}
+                        max={40}
+                        precision={1}
+                        step={0.1}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Orientation'>
                     <SelectInput
                         binding={new BindingTwoWay()}
@@ -100,7 +112,9 @@ export function Controls({ observer }) {
                             { v: TONEMAP_HEJL, t: 'HEJL' },
                             { v: TONEMAP_ACES, t: 'ACES' },
                             { v: TONEMAP_ACES2, t: 'ACES2' },
-                            { v: TONEMAP_NEUTRAL, t: 'NEUTRAL' }
+                            { v: TONEMAP_NEUTRAL, t: 'NEUTRAL' },
+                            { v: TONEMAP_AGX, t: 'AGX' },
+                            { v: TONEMAP_AGX_PUNCHY, t: 'AGX_PUNCHY' }
                         ]}
                     />
                 </LabelGroup>

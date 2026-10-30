@@ -16,7 +16,8 @@ const COARSE_COUNT = 10;
 
 // Leaves of unit half-extent centered on the given z positions of the camera axis. Each leaf has
 // its own file per level - `fine_<i>` for LOD 0 and `coarse_<i>` for LOD 1 - so every load can
-// be traced back to the one node and level that asked for it.
+// be traced back to the one node and level that asked for it. The tree built from them keeps each
+// leaf as its coarse node, refined to its fine node.
 const makeOctree = (zs) => {
     const filenames = [
         ...zs.map((z, i) => `fine_${i}.json`),
@@ -118,7 +119,7 @@ const addView = (octree, { lodUnderfillLimit = 1, lodBehindPenalty = 1.5 } = {})
     const lodUpdate = (budget = 1e6) => {
         inst.update();
         inst.resolveLodRange();
-        inst.evaluateNodeDistances(camera, params);
+        inst.prepareDistances(camera, params);
         balancer.balance(new Map([[placement, inst]]), budget, false);
         inst.applyLodChanges(params);
         octree.flushRequests();
@@ -143,6 +144,9 @@ describe('GSplatOctree streaming order', function () {
             // manifest order deliberately unrelated to distance
             const { registry, lodUpdate, resolveAll } = makeScene([-40, -10, -30, -20]);
 
+            // a node refines once it renders, so the fine data is requested after the coarse loads
+            lodUpdate();
+            resolveAll();
             lodUpdate();
             resolveAll();
 
@@ -156,6 +160,8 @@ describe('GSplatOctree streaming order', function () {
             // equally distant, one in front and one behind
             const { registry, lodUpdate, resolveAll } = makeScene([10, -10], { maxConcurrentLoads: 1 });
 
+            lodUpdate();
+            resolveAll();
             lodUpdate();
             resolveAll();
 
@@ -177,49 +183,42 @@ describe('GSplatOctree streaming order', function () {
             expect(registry.started).to.deep.equal([coarse(0), coarse(3)]);
         });
 
-        it('keeps waiting placements queued across LOD updates', function () {
+        it('keeps waiting loads queued across LOD updates', function () {
             const { registry, lodUpdate, queued } = makeScene([-10, -20, -30], { maxConcurrentLoads: 1, lodUnderfillLimit: 0 });
 
             lodUpdate();
-            expect(registry.started).to.deep.equal([fine(0)]);
-            expect(queued()).to.have.members([fine(1), fine(2)]);
+            expect(registry.started).to.deep.equal([coarse(0)]);
+            expect(queued()).to.have.members([coarse(1), coarse(2)]);
 
             lodUpdate();
-            expect(queued()).to.have.members([fine(1), fine(2)]);
+            expect(queued()).to.have.members([coarse(1), coarse(2)]);
         });
     });
 
     describe('withdrawing requests', function () {
 
-        it('drops a queued prefetch that is no longer wanted', function () {
+        it('drops a queued load that is no longer wanted', function () {
             const { registry, lodUpdate, resolveAll, queued } = makeScene([-10, -20, -30], { maxConcurrentLoads: 1 });
 
             lodUpdate();
-            expect(queued()).to.include.members([fine(0), fine(1), fine(2)]);
+            resolveAll();
+            lodUpdate();
+            expect(registry.started.filter(isFine)).to.deep.equal([fine(0)]);
+            expect(queued()).to.have.members([fine(1), fine(2)]);
 
             // a budget that only fits the coarse level, so no node wants the fine one any more
             lodUpdate(3 * COARSE_COUNT);
-            expect(queued().filter(url => url.includes('fine'))).to.deep.equal([]);
+            expect(queued().filter(isFine)).to.deep.equal([]);
 
             resolveAll();
-            expect(registry.started.filter(url => url.includes('fine'))).to.deep.equal([]);
-        });
-
-        it('drops a queued placement as soon as its node moves on, without waiting for the cooldown', function () {
-            const { lodUpdate, queued, inst } = makeScene([-10, -20, -30], { maxConcurrentLoads: 1, lodUnderfillLimit: 0 });
-
-            lodUpdate();
-            expect(queued()).to.have.members([fine(1), fine(2)]);
-
-            lodUpdate(3 * COARSE_COUNT);
-            expect(queued().filter(url => url.includes('fine'))).to.deep.equal([]);
-            expect(inst.pending.has(1)).to.equal(false);
-            expect(inst.pending.has(2)).to.equal(false);
+            expect(registry.started.filter(isFine)).to.deep.equal([fine(0)]);
         });
 
         it('lets a withdrawn download finish, then releases it after the cooldown', function () {
-            const { octree, loader, lodUpdate, resolve } = makeScene([-10, -20], { maxConcurrentLoads: 8 });
+            const { octree, loader, lodUpdate, resolve, resolveAll } = makeScene([-10, -20], { maxConcurrentLoads: 8 });
 
+            lodUpdate();
+            resolveAll();
             lodUpdate();
             expect(loader._currentlyLoading.has(fine(0))).to.equal(true);
 
@@ -236,8 +235,10 @@ describe('GSplatOctree streaming order', function () {
         });
 
         it('keeps a withdrawn download if it is requested again before the cooldown ends', function () {
-            const { octree, loader, lodUpdate } = makeScene([-10, -20], { maxConcurrentLoads: 8 });
+            const { octree, loader, lodUpdate, resolveAll } = makeScene([-10, -20], { maxConcurrentLoads: 8 });
 
+            lodUpdate();
+            resolveAll();
             lodUpdate();
             lodUpdate(2 * COARSE_COUNT);
             expect(octree.cooldowns.has(0)).to.equal(true);
@@ -247,15 +248,18 @@ describe('GSplatOctree streaming order', function () {
             expect(loader._currentlyLoading.has(fine(0))).to.equal(true);
         });
 
-        it('stops tracking a prefetch nothing wants any more', function () {
-            const { inst, lodUpdate } = makeScene([-10, -20], { maxConcurrentLoads: 1 });
+        it('stops tracking a load nothing wants any more', function () {
+            const { inst, lodUpdate, resolveAll } = makeScene([-10, -20], { maxConcurrentLoads: 1 });
 
+            lodUpdate();
+            expect([...inst.prefetchPending]).to.have.members([2, 3]);
+            resolveAll();
             lodUpdate();
             expect([...inst.prefetchPending]).to.have.members([0, 1]);
 
-            // only the coarse level fits now, so the fine files drop out and the coarse ones remain
+            // only the coarse level fits now, which is loaded, so nothing is waited for
             lodUpdate(2 * COARSE_COUNT);
-            expect([...inst.prefetchPending]).to.have.members([2, 3]);
+            expect([...inst.prefetchPending]).to.deep.equal([]);
         });
     });
 
@@ -375,7 +379,7 @@ describe('GSplatOctree streaming order', function () {
     describe('several cameras', function () {
 
         it('does not withdraw the files another camera still waits for', function () {
-            const { octree, queued } = makeStreaming([-10, -20, -30], 1);
+            const { octree, queued, resolveAll } = makeStreaming([-10, -20, -30], 1);
             const a = addView(octree);
             const b = addView(octree);
 
@@ -383,43 +387,51 @@ describe('GSplatOctree streaming order', function () {
             b.placement.lodRangeMin = 1;
 
             a.lodUpdate();
-            expect(queued().filter(isFine)).to.have.members([fine(0), fine(1), fine(2)]);
+            resolveAll();
+            a.lodUpdate();
+            expect(queued().filter(isFine)).to.have.members([fine(1), fine(2)]);
 
             // B keeps re-evaluating while A's camera stays still
             for (let i = 0; i < 5; i++) {
                 b.lodUpdate();
             }
-            expect(queued().filter(isFine)).to.have.members([fine(0), fine(1), fine(2)]);
+            expect(queued().filter(isFine)).to.have.members([fine(1), fine(2)]);
         });
 
         it('withdraws a file once no camera wants it', function () {
-            const { octree, queued } = makeStreaming([-10, -20, -30], 1);
+            const { octree, queued, resolveAll } = makeStreaming([-10, -20, -30], 1);
             const a = addView(octree);
             const b = addView(octree);
 
             a.lodUpdate();
             b.lodUpdate();
-            expect(queued().filter(isFine)).to.have.members([fine(0), fine(1), fine(2)]);
+            resolveAll();
+            a.lodUpdate();
+            b.lodUpdate();
+            expect(queued().filter(isFine)).to.have.members([fine(1), fine(2)]);
 
             // a budget that only fits the coarse level
             a.lodUpdate(3 * COARSE_COUNT);
-            expect(queued().filter(isFine)).to.have.members([fine(0), fine(1), fine(2)]);
+            expect(queued().filter(isFine)).to.have.members([fine(1), fine(2)]);
 
             b.lodUpdate(3 * COARSE_COUNT);
             expect(queued().filter(isFine)).to.deep.equal([]);
         });
 
         it('keeps what another camera still wants when one camera is destroyed', function () {
-            const { octree, loader, queued } = makeStreaming([-10, -20, -30], 1);
+            const { octree, loader, queued, resolveAll } = makeStreaming([-10, -20, -30], 1);
             const a = addView(octree);
             const b = addView(octree);
             b.placement.lodRangeMin = 1;
 
             a.lodUpdate();
             b.lodUpdate();
+            resolveAll();
+            a.lodUpdate();
+            b.lodUpdate();
 
             b.inst.destroy(true);
-            expect(queued().filter(isFine)).to.have.members([fine(0), fine(1), fine(2)]);
+            expect(queued().filter(isFine)).to.have.members([fine(1), fine(2)]);
 
             a.inst.destroy(true);
             expect(queued()).to.deep.equal([]);
@@ -441,10 +453,13 @@ describe('GSplatOctree streaming order', function () {
         });
 
         it('keeps a download in progress that another camera wants when one camera is torn down', function () {
-            const { octree, loader } = makeStreaming([-10, -20], 8);
+            const { octree, loader, resolveAll } = makeStreaming([-10, -20], 8);
             const a = addView(octree);
             const b = addView(octree);
 
+            a.lodUpdate();
+            b.lodUpdate();
+            resolveAll();
             a.lodUpdate();
             b.lodUpdate();
             expect(loader._currentlyLoading.has(fine(0))).to.equal(true);

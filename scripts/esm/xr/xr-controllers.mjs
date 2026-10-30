@@ -206,8 +206,9 @@ class XrControllers extends Script {
      */
     async _onInputSourceAdd(inputSource) {
         // a transient pointer (looking and pinching on Apple Vision Pro) is neither a hand nor a
-        // device to draw: its profile's model would float at every select
-        if (inputSource.targetRayMode === 'transient-pointer') {
+        // device to draw: its profile's model would float at every select. Nor is a screen's
+        // touch (a phone in AR), whose profile has no model, so each touch would warn below
+        if (inputSource.targetRayMode === 'transient-pointer' || inputSource.targetRayMode === 'screen') {
             return;
         }
 

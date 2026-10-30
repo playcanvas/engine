@@ -125,7 +125,7 @@ const config = {
     lodUnderfillLimit: 5,
     cameraPosition: [10.3, 2, -10],
     focusPoint: [12, 3, 0],
-    // Camera fly speeds — the instanced world is enormous. Normal speed is 10x the lod-streaming
+    // Camera fly speeds — the instanced world is enormous. Normal speed is 10x the streamed-sog
     // example; fast (shift) is 80x.
     moveSpeed: 4 * 10, // 40
     moveFastSpeed: 15 * 20 * 4 // 1200
@@ -203,7 +203,7 @@ const applySkyRotation = () => {
 applySkyRotation();
 data.on('skyRotation:set', applySkyRotation);
 
-// --- scene-wide gsplat defaults (same values as the lod-streaming example) ---
+// --- scene-wide gsplat defaults (same values as the streamed-sog example) ---
 app.scene.gsplat.lodUpdateAngle = 90;
 app.scene.gsplat.lodBehindPenalty = 3;
 app.scene.gsplat.radialSorting = true;
@@ -383,7 +383,7 @@ const onFrameReady = (
 };
 gsplatSystem.on('frame:ready', onFrameReady);
 
-// --- camera with fly controls (same controls as lod-streaming, much faster move speeds) ---
+// --- camera with fly controls (same controls as streamed-sog, much faster move speeds) ---
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
 

@@ -281,8 +281,9 @@ class GSplatParams {
      * - {@link GSPLAT_DEBUG_SH_UPDATE}: Random color per SH update pass to visualize update
      * frequency.
      * - {@link GSPLAT_DEBUG_AABBS}: Draw world-space AABBs for each GSplat, colorized by LOD.
-     * - {@link GSPLAT_DEBUG_NODE_AABBS}: Draw world-space AABBs for each octree node of
-     * streamed GSplats, colorized by the currently selected LOD.
+     * - {@link GSPLAT_DEBUG_NODE_AABBS}: Draw world-space AABBs for the octree nodes streamed
+     * GSplats currently render, colorized by their LOD, and in gray the nodes still loading for the
+     * current view.
      *
      * Only one debug mode can be active at a time. Defaults to {@link GSPLAT_DEBUG_NONE}.
      *
@@ -513,38 +514,6 @@ class GSplatParams {
      */
     get lodBehindPenalty() {
         return this._lodBehindPenalty;
-    }
-
-    /** @private */
-    _lodDistanceShrink = 0.75;
-
-    /**
-     * Sets how the camera distance to each part of a streamed GSplat is judged when choosing its
-     * level of detail. At 0, a part counts as near as soon as any of it is near, so unusually
-     * large or sparse areas that reach towards the camera - sky, distant background, long thin
-     * regions - can get more detail than their surroundings and show up as patches of higher
-     * detail. Higher values judge those oversized parts closer to their middle instead, which
-     * removes the patches and lowers memory use; parts of typical size are unaffected. Use 1
-     * when memory matters more than detail close up, for example on mobile - it gives the lowest
-     * memory use. Clamped to [0, 1]. Defaults to 0.75.
-     *
-     * @type {number}
-     * @ignore
-     */
-    set lodDistanceShrink(value) {
-        value = Math.min(Math.max(value, 0), 1);
-        if (this._lodDistanceShrink !== value) {
-            this._lodDistanceShrink = value;
-            this.dirty = true;
-        }
-    }
-
-    /**
-     * @type {number}
-     * @ignore
-     */
-    get lodDistanceShrink() {
-        return this._lodDistanceShrink;
     }
 
     /**

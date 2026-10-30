@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.24.0-beta.25",
+  "version": "2.24.0-beta.26",
   "packageManager": "npm@11.19.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
@@ -85,7 +85,7 @@
     "@webgpu/types": "^0.1.70"
   },
   "devDependencies": {
-    "@playcanvas/eslint-config": "3.0.0-beta.8",
+    "@playcanvas/eslint-config": "3.0.0",
     "@rollup/plugin-strip": "3.0.4",
     "@types/node": "24.13.5",
     "acorn": "8.18.0",
