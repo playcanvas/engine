@@ -542,7 +542,7 @@ const SCENES = [
     // 2: apartment (.sog) — start at the editor/paint "biker1" spot, transformed into this
     // scene's frame (apartment at origin, euler 180, scale 1), looking toward the interior
     { asset: apartmentAsset, euler: [180, 0, 0], pos: [-3.8, -0.1, 7.2], focus: [0, -0.1, 0] },
-    // 3: skatepark — viewpoint from the lod-streaming-sh example
+    // 3: skatepark — viewpoint from the streamed-sog-sh example
     { asset: skateparkAsset, euler: [-90, 0, 0], pos: [32, 2, 2], focus: [0, 0.6, 0] }
 ];
 const SCENE_ROW = 5;
