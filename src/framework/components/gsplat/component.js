@@ -56,14 +56,15 @@ const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unifi
  * - [Downtown Streaming](https://playcanvas.github.io/#/gaussian-splatting/downtown)
  * - [Global Sorting](https://playcanvas.github.io/#/gaussian-splatting/global-sorting)
  * - [LOD Instances](https://playcanvas.github.io/#/gaussian-splatting/lod-instances)
- * - [LOD Streaming](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming)
- * - [LOD Streaming with Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming-sh)
  * - [Multi-Splat](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
  * - [Multi-View](https://playcanvas.github.io/#/gaussian-splatting/multi-view)
  * - [Picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
  * - [Reveal Effect](https://playcanvas.github.io/#/gaussian-splatting/reveal)
  * - [Shader Effects](https://playcanvas.github.io/#/gaussian-splatting/shader-effects)
  * - [Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/spherical-harmonics)
+ * - [Streamed LCC2](https://playcanvas.github.io/#/gaussian-splatting/streamed-lcc2)
+ * - [Streamed SOG](https://playcanvas.github.io/#/gaussian-splatting/streamed-sog)
+ * - [Streamed SOG with Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/streamed-sog-sh)
  *
  * @hideconstructor
  * @category Graphics

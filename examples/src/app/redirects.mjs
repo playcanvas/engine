@@ -9,6 +9,8 @@
  */
 export const exampleRedirects = {
     'debug/entity-inspector': 'debug/inspector',
+    'gaussian-splatting/lod-streaming': 'gaussian-splatting/streamed-sog',
+    'gaussian-splatting/lod-streaming-sh': 'gaussian-splatting/streamed-sog-sh',
     'graphics-advanced/custom-msaa-resolve': 'render-targets/custom-msaa-resolve',
     'graphics-advanced/msaa-depth-fog': 'render-targets/msaa-depth-fog',
     'graphics/ambient-occlusion': 'camera-frame/ambient-occlusion',

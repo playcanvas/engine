@@ -76,6 +76,16 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.compact' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Splat Budget'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.splatBudget' }}
+                        min={0}
+                        max={40}
+                        precision={1}
+                        step={0.1}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Orientation'>
                     <SelectInput
                         binding={new BindingTwoWay()}

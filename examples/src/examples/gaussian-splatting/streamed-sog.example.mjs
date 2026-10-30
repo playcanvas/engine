@@ -60,7 +60,7 @@ import { data, deviceType, win } from 'examples/context';
  */
 
 // Allow overriding scene url, orientation and camera speed via hash query params, e.g.
-// #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90&speed=5
+// #/gaussian-splatting/streamed-sog?url=https://example.com/scene/lod-meta.json&orientation=90&speed=5
 const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
 const hashParams = new URLSearchParams(hashQuery);
 const paramUrl = hashParams.get('url');

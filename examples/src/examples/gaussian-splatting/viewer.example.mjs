@@ -39,16 +39,23 @@ import {
     Vec2,
     WasmModule,
     createGraphicsDevice,
-    math
+    math,
+    platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
 
-import { data, deviceType } from 'examples/context';
+import { data, deviceType, win } from 'examples/context';
 
 /**
  * @import { MeshInstance } from 'playcanvas'
  */
+
+// A scene can also be loaded from a url, entered under the drop instructions or given as a hash
+// query param. This includes the streamed level of detail scenes, `lod-meta.json` and XGRIDS
+// `.lcc2`, e.g. #/gaussian-splatting/viewer?url=https://example.com/scene/lod-meta.json
+const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
+const paramUrl = new URLSearchParams(hashQuery).get('url');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -87,7 +94,45 @@ dropBox.style.cssText = `
     text-align: center;
     line-height: 1.4;
 `;
-dropBox.innerHTML = 'Drop .ply, .sog, .spz, or .glb file to view<br>or unpacked SOG (meta.json + .webp files)';
+const dropText = document.createElement('div');
+dropText.innerHTML =
+    'Drop .ply, .sog, .spz, or .glb file to view<br>or unpacked SOG (meta.json + .webp files)<br>or open a scene from its URL';
+dropBox.appendChild(dropText);
+
+// the url field takes clicks and typing, the rest of the overlay lets drops through to the canvas
+const urlForm = document.createElement('form');
+urlForm.style.cssText = `
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    pointer-events: auto;
+`;
+const urlInput = document.createElement('input');
+urlInput.type = 'text';
+urlInput.placeholder = 'https://.../lod-meta.json, .lcc2, .sog, .ply';
+urlInput.value = paramUrl || '';
+urlInput.style.cssText = `
+    flex: 1;
+    min-width: 360px;
+    padding: 8px 12px;
+    font-size: 16px;
+    color: white;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+`;
+const urlButton = document.createElement('button');
+urlButton.type = 'submit';
+urlButton.textContent = 'Open';
+urlButton.style.cssText = `
+    padding: 8px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+`;
+urlForm.append(urlInput, urlButton);
+dropBox.appendChild(urlForm);
 dropOverlay.appendChild(dropBox);
 document.body.appendChild(dropOverlay);
 
@@ -145,7 +190,10 @@ app.start();
 
 let splatEntity = null;
 
+// streamed scenes, as in the streamed-sog example, using all their levels of detail
 app.scene.gsplat.lodBehindPenalty = 3;
+app.scene.gsplat.lodUpdateDistance = 0.5;
+app.scene.gsplat.lodUnderfillLimit = 5;
 app.scene.gsplat.minPixelSize = 2;
 app.scene.gsplat.minContribution = 2;
 
@@ -165,6 +213,31 @@ const calcEntityAABB = (bbox, entity) => {
         });
     });
     return bbox;
+};
+
+/**
+ * The orientation that shows a splat file upright: SPZ stores +Y up, LCC2 +Z up, and the other
+ * formats -Y up.
+ *
+ * @param {string} filename - The file name.
+ * @returns {number} The rotation around the x axis, in degrees.
+ */
+const orientationOf = (filename) => {
+    const name = filename.toLowerCase();
+    if (name.endsWith('.spz')) return 0;
+    if (name.endsWith('.lcc2')) return 270;
+    return 180;
+};
+
+/**
+ * Shows a message in the drop overlay.
+ *
+ * @param {string} text - The message.
+ */
+const showError = (text) => {
+    dropText.textContent = text;
+    dropBox.style.background = 'rgba(180, 50, 50, 0.7)';
+    dropOverlay.style.display = 'flex';
 };
 
 // Create camera at startup so skydome is visible before dropping files
@@ -235,6 +308,8 @@ data.set('data', {
     // even a degree of stale view direction is visible
     colorUpdateAngle: 0,
     orientation: 180,
+    // the most splats a streamed scene renders, in millions; other splats always render in full
+    splatBudget: platform.mobile ? 2 : 6,
     tonemapping: TONEMAP_LINEAR,
     grading: {
         exposure: 0, // 0 EV = no change
@@ -260,6 +335,7 @@ applySkydome();
 // Apply settings function
 const applySettings = () => {
     app.scene.gsplat.colorUpdateAngle = data.get('data.colorUpdateAngle');
+    app.scene.gsplat.splatBudget = Math.round(data.get('data.splatBudget') * 1000000);
 
     cameraFrame.rendering.toneMapping = data.get('data.tonemapping');
 
@@ -301,24 +377,62 @@ data.on('renderer:set', () => {
 });
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 
-// Listen for changes
-data.on('*:set', (/** @type {string} */ path) => {
-    if (path === 'data.skydome') {
-        applySkydome();
-    } else if (path === 'data.compact') {
-        app.scene.gsplat.dataFormat = data.get('data.compact') ? GSPLATDATA_COMPACT : GSPLATDATA_LARGE;
-    } else if (path === 'data.antialias') {
-        app.scene.gsplat.antiAlias = data.get('data.antialias');
-    } else if (path === 'data.orientation') {
-        // Apply orientation to splat entity
-        if (splatEntity) {
-            const orientation = data.get('data.orientation');
-            splatEntity.setLocalEulerAngles(orientation, 0, 0);
-        }
+/** @type {CameraControls|null} */
+let cameraControls = null;
+
+/**
+ * Points the camera at a loaded entity, from a distance where its bounds fill the view.
+ *
+ * @param {Entity} entity - The entity.
+ * @param {BoundingBox} aabb - Its bounds, in local space for a gsplat and world space otherwise.
+ */
+const frameEntity = (entity, aabb) => {
+    const center = aabb.center;
+    const size = aabb.halfExtents.length() * 2;
+    const cameraDistance = size * 2.5;
+
+    // Update camera for the loaded asset
+    camera.camera.farClip = size * 10;
+    camera.setLocalPosition(center.x, center.y + size * 0.3, center.z + cameraDistance);
+
+    // frame the world space bounds from that direction, at the distance where they fill the view
+    const bounds = new BoundingBox();
+    if (entity.gsplat) {
+        bounds.setFromTransformedAabb(aabb, entity.getWorldTransform());
     } else {
-        applySettings();
+        bounds.copy(aabb);
     }
-});
+    const { halfExtents } = bounds;
+    const radius = Math.max(halfExtents.x, halfExtents.y, halfExtents.z);
+    const fitDistance = (radius * 1.5) / Math.sin(0.5 * camera.camera.fov * math.DEG_TO_RAD);
+    camera.setPosition(
+        camera.getPosition().clone().sub(bounds.center).normalize().mulScalar(fitDistance).add(bounds.center)
+    );
+
+    // Orbit with the left mouse button and the wheel, fly with the right mouse button or WASD and
+    // QE, at speeds that suit the size of the scene. Hold shift to fly faster and ctrl slower.
+    const settings = {
+        zoomRange: new Vec2(0.01, size * 5),
+        moveSpeed: size * 0.02,
+        moveFastSpeed: size * 0.08,
+        moveSlowSpeed: size * 0.005
+    };
+
+    // Add camera controls on the first load, and move them to each later one
+    if (cameraControls) {
+        Object.assign(cameraControls, settings);
+        cameraControls.reset(bounds.center, camera.getPosition());
+    } else {
+        camera.addComponent('script');
+        cameraControls = camera.script.create(CameraControls, {
+            properties: {
+                focusPoint: bounds.center,
+                pitchRange: new Vec2(-90, 90),
+                ...settings
+            }
+        });
+    }
+};
 
 // Setup drag and drop handlers
 canvas.addEventListener('dragover', (e) => {
@@ -429,8 +543,7 @@ canvas.addEventListener('drop', async (e) => {
             asset: asset
         });
 
-        // unlike ply/sog, spz files store data with +Y up, so no flip rotation is needed
-        const orientation = isSpz ? 0 : 180;
+        const orientation = orientationOf(file.name);
         entity.setLocalEulerAngles(orientation, 0, 0);
         app.root.addChild(entity);
 
@@ -465,10 +578,8 @@ canvas.addEventListener('drop', async (e) => {
             });
         } catch (err) {
             console.error('Failed to load GLB:', err);
-            // Show error in overlay (Draco/Basis compressed files are not supported)
-            dropBox.textContent = 'Failed to load GLB (compressed formats not supported)';
-            dropBox.style.background = 'rgba(180, 50, 50, 0.7)';
-            dropOverlay.style.display = 'flex';
+            // Draco/Basis compressed files are not supported
+            showError('Failed to load GLB (compressed formats not supported)');
             return;
         }
 
@@ -480,36 +591,79 @@ canvas.addEventListener('drop', async (e) => {
         aabb = calcEntityAABB(new BoundingBox(), entity);
     }
 
-    const center = aabb.center;
-    const size = aabb.halfExtents.length() * 2;
-    const cameraDistance = size * 2.5;
-
-    // Update camera for the loaded asset
-    camera.camera.farClip = size * 10;
-    camera.setLocalPosition(center.x, center.y + size * 0.3, center.z + cameraDistance);
-
-    // frame the world space bounds from that direction, at the distance where they fill the view
-    const bounds = new BoundingBox();
-    if (entity.gsplat) {
-        bounds.setFromTransformedAabb(aabb, entity.getWorldTransform());
-    } else {
-        bounds.copy(aabb);
-    }
-    const { halfExtents } = bounds;
-    const radius = Math.max(halfExtents.x, halfExtents.y, halfExtents.z);
-    const fitDistance = (radius * 1.5) / Math.sin(0.5 * camera.camera.fov * math.DEG_TO_RAD);
-    camera.setPosition(
-        camera.getPosition().clone().sub(bounds.center).normalize().mulScalar(fitDistance).add(bounds.center)
-    );
-
-    // Add camera controls
-    camera.addComponent('script');
-    camera.script.create(CameraControls, {
-        properties: {
-            enableFly: false,
-            focusPoint: bounds.center,
-            pitchRange: new Vec2(-90, 90),
-            zoomRange: new Vec2(0.01, size * 5)
-        }
-    });
+    frameEntity(entity, aabb);
 });
+
+// Load a gsplat scene from a url, replacing the one loaded from the previous url
+/** @type {{ entity: Entity, asset: Asset } | null} */
+let urlScene = null;
+const loadUrl = async (/** @type {string} */ url) => {
+    if (!url) return;
+    dropOverlay.style.display = 'none';
+
+    const filename = new URL(url, window.location.href).pathname.split('/').pop() || url;
+    const asset = new Asset(filename, 'gsplat', { url });
+    app.assets.add(asset);
+    try {
+        await new Promise((resolve, reject) => {
+            asset.once('load', resolve);
+            asset.once('error', reject);
+            app.assets.load(asset);
+        });
+    } catch (err) {
+        console.error(`Failed to load ${url}:`, err);
+        app.assets.remove(asset);
+        showError(`Failed to load ${filename}`);
+        return;
+    }
+
+    if (urlScene) {
+        urlScene.entity.destroy();
+        app.assets.remove(urlScene.asset);
+        urlScene.asset.unload();
+    }
+
+    const entity = new Entity(filename);
+    entity.addComponent('gsplat', { asset });
+    const orientation = orientationOf(filename);
+    entity.setLocalEulerAngles(orientation, 0, 0);
+    app.root.addChild(entity);
+    urlScene = { entity, asset };
+
+    splatEntity = entity;
+    data.set('data.orientation', orientation);
+
+    // Wait a frame for customAabb to be available
+    await new Promise((resolve) => {
+        requestAnimationFrame(resolve);
+    });
+    frameEntity(entity, entity.gsplat.customAabb);
+};
+
+// Listen for changes
+data.on('*:set', (/** @type {string} */ path) => {
+    if (path === 'data.skydome') {
+        applySkydome();
+    } else if (path === 'data.compact') {
+        app.scene.gsplat.dataFormat = data.get('data.compact') ? GSPLATDATA_COMPACT : GSPLATDATA_LARGE;
+    } else if (path === 'data.antialias') {
+        app.scene.gsplat.antiAlias = data.get('data.antialias');
+    } else if (path === 'data.orientation') {
+        // Apply orientation to splat entity
+        if (splatEntity) {
+            const orientation = data.get('data.orientation');
+            splatEntity.setLocalEulerAngles(orientation, 0, 0);
+        }
+    } else {
+        applySettings();
+    }
+});
+
+urlForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    loadUrl(urlInput.value.trim());
+});
+
+if (paramUrl) {
+    loadUrl(paramUrl);
+}
