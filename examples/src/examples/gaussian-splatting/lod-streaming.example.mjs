@@ -59,12 +59,13 @@ import { data, deviceType, win } from 'examples/context';
  * @import { Texture } from 'playcanvas'
  */
 
-// Allow overriding scene url and orientation via hash query params, e.g.
-// #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90
+// Allow overriding scene url, orientation and camera speed via hash query params, e.g.
+// #/gaussian-splatting/lod-streaming?url=https://example.com/scene/lod-meta.json&orientation=90&speed=5
 const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
 const hashParams = new URLSearchParams(hashQuery);
 const paramUrl = hashParams.get('url');
 const paramOrientation = hashParams.get('orientation');
+const paramSpeed = parseFloat(hashParams.get('speed') || '1') || 1;
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -174,20 +175,21 @@ const ENV_PRESETS = {
     }
 };
 
-// LOD preset definitions
+// LOD preset definitions. The ranges end past any scene's coarsest level, so the range clamps to
+// the scene's own levels and distant parts can always use its coarsest ones.
 /** @type {Record<string, { range: number[] }>} */
 const LOD_PRESETS = {
     'desktop-max': {
-        range: [0, 5]
+        range: [0, 20]
     },
     desktop: {
-        range: [1, 5]
+        range: [1, 20]
     },
     'mobile-max': {
-        range: [2, 5]
+        range: [2, 20]
     },
     mobile: {
-        range: [3, 5]
+        range: [3, 20]
     }
 };
 
@@ -277,8 +279,6 @@ data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
 data.set('splatBudgetMode', GSPLAT_BUDGET_TARGET);
 data.set('lodBaseDistance', 5);
 data.set('lodMultiplier', 3);
-// Experimental: shrink each LOD node's bounds towards its center before measuring its distance
-data.set('lodDistanceShrink', 0.75);
 data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');
 data.set('fogDensity', 0);
@@ -311,8 +311,8 @@ camera.addComponent('script');
 const cc = /** @type { CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
 Object.assign(cc, {
     sceneSize: 500,
-    moveSpeed: /** @type {number} */ (config.moveSpeed),
-    moveFastSpeed: /** @type {number} */ (config.moveFastSpeed),
+    moveSpeed: /** @type {number} */ (config.moveSpeed) * paramSpeed,
+    moveFastSpeed: /** @type {number} */ (config.moveFastSpeed) * paramSpeed,
     enableOrbit: false,
     enablePan: false,
     focusPoint: focusPoint
@@ -577,12 +577,6 @@ const applySplatBudgetMode = () => {
 };
 applySplatBudgetMode();
 data.on('splatBudgetMode:set', applySplatBudgetMode);
-
-const applyLodDistanceShrink = () => {
-    app.scene.gsplat.lodDistanceShrink = data.get('lodDistanceShrink');
-};
-applyLodDistanceShrink();
-data.on('lodDistanceShrink:set', applyLodDistanceShrink);
 
 data.on('lodBaseDistance:set', () => {
     if (gsplatGs) {
