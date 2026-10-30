@@ -157,7 +157,9 @@ const buildEngine = async () => {
             buildType,
             preserveModules: false,
             input: '../src/index.js',
-            dir: IFRAME_DIR
+            dir: IFRAME_DIR,
+            // an external map, which devtools fetch only when they are open
+            sourcemaps: buildType === 'dbg'
         })));
     }
     await Promise.all(tasks);
