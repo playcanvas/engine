@@ -40,9 +40,10 @@ describe('WebgpuXrBridge', function () {
                 return layer;
             }
 
-            // a view's sub-image: a slice of the layer's color, and the depth
+            // a view's sub-image: a slice of the layer's color, and the depth; a layer with a
+            // lostFromView fails from that view on, so a frame acquires only the views before it
             getViewSubImage(layer, view) {
-                if (layer.lost) {
+                if (layer.lost || view.index >= (layer.lostFromView ?? Infinity)) {
                     throw new Error('Unable to acquire the WebGPU projection layer texture.');
                 }
                 return {
@@ -175,6 +176,27 @@ describe('WebgpuXrBridge', function () {
         bridge.impl.beginFrame(frame(2), {});
         expect(bridge.device.xrSubImages).to.have.length(2);
         expect(bridge._onBindingError.calledTwice).to.be.true;
+    });
+
+    it('keeps no view, and clears no depth, of a frame that cannot acquire a later view\'s texture', function () {
+        depthTexture = createDepthTexture('depth24plus');
+        const bridge = createBridge();
+        const lost = bridge.impl.presentationLayer;
+        lost.lostFromView = 1;
+
+        // the second frame makes the layer again and destroys the lost one, which neither frame's
+        // first view, nor its depth clear, may then reference
+        for (let i = 0; i < 2; i++) {
+            bridge.impl.beginFrame(frame(2), {});
+            expect(bridge.device.xrSubImages).to.have.length(0);
+        }
+        expect(lost.destroy.calledOnce).to.be.true;
+        expect(bridge.device.commandEncoder.beginRenderPass.called).to.be.false;
+
+        // the next frame draws both views into the new layer and clears both depths
+        bridge.impl.beginFrame(frame(2), {});
+        expect(bridge.device.xrSubImages).to.have.length(2);
+        expect(bridge.device.commandEncoder.beginRenderPass.calledTwice).to.be.true;
     });
 
     it('keeps the projection layer when a single frame cannot acquire its texture', function () {

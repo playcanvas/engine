@@ -84,12 +84,19 @@ class WebgpuXrBridge {
             return;
         }
 
+        // the views' depth textures and array layers, cleared only once every view has acquired its
+        // texture, so a frame that fails part way encodes nothing from a layer about to be destroyed
+        let depthClears = null;
+
         const subImages = device.xrSubImages;
         for (let i = 0; i < pose.views.length; i++) {
             let sub;
             try {
                 sub = this._binding.getViewSubImage(this._layer, pose.views[i]);
             } catch (e) {
+                // drop the views acquired before this one, which would otherwise render into a
+                // layer that is about to be destroyed
+                subImages.length = 0;
                 this.xrBridge._onBindingError?.(e);
                 // A runtime can lose the projection layer's textures, after which every
                 // getViewSubImage fails to acquire one and nothing reaches the display: the Quest
@@ -132,7 +139,8 @@ class WebgpuXrBridge {
             // Remove once Safari is fixed.
             const depthTexture = sub.depthStencilTexture;
             if (depthTexture) {
-                this._clearDepth(depthTexture, viewDescriptor?.baseArrayLayer ?? 0);
+                depthClears ??= [];
+                depthClears.push(depthTexture, viewDescriptor?.baseArrayLayer ?? 0);
             }
 
             // Prefer the view descriptor's format when present: WebXR runtimes may use it to
@@ -145,6 +153,12 @@ class WebgpuXrBridge {
                 viewport: sub.viewport,
                 viewFormat: viewDescriptor?.format ?? colorTexture.format
             });
+        }
+
+        if (depthClears) {
+            for (let i = 0; i < depthClears.length; i += 2) {
+                this._clearDepth(depthClears[i], depthClears[i + 1]);
+            }
         }
 
         // First view: seeds device.xr* for WebGPU frameStart (runs before per-eye rendering) and
