@@ -354,6 +354,57 @@ describe('AssetRegistry', function () {
             expect(again.asset.resource).to.equal('reloaded');
         });
 
+        it('drops a load that finishes after the asset was unloaded', () => {
+            const callbacks = [];
+            stub(app.loader, 'load').callsFake((url, type, callback) => callbacks.push(callback));
+            const clearCache = stub(app.loader, 'clearCache');
+
+            const asset = new Asset('flaky', 'text', { url: `${assetPath}flaky.txt` });
+            app.assets.add(asset);
+            const onLoad = spy();
+            asset.on('load', onLoad);
+
+            app.assets.load(asset);
+            expect(asset.loading).to.be.true;
+
+            asset.unload();
+            expect(asset.loading).to.be.false;
+            clearCache.resetHistory();
+
+            callbacks[0](null, 'late');
+            expect(asset.loaded).to.be.false;
+            expect(asset.loading).to.be.false;
+            expect(asset.resource).to.not.exist;
+            expect(onLoad.called).to.be.false;
+            expect(clearCache.calledOnce).to.be.true;
+        });
+
+        it('keeps the load of an asset that was unloaded and loaded again', () => {
+            const callbacks = [];
+            stub(app.loader, 'load').callsFake((url, type, callback) => callbacks.push(callback));
+
+            const asset = new Asset('flaky', 'text', { url: `${assetPath}flaky.txt` });
+            app.assets.add(asset);
+            const onLoad = spy();
+            asset.on('load', onLoad);
+
+            app.assets.load(asset);
+            asset.unload();
+            app.assets.load(asset);
+            expect(callbacks.length).to.equal(2);
+
+            callbacks[0](null, 'stale');
+            expect(asset.loaded).to.be.false;
+            expect(asset.loading).to.be.true;
+            expect(onLoad.called).to.be.false;
+
+            callbacks[1](null, 'fresh');
+            expect(asset.loaded).to.be.true;
+            expect(asset.loading).to.be.false;
+            expect(asset.resource).to.equal('fresh');
+            expect(onLoad.calledOnce).to.be.true;
+        });
+
         it('loads css assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.css`, 'css', (err, asset) => {
                 expect(err).to.be.null;
