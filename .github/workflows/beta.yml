@@ -34,7 +34,7 @@ jobs:
       - name: Set up Node.js 24.x
         uses: actions/setup-node@v7
         with:
-          node-version: 24.x
+          node-version: 26.x
           cache: "npm"
 
       - name: Configure Git User
