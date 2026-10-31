@@ -73,20 +73,17 @@ class GSplatSortBinWeights {
     }
 
     /**
-     * Computes the camera bin index based on sort mode and distance range.
+     * Computes the camera bin index from the distance range of a linear sort. Only the depth sort
+     * of an orthographic or fisheye camera uses the bins; the other sort keys are spaced by log
+     * distance.
      *
-     * @param {boolean} radialSort - Whether using radial sort mode.
      * @param {number} minDist - Minimum distance.
      * @param {number} range - Distance range (maxDist - minDist).
      * @returns {number} The camera bin index (0 to NUM_BINS-1).
      */
-    static computeCameraBin(radialSort, minDist, range) {
+    static computeCameraBin(minDist, range) {
         const numBins = GSplatSortBinWeights.NUM_BINS;
-        if (radialSort) {
-            // For radial sort with inverted distances, camera (dist=0) maps to the last bin
-            return numBins - 1;
-        }
-        // For linear sort, calculate where camera falls in the projected distance range
+        // calculate where camera falls in the projected distance range
         const cameraOffsetFromRangeStart = -minDist;
         const cameraBinFloat = (cameraOffsetFromRangeStart / range) * numBins;
         return Math.max(0, Math.min(numBins - 1, Math.floor(cameraBinFloat)));

@@ -20,6 +20,7 @@ import {
     SHADERLANGUAGE_WGSL,
     SHADERSTAGE_COMPUTE,
     UNIFORMTYPE_FLOAT,
+    UNIFORMTYPE_INT,
     UNIFORMTYPE_MAT4,
     UNIFORMTYPE_UINT,
     UNIFORMTYPE_UVEC4,
@@ -59,6 +60,10 @@ const _viewProjData = new Float32Array(16);
 const _viewProj1Data = new Float32Array(16);
 const _viewData = new Float32Array(16);
 const _shaderProjMat = new Mat4();
+
+// scratch for reading a float's bit pattern, see the sort keys
+const _floatBits = new Float32Array(1);
+const _floatBitsI32 = new Int32Array(_floatBits.buffer);
 
 /**
  * Owns the per-splat compute pass for the hybrid GSplat renderer (Pass B in the pipeline):
@@ -293,7 +298,10 @@ class GSplatProjector {
             new UniformFormat('minDist', UNIFORMTYPE_FLOAT),
             new UniformFormat('invRange', UNIFORMTYPE_FLOAT),
             new UniformFormat('foveationStrength', UNIFORMTYPE_FLOAT),
-            new UniformFormat('foveationCenter', UNIFORMTYPE_FLOAT)
+            new UniformFormat('foveationCenter', UNIFORMTYPE_FLOAT),
+            new UniformFormat('sortKeyMinBits', UNIFORMTYPE_INT),
+            new UniformFormat('sortKeyScale', UNIFORMTYPE_FLOAT),
+            new UniformFormat('maxSortKey', UNIFORMTYPE_UINT)
         ];
 
         this._projectorUniformBufferFormat = new UniformBufferFormat(device, baseFields);
@@ -705,14 +713,6 @@ class GSplatProjector {
         const range = maxDist - minDist;
         const invRange = range > 0 ? 1.0 / range : 1.0;
 
-        // Bin weights — same pattern as CPU-side sort key preparation.
-        if (!stochastic) {
-            const bucketCount = (1 << numBits);
-            const cameraBin = GSplatSortBinWeights.computeCameraBin(radialMode, minDist, range);
-            const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
-            this.binWeightsBuffer.write(0, binWeights);
-        }
-
         compute.setParameter('compactedSplatIds', compactedSplatIds);
         compute.setParameter('sortElementCount', sortElementCountBuffer);
         compute.setParameter('projCache', this.projCache);
@@ -731,6 +731,7 @@ class GSplatProjector {
         // Camera + projection uniforms.
         const cameraComponent = cameraNode.camera;
         const cam = cameraComponent.camera;
+        const orthographic = cam.projection === PROJECTION_ORTHOGRAPHIC;
         const webgpu = this.device.isWebGPU;
         // focal length in pixels per axis (they differ when the viewport's pixel aspect doesn't
         // match the projection's)
@@ -786,12 +787,43 @@ class GSplatProjector {
         compute.setParameter('minContribution', minContribution);
         compute.setParameter('foveationStrength', foveationStrength);
         compute.setParameter('foveationCenter', foveationCenter);
-        compute.setParameter('isOrtho', cam.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0);
+        compute.setParameter('isOrtho', orthographic ? 1 : 0);
         compute.setParameter('splatTextureSize', workBuffer.textureSize);
         compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);
         compute.setParameter('minDist', minDist);
         compute.setParameter('invRange', invRange);
         compute.setParameter('stochastic', stochastic ? 1 : 0);
+
+        // Sort keys - same as the CPU worker. Radial keys, and the depth keys of a perspective
+        // camera, are spaced by log distance: they span the bit patterns of the distances from ten
+        // doublings inside the near clip (the splats closer than it are drawn too, with their depth
+        // clamped) out to the far end of the range, squared for radial (see the shader). An
+        // orthographic or fisheye camera can draw splats at or behind it, so its depth keys keep the
+        // camera-weighted bins.
+        const logKeys = !stochastic && (radialMode || (!orthographic && !fisheyeMode));
+        let sortKeyMinBits = 0;
+        let sortKeyScale = 0;
+        const maxSortKey = logKeys ? (1 << numBits) - 1 : 0;
+        if (logKeys) {
+            // an orthographic near clip can be zero or negative, so a share of the range stands in
+            // for it then (radial only)
+            const nearDist = (cam.nearClip > 0 ? cam.nearClip : maxDist * 1e-6) / 1024;
+            _floatBits[0] = radialMode ? nearDist * nearDist : nearDist;
+            sortKeyMinBits = _floatBitsI32[0];
+            // a linear range runs along the camera's +Z, which points backwards, so its far end is
+            // at -minDist
+            _floatBits[0] = radialMode ? maxDist * maxDist : -minDist;
+            const bitsRange = _floatBitsI32[0] - sortKeyMinBits;
+            sortKeyScale = bitsRange > 0 ? maxSortKey / bitsRange : 0;
+        } else if (!stochastic) {
+            const bucketCount = (1 << numBits);
+            const cameraBin = GSplatSortBinWeights.computeCameraBin(minDist, range);
+            const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
+            this.binWeightsBuffer.write(0, binWeights);
+        }
+        compute.setParameter('sortKeyMinBits', sortKeyMinBits);
+        compute.setParameter('sortKeyScale', sortKeyScale);
+        compute.setParameter('maxSortKey', maxSortKey);
 
         if (fisheyeMode) {
             compute.setParameter('fisheye_k', fisheyeProj.k);

@@ -518,7 +518,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
         let minDist = 0;
         let maxDist = 1;
         if (!stochastic) {
-            const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
+            // at least 16 bits whatever the splat count: log spaced keys (see GSplatProjector) are
+            // spread over every doubling of distance from inside the near clip out to the scene,
+            // and fewer leave the splats of a small scene far from the camera sharing keys
+            const numBits = Math.max(16, Math.min(20, Math.round(Math.log2(elementCount / 4))));
             roundedNumBits = Math.ceil(numBits / gpuSorter.radixBits) * gpuSorter.radixBits;
             ({ minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting));
         }
