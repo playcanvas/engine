@@ -17,11 +17,12 @@ const SH_C0: f32 = 0.28209479177387814;
 const norm: f32 = sqrt(2.0);
 
 #ifdef SOG_V2
-    // 256x1 RGBA32F LUT:
-    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a unused
-    fn lutScales(b: i32) -> f32 { return textureLoad(sogCodebook, vec2i(b, 0), 0).r; }
-    fn lutSh0(b: i32) -> f32    { return textureLoad(sogCodebook, vec2i(b, 0), 0).g; }
-    fn lutShN(b: i32) -> f32    { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }
+    // 256x1 RGBA32F LUT (V2 and V3):
+    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a = opacity codebook (V3)
+    fn lutScales(b: i32) -> f32  { return textureLoad(sogCodebook, vec2i(b, 0), 0).r; }
+    fn lutSh0(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).g; }
+    fn lutShN(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }
+    fn lutOpacity(b: i32) -> f32 { return textureLoad(sogCodebook, vec2i(b, 0), 0).a; }
 #endif
 
 // geometry getters are provided by gsplatWorkBufferGeometryPS when sourcing from the work buffer
@@ -36,6 +37,22 @@ fn getCenter() -> vec3f {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
+#ifdef SOG_V3
+// decode rotation quaternion from a 24-bit exponential map, one byte in each of the means_l,
+// means_u and scales alpha channels: p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
+fn getRotation() -> vec4f {
+    let b = floor(vec3f(
+        textureLoad(means_l, splat.uv, 0).w,
+        textureLoad(means_u, splat.uv, 0).w,
+        textureLoad(scales, splat.uv, 0).w
+    ) * 255.0 + 0.5);
+    let p = (b - 128.0) / 127.0;
+    let len = length(p);
+    let t = len * 1.5707963267948966;
+    let v = select(p * 1.5707963267948966, p * (sin(t) / len), len > 1e-6);
+    return vec4f(cos(t), v);
+}
+#else
 // decode rotation quaternion (3 components + 2-bit mode selecting the omitted axis)
 fn getRotation() -> vec4f {
     let q = textureLoad(quats, splat.uv, 0);
@@ -55,6 +72,7 @@ fn getRotation() -> vec4f {
     }
     return quat;
 }
+#endif
 
 fn getScale() -> vec3f {
     let s = textureLoad(scales, splat.uv, 0).xyz;
@@ -77,7 +95,17 @@ fn getColor() -> vec4f {
     #ifdef SOG_V2
         let i = vec3i(c.xyz * 255.0 + 0.5);
         rgb = vec3f(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
-        alpha = c.w;
+        #ifdef SOG_V3
+            // true opacity, may exceed 1 for merged (decimated) gaussians; carried
+            // through only when the renderer draws over-unity opacity (GSPLAT_OVERUNITY)
+            #ifdef GSPLAT_OVERUNITY
+                alpha = lutOpacity(i32(c.w * 255.0 + 0.5));
+            #else
+                alpha = min(lutOpacity(i32(c.w * 255.0 + 0.5)), 1.0);
+            #endif
+        #else
+            alpha = c.w;
+        #endif
     #else
         rgb = mix(uniform.sh0_mins.xyz, uniform.sh0_maxs.xyz, c.xyz);
         let logitAlpha = mix(uniform.sh0_mins.w, uniform.sh0_maxs.w, c.w);
@@ -85,6 +113,24 @@ fn getColor() -> vec4f {
     #endif
     return vec4f(vec3f(0.5) + rgb * SH_C0, alpha);
 }
+
+#ifdef SOG_BLIND
+// per-gaussian user data: SOG_BLIND_BYTES little-endian bytes of the blind texture
+fn getBlind() -> u32 {
+    let b = vec4u(textureLoad(blind, splat.uv, 0) * 255.0 + 0.5);
+    var v = b.x;
+    #if SOG_BLIND_BYTES > 1
+        v = v | (b.y << 8u);
+    #endif
+    #if SOG_BLIND_BYTES > 2
+        v = v | (b.z << 16u);
+    #endif
+    #if SOG_BLIND_BYTES > 3
+        v = v | (b.w << 24u);
+    #endif
+    return v;
+}
+#endif
 
 #include "gsplatSogSHVS"
 `;

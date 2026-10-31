@@ -83,6 +83,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_OVERDRAW');
+        this._internalDefines.add('GSPLAT_OVERUNITY');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -349,6 +350,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
         const hasPcId = !!this.workBuffer.format.getStream('pcId');
         this._material.setDefine('GSPLAT_UNIFIED_ID', hasPcId);
         this._material.setDefine('PICK_CUSTOM_ID', hasPcId);
+
+        // GSPLAT_OVERUNITY draws the over-unity plateau profile (see GSplatParams#compensation)
+        this._material.setDefine('GSPLAT_OVERUNITY', !!this.workBuffer.format.getStream('splatPlateau'));
     }
 
     /**

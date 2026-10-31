@@ -17,9 +17,13 @@ export default /* wgsl */`
     }
 
     fn readSHData(sh: ptr<function, array<half3, SH_COEFFS>>, scale: ptr<function, f32>) {
-        // extract the 16-bit centroid palette index from sh_labels bytes 0 and 1
+        // extract the centroid palette index from sh_labels: 16-bit (bytes 0 and 1), 24-bit in v3
         let labels = textureLoad(sh_labels, splat.uv, 0);
-        let n = i32(labels.x * 255.0 + 0.5) + i32(labels.y * 255.0 + 0.5) * 256;
+        #ifdef SOG_V3
+            let n = i32(labels.x * 255.0 + 0.5) + i32(labels.y * 255.0 + 0.5) * 256 + i32(labels.z * 255.0 + 0.5) * 65536;
+        #else
+            let n = i32(labels.x * 255.0 + 0.5) + i32(labels.y * 255.0 + 0.5) * 256;
+        #endif
 
         // calculate offset into the centroids texture (64 centroids per row, SH_COEFFS texels each)
         let u = (n % 64) * SH_COEFFS;
@@ -44,6 +48,17 @@ export default /* wgsl */`
             sh[12] = readSHTexel(u + 12, v);
             sh[13] = readSHTexel(u + 13, v);
             sh[14] = readSHTexel(u + 14, v);
+        #endif
+        #if SH_BANDS > 3
+            sh[15] = readSHTexel(u + 15, v);
+            sh[16] = readSHTexel(u + 16, v);
+            sh[17] = readSHTexel(u + 17, v);
+            sh[18] = readSHTexel(u + 18, v);
+            sh[19] = readSHTexel(u + 19, v);
+            sh[20] = readSHTexel(u + 20, v);
+            sh[21] = readSHTexel(u + 21, v);
+            sh[22] = readSHTexel(u + 22, v);
+            sh[23] = readSHTexel(u + 23, v);
         #endif
 
         *scale = 1.0;

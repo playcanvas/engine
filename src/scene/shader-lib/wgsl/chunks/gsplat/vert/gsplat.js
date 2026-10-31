@@ -7,6 +7,11 @@ export default /* wgsl */`
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
+#ifdef GSPLAT_OVERUNITY
+    // plateau shape D' of over-unity opacity, 1 for a plain gaussian (see gsplatCopyToWorkbuffer)
+    varying @interpolate(flat, either) gaussianPlateau: f32;
+#endif
+
 #ifndef DITHER_NONE
     varying @interpolate(flat, either) id: f32;
 #endif
@@ -50,6 +55,14 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         output.position = discardVec;
         return output;
     }
+
+    #ifdef GSPLAT_OVERUNITY
+        // over-unity plateau shape, read before initCorner, which culls by the grown footprint
+        cornerPlateau = exp2(loadSplatPlateau().r * 6.0);
+        if (cornerPlateau > 1.0) {
+            cornerGrow = ((cornerPlateau - 1.0) + 2.8284271 / sqrt(cornerPlateau)) / 2.8284271;
+        }
+    #endif
 
     // project center to screen space
     var corner: SplatCorner;
@@ -107,7 +120,13 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
+    // trim the quad to where alpha falls to the clip threshold (grown to the plateau profile's
+    // extent for over-unity opacity)
     clipCorner(&corner, clr.w);
+
+    #ifdef GSPLAT_OVERUNITY
+        output.gaussianPlateau = cornerPlateau;
+    #endif
 
     // write output
     #if GSPLAT_2DGS

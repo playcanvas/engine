@@ -35,6 +35,31 @@ uniform vec3 uColorMultiply;
     uniform uint uId;
 #endif
 
+#ifdef GSPLAT_OVERUNITY
+    // Over-unity opacity: a gaussian whose true opacity A exceeds 1 is drawn with the plateau
+    // profile exp(-D/2 * max(0, r - (D - 1))^2) (r in sigma), an opaque core joined smoothly to a
+    // gaussian edge, which carries mass I(D) = (D-1)^2/2 + 1/D + (D-1)/2 * sqrt(2 pi / D).
+    float plateauMass(float D) {
+        float p = D - 1.0;
+        return 0.5 * p * p + 1.0 / D + 0.5 * p * sqrt(6.283185307 / D);
+    }
+
+    // The plateau shape for true opacity A, encoded as log2(D') / 6 (0 = plain gaussian). D solves
+    // I(D) = A; the drawn shape D' = 1 + 0.4 (D - 1) shrinks the opaque core, as a core carrying
+    // all of the mass over-occludes.
+    float encodePlateau(float A) {
+        if (A <= 1.0) return 0.0;
+        float lo = 1.0;
+        float hi = 1.0 + sqrt(2.0 * A);
+        for (int k = 0; k < 24; k++) {
+            float mid = 0.5 * (lo + hi);
+            if (plateauMass(mid) < A) lo = mid; else hi = mid;
+        }
+        float D = 1.0 + 0.4 * (0.5 * (lo + hi) - 1.0);
+        return clamp(log2(D) / 6.0, 0.0, 1.0);
+    }
+#endif
+
 void main(void) {
     // Compute source index from packed sub-draw varying: (sourceBase, colStart, rowWidth, rowStart)
     int localRow = int(gl_FragCoord.y) - vSubDraw.w;
@@ -126,6 +151,12 @@ void main(void) {
     modifySplatColor(worldCenter, color);
 
     color.xyz *= uColorMultiply;
+
+    #ifdef GSPLAT_OVERUNITY
+        // the plateau carries the mass above 1, so the stored opacity peaks at 1
+        writeSplatPlateau(vec4(encodePlateau(color.w), 0.0, 0.0, 0.0));
+        color.w = min(color.w, 1.0);
+    #endif
 
     // write color + transform using format-specific encoding (rotation/scale ignored under
     // GSPLAT_COLOR_ONLY)

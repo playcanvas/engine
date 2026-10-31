@@ -41,6 +41,10 @@ fn normExp(x: half) -> half {
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
+#ifdef GSPLAT_OVERUNITY
+    varying @interpolate(flat, either) gaussianPlateau: f32;
+#endif
+
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     varying @interpolate(flat, either) vPickId: u32;
 #endif
@@ -66,12 +70,35 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     // note: no early return after the discard - it would make the control flow non-uniform,
     // preventing user gsplatModifyPS chunks from using derivatives (fwidth etc.)
-    if (A > half(1.0)) {
-        discard;
-    }
+    #ifdef GSPLAT_OVERUNITY
+        // over-unity opacity: the quad was grown to the plateau extent (see gsplatVS)
+        let plateau = gaussianPlateau;
+        var extent2 = 1.0;
+        if (plateau > 1.0) {
+            let grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
+            extent2 = grow * grow;
+        }
+        if (f32(A) > extent2) {
+            discard;
+        }
+    #else
+        if (A > half(1.0)) {
+            discard;
+        }
+    #endif
 
     // evaluate alpha
     var alpha: half = normExp(A) * gaussianColor.a;
+
+    #ifdef GSPLAT_OVERUNITY
+        if (plateau > 1.0) {
+            // exp(-D'/2 * max(0, r - (D'-1))^2) with r in sigma: an opaque core of radius
+            // (D'-1) sigma, reaching the same exp(-4) floor as the gaussian at the quad edge
+            let r = 2.8284271 * sqrt(f32(A));
+            let s = max(0.0, r - (plateau - 1.0));
+            alpha = half((exp(-0.5 * plateau * s * s) - f32(EXP4)) * f32(INV_EXP4)) * gaussianColor.a;
+        }
+    #endif
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < half(uniform.alphaClip)) {
