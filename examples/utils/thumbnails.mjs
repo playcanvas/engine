@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import { launch } from 'puppeteer';
 import sharp from 'sharp';
 
-import { loadExampleMetaData } from './build-examples.mjs';
+import { getThumbnailPath, loadExampleMetaData, THUMBNAIL_SIZES } from './build-examples.mjs';
 
 /**
  * @import { ChildProcess } from 'node:child_process'
@@ -136,12 +136,12 @@ class PuppeteerPool {
 
 /**
  * @param {PuppeteerPool} pool - The pool instance.
- * @param {string} categoryKebab - Category kebab name.
- * @param {string} exampleNameKebab - Example kebab name.
+ * @param {ExampleMetadata} item - Example metadata.
  * @param {boolean} debug - Enable debug logs.
  * @returns {Promise<void>} completion promise.
  */
-const takeThumbnails = async (pool, categoryKebab, exampleNameKebab, debug) => {
+const takeThumbnails = async (pool, item, debug) => {
+    const { categoryKebab, exampleNameKebab } = item;
     const poolItem = pool.allocPoolItem();
     const page = await pool.newPage(poolItem);
     if (debug) {
@@ -166,24 +166,17 @@ const takeThumbnails = async (pool, categoryKebab, exampleNameKebab, debug) => {
     await page.waitForFunction('window?.pc?.app?._time > 1000', { timeout: TIMEOUT });
 
     // screenshot page
-    await page.screenshot({ path: `thumbnails/${categoryKebab}_${exampleNameKebab}.webp`, type: 'webp' });
-
-    // read in image as data
-    // N.B. Cannot use path because of file locking (https://github.com/lovell/sharp/issues/346)
-    const imgData = fs.readFileSync(`thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
+    const imgData = await page.screenshot({ type: 'webp' });
 
     // copy and crop image for large thumbnail
     await sharp(imgData)
     .resize(320, 240)
-    .toFile(`thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
+    .toFile(getThumbnailPath(item, 'large'));
 
     // copy and crop image for small thumbnail
     await sharp(imgData)
     .resize(64, 48)
-    .toFile(`thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
-
-    // remove screenshot
-    fs.unlinkSync(`thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
+    .toFile(getThumbnailPath(item, 'small'));
 
     // close page
     await pool.closePage(poolItem, page);
@@ -204,10 +197,9 @@ const takeScreenshots = async (metadata, options) => {
     }
 
     if (options.clean) {
-        fs.rmSync('thumbnails', { recursive: true, force: true });
-    }
-    if (!fs.existsSync('thumbnails')) {
-        fs.mkdirSync('thumbnails');
+        metadata.forEach((item) => {
+            THUMBNAIL_SIZES.forEach(size => fs.rmSync(getThumbnailPath(item, size), { force: true }));
+        });
     }
 
     // create browser instance with new page
@@ -216,16 +208,16 @@ const takeScreenshots = async (metadata, options) => {
 
     const screenshotPromises = [];
     for (let i = 0; i < metadata.length; i++) {
-        const { categoryKebab, exampleNameKebab } = metadata[i];
+        const item = metadata[i];
 
         // check if thumbnail exists
-        if (fs.existsSync(`thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
-            console.log(`skipped (cached): ${categoryKebab}/${exampleNameKebab}`);
+        if (fs.existsSync(getThumbnailPath(item, 'large'))) {
+            console.log(`skipped (cached): ${item.categoryKebab}/${item.exampleNameKebab}`);
             continue;
         }
 
         screenshotPromises.push(
-            takeThumbnails(pool, categoryKebab, exampleNameKebab, options.debug)
+            takeThumbnails(pool, item, options.debug)
         );
     }
 

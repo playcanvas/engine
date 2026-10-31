@@ -582,7 +582,7 @@ export default [
         }
     },
     {
-        files: ['src/examples/**/*.example.mjs'],
+        files: ['src/examples/**/example.mjs'],
         rules: {
             'examples/asset-loader-top-level-await': 'error',
             'examples/config-block-at-top': 'error',

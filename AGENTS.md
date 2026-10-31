@@ -40,7 +40,7 @@ PlayCanvas is an open-source WebGL/WebGPU game engine written in JavaScript. It'
   - `src/extras/` - Optional extras and utilities
   - `src/deprecated/` - Side-effect-free aliases for deprecated APIs (see section 9)
 - **Build output**: Generated files go in `build/` (never edit these directly)
-- **Examples**: Live in `examples/src/examples/`
+- **Examples**: Live in `examples/src/examples/<category>/<example>/`, one folder per example
 - **Tests**: Unit tests go in `test/` with `.mjs` extension
 - **File naming**: Module file names should match the main class they contain
   - Use kebab-case for file names (e.g., `graphics-device.js` for `GraphicsDevice` class)
@@ -306,8 +306,8 @@ Always address the root cause of issues rather than implementing workarounds tha
 
 ### 21. When Creating Examples
 
-- Examples go in `examples/src/examples/`
-- Follow existing example structure (see other `.example.mjs` files)
+- Each example is a folder, `examples/src/examples/<category>/<example>/`, holding `example.mjs`, optional `controls.jsx`, any other files it imports, and its `thumbnail-large.webp` / `thumbnail-small.webp`
+- Follow existing example structure (see other `example.mjs` files)
 - Include descriptive comments
 - Keep examples simple and focused on one feature
 
