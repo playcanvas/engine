@@ -101,6 +101,11 @@ fn evaluateBackend() -> FragmentOutput {
         );
     #endif
 
+    // scaling of the base layer below the sheen, used by the lights and when combining
+    #ifdef LIT_SHEEN
+        calcSheenAlbedoScaling(litArgs_worldNormal, dViewDirW, litArgs_sheen_gloss, litArgs_sheen_specularity);
+    #endif
+
     #ifdef LIT_LIGHTING || LIT_REFLECTIONS
 
         #ifdef LIT_REFLECTIONS
