@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
 import { GSplatHandler } from '../../../src/framework/handlers/gsplat.js';
+import { GSplatLcc2Parser } from '../../../src/framework/parsers/gsplat-lcc2.js';
 import { GSplatOctreeParser } from '../../../src/framework/parsers/gsplat-octree.js';
 import { PlyParser } from '../../../src/framework/parsers/ply.js';
 import { SogBundleParser } from '../../../src/framework/parsers/sog-bundle.js';
@@ -34,6 +35,10 @@ describe('GSplatHandler (parser selection)', function () {
         expect(select('assets/splat/lod-meta.json')).to.be.an.instanceof(GSplatOctreeParser);
     });
 
+    it('routes .lcc2 to the LCC2 parser', function () {
+        expect(select('scene/office.lcc2')).to.be.an.instanceof(GSplatLcc2Parser);
+    });
+
     it('returns no parser for an unrecognized extension', function () {
         expect(select('scene.xyz')).to.equal(null);
     });
@@ -48,8 +53,8 @@ describe('GSplatHandler (parser selection)', function () {
         expect(selectFor('scene.ply', 'scene.sog')).to.be.an.instanceof(SogBundleParser);
     });
 
-    it('exposes the four built-in parsers', function () {
-        expect(handler.parsers).to.have.lengthOf(4);
+    it('exposes the five built-in parsers', function () {
+        expect(handler.parsers).to.have.lengthOf(5);
     });
 
     it('parsers read maxRetries from the handler (not a hardcoded value)', function () {
