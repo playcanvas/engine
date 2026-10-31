@@ -19,6 +19,7 @@ import gsplatFormatVS from '../chunks/gsplat/vert/gsplatFormat.js';
 // Format-specific chunks (merged decl + read)
 import gsplatUncompressedVS from '../chunks/gsplat/vert/formats/uncompressed.js';
 import gsplatUncompressedSHVS from '../chunks/gsplat/vert/formats/uncompressedSH.js';
+import gsplatUncompressedSBVS from '../chunks/gsplat/vert/formats/uncompressedSB.js';
 import gsplatCompressedVS from '../chunks/gsplat/vert/formats/compressed.js';
 import gsplatCompressedSHVS from '../chunks/gsplat/vert/formats/compressedSH.js';
 import gsplatSogVS from '../chunks/gsplat/vert/formats/sog.js';
@@ -47,6 +48,7 @@ export const gsplatChunksGLSL = {
     gsplatFormatVS,
     gsplatUncompressedVS,
     gsplatUncompressedSHVS,
+    gsplatUncompressedSBVS,
     gsplatCompressedVS,
     gsplatCompressedSHVS,
     gsplatSogVS,

@@ -381,6 +381,16 @@ class GSplatData {
         return sizes[numProps()] ?? 0;
     }
 
+    // return the number of spherical beta lobes present, stored as `sb_params_*` properties with
+    // 6 values per lobe. A count that is not a whole number of lobes is ignored and returns 0.
+    get sbLobes() {
+        let count = 0;
+        while (this.getProp(`sb_params_${count}`)) {
+            count++;
+        }
+        return count % 6 === 0 ? count / 6 : 0;
+    }
+
     calcMortonOrder() {
         const calcMinMax = (arr) => {
             let min = arr[0];

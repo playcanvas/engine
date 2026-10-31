@@ -32,4 +32,5 @@ fn getScale() -> vec3f {
 }
 
 #include "gsplatUncompressedSHVS"
+#include "gsplatUncompressedSBVS"
 `;

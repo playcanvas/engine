@@ -975,7 +975,7 @@ class GSplatWorld {
                 // Splat moved, need to re-sort
                 movedAny = true;
 
-            } else if (hasCameraMovement && splat.hasSphericalHarmonics) {
+            } else if (hasCameraMovement && splat.hasViewDependentColor) {
 
                 _splatsWithSH.push(splat);
 
