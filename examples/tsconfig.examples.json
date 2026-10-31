@@ -6,9 +6,9 @@
         "jsxImportSource": "react"
     },
     "include": [
-        "src/examples/**/*.example.mjs",
-        "src/examples/**/*.controls.mjs",
-        "src/examples/**/*.controls.jsx",
+        "src/examples/**/example.mjs",
+        "src/examples/**/controls.mjs",
+        "src/examples/**/controls.jsx",
         "src/examples/*.d.ts",
         "src/app/**/*.d.ts"
     ],

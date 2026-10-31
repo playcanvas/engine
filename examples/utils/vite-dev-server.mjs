@@ -14,6 +14,8 @@ import {
     getFiles,
     getRedirect,
     getRedirects,
+    getThumbnailPath,
+    isExampleFile,
     loadExampleMetaData,
     readExampleConfig,
     slash,
@@ -71,6 +73,7 @@ const NODE_ENV = 'development';
 const UPDATE_EVENT = 'playcanvas:examples-update';
 const ENGINE_PREFIX = '/iframe/ENGINE_PATH/';
 const IFRAME_PREFIX = '/iframe/';
+const THUMBNAIL_URL = /^\/thumbnails\/([^/]+)_(large|small)\.webp$/;
 const TEXT = 'text/plain; charset=utf-8';
 const TYPES_DIR = '../build';
 const HASH_ALGORITHM = 'sha1';
@@ -79,7 +82,6 @@ const STATIC_ROUTES = [
     { url: '/static/assets/', root: 'assets' },
     { url: '/static/scripts/', root: '../scripts' },
     { url: '/icons/', root: 'src/static/icons' },
-    { url: '/thumbnails/', root: 'thumbnails' },
     { url: '/modules/monaco-editor/min/vs/', root: 'node_modules/monaco-editor/min/vs' },
     { url: '/modules/fflate/esm/', root: '../node_modules/fflate/esm' },
     { url: '/modules/inspector/', root: 'node_modules/@playcanvas/inspector/src' }
@@ -132,6 +134,8 @@ const mime = (file) => {
             return 'image/jpeg';
         case '.svg':
             return 'image/svg+xml';
+        case '.webp':
+            return 'image/webp';
         case '.wasm':
             return 'application/wasm';
     }
@@ -268,11 +272,14 @@ const notFound = (res) => {
  * @returns {ExampleMetadata | null} matching example.
  */
 const exampleFromFile = (file) => {
+    if (!isExampleFile(path.basename(file))) {
+        return null;
+    }
     const abs = slash(path.resolve(file));
     for (let i = 0; i < exampleMetaData.length; i++) {
         const item = exampleMetaData[i];
         const dir = slash(path.resolve(item.path));
-        if (abs.startsWith(`${dir}/`) && path.basename(file).startsWith(`${item.exampleNameKebab}.`)) {
+        if (abs.startsWith(`${dir}/`)) {
             return item;
         }
     }
@@ -450,6 +457,24 @@ const serveExampleFile = async (url, res) => {
 };
 
 /**
+ * Serves a thumbnail from its example folder under the flat name the production build copies it
+ * to, including the old names of moved examples.
+ *
+ * @param {string} url - request url.
+ * @param {HttpResponse} res - http response.
+ * @returns {Promise<boolean>} true if handled.
+ */
+const serveThumbnail = async (url, res) => {
+    const match = THUMBNAIL_URL.exec(url);
+    const item = match ? getExample(match[1]) ?? getRedirect(match[1]) : undefined;
+    if (!item) {
+        return notFound(res);
+    }
+    const found = await sendFile(res, getThumbnailPath(item, /** @type {'large' | 'small'} */ (match[2])));
+    return found || notFound(res);
+};
+
+/**
  * @param {ViteServer} server - vite server.
  * @param {HttpRequest} req - http request.
  * @param {HttpResponse} res - http response.
@@ -499,6 +524,9 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
     if (IFRAME_FILES[url]) {
         const found = await sendFile(res, IFRAME_FILES[url]);
         return found || notFound(res);
+    }
+    if (url.startsWith('/thumbnails/')) {
+        return serveThumbnail(url, res);
     }
     const route = STATIC_ROUTES.find(item => url.startsWith(item.url));
     if (route) {

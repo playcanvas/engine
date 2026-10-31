@@ -529,7 +529,7 @@ archMaterials.forEach((/** @type {Material} */ mat) => {
 // portalOnlyStencil), so it doesn't paint over the from-scene or the arch.
 //
 // Following the "Spec Fade Off" sphere recipe from
-// material-translucent-specular.example.mjs:
+// materials/material-translucent-specular:
 //  - BLEND_NORMAL alpha blending
 //  - opacityFadesSpecular = false so the specular stays bright at low opacity
 //  - low diffuse opacity, white specular, high gloss

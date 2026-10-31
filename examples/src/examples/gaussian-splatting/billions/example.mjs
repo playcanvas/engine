@@ -58,7 +58,7 @@ import { CylinderController } from './cylinder-controller.mjs';
 // the gentle strip bend + the standard CameraControls fly camera.
 const USE_CYLINDER_CONTROLLER = true;
 
-// Max instances the slider allows (kept in sync with billions.controls.jsx). At this count the
+// Max instances the slider allows (kept in sync with controls.jsx). At this count the
 // layout is LAYOUT.maxCols full rings wide (each ring is a complete 360° loop); fewer instances
 // fill ring-by-ring, and a single partial ring forms an arc you can fly along.
 const MAX_INSTANCES = 100;

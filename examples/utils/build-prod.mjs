@@ -9,6 +9,7 @@ import {
     IFRAME_DIR,
     STATIC_TARGETS,
     TARGET,
+    THUMBNAIL_DIR,
     copyFile,
     copyTargets,
     getEnginePath,
@@ -77,10 +78,11 @@ const writeSources = async (sources) => {
  * @returns {Promise<void>} completion promise.
  */
 const buildExampleSupport = async () => {
-    const { sources, assets, html, share, redirects } = getExampleTargets();
+    const { sources, assets, thumbnails, html, share, redirects } = getExampleTargets();
     const tasks = [
         timed('src/examples sources', `${IFRAME_DIR} source files`, () => writeSources(sources)),
         timed('src/examples assets', `${IFRAME_DIR} assets`, () => copyTargets(assets)),
+        timed('src/examples thumbnails', THUMBNAIL_DIR, () => copyTargets(thumbnails)),
         timed(EXAMPLE_TEMPLATE, `${IFRAME_DIR} html`, () => Promise.all(html.map(({ item, files }) => writeExampleHtml(item, files, {
             nodeEnv: NODE_ENV,
             enginePath: ENGINE_PATH
