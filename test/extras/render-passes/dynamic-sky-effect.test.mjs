@@ -117,6 +117,61 @@ describe('DynamicSkyEffect', function () {
             }
             expect(sky._skyUniforms.get('dynSkyMieG')).to.be.below(1);
         });
+
+        it('sets the uniforms of its sky on the device every frame, for the shaders of other materials', function () {
+            sky.elevation = 30;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+            frameUpdate();
+
+            const scope = app.graphicsDevice.scope;
+            const names = ['dynSkySunDir', 'dynSkyBetaR', 'dynSkyBetaM', 'dynSkySunE', 'dynSkyMieG', 'dynSkyLuminance',
+                'dynSkyNightBlend', 'dynSkyNightColor', 'dynSkyNightParams', 'dynSkyRotation'];
+            for (const name of names) {
+                expect(scope.resolve(name).value, name).to.equal(sky._skyUniforms.get(name));
+            }
+
+            // a change of the sky reaches the device on the next frame
+            sky.elevation = -10;
+            cameraFrame.update();
+            frameUpdate();
+            expect(scope.resolve('dynSkyNightBlend').value).to.equal(1);
+        });
+
+        it('gets the color of the day sky in a direction - blue above, and brightest towards a low sun', function () {
+            sky.elevation = 60;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+
+            // before the first frame too, and for a direction of any length
+            const zenith = sky.getSkyColor(new Vec3(0, 5, 0));
+            expect(zenith.b).to.be.above(zenith.g);
+            expect(zenith.g).to.be.above(zenith.r);
+            expect(zenith.r).to.be.above(0);
+            expect(sky.getSkyColor(Vec3.UP).equals(zenith)).to.equal(true);
+
+            sky.elevation = 5;
+            sky.azimuth = 90;
+            cameraFrame.update();
+            const luma = c => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+            const towards = sky.getSkyColor(new Vec3(1, 0.1, 0));
+            const away = sky.getSkyColor(new Vec3(-1, 0.1, 0));
+            expect(luma(towards)).to.be.above(luma(away) * 2);
+        });
+
+        it('gets the color of the night sky in a direction, its gradient without the lights', function () {
+            sky.elevation = -20;
+            sky.nightColor = new Color(0.1, 0.2, 0.4);
+            sky.nightBrightness = 0.5;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+
+            // straight up, the gradient is at its darkest, and the afterglow of the sunset is gone
+            const color = sky.getSkyColor(Vec3.UP);
+            expect(color.r).to.be.closeTo(0.1 * 0.5 * 0.4, 1e-6);
+            expect(color.g).to.be.closeTo(0.2 * 0.5 * 0.4, 1e-6);
+            expect(color.b).to.be.closeTo(0.4 * 0.5 * 0.4, 1e-6);
+        });
     });
 
     describe('clouds', function () {

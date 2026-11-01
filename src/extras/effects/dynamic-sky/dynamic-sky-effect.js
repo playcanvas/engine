@@ -123,6 +123,12 @@ const tmpView = new Mat4();
 // the rotation of the sky without the rotation of the sky of the scene
 const IDENTITY_MAT3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
+// the blue of the day sky that does not come from the sun - see dynamicSkyDay
+const SKY_BASE = [0, 0.0003, 0.00075];
+
+// the day sky's color, while it is evaluated on the CPU
+const tmpColor = [0, 0, 0];
+
 // the texture coordinates of the reprojection's vertex shader, unmodified
 const UV_MOD = [1, 1, 0, 0];
 
@@ -148,6 +154,30 @@ const UV_MOD = [1, 1, 0, 0];
  * In XR, the sky and the flat clouds render for each view, like the rest of the scene. The
  * volumetric clouds render to their texture for the view of the camera alone, so they streak where
  * the view of an eye extends past it - use {@link CLOUDTYPE_FLAT} clouds in XR.
+ *
+ * The shaders of the scene's own materials can evaluate the sky too, for example to fade distant
+ * ground into the color of the sky behind it. The effect sets the uniforms of its sky on the
+ * graphics device every frame, and its shader chunk `dynamicSkyAtmospherePS`, in GLSL and WGSL,
+ * evaluates the sky from them. Include the chunk in a shader, and `dynamicSkyBase(dir, ambient)`
+ * returns the radiance of the sky in a direction, without the sun disc, the stars and the moon, and
+ * sets `ambient` to the light of the sky around it. The direction is in the space of the sky - a
+ * world space direction turned by the rotation of the sky of the scene, `dynSkyRotation`, which the
+ * effect sets with the other uniforms, and with X flipped:
+ *
+ * ```glsl
+ * #include "dynamicSkyAtmospherePS"
+ * uniform mat3 dynSkyRotation;
+ *
+ * vec3 skyColor(vec3 worldDir) {
+ *     vec3 dir = worldDir * dynSkyRotation;
+ *     dir.x = -dir.x;
+ *     vec3 ambient;
+ *     return dynamicSkyBase(dir, ambient);
+ * }
+ * ```
+ *
+ * With more than one dynamic sky, a material renders with the sky that was updated last. On the
+ * CPU, {@link DynamicSkyEffect#getSkyColor} evaluates the same sky in a direction.
  *
  * The sky does not work together with the volumetric fog of the camera frame,
  * {@link CameraFrame#volumetricFog}: the clouds cast no shadows into the fog, and the fog is not lit
@@ -606,8 +636,12 @@ class DynamicSkyEffect extends CameraFrameEffect {
     /** @private */
     _bufferProj = new Float32Array(2);
 
-    /** @private */
-    _rotation = new Float32Array(9);
+    /**
+     * The rotation of the sky of the scene, the identity until the first frame sets it.
+     *
+     * @private
+     */
+    _rotation = new Float32Array(IDENTITY_MAT3);
 
     /** @private */
     _frameIndex = 0;
@@ -965,6 +999,85 @@ class DynamicSkyEffect extends CameraFrameEffect {
      */
     bakeLighting() {
         this._bakeRequested = true;
+    }
+
+    /**
+     * Gets the color of the sky in a direction - its linear radiance, without the sun disc, the
+     * stars and the moon, as `dynamicSkyBase` of the shader chunk `dynamicSkyAtmospherePS`
+     * evaluates it. Use it for lighting worked out on the CPU, such as the light the sky gives to
+     * particles. It evaluates the sky as of the last {@link CameraFrame#update}.
+     *
+     * @param {Vec3} direction - The direction, in the world space. It does not need to be
+     * normalized.
+     * @param {Color} [color] - The color to receive the result. A new one is created if not given.
+     * @returns {Color} The color of the sky.
+     * @example
+     * // the light of the sky from straight above
+     * const zenith = sky.getSkyColor(Vec3.UP);
+     */
+    getSkyColor(direction, color = new Color()) {
+
+        // to the space of the sky, as its shaders derive it - turned by the rotation of the sky of
+        // the scene, and with X flipped
+        const r = this._rotation;
+        const { x: wx, y: wy, z: wz } = direction;
+        let x = wx * r[0] + wy * r[1] + wz * r[2];
+        let y = wx * r[3] + wy * r[4] + wz * r[5];
+        let z = wx * r[6] + wy * r[7] + wz * r[8];
+        const length = Math.hypot(x, y, z) || 1;
+        x = -x / length;
+        y /= length;
+        z /= length;
+
+        const uniforms = this._skyUniforms;
+        const sun = this._sunDirValue;
+        const nightBlend = uniforms.get('dynSkyNightBlend') ?? 0;
+        let red = 0;
+        let green = 0;
+        let blue = 0;
+
+        // the day sky - see dynamicSkyDay
+        if (nightBlend < 1) {
+            const zenith = Math.acos(Math.max(0, y));
+            const denom = Math.cos(zenith) + 0.15 * Math.pow(Math.max(93.885 - zenith * math.RAD_TO_DEG, 0), -1.253);
+            const cosTheta = x * sun[0] + y * sun[1] + z * sun[2];
+            const c = cosTheta * 0.5 + 0.5;
+            const rayleighPhase = (3 / (16 * Math.PI)) * (1 + c * c);
+            const g = uniforms.get('dynSkyMieG') ?? 0;
+            const g2 = g * g;
+            const miePhase = (1 / (4 * Math.PI)) * (1 - g2) / Math.pow(Math.max(1 - 2 * g * cosTheta + g2, 0), 1.5);
+            const sunE = uniforms.get('dynSkySunE') ?? 0;
+            const luminance = uniforms.get('dynSkyLuminance') ?? 0;
+            const horizon = math.clamp(Math.pow(1 - sun[1], 5), 0, 1);
+            const day = tmpColor;
+            for (let i = 0; i < 3; i++) {
+                const betaR = this._betaR[i];
+                const betaM = this._betaM[i];
+                const fex = Math.exp(-(betaR * 8.4e3 + betaM * 1.25e3) / denom);
+                const ratio = (betaR * rayleighPhase + betaM * miePhase) / (betaR + betaM);
+                let lin = Math.pow(sunE * ratio * (1 - fex), 1.5);
+                lin *= 1 + (Math.pow(sunE * ratio * fex, 0.5) - 1) * horizon;
+                day[i] = ((lin + 0.1 * fex) * 0.04 + SKY_BASE[i]) * luminance;
+            }
+            red = day[0] * (1 - nightBlend);
+            green = day[1] * (1 - nightBlend);
+            blue = day[2] * (1 - nightBlend);
+        }
+
+        // the night sky without its lights - see dynamicSkyNightBase
+        if (nightBlend > 0) {
+            const night = this._nightColor;
+            const gradient = math.lerp(1.1, 0.4, Math.max(y, 0));
+            const hx = sun[0] + 1e-5;
+            const hz = sun[2];
+            const toSun = Math.max((x * hx + z * hz) / Math.hypot(hx, hz), 0);
+            const glow = Math.pow(toSun, 5) * math.clamp(1 + sun[1] * 4, 0, 1) * this._nightParams[3];
+            red += (night[0] * gradient + glow) * nightBlend;
+            green += (night[1] * gradient + glow * 0.45) * nightBlend;
+            blue += (night[2] * gradient + glow * 0.15) * nightBlend;
+        }
+
+        return color.set(red, green, blue, 1);
     }
 
     /** @private */
@@ -1549,6 +1662,10 @@ class DynamicSkyEffect extends CameraFrameEffect {
         }
 
         this._applyToMaterial();
+
+        // the values of the sky on the device too, for the shaders of the scene's own materials,
+        // see the description of the class
+        this._bindSkyUniforms();
     }
 
     /**
