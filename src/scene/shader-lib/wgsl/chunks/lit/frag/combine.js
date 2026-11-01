@@ -14,8 +14,7 @@ fn combineColor(albedo: vec3f, sheenSpecularity: vec3f, clearcoatSpecularity: f3
     #endif // LIT_REFLECTIONS
 
     #ifdef LIT_SHEEN
-        let sheenScaling: f32 = 1.0 - max(max(sheenSpecularity.r, sheenSpecularity.g), sheenSpecularity.b) * 0.157;
-        ret = ret * sheenScaling + (sSpecularLight + sReflection.rgb) * sheenSpecularity;
+        ret = ret * sAlbedoScaling + (sSpecularLight + sReflection.rgb) * sheenSpecularity;
     #endif // LIT_SHEEN
     #ifdef LIT_CLEARCOAT
         let clearCoatScaling: f32 = 1.0 - ccFresnel * clearcoatSpecularity;
