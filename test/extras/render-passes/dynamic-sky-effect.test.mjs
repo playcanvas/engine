@@ -4,11 +4,20 @@ import { restore, spy, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
+import { Preprocessor } from '../../../src/core/preprocessor.js';
 import { DynamicSkyEffect } from '../../../src/extras/effects/dynamic-sky/dynamic-sky-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import { CLOUDTYPE_FLAT, CLOUDTYPE_NONE, CLOUDTYPE_VOLUMETRIC } from '../../../src/extras/render-passes/constants.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { LAYERID_SKYBOX, PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, TYPE_FLOAT32 } from '../../../src/platform/graphics/constants.js';
+import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
+import { FOG_EXP, LAYERID_SKYBOX, PROJECTION_ORTHOGRAPHIC, SHADER_FORWARD } from '../../../src/scene/constants.js';
+import { FogParams } from '../../../src/scene/fog-params.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
+import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
+import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
+import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -171,6 +180,172 @@ describe('DynamicSkyEffect', function () {
             expect(color.r).to.be.closeTo(0.1 * 0.5 * 0.4, 1e-6);
             expect(color.g).to.be.closeTo(0.2 * 0.5 * 0.4, 1e-6);
             expect(color.b).to.be.closeTo(0.4 * 0.5 * 0.4, 1e-6);
+        });
+    });
+
+    describe('haze', function () {
+
+        // the define the camera sets for the fog of the haze
+        const HAZE = 'DYNAMICSKYHAZE';
+
+        // the forward fragment shader of a material, as the camera of the camera frame renders it -
+        // with the fog of the camera, which the renderer gives its shader parameters each frame
+        const fragmentSource = (material) => {
+            const device = app.graphicsDevice;
+            const { camera, shaderParams } = cameraFrame.cameraComponent;
+            shaderParams.fog = (camera.fogParams ?? app.scene.fog).type;
+            material.update();
+            const shader = material.getShaderVariant({
+                device,
+                scene: app.scene,
+                objDefs: 0,
+                pass: SHADER_FORWARD,
+                cameraShaderParams: shaderParams,
+                viewUniformFormat: app.renderer.getViewUniformFormat(false, new LightList()),
+                vertexFormat: new VertexFormat(device, [
+                    { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 }
+                ])
+            });
+            expect(shader.failed).to.equal(false);
+            return shader.definition.fshader;
+        };
+
+        it('hazes the lit materials of its camera alone, and only while enabled', function () {
+            const other = createCamera('Other');
+            const material = new StandardMaterial();
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+            const cameraComponent = cameraFrame.cameraComponent;
+            expect(cameraComponent.fog).to.equal(null);
+            expect(fragmentSource(material)).to.not.include('dynamicSkyHazeAmount');
+
+            // the material compiled before the haze is hazed too
+            sky.haze = true;
+            cameraFrame.update();
+            expect(cameraComponent.fog.type.toUpperCase()).to.equal(HAZE);
+            expect(other.fog).to.equal(null);
+            expect(fragmentSource(material)).to.include('dynamicSkyHazeAmount(view_position, vPositionW)');
+
+            sky.haze = false;
+            cameraFrame.update();
+            expect(cameraComponent.fog).to.equal(null);
+            expect(fragmentSource(material)).to.not.include('dynamicSkyHazeAmount');
+        });
+
+        it('renders the materials opting out of the haze without fog', function () {
+            sky.haze = true;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+
+            const noFog = new StandardMaterial();
+            noFog.useFog = false;
+            expect(fragmentSource(noFog)).to.not.include('dynamicSkyHazeAmount');
+
+            const optedOut = new StandardMaterial();
+            optedOut.setDefine('DYNAMIC_SKY_NO_HAZE', true);
+            expect(fragmentSource(optedOut)).to.not.include('dynamicSkyHazeAmount');
+        });
+
+        it('gives the camera its fog back once disabled, removed or destroyed', function () {
+            const cameraComponent = cameraFrame.cameraComponent;
+            const fog = new FogParams();
+            fog.type = FOG_EXP;
+            cameraComponent.fog = fog;
+
+            sky.haze = true;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+            expect(cameraComponent.fog).to.not.equal(fog);
+
+            cameraFrame.enabled = false;
+            expect(cameraComponent.fog).to.equal(fog);
+            cameraFrame.enabled = true;
+            expect(cameraComponent.fog).to.not.equal(fog);
+
+            cameraFrame.removeEffect(sky);
+            expect(cameraComponent.fog).to.equal(fog);
+
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+            expect(cameraComponent.fog).to.not.equal(fog);
+            sky.destroy();
+            expect(cameraComponent.fog).to.equal(fog);
+        });
+
+        it('keeps a fog the camera was given while hazed', function () {
+            sky.haze = true;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+
+            const cameraComponent = cameraFrame.cameraComponent;
+            const fog = new FogParams();
+            cameraComponent.fog = fog;
+            sky.haze = false;
+            cameraFrame.update();
+            expect(cameraComponent.fog).to.equal(fog);
+        });
+
+        it('sets the density, the falloff and the base height of the haze on the device', function () {
+            sky.hazeDensity = 0.002;
+            sky.hazeHeight = 500;
+            sky.hazeBaseHeight = -20;
+            cameraFrame.addEffect(sky);
+            cameraFrame.update();
+            frameUpdate();
+
+            const value = app.graphicsDevice.scope.resolve('dynSkyHaze').value;
+            expect(value[0]).to.be.closeTo(0.002, 1e-9);
+            expect(value[1]).to.be.closeTo(1 / 500, 1e-9);
+            expect(value[2]).to.equal(-20);
+
+            // no negative density, and no division by a zero height
+            sky.hazeDensity = -1;
+            sky.hazeHeight = 0;
+            cameraFrame.update();
+            expect(value[0]).to.equal(0);
+            expect(Number.isFinite(value[1])).to.equal(true);
+        });
+
+        it('takes the place of the fog chunk once, keeping the fog of the scene', function () {
+            const device = app.graphicsDevice;
+            const glsl = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
+            const wgsl = ShaderChunks.get(device, SHADERLANGUAGE_WGSL);
+            const fog = glsl.get('fogPS');
+            expect(fog).to.include(HAZE);
+
+            // a second sky does not wrap the fog chunk of the first
+            const second = new DynamicSkyEffect(device);
+            expect(glsl.get('fogPS')).to.equal(fog);
+            expect(glsl.get('dynamicSkySceneFogPS')).to.equal(shaderChunksGLSL.fogPS);
+            expect(wgsl.get('dynamicSkySceneFogPS')).to.equal(shaderChunksWGSL.fogPS);
+            second.destroy();
+        });
+
+        it('hazes the lit fragment shaders alone - the particles and the gaussian splats render without fog', function () {
+            for (const language of [SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL]) {
+                const chunks = ShaderChunks.get(app.graphicsDevice, language);
+                const fog = (defines) => {
+                    const source = `${defines.map(name => `#define ${name}\n`).join('')}${chunks.get('fogPS')}`;
+                    return Preprocessor.run(source, chunks);
+                };
+
+                const hazed = `FOG ${HAZE}`;
+                expect(fog([hazed, 'LIT_BLEND_TYPE NORMAL']), language).to.include('dynamicSkyHazeAmount');
+                expect(fog([hazed, 'LIT_BLEND_TYPE NORMAL', 'DYNAMIC_SKY_NO_HAZE']), language).to.not.include('dynamicSkyHazeAmount');
+
+                // the others pass the color through, in both stages
+                for (const stage of [[], ['VERTEXSHADER']]) {
+                    const source = fog([hazed, ...stage]);
+                    expect(source, language).to.not.include('dynamicSkyHazeAmount');
+                    expect(source, language).to.not.include('fog_color');
+                    expect(source, language).to.include('addFog');
+                }
+
+                // the other types of fog are the fog of the scene
+                const scene = fog(['FOG EXP', 'LIT_BLEND_TYPE NORMAL']);
+                expect(scene, language).to.not.include('dynamicSkyHazeAmount');
+                expect(scene, language).to.include('fog_density');
+            }
         });
     });
 

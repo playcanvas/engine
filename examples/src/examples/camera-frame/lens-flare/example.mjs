@@ -1,7 +1,7 @@
 // @config
 //
 // This example shows the lens flare effect of a CameraFrame. A LensFlare follows a light: the sun
-// of the procedural sky gets a large flare with a diffraction burst and a train of ghosts, the
+// of the dynamic sky gets a large flare with a diffraction burst and a train of ghosts, the
 // lamps a small glow, and the spot lights flare only while the camera is inside their cone. The
 // flares fade as their light is occluded by the scene, which is measured against the scene depth.
 // The shapes of all flares are textures of one shape library, which the effect copies into a
@@ -16,6 +16,7 @@ import {
     CameraFrame,
     Color,
     ContainerHandler,
+    DynamicSkyEffect,
     Entity,
     FILLMODE_FILL_WINDOW,
     Keyboard,
@@ -36,7 +37,6 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -167,11 +167,10 @@ createPrimitive('box', new Vec3(0, 4, -14), new Vec3(12, 8, 1), wallMaterial);
 createPrimitive('box', new Vec3(10, 3.5, 8), new Vec3(1.5, 7, 1.5), wallMaterial);
 createPrimitive('box', new Vec3(-10, 2, 6), new Vec3(1.5, 4, 1.5), wallMaterial);
 
-// The sun: a directional light, which the procedural sky aims, colours and dims with the sun
+// The sun: a directional light, which the dynamic sky aims, colours and dims with the sun
 const sun = new Entity('Sun');
 sun.addComponent('light', {
     type: 'directional',
-    intensity: 2.5,
     castShadows: true,
     shadowDistance: 60,
     shadowResolution: 2048,
@@ -180,19 +179,17 @@ sun.addComponent('light', {
 });
 app.root.addChild(sun);
 
-// The procedural sky, with the sun low above the horizon so that it sits in the view of the camera.
+// The dynamic sky, with the sun low above the horizon so that it sits in the view of the camera.
 // It renders the sun disc the flare is drawn over, and generates the image based lighting.
-const sky = new Entity('ProceduralSky');
-sky.addComponent('script');
-const skyScript = /** @type {ProceduralSky} */ (sky.script.create(ProceduralSky));
-skyScript.sunLight = sun;
-skyScript.elevation = 6;
-skyScript.azimuth = 160;
-skyScript.turbidity = 4;
-skyScript.mieCoefficient = 0.002;
-skyScript.rayleigh = 2.5;
-skyScript.luminance = 0.7;
-app.root.addChild(sky);
+const sky = new DynamicSkyEffect(device);
+sky.light = sun.light;
+sky.sunIntensity = 2.5;
+sky.elevation = 6;
+sky.azimuth = 160;
+sky.turbidity = 4;
+sky.mieCoefficient = 0.002;
+sky.rayleigh = 2.5;
+sky.luminance = 0.6;
 
 // Lamps: omni lights on poles, each with an emissive bulb
 const lamps = [];
@@ -371,6 +368,7 @@ cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 cameraFrame.bloom.intensity = 0.02;
 cameraFrame.bloom.blurLevel = 6;
+cameraFrame.addEffect(sky);
 cameraFrame.addEffect(lensFlare);
 cameraFrame.update();
 

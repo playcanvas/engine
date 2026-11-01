@@ -30,6 +30,7 @@ import {
     ConeGeometry,
     ContainerHandler,
     CylinderGeometry,
+    DynamicSkyEffect,
     ELEMENTTYPE_IMAGE,
     ELEMENTTYPE_TEXT,
     ElementComponentSystem,
@@ -72,7 +73,6 @@ import {
     math,
     platform
 } from 'playcanvas';
-import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 import { VatCharacters } from 'playcanvas/scripts/esm/vat/vat-characters.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -629,12 +629,11 @@ app.root.addChild(scenery);
 // sky, sun and camera
 
 // the sun sits low and off to one side, so the ridges and the trees on them rake long shadows and
-// shafts across the valley floor. The procedural sky dims it as it approaches the horizon, so the
-// authored intensity is the value it would have at midday
+// shafts across the valley floor. The dynamic sky sets its intensity, dimming it as it approaches the
+// horizon from the value it would have at midday, see below
 const sun = new Entity('Sun');
 sun.addComponent('light', {
     type: 'directional',
-    intensity: 2.8,
     castShadows: EFFECTS_ON,
     shadowType: SHADOW_PCF3_32F,
     shadowBias: 0.3,
@@ -649,24 +648,6 @@ sun.addComponent('light', {
     shadowResolution: 2048
 });
 app.root.addChild(sun);
-
-// the procedural sky drives the sun's direction, color and intensity, and generates the image
-// based lighting for everything in the scene
-const sky = new Entity('ProceduralSky');
-sky.addComponent('script');
-const skyScript = /** @type {ProceduralSky} */ (sky.script.create(ProceduralSky));
-skyScript.sunLight = sun;
-// The sun sits just off the valley's axis rather than straight down it - the enemies stay readable
-// against the ground instead of being lost in the glare, and the ridges get some shape. It is low
-// enough for a sunset, but not so low that the machine's own shadow is thrown for sixty meters
-// straight at the camera and disappears behind it.
-skyScript.elevation = 7.5;
-skyScript.azimuth = LIGHT_AZIMUTH;
-skyScript.turbidity = 8;
-skyScript.rayleigh = 3;
-skyScript.luminance = 0.9;
-skyScript.twilightGlow = 0.8;
-app.root.addChild(sky);
 
 const camera = new Entity('Camera');
 camera.addComponent('camera', {
@@ -702,6 +683,24 @@ cameraFrame.volumetricFog.maxDistance = 340;
 // what the shafts cost, and the march runs at half resolution on top of it
 cameraFrame.volumetricFog.steps = FOG_STEPS_DEFAULT;
 cameraFrame.volumetricFog.scale = 0.5;
+
+// the dynamic sky drives the sun's direction, color and intensity, and generates the image based
+// lighting for everything in the scene
+const sky = new DynamicSkyEffect(device);
+sky.light = sun.light;
+sky.sunIntensity = 2.8;
+
+// The sun sits just off the valley's axis rather than straight down it - the enemies stay readable
+// against the ground instead of being lost in the glare, and the ridges get some shape. It is low
+// enough for a sunset, but not so low that the machine's own shadow is thrown for sixty meters
+// straight at the camera and disappears behind it.
+sky.elevation = 7.5;
+sky.azimuth = LIGHT_AZIMUTH;
+sky.turbidity = 8;
+sky.rayleigh = 3;
+sky.luminance = 0.85;
+sky.twilightGlow = 0.8;
+cameraFrame.addEffect(sky);
 cameraFrame.update();
 
 // --------------------------------------------------------------------------------------------
@@ -2359,7 +2358,8 @@ app.on('update', (dt) => {
 
     // drift the sun round and back, which sweeps the shafts and the long shadows across the valley
     const sweep = 0.5 - 0.5 * Math.cos((time / LIGHT_SWEEP_PERIOD) * Math.PI * 2);
-    skyScript.azimuth = LIGHT_AZIMUTH + sweep * LIGHT_SWEEP;
+    sky.azimuth = LIGHT_AZIMUTH + sweep * LIGHT_SWEEP;
+    cameraFrame.update();
 
     // The camera moves first and the aim is then solved against the pose it ended up in, so the two
     // settle together on the state where the reticle sits exactly under a stationary cursor.
