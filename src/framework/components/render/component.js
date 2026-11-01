@@ -959,6 +959,11 @@ class RenderComponent extends Component {
      * @private
      */
     _onMeshInstancesChanged() {
+        // the batches of the batch group hold the replaced mesh instances, so they are built again
+        if (this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+            this.system.app.batcher?.markGroupDirty(this._batchGroupId);
+        }
+
         if (!this.entity._destroying) {
             // the systems registry is torn down before assets are unloaded when the app is
             // destroyed, and by then there is nothing left to notify
