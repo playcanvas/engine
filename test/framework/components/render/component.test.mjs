@@ -70,6 +70,30 @@ describe('RenderComponent', function () {
 
     });
 
+    describe('#type', function () {
+
+        it('rebuilds the dynamic batch with the new mesh instances', function () {
+            const group = app.batcher.addGroup('test', true, 100);
+
+            const entities = ['e1', 'e2'].map((name) => {
+                const e = new Entity(name);
+                app.root.addChild(e);
+                e.addComponent('render', { type: 'box', batchGroupId: group.id });
+                return e;
+            });
+            app.batcher.updateAll();
+            expect(app.batcher._batchList.length).to.equal(1);
+
+            // this destroys the mesh instances the batch was built from
+            entities[0].render.type = 'sphere';
+
+            expect(() => app.batcher.updateAll()).to.not.throw();
+            expect(app.batcher._batchList.length).to.equal(1);
+            expect(app.batcher._batchList[0].origMeshInstances).to.include(entities[0].render.meshInstances[0]);
+        });
+
+    });
+
     describe('#shadowCascadeMask', function () {
 
         it('defaults to all cascades and is assigned to the mesh instances', function () {
