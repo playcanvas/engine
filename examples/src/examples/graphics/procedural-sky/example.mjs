@@ -1,5 +1,9 @@
 // @config
 //
+// A day and night cycle over a desert. The DynamicSkyEffect of the camera frame renders the sky,
+// lights the scene with it, keeps the sun in sync with the time of day, and hazes the distant dunes
+// with the color of the sky behind them.
+//
 // @credit
 // title: Laboratory
 // author: Sketchfab
@@ -26,6 +30,7 @@ import {
     ContainerHandler,
     Curve,
     DepthState,
+    DynamicSkyEffect,
     Entity,
     FILLMODE_FILL_WINDOW,
     LIGHTFALLOFF_INVERSESQUARED,
@@ -49,7 +54,6 @@ import {
     math
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -192,14 +196,12 @@ terrain.findComponents('render').forEach((render) => {
     });
 });
 
-// A single directional light, kept in sync with the sun by the procedural sky script. It uses
-// PCSS soft shadows so the shadow penumbra reacts to the (moving) sun.
+// A single directional light, kept in sync with the sun by the dynamic sky - its direction, color
+// and intensity. It uses PCSS soft shadows so the shadow penumbra reacts to the (moving) sun.
 const sunLight = new Entity('Sun');
 sunLight.addComponent('light', {
     type: 'directional',
     castShadows: true,
-    // Daytime peak intensity - the procedural sky captures this and fades it across the day/night cycle
-    intensity: 6,
     shadowType: SHADOW_PCSS_32F,
     penumbraSize: 0.03,
     penumbraFalloff: 2.1,
@@ -218,14 +220,6 @@ sunLight.addComponent('light', {
     shadowUpdateMode: SHADOWUPDATE_REALTIME
 });
 app.root.addChild(sunLight);
-
-// Procedural sky - renders the visible sky and generates the image-based lighting, driving the
-// Sun light's direction, color and intensity
-const sky = new Entity('ProceduralSky');
-sky.addComponent('script');
-const skyScript = sky.script.create(ProceduralSky);
-skyScript.sunLight = sunLight;
-app.root.addChild(sky);
 
 // Create an Entity with a camera component
 const cameraEntity = new Entity('Camera');
@@ -265,13 +259,22 @@ cameraFrame.ssao.minAngle = 10;
 cameraFrame.bloom.intensity = 0;
 cameraFrame.bloom.blurLevel = 16;
 
-cameraFrame.update();
+// The dynamic sky - renders the sky, lights the scene with it and drives the sun light. Its haze
+// fades the distant dunes into the color of the sky behind them, densest at the ground level and
+// thinning out above it
+const sky = new DynamicSkyEffect(device);
+sky.light = sunLight.light;
+sky.sunIntensity = 6;
+sky.haze = true;
+sky.hazeBaseHeight = groundLevel;
 
-// SSAO toggles the CameraFrame SSAO type, which needs an explicit update()
-data.on('data.effects.ssao:set', (/** @type {boolean} */ value) => {
-    cameraFrame.ssao.type = value ? SSAOTYPE_LIGHTING : SSAOTYPE_NONE;
-    cameraFrame.update();
-});
+// The densest haze the control gives, which it sets a fraction of
+const HAZE_MAX_DENSITY = 0.0005;
+
+// The time of day animates, so the lighting blends between its updates instead of stepping
+sky.lightingInterpolation = true;
+cameraFrame.addEffect(sky);
+cameraFrame.update();
 
 // Initial control values
 data.set('data', {
@@ -287,6 +290,12 @@ data.set('data', {
         // turns the whole sky, and the sun with it, around Y - orients the sky over the scene
         // without disturbing the time of day driving the azimuth and elevation
         rotation: 0
+    },
+    // The haze of the sky over the distant terrain, its density as a fraction of HAZE_MAX_DENSITY
+    haze: {
+        enabled: true,
+        density: 0.33,
+        height: 40
     },
     effects: {
         ssao: true,
@@ -319,11 +328,6 @@ data.set('data', {
             [18, 0],
             [24, -90]
         ], // x = hour,           y = elevation (deg)
-        luminance: [
-            [0, 2],
-            [35, 0.4],
-            [90, 0.3]
-        ], // x = elevation (deg), y = luminance
         bloom: [
             [0, 0.005],
             [5, 0.001],
@@ -340,7 +344,6 @@ const buildCurve = (pairs) => {
     return curve;
 };
 
-let lastBloom = -1;
 const timeSpeed = 1; // hours per second
 
 app.on('update', (dt) => {
@@ -354,45 +357,47 @@ app.on('update', (dt) => {
 
     // Rebuild the editable curves and evaluate them
     const elevation = buildCurve(data.get('data.curves.elevation')).value(hour);
-    const luminance = buildCurve(data.get('data.curves.luminance')).value(elevation);
     const bloomCurve = buildCurve(data.get('data.curves.bloom'));
 
     // Sun: elevation from the time curve, azimuth sweeping east -> west across the day
-    skyScript.elevation = elevation;
-    skyScript.azimuth = (hour / 24) * 360;
+    sky.elevation = elevation;
+    sky.azimuth = (hour / 24) * 360;
 
     // Sky look
-    skyScript.luminance = luminance;
-    skyScript.rotation = data.get('data.sky.rotation');
-    skyScript.turbidity = data.get('data.sky.turbidity');
-    skyScript.rayleigh = data.get('data.sky.rayleigh');
+    sky.rotation = data.get('data.sky.rotation');
+    sky.turbidity = data.get('data.sky.turbidity');
+    sky.rayleigh = data.get('data.sky.rayleigh');
     app.scene.exposure = data.get('data.sky.exposure');
 
     // Moonlight (night key light)
-    skyScript.moonIntensity = data.get('data.moon.intensity');
+    sky.moonIntensity = data.get('data.moon.intensity');
     const mc = data.get('data.moon.color');
-    skyScript.moonColor.set(mc[0], mc[1], mc[2]);
+    sky.moonColor.set(mc[0], mc[1], mc[2]);
     const md = data.get('data.moon.direction');
-    skyScript.moonDirection.set(md[0], md[1], md[2]);
+    sky.moonDirection.set(md[0], md[1], md[2]);
 
     // Procedural night sky
     const nc = data.get('data.night.color');
-    skyScript.nightColor.set(nc[0], nc[1], nc[2]);
-    skyScript.nightBrightness = data.get('data.night.brightness');
-    skyScript.starBrightness = data.get('data.night.starBrightness');
-    skyScript.starDensity = data.get('data.night.density');
-    skyScript.starSize = data.get('data.night.starSize');
-    skyScript.twilightGlow = data.get('data.night.twilight');
-    skyScript.moonSize = data.get('data.night.moonSize');
-    skyScript.moonGlow = data.get('data.night.moonGlow');
+    sky.nightColor.set(nc[0], nc[1], nc[2]);
+    sky.nightBrightness = data.get('data.night.brightness');
+    sky.starBrightness = data.get('data.night.starBrightness');
+    sky.starDensity = data.get('data.night.density');
+    sky.starSize = data.get('data.night.starSize');
+    sky.twilightGlow = data.get('data.night.twilight');
+    sky.moonSize = data.get('data.night.moonSize');
+    sky.moonGlow = data.get('data.night.moonGlow');
 
-    // Bloom is a toggle whose intensity is driven by elevation - CameraFrame needs update() on change
-    const bloom = data.get('data.effects.bloom') ? bloomCurve.value(elevation) : 0;
-    if (bloom !== lastBloom) {
-        cameraFrame.bloom.intensity = bloom;
-        cameraFrame.update();
-        lastBloom = bloom;
-    }
+    // Haze
+    sky.haze = data.get('data.haze.enabled');
+    sky.hazeDensity = data.get('data.haze.density') * HAZE_MAX_DENSITY;
+    sky.hazeHeight = data.get('data.haze.height');
+
+    // Bloom is a toggle whose intensity is driven by elevation, and SSAO is applied to the lighting
+    cameraFrame.bloom.intensity = data.get('data.effects.bloom') ? bloomCurve.value(elevation) : 0;
+    cameraFrame.ssao.type = data.get('data.effects.ssao') ? SSAOTYPE_LIGHTING : SSAOTYPE_NONE;
+
+    // The settings of the sky and the other effects apply on the update of the camera frame
+    cameraFrame.update();
 
     // Torches glow between sunset and sunrise
     const nightFactor = 1 - math.smoothstep(-3, 3, elevation);

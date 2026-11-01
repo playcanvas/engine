@@ -76,6 +76,33 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
             </Panel>
+            <Panel headerText='Haze'>
+                <LabelGroup text='Enabled'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.haze.enabled' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Density'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.haze.density' }}
+                        min={0}
+                        max={1}
+                        precision={2}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Height'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.haze.height' }}
+                        min={20}
+                        max={200}
+                        precision={0}
+                    />
+                </LabelGroup>
+            </Panel>
             <Panel headerText='Effects'>
                 <LabelGroup text='SSAO'>
                     <BooleanInput
