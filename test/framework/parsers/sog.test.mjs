@@ -168,6 +168,40 @@ describe('SogParser', function () {
             expect(device.contextLost).to.be.true;
             expect(device._callbacks.get('devicerestored')?.length ?? 0).to.equal(listenersBefore);
         });
+
+        it(`${Parser.name} fails the load when a texture fails to load`, async function () {
+            const meta = { ...META, blind: [{ files: ['blind_0.webp'], fields: [{ name: 'id', type: 'u8', offset: 0 }] }] };
+            const archive = zipSync({ 'meta.json': strToU8(JSON.stringify(meta)) }, { level: 0 });
+            const sog = new Asset('sog', 'gsplat', {
+                url: Parser === SogBundleParser ? 'assets/splats/test.sog' : META_URL,
+                contents: archive.buffer
+            });
+            app.assets.add(sog);
+
+            stub(http, 'get').callsFake((url, options, callback) => callback(null, meta));
+            const load = app.assets.load;
+            stub(app.assets, 'load').callsFake((asset) => {
+                if (asset.type !== 'texture') {
+                    load.call(app.assets, asset);
+                } else if (asset.name === 'blind_0.webp') {
+                    asset.fire('error', 'decode failed', asset);
+                } else {
+                    asset.resource = new Texture(app.graphicsDevice, { width: 1, height: 1 });
+                    asset.loaded = true;
+                    asset.fire('load', asset);
+                }
+            });
+
+            const err = await new Promise((resolve, reject) => {
+                sog.once('load', () => reject(new Error('loaded')));
+                sog.once('error', resolve);
+                app.assets.load(sog);
+            });
+            expect(err).to.contain('blind_0.webp');
+            expect(err).to.contain('decode failed');
+            expect(sog.resources).to.be.empty;
+            expect(app.assets.list()).to.deep.equal([sog]);
+        });
     });
 
     // Nothing cancels an in-flight request, so a load callback can run after app.destroy(). That
