@@ -17,13 +17,40 @@ import {
  * @returns {ReactElement} The control panel.
  */
 export function Controls({ observer }) {
+    /**
+     * @param {string} path - The path of the setting.
+     * @returns {ReactElement} The slider.
+     */
+    const slider = (path) => (
+        <SliderInput
+            binding={new BindingTwoWay()}
+            link={{ observer, path: `settings.${path}` }}
+            min={0}
+            max={1}
+            precision={2}
+        />
+    );
+
+    /**
+     * @param {string} path - The path of the setting.
+     * @returns {ReactElement} The toggle.
+     */
+    const toggle = (path) => (
+        <BooleanInput
+            type='toggle'
+            binding={new BindingTwoWay()}
+            link={{ observer, path: `settings.${path}` }}
+        />
+    );
+
     return (
         <>
-            <Panel headerText='Settings'>
+            <Panel headerText='Reflections'>
+                <LabelGroup text='Enabled'>{toggle('reflections.enabled')}</LabelGroup>
                 <LabelGroup text='Update'>
                     <SelectInput
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'settings.updateFrequency' }}
+                        link={{ observer, path: 'settings.reflections.updateFrequency' }}
                         type='number'
                         options={[
                             { v: 0, t: 'Once' },
@@ -33,52 +60,25 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='Gloss'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'settings.gloss' }}
-                        min={0}
-                        max={1}
-                        precision={2}
-                    />
+                <LabelGroup text='Box Projection'>{toggle('reflections.boxProjection')}</LabelGroup>
+                <LabelGroup text='Reflectivity'>{slider('reflections.reflectivity')}</LabelGroup>
+                <LabelGroup text='Show Cubemap'>{toggle('reflections.showCubemap')}</LabelGroup>
+            </Panel>
+            <Panel headerText='Material'>
+                <LabelGroup text='Floor Roughness'>{slider('material.floorRoughness')}</LabelGroup>
+                <LabelGroup text='Floor Metalness'>{slider('material.floorMetalness')}</LabelGroup>
+                <LabelGroup text='Sphere Roughness'>
+                    {slider('material.sphereRoughness')}
                 </LabelGroup>
-                <LabelGroup text='Metalness'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'settings.metalness' }}
-                        min={0}
-                        max={1}
-                        precision={2}
-                    />
+                <LabelGroup text='Sphere Metalness'>
+                    {slider('material.sphereMetalness')}
                 </LabelGroup>
-                <LabelGroup text='Reflectivity'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'settings.reflectivity' }}
-                        min={0}
-                        max={1}
-                        precision={2}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Bumpiness'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'settings.bumpiness' }}
-                        min={0}
-                        max={1}
-                        precision={2}
-                    />
+                <LabelGroup text='Sphere Bumpiness'>
+                    {slider('material.sphereBumpiness')}
                 </LabelGroup>
             </Panel>
-            <Panel headerText='Debug'>
-                <LabelGroup text='Show cubemap'>
-                    <BooleanInput
-                        type='toggle'
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'settings.showCubemap' }}
-                        value={observer.get('settings.showCubemap')}
-                    />
-                </LabelGroup>
+            <Panel headerText='Scene'>
+                <LabelGroup text='Animate'>{toggle('scene.animate')}</LabelGroup>
             </Panel>
         </>
     );
