@@ -232,6 +232,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_UNIFIED_ID');
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_OVERDRAW');
+        this._internalDefines.add('GSPLAT_OVERUNITY');
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_XR');
@@ -546,7 +547,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             antiAlias: params.antiAlias,
             isStereo,
             material: params.material,
-            userCacheWords: params.varyings.words
+            userCacheWords: params.varyings.words + this._plateauWords()
         });
 
         projector.writeIndirectArgs(
@@ -745,6 +746,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
             this._pickMaterial.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
             this._pickMaterial.setDefine('{CACHE_STRIDE}', this._cacheStride);
+            this._pickMaterial.setDefine('GSPLAT_OVERUNITY', !!this._material.getDefine('GSPLAT_OVERUNITY'));
             this._pickMaterial.setDefine('SH_BANDS', '0');
             this._pickMaterial.setDefine('GSPLAT_INDIRECT_DRAW', true);
             this._pickMaterial.setDefine('DITHER_NONE', '');
@@ -860,14 +862,19 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this._material.update();
         }
 
-        // keep the projection cache stride in sync with the user varying streams
-        const cacheStride = CACHE_STRIDE + params.varyings.words;
-        if (cacheStride !== this._cacheStride) {
+        // keep the projection cache stride in sync with the user varying streams and the
+        // over-unity plateau word
+        const plateauWords = this._plateauWords();
+        const cacheStride = CACHE_STRIDE + params.varyings.words + plateauWords;
+        const overUnity = plateauWords > 0;
+        if (cacheStride !== this._cacheStride || overUnity !== !!this._material.getDefine('GSPLAT_OVERUNITY')) {
             this._cacheStride = cacheStride;
             this._material.setDefine('{CACHE_STRIDE}', cacheStride);
+            this._material.setDefine('GSPLAT_OVERUNITY', overUnity);
             this._material.update();
             if (this._pickMaterial) {
                 this._pickMaterial.setDefine('{CACHE_STRIDE}', cacheStride);
+                this._pickMaterial.setDefine('GSPLAT_OVERUNITY', overUnity);
                 this._pickMaterial.update();
             }
         }
@@ -930,6 +937,17 @@ class GSplatHybridRenderer extends GSplatRenderer {
         }
 
         this._material.update();
+    }
+
+    /**
+     * Cache words for the over-unity plateau shape: one when the work buffer carries it (see
+     * GSplatParams#compensation).
+     *
+     * @returns {number} The word count.
+     * @private
+     */
+    _plateauWords() {
+        return this.workBuffer?.format.getStream('splatPlateau') ? 1 : 0;
     }
 
     /**

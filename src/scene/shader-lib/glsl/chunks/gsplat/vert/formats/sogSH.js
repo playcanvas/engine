@@ -7,9 +7,12 @@ export default /* glsl */`
     #endif
 
     void readSHData(out vec3 sh[SH_COEFFS], out float scale) {
-        // extract the 16-bit centroid palette index from sh_labels bytes 0 and 1
+        // extract the centroid palette index from sh_labels: 16-bit (bytes 0 and 1), 24-bit in v3
         vec4 labels = texelFetch(sh_labels, splat.uv, 0);
         int n = int(labels.x * 255.0 + 0.5) + int(labels.y * 255.0 + 0.5) * 256;
+        #ifdef SOG_V3
+            n += int(labels.z * 255.0 + 0.5) * 65536;
+        #endif
 
         // calculate offset into the centroids texture (64 centroids per row, SH_COEFFS texels each)
         int u = (n % 64) * SH_COEFFS;

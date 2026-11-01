@@ -249,9 +249,19 @@ class GSplatShadowRenderer {
         const wbFormat = this.world.workBuffer.format;
         const version = wbFormat.extraStreamsVersion;
         if (!this._cullShader || version !== this._cullFormatVersion || this._userChunksKey !== this._cullBuiltChunksKey) {
+            const formatChanged = version !== this._cullFormatVersion;
             this._cullFormatVersion = version;
             this._cullBuiltChunksKey = this._userChunksKey;
             this._buildCullShader();
+
+            // streams added to the format in place (e.g. the over-unity plateau) also change the
+            // draw materials' read code and bindings
+            if (formatChanged) {
+                this.entries.forEach((entry) => {
+                    this._configureMaterialWorkBuffer(entry.material);
+                    entry.material.update();
+                });
+            }
         }
     }
 
@@ -306,6 +316,9 @@ class GSplatShadowRenderer {
         const colorStream = wbFormat.getStream('dataColor');
         if (colorStream && colorStream.format !== PIXELFORMAT_RGBA16U) {
             cdefines.set('GSPLAT_COLOR_FLOAT', '');
+        }
+        if (wbFormat.getStream('splatPlateau')) {
+            cdefines.set('GSPLAT_OVERUNITY', '');
         }
 
         this._cullShader?.destroy();
@@ -813,6 +826,9 @@ class GSplatShadowRenderer {
         const hasPcId = !!wbFormat.getStream('pcId');
         material.setDefine('GSPLAT_UNIFIED_ID', hasPcId);
         material.setDefine('PICK_CUSTOM_ID', hasPcId);
+
+        // over-unity plateau profile (see GSplatParams#compensation)
+        material.setDefine('GSPLAT_OVERUNITY', !!wbFormat.getStream('splatPlateau'));
 
         // bind work buffer textures
         for (const stream of wbFormat.resourceStreams) {

@@ -101,15 +101,22 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
+    // the drawn footprint, grown for an over-unity plateau
+    #ifdef GSPLAT_OVERUNITY
+        let extent = max(l1, l2) * cornerGrow;
+    #else
+        let extent = max(l1, l2);
+    #endif
+
     // early-out gaussians smaller than minPixelSize
-    if (max(l1, l2) < uniform.minPixelSize) {
+    if (extent < uniform.minPixelSize) {
         return false;
     }
 
     let c = center.proj.ww * uniform.viewport_size.zw;
 
     // cull against frustum x/y axes
-    if (any((abs(center.proj.xy) - vec2f(max(l1, l2)) * c) > center.proj.ww)) {
+    if (any((abs(center.proj.xy) - vec2f(extent) * c) > center.proj.ww)) {
         return false;
     }
 

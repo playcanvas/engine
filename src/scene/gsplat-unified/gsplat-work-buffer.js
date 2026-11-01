@@ -73,6 +73,11 @@ class WorkBufferRenderInfo {
             clonedDefines.set('GSPLAT_ID', '');
         }
 
+        // Write the over-unity plateau shape when its stream exists (see GSplatParams#compensation)
+        if (format.getStream('splatPlateau')) {
+            clonedDefines.set('GSPLAT_OVERUNITY', '');
+        }
+
         // Get custom shader chunks from material (for container support)
         const fragmentIncludes = material.hasShaderChunks ?
             (device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl) :

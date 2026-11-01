@@ -96,15 +96,22 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
     float l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
+    // the drawn footprint, grown for an over-unity plateau
+    #ifdef GSPLAT_OVERUNITY
+        float extent = max(l1, l2) * cornerGrow;
+    #else
+        float extent = max(l1, l2);
+    #endif
+
     // early-out gaussians smaller than minPixelSize
-    if (max(l1, l2) < minPixelSize) {
+    if (extent < minPixelSize) {
         return false;
     }
 
     vec2 c = center.proj.ww * viewport_size.zw;
 
     // cull against frustum x/y axes
-    if (any(greaterThan(abs(center.proj.xy) - vec2(max(l1, l2)) * c, center.proj.ww))) {
+    if (any(greaterThan(abs(center.proj.xy) - vec2(extent) * c, center.proj.ww))) {
         return false;
     }
 

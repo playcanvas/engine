@@ -452,6 +452,11 @@ class GSplatProjector {
         if (stereo) {
             cdefines.set('GSPLAT_XR', '');
         }
+        // over-unity plateau shape, appended as the cache's last word (the caller counts it in
+        // userCacheWords; see GSplatHybridRenderer)
+        if (wbFormat.getStream('splatPlateau')) {
+            cdefines.set('GSPLAT_OVERUNITY', '');
+        }
 
         // Format-specific defines.
         const colorStream = wbFormat.getStream('dataColor');
