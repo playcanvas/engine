@@ -119,6 +119,7 @@ const tmpMoon = new Vec3();
 const tmpMat = new Mat4();
 const tmpQuat = new Quat();
 const tmpView = new Mat4();
+const tmpLinear = new Color();
 
 // the rotation of the sky without the rotation of the sky of the scene
 const IDENTITY_MAT3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -1352,9 +1353,10 @@ class DynamicSkyEffect extends CameraFrameEffect {
         // are lit by their own moonlight
         const cloudIntensity = (this.sunIntensity * math.smoothstep(0, 0.3, y) +
             this.cloudNightBrightness * nightFactor) * this.cloudBrightness;
-        this._cloudLight[0] = Math.pow(sunColor.r, 2.2) * cloudIntensity;
-        this._cloudLight[1] = Math.pow(sunColor.g, 2.2) * cloudIntensity;
-        this._cloudLight[2] = Math.pow(sunColor.b, 2.2) * cloudIntensity;
+        tmpLinear.linear(sunColor);
+        this._cloudLight[0] = tmpLinear.r * cloudIntensity;
+        this._cloudLight[1] = tmpLinear.g * cloudIntensity;
+        this._cloudLight[2] = tmpLinear.b * cloudIntensity;
         this._cloudLightDir[0] = -src.x;
         this._cloudLightDir[1] = src.y;
         this._cloudLightDir[2] = src.z;

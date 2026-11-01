@@ -7,16 +7,17 @@ vec3 decodeLinear(vec4 raw) {
     return raw.rgb;
 }
 
+// the exact sRGB transfer, as the GPU decodes an sRGB texture
 float decodeGamma(float raw) {
-    return pow(raw, 2.2);
+    return raw <= 0.04045 ? raw / 12.92 : pow((raw + 0.055) / 1.055, 2.4);
 }
 
 vec3 decodeGamma(vec3 raw) {
-    return pow(raw, vec3(2.2));
+    return mix(pow((raw + 0.055) / 1.055, vec3(2.4)), raw / 12.92, lessThanEqual(raw, vec3(0.04045)));
 }
 
 vec3 decodeGamma(vec4 raw) {
-    return pow(raw.xyz, vec3(2.2));
+    return decodeGamma(raw.xyz);
 }
 
 vec3 decodeRGBM(vec4 raw) {

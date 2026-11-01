@@ -33,6 +33,9 @@ describe('PlaceholderTextures', function () {
     // the texel of a placeholder, in the range 0..1
     const texel = texture => Array.from(texture._levels[0]).map(c => c / 255);
 
+    // the exact sRGB transfer, as the GPU and the decode functions of the shader chunks apply it
+    const srgbToLinear = c => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+
     // the color the shader decodes from a texel, as the decode functions of the shader chunks do
     const decode = (texture) => {
         const [r, g, b, a] = texel(texture);
@@ -40,7 +43,7 @@ describe('PlaceholderTextures', function () {
             case TEXTURETYPE_RGBM: return [r, g, b].map(c => (8 * a * c) ** 2);
             case TEXTURETYPE_RGBP: return [r, g, b].map(c => (c * (8 - 7 * a)) ** 2);
             case TEXTURETYPE_RGBE: return [r, g, b].map(c => (a === 0 ? 0 : c * 2 ** (a * 255 - 128)));
-            default: return [r, g, b].map(c => c ** 2.2);
+            default: return [r, g, b].map(srgbToLinear);
         }
     };
 
@@ -99,7 +102,7 @@ describe('PlaceholderTextures', function () {
         // the gamma space texels the placeholders of the default type store
         const colors = { lightMap: 1, emissiveMap: 128 / 255, sheenMap: 0 };
         for (const [parameterName, value] of Object.entries(colors)) {
-            const expected = value ** 2.2;
+            const expected = srgbToLinear(value);
             expect(decode(placeholders.get(one(parameterName), false, TEXTURETYPE_DEFAULT))[0]).to.be.closeTo(expected, 1e-6);
             for (const type of [TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP]) {
                 const decoded = decode(placeholders.get(one(parameterName), false, type));
@@ -138,7 +141,7 @@ describe('PlaceholderTextures', function () {
             const diffuse = placeholders.get(one('diffuseMap'), true, TEXTURETYPE_DEFAULT);
             expect(Array.from(diffuse._levels[0])).to.eql([128, 128, 128, 255]);
             for (const c of sampled(diffuse)) {
-                expect(c).to.be.closeTo((128 / 255) ** 2.2, 0.005);
+                expect(c).to.be.closeTo(srgbToLinear(128 / 255), 0.005);
             }
         });
     });

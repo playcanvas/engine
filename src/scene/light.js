@@ -1185,13 +1185,14 @@ class Light {
         }
 
         // Note: This is slightly unconventional, ideally we'd convert color to linear space and then
-        // multiply by intensity, but keeping this for backwards compatibility
+        // multiply by intensity, but keeping this for backwards compatibility: below 1, intensity
+        // scales the color in gamma 2.2 space, which the lightmapper's virtual lights rely on
         const color = this._color;
         const colorLinear = this._colorLinear;
         if (intensity >= 1) {
             tmpColor.linear(color).mulScalar(intensity);
         } else {
-            tmpColor.copy(color).mulScalar(intensity).linear();
+            tmpColor.linear(color).mulScalar(Math.pow(intensity, 2.2));
         }
 
         colorLinear[0] = tmpColor.r;
