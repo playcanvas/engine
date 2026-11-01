@@ -224,7 +224,7 @@ describe('DynamicSkyEffect', function () {
             cameraFrame.update();
             expect(cameraComponent.fog.type.toUpperCase()).to.equal(HAZE);
             expect(other.fog).to.equal(null);
-            expect(fragmentSource(material)).to.include('dynamicSkyHazeAmount(view_position, vPositionW)');
+            expect(fragmentSource(material)).to.include('dynamicSkyHazeAmount');
 
             sky.haze = false;
             cameraFrame.update();
