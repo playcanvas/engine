@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
+import { SPRITETYPE_SIMPLE } from '../../../../src/framework/components/sprite/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
@@ -78,6 +79,11 @@ describe('SpriteComponent', function () {
         e.addComponent('sprite');
 
         expect(e.sprite).to.exist;
+    });
+
+    it('Defaults type to SPRITETYPE_SIMPLE', function () {
+        expect(new Entity().addComponent('sprite').type).to.equal(SPRITETYPE_SIMPLE);
+        expect(new Entity().addComponent('sprite', { type: undefined }).type).to.equal(SPRITETYPE_SIMPLE);
     });
 
     [true, false].forEach((tintBeforeSprite) => {
