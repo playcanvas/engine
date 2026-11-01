@@ -193,7 +193,6 @@ const getBundledOptions = ({
     metafile = false
 }) => {
     const isUMD = moduleFormat === 'umd';
-    const isDebug = buildType === 'dbg';
     const isMin = buildType === 'min';
     const prefix = OUT_PREFIX[buildType];
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
@@ -210,7 +209,7 @@ const getBundledOptions = ({
         target: TARGET,
         metafile,
         ...(preserveClassFields ? { supported: CLASS_FIELD_SUPPORT } : {}),
-        sourcemap: sourcemaps ? true : isDebug ? 'inline' : false,
+        sourcemap: sourcemaps,
         minify: isMin,
         drop: isMin ? ['console'] : undefined,
         legalComments: 'none',
