@@ -5,7 +5,10 @@ import {
     Vec3,
     Texture,
     RenderTarget,
+    PIXELFORMAT_RGBA16F,
     PIXELFORMAT_SRGBA8,
+    GAMMA_NONE,
+    TONEMAP_NONE,
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
     FILTER_LINEAR_MIPMAP_LINEAR
@@ -102,6 +105,18 @@ class PlanarRenderer extends Script {
      * @type {boolean}
      */
     depth = true;
+
+    /**
+     * If set to true, the texture stores high dynamic range colors, so that bright light sources
+     * keep their brightness in it. The camera then renders linear colors, without tone mapping and
+     * gamma correction, which are applied by the camera rendering the material using the texture.
+     * Falls back to a low dynamic range texture when the device cannot render to half-float
+     * textures.
+     *
+     * @attribute
+     * @type {boolean}
+     */
+    hdr = false;
 
     /**
      * A point on the plane.
@@ -215,8 +230,11 @@ class PlanarRenderer extends Script {
         const width = Math.min(Math.floor(sceneCameraWidth * this.scale), device.maxTextureSize);
         const height = Math.min(Math.floor(sceneCameraHeight * this.scale), device.maxTextureSize);
 
+        const format = this.hdr && device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : PIXELFORMAT_SRGBA8;
+
         const planarCamera = this.entity.camera;
-        if (!planarCamera.renderTarget || planarCamera.renderTarget.width !== width || planarCamera.renderTarget.height !== height) {
+        const rt = planarCamera.renderTarget;
+        if (!rt || rt.width !== width || rt.height !== height || this._texture?.format !== format) {
 
             // destroy old render target
             this._destroyRenderTarget();
@@ -226,7 +244,7 @@ class PlanarRenderer extends Script {
                 name: `${this.entity.name}:PlanarRenderer`,
                 width: width,
                 height: height,
-                format: PIXELFORMAT_SRGBA8,
+                format: format,
                 mipmaps: this.mipmaps,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -378,6 +396,13 @@ class PlanarRenderer extends Script {
             planarCamera.aperture = sceneCamera.aperture;
             planarCamera.sensitivity = sceneCamera.sensitivity;
             planarCamera.shutter = sceneCamera.shutter;
+
+            // a high dynamic range texture stores the linear colors, which are tone mapped and
+            // gamma corrected later, by the camera rendering the material using the texture
+            if (this._texture.format === PIXELFORMAT_RGBA16F) {
+                planarCamera.toneMapping = TONEMAP_NONE;
+                planarCamera.gammaCorrection = GAMMA_NONE;
+            }
 
             // oblique clipping using a custom projection
             if (this.obliqueClipping) {
