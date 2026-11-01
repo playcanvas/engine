@@ -319,6 +319,7 @@ class ImageElement {
         this._innerOffsetUniform = new Float32Array(4);
         this._atlasRect = new Vec4();
         this._atlasRectUniform = new Float32Array(4);
+        this._tileHalfTexelUniform = new Float32Array(2);
 
         this._defaultMesh = this._createMesh();
         this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
@@ -529,6 +530,11 @@ class ImageElement {
                 frameData.rect.z / tex.width,
                 frameData.rect.w / tex.height);
 
+            // half a texel of the frame's repeating middle, as a fraction of it, which tiled
+            // sampling stays inside
+            this._tileHalfTexelUniform[0] = 0.5 / Math.max(1, frameData.rect.z - frameData.border.x - frameData.border.z);
+            this._tileHalfTexelUniform[1] = 0.5 / Math.max(1, frameData.rect.w - frameData.border.y - frameData.border.w);
+
             // scale: apply PPU
             const ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
             const scaleMulX = frameData.rect.z / ppu;
@@ -559,6 +565,7 @@ class ImageElement {
                 this._atlasRectUniform[2] = this._atlasRect.z;
                 this._atlasRectUniform[3] = this._atlasRect.w;
                 this._renderable.setParameter('atlasRect', this._atlasRectUniform);
+                this._renderable.setParameter('tileHalfTexel', this._tileHalfTexelUniform);
                 this._outerScaleUniform[0] = this._outerScale.x;
                 this._outerScaleUniform[1] = this._outerScale.y;
                 this._renderable.setParameter('outerScale', this._outerScaleUniform);

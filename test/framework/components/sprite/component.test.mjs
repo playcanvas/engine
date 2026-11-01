@@ -1,9 +1,15 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { SPRITETYPE_SIMPLE } from '../../../../src/framework/components/sprite/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
+import { SPRITE_RENDERMODE_TILED } from '../../../../src/scene/constants.js';
+import { Sprite } from '../../../../src/scene/sprite.js';
+import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -154,6 +160,29 @@ describe('SpriteComponent', function () {
         for (const material of [system.defaultMaterial, system.default9SlicedMaterialSlicedMode, system.default9SlicedMaterialTiledMode]) {
             expect(material.defines.get('MESH_COLOR')).to.equal(true);
         }
+    });
+
+    it('Keeps tiled sampling half a texel inside the repeating middle of the frame', function () {
+        // A 40 x 20 frame whose 6 pixel ends and 2 pixel top border leave a 28 x 18 middle to repeat
+        const atlas = new TextureAtlas();
+        atlas.texture = new Texture(app.graphicsDevice, { width: 64, height: 32 });
+        atlas.frames = {
+            tile: { rect: new Vec4(4, 8, 40, 20), pivot: new Vec2(0.5, 0.5), border: new Vec4(6, 0, 6, 2) }
+        };
+        const sprite = new Sprite(app.graphicsDevice, {
+            atlas,
+            frameKeys: ['tile'],
+            pixelsPerUnit: 1,
+            renderMode: SPRITE_RENDERMODE_TILED
+        });
+
+        const e = new Entity();
+        app.root.addChild(e);
+        e.addComponent('sprite', { sprite, width: 100, height: 20 });
+
+        const halfTexel = e.sprite._meshInstance.getParameter('tileHalfTexel').data;
+        expect(halfTexel[0]).to.be.closeTo(0.5 / 28, 1e-7);
+        expect(halfTexel[1]).to.be.closeTo(0.5 / 18, 1e-7);
     });
 
     it('Add / Remove Component', function () {

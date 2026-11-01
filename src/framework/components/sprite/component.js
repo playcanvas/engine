@@ -28,6 +28,7 @@ const PARAM_COLOR = 'mesh_color';
 const PARAM_INNER_OFFSET = 'innerOffset';
 const PARAM_OUTER_SCALE = 'outerScale';
 const PARAM_ATLAS_RECT = 'atlasRect';
+const PARAM_TILE_HALF_TEXEL = 'tileHalfTexel';
 const tempColor = new Color();
 
 /**
@@ -205,6 +206,9 @@ class SpriteComponent extends Component {
 
     /** @private */
     _atlasRectUniform = new Float32Array(4);
+
+    /** @private */
+    _tileHalfTexelUniform = new Float32Array(2);
 
     // batch groups
 
@@ -964,8 +968,13 @@ class SpriteComponent extends Component {
                     frameData.rect.w / tex.height
                 );
 
+                // half a texel of the frame's repeating middle, as a fraction of it, which tiled
+                // sampling stays inside
+                this._tileHalfTexelUniform[0] = 0.5 / Math.max(1, frameData.rect.z - frameData.border.x - frameData.border.z);
+                this._tileHalfTexelUniform[1] = 0.5 / Math.max(1, frameData.rect.w - frameData.border.y - frameData.border.w);
             } else {
                 this._innerOffset.set(0, 0, 0, 0);
+                this._tileHalfTexelUniform.fill(0);
             }
 
             // set inner offset and atlas rect on mesh instance
@@ -979,6 +988,7 @@ class SpriteComponent extends Component {
             this._atlasRectUniform[2] = this._atlasRect.z;
             this._atlasRectUniform[3] = this._atlasRect.w;
             this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRectUniform);
+            this._meshInstance.setParameter(PARAM_TILE_HALF_TEXEL, this._tileHalfTexelUniform);
         } else {
             this._meshInstance._updateAabbFunc = null;
         }
