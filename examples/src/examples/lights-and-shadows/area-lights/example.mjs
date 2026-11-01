@@ -152,7 +152,7 @@ const room = assets.room.resource.instantiateRenderEntity({
 app.root.addChild(room);
 
 const floorMaterial = /** @type {StandardMaterial} */ (
-    assets.room.resource.materials.find((/** @type {Asset} */ asset) => asset.resource.name === 'Floor').resource
+    assets.room.resource.materials.find((asset) => asset.resource.name === 'Floor').resource
 );
 
 // The statue, a glossy red sphere and a white ceramic sphere on the pedestals of the room
