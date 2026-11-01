@@ -418,7 +418,8 @@ class GltfExporter extends CoreExporter {
         return copy;
     }
 
-    attachTexture(resources, material, destination, name, textureSemantic, json) {
+    // Attaches a map as a glTF texture, which glTF reads from the given channels.
+    attachTexture(resources, material, destination, name, textureSemantic, json, channel) {
         const texture = this.getExportedTexture(resources, material, textureSemantic);
 
         if (texture) {
@@ -465,16 +466,54 @@ class GltfExporter extends CoreExporter {
                     destination[name].extensions.KHR_texture_transform.rotation = rotation * math.DEG_TO_RAD;
                 }
             }
+
+            // a channel copy already holds the map in the channel glTF reads
+            if (!(texture instanceof ChannelCopy)) {
+                this.checkChannel(material, name, textureSemantic, channel);
+            }
+        }
+    }
+
+    // Warns when the material samples a map from other channels than glTF reads from the texture
+    // it is exported as. The texels are exported unchanged.
+    checkChannel(material, name, textureSemantic, channel) {
+        const materialChannel = material[`${textureSemantic}Channel`] ?? channel;
+        if (materialChannel !== channel) {
+            console.warn(`Material '${material.name}' has ${textureSemantic}Channel set to '${materialChannel}', but glTF reads ${name} from channel '${channel}', and the texture is exported unchanged.`);
+        }
+    }
+
+    // Warns when the map of a gloss property is exported as a glTF roughness texture, but the
+    // material doesn't invert that gloss, so the texels hold gloss.
+    checkGlossInvert(material, name, gloss) {
+        if (!material[`${gloss}Invert`]) {
+            console.warn(`Material '${material.name}' has ${gloss}Invert set to false, so its ${gloss}Map is exported as ${name} without converting gloss to roughness.`);
         }
     }
 
     // Attaches the map of a gloss property as a glTF roughness texture. The texels are exported
     // unchanged, so they only hold roughness when the material inverts that gloss.
-    attachRoughnessTexture(resources, material, destination, name, gloss, json) {
-        this.attachTexture(resources, material, destination, name, `${gloss}Map`, json);
+    attachRoughnessTexture(resources, material, destination, name, gloss, json, channel) {
+        this.attachTexture(resources, material, destination, name, `${gloss}Map`, json, channel);
 
-        if (destination[name] && !material[`${gloss}Invert`]) {
-            console.warn(`Material '${material.name}' has ${gloss}Invert set to false, so its ${gloss}Map is exported as ${name} without converting gloss to roughness.`);
+        if (destination[name]) {
+            this.checkGlossInvert(material, name, gloss);
+        }
+    }
+
+    // Attaches the metalness map as the glTF metallic-roughness texture. glTF also reads roughness
+    // from that texture, so the gloss map is only exported when it is the metalness map.
+    attachMetallicRoughnessTexture(resources, material, destination, json) {
+        const name = 'metallicRoughnessTexture';
+        const { glossMap, metalnessMap } = material;
+
+        this.attachTexture(resources, material, destination, name, 'metalnessMap', json, 'b');
+
+        if (glossMap !== metalnessMap) {
+            console.warn(`Material '${material.name}' doesn't use the same texture for glossMap and metalnessMap, but glTF reads roughness from channel 'g' of ${name}, which is exported from the metalnessMap.`);
+        } else if (glossMap) {
+            this.checkChannel(material, name, 'glossMap', 'g');
+            this.checkGlossInvert(material, name, 'gloss');
         }
     }
 
@@ -518,8 +557,8 @@ class GltfExporter extends CoreExporter {
         }
 
         // For unlit, use emissiveMap as baseColorTexture source (parser copies diffuseMap to emissiveMap)
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', mat.useLighting ? 'diffuseMap' : 'emissiveMap', json);
-        this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', mat.useLighting ? 'diffuseMap' : 'emissiveMap', json, 'rgb');
+        this.attachMetallicRoughnessTexture(resources, mat, pbr, json);
 
         // Emissive (skip for unlit - emissive holds the baseColor)
         if (mat.useLighting && !emissive.equals(Color.BLACK)) {
@@ -561,8 +600,8 @@ class GltfExporter extends CoreExporter {
                 clearcoatExt.clearcoatRoughnessFactor = clearcoatRoughness;
             }
 
-            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatTexture', 'clearCoatMap', json);
-            this.attachRoughnessTexture(resources, mat, clearcoatExt, 'clearcoatRoughnessTexture', 'clearCoatGloss', json);
+            this.attachTexture(resources, mat, clearcoatExt, 'clearcoatTexture', 'clearCoatMap', json, 'r');
+            this.attachRoughnessTexture(resources, mat, clearcoatExt, 'clearcoatRoughnessTexture', 'clearCoatGloss', json, 'g');
 
             // clearcoatNormalTexture with scale
             if (mat.clearCoatNormalMap) {
@@ -587,9 +626,9 @@ class GltfExporter extends CoreExporter {
             }
 
             this.attachTexture(resources, mat, diffuseTransmissionExt,
-                'diffuseTransmissionTexture', 'diffuseTransmissionMap', json);
+                'diffuseTransmissionTexture', 'diffuseTransmissionMap', json, 'a');
             this.attachTexture(resources, mat, diffuseTransmissionExt,
-                'diffuseTransmissionColorTexture', 'diffuseTransmissionColorMap', json);
+                'diffuseTransmissionColorTexture', 'diffuseTransmissionColorMap', json, 'rgb');
 
             this.addExtension(json, output, 'KHR_materials_diffuse_transmission',
                 diffuseTransmissionExt);
@@ -637,8 +676,8 @@ class GltfExporter extends CoreExporter {
                 iridescenceExt.iridescenceThicknessMaximum = mat.iridescenceThicknessMax;
             }
 
-            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceTexture', 'iridescenceMap', json);
-            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceThicknessTexture', 'iridescenceThicknessMap', json);
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceTexture', 'iridescenceMap', json, 'r');
+            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceThicknessTexture', 'iridescenceThicknessMap', json, 'g');
 
             if (Object.keys(iridescenceExt).length > 0) {
                 this.addExtension(json, output, 'KHR_materials_iridescence', iridescenceExt);
@@ -658,8 +697,8 @@ class GltfExporter extends CoreExporter {
                 sheenExt.sheenRoughnessFactor = sheenRoughness;
             }
 
-            this.attachTexture(resources, mat, sheenExt, 'sheenColorTexture', 'sheenMap', json);
-            this.attachRoughnessTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGloss', json);
+            this.attachTexture(resources, mat, sheenExt, 'sheenColorTexture', 'sheenMap', json, 'rgb');
+            this.attachRoughnessTexture(resources, mat, sheenExt, 'sheenRoughnessTexture', 'sheenGloss', json, 'a');
 
             this.addExtension(json, output, 'KHR_materials_sheen', sheenExt);
         }
@@ -680,8 +719,8 @@ class GltfExporter extends CoreExporter {
                 specularExt.specularFactor = mat.specularityFactor;
             }
 
-            this.attachTexture(resources, mat, specularExt, 'specularColorTexture', 'specularMap', json);
-            this.attachTexture(resources, mat, specularExt, 'specularTexture', 'specularityFactorMap', json);
+            this.attachTexture(resources, mat, specularExt, 'specularColorTexture', 'specularMap', json, 'rgb');
+            this.attachTexture(resources, mat, specularExt, 'specularTexture', 'specularityFactorMap', json, 'a');
 
             if (Object.keys(specularExt).length > 0) {
                 this.addExtension(json, output, 'KHR_materials_specular', specularExt);
@@ -696,7 +735,7 @@ class GltfExporter extends CoreExporter {
                 transmissionExt.transmissionFactor = mat.refraction;
             }
 
-            this.attachTexture(resources, mat, transmissionExt, 'transmissionTexture', 'refractionMap', json);
+            this.attachTexture(resources, mat, transmissionExt, 'transmissionTexture', 'refractionMap', json, 'r');
 
             if (Object.keys(transmissionExt).length > 0) {
                 this.addExtension(json, output, 'KHR_materials_transmission', transmissionExt);
@@ -725,7 +764,7 @@ class GltfExporter extends CoreExporter {
                 volumeExt.attenuationColor = [r, g, b];
             }
 
-            this.attachTexture(resources, mat, volumeExt, 'thicknessTexture', 'thicknessMap', json);
+            this.attachTexture(resources, mat, volumeExt, 'thicknessTexture', 'thicknessMap', json, 'g');
 
             if (Object.keys(volumeExt).length > 0) {
                 this.addExtension(json, output, 'KHR_materials_volume', volumeExt);
@@ -764,11 +803,11 @@ class GltfExporter extends CoreExporter {
                 }
 
                 this.attachTexture(resources, mat, material, 'normalTexture', 'normalMap', json);
-                this.attachTexture(resources, mat, material, 'occlusionTexture', 'aoMap', json);
+                this.attachTexture(resources, mat, material, 'occlusionTexture', 'aoMap', json, 'r');
                 if (material.occlusionTexture && mat.aoIntensity !== 1) {
                     material.occlusionTexture.strength = mat.aoIntensity;
                 }
-                this.attachTexture(resources, mat, material, 'emissiveTexture', 'emissiveMap', json);
+                this.attachTexture(resources, mat, material, 'emissiveTexture', 'emissiveMap', json, 'rgb');
 
                 return material;
             });
@@ -1197,10 +1236,23 @@ class GltfExporter extends CoreExporter {
     }
 
     /**
-     * Converts a hierarchy of entities to GLB format. Clearcoat and sheen gloss maps are exported
-     * unchanged as roughness textures, which is only correct for materials that enable
-     * {@link StandardMaterial#clearCoatGlossInvert} or {@link StandardMaterial#sheenGlossInvert},
-     * such as materials imported from glTF.
+     * Converts a hierarchy of entities to GLB format.
+     *
+     * Most textures are exported unchanged, so material maps are only exported correctly when they
+     * hold the data glTF expects, as the maps of materials imported from glTF do:
+     *
+     * - glTF reads each texture from fixed channels, such as clearcoat from red, metalness from
+     *   blue and sheen roughness from alpha. A map that the material samples from another channel,
+     *   such as the default green channel, is only exported correctly when the texture holds the
+     *   same data in both channels. The diffuse transmission map is the exception: it is exported
+     *   as a copy of its texture, with its channel moved into alpha, where glTF reads it.
+     * - glTF reads roughness from the green channel of the metalness texture, so the gloss map is
+     *   only exported when it is the metalness map.
+     * - glTF reads roughness rather than gloss, so gloss maps are only exported correctly from
+     *   materials that enable {@link StandardMaterial#glossInvert},
+     *   {@link StandardMaterial#clearCoatGlossInvert} or {@link StandardMaterial#sheenGlossInvert}.
+     *
+     * The exporter warns about maps that don't meet these conditions.
      *
      * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
