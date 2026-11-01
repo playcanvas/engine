@@ -1548,12 +1548,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
             (colorBufferCount === 1 && isIntegerPixelFormat(rt._colorBuffers[0].format));
         if (!useClearBuffers && colorOps?.clear) {
             clearFlags |= CLEARFLAG_COLOR;
-            const { clearValue } = colorOps;
+
+            // the clear value is in sRGB space, and a color buffer of an sRGB format encodes the
+            // value it is cleared to, so it is cleared to the linear value instead, as on WebGPU
+            const { clearValue, clearValueLinear } = colorOps;
+            const value = rt.isColorBufferSrgb(0) ? clearValueLinear : clearValue;
             const color = _clearOptions.color;
-            color[0] = clearValue.r;
-            color[1] = clearValue.g;
-            color[2] = clearValue.b;
-            color[3] = clearValue.a;
+            color[0] = value.r;
+            color[1] = value.g;
+            color[2] = value.b;
+            color[3] = value.a;
         }
 
         if (clearFlags !== 0) {
@@ -1585,14 +1589,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         writeMasksReset = true;
                     }
 
-                    const { clearValue } = colorOps;
+                    const { clearValue, clearValueLinear } = colorOps;
+                    const value = rt.isColorBufferSrgb(i) ? clearValueLinear : clearValue;
                     const formatInfo = pixelFormatInfo.get(rt._colorBuffers[i].format);
                     const clearValueArray = formatInfo?.isUint ? _attachmentClearValueUint :
                         (formatInfo?.isInt ? _attachmentClearValueInt : _attachmentClearValue);
-                    clearValueArray[0] = clearValue.r;
-                    clearValueArray[1] = clearValue.g;
-                    clearValueArray[2] = clearValue.b;
-                    clearValueArray[3] = clearValue.a;
+                    clearValueArray[0] = value.r;
+                    clearValueArray[1] = value.g;
+                    clearValueArray[2] = value.b;
+                    clearValueArray[3] = value.a;
 
                     if (formatInfo?.isUint) {
                         gl.clearBufferuiv(gl.COLOR, i, clearValueArray);
