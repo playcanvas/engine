@@ -60,6 +60,9 @@ struct ProjectorUniforms {
     invRange: f32,
     foveationStrength: f32,
     foveationCenter: f32,
+    sortKeyMinBits: i32,
+    sortKeyScale: f32,
+    maxSortKey: u32,
     #ifdef GSPLAT_XR
         // Eye-1 view-projection (raw XR projViewOffMat). Eye 0 uses viewProj above.
         // Appended only for the stereo variant - matches the conditional CPU UBO field.
@@ -88,6 +91,17 @@ struct ProjectorUniforms {
 // vs a per-thread atomic on the global counter without needing subgroup ops.
 var<workgroup> wgCount: atomic<u32>;
 var<workgroup> wgBase: u32;
+
+// Sort key spaced by log distance (same as CPU worker). A positive float's bit pattern grows with
+// its value almost exactly as its log2, so keys taken from the bits give every doubling of
+// distance the same number of keys, and splats far away cost no precision near the camera. The
+// bits are measured from those of a distance ten doublings inside the near clip (splats closer than
+// it are drawn too), and inverted so far splats sort first.
+fn logSortKey(value: f32) -> u32 {
+    let bits = bitcast<i32>(value) - uniforms.sortKeyMinBits;
+    let keyFromNear = clamp(f32(bits) * uniforms.sortKeyScale, 0.0, f32(uniforms.maxSortKey));
+    return uniforms.maxSortKey - u32(keyFromNear);
+}
 
 @compute @workgroup_size(256)
 fn main(
@@ -200,31 +214,33 @@ fn main(
         if (uniforms.stochastic != 0u) {
             sortKey = projected.splatId;
         } else {
-            // Sort key — shared depth-bin weighting (same as CPU worker).
-            // The in-bin fraction is computed from the camera-relative distance so splats near the
-            // camera keep full f32 precision (instead of the ~2^-19 of a [0, numBins) float).
-            let numBinsF = f32(uniforms.numBins);
-            let invBinSize = uniforms.invRange * numBinsF;
             #ifdef RADIAL_SORT
-                let radialDist = length(center - uniforms.cameraPosition);
-                let d = (1.0 / uniforms.invRange - radialDist) * invBinSize;
-                let bin = u32(clamp(d, 0.0, numBinsF - 0.001));
-                // measured from the bin's near (camera) edge, so the foreground keeps relative precision
-                let nearFrac = radialDist * invBinSize - (numBinsF - 1.0 - f32(bin));
+                // from the squared distance, whose bits follow log2 as well
+                let delta = center - uniforms.cameraPosition;
+                sortKey = logSortKey(dot(delta, delta));
             #else
                 let s = dot(center - uniforms.cameraPosition, uniforms.cameraDirection);
-                let d = (s - uniforms.minDist) * invBinSize;
-                let bin = u32(clamp(d, 0.0, numBinsF - 0.001));
-                let binFrac = s * invBinSize - (uniforms.minDist * invBinSize + f32(bin));
+                // maxSortKey is zero when the keys use the depth bins
+                if (uniforms.maxSortKey != 0u) {
+                    // depth in front of the camera: cameraDirection is the camera's +Z, which points
+                    // backwards. Splats far inside the near clip share the nearest key.
+                    sortKey = logSortKey(max(-s, 0.0));
+                } else {
+                    // Orthographic or fisheye, where splats at or behind the camera can be drawn:
+                    // shared depth-bin weighting (same as CPU worker). The in-bin fraction is
+                    // computed from the camera-relative distance so splats near the camera keep full
+                    // f32 precision (instead of the ~2^-19 of a [0, numBins) float).
+                    let numBinsF = f32(uniforms.numBins);
+                    let invBinSize = uniforms.invRange * numBinsF;
+                    let d = (s - uniforms.minDist) * invBinSize;
+                    let bin = u32(clamp(d, 0.0, numBinsF - 0.001));
+                    let binFrac = s * invBinSize - (uniforms.minDist * invBinSize + f32(bin));
+                    let bw = binWeights[bin];
+                    let divider = u32(bw.divider);
+                    let offset = min(u32(bw.divider * clamp(binFrac, 0.0, 1.0)), divider - 1u);
+                    sortKey = u32(bw.base) + offset;
+                }
             #endif
-            let bw = binWeights[bin];
-            let divider = u32(bw.divider);
-            #ifdef RADIAL_SORT
-                let offset = divider - 1u - min(u32(bw.divider * clamp(nearFrac, 0.0, 1.0)), divider - 1u);
-            #else
-                let offset = min(u32(bw.divider * clamp(binFrac, 0.0, 1.0)), divider - 1u);
-            #endif
-            sortKey = u32(bw.base) + offset;
         }
 
         // assemble (rgb, a) and run the render-stage color modifier on the modified center,
