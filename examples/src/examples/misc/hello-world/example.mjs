@@ -28,7 +28,6 @@ import {
     RenderComponentSystem,
     RoundedBoxGeometry,
     SHADOW_VSM_16F,
-    SSAOTYPE_LIGHTING,
     ScriptComponentSystem,
     StandardMaterial,
     TEXTURETYPE_RGBP,
@@ -368,14 +367,10 @@ cameraControls.enablePan = false;
 cameraControls.pitchRange = new Vec2(-70, -5);
 cameraControls.zoomRange = new Vec2(2.5, 10);
 
-// Ambient occlusion grounds the objects on the floor, the tone mapping keeps the pastel colors
+// The neutral tone mapping keeps the pastel colors, a subtle bloom and vignette finish the image
 const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
-cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
-cameraFrame.ssao.radius = 0.6;
-cameraFrame.ssao.intensity = 0.8;
-cameraFrame.ssao.samples = 12;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.bloom.blurLevel = 6;
 cameraFrame.vignette.intensity = 0.25;
