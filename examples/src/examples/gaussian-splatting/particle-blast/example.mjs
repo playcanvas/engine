@@ -462,8 +462,6 @@ const state = {
     pitch: -5,
     mouseX: 0,
     mouseY: 0,
-    looking: false,
-    painting: false,
     pendingBurst: 0,
     velocity: new Vec3(),
 
@@ -498,28 +496,23 @@ const updateBrush = (time) => {
     }
 };
 
+// The buttons held down, to look with the left one and paint with the right one, are read with
+// isPressed instead of being tracked from the mousedown and mouseup events: Mouse does not fire
+// mouseup for a button released outside of the window, which would leave them stuck down.
+// TODO: track them with the mouse events again once mouseup fires for those releases (#9906)
+const isLooking = () => app.mouse.isPressed(MOUSEBUTTON_LEFT);
+const isPainting = () => app.mouse.isPressed(MOUSEBUTTON_RIGHT);
+
 app.mouse.disableContextMenu();
 app.mouse.on('mousedown', (e) => {
-    if (e.button === MOUSEBUTTON_LEFT) {
-        state.looking = true;
-    } else if (e.button === MOUSEBUTTON_RIGHT) {
-        state.painting = true;
-        if (data.get('data.mode') === 'burst') {
-            state.pendingBurst += data.get('data.burst') * 1000;
-        }
-    }
-});
-app.mouse.on('mouseup', (e) => {
-    if (e.button === MOUSEBUTTON_LEFT) {
-        state.looking = false;
-    } else if (e.button === MOUSEBUTTON_RIGHT) {
-        state.painting = false;
+    if (e.button === MOUSEBUTTON_RIGHT && data.get('data.mode') === 'burst') {
+        state.pendingBurst += data.get('data.burst') * 1000;
     }
 });
 app.mouse.on('mousemove', (e) => {
     state.mouseX = e.x;
     state.mouseY = e.y;
-    if (state.looking) {
+    if (isLooking()) {
         state.yaw -= e.dx * 0.2;
         state.pitch = math.clamp(state.pitch - e.dy * 0.2, -89, 89);
     }
@@ -603,7 +596,8 @@ app.on('update', (/** @type {number} */ dt) => {
     updateBrush(time);
     let count = state.pendingBurst;
     state.pendingBurst = 0;
-    if (automatic || (state.painting && !state.looking && mode === 'stream')) {
+    const looking = isLooking();
+    if (automatic || (isPainting() && !looking && mode === 'stream')) {
         count += Math.round(data.get('data.rate') * 1000 * Math.min(dt, 1 / 30));
     }
     const height = canvas.clientHeight;
@@ -649,7 +643,7 @@ app.on('update', (/** @type {number} */ dt) => {
     brushRing.style.top = `${state.mouseY - radius}px`;
     brushRing.style.width = `${radius * 2}px`;
     brushRing.style.height = `${radius * 2}px`;
-    brushRing.style.display = state.looking || automatic ? 'none' : 'block';
+    brushRing.style.display = looking || automatic ? 'none' : 'block';
 
     data.set('stats.particles', particles.count.toLocaleString());
 });
