@@ -15,6 +15,7 @@ import {
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH, SHADERDEF_CLIP,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
+    REFLECTIONSRC_PLANAR,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
     SCENETEXTURE_DEPTH
 } from '../constants.js';
@@ -219,6 +220,7 @@ class StandardMaterialOptionsBuilder {
 
     _updateMaterialOptions(options, stdMat, scene) {
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
+                            stdMat.planarReflectionMap ||
                             notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
@@ -288,7 +290,11 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.useAnisotropy = stdMat.enableGGXSpecular && (stdMat.anisotropyIntensity > 0 || !!stdMat.anisotropyMap);
         options.litOptions.fresnelModel = stdMat.fresnelModel;
-        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || options.litOptions.reflectionSource !== REFLECTIONSRC_NONE);
+        // the refraction without the scene color samples the reflections with the refracted ray,
+        // which a planar reflection, holding only the mirrored scene, cannot provide
+        const reflectionSource = options.litOptions.reflectionSource;
+        const useCubeRefraction = reflectionSource !== REFLECTIONSRC_NONE && reflectionSource !== REFLECTIONSRC_PLANAR;
+        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || useCubeRefraction);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;
         options.litOptions.useSheen = stdMat.useSheen;
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
@@ -311,8 +317,12 @@ class StandardMaterialOptionsBuilder {
         const useSceneEnv = stdMat.useSkybox && !stdMat.envAtlas && !stdMat.cubeMap && !stdMat.sphereMap;
         let usingSceneEnv = false;
 
-        // source of environment reflections is as follows:
-        if (stdMat.envAtlas && stdMat.cubeMap) {
+        // source of environment reflections is as follows, a planar reflection replacing only the
+        // reflections, while the environment still provides the ambient lighting:
+        if (stdMat.planarReflectionMap) {
+            options.litOptions.reflectionSource = REFLECTIONSRC_PLANAR;
+            options.litOptions.reflectionEncoding = stdMat.planarReflectionMap.encoding;
+        } else if (stdMat.envAtlas && stdMat.cubeMap) {
             options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = stdMat.cubeMap.encoding;
@@ -352,6 +362,10 @@ class StandardMaterialOptionsBuilder {
             if (envAtlas) {
                 options.litOptions.ambientSource = AMBIENTSRC_ENVALATLAS;
                 options.litOptions.ambientEncoding = envAtlas.encoding;
+
+                // the ambient lighting alone can use the scene environment, when a planar
+                // reflection replaces the reflections
+                usingSceneEnv ||= envAtlas !== stdMat.envAtlas;
             } else {
                 options.litOptions.ambientSource = AMBIENTSRC_CONSTANT;
                 options.litOptions.ambientEncoding = null;

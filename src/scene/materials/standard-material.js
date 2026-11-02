@@ -1,6 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
@@ -571,6 +572,13 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * This setting overrides sphereMap and will replace the scene lighting environment.
  * @property {Texture|null} sphereMap The spherical environment map of the material (default is
  * null). This will replace the scene lighting environment.
+ * @property {Texture|null} planarReflectionMap The planar reflection of the material (default is
+ * null): a texture the scene is rendered into by a camera mirrored by the plane of the surface,
+ * for example by the PlanarRenderer script. It replaces the environment reflections, while the
+ * environment keeps providing the ambient lighting. Requires {@link planarReflectionMatrix} to be
+ * set to the view projection matrix of that camera. Rougher surfaces sample the smaller mipmaps of
+ * the texture, blurring the reflection. A refraction of the material uses the scene color (see
+ * {@link useDynamicRefraction}), as the texture holds no environment to refract.
  * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
  * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
@@ -723,6 +731,14 @@ class StandardMaterial extends Material {
      * @private
      */
     _pendingSource = null;
+
+    /**
+     * The view projection matrix of the planar reflection, created by {@link StandardMaterial#reset}.
+     *
+     * @type {Mat4}
+     * @private
+     */
+    _planarReflectionMatrix;
 
     /**
      * A custom function that will be called after all shader generator properties are collected
@@ -1820,6 +1836,31 @@ class StandardMaterial extends Material {
     }
 
     /**
+     * Sets the view projection matrix of the camera which renders the
+     * {@link StandardMaterial#planarReflectionMap}, which projects the surface into the texture.
+     * The matrix is copied into the material. Defaults to the identity matrix.
+     *
+     * @type {Mat4}
+     * @example
+     * const texture = planarRenderer.frameUpdate();
+     * material.planarReflectionMap = texture;
+     * material.planarReflectionMatrix = planarRenderer.viewProjectionMatrix;
+     * material.update();
+     */
+    set planarReflectionMatrix(value) {
+        this._planarReflectionMatrix.copy(value);
+    }
+
+    /**
+     * Gets the view projection matrix of the planar reflection.
+     *
+     * @type {Mat4}
+     */
+    get planarReflectionMatrix() {
+        return this._planarReflectionMatrix;
+    }
+
+    /**
      * Sets the alpha test reference value to control which fragments are written to the currently
      * active render target based on alpha value. All fragments with an alpha value of less than
      * the alphaTest reference value will be discarded. Defaults to 0 (all fragments pass).
@@ -1996,6 +2037,13 @@ class StandardMaterial extends Material {
             this._setParameter('texture_cubeMap', this.cubeMap);
         } else if (this.sphereMap) {
             this._setParameter('texture_sphereMap', this.sphereMap);
+        }
+
+        // the planar reflection replaces the reflections of the environment textures above, which
+        // can still provide the ambient lighting
+        if (this.planarReflectionMap) {
+            this._setParameter('texture_planarReflectionMap', this.planarReflectionMap);
+            this._setParameter('planarReflectionMatrix', this._planarReflectionMatrix.data);
         }
 
         // remove unused params
@@ -2383,6 +2431,7 @@ function _defineMaterialProps() {
     registerProp('heightMapFactor', () => 1);
     registerProp('alphaDither', () => null);
     registerProp('cubeMapProjectionBox', () => null, true);
+    registerProp('planarReflectionMatrix', () => new Mat4(), true);
 
     registerProp('alphaTest', () => 0);
 
@@ -2453,6 +2502,7 @@ function _defineMaterialProps() {
     _defineObject('cubeMap', dirtyShaderOnEnvTexture);
     _defineObject('sphereMap', dirtyShaderOnEnvTexture);
     _defineObject('envAtlas', dirtyShaderOnEnvTexture);
+    _defineObject('planarReflectionMap', dirtyShaderOnEnvTexture);
 
     // prefiltered cubemap getter
     const getterFunc = function () {
