@@ -30,6 +30,21 @@ import { TextureView } from './texture-view.js';
 let id = 0;
 
 /**
+ * Releases a source of a texture level which the texture owns: closes an ImageBitmap, and drops a
+ * typed array. Other sources, such as images and canvases, are not released.
+ *
+ * @param {any} source - The source.
+ * @returns {boolean} True if the source was released, and the level should no longer hold it.
+ */
+const releaseSource = (source) => {
+    if (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap) {
+        source.close();
+        return true;
+    }
+    return ArrayBuffer.isView(source);
+};
+
+/**
  * Represents a texture, which is typically an image composed of pixels (texels). Textures are
  * fundamental resources for rendering graphical objects. They are commonly used by
  * {@link Material}s and sampled in {@link Shader}s (usually fragment shaders) to define the visual
@@ -420,7 +435,7 @@ class Texture {
             // Free CPU-side decoded pixel data if the owner has opted in via
             // setReleaseSourceAfterUpload; only safe when the source is engine-owned.
             if (this.releaseSourceAfterUpload) {
-                this.releaseImageSources();
+                this.releaseSources();
             }
 
             this._levels = null;
@@ -429,41 +444,40 @@ class Texture {
     }
 
     /**
-     * Closes any ImageBitmaps held on `_levels` and nulls those entries. The GPU has its own
-     * copy after upload, so the decoded pixels in CPU memory can be released. Safe to call only
-     * when no subsequent re-upload from CPU source will be needed and the source is owned by
-     * the engine (not shared with caller code or other textures). Clears the
-     * `releaseSourceAfterUpload` flag so future uploads keep their sources by default.
+     * Releases the ImageBitmaps and the typed arrays held on `_levels`, closing the ImageBitmaps,
+     * and nulls those entries. The GPU has its own copy after upload, so the pixels in CPU memory
+     * can be released. Safe to call only when no subsequent re-upload from CPU source will be
+     * needed and the source is owned by the engine (not shared with caller code or other
+     * textures). Clears the `releaseSourceAfterUpload` flag so future uploads keep their sources
+     * by default.
      *
      * @ignore
      */
-    releaseImageSources() {
+    releaseSources() {
         this.releaseSourceAfterUpload = false;
-        if (typeof ImageBitmap === 'undefined' || !this._levels) {
+        if (!this._levels) {
             return;
         }
         for (let i = 0; i < this._levels.length; i++) {
             const level = this._levels[i];
-            if (level instanceof ImageBitmap) {
-                level.close();
-                this._levels[i] = null;
-            } else if (Array.isArray(level)) {
+            if (Array.isArray(level)) {
                 for (let j = 0; j < level.length; j++) {
-                    if (level[j] instanceof ImageBitmap) {
-                        level[j].close();
+                    if (releaseSource(level[j])) {
                         level[j] = null;
                     }
                 }
+            } else if (releaseSource(level)) {
+                this._levels[i] = null;
             }
         }
     }
 
     /**
-     * One-shot opt-in: marks this texture so its CPU-side ImageBitmap source is released after
-     * the next upload completes. The flag is cleared once the release runs, so callers must
-     * re-arm after assigning a new source. The caller must own the ImageBitmap and guarantee
-     * that no re-upload from CPU source will be needed (e.g. the owner re-creates the texture
-     * on device loss). Used by the gsplat octree for streamed SOG textures.
+     * One-shot opt-in: marks this texture so its CPU-side source, an ImageBitmap or a typed array,
+     * is released after the next upload completes. The flag is cleared once the release runs, so
+     * callers must re-arm after assigning a new source. The caller must own the source and
+     * guarantee that no re-upload from CPU source will be needed (e.g. the owner re-creates the
+     * texture or its source on device loss). Used by the gsplat octree for streamed SOG textures.
      *
      * @ignore
      */
@@ -472,7 +486,7 @@ class Texture {
 
         // If upload has already happened, release eagerly.
         if (!this._needsUpload && !this._needsMipmapsUpload) {
-            this.releaseImageSources();
+            this.releaseSources();
         }
     }
 

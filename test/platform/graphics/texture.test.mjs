@@ -199,6 +199,36 @@ describe('Texture', function () {
         });
     });
 
+    describe('#releaseSources', function () {
+
+        it('releases the typed arrays of the levels', function () {
+            const texture = new Texture(device, { width: 2, height: 2, format: PIXELFORMAT_RGBA8, mipmaps: false, levels: [new Uint8Array(16)] });
+            texture.releaseSourceAfterUpload = true;
+            texture.releaseSources();
+            expect(texture.getSource()).to.equal(null);
+            expect(texture.releaseSourceAfterUpload).to.be.false;
+            texture.destroy();
+        });
+
+        it('releases the typed arrays of the cubemap faces', function () {
+            const faces = [0, 1, 2, 3, 4, 5].map(() => new Uint8Array(16));
+            const texture = new Texture(device, { width: 2, height: 2, format: PIXELFORMAT_RGBA8, cubemap: true, mipmaps: false, levels: [faces] });
+            texture.releaseSources();
+            expect(texture.getSource()).to.deep.equal([null, null, null, null, null, null]);
+            texture.destroy();
+        });
+
+        it('keeps the sources it does not own', function () {
+            const canvas = document.createElement('canvas');
+            const texture = new Texture(device, { width: 2, height: 2, format: PIXELFORMAT_RGBA8, mipmaps: false });
+            texture._levels[0] = canvas;
+            texture.releaseSources();
+            expect(texture.getSource()).to.equal(canvas);
+            texture._levels[0] = null;
+            texture.destroy();
+        });
+    });
+
     describe('#setSource', function () {
 
         let hadImageBitmap;
