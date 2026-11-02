@@ -107,9 +107,9 @@ describe('SpriteComponent', function () {
 
             const meshColor = e.sprite._meshInstance.getParameter('mesh_color').data;
             expect(meshColor).to.have.lengthOf(4);
-            expect(meshColor[0]).to.be.closeTo(0.217638, 0.000001);
-            expect(meshColor[1]).to.be.closeTo(0.047366, 0.000001);
-            expect(meshColor[2]).to.be.closeTo(0.531049, 0.000001);
+            expect(meshColor[0]).to.be.closeTo(0.214041, 0.000001);
+            expect(meshColor[1]).to.be.closeTo(0.050876, 0.000001);
+            expect(meshColor[2]).to.be.closeTo(0.522522, 0.000001);
             expect(meshColor[3]).to.be.closeTo(0.4, 0.000001);
             expect(e.sprite.color.r).to.equal(0.5);
             expect(e.sprite.color.g).to.equal(0.25);

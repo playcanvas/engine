@@ -3,8 +3,10 @@ vec4 encodeLinear(vec3 source) {
     return vec4(source, 1.0);
 }
 
+// the exact sRGB transfer, which an sRGB texture's decode inverts
 vec4 encodeGamma(vec3 source) {
-    return vec4(pow(source + 0.0000001, vec3(1.0 / 2.2)), 1.0);
+    vec3 color = max(source, vec3(0.0));
+    return vec4(mix(1.055 * pow(color, vec3(1.0 / 2.4)) - 0.055, color * 12.92, lessThanEqual(color, vec3(0.0031308))), 1.0);
 }
 
 vec4 encodeRGBM(vec3 source) { // modified RGBM

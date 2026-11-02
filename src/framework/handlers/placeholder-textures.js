@@ -83,6 +83,9 @@ const encodeRGBE = (linear) => {
 // a linear value in the range 0..1 as an sRGB texture stores it, which sampling decodes
 const linearToSrgb = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
 
+// the linear value of an sRGB-encoded one in the range 0..1, as sampling an sRGB texture decodes it
+const srgbToLinear = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+
 const ENCODERS = {
     [TEXTURETYPE_RGBM]: encodeRGBM,
     [TEXTURETYPE_RGBP]: encodeRGBP,
@@ -149,7 +152,7 @@ const getTexel = (maps, srgb, type) => {
 
     const encode = ENCODERS[type];
     if (encode) {
-        const linear = texel.slice(0, 3).map(c => Math.pow(c / 255, 2.2));
+        const linear = texel.slice(0, 3).map(c => srgbToLinear(c / 255));
         return encode(linear).map(c => Math.round(Math.min(1, c) * 255));
     }
 

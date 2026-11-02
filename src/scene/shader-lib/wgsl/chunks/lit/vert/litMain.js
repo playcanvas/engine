@@ -69,8 +69,9 @@ var<private> dModelMatrix: mat4x4f;
 #include  "litUserCodeVS"
 
 #ifdef VERTEX_COLOR
+    // the exact sRGB transfer, as decodePS decodes colors in the fragment shader
     fn decodeGamma3(raw: vec3f) -> vec3f {
-        return pow(raw, vec3f(2.2));
+        return select(pow(raw * 0.9478672986 + vec3f(0.0521327014), vec3f(2.4)), raw * 0.0773993808, raw <= vec3f(0.04045));
     }
     fn gammaCorrectInputVec4(color: vec4f) -> vec4f {
         return vec4f(decodeGamma3(color.xyz), color.w);

@@ -200,17 +200,18 @@ const pixel = (pixels, x, y, expected, label) => {
     );
 };
 // CPU reference arithmetic is independent of the generated shader source.
+const srgbToLinear = (value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+const linearToSrgb = (value) => (value <= 0.0031308 ? value * 12.92 : 1.055 * value ** (1 / 2.4) - 0.055);
 const decode = (raw, encoding, hardwareSrgb) =>
     raw.slice(0, 3).map((value) => {
-        if (hardwareSrgb) return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-        if (encoding === 'srgb') return value ** 2.2;
+        if (hardwareSrgb || encoding === 'srgb') return srgbToLinear(value);
         if (encoding === 'rgbm') return (value * raw[3] * 8) ** 2;
         if (encoding === 'rgbe') return raw[3] === 0 ? 0 : value * 2 ** (raw[3] * 255 - 128);
         if (encoding === 'rgbp') return (value * (8 - raw[3] * 7)) ** 2;
         return value;
     });
 const encodeOutput = (linear, gamma) => [
-    ...linear.map((value) => Math.round(Math.min(1, gamma === GAMMA_SRGB ? (value + 1e-7) ** (1 / 2.2) : value) * 255)),
+    ...linear.map((value) => Math.round(Math.min(1, gamma === GAMMA_SRGB ? linearToSrgb(value) : value) * 255)),
     255
 ];
 const makeSource = (

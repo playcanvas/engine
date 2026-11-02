@@ -37,9 +37,11 @@ export default /* wgsl */`
     }
 
     fn applyColorLut(color: vec3f, uv: vec2f) -> vec3f {
-        // Encode linear → sRGB for the lookup coordinate. The clamp keeps the lookup
-        // inside the LUT for HDR inputs where the linear value can exceed 1.0.
-        let srgbCoord: vec3f = pow(max(color, vec3f(0.0)) + vec3f(0.0000001), vec3f(1.0 / 2.2));
+        // Encode linear → sRGB for the lookup coordinate, with the exact sRGB transfer the LUT
+        // is authored in. The clamp keeps the lookup inside the LUT for HDR inputs where the
+        // linear value can exceed 1.0.
+        let linearColor: vec3f = max(color, vec3f(0.0));
+        let srgbCoord: vec3f = select(1.055 * pow(linearColor, vec3f(1.0 / 2.4)) - vec3f(0.055), linearColor * 12.92, linearColor <= vec3f(0.0031308));
         let c: vec3f = clamp(srgbCoord, vec3f(0.0), vec3f(1.0));
 
         // Calculate blue axis slice
