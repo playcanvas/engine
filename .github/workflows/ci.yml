@@ -182,6 +182,10 @@ jobs:
         working-directory: ./examples
         run: npm run lint
 
+      - name: Check example thumbnails
+        working-directory: ./examples
+        run: npm run check:thumbnails
+
       - name: Build TypeScript declarations
         run: npm run build:types
 

@@ -110,6 +110,7 @@ import reflectionCCPS from '../chunks/lit/frag/reflectionCC.js';
 import reflectionCubePS from '../chunks/lit/frag/reflectionCube.js';
 import reflectionEnvHQPS from '../chunks/lit/frag/reflectionEnvHQ.js';
 import reflectionEnvPS from '../chunks/lit/frag/reflectionEnv.js';
+import reflectionPlanarPS from '../chunks/lit/frag/reflectionPlanar.js';
 import reflectionSpherePS from '../chunks/lit/frag/reflectionSphere.js';
 import reflectionSheenPS from '../chunks/lit/frag/reflectionSheen.js';
 import refractionCubePS from '../chunks/lit/frag/refractionCube.js';
@@ -297,6 +298,7 @@ const shaderChunksWGSL = {
     reflectionCubePS,
     reflectionEnvHQPS,
     reflectionEnvPS,
+    reflectionPlanarPS,
     reflectionSpherePS,
     reflectionSheenPS,
     refractionCubePS,

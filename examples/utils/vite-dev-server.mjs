@@ -99,7 +99,6 @@ const IFRAME_FILES = {
     '/iframe/loader.mjs': 'iframe/loader.mjs',
     '/iframe/main.css': 'iframe/main.css',
     '/iframe/ministats.mjs': 'iframe/ministats.mjs',
-    '/iframe/polyfill.js': 'iframe/polyfill.js',
     '/iframe/playcanvas-observer.mjs': 'node_modules/@playcanvas/observer/dist/index.mjs',
     '/iframe/runtime.mjs': 'iframe/runtime.mjs',
     '/iframe/state.mjs': 'iframe/state.mjs',

@@ -761,13 +761,15 @@ export const REFLECTIONSRC_ENVATLAS = 'envAtlas';
 export const REFLECTIONSRC_ENVATLASHQ = 'envAtlasHQ';
 export const REFLECTIONSRC_CUBEMAP = 'cubeMap';
 export const REFLECTIONSRC_SPHEREMAP = 'sphereMap';
+export const REFLECTIONSRC_PLANAR = 'planar';
 
 export const reflectionSrcNames = {
     [REFLECTIONSRC_NONE]: 'NONE',
     [REFLECTIONSRC_ENVATLAS]: 'ENVATLAS',
     [REFLECTIONSRC_ENVATLASHQ]: 'ENVATLASHQ',
     [REFLECTIONSRC_CUBEMAP]: 'CUBEMAP',
-    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP'
+    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP',
+    [REFLECTIONSRC_PLANAR]: 'PLANAR'
 };
 
 // ambient source used by the shader generation

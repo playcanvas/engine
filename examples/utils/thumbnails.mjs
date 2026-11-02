@@ -3,11 +3,13 @@
  */
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { launch } from 'puppeteer';
 import sharp from 'sharp';
 
 import { getThumbnailPath, loadExampleMetaData, THUMBNAIL_SIZES } from './build-examples.mjs';
+import { bold, GREEN, RED, writeLog } from './log.mjs';
 
 /**
  * @import { ChildProcess } from 'node:child_process'
@@ -210,8 +212,8 @@ const takeScreenshots = async (metadata, options) => {
     for (let i = 0; i < metadata.length; i++) {
         const item = metadata[i];
 
-        // check if thumbnail exists
-        if (fs.existsSync(getThumbnailPath(item, 'large'))) {
+        // check if both thumbnails exist
+        if (THUMBNAIL_SIZES.every(size => fs.existsSync(getThumbnailPath(item, size)))) {
             console.log(`skipped (cached): ${item.categoryKebab}/${item.exampleNameKebab}`);
             continue;
         }
@@ -278,4 +280,34 @@ export const buildThumbnails = async (options = {}) => {
     if (err) {
         throw err;
     }
+};
+
+/**
+ * Checks that every example has both of its thumbnails. The production build copies only the
+ * thumbnails that exist, so an example without one would otherwise show in the browser without
+ * its thumbnail.
+ *
+ * @returns {Promise<boolean>} True if no thumbnail is missing.
+ */
+export const checkThumbnails = async () => {
+    const metadata = await loadExampleMetaData();
+    const missing = [];
+    for (const item of metadata) {
+        for (const size of THUMBNAIL_SIZES) {
+            const file = getThumbnailPath(item, size);
+            if (!fs.existsSync(file)) {
+                missing.push(path.relative(process.cwd(), file));
+            }
+        }
+    }
+
+    if (missing.length) {
+        writeLog(process.stderr, RED, `missing thumbnails (${bold(missing.length)})`);
+        missing.forEach(file => writeLog(process.stderr, RED, `  ${file}`));
+        writeLog(process.stderr, RED, 'generate them with `npm run build` and then `npm run build:thumbnails`');
+        return false;
+    }
+
+    writeLog(process.stdout, GREEN, `thumbnails of ${bold(metadata.length)} examples found`);
+    return true;
 };

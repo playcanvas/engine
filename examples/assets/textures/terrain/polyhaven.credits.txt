@@ -1,0 +1,25 @@
+Jet Fighter Terrain Textures
+============================
+
+The ground textures of the jet fighter example - scanned materials from Poly Haven, released into
+the public domain (CC0 1.0 Universal, https://creativecommons.org/publicdomain/zero/1.0/). Each is
+the 1k JPG of the diffuse color and of the OpenGL normal map, unchanged.
+
+aerial_grass_rock_diff_1k.jpg, aerial_grass_rock_nor_1k.jpg
+    "Aerial Grass Rock" by Rob Tuytel - https://polyhaven.com/a/aerial_grass_rock
+
+sparse_grass_diff_1k.jpg, sparse_grass_nor_1k.jpg
+    "Sparse Grass" by Amal Kumar - https://polyhaven.com/a/sparse_grass
+
+dirt_aerial_02_diff_1k.jpg, dirt_aerial_02_nor_1k.jpg
+    "Dirt Aerial 02" by Rob Tuytel - https://polyhaven.com/a/dirt_aerial_02
+
+aerial_rocks_02_diff_1k.jpg, aerial_rocks_02_nor_1k.jpg
+    "Aerial Rocks 02" by Rob Tuytel - https://polyhaven.com/a/aerial_rocks_02
+
+aerial_beach_01_diff_1k.jpg, aerial_beach_01_nor_1k.jpg
+    "Aerial Beach 01" by Rob Tuytel - https://polyhaven.com/a/aerial_beach_01
+
+rock_face_03_diff_1k.jpg, rock_face_03_nor_1k.jpg (the OpenGL normal map, renamed)
+    "Rock Face 03" by Dario Barresi (photography) and Rico Cilliers (processing) -
+    https://polyhaven.com/a/rock_face_03

@@ -317,6 +317,11 @@ npm run build:thumbnails
 
 This command spawns its own `serve` instance on port 12321, so you don't need to care about that.
 
+CI fails when an example is missing either of its thumbnails. To run the same check locally:
+```
+npm run check:thumbnails
+```
+
 4) Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
 
 5) Run `git commit -m "Update to Engine 1.XX.X"` in the `playcanvas.github.io` repo

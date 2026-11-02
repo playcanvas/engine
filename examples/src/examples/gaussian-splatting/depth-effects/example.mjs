@@ -16,6 +16,7 @@ import {
     AssetListLoader,
     CameraComponentSystem,
     CameraFrame,
+    DynamicSkyEffect,
     Entity,
     FILLMODE_FILL_WINDOW,
     GSplatComponentSystem,
@@ -40,7 +41,6 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -193,15 +193,12 @@ camera.addComponent('script');
 const cc = /** @type {CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
 
 // ------ Sun ------
-// A single directional light kept in sync with the procedural sky below, so the time of day drives
+// A single directional light kept in sync with the dynamic sky below, so the time of day drives
 // its direction, color and intensity at once. The splats cast into its shadow map, which is what
 // carves the shafts out of the fog.
 const sun = new Entity('sun');
 sun.addComponent('light', {
     type: 'directional',
-
-    // captured by the procedural sky as the daytime peak, then faded across the day / night cycle
-    intensity: 6,
     castShadows: true,
     shadowType: SHADOW_PCF3_32F,
     shadowResolution: 2048,
@@ -216,13 +213,6 @@ sun.addComponent('light', {
     shadowUpdateMode: SHADOWUPDATE_REALTIME
 });
 app.root.addChild(sun);
-
-// ------ Procedural sky ------
-const sky = new Entity('sky');
-sky.addComponent('script');
-const skyScript = /** @type {ProceduralSky} */ (/** @type {any} */ (sky.script).create(ProceduralSky));
-skyScript.sunLight = sun;
-app.root.addChild(sky);
 
 // ------ Splats ------
 // The capture is Y down, so it needs the usual 180 degree rotation around X to stand up in the
@@ -256,6 +246,18 @@ cameraFrame.dof.nearBlur = true;
 cameraFrame.dof.blurRings = 4;
 cameraFrame.dof.blurRingPoints = 5;
 cameraFrame.dof.highQuality = true;
+
+// ------ Dynamic sky ------
+// Renders the sky, generates the image based lighting from it, and drives the sun, at the daytime
+// peak intensity of the light
+const sky = new DynamicSkyEffect(device);
+sky.light = /** @type {LightComponent} */ (sun.light);
+sky.sunIntensity = 6;
+
+// a deeper sky than the default, which with no tone curve keeps the sky around the low sun of the
+// late afternoon off the clip
+sky.luminance = 0.35;
+cameraFrame.addEffect(sky);
 
 // ------ Autofocus ------
 // The engine has no autofocus, so this reads the scene depth the DOF pass consumes back to the CPU and
@@ -393,10 +395,10 @@ const applySettings = () => {
     cameraFrame.dof.focusRange = dof.focusRange;
     cameraFrame.dof.blurRadius = dof.blurRadius;
 
-    cameraFrame.update();
-
-    skyScript.rotation = skySettings.rotation;
+    sky.rotation = skySettings.rotation;
     app.scene.exposure = skySettings.exposure;
+
+    cameraFrame.update();
 };
 
 applySettings();
@@ -404,11 +406,17 @@ data.on('*:set', () => applySettings());
 
 // ------ Time of day ------
 // The sun sweeps 15 degrees of azimuth per hour, so 06:00 is due east, noon due south and 18:00
-// due west, and its elevation follows a sine that puts sunrise and sunset at 06:00 and 18:00.
+// due west, and its elevation follows a sine that puts sunrise and sunset at 06:00 and 18:00. The sky
+// applies them on the update of the camera frame.
+let skyHour = -1;
 app.on('update', () => {
     const hour = data.get('settings.sky.time');
-    skyScript.azimuth = hour * 15;
-    skyScript.elevation = MAX_SUN_ELEVATION * Math.sin(((hour - 6) / 12) * Math.PI);
+    if (hour !== skyHour) {
+        skyHour = hour;
+        sky.azimuth = hour * 15;
+        sky.elevation = MAX_SUN_ELEVATION * Math.sin(((hour - 6) / 12) * Math.PI);
+        cameraFrame.update();
+    }
 });
 
 // ------ Hold the loading screen until the capture is on screen ------

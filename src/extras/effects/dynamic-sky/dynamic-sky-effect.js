@@ -13,6 +13,7 @@ import { BlendState } from '../../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { LAYERID_SKYBOX, PROJECTION_PERSPECTIVE, SKYTYPE_INFINITE } from '../../../scene/constants.js';
+import { FogParams } from '../../../scene/fog-params.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { EnvLighting } from '../../../scene/graphics/env-lighting.js';
 import { getBlueNoiseTexture } from '../../../scene/graphics/noise-textures.js';
@@ -32,17 +33,22 @@ import glslAtmospherePS from './glsl/atmosphere-ps.js';
 import glslBakePS from './glsl/bake-ps.js';
 import glslCloudBufferPS from './glsl/cloud-buffer-ps.js';
 import glslCloudsPS from './glsl/clouds-ps.js';
+import glslHazeFogPS from './glsl/haze-fog-ps.js';
+import glslHazePS from './glsl/haze-ps.js';
 import glslLightingBlendPS from './glsl/lighting-blend-ps.js';
 import glslSkyPS from './glsl/sky-ps.js';
 import wgslAtmospherePS from './wgsl/atmosphere-ps.js';
 import wgslBakePS from './wgsl/bake-ps.js';
 import wgslCloudBufferPS from './wgsl/cloud-buffer-ps.js';
 import wgslCloudsPS from './wgsl/clouds-ps.js';
+import wgslHazeFogPS from './wgsl/haze-fog-ps.js';
+import wgslHazePS from './wgsl/haze-ps.js';
 import wgslLightingBlendPS from './wgsl/lighting-blend-ps.js';
 import wgslSkyPS from './wgsl/sky-ps.js';
 
 /**
  * @import { CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from '../../render-passes/camera-frame-effect.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { LightComponent } from '../../../framework/components/light/component.js'
@@ -112,6 +118,24 @@ const cloudQualityValue = (values, quality) => {
 // wraps a value into the 0..period range
 const wrap = (value, period) => value - Math.floor(value / period) * period;
 
+// the type of the fog an effect with the haze gives its camera. The camera sets the FOG define of its
+// shaders to the type in upper case, which the fog chunk of the effect hazes the lit materials for
+const HAZE_FOG = 'dynamicskyhaze';
+
+/**
+ * Sets up the fog chunk of the effect in place of the fog chunk the device has, which it keeps as
+ * the fog of the scene - once, for all the effects of the device.
+ *
+ * @param {Map<string, string>} chunks - The shader chunks of the device, of a shader language.
+ * @param {string} hazeFog - The fog chunk of the effect, in the shader language.
+ */
+const setupFogChunk = (chunks, hazeFog) => {
+    if (chunks.get('fogPS') !== hazeFog) {
+        chunks.set('dynamicSkySceneFogPS', chunks.get('fogPS'));
+        chunks.set('fogPS', hazeFog);
+    }
+};
+
 const tmpX = new Vec3();
 const tmpZ = new Vec3();
 const tmpSrc = new Vec3();
@@ -151,6 +175,10 @@ const UV_MOD = [1, 1, 0, 0];
  * cameras without the effect, such as the cameras rendering planar reflections, render the sky of
  * the scene from that environment atlas - a still image of this sky.
  *
+ * The effect can also haze the scene with the sky, see {@link DynamicSkyEffect#haze}: with their
+ * distance, the lit materials fade into the color of the sky behind them, in place of the fog of
+ * the camera.
+ *
  * In XR, the sky and the flat clouds render for each view, like the rest of the scene. The
  * volumetric clouds render to their texture for the view of the camera alone, so they streak where
  * the view of an eye extends past it - use {@link CLOUDTYPE_FLAT} clouds in XR.
@@ -174,6 +202,16 @@ const UV_MOD = [1, 1, 0, 0];
  *     vec3 ambient;
  *     return dynamicSkyBase(dir, ambient);
  * }
+ * ```
+ *
+ * The chunk `dynamicSkyHazePS` applies the haze of the sky, see {@link DynamicSkyEffect#haze}, in
+ * the shaders that the haze does not reach on its own - `dynamicSkyHaze(color, cameraPos, worldPos)`
+ * returns a linear color seen through it:
+ *
+ * ```glsl
+ * #include "dynamicSkyHazePS"
+ *
+ * vec3 hazed = dynamicSkyHaze(color, view_position, vPositionW);
  * ```
  *
  * With more than one dynamic sky, a material renders with the sky that was updated last. On the
@@ -483,6 +521,61 @@ class DynamicSkyEffect extends CameraFrameEffect {
     windDirection = 45;
 
     /**
+     * Whether the sky hazes the scene the camera renders - the aerial perspective. With their
+     * distance, surfaces fade into the color of the sky behind them: warm toward a low sun, blue
+     * away from it, and the gradient of the night sky after the sunset. The haze is densest at
+     * {@link DynamicSkyEffect#hazeBaseHeight} and thins out with the height above it, see
+     * {@link DynamicSkyEffect#hazeHeight}, so the valleys stay hazy while the view from high up is
+     * clear.
+     *
+     * The haze takes the place of the fog of the camera, {@link Scene#fog} or
+     * {@link CameraComponent#fog}: while the haze is enabled, the effect gives its camera a fog of
+     * its own, and gives the camera its fog back once the haze is disabled. The lit materials the
+     * camera renders, such as {@link StandardMaterial}, fade into the sky, while the other shaders,
+     * such as those of the particles and the gaussian splats, render without fog - custom shaders
+     * can apply the haze with the chunk `dynamicSkyHazePS`, see the description of the class. A
+     * material opts out of the haze, rendering without fog, with {@link StandardMaterial#useFog},
+     * or by setting the define `DYNAMIC_SKY_NO_HAZE`:
+     *
+     * ```javascript
+     * material.setDefine('DYNAMIC_SKY_NO_HAZE', true);
+     * material.update();
+     * ```
+     *
+     * A material replacing the chunk `fogPS` with its own is not hazed, and finds the define `FOG`
+     * of its shaders set to `DYNAMICSKYHAZE` on the camera. Enabling or disabling the haze compiles
+     * the shaders of the lit materials the camera renders again. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    haze = false;
+
+    /**
+     * The density of the haze at its {@link DynamicSkyEffect#hazeBaseHeight}, per world unit - the
+     * fraction of the light it scatters over a unit of distance. A level view at that height is
+     * hidden by 95% of the haze at about 3 / density. Defaults to 0.0005.
+     *
+     * @type {number}
+     */
+    hazeDensity = 0.0005;
+
+    /**
+     * The height over which the density of the haze falls to about a third, in world units. Lower
+     * values keep the haze closer to the ground. Defaults to 1000.
+     *
+     * @type {number}
+     */
+    hazeHeight = 1000;
+
+    /**
+     * The height the haze is densest at, in world units - usually the lowest ground of the scene,
+     * such as the level of the sea. Below it, the haze grows denser still. Defaults to 0.
+     *
+     * @type {number}
+     */
+    hazeBaseHeight = 0;
+
+    /**
      * Whether the effect generates the lighting of the scene from its sky - the environment atlas
      * lighting the materials, assigned to {@link Scene#envAtlas}. Only one effect should do so, the
      * one of the main camera. The lighting is generated when the effect is first used, and again
@@ -624,6 +717,13 @@ class DynamicSkyEffect extends CameraFrameEffect {
     /** @private */
     _cloudLightDir = new Float32Array(3);
 
+    /**
+     * The density of the haze, one over its height, and its base height.
+     *
+     * @private
+     */
+    _hazeParams = new Float32Array(4);
+
     /** @private */
     _invView = new Float32Array(16);
 
@@ -700,6 +800,31 @@ class DynamicSkyEffect extends CameraFrameEffect {
      * @private
      */
     _passesCameraFrame = null;
+
+    /**
+     * The fog the effect gives its camera while the haze is enabled, of the type the fog chunk of
+     * the effect hazes the lit materials for.
+     *
+     * @type {FogParams}
+     * @private
+     */
+    _hazeFog = new FogParams();
+
+    /**
+     * The camera given the fog of the haze, while it has it.
+     *
+     * @type {CameraComponent|null}
+     * @private
+     */
+    _hazeCamera = null;
+
+    /**
+     * The fog the camera had before it was given the fog of the haze, to give back to it.
+     *
+     * @type {FogParams|null}
+     * @private
+     */
+    _hazeCameraFog = null;
 
     /**
      * @type {FramePassDynamicSkyLighting|null}
@@ -904,6 +1029,16 @@ class DynamicSkyEffect extends CameraFrameEffect {
         wgsl.set('dynamicSkyCloudBufferPS', wgslCloudBufferPS);
         wgsl.set('dynamicSkyBakePS', wgslBakePS);
         wgsl.set('dynamicSkyLightingBlendPS', wgslLightingBlendPS);
+        glsl.set('dynamicSkyHazePS', glslHazePS);
+        wgsl.set('dynamicSkyHazePS', wgslHazePS);
+
+        // the fog of the lit materials, which the sky hazes on the cameras given the fog of the haze -
+        // otherwise the fog of the scene, as before. A global chunk becomes a part of a shader as the
+        // shader is generated, and so it does of all those with the fog of the haze, which are all
+        // generated after this, as no shader had that fog before
+        setupFogChunk(glsl, glslHazeFogPS);
+        setupFogChunk(wgsl, wgslHazeFogPS);
+        this._hazeFog.type = HAZE_FOG;
 
         const values = this._skyUniforms;
         values.set('dynSkySunDir', this._sunDirValue);
@@ -919,6 +1054,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         values.set('dynSkyCloudVolume', this._cloudVolume);
         values.set('dynSkyCloudLight', this._cloudLight);
         values.set('dynSkyCloudLightDir', this._cloudLightDir);
+        values.set('dynSkyHaze', this._hazeParams);
         values.set('dynSkyInvView', this._invView);
         values.set('dynSkyProjScale', this._projScale);
         values.set('dynSkyRotation', this._rotation);
@@ -1110,6 +1246,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._lightingPass = new FramePassDynamicSkyLighting(device, this);
         passes.preScene.push(this._lightingPass);
 
+
         // the volumetric clouds, rendered to a texture of their own
         if (this._cloudsBuffered) {
             const format = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F], true, 1) ?? PIXELFORMAT_RGBA8;
@@ -1155,6 +1292,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._layer = null;
         this._camera = null;
         this._passesCameraFrame = null;
+        this._restoreCameraFog();
 
         this._lightingPass?.destroy();
         this._lightingPass = null;
@@ -1174,6 +1312,52 @@ class DynamicSkyEffect extends CameraFrameEffect {
      */
     buildKey() {
         return `${this._cloudsBuffered}`;
+    }
+
+    /**
+     * @ignore
+     */
+    _detach() {
+
+        // a removed effect keeps its passes until it is destroyed, but no longer hazes its camera
+        this._restoreCameraFog();
+        super._detach();
+    }
+
+    /**
+     * Gives the camera the fog of the haze while the haze is enabled, in place of the fog it has,
+     * which the fog chunk of the effect hazes the lit materials for.
+     *
+     * @private
+     */
+    _updateHazeFog() {
+        if (this.haze) {
+            if (!this._hazeCamera) {
+                const cameraComponent = this.cameraFrame.cameraComponent;
+                this._hazeCamera = cameraComponent;
+                this._hazeCameraFog = cameraComponent.fog;
+                cameraComponent.fog = this._hazeFog;
+            }
+        } else {
+            this._restoreCameraFog();
+        }
+    }
+
+    /**
+     * Gives the camera given the fog of the haze its fog back - unless the camera was given another
+     * fog since.
+     *
+     * @private
+     */
+    _restoreCameraFog() {
+        const cameraComponent = this._hazeCamera;
+        if (cameraComponent) {
+            if (cameraComponent.fog === this._hazeFog) {
+                cameraComponent.fog = this._hazeCameraFog;
+            }
+            this._hazeCamera = null;
+            this._hazeCameraFog = null;
+        }
     }
 
     /**
@@ -1563,6 +1747,12 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._updateLight();
         this._updateClouds();
         this._updateDefines();
+        this._updateHazeFog();
+
+        const haze = this._hazeParams;
+        haze[0] = Math.max(this.hazeDensity, 0);
+        haze[1] = 1 / Math.max(this.hazeHeight, 1e-3);
+        haze[2] = this.hazeBaseHeight;
 
         // the lighting is due when the sun or the moon moved enough, or a setting of the sky
         // changed by more than a small fraction since the lighting was generated - settings
