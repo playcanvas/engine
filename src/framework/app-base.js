@@ -1823,8 +1823,17 @@ class AppBase extends EventHandler {
      * update. However, if called outside of the engine frame update, calling destroy() will
      * destroy the application immediately.
      *
+     * On WebGL, the canvas keeps its WebGL context until the canvas is garbage collected. Browsers
+     * limit the number of live WebGL contexts on a page, and beyond the limit they lose the oldest
+     * one, which can belong to another running application. A page that destroys applications
+     * whose canvases it doesn't reuse can release the context, as shown below. A released context
+     * can't be used by a new application on the same canvas.
+     *
      * @example
      * app.destroy();
+     *
+     * // on WebGL, also release the context of a canvas that won't be reused
+     * canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')?.loseContext();
      */
     destroy() {
         if (this._inFrameUpdate) {
