@@ -8,6 +8,7 @@
     "build": "cross-env NODE_ENV=production node build.mjs",
     "build:metadata": "node build.mjs --metadata",
     "build:thumbnails": "node build.mjs --thumbnails",
+    "check:thumbnails": "node build.mjs --check-thumbnails",
     "cert": "node build.mjs --cert",
     "clean": "node build.mjs --clean",
     "dev": "npm run -s build:metadata && cross-env NODE_ENV=development vite",
