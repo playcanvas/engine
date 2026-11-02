@@ -28,6 +28,13 @@ CubemapRenderer.attributes.add('depth', {
     default: true
 });
 
+CubemapRenderer.attributes.add('hdr', {
+    title: 'HDR',
+    description: 'If set to true, the cubemap stores linear colors brighter than 1 in a half float format, when the device can render to it.',
+    type: 'boolean',
+    default: false
+});
+
 // initialize code called once per entity
 CubemapRenderer.prototype.initialize = function () {
 
@@ -44,12 +51,15 @@ CubemapRenderer.prototype.initialize = function () {
     // limit maximum texture size
     var resolution = Math.min(this.resolution, this.app.graphicsDevice.maxCubeMapSize);
 
+    // the half float cubemap is used when the device can render to it
+    var hdr = this.hdr && this.app.graphicsDevice.textureHalfFloatRenderable;
+
     // Create cubemap render target with specified resolution and mipmap generation
     this.cubeMap = new pc.Texture(this.app.graphicsDevice, {
         name: `${this.entity.name}:CubemapRenderer-${resolution}`,
         width: resolution,
         height: resolution,
-        format: pc.PIXELFORMAT_SRGBA8,
+        format: hdr ? pc.PIXELFORMAT_RGBA16F : pc.PIXELFORMAT_SRGBA8,
         cubemap: true,
         mipmaps: this.mipmaps,
         minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
@@ -100,8 +110,10 @@ CubemapRenderer.prototype.initialize = function () {
             farClip: camera.farClip,
             nearClip: camera.nearClip,
             frustumCulling: camera.frustumCulling,
-            gammaCorrection: camera.gammaCorrection,
-            toneMapping: camera.toneMapping,
+
+            // the half float cubemap stores linear colors, which are not gamma corrected or tone mapped
+            gammaCorrection: hdr ? pc.GAMMA_NONE : camera.gammaCorrection,
+            toneMapping: hdr ? pc.TONEMAP_LINEAR : camera.toneMapping,
             fog: camera.fog,
 
             // this camera renders into texture target

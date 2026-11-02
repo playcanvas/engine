@@ -716,9 +716,11 @@ class CameraComponent extends Component {
      * Sets the layer id of the layer on which the post-processing of the camera stops being applied
      * to. Defaults to {@link LAYERID_UI}, which causes post-processing to not be applied to UI
      * layer and any following layers for the camera. Set to `undefined` for post-processing to be
-     * applied to all layers of the camera.
+     * applied to all layers of the camera. Only applies to the deprecated post effects queue.
      *
      * @type {number}
+     * @deprecated Use {@link CameraFrame} instead.
+     * @ignore
      */
     set disablePostEffectsLayer(layer) {
         this._disablePostEffectsLayer = layer;
@@ -730,6 +732,8 @@ class CameraComponent extends Component {
      * to.
      *
      * @type {number}
+     * @deprecated Use {@link CameraFrame} instead.
+     * @ignore
      */
     get disablePostEffectsLayer() {
         return this._disablePostEffectsLayer;
@@ -951,11 +955,17 @@ class CameraComponent extends Component {
      * camera.
      *
      * @type {PostEffectQueue}
+     * @deprecated Use {@link CameraFrame} instead.
+     * @ignore
      */
     get postEffects() {
         return this._postEffects;
     }
 
+    /**
+     * @type {boolean}
+     * @ignore
+     */
     get postEffectsEnabled() {
         return this._postEffects.enabled;
     }

@@ -55,7 +55,6 @@ WasmModule.setConfig('DracoDecoderModule', {
 
 const assets = {
     laboratory: new Asset('statue', 'container', { url: './assets/models/laboratory.glb' }),
-    ssao: new Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',

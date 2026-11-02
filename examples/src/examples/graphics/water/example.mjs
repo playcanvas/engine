@@ -27,6 +27,7 @@ import {
     Color,
     ContainerHandler,
     Curve,
+    DynamicSkyEffect,
     Entity,
     FILLMODE_FILL_WINDOW,
     FOG_EXP,
@@ -49,7 +50,6 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 import { Water } from 'playcanvas/scripts/esm/water.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -159,25 +159,16 @@ islandMaterials.forEach((material) => {
 app.scene.fog.type = FOG_EXP;
 
 // directional light (the sun), lighting the scene and the water. Its direction, color and
-// intensity are driven by the procedural sky script based on the time of day.
+// intensity are driven by the dynamic sky based on the time of day.
 const sun = new Entity('Sun');
 sun.addComponent('light', {
     type: 'directional',
-    intensity: 1.3,
     castShadows: true,
     shadowBias: 0.2,
     normalOffsetBias: 0.05,
     shadowDistance: 120
 });
 app.root.addChild(sun);
-
-// procedural sky - renders the visible sky and generates the image-based lighting
-const sky = new Entity('ProceduralSky');
-sky.addComponent('script');
-const skyScript = /** @type {ProceduralSky} */ (sky.script.create(ProceduralSky));
-skyScript.sunLight = sun;
-skyScript.moonIntensity = 0.4;
-app.root.addChild(sky);
 
 // main camera, renders also the water layer. Tone mapping is handled by the CameraFrame,
 // so the camera (and the water's internal cameras which follow it) stays linear.
@@ -206,20 +197,25 @@ cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 cameraFrame.rendering.sceneDepthMap = true;
 cameraFrame.bloom.intensity = 0;
 cameraFrame.bloom.blurLevel = 16;
+
+// the dynamic sky - renders the visible sky, generates the image-based lighting and drives the sun
+const sky = new DynamicSkyEffect(device);
+sky.light = sun.light;
+sky.sunIntensity = 1.3;
+sky.moonIntensity = 0.4;
+
+// a bright sky for the sun, which keeps the sky and its reflection on the water light and clear
+sky.luminance = 3.5;
+cameraFrame.addEffect(sky);
 cameraFrame.update();
 
 // sun elevation over the day - x = hour, y = elevation in degrees
 const elevationCurve = new Curve([0, -60, 6, 0, 12, 60, 18, 0, 24, -90]);
 elevationCurve.type = CURVE_SMOOTHSTEP;
 
-// sky luminance by sun elevation - brighter sky radiance at twilight, dimmer at midday
-const luminanceCurve = new Curve([0, 2, 35, 0.4, 90, 0.3]);
-luminanceCurve.type = CURVE_SMOOTHSTEP;
-
 // bloom intensity by sun elevation - stronger glow around the low sun
 const bloomCurve = new Curve([0, 0.005, 5, 0.001, 8, 0.001, 90, 0.002]);
 bloomCurve.type = CURVE_SMOOTHSTEP;
-let lastBloom = -1;
 
 // the fog color follows the daylight - without this, the constant bright fog color makes
 // fogged geometry glow through the transparent shore line at night
@@ -238,21 +234,17 @@ const applyFogColor = () => {
  */
 const applyTimeOfDay = (hour) => {
     const elevation = elevationCurve.value(hour);
-    skyScript.elevation = elevation;
-    skyScript.azimuth = (hour / 24) * 360;
-    skyScript.luminance = luminanceCurve.value(Math.max(elevation, 0));
+    sky.elevation = elevation;
+    sky.azimuth = (hour / 24) * 360;
 
     // dim the underwater fog with the daylight (small floor for the moonlit night)
     const t = Math.max(0, Math.min(1, (elevation + 2) / 14));
     fogDayFactor = 0.05 + 0.95 * t * t * (3 - 2 * t);
     applyFogColor();
 
-    const bloom = bloomCurve.value(Math.max(elevation, 0));
-    if (bloom !== lastBloom) {
-        lastBloom = bloom;
-        cameraFrame.bloom.intensity = bloom;
-        cameraFrame.update();
-    }
+    // the sky and the bloom apply on the update of the camera frame
+    cameraFrame.bloom.intensity = bloomCurve.value(Math.max(elevation, 0));
+    cameraFrame.update();
 };
 
 // the water surface - a tessellated circle mesh, so the geometry waves can displace it. The

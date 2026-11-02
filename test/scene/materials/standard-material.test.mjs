@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
+import { Mat4 } from '../../../src/core/math/mat4.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
@@ -8,7 +9,8 @@ import { JsonStandardMaterialParser } from '../../../src/framework/parsers/mater
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
     AMBIENTSRC_CONSTANT, AMBIENTSRC_ENVALATLAS, CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK,
-    REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_NONE, SHADER_FORWARD, SPECOCC_AO
+    REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_NONE, REFLECTIONSRC_PLANAR, SHADER_FORWARD,
+    SPECOCC_AO
 } from '../../../src/scene/constants.js';
 import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { Material } from '../../../src/scene/materials/material.js';
@@ -308,6 +310,9 @@ describe('StandardMaterial', function () {
         expect(material.specularityFactorVertexColorChannel).to.equal('g');
 
         expect(material.sphereMap).to.be.null;
+        expect(material.planarReflectionMap).to.be.null;
+        expect(material.planarReflectionMatrix).to.be.an.instanceof(Mat4);
+        expect(material.planarReflectionMatrix.equals(Mat4.IDENTITY)).to.equal(true);
         expect(material.twoSidedLighting).to.equal(false);
 
         expect(material.useFog).to.equal(true);
@@ -376,6 +381,11 @@ describe('StandardMaterial', function () {
                     return new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
                 }
 
+                // the planar reflection matrix is copied by the setter, so it has to be a real matrix
+                if (value instanceof Mat4) {
+                    return new Mat4().setTranslate(1, 2, 3);
+                }
+
                 switch (typeof value) {
                     case 'boolean':
                         return !value;
@@ -400,7 +410,8 @@ describe('StandardMaterial', function () {
 
                 const sourceValue = src[name];
                 const copiedValue = dst[name];
-                if (sourceValue instanceof Color || sourceValue instanceof Vec2 || sourceValue instanceof BoundingBox) {
+                if (sourceValue instanceof Color || sourceValue instanceof Vec2 || sourceValue instanceof BoundingBox ||
+                    sourceValue instanceof Mat4) {
                     expect(copiedValue, name).to.not.equal(sourceValue);
                     expect(copiedValue.equals(sourceValue), name).to.equal(true);
                 } else if (Array.isArray(sourceValue)) {
@@ -681,7 +692,7 @@ describe('StandardMaterial', function () {
         const envTexture = encoding => ({ encoding });
 
         it('invalidates shaders when an environment texture is added or removed', function () {
-            for (const name of ['envAtlas', 'cubeMap', 'sphereMap']) {
+            for (const name of ['envAtlas', 'cubeMap', 'sphereMap', 'planarReflectionMap']) {
                 const material = new StandardMaterial();
                 material.update();
 
@@ -698,7 +709,7 @@ describe('StandardMaterial', function () {
         });
 
         it('does not invalidate shaders when an environment texture is replaced with the same encoding', function () {
-            for (const name of ['envAtlas', 'cubeMap', 'sphereMap']) {
+            for (const name of ['envAtlas', 'cubeMap', 'sphereMap', 'planarReflectionMap']) {
                 const material = new StandardMaterial();
                 material[name] = envTexture('rgbm');
                 material.update();
@@ -711,7 +722,7 @@ describe('StandardMaterial', function () {
         });
 
         it('invalidates shaders when an environment texture is replaced with a different encoding', function () {
-            for (const name of ['envAtlas', 'cubeMap', 'sphereMap']) {
+            for (const name of ['envAtlas', 'cubeMap', 'sphereMap', 'planarReflectionMap']) {
                 const material = new StandardMaterial();
                 material[name] = envTexture('rgbm');
                 material.update();
@@ -979,6 +990,65 @@ describe('StandardMaterial', function () {
             lit = resolve(material);
             expect(lit.reflectionSource).to.equal(REFLECTIONSRC_ENVATLASHQ);
             expect(lit.ambientSource).to.equal(AMBIENTSRC_ENVALATLAS);
+        });
+
+        it('publishes the planar reflection with its matrix', function () {
+            const material = new StandardMaterial();
+            const map = { name: 'planar', encoding: 'linear' };
+            material.planarReflectionMap = map;
+            material.planarReflectionMatrix = new Mat4().setTranslate(1, 2, 3);
+            material.update();
+            material.updateUniforms(null, scene);
+            expect(material.getParameter('texture_planarReflectionMap').data).to.equal(map);
+            expect(material.getParameter('planarReflectionMatrix').data).to.equal(material.planarReflectionMatrix.data);
+            expect(material.planarReflectionMatrix.getTranslation().equals(new Vec3(1, 2, 3))).to.equal(true);
+
+            material.planarReflectionMap = null;
+            material.update();
+            material.updateUniforms(null, scene);
+            expect(material.getParameter('texture_planarReflectionMap')).to.be.undefined;
+            expect(material.getParameter('planarReflectionMatrix')).to.be.undefined;
+        });
+
+        it('replaces only the reflections with a planar reflection', function () {
+            const material = new StandardMaterial();
+            material.planarReflectionMap = { name: 'planar', encoding: 'linear' };
+
+            // the ambient lighting keeps using the scene environment
+            let lit = resolve(material);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_PLANAR);
+            expect(lit.reflectionEncoding).to.equal('linear');
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_ENVALATLAS);
+            expect(lit.useSceneEnv).to.equal(true);
+            expect(lit.skyboxIntensity).to.equal(true);
+
+            // or the environment of the material
+            material.envAtlas = envTexture('materialAtlas');
+            lit = resolve(material);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_PLANAR);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_ENVALATLAS);
+            expect(lit.useSceneEnv).to.equal(false);
+
+            // or none at all
+            material.envAtlas = null;
+            material.useSkybox = false;
+            lit = resolve(material);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_PLANAR);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_CONSTANT);
+            expect(lit.useSceneEnv).to.equal(false);
+            expect(lit.useSpecular).to.equal(true);
+        });
+
+        it('refracts the scene color only with a planar reflection', function () {
+            const material = new StandardMaterial();
+            material.refraction = 0.5;
+            expect(resolve(material).useRefraction).to.equal(true);
+
+            material.planarReflectionMap = { name: 'planar', encoding: 'linear' };
+            expect(resolve(material).useRefraction).to.equal(false);
+
+            material.useDynamicRefraction = true;
+            expect(resolve(material).useRefraction).to.equal(true);
         });
 
         it('includes the environment ownership in the shader key', function () {
