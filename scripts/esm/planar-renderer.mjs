@@ -21,6 +21,8 @@ const _reflectedTarget = new Vec3();
 const _plane = new Plane();
 const _clipPoint = new Vec3();
 const _clipNormal = new Vec3();
+const _projMatrix = new Mat4();
+const _viewMatrix = new Mat4();
 
 /**
  * PlanarRenderer script renders the scene from a camera mirrored (reflection mode) or matching
@@ -56,8 +58,11 @@ const _clipNormal = new Vec3();
  * });
  * app.root.addChild(reflectionCamera);
  *
- * // each frame, after the main camera was updated
+ * // each frame, after the main camera was updated, a material reflects the texture
  * const texture = planarRenderer.frameUpdate();
+ * material.planarReflectionMap = texture;
+ * material.planarReflectionMatrix = planarRenderer.viewProjectionMatrix;
+ * material.update();
  * @category Rendering
  */
 class PlanarRenderer extends Script {
@@ -172,6 +177,25 @@ class PlanarRenderer extends Script {
      * @private
      */
     _viewSpaceClipPlane = [0, 0, 0, 0];
+
+    /**
+     * The view projection matrix of the planar camera.
+     *
+     * @type {Mat4}
+     * @private
+     */
+    _viewProjectionMatrix = new Mat4();
+
+    /**
+     * Gets the view projection matrix of the camera, which projects world space positions into
+     * the texture. Updated by {@link PlanarRenderer#frameUpdate}, and typically assigned to
+     * {@link StandardMaterial#planarReflectionMatrix} together with the texture.
+     *
+     * @type {Mat4}
+     */
+    get viewProjectionMatrix() {
+        return this._viewProjectionMatrix;
+    }
 
     initialize() {
 
@@ -413,6 +437,11 @@ class PlanarRenderer extends Script {
             } else {
                 planarCamera.calculateProjection = null;
             }
+
+            // the view projection matrix, built the same way as the projection of the camera
+            this._calculateProjection(_projMatrix);
+            _viewMatrix.copy(this.entity.getWorldTransform()).invert();
+            this._viewProjectionMatrix.mul2(_projMatrix, _viewMatrix);
 
             return this._texture;
         }

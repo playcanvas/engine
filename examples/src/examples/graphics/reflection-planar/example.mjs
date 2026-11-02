@@ -1,8 +1,8 @@
 // @config
 //
 // The polished floor reflects the room with a planar reflection. A camera mirrored by the floor
-// renders the room into a texture each frame, and the lit material of the floor uses it in place of
-// its environment reflection. Unlike the cubemap baked from the empty room, it reflects the statue,
+// renders the room into a texture each frame, and the planarReflectionMap of the floor material uses
+// it in place of its environment reflection. Unlike the cubemap baked from the empty room, it reflects the statue,
 // the drone and the spinning torus exactly, also where they touch the floor. Rougher floors blur
 // the reflection, using the mipmaps of the texture.
 
@@ -21,12 +21,9 @@ import {
     FILLMODE_FILL_WINDOW,
     Layer,
     LightComponentSystem,
-    Mat4,
     Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL,
     ScriptComponentSystem,
     StandardMaterial,
     TEXTURETYPE_RGBP,
@@ -42,9 +39,6 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { PlanarRenderer } from 'playcanvas/scripts/esm/planar-renderer.mjs';
 
 import { data, deviceType } from 'examples/context';
-
-import reflectionGlsl from './reflection.glsl.frag';
-import reflectionWgsl from './reflection.wgsl.frag';
 
 /**
  * @import { RenderComponent } from 'playcanvas'
@@ -327,14 +321,8 @@ const planarRenderer = /** @type {PlanarRenderer} */ (
 );
 app.root.addChild(reflectionCamera);
 
-// The floor material reflects the room using the planar reflection, replacing its environment
-// reflection chunk. It is mostly metallic, so the reflection shows over its diffuse lighting.
+// The floor material is mostly metallic, so the reflection shows over its diffuse lighting
 floorMaterial.metalness = 0.7;
-floorMaterial.shaderChunksVersion = '2.24';
-
-// The view projection matrix of the reflection camera, which projects points to the texture
-const reflectionView = new Mat4();
-const reflectionViewProjection = new Mat4();
 
 // The reflection texture in the corner of the screen, for debugging
 const textures = new TextureRenderer(app);
@@ -344,17 +332,7 @@ const applySettings = () => {
     const settings = data.get('settings');
     const planar = settings.reflection === 'planar';
 
-    // with the cubemap, the floor uses its default environment reflection chunk, and the
-    // reflection camera does not need to render
-    const glslChunks = floorMaterial.getShaderChunks(SHADERLANGUAGE_GLSL);
-    const wgslChunks = floorMaterial.getShaderChunks(SHADERLANGUAGE_WGSL);
-    if (planar) {
-        glslChunks.set('reflectionEnvPS', reflectionGlsl);
-        wgslChunks.set('reflectionEnvPS', reflectionWgsl);
-    } else {
-        glslChunks.delete('reflectionEnvPS');
-        wgslChunks.delete('reflectionEnvPS');
-    }
+    // with the cubemap, the reflection camera does not need to render
     reflectionCamera.camera.enabled = planar;
 
     planarRenderer.scale = settings.resolution;
@@ -383,17 +361,15 @@ app.on('update', (/** @type {number} */ dt) => {
     // the torus spins on its pedestal
     torusPivot.setLocalEulerAngles(0, time * 40, 0);
 
-    // Update the reflection camera, after the main camera has moved this frame, and pass the
-    // texture it renders to and its view projection matrix to the floor material
+    // Update the reflection camera, after the main camera has moved this frame. The floor reflects
+    // the texture it renders to, projected by its view projection matrix. With the camera disabled
+    // there is no texture, and the floor falls back to the reflections of its environment atlas.
     const texture = planarRenderer.frameUpdate();
-    if (texture) {
-        reflectionView.copy(reflectionCamera.getWorldTransform()).invert();
-        reflectionViewProjection.mul2(reflectionCamera.camera.projectionMatrix, reflectionView);
-        floorMaterial.setParameter('planarReflectionMap', texture);
-        floorMaterial.setParameter('planarReflectionViewProjection', reflectionViewProjection.data);
+    floorMaterial.planarReflectionMap = texture;
+    floorMaterial.planarReflectionMatrix = planarRenderer.viewProjectionMatrix;
+    floorMaterial.update();
 
-        if (settings.showTexture) {
-            textures.draw(texture, 0.7, 0.7, 0.28, 0.28);
-        }
+    if (texture && settings.showTexture) {
+        textures.draw(texture, 0.7, 0.7, 0.28, 0.28);
     }
 });
