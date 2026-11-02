@@ -2,8 +2,7 @@ export default /* glsl */`
 // Anisotropic GGX
 float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec3 lightDirNorm, mat3 tbn) {
     float PI = 3.141592653589793;
-    float roughness = max((1.0 - gloss) * (1.0 - gloss), 0.001);
-    float alphaRoughness = roughness * roughness;
+    float alphaRoughness = max((1.0 - gloss) * (1.0 - gloss), 0.001);
     float anisotropy = dAnisotropy;
     vec2 direction = dAnisotropyRotation;
 
