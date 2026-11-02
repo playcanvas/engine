@@ -172,6 +172,33 @@ describe('VoxelOccupancy', function () {
             expect(Array.from(blocks)).to.deep.equal([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff]);
         });
 
+        it('treats the blocks outside the root of the octree as empty', function () {
+            // a grid of 4x1x1 blocks, of which only the first is occupied, so splat-transform ends
+            // the octree at a root spanning 2x2x2 blocks: its voxel (0, 0, 0) is solid
+            const metadata = {
+                version: '1.1',
+                voxelResolution: 1,
+                leafSize: 4,
+                treeDepth: 1,
+                nodeCount: 2,
+                leafDataCount: 2,
+                gridBounds: { min: [0, 0, 0], max: [16, 4, 4] }
+            };
+            const voxels = new VoxelOccupancy(metadata, new Uint32Array([0x01000001, 0, 1, 0]).buffer);
+            expect(voxels.isVoxelSolid(0, 0, 0)).to.be.true;
+            expect(voxels.isVoxelSolid(8, 0, 0)).to.be.false;
+            expect(Array.from(voxels.readBlock(2, 0, 0, new Uint32Array(2)))).to.deep.equal([0, 0]);
+
+            // a ray from the far end of the grid passes the blocks outside the root
+            const point = new Vec3();
+            expect(voxels.raycast(new Ray(new Vec3(15.5, 0.5, 0.5), new Vec3(-1, 0, 0)), Infinity, point)).to.be.true;
+            expect(point.toString()).to.equal('[1, 0.5, 0.5]');
+
+            const blocks = new Uint32Array(4 * 2);
+            voxels._decodeBlocks(blocks);
+            expect(Array.from(blocks)).to.deep.equal([1, 0, 0, 0, 0, 0, 0, 0]);
+        });
+
         it('treats an empty grid as empty', function () {
             const { metadata, data } = encode(SIZE, () => false);
             expect(metadata.nodeCount).to.equal(0);

@@ -90,6 +90,16 @@ class VoxelOccupancy {
      */
     _treeDepth;
 
+    /**
+     * The number of blocks the root of the octree spans along each axis. It can span fewer blocks
+     * than the grid: splat-transform ends the octree at a smaller root when its occupied blocks
+     * all fit in it, and the blocks outside of the root are empty.
+     *
+     * @type {number}
+     * @private
+     */
+    _rootSpan;
+
     /** @private */
     _voxelSize;
 
@@ -155,6 +165,7 @@ class VoxelOccupancy {
         this._nodes = words.subarray(0, metadata.nodeCount);
         this._leafData = words.subarray(metadata.nodeCount, metadata.nodeCount + metadata.leafDataCount);
         this._treeDepth = metadata.treeDepth;
+        this._rootSpan = 2 ** metadata.treeDepth;
         this._voxelSize = metadata.voxelResolution;
 
         const { min, max } = metadata.gridBounds;
@@ -210,7 +221,8 @@ class VoxelOccupancy {
     }
 
     /**
-     * Finds the block of voxels at the given block coordinates, which must be inside the grid.
+     * Finds the block of voxels at the given block coordinates, which must be inside the grid. The
+     * blocks outside of the root of the octree are empty.
      *
      * @param {number} bx - The x coordinate of the block.
      * @param {number} by - The y coordinate of the block.
@@ -220,7 +232,8 @@ class VoxelOccupancy {
      */
     _findBlock(bx, by, bz) {
         const nodes = this._nodes;
-        if (nodes.length === 0) {
+        const span = this._rootSpan;
+        if (nodes.length === 0 || bx >= span || by >= span || bz >= span) {
             return BLOCK_EMPTY;
         }
 
@@ -557,7 +570,7 @@ class VoxelOccupancy {
 
         // the nodes to visit: their index, the block coordinates of their min corner, and the
         // number of blocks they span along each axis
-        const stack = nodes.length ? [0, 0, 0, 0, 1 << this._treeDepth] : [];
+        const stack = nodes.length ? [0, 0, 0, 0, this._rootSpan] : [];
         while (stack.length) {
             const span = /** @type {number} */ (stack.pop());
             const bz = /** @type {number} */ (stack.pop());
