@@ -336,7 +336,7 @@ class MainLayout extends TypedComponent {
                     null,
                     jsx(Route, {
                         path: '/',
-                        element: jsx(Navigate, { to: '/misc/hello-world', replace: true })
+                        element: jsx(Navigate, { to: '/demos/welcome', replace: true })
                     }),
                     Object.entries(exampleRedirects).map(([from, to]) => jsx(Route, {
                         key: from,
