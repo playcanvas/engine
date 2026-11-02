@@ -478,7 +478,7 @@ app.on('update', (/** @type {number} */ dt) => {
         const spin = hopCount % 4 === 0;
         height = 4 * t * (1 - t) * HOP_HEIGHT * (spin ? 2 : 1);
 
-        // turn to face the camera in the air
+        // turn towards the camera in the air
         const turn = t * t * (3 - 2 * t);
         yaw = math.lerpAngle(startYaw, targetYaw, turn) + (spin ? turn * 360 : 0);
 
@@ -499,10 +499,11 @@ app.on('update', (/** @type {number} */ dt) => {
             hopCount++;
             squashVelocity += hopCount % 4 === 0 ? 7 : 5;
 
-            // the direction to the camera
+            // the direction to the camera, turned by up to 30 degrees either way, so the cube also
+            // shows its sides
             const cameraPosition = camera.getPosition();
             startYaw = yaw % 360;
-            targetYaw = Math.atan2(cameraPosition.x, cameraPosition.z) * math.RAD_TO_DEG;
+            targetYaw = Math.atan2(cameraPosition.x, cameraPosition.z) * math.RAD_TO_DEG + math.random(-30, 30);
         }
     }
 
