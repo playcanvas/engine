@@ -23,7 +23,7 @@ import { GraphNode } from '../../../scene/graph-node.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-import { setTileHalfTexel } from '../../../scene/sprite.js';
+import { TileHalfTexel } from '../../../scene/sprite.js';
 import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 import { Asset } from '../../asset/asset.js';
@@ -320,7 +320,7 @@ class ImageElement {
         this._innerOffsetUniform = new Float32Array(4);
         this._atlasRect = new Vec4();
         this._atlasRectUniform = new Float32Array(4);
-        this._tileHalfTexelUniform = new Float32Array(2);
+        this._tileHalfTexel = new TileHalfTexel();
 
         this._defaultMesh = this._createMesh();
         this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
@@ -358,6 +358,8 @@ class ImageElement {
         this.textureAsset = null;
         this.spriteAsset = null;
         this.materialAsset = null;
+
+        this._system._tileHalfTexels.delete(this._tileHalfTexel);
 
         this._renderable.setMesh(this._defaultMesh);
         this._renderable.destroy();
@@ -531,7 +533,9 @@ class ImageElement {
                 frameData.rect.z / tex.width,
                 frameData.rect.w / tex.height);
 
-            setTileHalfTexel(this._tileHalfTexelUniform, frameData, tex);
+            // the system keeps the inset in step with the texture's filtering
+            this._tileHalfTexel.set(frameData, tex);
+            this._system._tileHalfTexels.add(this._tileHalfTexel);
 
             // scale: apply PPU
             const ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
@@ -563,7 +567,7 @@ class ImageElement {
                 this._atlasRectUniform[2] = this._atlasRect.z;
                 this._atlasRectUniform[3] = this._atlasRect.w;
                 this._renderable.setParameter('atlasRect', this._atlasRectUniform);
-                this._renderable.setParameter('tileHalfTexel', this._tileHalfTexelUniform);
+                this._renderable.setParameter('tileHalfTexel', this._tileHalfTexel.data);
                 this._outerScaleUniform[0] = this._outerScale.x;
                 this._outerScaleUniform[1] = this._outerScale.y;
                 this._renderable.setParameter('outerScale', this._outerScaleUniform);
@@ -573,6 +577,9 @@ class ImageElement {
                 this._renderable.node.setLocalPosition((0.5 - element.pivot.x) * w, (0.5 - element.pivot.y) * h, 0);
             }
         } else {
+            this._tileHalfTexel.set(null, null);
+            this._system._tileHalfTexels.delete(this._tileHalfTexel);
+
             const vb = mesh.vertexBuffer;
             const vertexDataF32 = new Float32Array(vb.lock());
 

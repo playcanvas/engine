@@ -10,7 +10,7 @@ import {
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
-import { setTileHalfTexel } from '../../../scene/sprite.js';
+import { TileHalfTexel } from '../../../scene/sprite.js';
 import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
@@ -208,8 +208,11 @@ class SpriteComponent extends Component {
     /** @private */
     _atlasRectUniform = new Float32Array(4);
 
-    /** @private */
-    _tileHalfTexelUniform = new Float32Array(2);
+    /**
+     * @type {TileHalfTexel}
+     * @private
+     */
+    _tileHalfTexel = new TileHalfTexel();
 
     // batch groups
 
@@ -969,10 +972,10 @@ class SpriteComponent extends Component {
                     frameData.rect.w / tex.height
                 );
 
-                setTileHalfTexel(this._tileHalfTexelUniform, frameData, tex);
+                this._tileHalfTexel.set(frameData, tex);
             } else {
                 this._innerOffset.set(0, 0, 0, 0);
-                this._tileHalfTexelUniform.fill(0);
+                this._tileHalfTexel.set(null, null);
             }
 
             // set inner offset and atlas rect on mesh instance
@@ -986,9 +989,10 @@ class SpriteComponent extends Component {
             this._atlasRectUniform[2] = this._atlasRect.z;
             this._atlasRectUniform[3] = this._atlasRect.w;
             this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRectUniform);
-            this._meshInstance.setParameter(PARAM_TILE_HALF_TEXEL, this._tileHalfTexelUniform);
+            this._meshInstance.setParameter(PARAM_TILE_HALF_TEXEL, this._tileHalfTexel.data);
         } else {
             this._meshInstance._updateAabbFunc = null;
+            this._tileHalfTexel.set(null, null);
         }
 
         this._updateTransform();

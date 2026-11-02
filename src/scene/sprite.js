@@ -401,22 +401,64 @@ class Sprite extends EventHandler {
 }
 
 /**
- * Writes the inset the tiled 9-sliced shader keeps its sampling of a frame's repeating middle
- * inside, as a fraction of that middle. A texture sampled nearest gets half a texel: at a seam
- * the wrap lands within a hair of the tile's edge, which nearest sampling can round onto the
- * texel beyond. A linearly filtered texture gets none, so it still blends across the seam, which
- * an atlas can make seamless by repeating the tile's opposite edge around the frame.
+ * The `tileHalfTexel` uniform: the inset the tiled 9-sliced shader keeps its sampling of a frame's
+ * repeating middle inside, as a fraction of that middle. A texture both of whose filters sample
+ * nearest gets half a texel: at a seam the wrap lands within a hair of the tile's edge, which
+ * nearest sampling can round onto the texel beyond. Any other texture gets none, so its linear
+ * samples still blend across the seam, which an atlas can make seamless by repeating the tile's
+ * opposite edge around the frame. That includes mixed filters, as the shader can't tell which
+ * filter a sample uses.
  *
- * @param {Float32Array} out - The two components of the inset to write.
- * @param {{ rect: Vec4, border: Vec4 }} frame - The atlas frame, in pixels.
- * @param {Texture} texture - The atlas texture.
  * @ignore
  */
-const setTileHalfTexel = (out, frame, texture) => {
-    const nearest = texture.magFilter === FILTER_NEAREST || texture.minFilter === FILTER_NEAREST ||
-        texture.minFilter === FILTER_NEAREST_MIPMAP_NEAREST || texture.minFilter === FILTER_NEAREST_MIPMAP_LINEAR;
-    out[0] = nearest ? 0.5 / Math.max(1, frame.rect.z - frame.border.x - frame.border.z) : 0;
-    out[1] = nearest ? 0.5 / Math.max(1, frame.rect.w - frame.border.y - frame.border.w) : 0;
-};
+class TileHalfTexel {
+    /**
+     * The value of the uniform.
+     *
+     * @type {Float32Array}
+     */
+    data = new Float32Array(2);
 
-export { Sprite, setTileHalfTexel };
+    /**
+     * @type {{ rect: Vec4, border: Vec4 }|null}
+     * @private
+     */
+    _frame = null;
+
+    /**
+     * @type {Texture|null}
+     * @private
+     */
+    _texture = null;
+
+    /**
+     * Derives the inset from an atlas frame and texture, or clears it when given nulls.
+     *
+     * @param {{ rect: Vec4, border: Vec4 }|null} frame - The atlas frame, in pixels.
+     * @param {Texture|null} texture - The atlas texture.
+     */
+    set(frame, texture) {
+        this._frame = frame;
+        this._texture = texture;
+        this.data.fill(0);
+        this.update();
+    }
+
+    /**
+     * Derives the inset again. Call this every frame, as the texture's filtering can change
+     * without notice.
+     */
+    update() {
+        const frame = this._frame;
+        const texture = this._texture;
+        if (frame && texture) {
+            const minFilter = texture.minFilter;
+            const nearest = texture.magFilter === FILTER_NEAREST && (minFilter === FILTER_NEAREST ||
+                minFilter === FILTER_NEAREST_MIPMAP_NEAREST || minFilter === FILTER_NEAREST_MIPMAP_LINEAR);
+            this.data[0] = nearest ? 0.5 / Math.max(1, frame.rect.z - frame.border.x - frame.border.z) : 0;
+            this.data[1] = nearest ? 0.5 / Math.max(1, frame.rect.w - frame.border.y - frame.border.w) : 0;
+        }
+    }
+}
+
+export { Sprite, TileHalfTexel };
