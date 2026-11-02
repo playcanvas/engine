@@ -68,7 +68,7 @@ mat4 dModelMatrix;
 #ifdef VERTEX_COLOR
     // the exact sRGB transfer, as decodePS decodes colors in the fragment shader
     vec3 decodeGamma(vec3 raw) {
-        return mix(pow((raw + 0.055) / 1.055, vec3(2.4)), raw / 12.92, lessThanEqual(raw, vec3(0.04045)));
+        return mix(pow(raw * 0.9478672986 + 0.0521327014, vec3(2.4)), raw * 0.0773993808, lessThanEqual(raw, vec3(0.04045)));
     }
     vec4 gammaCorrectInput(vec4 color) {
         return vec4(decodeGamma(color.xyz), color.w);
