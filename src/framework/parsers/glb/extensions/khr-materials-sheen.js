@@ -8,7 +8,8 @@ const KHR_materials_sheen = {
             const [r, g, b] = data.sheenColorFactor;
             material.sheen.set(r, g, b).gamma();
         } else {
-            material.sheen.set(1, 1, 1);
+            // glTF defaults to black (no sheen), where the material defaults to white
+            material.sheen.set(0, 0, 0);
         }
         if (data.hasOwnProperty('sheenColorTexture')) {
             material.sheenMap = textures[data.sheenColorTexture.index];
