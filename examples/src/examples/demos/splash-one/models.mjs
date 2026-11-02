@@ -25,7 +25,7 @@ import {
 import { applyAtmosphere } from './atmosphere.mjs';
 
 /**
- * @import { Asset, GraphicsDevice } from 'playcanvas'
+ * @import { Asset, ContainerResource, GraphicsDevice } from 'playcanvas'
  */
 
 const _p = new Vec3();
@@ -425,7 +425,8 @@ export const LIVERIES = {
  * @param {Livery} livery - Its paint scheme.
  * @param {boolean} twinTail - Twin canted tails and no canards (the player), or a single tall tail
  * with canards (the enemy) - a different silhouette, so the two are told apart at a distance.
- * @returns {MeshBuilder} The geometry.
+ * @returns {{ airframe: MeshBuilder, canopy: MeshBuilder }} The geometry of the painted airframe, and
+ * of its glass canopy.
  */
 const buildAirframe = (livery, twinTail) => {
     const builder = new MeshBuilder();
@@ -597,8 +598,7 @@ const buildAirframe = (livery, twinTail) => {
         builder.box(m, [x, -0.32, 2.0], [0.1, 0.3, 1.6], dark);
     }
 
-    builder.canopy = canopyBuilder;
-    return builder;
+    return { airframe: builder, canopy: canopyBuilder };
 };
 
 /**
@@ -672,12 +672,12 @@ const buildMissile = () => {
  * @returns {JetModel} The jet.
  */
 export const createJet = (device, materials, livery, twinTail, missileMesh, castShadows) => {
-    const builder = buildAirframe(livery, twinTail);
+    const { airframe, canopy } = buildAirframe(livery, twinTail);
     const entity = new Entity('Jet');
     entity.addComponent('render', {
         meshInstances: [
-            new MeshInstance(builder.build(device), materials.paint),
-            new MeshInstance(builder.canopy.build(device), materials.canopy)
+            new MeshInstance(airframe.build(device), materials.paint),
+            new MeshInstance(canopy.build(device), materials.canopy)
         ],
         castShadows
     });
@@ -764,7 +764,7 @@ const findSurface = (root, name) => {
  * @returns {JetModel} The jet.
  */
 export const createPlayerJet = (asset, materials, missileMesh, castShadows) => {
-    const entity = asset.resource.instantiateRenderEntity({ castShadows });
+    const entity = /** @type {ContainerResource} */ (asset.resource).instantiateRenderEntity({ castShadows });
     entity.name = 'PlayerJet';
 
     // the haze over the distance applies to the model's own materials too
@@ -930,7 +930,7 @@ const hazed = new WeakSet();
  * @returns {ShipModel} The frigate.
  */
 export const createFrigate = (asset) => {
-    const entity = asset.resource.instantiateRenderEntity({ castShadows: false });
+    const entity = /** @type {ContainerResource} */ (asset.resource).instantiateRenderEntity({ castShadows: false });
     entity.name = 'Frigate';
 
     // the haze over the distance applies to the model's own materials too - shared by every ship

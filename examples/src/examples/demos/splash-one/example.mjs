@@ -1,4 +1,60 @@
 // @config
+//
+// @flag CREDITS_HIDDEN
+//
+// @credit
+// title: Aerial Grass Rock
+// author: Rob Tuytel
+// source: https://polyhaven.com/a/aerial_grass_rock
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: Sparse Grass
+// author: Amal Kumar
+// source: https://polyhaven.com/a/sparse_grass
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: Dirt Aerial 02
+// author: Rob Tuytel
+// source: https://polyhaven.com/a/dirt_aerial_02
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: Aerial Rocks 02
+// author: Rob Tuytel
+// source: https://polyhaven.com/a/aerial_rocks_02
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: Aerial Beach 01
+// author: Rob Tuytel
+// source: https://polyhaven.com/a/aerial_beach_01
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: Rock Face 03
+// author: Dario Barresi and Rico Cilliers
+// source: https://polyhaven.com/a/rock_face_03
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: Afterburner sound.wav
+// author: StoneyJ
+// source: https://freesound.org/people/StoneyJ/sounds/104883/
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: Afterburner
+// author: TiesWijnen
+// source: https://freesound.org/people/TiesWijnen/sounds/413312/
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+//
+// @credit
+// title: missile lock on sound
+// author: Alxy
+// source: https://freesound.org/people/Alxy/sounds/189327/
+// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
 
 // An arcade jet fighter. The mission briefing, with the controls, is shown in the game itself.
 

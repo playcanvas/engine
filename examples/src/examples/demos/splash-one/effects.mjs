@@ -813,6 +813,7 @@ const createAtlas = (device) => {
  * @property {number[]} frames - The first and last atlas frame to pick from.
  * @property {number} stretch - How far it streaks along its velocity, in seconds of travel.
  * @property {boolean} collide - Whether it bounces off the ground.
+ * @property {number} [index] - Its position in PRESET_LIST, set once all the presets are defined.
  */
 
 /** @type {Record<string, ParticlePreset>} */
@@ -1376,7 +1377,7 @@ class ParticleSystem {
         this.scale[i] = scale;
         this.opacity[i] = opacity;
         this.frame[i] = preset.frames[0] + Math.floor(Math.random() * (preset.frames[1] - preset.frames[0] + 0.999));
-        this.preset[i] = preset.index;
+        this.preset[i] = preset.index ?? 0;
     }
 
     /**
