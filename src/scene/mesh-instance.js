@@ -605,6 +605,15 @@ class MeshInstance {
     storageSlotVersion = -1;
 
     /**
+     * The node whose matrices are stored in the slot. Skin roots can change without changing
+     * the mesh node, and transform versions are local to each node.
+     *
+     * @type {GraphNode|null}
+     * @ignore
+     */
+    _storageSlotNode = null;
+
+    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -884,6 +893,7 @@ class MeshInstance {
         // use local space override aabb if specified
         let localAabb = this._customAabb;
         let toWorldSpace = !!localAabb;
+        let node = this.node;
 
         // otherwise evaluate local aabb
         if (!localAabb) {
@@ -891,6 +901,8 @@ class MeshInstance {
             localAabb = _tmpAabb;
 
             if (this.skinInstance) {
+
+                node = this.skinInstance.rootBone ?? node;
 
                 // Initialize local bone AABBs if needed
                 if (!this.mesh.boneAabb) {
@@ -946,7 +958,7 @@ class MeshInstance {
 
         // store world space bounding box
         if (toWorldSpace) {
-            this._aabb.setFromTransformedAabb(localAabb, this.node.getWorldTransform());
+            this._aabb.setFromTransformedAabb(localAabb, node.getWorldTransform());
         }
 
         return this._aabb;
