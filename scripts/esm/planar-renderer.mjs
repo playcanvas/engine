@@ -115,7 +115,8 @@ class PlanarRenderer extends Script {
      * If set to true, the texture stores high dynamic range colors, so that bright light sources
      * keep their brightness in it. The camera then renders linear colors, without tone mapping and
      * gamma correction, which are applied by the camera rendering the material using the texture.
-     * Falls back to a low dynamic range texture when the device cannot render to half-float
+     * Its own tone mapping and gamma correction are restored when the texture is low dynamic range
+     * again. Falls back to a low dynamic range texture when the device cannot render to half-float
      * textures.
      *
      * @attribute
@@ -187,6 +188,15 @@ class PlanarRenderer extends Script {
     _viewProjectionMatrix = new Mat4();
 
     /**
+     * The tone mapping and gamma correction of the camera, stored while it renders to a high
+     * dynamic range texture, and restored when it renders to a low dynamic range texture again.
+     *
+     * @type {{ toneMapping: number, gammaCorrection: number }|null}
+     * @private
+     */
+    _ldrColorSettings = null;
+
+    /**
      * Gets the view projection matrix of the camera, which projects world space positions into
      * the texture. Updated by {@link PlanarRenderer#frameUpdate}, and typically assigned to
      * {@link StandardMaterial#planarReflectionMatrix} together with the texture.
@@ -226,8 +236,37 @@ class PlanarRenderer extends Script {
         this.on('destroy', () => {
             evtPostRender.off();
             planarCamera.calculateProjection = null;
+            this._updateColorSettings(false);
             this._destroyRenderTarget();
         });
+    }
+
+    /**
+     * Switches the camera to render linear colors into a high dynamic range texture, which are
+     * tone mapped and gamma corrected later, by the camera rendering the material using the
+     * texture. Its own settings are stored, and restored for a low dynamic range texture.
+     *
+     * @param {boolean} hdr - Whether the camera renders to a high dynamic range texture.
+     * @private
+     */
+    _updateColorSettings(hdr) {
+        const planarCamera = this.entity.camera;
+        if (!planarCamera) {
+            return;
+        }
+
+        if (hdr && !this._ldrColorSettings) {
+            this._ldrColorSettings = {
+                toneMapping: planarCamera.toneMapping,
+                gammaCorrection: planarCamera.gammaCorrection
+            };
+            planarCamera.toneMapping = TONEMAP_NONE;
+            planarCamera.gammaCorrection = GAMMA_NONE;
+        } else if (!hdr && this._ldrColorSettings) {
+            planarCamera.toneMapping = this._ldrColorSettings.toneMapping;
+            planarCamera.gammaCorrection = this._ldrColorSettings.gammaCorrection;
+            this._ldrColorSettings = null;
+        }
     }
 
     _destroyRenderTarget() {
@@ -280,6 +319,8 @@ class PlanarRenderer extends Script {
                 colorBuffer: this._texture,
                 depth: this.depth
             });
+
+            this._updateColorSettings(format === PIXELFORMAT_RGBA16F);
         }
     }
 
@@ -420,13 +461,6 @@ class PlanarRenderer extends Script {
             planarCamera.aperture = sceneCamera.aperture;
             planarCamera.sensitivity = sceneCamera.sensitivity;
             planarCamera.shutter = sceneCamera.shutter;
-
-            // a high dynamic range texture stores the linear colors, which are tone mapped and
-            // gamma corrected later, by the camera rendering the material using the texture
-            if (this._texture.format === PIXELFORMAT_RGBA16F) {
-                planarCamera.toneMapping = TONEMAP_NONE;
-                planarCamera.gammaCorrection = GAMMA_NONE;
-            }
 
             // oblique clipping using a custom projection
             if (this.obliqueClipping) {
