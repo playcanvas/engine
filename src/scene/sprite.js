@@ -1,11 +1,14 @@
 import { EventHandler } from '../core/event-handler.js';
 import { Vec2 } from '../core/math/vec2.js';
+import { FILTER_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST } from '../platform/graphics/constants.js';
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
 import { Mesh } from './mesh.js';
 import { Geometry } from './geometry/geometry.js';
 
 /**
+ * @import { Vec4 } from '../core/math/vec4.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
  * @import { TextureAtlas } from './texture-atlas.js'
  */
 
@@ -397,4 +400,23 @@ class Sprite extends EventHandler {
     }
 }
 
-export { Sprite };
+/**
+ * Writes the inset the tiled 9-sliced shader keeps its sampling of a frame's repeating middle
+ * inside, as a fraction of that middle. A texture sampled nearest gets half a texel: at a seam
+ * the wrap lands within a hair of the tile's edge, which nearest sampling can round onto the
+ * texel beyond. A linearly filtered texture gets none, so it still blends across the seam, which
+ * an atlas can make seamless by repeating the tile's opposite edge around the frame.
+ *
+ * @param {Float32Array} out - The two components of the inset to write.
+ * @param {{ rect: Vec4, border: Vec4 }} frame - The atlas frame, in pixels.
+ * @param {Texture} texture - The atlas texture.
+ * @ignore
+ */
+const setTileHalfTexel = (out, frame, texture) => {
+    const nearest = texture.magFilter === FILTER_NEAREST || texture.minFilter === FILTER_NEAREST ||
+        texture.minFilter === FILTER_NEAREST_MIPMAP_NEAREST || texture.minFilter === FILTER_NEAREST_MIPMAP_LINEAR;
+    out[0] = nearest ? 0.5 / Math.max(1, frame.rect.z - frame.border.x - frame.border.z) : 0;
+    out[1] = nearest ? 0.5 / Math.max(1, frame.rect.w - frame.border.y - frame.border.w) : 0;
+};
+
+export { Sprite, setTileHalfTexel };

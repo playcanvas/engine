@@ -10,6 +10,7 @@ import {
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
+import { setTileHalfTexel } from '../../../scene/sprite.js';
 import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
@@ -968,10 +969,7 @@ class SpriteComponent extends Component {
                     frameData.rect.w / tex.height
                 );
 
-                // half a texel of the frame's repeating middle, as a fraction of it, which tiled
-                // sampling stays inside
-                this._tileHalfTexelUniform[0] = 0.5 / Math.max(1, frameData.rect.z - frameData.border.x - frameData.border.z);
-                this._tileHalfTexelUniform[1] = 0.5 / Math.max(1, frameData.rect.w - frameData.border.y - frameData.border.w);
+                setTileHalfTexel(this._tileHalfTexelUniform, frameData, tex);
             } else {
                 this._innerOffset.set(0, 0, 0, 0);
                 this._tileHalfTexelUniform.fill(0);

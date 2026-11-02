@@ -23,6 +23,7 @@ import { GraphNode } from '../../../scene/graph-node.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
+import { setTileHalfTexel } from '../../../scene/sprite.js';
 import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
 import { Asset } from '../../asset/asset.js';
@@ -530,10 +531,7 @@ class ImageElement {
                 frameData.rect.z / tex.width,
                 frameData.rect.w / tex.height);
 
-            // half a texel of the frame's repeating middle, as a fraction of it, which tiled
-            // sampling stays inside
-            this._tileHalfTexelUniform[0] = 0.5 / Math.max(1, frameData.rect.z - frameData.border.x - frameData.border.z);
-            this._tileHalfTexelUniform[1] = 0.5 / Math.max(1, frameData.rect.w - frameData.border.y - frameData.border.w);
+            setTileHalfTexel(this._tileHalfTexelUniform, frameData, tex);
 
             // scale: apply PPU
             const ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
