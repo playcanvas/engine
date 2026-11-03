@@ -1,11 +1,16 @@
+import { Debug } from '../../core/debug.js';
+
+import glslBlindField from '../shader-lib/glsl/chunks/gsplat/vert/formats/sogBlindField.js';
+import wgslBlindField from '../shader-lib/wgsl/chunks/gsplat/vert/formats/sogBlindField.js';
+
 /**
  * SOG v3 blind data: per-gaussian application data stored in RGBA8 textures (`meta.blind`, one
- * entry per texture). Each texture's fields occupy its bytes (R, G, B, A) at their `offset`,
+ * entry per texture). Each texture's fields are packed in order into its bytes (R, G, B, A),
  * little-endian, in one of these encodings:
  *
  * - `u8` `u16` `u24` `u32`: unsigned integer.
  * - `f16` `f32`: IEEE half / single float bits.
- * - `unorm8` `unorm16`: a float quantized linearly from [`min`, `max`] (default [0, 1]).
+ * - `unorm8` `unorm16`: a float quantized linearly from `range` ([min, max], default [0, 1]).
  *
  * Shaders read field `name` through a generated `getBlind_<name>()` (name sanitized to an
  * identifier), returning `uint` / `u32` for integer encodings and `float` / `f32` otherwise; a
@@ -14,44 +19,75 @@
  * @ignore
  */
 
+/**
+ * @typedef {object} BlindField
+ * @property {number} texture - Index of the field's texture in `meta.blind`.
+ * @property {string} name - The field name.
+ * @property {string} id - Shader identifier suffix derived from the name.
+ * @property {string} type - The encoding.
+ * @property {number} offset - Index of the field's first byte in the texel (0 = R).
+ * @property {number} bytes - Number of bytes.
+ * @property {number} min - Value of the smallest code (unorm encodings).
+ * @property {number} max - Value of the largest code (unorm encodings).
+ * @ignore
+ */
+
 const BLIND_TYPE_BYTES = { u8: 1, u16: 2, u24: 3, u32: 4, f16: 2, f32: 4, unorm8: 1, unorm16: 2 };
+
+const DEFAULT_RANGE = [0, 1];
 
 const isIntegerType = type => type[0] === 'u' && !type.startsWith('unorm');
 
+// Pre-compiled regex patterns for template replacement
+const RE_ID = /\{id\}/g;
+const RE_RETURN_TYPE = /\{returnType\}/g;
+const RE_TEXTURE = /\{texture\}/g;
+const RE_OFFSET = /\{offset\}/g;
+const RE_BYTES = /\{bytes\}/g;
+const RE_DECODE = /\{decode\}/g;
+
 /**
  * Shader identifier suffix for a blind field name: characters outside [A-Za-z0-9_] become '_',
- * and runs of '_' collapse to one (GLSL reserves '__').
+ * runs of '_' collapse to one and leading / trailing '_' are dropped, as GLSL reserves '__' and
+ * the suffix follows a '_'.
  *
  * @param {string} name - The field name.
  * @returns {string} The suffix.
  */
-const blindFieldId = name => name.replace(/\W/g, '_').replace(/_+/g, '_');
+const blindFieldId = name => name.replace(/\W/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 
 /**
- * The validated fields of a SOG meta's blind textures, each with its texture index and shader
- * identifier. Fields whose type is unknown, which do not fit their texture, or whose identifier
- * repeats an earlier field's are reported in `skipped` and left out.
+ * The fields of a SOG meta's blind textures, each with its texture index, byte offset and shader
+ * identifier. Fields are packed in order, so each starts where the previous field of its texture
+ * ended. The data is assumed valid, as the tools writing it check it; debug builds report
+ * problems.
  *
  * @param {object} meta - The SOG meta.json.
- * @returns {{fields: {texture: number, name: string, id: string, type: string, offset: number, bytes: number, min: number, max: number}[], skipped: string[]}} The fields.
+ * @returns {BlindField[]} The fields.
  */
-const blindFields = (meta) => {
+const parseBlindFields = (meta) => {
     const fields = [];
-    const skipped = [];
-    const ids = new Set();
     (meta.blind ?? []).forEach((texture, t) => {
-        for (const f of texture.fields ?? []) {
+        let offset = 0;
+        for (const f of texture.fields) {
             const bytes = BLIND_TYPE_BYTES[f.type];
-            const id = blindFieldId(f.name);
-            if (!bytes || !(f.offset >= 0 && f.offset + bytes <= 4) || ids.has(id)) {
-                skipped.push(f.name);
-                continue;
-            }
-            ids.add(id);
-            fields.push({ texture: t, name: f.name, id, type: f.type, offset: f.offset, bytes, min: f.min ?? 0, max: f.max ?? 1 });
+            const [min, max] = f.range ?? DEFAULT_RANGE;
+            fields.push({ texture: t, name: f.name, id: blindFieldId(f.name), type: f.type, offset, bytes, min, max });
+            offset += bytes;
         }
     });
-    return { fields, skipped };
+
+    Debug.call(() => {
+        const ids = new Set();
+        for (const f of fields) {
+            Debug.assert(f.bytes, `SOG blind field ${f.name} has unknown type ${f.type}`);
+            Debug.assert(f.offset + f.bytes <= 4, `SOG blind field ${f.name} does not fit in its texture`);
+            Debug.assert(f.id && !ids.has(f.id), `SOG blind field ${f.name} has an empty or repeated shader identifier '${f.id}'`);
+            ids.add(f.id);
+        }
+    });
+
+    return fields;
 };
 
 // a float literal both GLSL and WGSL accept
@@ -61,91 +97,40 @@ const floatLiteral = (v) => {
 };
 
 /**
- * Shader code for the blind field accessors, appended to the SOG read code. The textures are
- * declared as streams `blind0`, `blind1`, ... whose generated `loadBlind<i>()` returns the RGBA8
- * texel as normalized floats.
+ * Shader code for the blind field accessors, appended to the SOG read code: the
+ * `gsplatSogBlindVS` decoding helpers, then one accessor per field from the `sogBlindField`
+ * template. The textures are declared as streams `blind0`, `blind1`, ... whose generated
+ * `loadBlind<i>()` returns the RGBA8 texel as normalized floats.
  *
- * @param {object} meta - The SOG meta.json.
+ * @param {BlindField[]} fields - The fields, from {@link parseBlindFields}.
  * @param {boolean} wgsl - Generate WGSL (else GLSL).
- * @returns {string} The accessor functions.
+ * @returns {string} The accessor functions, empty when there are no fields.
  */
-const blindAccessors = (meta, wgsl) => {
-    const lines = [];
-    for (const f of blindFields(meta).fields) {
-        const ch = 'xyzw';
-        const terms = [];
-        for (let k = 0; k < f.bytes; k++) {
-            const byte = `b.${ch[f.offset + k]}`;
-            terms.push(k === 0 ? byte : `(${byte} << ${8 * k}u)`);
-        }
-        const bits = terms.join(' | ');
+const blindAccessors = (fields, wgsl) => {
+    if (!fields.length) {
+        return '';
+    }
+    const template = wgsl ? wgslBlindField : glslBlindField;
+    const accessors = fields.map((f) => {
         const integer = isIntegerType(f.type);
-        let value;
-        if (integer) {
-            value = 'bits';
+        let decode = 'bits';
+        if (f.type === 'f16') {
+            decode = 'sogBlindF16(bits)';
         } else if (f.type === 'f32') {
-            value = wgsl ? 'bitcast<f32>(bits)' : 'uintBitsToFloat(bits)';
-        } else if (f.type === 'f16') {
-            value = wgsl ? 'unpack2x16float(bits).x' : 'unpackHalf2x16(bits).x';
-        } else {
+            decode = 'sogBlindF32(bits)';
+        } else if (!integer) {
             const steps = f.type === 'unorm8' ? '255.0' : '65535.0';
-            const toFloat = wgsl ? 'f32(bits)' : 'float(bits)';
-            value = `${floatLiteral(f.min)} + ${toFloat} / ${steps} * ${floatLiteral(f.max - f.min)}`;
+            decode = `sogBlindUnorm(bits, ${steps}, ${floatLiteral(f.min)}, ${floatLiteral(f.max)})`;
         }
-        lines.push(wgsl ?
-            `fn getBlind_${f.id}() -> ${integer ? 'u32' : 'f32'} {\n` +
-            `    let b = vec4u(loadBlind${f.texture}() * 255.0 + 0.5);\n` +
-            `    let bits = ${bits};\n` +
-            `    return ${value};\n}` :
-            `${integer ? 'uint' : 'float'} getBlind_${f.id}() {\n` +
-            `    uvec4 b = uvec4(loadBlind${f.texture}() * 255.0 + 0.5);\n` +
-            `    uint bits = ${bits};\n` +
-            `    return ${value};\n}`);
-    }
-    return lines.length ? `\n// SOG v3 blind data accessors (see gsplat-sog-blind.js)\n${lines.join('\n')}\n` : '';
+        return template
+        .replace(RE_ID, f.id)
+        .replace(RE_RETURN_TYPE, integer ? (wgsl ? 'u32' : 'uint') : (wgsl ? 'f32' : 'float'))
+        .replace(RE_TEXTURE, String(f.texture))
+        .replace(RE_OFFSET, String(f.offset))
+        .replace(RE_BYTES, String(f.bytes))
+        .replace(RE_DECODE, decode);
+    });
+    return `\n#include "gsplatSogBlindVS"\n${accessors.join('')}`;
 };
 
-const halfToFloat = (h) => {
-    const sign = h & 0x8000 ? -1 : 1;
-    const exp = (h >>> 10) & 0x1f;
-    const mant = h & 0x3ff;
-    if (exp === 0) return sign * mant * 2 ** -24;
-    if (exp === 0x1f) return mant ? NaN : sign * Infinity;
-    return sign * (1 + mant / 1024) * 2 ** (exp - 15);
-};
-
-const f32 = new Float32Array(1);
-const u32 = new Uint32Array(f32.buffer);
-
-/**
- * Decode one blind field for every gaussian from its texture's RGBA8 bytes.
- *
- * @param {Uint8Array|Uint8ClampedArray} rgba - The texture's pixels.
- * @param {object} field - A field from {@link blindFields}.
- * @param {number} count - Gaussian count.
- * @returns {Uint32Array|Float32Array} The values: Uint32Array for integer encodings.
- */
-const decodeBlindField = (rgba, field, count) => {
-    const integer = isIntegerType(field.type);
-    const out = integer ? new Uint32Array(count) : new Float32Array(count);
-    for (let i = 0; i < count; i++) {
-        const t = i * 4 + field.offset;
-        let bits = 0;
-        for (let k = 0; k < field.bytes; k++) bits |= rgba[t + k] << (8 * k);
-        bits >>>= 0;
-        if (integer) {
-            out[i] = bits;
-        } else if (field.type === 'f32') {
-            u32[0] = bits;
-            out[i] = f32[0];
-        } else if (field.type === 'f16') {
-            out[i] = halfToFloat(bits);
-        } else {
-            const steps = field.type === 'unorm8' ? 255 : 65535;
-            out[i] = field.min + (bits / steps) * (field.max - field.min);
-        }
-    }
-    return out;
-};
-
-export { blindAccessors, blindFields, decodeBlindField, isIntegerType };
+export { blindAccessors, parseBlindFields };

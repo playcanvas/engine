@@ -3,7 +3,6 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
-import { blindFields, decodeBlindField, isIntegerType } from './gsplat-sog-blind.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import {
@@ -340,14 +339,14 @@ class GSplatSogData {
         // f_rest columns: 45 (3 bands, lower bands zero-padded) or 72 with a 4th band
         const restCount = shBands > 3 ? 72 : 45;
 
-        // copy back gpu texture data so cpu iterator has access to it
-        const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids, blind } = this;
+        // copy back gpu texture data so cpu iterator has access to it (v3 blind data is only read
+        // on the GPU, through the generated getBlind_<name>() accessors)
+        const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = this;
         means_l._levels[0] = await readImageDataAsync(means_l);
         means_u._levels[0] = await readImageDataAsync(means_u);
         if (quats) quats._levels[0] = await readImageDataAsync(quats);
         scales._levels[0] = await readImageDataAsync(scales);
         sh0._levels[0] = await readImageDataAsync(sh0);
-        const blindData = await Promise.all(blind.map(t => readImageDataAsync(t)));
 
         // allocate spherical harmonics data
         if (shBands > 0) {
@@ -421,12 +420,6 @@ class GSplatSogData {
                 storage: data[name]
             };
         });
-
-        // v3 blind data: each field as a column under its own name (uint for integer encodings)
-        for (const f of blindFields(meta).fields) {
-            const storage = decodeBlindField(blindData[f.texture], f, this.numSplats);
-            properties.push({ name: f.name, type: isIntegerType(f.type) ? 'uint' : 'float', byteSize: 4, storage });
-        }
 
         const result = new GSplatData([{
             name: 'vertex',

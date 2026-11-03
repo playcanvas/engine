@@ -170,7 +170,7 @@ describe('SogParser', function () {
         });
 
         it(`${Parser.name} fails the load when a texture fails to load`, async function () {
-            const meta = { ...META, blind: [{ files: ['blind_0.webp'], fields: [{ name: 'id', type: 'u8', offset: 0 }] }] };
+            const meta = { ...META, blind: [{ files: ['blind_0.webp'], fields: [{ name: 'id', type: 'u8' }] }] };
             const archive = zipSync({ 'meta.json': strToU8(JSON.stringify(meta)) }, { level: 0 });
             const sog = new Asset('sog', 'gsplat', {
                 url: Parser === SogBundleParser ? 'assets/splats/test.sog' : META_URL,
@@ -201,6 +201,36 @@ describe('SogParser', function () {
             expect(err).to.contain('decode failed');
             expect(sog.resources).to.be.empty;
             expect(app.assets.list()).to.deep.equal([sog]);
+        });
+
+        it(`${Parser.name} fails the load instead of hanging when the meta is malformed`, async function () {
+            // the previous object shape of meta.blind
+            const meta = { ...META, blind: { name: 'id', bytes: 1, files: ['blind.webp'] } };
+            const archive = zipSync({ 'meta.json': strToU8(JSON.stringify(meta)) }, { level: 0 });
+            const sog = new Asset('sog', 'gsplat', {
+                url: Parser === SogBundleParser ? 'assets/splats/test.sog' : META_URL,
+                contents: archive.buffer
+            });
+            app.assets.add(sog);
+
+            stub(http, 'get').callsFake((url, options, callback) => callback(null, meta));
+            const load = app.assets.load;
+            stub(app.assets, 'load').callsFake((asset) => {
+                if (asset.type === 'texture') {
+                    asset.resource = new Texture(app.graphicsDevice, { width: 1, height: 1 });
+                    asset.loaded = true;
+                    asset.fire('load', asset);
+                } else {
+                    load.call(app.assets, asset);
+                }
+            });
+
+            const err = await new Promise((resolve, reject) => {
+                sog.once('load', () => reject(new Error('loaded')));
+                sog.once('error', resolve);
+                app.assets.load(sog);
+            });
+            expect(String(err)).to.contain('TypeError');
         });
     });
 

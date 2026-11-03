@@ -303,9 +303,14 @@ class SogParser {
      * @param {Asset} asset - Container asset.
      */
     load(url, callback, asset) {
+        // report a throw as a load error instead of leaving the asset loading forever
+        const loadTextures = (meta) => {
+            this.loadTextures(url, callback, asset, meta).catch(err => callback(`Error loading gsplat: ${url.original} [${err}]`));
+        };
+
         if (asset.data?.means) {
             // user can specify meta.json in asset data
-            this.loadTextures(url, callback, asset, asset.data);
+            loadTextures(asset.data);
         } else {
             // otherwise download meta.json using asset url
             if (typeof url === 'string') {
@@ -329,7 +334,7 @@ class SogParser {
                 }
 
                 if (!err) {
-                    this.loadTextures(url, callback, asset, meta);
+                    loadTextures(meta);
                 } else {
                     callback(`Error loading gsplat meta: ${url.original} [${err}]`);
                 }

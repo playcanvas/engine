@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
-import { blindAccessors, blindFields } from './gsplat-sog-blind.js';
+import { blindAccessors, parseBlindFields } from './gsplat-sog-blind.js';
 
 /**
  * @import { GSplatSogData } from './gsplat-sog-data.js'
@@ -17,6 +17,15 @@ import { blindAccessors, blindFields } from './gsplat-sog-blind.js';
  * @category Graphics
  */
 class GSplatSogResource extends GSplatResourceBase {
+    /**
+     * The `SOG_BLIND_<name>` define of each blind field, built once so setting the material
+     * defines on every work buffer update allocates nothing.
+     *
+     * @type {string[]}
+     * @private
+     */
+    _blindDefines;
+
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatSogData} gsplatData - The splat data.
@@ -85,15 +94,16 @@ class GSplatSogResource extends GSplatResourceBase {
             streams.push({ name: 'sogCodebook', format: PIXELFORMAT_RGBA32F });
         }
 
-        // Create format with streams and shader chunk include
+        const fields = parseBlindFields(meta);
+        this._blindDefines = fields.map(f => `SOG_BLIND_${f.id}`);
+
+        // Create format with streams and shader chunk include. The format only uses the read code
+        // of the device's shader language, so only that one is generated.
         // Note: We don't call streams.init() as textures are externally managed by gsplatData
-        const { skipped } = blindFields(meta);
-        if (skipped.length) {
-            Debug.warn(`GSplatSogResource: skipping SOG blind fields with an unknown type, a bad offset or a repeated name: ${skipped.join(', ')}`);
-        }
+        const read = `#include "gsplatSogVS"${blindAccessors(fields, device.isWebGPU)}`;
         this._format = new GSplatFormat(device, streams, {
-            readGLSL: `#include "gsplatSogVS"${blindAccessors(meta, false)}`,
-            readWGSL: `#include "gsplatSogVS"${blindAccessors(meta, true)}`
+            readGLSL: read,
+            readWGSL: read
         });
 
         // Populate parameters map with dequantization uniforms
@@ -175,8 +185,8 @@ class GSplatSogResource extends GSplatResourceBase {
         // the format version (v1 files have none): 2 and up dequantize through codebooks, 3 adds the
         // exp-map rotations, squared opacity and 24-bit SH labels
         defines.set('SOG_VERSION', meta.version ?? 1);
-        for (const f of blindFields(meta).fields) {
-            defines.set(`SOG_BLIND_${f.id}`, '');
+        for (const define of this._blindDefines) {
+            defines.set(define, '');
         }
     }
 
