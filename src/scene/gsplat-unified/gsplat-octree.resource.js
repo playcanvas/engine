@@ -38,6 +38,12 @@ class GSplatOctreeResource {
     _numSplats = null;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _antiAlias = false;
+
+    /**
      * Raw parsed manifest data, retained for consumers that read custom or extension
      * fields the octree itself does not consume (for example application-specific
      * metadata accompanying a `lod-meta.json`). Its `tree` field is null, as the node hierarchy
@@ -61,6 +67,9 @@ class GSplatOctreeResource {
         // Tree hierarchy is fully consumed by GSplatOctree above; null it out so this
         // retained reference doesn't keep the (typically large) tree data alive.
         this.data.tree = null;
+
+        // the training mode is recorded once for the whole tree, the same way SOG files record it
+        this.antiAlias = data.model === 'antialiased';
     }
 
     /**
@@ -72,6 +81,32 @@ class GSplatOctreeResource {
      */
     get aabb() {
         return this._aabb;
+    }
+
+    /**
+     * Sets whether the splats were trained with anti-aliasing (a screen-space filter with opacity
+     * compensation, as in Mip-Splatting), which they need to be rendered with to look right. Set
+     * from the `model` field of the `lod-meta.json` file when it records the training mode, and
+     * applies to all the files the splats are streamed from. Set it for files that do not record
+     * the training mode. Used when {@link GSplatParams#antiAlias} is undefined, its default.
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set antiAlias(value) {
+        this._antiAlias = value;
+        if (this.octree) {
+            this.octree.antiAlias = value;
+        }
+    }
+
+    /**
+     * Gets whether the splats were trained with anti-aliasing.
+     *
+     * @type {boolean}
+     */
+    get antiAlias() {
+        return this._antiAlias;
     }
 
     /**

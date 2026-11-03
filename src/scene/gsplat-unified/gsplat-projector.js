@@ -51,7 +51,8 @@ const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
 // these are ignored when merged into the projector compute, so user customization can't clobber
 // the projector's own variant/format configuration.
 const PROJECTOR_INTERNAL_DEFINES = new Set([
-    '{CACHE_STRIDE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA', 'GSPLAT_COLOR_FLOAT', 'GSPLAT_XR'
+    '{CACHE_STRIDE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA', 'GSPLAT_AA_MIXED', 'GSPLAT_COLOR_FLOAT',
+    'GSPLAT_XR'
 ]);
 
 const _cameraDir = new Vec3();
@@ -384,12 +385,13 @@ class GSplatProjector {
      * @param {boolean} pickMode - Pick output mode.
      * @param {boolean} fisheyeMode - Fisheye projection mode.
      * @param {boolean} antiAlias - Anti-aliasing opacity compensation mode.
+     * @param {boolean} antiAliasMixed - Per-splat anti-aliasing mode.
      * @param {boolean} stereo - XR stereo (2-view) projection mode.
      * @returns {string} The cache key.
      * @private
      */
-    _projectorKey(radialSort, pickMode, fisheyeMode, antiAlias, stereo) {
-        return `${radialSort ? 'r' : 'l'}${pickMode ? 'p' : ''}${fisheyeMode ? 'f' : ''}${antiAlias ? 'a' : ''}${stereo ? 's' : ''}`;
+    _projectorKey(radialSort, pickMode, fisheyeMode, antiAlias, antiAliasMixed, stereo) {
+        return `${radialSort ? 'r' : 'l'}${pickMode ? 'p' : ''}${fisheyeMode ? 'f' : ''}${antiAlias ? 'a' : ''}${antiAliasMixed ? 'm' : ''}${stereo ? 's' : ''}`;
     }
 
     /**
@@ -401,11 +403,13 @@ class GSplatProjector {
      * @param {boolean} fisheyeMode - Whether to compile the GSPLAT_FISHEYE variant.
      * @param {boolean} antiAlias - Whether to compile the GSPLAT_AA variant (bakes the
      * anti-aliasing opacity compensation into the cached alpha).
+     * @param {boolean} antiAliasMixed - Whether to compile the GSPLAT_AA_MIXED variant (applies the
+     * compensation only to the splats flagged in the work buffer).
      * @param {boolean} stereo - Whether to compile the GSPLAT_XR (2-view stereo) variant.
      * @returns {Compute} The created compute instance.
      * @private
      */
-    _createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias, stereo) {
+    _createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias, antiAliasMixed, stereo) {
         const device = this.device;
         const wbFormat = workBuffer.format;
 
@@ -457,6 +461,9 @@ class GSplatProjector {
         if (antiAlias) {
             cdefines.set('GSPLAT_AA', '');
         }
+        if (antiAliasMixed) {
+            cdefines.set('GSPLAT_AA_MIXED', '');
+        }
         if (stereo) {
             cdefines.set('GSPLAT_XR', '');
         }
@@ -477,7 +484,7 @@ class GSplatProjector {
             });
         }
 
-        const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}${antiAlias ? 'Aa' : ''}${stereo ? 'Stereo' : ''}`;
+        const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}${antiAlias ? 'Aa' : ''}${antiAliasMixed ? 'Mixed' : ''}${stereo ? 'Stereo' : ''}`;
 
         const ubFormat = stereo ?
             this._projectorUniformBufferFormatStereo :
@@ -533,21 +540,22 @@ class GSplatProjector {
      * @param {boolean} [pickMode] - Whether to use the pick-output variant.
      * @param {boolean} [fisheyeMode] - Whether to use the fisheye projection variant.
      * @param {boolean} [antiAlias] - Whether to use the anti-aliasing variant.
+     * @param {boolean} [antiAliasMixed] - Whether to use the per-splat anti-aliasing variant.
      * @param {boolean} [stereo] - Whether to use the XR stereo (2-view) variant.
      * @returns {Compute} The projector compute instance.
      * @private
      */
-    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false, antiAlias = false, stereo = false) {
+    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false, antiAlias = false, antiAliasMixed = false, stereo = false) {
         const wbFormat = workBuffer.format;
         if (this._formatVersion !== wbFormat.extraStreamsVersion) {
             this._destroyProjectorComputes();
             this._formatVersion = wbFormat.extraStreamsVersion;
         }
 
-        const key = this._projectorKey(radialSort, pickMode, fisheyeMode, antiAlias, stereo);
+        const key = this._projectorKey(radialSort, pickMode, fisheyeMode, antiAlias, antiAliasMixed, stereo);
         let compute = this._projectorComputes.get(key);
         if (!compute) {
-            compute = this._createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias, stereo);
+            compute = this._createProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, antiAlias, antiAliasMixed, stereo);
             this._projectorComputes.set(key, compute);
         }
         return compute;
@@ -645,6 +653,8 @@ class GSplatProjector {
      * @param {boolean} [params.antiAlias] - Whether to bake anti-aliasing opacity
      * compensation into the cached alpha. Ignored in pick mode (picking only gates on a
      * binary opacity threshold), which keeps the projector variant count down.
+     * @param {boolean} [params.antiAliasMixed] - Whether the compensation applies only to the
+     * splats flagged as trained with anti-aliasing in the work buffer.
      * @param {boolean} [params.isStereo] - Whether to project both XR eyes in a single pass
      * (GSPLAT_XR variant). Requires `cameraNode.camera.camera.xrViews` to have 2 views.
      * Mutually exclusive with pick and fisheye.
@@ -660,6 +670,7 @@ class GSplatProjector {
             stochastic = false,
             fisheyeProj,
             antiAlias = false,
+            antiAliasMixed = false,
             isStereo = false,
             material,
             userCacheWords = 0
@@ -679,6 +690,7 @@ class GSplatProjector {
         // AA only matters for the forward color path; skip it for picking to avoid
         // doubling the projector variant count.
         const aaMode = antiAlias && !pickMode;
+        const aaMixedMode = aaMode && antiAliasMixed;
 
         // sync render-stage customization (modify chunk + defines) before fetching the compute,
         // so a change rebuilds the variant with the new source/defines
@@ -691,7 +703,7 @@ class GSplatProjector {
         // workgroups run their atomicAdds.
         this.renderCounter.clear();
 
-        const compute = this._getProjectorCompute(workBuffer, radialMode, pickMode, fisheyeMode, aaMode, stereoMode);
+        const compute = this._getProjectorCompute(workBuffer, radialMode, pickMode, fisheyeMode, aaMode, aaMixedMode, stereoMode);
 
         // Forward the user render-stage material parameters (uniforms/textures referenced by the
         // modify chunk, reflected into the projector's auto-generated bind group, matched by name).

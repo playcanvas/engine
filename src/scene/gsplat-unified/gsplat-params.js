@@ -66,6 +66,12 @@ class GSplatParams {
     _dataFormat = GSPLATDATA_COMPACT;
 
     /**
+     * @type {boolean|undefined}
+     * @private
+     */
+    _antiAlias = undefined;
+
+    /**
      * Creates a new GSplatParams instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -847,29 +853,31 @@ class GSplatParams {
     }
 
     /**
-     * Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     * Sets whether Gaussian splats are rendered with anti-aliasing compensation, the opacity
+     * correction that splats trained with anti-aliasing (a screen-space filter, as in Mip-Splatting)
+     * need to look right. When undefined, each splat follows the
+     * {@link GSplatResourceBase#antiAlias} or {@link GSplatOctreeResource#antiAlias} of its
+     * resource, which is set from the file when it records the training mode, so a scene can mix
+     * splats trained with and without anti-aliasing. Set to true or false to render every splat
+     * with or without it. Defaults to undefined.
      *
-     * This option is intended for splat data that was generated with anti-aliasing
-     * enabled during training/export. It improves visual stability and reduces
-     * flickering for very small or distant splats.
+     * Rendering splats trained with anti-aliasing without the compensation makes small and distant
+     * splats too bright, and rendering other splats with it makes them too faint.
      *
-     * If the source splats were generated without anti-aliasing, enabling this
-     * option may slightly soften the image or alter opacity.
-     *
-     * @type {boolean}
+     * @type {boolean|undefined}
      */
     set antiAlias(value) {
-        this._material.setDefine('GSPLAT_AA', value);
-        this._material.update();
+        this._antiAlias = value;
     }
 
     /**
-     * Gets whether anti-aliasing compensation is enabled.
+     * Gets whether Gaussian splats are rendered with anti-aliasing compensation, or undefined when
+     * each splat follows its resource.
      *
-     * @type {boolean}
+     * @type {boolean|undefined}
      */
     get antiAlias() {
-        return !!this._material.getDefine('GSPLAT_AA');
+        return this._antiAlias;
     }
 
     /**

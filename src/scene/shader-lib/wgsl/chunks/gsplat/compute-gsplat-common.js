@@ -196,6 +196,14 @@ fn computeSplatCov(
         // quad renderer's GSPLAT_AA branch in gsplatCorner.js initCornerCov.
         let detOrig = aRaw * cRaw - b * b;
         result.aaFactor = sqrt(max(detOrig / det, 0.0));
+
+        #ifdef GSPLAT_AA_MIXED
+            // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
+            // in the work buffer are compensated
+            if (!getAntiAlias()) {
+                result.aaFactor = 1.0;
+            }
+        #endif
     #endif
 
     // Rejects splats whose total visual contribution (opacity * projected area) is

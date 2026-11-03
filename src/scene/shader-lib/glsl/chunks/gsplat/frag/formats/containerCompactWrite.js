@@ -1,5 +1,15 @@
 // Write function for compact work buffer format (20 bytes/splat).
 export default /* glsl */`
+// Anti-aliasing flag of the splats being written (GSplatResourceBase#antiAlias), stored in the
+// lowest bit of center.x and read back by getAntiAlias(). That moves the center by at most one
+// float step. An infinite or NaN center.x is left as is, as the bit would change its value class.
+uniform uint uAntiAlias;
+
+uint gsplatPackCenterX(float x) {
+    uint bits = floatBitsToUint(x);
+    return (bits & 0x7f800000u) == 0x7f800000u ? bits : ((bits & ~1u) | uAntiAlias);
+}
+
 void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
     // Pack RGB as 11+11+10 bits into R32U, range [0, 4]
     vec3 rgb = clamp(color.rgb, 0.0, 4.0);
@@ -29,7 +39,7 @@ void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
         uint alphaBits = uint(clamp(color.a, 0.0, 1.0) * 255.0 + 0.5);
         uint packedScaleAlpha = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
 
-        writeDataTransformA(uvec4(floatBitsToUint(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packedScaleAlpha));
+        writeDataTransformA(uvec4(gsplatPackCenterX(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packedScaleAlpha));
 
         writeDataTransformB(uvec4(packedQuat, 0u, 0u, 0u));
     #endif

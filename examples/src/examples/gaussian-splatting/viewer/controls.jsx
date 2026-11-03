@@ -45,10 +45,14 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
                 <LabelGroup text='Anti-alias'>
-                    <BooleanInput
-                        type='toggle'
+                    <SelectInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'data.antialias' }}
+                        options={[
+                            { v: 'auto', t: 'Auto (from file)' },
+                            { v: 'on', t: 'On' },
+                            { v: 'off', t: 'Off' }
+                        ]}
                     />
                 </LabelGroup>
                 <LabelGroup text='SH Update Angle'>
