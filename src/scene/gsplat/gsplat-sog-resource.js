@@ -8,11 +8,19 @@ import { GSplatFormat } from './gsplat-format.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
+/**
+ * A Gaussian splat resource that stores splat data in the compressed SOG format. Created when
+ * loading SOG files (a `meta.json` file or a `.sog` bundle), unless their asset data sets
+ * `decompress` to true.
+ *
+ * @category Graphics
+ */
 class GSplatSogResource extends GSplatResourceBase {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatSogData} gsplatData - The splat data.
      * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
+     * @ignore
      */
     constructor(device, gsplatData, options = {}) {
         super(device, gsplatData, options);
