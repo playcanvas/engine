@@ -415,6 +415,10 @@ class GSplatManager {
         p.minContribution = gsplat.minContribution;
         p.foveationStrength = gsplat.foveationStrength;
         p.foveationCenter = gsplat.foveationCenter;
+
+        // resolved here rather than taken from the end of update(): the GPU path fills and
+        // dispatches the forward view earlier in update(), and must see the current setting
+        this._resolveAntiAlias();
         p.antiAlias = this._antiAlias;
         p.antiAliasMixed = this._antiAliasMixed;
         p.fisheye = gsplat.fisheye;
@@ -846,7 +850,9 @@ class GSplatManager {
 
         // Renderer per-frame update (material syncing, deferred setup). Must run after
         // fireFrameReadyEvent(): listeners may change material state (e.g. antiAlias), and
-        // syncing here applies it this same frame before frameEnd() clears the dirty flag.
+        // syncing here applies it this same frame before frameEnd() clears the dirty flag. The
+        // anti-aliasing is resolved again for the same reason (the quad renderer applies it in its
+        // material; the GPU path resolved it when it filled the forward view above).
         this._resolveAntiAlias();
         this.renderer.setAntiAlias(this._antiAlias, this._antiAliasMixed);
         this.renderer.frameUpdate(this.gsplat);

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { GSPLAT_FORWARD } from '../../../src/scene/constants.js';
 import { GSplatManager } from '../../../src/scene/gsplat-unified/gsplat-manager.js';
 import { GSplatOctree } from '../../../src/scene/gsplat-unified/gsplat-octree.js';
 import { GSplatOctreeResource } from '../../../src/scene/gsplat-unified/gsplat-octree.resource.js';
@@ -173,6 +174,74 @@ describe('GSplat anti-aliasing', function () {
         it('applies GSplatParams#antiAlias to every splat when it is set', function () {
             expect(resolve(true, [true, false])).to.deep.equal({ antiAlias: true, mixed: false });
             expect(resolve(false, [true, false])).to.deep.equal({ antiAlias: false, mixed: false });
+        });
+
+        // A GPU-sort manager whose update() records the anti-aliasing each forward view is
+        // dispatched with. Everything update() calls besides the parameter resolution is stubbed.
+        const makeGpuManager = (flags) => {
+            const state = { splats: flags.map(antiAlias => ({ resource: { antiAlias } })) };
+            const dispatched = [];
+            const manager = Object.create(GSplatManager.prototype);
+            Object.assign(manager, {
+                gsplat: { antiAlias: undefined, dirty: false },
+                renderMode: GSPLAT_FORWARD,
+                sortNeeded: false,
+                cpuSorter: null,
+                director: { _streamToken: 0 },
+                _renderViewParams: {},
+                _bakeResult: {},
+                _resourcesAntiAlias: false,
+                _resourcesAntiAliasMixed: false,
+                _antiAlias: false,
+                _antiAliasMixed: false,
+                world: {
+                    lastWorldStateVersion: 1,
+                    currentVersion: 1,
+                    getState: () => state,
+                    resetFrameStats() {},
+                    bake(version, camera, updateBounds, result) {
+                        result.rebuilt = false;
+                        result.sortNeeded = false;
+                    },
+                    computeAggregateAabb: () => null,
+                    markInstancesNeedLodUpdate() {}
+                },
+                renderer: {
+                    usesGpuSort: true,
+                    requiresBounds: false,
+                    prepareRenderView: (world, lastState, p) => dispatched.push({ antiAlias: p.antiAlias, mixed: p.antiAliasMixed }),
+                    setAntiAlias() {},
+                    frameUpdate() {}
+                },
+                // the streaming pass records the resources of a new world state, as it does on
+                // the first frame
+                updateStreaming() {
+                    this._updateResourcesAntiAlias();
+                },
+                testCameraMovedForSort: () => false,
+                _markSortedIfNeeded() {},
+                fireFrameReadyEvent() {}
+            });
+            return { manager, dispatched };
+        };
+
+        it('dispatches the GPU view with the anti-aliasing of the same frame', function () {
+            const { manager, dispatched } = makeGpuManager([true]);
+
+            // the first frame of a flagged resource is already compensated
+            manager.update();
+            expect(dispatched[0]).to.deep.equal({ antiAlias: true, mixed: false });
+
+            // an override takes effect on the next frame rendered
+            manager.gsplat.antiAlias = false;
+            manager.update();
+            expect(dispatched[1]).to.deep.equal({ antiAlias: false, mixed: false });
+        });
+
+        it('dispatches the GPU view in the mixed mode from the first frame', function () {
+            const { manager, dispatched } = makeGpuManager([true, false]);
+            manager.update();
+            expect(dispatched[0]).to.deep.equal({ antiAlias: true, mixed: true });
         });
     });
 });
