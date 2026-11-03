@@ -217,13 +217,11 @@ for (const [x, y, frame] of decor) {
     spawn('decor', [x, y, -0.5], { sprite: decorSprite, frame: decorFrames.indexOf(frame) });
 }
 
-// Coins spin until the slime touches one, which plays its one-shot collect clip and goes. Each
-// has a coin icon at the top of the view, lit once it's collected.
+// Coins spin until the slime touches one, which plays its one-shot collect clip and goes
 const coinClips = clips('coin', [
     ['spin', 10, true],
     ['collect', 15, false]
 ]);
-const iconSprite = sprite(['coin-spin-0']);
 const coins = [
     [-19, 0.75],
     [-14, 2.75],
@@ -242,9 +240,13 @@ const coins = [
     entity.sprite.on('end', (clip) => {
         if (clip.name === 'collect') entity.enabled = false;
     });
-    const icon = spawn('icon', [0, 0, -1], { sprite: iconSprite, opacity: 0.3 }, camera);
-    return { entity, icon, x, y, collected: false };
+    return { entity, x, y, collected: false };
 });
+
+// The coin count: a row of coin icons at the top of the view, lit from the left as coins are
+// collected
+const iconSprite = sprite(['coin-spin-0']);
+const icons = coins.map(() => spawn('icon', [0, 0, -1], { sprite: iconSprite, opacity: 0.3 }, camera));
 
 const shadow = spawn('shadow', [-18, 0, 0.9], { sprite: sprite(['shadow']), opacity: 0.35 });
 const slime = animated(
@@ -304,8 +306,8 @@ const fitView = () => {
     viewHeight = height;
     const zoom = Math.max(1, Math.floor(Math.min(width, height) / 160));
     camera.camera.orthoHeight = height / (2 * PIXELS_PER_UNIT * zoom);
-    coins.forEach(({ icon }, i) => {
-        icon.setLocalPosition((i - (coins.length - 1) / 2) * 0.8, camera.camera.orthoHeight - 0.75, -1);
+    icons.forEach((icon, i) => {
+        icon.setLocalPosition((i - (icons.length - 1) / 2) * 0.8, camera.camera.orthoHeight - 0.75, -1);
     });
 };
 
@@ -387,7 +389,7 @@ app.on('update', (frameDt) => {
         if (!coin.collected && Math.abs(coin.x - position.x) < 0.65 && Math.abs(coin.y - position.y - 0.5) < 0.8) {
             coin.collected = true;
             coin.entity.sprite.play('collect');
-            coin.icon.sprite.opacity = 1;
+            icons[collected].sprite.opacity = 1;
             if (++collected === coins.length) respawnAt = time + 1.5;
         }
     }
@@ -395,7 +397,9 @@ app.on('update', (frameDt) => {
         for (const coin of coins) {
             coin.collected = false;
             coin.entity.enabled = true;
-            coin.icon.sprite.opacity = 0.3;
+        }
+        for (const icon of icons) {
+            icon.sprite.opacity = 0.3;
         }
         collected = 0;
         respawnAt = Infinity;
