@@ -132,6 +132,36 @@ class GSplatManager {
      */
     _centersVersions = new Map();
 
+    /**
+     * Whether any resource of the latest world state is flagged as trained with anti-aliasing,
+     * and whether flagged and unflagged resources are mixed. Updated on each new world state.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _resourcesAntiAlias = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _resourcesAntiAliasMixed = false;
+
+    /**
+     * The anti-aliasing compensation resolved for this frame: whether it is compiled in, and
+     * whether it applies only to the splats flagged in the work buffer.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _antiAlias = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _antiAliasMixed = false;
+
     /** @type {Vec3} */
     lastSortCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
@@ -385,7 +415,12 @@ class GSplatManager {
         p.minContribution = gsplat.minContribution;
         p.foveationStrength = gsplat.foveationStrength;
         p.foveationCenter = gsplat.foveationCenter;
-        p.antiAlias = gsplat.antiAlias;
+
+        // resolved here rather than taken from the end of update(): the GPU path fills and
+        // dispatches the forward view earlier in update(), and must see the current setting
+        this._resolveAntiAlias();
+        p.antiAlias = this._antiAlias;
+        p.antiAliasMixed = this._antiAliasMixed;
         p.fisheye = gsplat.fisheye;
         p.material = gsplat.material;
         p.varyings = gsplat.varyings;
@@ -684,7 +719,10 @@ class GSplatManager {
         this.world.update(this.cameraNode, allowLodUpdate, !!this.cpuSorter, this._updateResult);
         if (this._updateResult.overdrawDirty) this.renderer.updateOverdrawMode(this.gsplat);
         if (this._updateResult.sortNeeded) this.sortNeeded = true;
-        if (this._updateResult.newVersion) this._feedCpuSorterCenters();
+        if (this._updateResult.newVersion) {
+            this._feedCpuSorterCenters();
+            this._updateResourcesAntiAlias();
+        }
 
         // tick cooldowns once per frame per unique octree, across the worlds of all managers
         this.world.tickCooldowns(token);
@@ -812,7 +850,11 @@ class GSplatManager {
 
         // Renderer per-frame update (material syncing, deferred setup). Must run after
         // fireFrameReadyEvent(): listeners may change material state (e.g. antiAlias), and
-        // syncing here applies it this same frame before frameEnd() clears the dirty flag.
+        // syncing here applies it this same frame before frameEnd() clears the dirty flag. The
+        // anti-aliasing is resolved again for the same reason (the quad renderer applies it in its
+        // material; the GPU path resolved it when it filled the forward view above).
+        this._resolveAntiAlias();
+        this.renderer.setAntiAlias(this._antiAlias, this._antiAliasMixed);
         this.renderer.frameUpdate(this.gsplat);
 
         // return the number of active splats for stats
@@ -828,6 +870,48 @@ class GSplatManager {
      */
     updateShadows() {
         this.shadowRenderer?.cull(this.gsplat);
+    }
+
+    /**
+     * Records which anti-aliasing compensation the resources of the latest world-state version
+     * ask for. Called after the world creates a new world-state version.
+     *
+     * The rendered version can lag the latest one by a few frames. Adding a resource can only turn
+     * the result to mixed, which renders every splat correctly, so only a removed resource's splats
+     * can briefly render with the compensation of the remaining ones.
+     *
+     * @private
+     */
+    _updateResourcesAntiAlias() {
+        const state = this.world.getState(this.world.lastWorldStateVersion);
+        if (!state) return;
+
+        let flagged = 0;
+        const splats = state.splats;
+        for (let i = 0; i < splats.length; i++) {
+            if (splats[i].resource.antiAlias) {
+                flagged++;
+            }
+        }
+        this._resourcesAntiAlias = flagged > 0;
+        this._resourcesAntiAliasMixed = flagged > 0 && flagged < splats.length;
+    }
+
+    /**
+     * Resolves the anti-aliasing compensation for this frame: {@link GSplatParams#antiAlias} when
+     * set, otherwise what the resources ask for.
+     *
+     * @private
+     */
+    _resolveAntiAlias() {
+        const antiAlias = this.gsplat.antiAlias;
+        if (antiAlias === true || antiAlias === false) {
+            this._antiAlias = antiAlias;
+            this._antiAliasMixed = false;
+        } else {
+            this._antiAlias = this._resourcesAntiAlias;
+            this._antiAliasMixed = this._resourcesAntiAliasMixed;
+        }
     }
 
     /**

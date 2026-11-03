@@ -1530,7 +1530,8 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatMinContribution] - Minimum visual contribution threshold for the compute gsplat renderer. Defaults to 3.
      * @param {number} [settings.render.gsplatFoveationStrength] - Foveated contribution culling strength. Defaults to 0.
      * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
-     * @param {boolean} [settings.render.gsplatAntiAlias] - Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     * @param {boolean} [settings.render.gsplatAntiAlias] - Whether Gaussian splats are rendered with anti-aliasing compensation. When
+     * not set, each splat follows its resource; see {@link GSplatParams#antiAlias}.
      * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.
      * @param {boolean} [settings.render.gsplatUseTonemap] - Whether to apply the camera's tonemapping and the
      * scene exposure to Gaussian splats. Defaults to true.

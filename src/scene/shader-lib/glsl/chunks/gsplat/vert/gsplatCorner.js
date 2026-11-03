@@ -85,6 +85,14 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
         float detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1];
         float detBlur = (cov[0][0] + GSPLAT_LOWPASS) * (cov[1][1] + GSPLAT_LOWPASS) - cov[0][1] * cov[0][1];
         corner.aaFactor = sqrt(max(detOrig / detBlur, 0.0));
+
+        #ifdef GSPLAT_AA_MIXED
+            // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
+            // in the work buffer are compensated
+            if (!getAntiAlias()) {
+                corner.aaFactor = 1.0;
+            }
+        #endif
     #endif
 
     float diagonal1 = cov[0][0] + GSPLAT_LOWPASS;

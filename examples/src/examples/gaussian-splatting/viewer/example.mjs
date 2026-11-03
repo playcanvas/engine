@@ -303,7 +303,9 @@ device.on('devicerestored', applySkydome);
 data.set('data', {
     skydome: false,
     compact: false,
-    antialias: false,
+    // anti-aliasing compensation: 'auto' follows the training mode the file records, 'on' and 'off'
+    // force it for every splat
+    antialias: 'auto',
     // re-evaluate spherical harmonics every frame the camera moves, as with higher SH bands
     // even a degree of stale view direction is visible
     colorUpdateAngle: 0,
@@ -647,7 +649,8 @@ data.on('*:set', (/** @type {string} */ path) => {
     } else if (path === 'data.compact') {
         app.scene.gsplat.dataFormat = data.get('data.compact') ? GSPLATDATA_COMPACT : GSPLATDATA_LARGE;
     } else if (path === 'data.antialias') {
-        app.scene.gsplat.antiAlias = data.get('data.antialias');
+        const mode = data.get('data.antialias');
+        app.scene.gsplat.antiAlias = mode === 'auto' ? undefined : mode === 'on';
     } else if (path === 'data.orientation') {
         // Apply orientation to splat entity
         if (splatEntity) {

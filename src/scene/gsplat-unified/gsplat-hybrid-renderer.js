@@ -547,6 +547,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             pickMode,
             fisheyeProj,
             antiAlias: params.antiAlias,
+            antiAliasMixed: params.antiAliasMixed,
             isStereo,
             material: params.material,
             userCacheWords: params.varyings.words

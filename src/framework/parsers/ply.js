@@ -565,6 +565,35 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
 // by default load everything
 const defaultElementFilter = val => true;
 
+/**
+ * Returns whether the header comments record that the splats were trained with anti-aliasing, in
+ * the form Postshot writes (`antialiased 1`) or the one Brush and splat-transform write
+ * (`SplatRenderMode: mip`). As in those tools, matching is case-insensitive and the last matching
+ * comment wins.
+ *
+ * @param {string[]} comments - The header comments, without the leading `comment `.
+ * @returns {boolean} True if the splats were trained with anti-aliasing.
+ * @ignore
+ */
+const isAntiAliased = (comments) => {
+    let antiAliased = false;
+    for (const comment of comments) {
+        const lower = comment.toLowerCase().trim();
+        if (lower.startsWith('splatrendermode:')) {
+            const mode = lower.substring(16).trim();
+            if (mode === 'mip' || mode === 'default' || mode === '2dgs') {
+                antiAliased = mode === 'mip';
+            }
+        } else if (lower.startsWith('antialiased ')) {
+            const value = lower.substring(12).trim();
+            if (value === '1' || value === '0') {
+                antiAliased = value === '1';
+            }
+        }
+    }
+    return antiAliased;
+};
+
 class PlyParser {
     /** @type {AppBase} */
     app;
@@ -634,6 +663,7 @@ class PlyParser {
                 const resource = (data.isCompressed && !asset.data.decompress) ?
                     new GSplatCompressedResource(this.app.graphicsDevice, data, { prepareCenters }) :
                     new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data, { prepareCenters });
+                resource.antiAlias = isAntiAliased(data.comments);
 
                 callback(null, resource);
             }
@@ -652,4 +682,4 @@ class PlyParser {
     }
 }
 
-export { PlyParser };
+export { PlyParser, isAntiAliased };

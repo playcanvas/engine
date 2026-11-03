@@ -90,6 +90,14 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         let detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0];
         let detBlur = (cov[0][0] + GSPLAT_LOWPASS) * (cov[1][1] + GSPLAT_LOWPASS) - cov[0][1] * cov[1][0];
         corner.aaFactor = half(sqrt(max(detOrig / detBlur, 0.0)));
+
+        #ifdef GSPLAT_AA_MIXED
+            // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
+            // in the work buffer are compensated
+            if (!getAntiAlias()) {
+                corner.aaFactor = half(1.0);
+            }
+        #endif
     #endif
 
     let diagonal1 = cov[0][0] + GSPLAT_LOWPASS;

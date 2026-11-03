@@ -131,6 +131,9 @@ class GSplatResourceBase {
     parameters = new Map();
 
     /** @private */
+    _antiAlias = false;
+
+    /** @private */
     _refCount = 0;
 
     /** @private */
@@ -311,6 +314,29 @@ class GSplatResourceBase {
      */
     get aabb() {
         return this._aabb;
+    }
+
+    /**
+     * Sets whether the splats were trained with anti-aliasing (a screen-space filter with opacity
+     * compensation, as in Mip-Splatting), which they need to be rendered with to look right. Loaded
+     * resources set this from the file, when it records the training mode: the `antialiased 1` or
+     * `SplatRenderMode: mip` PLY header comment, the `model` field of a SOG file, or the
+     * anti-aliased flag of an SPZ file. Set it for files that do not record the training mode.
+     * Used when {@link GSplatParams#antiAlias} is undefined, its default. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set antiAlias(value) {
+        this._antiAlias = value;
+    }
+
+    /**
+     * Gets whether the splats were trained with anti-aliasing.
+     *
+     * @type {boolean}
+     */
+    get antiAlias() {
+        return this._antiAlias;
     }
 
     /**
