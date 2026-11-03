@@ -2,11 +2,22 @@ import { AnimClipParser } from '../parsers/anim-clip.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * Resource handler used for loading {@link AnimClip} resources.
+ * @import { AppBase } from '../app-base.js'
+ */
+
+/**
+ * Resource handler for the `animclip` asset type. Loads a PlayCanvas JSON animation clip into an
+ * {@link AnimTrack}.
  *
- * @ignore
+ * @category Asset
  */
 class AnimClipHandler extends ResourceHandler {
+    /**
+     * Create a new AnimClipHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
+     */
     constructor(app) {
         super(app, 'animclip');
 
