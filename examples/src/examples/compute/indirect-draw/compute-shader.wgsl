@@ -18,8 +18,10 @@ struct Uniforms {
 fn main(@builtin(global_invocation_id) gid: vec3u) {
     let metaData = uniforms.indirectMetaData;
 
-    // Generate oscillating instance count using a sine wave
-    let wave = abs(sin(uniforms.time));
+    // The number of instances to draw rises from none to all of them and falls back, easing in
+    // and out. The instances are stored from the center of the spiral outwards, so the spiral grows
+    // and shrinks from its center.
+    let wave = 0.5 - 0.5 * cos(uniforms.time);
     let visibleCount = u32(wave * f32(uniforms.maxInstanceCount));
 
     // generate draw call parameters based on metadata. Supply computed number of instances.
