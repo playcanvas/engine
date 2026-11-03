@@ -31,6 +31,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @property {number} minContribution - Minimum visual contribution threshold.
  * @property {number} foveationStrength - Foveation strength.
  * @property {number} foveationCenter - Foveation center.
+ * @property {number} antiAliasFilterSize - Variance in pixels squared of the anti-aliasing filter.
  * @property {boolean} antiAlias - Whether the anti-aliasing compensation is compiled in.
  * @property {boolean} antiAliasMixed - Whether the compensation is applied only to the splats
  * flagged as trained with anti-aliasing (a per-splat bit in the work buffer), not to all of them.

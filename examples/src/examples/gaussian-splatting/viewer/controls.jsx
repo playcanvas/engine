@@ -55,6 +55,15 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
+                <LabelGroup text='AA Filter Size'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.antiAliasFilterSize' }}
+                        min={0.05}
+                        max={0.5}
+                        precision={2}
+                    />
+                </LabelGroup>
                 <LabelGroup text='SH Update Angle'>
                     <SliderInput
                         binding={new BindingTwoWay()}

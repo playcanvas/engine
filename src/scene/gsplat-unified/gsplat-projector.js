@@ -300,6 +300,7 @@ class GSplatProjector {
             new UniformFormat('invRange', UNIFORMTYPE_FLOAT),
             new UniformFormat('foveationStrength', UNIFORMTYPE_FLOAT),
             new UniformFormat('foveationCenter', UNIFORMTYPE_FLOAT),
+            new UniformFormat('antiAliasFilterSize', UNIFORMTYPE_FLOAT),
             new UniformFormat('sortKeyMinBits', UNIFORMTYPE_INT),
             new UniformFormat('sortKeyScale', UNIFORMTYPE_FLOAT),
             new UniformFormat('maxSortKey', UNIFORMTYPE_UINT)
@@ -641,6 +642,8 @@ class GSplatProjector {
      * `minContribution` toward the screen edges (0 disables).
      * @param {number} params.foveationCenter - Protected centre radius (NDC units) within which
      * foveated culling has no effect.
+     * @param {number} [params.antiAliasFilterSize] - Variance in pixels squared of the screen-space
+     * filter of the splats rendered with the anti-aliasing compensation.
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
      * @param {boolean} [params.stochastic] - Write stable splat IDs instead of sort keys. The
@@ -664,7 +667,7 @@ class GSplatProjector {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
             totalCapacity, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
-            foveationStrength = 0, foveationCenter = 0.3,
+            foveationStrength = 0, foveationCenter = 0.3, antiAliasFilterSize = 0.3,
             viewportWidth, viewportHeight,
             pickMode = false,
             stochastic = false,
@@ -800,6 +803,7 @@ class GSplatProjector {
         compute.setParameter('minContribution', minContribution);
         compute.setParameter('foveationStrength', foveationStrength);
         compute.setParameter('foveationCenter', foveationCenter);
+        compute.setParameter('antiAliasFilterSize', antiAliasFilterSize);
         compute.setParameter('isOrtho', orthographic ? 1 : 0);
         compute.setParameter('splatTextureSize', workBuffer.textureSize);
         compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);

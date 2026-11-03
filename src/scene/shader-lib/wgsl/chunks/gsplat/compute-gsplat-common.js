@@ -50,6 +50,7 @@ fn computeSplatCov(
     minContribution: f32,
     foveationStrength: f32,
     foveationCenter: f32,
+    antiAliasFilterSize: f32,   // GSplatParams#antiAliasFilterSize, in pixels squared
     #ifdef GSPLAT_FISHEYE
         fisheye_k: f32,
         fisheye_inv_k: f32,
@@ -183,8 +184,23 @@ fn computeSplatCov(
         return result;
     }
 
-    let a = aRaw + GSPLAT_LOWPASS;
-    let c = cRaw + GSPLAT_LOWPASS;
+    // Screen-space filter: the classic dilation, or for compensated splats the filter they were
+    // trained with (antiAliasFilterSize is in pixels squared, the covariance in half pixel units).
+    var lowpass = GSPLAT_LOWPASS;
+    #if GSPLAT_AA
+        var compensated = true;
+        #ifdef GSPLAT_AA_MIXED
+            // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
+            // in the work buffer are compensated
+            compensated = getAntiAlias();
+        #endif
+        if (compensated) {
+            lowpass = 4.0 * antiAliasFilterSize;
+        }
+    #endif
+
+    let a = aRaw + lowpass;
+    let c = cRaw + lowpass;
 
     let det = a * c - b * b;
     if (det <= 0.0) {
@@ -195,15 +211,7 @@ fn computeSplatCov(
         // AA compensation: ratio of pre-blur to post-blur determinant. Matches the
         // quad renderer's GSPLAT_AA branch in gsplatCorner.js initCornerCov.
         let detOrig = aRaw * cRaw - b * b;
-        result.aaFactor = sqrt(max(detOrig / det, 0.0));
-
-        #ifdef GSPLAT_AA_MIXED
-            // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
-            // in the work buffer are compensated
-            if (!getAntiAlias()) {
-                result.aaFactor = 1.0;
-            }
-        #endif
+        result.aaFactor = select(1.0, sqrt(max(detOrig / det, 0.0)), compensated);
     #endif
 
     // Rejects splats whose total visual contribution (opacity * projected area) is
