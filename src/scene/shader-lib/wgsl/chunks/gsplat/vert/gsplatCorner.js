@@ -1,6 +1,9 @@
 export default /* wgsl */`
 uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
 uniform minPixelSize: f32;
+#if GSPLAT_AA
+    uniform antiAliasFilterSize: f32;     // GSplatParams#antiAliasFilterSize, in pixels squared
+#endif
 
 // Rotation and scale source data are f16; covariance must be f32 to avoid scale^2 overflow
 fn computeCovariance(rotation: half4, scale: half3, covA_ptr: ptr<function, vec3f>, covB_ptr: ptr<function, vec3f>) {
@@ -85,24 +88,29 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         return false;
     }
 
+    // screen-space filter: the classic dilation, or for compensated splats the filter they were
+    // trained with (antiAliasFilterSize is in pixels squared, cov in half pixel units)
+    var lowpass = GSPLAT_LOWPASS;
     #if GSPLAT_AA
-        // calculate AA factor
-        let detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0];
-        let detBlur = (cov[0][0] + GSPLAT_LOWPASS) * (cov[1][1] + GSPLAT_LOWPASS) - cov[0][1] * cov[1][0];
-        corner.aaFactor = half(sqrt(max(detOrig / detBlur, 0.0)));
-
+        var compensated = true;
         #ifdef GSPLAT_AA_MIXED
             // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
             // in the work buffer are compensated
-            if (!getAntiAlias()) {
-                corner.aaFactor = half(1.0);
-            }
+            compensated = getAntiAlias();
         #endif
+        if (compensated) {
+            lowpass = 4.0 * uniform.antiAliasFilterSize;
+        }
+
+        // calculate AA factor
+        let detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0];
+        let detBlur = (cov[0][0] + lowpass) * (cov[1][1] + lowpass) - cov[0][1] * cov[1][0];
+        corner.aaFactor = select(half(1.0), half(sqrt(max(detOrig / detBlur, 0.0))), compensated);
     #endif
 
-    let diagonal1 = cov[0][0] + GSPLAT_LOWPASS;
+    let diagonal1 = cov[0][0] + lowpass;
     let offDiagonal = cov[0][1];
-    let diagonal2 = cov[1][1] + GSPLAT_LOWPASS;
+    let diagonal2 = cov[1][1] + lowpass;
 
     let mid = 0.5 * (diagonal1 + diagonal2);
     let radius = length(vec2f((diagonal1 - diagonal2) / 2.0, offDiagonal));

@@ -65,6 +65,14 @@ describe('GSplat anti-aliasing', function () {
             expect(params.antiAlias).to.equal(undefined);
         });
 
+        it('defaults the anti-aliasing filter size to 0.3 and keeps a new value', function () {
+            const params = new GSplatParams(device);
+            expect(params.antiAliasFilterSize).to.equal(0.3);
+            params.antiAliasFilterSize = 0.1;
+            expect(params.antiAliasFilterSize).to.equal(0.1);
+            expect(params.material.getParameter('antiAliasFilterSize').data).to.equal(0.1);
+        });
+
         it('takes the value from the render settings only when they set it', function () {
             const params = new GSplatParams(device);
             params.applySettings({});

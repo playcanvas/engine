@@ -88,6 +88,7 @@ class GSplatParams {
         this._material.setParameter('minContribution', 3.0);
         this._material.setParameter('foveationStrength', 0);
         this._material.setParameter('foveationCenter', 0.3);
+        this._material.setParameter('antiAliasFilterSize', 0.3);
     }
 
     /**
@@ -878,6 +879,30 @@ class GSplatParams {
      */
     get antiAlias() {
         return this._antiAlias;
+    }
+
+    /**
+     * Sets the size of the screen-space filter that splats trained with anti-aliasing were trained
+     * with: the variance of the filter, in pixels squared. It applies to the splats rendered with
+     * the anti-aliasing compensation (see {@link GSplatParams#antiAlias}); other splats use the 0.3
+     * filter of standard training. Set it to the value the splats were trained with: 0.3 for the
+     * anti-aliased mode of gsplat, 0.1 for Mip-Splatting and the mip mode of Brush. Defaults to 0.3.
+     *
+     * @type {number}
+     */
+    set antiAliasFilterSize(value) {
+        this._material.setParameter('antiAliasFilterSize', value);
+        this._material.update();
+    }
+
+    /**
+     * Gets the size of the screen-space filter that splats trained with anti-aliasing were trained
+     * with.
+     *
+     * @type {number}
+     */
+    get antiAliasFilterSize() {
+        return this._material.getParameter('antiAliasFilterSize')?.data ?? 0.3;
     }
 
     /**

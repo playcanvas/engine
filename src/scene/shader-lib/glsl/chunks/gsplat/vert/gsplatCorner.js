@@ -1,6 +1,9 @@
 export default /* glsl */`
 uniform vec4 viewport_size;             // viewport width, height, 1/width, 1/height
 uniform float minPixelSize;
+#if GSPLAT_AA
+    uniform float antiAliasFilterSize;    // GSplatParams#antiAliasFilterSize, in pixels squared
+#endif
 
 // compute 3d covariance from rotation (w,x,y,z format) and scale
 void computeCovariance(vec4 rotation, vec3 scale, out vec3 covA, out vec3 covB) {
@@ -80,24 +83,29 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
         return false;
     }
 
+    // screen-space filter: the classic dilation, or for compensated splats the filter they were
+    // trained with (antiAliasFilterSize is in pixels squared, cov in half pixel units)
+    float lowpass = GSPLAT_LOWPASS;
     #if GSPLAT_AA
-        // calculate AA factor
-        float detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1];
-        float detBlur = (cov[0][0] + GSPLAT_LOWPASS) * (cov[1][1] + GSPLAT_LOWPASS) - cov[0][1] * cov[0][1];
-        corner.aaFactor = sqrt(max(detOrig / detBlur, 0.0));
-
+        bool compensated = true;
         #ifdef GSPLAT_AA_MIXED
             // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
             // in the work buffer are compensated
-            if (!getAntiAlias()) {
-                corner.aaFactor = 1.0;
-            }
+            compensated = getAntiAlias();
         #endif
+        if (compensated) {
+            lowpass = 4.0 * antiAliasFilterSize;
+        }
+
+        // calculate AA factor
+        float detOrig = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1];
+        float detBlur = (cov[0][0] + lowpass) * (cov[1][1] + lowpass) - cov[0][1] * cov[0][1];
+        corner.aaFactor = compensated ? sqrt(max(detOrig / detBlur, 0.0)) : 1.0;
     #endif
 
-    float diagonal1 = cov[0][0] + GSPLAT_LOWPASS;
+    float diagonal1 = cov[0][0] + lowpass;
     float offDiagonal = cov[0][1];
-    float diagonal2 = cov[1][1] + GSPLAT_LOWPASS;
+    float diagonal2 = cov[1][1] + lowpass;
 
     float mid = 0.5 * (diagonal1 + diagonal2);
     float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
