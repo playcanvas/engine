@@ -161,7 +161,8 @@ describe('TextureAtlasHandler', function () {
         it('fails to load a sheet whose image is missing', function (done) {
             app.loader.getHandler('texture').maxRetries = 0;
             loadAtlas('/test/assets/sprites/sprite-sheet-missing-image.json', null, (err) => {
-                expect(String(err)).to.include('missing.png');
+                expect(err).to.be.a('string');
+                expect(err).to.include('/test/assets/sprites/missing.png');
                 done();
             });
         });

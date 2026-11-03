@@ -125,7 +125,8 @@ class TextureAtlasHandler extends ResourceHandler {
 
                 this._loader.load(textureUrl, 'texture', (err, texture) => {
                     if (err) {
-                        callback(err);
+                        // name the image, as some image loads fail with only a status code
+                        callback(`Error loading texture atlas image: ${textureUrl} [${err}]`);
                         return;
                     }
 
