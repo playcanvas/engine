@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
+import { Ray } from '../../../src/core/shape/ray.js';
 
 describe('BoundingBox', function () {
 
@@ -317,6 +318,39 @@ describe('BoundingBox', function () {
             expect(result.x).to.equal(0);
             expect(result.y).to.equal(1);
             expect(result.z).to.equal(0);
+        });
+
+    });
+
+    describe('#intersectsRay', function () {
+
+        it('returns the entry point for a ray starting outside the box', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const ray = new Ray(new Vec3(-3, 0, 0), new Vec3(1, 0, 0));
+            const point = new Vec3();
+            expect(box.intersectsRay(ray)).to.equal(true);
+            expect(box.intersectsRay(ray, point)).to.equal(true);
+            expect(point.x).to.equal(-1);
+            expect(point.y).to.equal(0);
+            expect(point.z).to.equal(0);
+        });
+
+        it('returns the exit point for a ray starting inside the box', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const ray = new Ray(new Vec3(0.5, 0, 0), new Vec3(1, 0, 0));
+            const point = new Vec3();
+            expect(box.intersectsRay(ray)).to.equal(true);
+            expect(box.intersectsRay(ray, point)).to.equal(true);
+            expect(point.x).to.equal(1);
+            expect(point.y).to.equal(0);
+            expect(point.z).to.equal(0);
+        });
+
+        it('returns false for a box behind the ray', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            const ray = new Ray(new Vec3(3, 0, 0), new Vec3(1, 0, 0));
+            expect(box.intersectsRay(ray)).to.equal(false);
+            expect(box.intersectsRay(ray, new Vec3())).to.equal(false);
         });
 
     });

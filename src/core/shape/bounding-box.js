@@ -216,10 +216,12 @@ class BoundingBox {
         const minMax = Math.min(Math.min(realMax.x, realMax.y), realMax.z);
         const maxMin = Math.max(Math.max(realMin.x, realMin.y), realMin.z);
 
-        const intersects = minMax >= maxMin && maxMin >= 0;
+        // the box must not be entirely behind the ray; a ray starting inside the box (maxMin < 0)
+        // intersects it where it leaves the box
+        const intersects = minMax >= maxMin && minMax >= 0;
 
         if (intersects) {
-            point.copy(ray.direction).mulScalar(maxMin).add(ray.origin);
+            point.copy(ray.direction).mulScalar(maxMin >= 0 ? maxMin : minMax).add(ray.origin);
         }
 
         return intersects;
@@ -270,11 +272,11 @@ class BoundingBox {
     }
 
     /**
-     * Test if a ray intersects with the AABB.
+     * Test if a ray intersects with the AABB. A ray that starts inside the AABB intersects it.
      *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
-     * into here.
+     * into here. For a ray that starts inside the AABB, this is the point where the ray leaves it.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
