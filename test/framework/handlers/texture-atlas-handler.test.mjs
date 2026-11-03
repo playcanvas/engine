@@ -27,8 +27,8 @@ describe('TextureAtlasHandler', function () {
         jsdomTeardown();
     });
 
-    const loadAtlas = (url, data, callback) => {
-        const asset = new Asset('atlas', 'textureatlas', { url }, data);
+    const loadAtlas = (url, data, callback, options) => {
+        const asset = new Asset('atlas', 'textureatlas', { url }, data, options);
         app.assets.add(asset);
         asset.once('load', () => callback(null, asset));
         asset.once('error', err => callback(err, asset));
@@ -182,6 +182,92 @@ describe('TextureAtlasHandler', function () {
                 done();
             });
         });
+
+        it('keeps the query of the JSON url on the PNG of the same name', function (done) {
+            const handler = app.loader.getHandler('texture');
+            const load = handler.load.bind(handler);
+            const urls = [];
+            handler.load = (url, callback, asset) => {
+                urls.push(url.load);
+                load(url, callback, asset);
+            };
+
+            loadAtlas('/test/assets/sprites/red-atlas.json?token=a&t=2', null, (err) => {
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                expect(urls).to.deep.equal(['/test/assets/sprites/red-atlas.png?token=a&t=2']);
+                done();
+            });
+        });
+    });
+
+    describe('ownership', function () {
+
+        // a texture asset of the image the atlases below load
+        const loadTexture = (callback) => {
+            const url = '/test/assets/sprites/red-atlas.png';
+            const asset = new Asset('image', 'texture', { url });
+            app.assets.add(asset);
+            asset.once('load', () => callback(asset));
+            app.assets.load(asset);
+        };
+
+        it('gives the atlas its own texture, which unloading destroys', function (done) {
+            loadTexture((image) => {
+                loadAtlas('/test/assets/sprites/texturepacker-hash.json', null, (err, asset) => {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    expect(asset.resource.texture).to.not.equal(image.resource);
+                    setTimeout(() => {
+                        asset.unload();
+                        expect(image.resource.device).to.exist;
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('leaves another asset\'s texture alone when a sheet fails to load', function (done) {
+            loadTexture((image) => {
+                loadAtlas('/test/assets/sprites/sprite-sheet-rotated.json', null, (err) => {
+                    expect(err).to.be.a('string');
+                    expect(image.resource.device).to.exist;
+                    done();
+                });
+            });
+        });
+    });
+
+    describe('texture options', function () {
+
+        // the asset's texture options override its data, when the texture is created and after
+        const options = { texture: { mipmaps: false, minFilter: FILTER_NEAREST } };
+
+        for (const [kind, url] of [
+            ['a sprite sheet', '/test/assets/sprites/aseprite-array.json'],
+            ['an image', '/test/assets/sprites/red-atlas.png']
+        ]) {
+            it(`override the asset data for ${kind}`, function (done) {
+                const data = { mipmaps: true, minfilter: 'linear', frames: {} };
+                loadAtlas(url, data, (err, asset) => {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    const texture = asset.resource.texture;
+                    expect(texture.mipmaps).to.equal(false);
+                    expect(texture.minFilter).to.equal(FILTER_NEAREST);
+                    done();
+                }, options);
+            });
+        }
     });
 
     describe('reloading', function () {
