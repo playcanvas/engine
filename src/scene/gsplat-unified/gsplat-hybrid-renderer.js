@@ -538,7 +538,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             minDist,
             maxDist,
             alphaClip,
-            minPixelSize: params.minPixelSize * 0.5,
+            minPixelSize: params.minPixelSize,
             minContribution: params.minContribution,
             foveationStrength: params.foveationStrength,
             foveationCenter: params.foveationCenter,

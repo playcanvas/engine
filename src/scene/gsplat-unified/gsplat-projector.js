@@ -626,7 +626,8 @@ class GSplatProjector {
      * @param {number} params.minDist - Minimum distance for sort key normalization.
      * @param {number} params.maxDist - Maximum distance for sort key normalization.
      * @param {number} params.alphaClip - Alpha cull threshold.
-     * @param {number} params.minPixelSize - Minimum on-screen pixel size before culling.
+     * @param {number} params.minPixelSize - Minimum on-screen size in pixels (major-axis diameter of the
+     * drawn footprint, as in the quad renderers) before culling.
      * @param {number} params.minContribution - Minimum total contribution before culling.
      * @param {number} params.foveationStrength - Foveated culling strength added to
      * `minContribution` toward the screen edges (0 disables).
