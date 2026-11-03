@@ -38,7 +38,7 @@ fn computeSplatCov(
     scale: half3,
     viewMatrix: mat4x4f,
     viewProj: mat4x4f,
-    focal: vec2f,           // focal length in pixels, per axis
+    focal: vec2f,           // viewport size * projection scale per axis (= 2 x the focal length in pixels)
     viewportWidth: f32,
     viewportHeight: f32,
     nearClip: f32,
@@ -175,8 +175,16 @@ fn computeSplatCov(
     let b = dot(b0, b1);
     let cRaw = dot(b1, b1);
 
-    let a = aRaw + 0.3;
-    let c = cRaw + 0.3;
+    // The size and contribution culls measure the footprint with GSPLAT_CULL_LOWPASS, the rendered footprint
+    // uses GSPLAT_LOWPASS (see gsplatHelpersVS). The size cull runs first, before the contribution and AA math.
+    let aCull = aRaw + GSPLAT_CULL_LOWPASS;
+    let cCull = cRaw + GSPLAT_CULL_LOWPASS;
+    if (gsplatFootprintSmallerThan(aCull, b, cCull, minPixelSize)) {
+        return result;
+    }
+
+    let a = aRaw + GSPLAT_LOWPASS;
+    let c = cRaw + GSPLAT_LOWPASS;
 
     let det = a * c - b * b;
     if (det <= 0.0) {
@@ -210,7 +218,7 @@ fn computeSplatCov(
     let fovT = saturate((fovR - foveationCenter) / max(1.0 - foveationCenter, 1e-4));
     let effMinContribution = minContribution + foveationStrength * fovT * fovT * (3.0 - 2.0 * fovT);
 
-    let totalContribution = opacity * 6.283185 * sqrt(det);
+    let totalContribution = opacity * 6.283185 * sqrt(aCull * cCull - b * b);
     if (totalContribution < effMinContribution) {
         return result;
     }
@@ -221,10 +229,6 @@ fn computeSplatCov(
     let radiusYUncapped = sqrt(2.0 * c);
     let radiusX = min(radiusXUncapped, maxRadius);
     let radiusY = min(radiusYUncapped, maxRadius);
-
-    if (max(radiusX, radiusY) < minPixelSize) {
-        return result;
-    }
 
     // Frustum cull: reject splats entirely off-screen
     #ifdef GSPLAT_XR
