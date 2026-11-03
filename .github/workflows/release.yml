@@ -1,21 +1,30 @@
 name: Release
 
-run-name: Release ${{ inputs.type }} on ${{ github.ref_name }}
+run-name: Release ${{ inputs.type || 'beta' }} on ${{ github.ref_name }}
 
-# Run from the Actions tab with "Use workflow from" set to:
+# Runs nightly as 'beta' on main, or from the Actions tab with "Use workflow from" set to:
+# - main, type 'beta': bumps main and tags vX.Y.0-beta.N if anything changed since the last beta
 # - main, type 'minor': creates release-X.Y from main, bumps main to the next minor beta
 #   ('Branch X.Y' commit) and tags vX.Y.0-preview.0 on release-X.Y
 # - release-X.Y, type 'patch' or 'preview': bumps release-X.Y and tags vX.Y.Z or vX.Y.Z-preview.N
+# - any other branch, type 'alpha': tags vX.Y.Z-alpha.<pr>.sha-<hash> without pushing the branch
+#   (commenting /alpha on a PR dispatches this, see alpha.yml)
 # The tag triggers the Publish workflow.
 
 on:
+  schedule:
+    - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       type:
-        description: "minor (on main), patch or preview (on release-X.Y)"
+        description: "beta or minor (on main), patch or preview (on release-X.Y), alpha (on any other branch)"
         type: choice
-        options: [patch, preview, minor]
+        options: [patch, preview, minor, beta, alpha]
         default: patch
+      force:
+        description: "beta: release even if nothing changed since the last beta"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,24 +33,21 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: github.repository == 'playcanvas/engine' && (github.ref_name == 'main' || startsWith(github.ref_name, 'release-'))
-    # queue releases instead of racing them
+    if: github.repository == 'playcanvas/engine'
+    # queue releases per branch instead of racing them
     concurrency:
-      group: release
+      group: release-${{ github.ref_name }}
       cancel-in-progress: false
+    env:
+      TYPE: ${{ inputs.type || 'beta' }}
     steps:
       - name: Check type
         run: |
-          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
-            [[ "$TYPE" == "minor" ]] || { echo "::error::Use type 'minor' on main; 'patch' and 'preview' run on a release-X.Y branch"; exit 1; }
-          elif [[ "$GITHUB_REF_NAME" =~ ^release-[0-9]+\.[0-9]+$ ]]; then
-            [[ "$TYPE" != "minor" ]] || { echo "::error::Use type 'patch' or 'preview' on $GITHUB_REF_NAME; 'minor' runs on main"; exit 1; }
-          else
-            echo "::error::Unrecognized branch '$GITHUB_REF_NAME'"
-            exit 1
-          fi
-        env:
-          TYPE: ${{ inputs.type }}
+          case "$TYPE" in
+            beta|minor) [[ "$GITHUB_REF_NAME" == main ]] ;;
+            patch|preview) [[ "$GITHUB_REF_NAME" =~ ^release-[0-9]+\.[0-9]+$ ]] ;;
+            alpha) [[ "$GITHUB_REF_NAME" != main ]] ;;
+          esac || { echo "::error::'$TYPE' can't run on $GITHUB_REF_NAME: beta and minor run on main, patch and preview on release-X.Y, alpha on any other branch"; exit 1; }
 
       # tags pushed with GITHUB_TOKEN don't trigger the publish workflow
       - name: Generate app token
@@ -57,7 +63,7 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Set up Node.js 24.x
+      - name: Set up Node.js 26.x
         uses: actions/setup-node@v7
         with:
           node-version: 26.x
@@ -70,8 +76,37 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
+      - name: Tag beta
+        if: env.TYPE == 'beta'
+        run: |
+          last=$(git describe --tags --match "v*-beta.*" --abbrev=0 2>/dev/null || true)
+          if [[ "$FORCE" != "true" && -n "$last" ]] && git diff --quiet "$last" HEAD; then
+            echo "No changes since $last" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          tag=$(npm version prerelease --preid=beta)
+          git push --atomic origin "HEAD:refs/heads/main" "refs/tags/$tag"
+          echo "Released $tag" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          FORCE: ${{ inputs.force }}
+
+      - name: Tag alpha
+        if: env.TYPE == 'alpha'
+        run: |
+          base=$(npm pkg get version | tr -d '"')
+          pr=$(gh pr view "$GITHUB_REF_NAME" --json number --jq .number 2>/dev/null || true)
+          tag=$(npm version "${base%%-*}-alpha.${pr:-$GITHUB_RUN_NUMBER}.sha-$(git rev-parse --short HEAD)")
+          git push origin "refs/tags/$tag"
+          if [[ -n "$pr" ]]; then
+            gh pr comment "$pr" --body "Tagged \`$tag\`, publishing [\`playcanvas@${tag#v}\`](https://www.npmjs.com/package/playcanvas/v/${tag#v})" ||
+              echo "::warning::Couldn't comment on #$pr"
+          fi
+          echo "Released $tag" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
       - name: Create release branch
-        if: github.ref_name == 'main'
+        if: env.TYPE == 'minor'
         run: |
           IFS=. read -r major minor _ <<< "$(npm pkg get version | tr -d '"')"
           branch="release-$major.$minor"
@@ -85,11 +120,9 @@ jobs:
           echo "Created $branch and released $tag" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Tag release
-        if: github.ref_name != 'main'
+        if: env.TYPE == 'patch' || env.TYPE == 'preview'
         run: |
           [[ "$TYPE" == "preview" ]] && TYPE=prerelease
           tag=$(npm version "$TYPE" --preid=preview)
           git push --atomic origin "HEAD:refs/heads/$GITHUB_REF_NAME" "refs/tags/$tag"
           echo "Released $tag" >> "$GITHUB_STEP_SUMMARY"
-        env:
-          TYPE: ${{ inputs.type }}
