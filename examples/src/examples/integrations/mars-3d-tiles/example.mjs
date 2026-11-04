@@ -230,13 +230,14 @@ const skyTiles = createTiles(SKY_URL, (material) => {
 });
 skyTiles.lruCache = groundTiles.lruCache;
 
-// the rover, playing its deployment and drive animation
+// the rover, playing its deployment and drive animation once and then holding the final pose, as
+// looping it would snap the rover back to its stowed starting pose
 const rover = assets.rover.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true
 });
 rover.addComponent('anim', { activate: true });
-rover.anim.assignAnimation('Drive', assets.rover.resource.animations[0].resource);
+rover.anim.assignAnimation('Drive', assets.rover.resource.animations[0].resource, undefined, 1, false);
 rover.setLocalEulerAngles(0, 180, 0);
 app.root.addChild(rover);
 
