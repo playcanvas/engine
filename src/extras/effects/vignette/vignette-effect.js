@@ -14,7 +14,7 @@ import { COMPOSESLOT_LDR } from '../../render-passes/constants.js';
  * of the image darker than the edges, by specifying the outer distance smaller than the inner
  * distance.
  *
- * Applied in display-referred space, after tone mapping, so that the vignette colour is reached
+ * Applied in display-referred space, after tone mapping, so that the vignette color is reached
  * exactly regardless of the tone mapping in use.
  *
  * Every {@link CameraFrame} constructs and registers one, available as {@link CameraFrame#vignette}.

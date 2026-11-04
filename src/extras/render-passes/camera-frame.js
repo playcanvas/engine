@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
-import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORGRAB } from './constants.js';
 import { BloomEffect } from '../effects/bloom/bloom-effect.js';
 import { CasEffect } from '../effects/cas/cas-effect.js';
@@ -38,10 +38,10 @@ const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
  * preference. First format from this list that is supported by the hardware is used. When none of
  * the formats are supported, {@link PIXELFORMAT_RGBA8} is used, but this automatically disables
  * bloom effect, which requires HDR format. The list can contain the following formats:
- * {@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F} and {@link
+ * {@link PIXELFORMAT_RG11B10F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F} and {@link
  * PIXELFORMAT_RGBA8}. Typically the default option should be used, which prefers the faster formats,
  * but if higher dynamic range is needed, the list can be adjusted to prefer higher precision formats.
- * Defaults to [{@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F}].
+ * Defaults to [{@link PIXELFORMAT_RG11B10F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F}].
  * @property {boolean} stencil - Whether the render buffer has a stencil buffer. Defaults to false.
  * @property {number} renderTargetScale - The scale of the render target, 0.1-1 range. This allows the
  * scene to be rendered to a lower resolution render target as an optimization. The post-processing
@@ -106,7 +106,7 @@ class CameraFrame {
      * @type {Rendering}
      */
     rendering = {
-        renderFormats: [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F],
+        renderFormats: [PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F],
         stencil: false,
         renderTargetScale: 1.0,
         samples: 1,

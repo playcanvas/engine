@@ -25,7 +25,7 @@ import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
  *
  * @example
  * // Fade in an upper-body layer and play its 'Wave' state over the base layer
- * const layer = entity.anim.findAnimationLayer('UpperBody');
+ * const layer = entity.anim.findLayer('UpperBody');
  * layer.blendToWeight(1, 0.3);
  * layer.play('Wave');
  *

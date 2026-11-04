@@ -541,6 +541,7 @@ class SpzParser {
                     const gsplatData = parseSpz(data, decoder);
                     const prepareCenters = this.app.scene?.gsplatCentersEnabled !== false;
                     const resource = new GSplatSpzResource(this.app.graphicsDevice, gsplatData, { prepareCenters });
+                    resource.antiAlias = gsplatData.antialiased;
                     callback(null, resource);
                 } catch (e) {
                     callback(e);

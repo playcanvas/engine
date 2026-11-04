@@ -20,8 +20,8 @@ import wgslLensFlareShapePS from './wgsl/shape-ps.js';
 
 /**
  * The description of one shape of a lens flare shape library, see {@link LensFlareShapeLibrary}:
- * a texture, with the shape in the colour channels and its coverage in alpha. A white shape on a
- * transparent background, or a grey shape on black, both work, as the sprites add the colour
+ * a texture, with the shape in the color channels and its coverage in alpha. A white shape on a
+ * transparent background, or a gray shape on black, both work, as the sprites add the color
  * weighted by the alpha.
  *
  * @typedef {object} LensFlareShapeDesc

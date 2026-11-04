@@ -6,13 +6,13 @@ export default /* wgsl */`
         uniform aeHistogram: array<vec4f, 16>;
 
         // x, y: the darkest and the brightest brightness the average includes, z: the average, w: the
-        // brightness the camera exposes as middle grey - each as a position along the histogram, 0-1
+        // brightness the camera exposes as middle gray - each as a position along the histogram, 0-1
         uniform aeMarkers: vec4f;
 
         // the 'autoexposure' debug view: the scene at the exposure the camera renders with, without
         // the other effects, with the histogram of its brightness drawn along the bottom - the bins
         // the average includes bright, the average in yellow and the brightness the camera exposes
-        // as middle grey in blue, which meet once the exposure has adapted
+        // as middle gray in blue, which meet once the exposure has adapted
         fn debugAutoexposure() -> vec3f {
             // the pixel sampled, flipped like the composition samples the scene
             let uv = vec2f(uv0.x, mix(uv0.y, 1.0 - uv0.y, uniform.composeTargetFlipY));

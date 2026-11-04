@@ -2,10 +2,14 @@ import { JsonParser } from '../parsers/json.js';
 import { ResourceHandler } from './handler.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ */
+
+/**
  * Resource handler for the `json` asset type. Loads a JSON file and parses it into the JavaScript
  * value it encodes: an object, array, string, number, boolean or null.
  *
- * @ignore
+ * @category Asset
  */
 class JsonHandler extends ResourceHandler {
     /**
@@ -16,6 +20,12 @@ class JsonHandler extends ResourceHandler {
      */
     decoder = null;
 
+    /**
+     * Create a new JsonHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
+     */
     constructor(app) {
         super(app, 'json');
         this.addParser(new JsonParser());
@@ -26,6 +36,7 @@ class JsonHandler extends ResourceHandler {
      *
      * @param {DataView} data - The raw data as a DataView
      * @returns {object} The parsed resource data.
+     * @ignore
      */
     openBinary(data) {
         this.decoder ??= new TextDecoder('utf-8');

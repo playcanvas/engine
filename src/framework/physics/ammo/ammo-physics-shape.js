@@ -57,7 +57,7 @@ function isUnitScale(scale) {
  * binding cannot scale a sub-shape independently of the shared data (btTriangleMeshShape
  * stores its local scaling on the shared btStridingMeshInterface), so on those the source scale
  * is baked into the cached data instead and the first shape to build a mesh decides the scale
- * for every later shape sharing it - the behaviour before the binding existed.
+ * for every later shape sharing it - the behavior before the binding existed.
  *
  * @param {AmmoPhysicsWorld} world - The owning world.
  * @param {PhysicsMeshSource} source - The geometry source.

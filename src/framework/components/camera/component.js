@@ -65,7 +65,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
- * For ready-made camera behaviour, attach the `CameraControls` script from
+ * For ready-made camera behavior, attach the `CameraControls` script from
  * `playcanvas/scripts/esm/camera-controls.mjs`, which provides orbit, fly and pan driven by mouse,
  * touch and gamepad input.
  *
@@ -1131,6 +1131,54 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets whether the scene color map of this camera has mipmaps. Rough refractive materials
+     * sample its small mip levels, which blur what is behind them. Without mipmaps, they sample the
+     * full resolution map, and refract sharply. This saves generating the mipmaps each frame, and
+     * the memory of about a third of the map, where only sharp refraction is needed, such as of
+     * clear glass or a heat haze. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set sceneColorMapMipmaps(value) {
+        this._camera.sceneColorMapMipmaps = value;
+    }
+
+    /**
+     * Gets whether the scene color map of this camera has mipmaps.
+     *
+     * @type {boolean}
+     */
+    get sceneColorMapMipmaps() {
+        return this._camera.sceneColorMapMipmaps;
+    }
+
+    /**
+     * Sets the filter used to generate the mipmaps of the scene color map of this camera, when it
+     * has them, see {@link CameraComponent#sceneColorMapMipmaps}. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}: averages each block of 2x2 texels of the previous mip level.
+     * - {@link MIPMAPFILTER_GAUSSIAN}: a wider, smooth filter, which avoids the blocks and the
+     * flickering of the box filter in the blurred refraction, at a higher cost of generating the
+     * mipmaps.
+     *
+     * Defaults to {@link MIPMAPFILTER_BOX}. See {@link Texture#mipmapFilter}.
+     *
+     * @type {string}
+     */
+    set sceneColorMapMipmapFilter(value) {
+        this._camera.sceneColorMapMipmapFilter = value;
+    }
+
+    /**
+     * Gets the filter used to generate the mipmaps of the scene color map of this camera.
+     *
+     * @type {string}
+     */
+    get sceneColorMapMipmapFilter() {
+        return this._camera.sceneColorMapMipmapFilter;
+    }
+
+    /**
      * Sets the render target to which rendering of the camera is performed. If not set, it will
      * render simply to the screen.
      *
@@ -1297,20 +1345,26 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 2D screen space to 3D world space.
      *
-     * Screen space is measured in CSS pixels of the application's canvas element, the units of
-     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
-     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
-     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
-     * `display: none`, or not laid out yet - measures zero, and the returned coordinate is then not
-     * finite.
+     * By default, screen space is measured in CSS pixels of the application's canvas element, the
+     * units of mouse and touch event positions, not device pixels. The canvas size used for the
+     * conversion is measured on the page once per application update; an `OffscreenCanvas` uses its
+     * `width` and `height` instead. A canvas that is not laid out on the page - detached, hidden
+     * with `display: none`, or not laid out yet - measures zero, and the returned coordinate is
+     * then not finite.
      *
-     * @param {number} screenx - X coordinate on PlayCanvas' canvas element. Should be in the range
-     * 0 to `canvas.offsetWidth` of the application's canvas element.
-     * @param {number} screeny - Y coordinate on PlayCanvas' canvas element. Should be in the range
-     * 0 to `canvas.offsetHeight` of the application's canvas element.
+     * Pass `width` and `height` to measure screen space in other units: for example
+     * {@link GraphicsDevice#width} and {@link GraphicsDevice#height} for device pixels, or the size
+     * of the camera's render target when it is used as a texture.
+     *
+     * @param {number} screenx - X coordinate in screen space, in the range 0 to `width`.
+     * @param {number} screeny - Y coordinate in screen space, in the range 0 to `height`.
      * @param {number} cameraz - The distance from the camera in world space to create the new
      * point.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
+     * @param {number} [width] - The width of screen space. Defaults to the width of the canvas
+     * element in CSS pixels.
+     * @param {number} [height] - The height of screen space. Defaults to the height of the canvas
+     * element in CSS pixels.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
      * const start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
@@ -1323,20 +1377,23 @@ class CameraComponent extends Component {
      * }
      * @returns {Vec3} The world space coordinate.
      */
-    screenToWorld(screenx, screeny, cameraz, worldCoord) {
-        const device = this.system.app.graphicsDevice;
-        const { width, height } = device.clientRect;
-        return this._camera.screenToWorld(screenx, screeny, cameraz, width, height, worldCoord);
+    screenToWorld(screenx, screeny, cameraz, worldCoord, width, height) {
+        const { clientRect } = this.system.app.graphicsDevice;
+        return this._camera.screenToWorld(screenx, screeny, cameraz, width ?? clientRect.width, height ?? clientRect.height, worldCoord);
     }
 
     /**
      * Convert a point from 3D world space to 2D screen space.
      *
-     * The returned `x` and `y` are in CSS pixels of the application's canvas element, the units of
-     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
-     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
-     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
-     * `display: none`, or not laid out yet - measures zero, and `x` and `y` are then zero.
+     * By default, the returned `x` and `y` are in CSS pixels of the application's canvas element,
+     * the units of mouse and touch event positions, not device pixels. The canvas size used for the
+     * conversion is measured on the page once per application update; an `OffscreenCanvas` uses its
+     * `width` and `height` instead. A canvas that is not laid out on the page - detached, hidden
+     * with `display: none`, or not laid out yet - measures zero, and `x` and `y` are then zero.
+     *
+     * Pass `width` and `height` to measure screen space in other units: for example
+     * {@link GraphicsDevice#width} and {@link GraphicsDevice#height} for device pixels, or the size
+     * of the camera's render target when it is used as a texture.
      *
      * The returned `z` is the unnormalized clip space depth, not a behind-the-camera flag: it also
      * goes negative for points in front of a perspective camera that are nearer than twice the
@@ -1347,12 +1404,19 @@ class CameraComponent extends Component {
      *
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
+     * @param {number} [width] - The width of screen space. Defaults to the width of the canvas
+     * element in CSS pixels.
+     * @param {number} [height] - The height of screen space. Defaults to the height of the canvas
+     * element in CSS pixels.
      * @returns {Vec3} The screen space coordinate.
+     * @example
+     * // The pixel position of a point in the texture of a camera that renders into a render target
+     * const { width, height } = entity.camera.renderTarget;
+     * const pixel = entity.camera.worldToScreen(point, undefined, width, height);
      */
-    worldToScreen(worldCoord, screenCoord) {
-        const device = this.system.app.graphicsDevice;
-        const { width, height } = device.clientRect;
-        return this._camera.worldToScreen(worldCoord, width, height, screenCoord);
+    worldToScreen(worldCoord, screenCoord, width, height) {
+        const { clientRect } = this.system.app.graphicsDevice;
+        return this._camera.worldToScreen(worldCoord, width ?? clientRect.width, height ?? clientRect.height, screenCoord);
     }
 
     /**

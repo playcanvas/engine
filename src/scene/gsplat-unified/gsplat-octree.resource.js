@@ -2,9 +2,19 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { GSplatOctree } from './gsplat-octree.js';
 
+/**
+ * A Gaussian splat resource for streamed level-of-detail data, created when loading a
+ * `lod-meta.json` or `.lcc2` file. Its splats are loaded in chunks on demand, based on the view
+ * distance and the splat budget.
+ *
+ * @category Graphics
+ */
 class GSplatOctreeResource {
-    /** @type {BoundingBox} */
-    aabb = new BoundingBox();
+    /**
+     * @type {BoundingBox}
+     * @private
+     */
+    _aabb = new BoundingBox();
 
     /**
      * Version counter for centers array changes. Always 0 for octree resources (static).
@@ -13,7 +23,10 @@ class GSplatOctreeResource {
      */
     centersVersion = 0;
 
-    /** @type {GSplatOctree|null} */
+    /**
+     * @type {GSplatOctree|null}
+     * @ignore
+     */
     octree;
 
     /**
@@ -25,11 +38,16 @@ class GSplatOctreeResource {
     _numSplats = null;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _antiAlias = false;
+
+    /**
      * Raw parsed manifest data, retained for consumers that read custom or extension
      * fields the octree itself does not consume (for example application-specific
-     * metadata accompanying a `lod-meta.json`). The `tree` field is nulled out by the
-     * constructor since {@link GSplatOctree} consumes it — access node hierarchy via
-     * {@link GSplatOctreeResource#octree} instead.
+     * metadata accompanying a `lod-meta.json`). Its `tree` field is null, as the node hierarchy
+     * is consumed when the resource is created.
      *
      * @type {object}
      */
@@ -39,15 +57,56 @@ class GSplatOctreeResource {
      * @param {string} assetFileUrl - The file URL of the container asset.
      * @param {object} data - Parsed JSON data.
      * @param {object} assetLoader - Asset loader instance (framework-level object).
+     * @ignore
      */
     constructor(assetFileUrl, data, assetLoader) {
         this.octree = new GSplatOctree(assetFileUrl, data);
         this.octree.assetLoader = assetLoader;
-        this.aabb.setMinMax(new Vec3(data.tree.bound.min), new Vec3(data.tree.bound.max));
+        this._aabb.setMinMax(new Vec3(data.tree.bound.min), new Vec3(data.tree.bound.max));
         this.data = data;
         // Tree hierarchy is fully consumed by GSplatOctree above; null it out so this
         // retained reference doesn't keep the (typically large) tree data alive.
         this.data.tree = null;
+
+        // the training mode is recorded once for the whole tree, the same way SOG files record it
+        this.antiAlias = data.model === 'antialiased';
+    }
+
+    /**
+     * Gets the bounding box of the splats, in the local space of the resource. It is read from the
+     * level-of-detail data; use {@link GSplatComponent#customAabb} to override the bounds of a
+     * component.
+     *
+     * @type {BoundingBox}
+     */
+    get aabb() {
+        return this._aabb;
+    }
+
+    /**
+     * Sets whether the splats were trained with anti-aliasing (a screen-space filter with opacity
+     * compensation, as in Mip-Splatting), which they need to be rendered with to look right. Set
+     * from the `model` field of the `lod-meta.json` file when it records the training mode, and
+     * applies to all the files the splats are streamed from. Set it for files that do not record
+     * the training mode. Used when {@link GSplatParams#antiAlias} is undefined, its default.
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set antiAlias(value) {
+        this._antiAlias = value;
+        if (this.octree) {
+            this.octree.antiAlias = value;
+        }
+    }
+
+    /**
+     * Gets whether the splats were trained with anti-aliasing.
+     *
+     * @type {boolean}
+     */
+    get antiAlias() {
+        return this._antiAlias;
     }
 
     /**

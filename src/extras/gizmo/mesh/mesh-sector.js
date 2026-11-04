@@ -65,7 +65,7 @@ class MeshSector {
         this._material.setDefine('DEPTH_WRITE', '0');
         this._material.update();
 
-        // a fan around the centre vertex, its positions written on each draw
+        // a fan around the center vertex, its positions written on each draw
         const indices = [];
         for (let i = 0; i < this._segments; i++) {
             indices.push(0, i + 1, i + 2);

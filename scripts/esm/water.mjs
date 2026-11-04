@@ -230,6 +230,7 @@ function setupWaterWorldChunks(device) {
 
 // Reusable objects to avoid allocations
 const _flippedNormal = new Vec3();
+const _tmpColor = new Color();
 
 // ----------------------
 // Shared wave functions - Gerstner waves, 3 octaves derived from the main direction
@@ -1781,9 +1782,10 @@ class Water extends Script {
      * @private
      */
     _linearColor(color, target, intensity = 1) {
-        target[0] = Math.pow(color.r, 2.2) * intensity;
-        target[1] = Math.pow(color.g, 2.2) * intensity;
-        target[2] = Math.pow(color.b, 2.2) * intensity;
+        _tmpColor.linear(color);
+        target[0] = _tmpColor.r * intensity;
+        target[1] = _tmpColor.g * intensity;
+        target[2] = _tmpColor.b * intensity;
         return target;
     }
 

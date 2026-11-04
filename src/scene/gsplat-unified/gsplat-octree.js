@@ -189,6 +189,15 @@ class GSplatOctree {
     environmentRefCount = 0;
 
     /**
+     * Whether the splats were trained with anti-aliasing. Applies to every file resource and the
+     * environment resource, whatever their own files say.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _antiAlias = false;
+
+    /**
      * Asset loader used for loading/unloading resources.
      *
      * @type {GSplatAssetLoaderBase|null}
@@ -557,6 +566,31 @@ class GSplatOctree {
     }
 
     /**
+     * Sets whether the splats were trained with anti-aliasing, for the loaded resources and the
+     * ones still to load.
+     *
+     * @type {boolean}
+     */
+    set antiAlias(value) {
+        this._antiAlias = value;
+        for (const res of this.fileResources.values()) {
+            res.antiAlias = value;
+        }
+        if (this.environmentResource) {
+            this.environmentResource.antiAlias = value;
+        }
+    }
+
+    /**
+     * Gets whether the splats were trained with anti-aliasing.
+     *
+     * @type {boolean}
+     */
+    get antiAlias() {
+        return this._antiAlias;
+    }
+
+    /**
      * Checks whether a file has finished loading, and stores its resource if so.
      *
      * @param {number} fileIndex - The index of the file in the `files` array.
@@ -578,6 +612,7 @@ class GSplatOctree {
         // Check if the resource is now available from the asset loader
         const res = this.assetLoader.getResource(this.files[fileIndex].url);
         if (res) {
+            res.antiAlias = this._antiAlias;
             this.fileResources.set(fileIndex, res);
             this._updateLoadedBelow(fileIndex, 1);
 
@@ -813,6 +848,7 @@ class GSplatOctree {
         // Check if the resource is now available from the asset loader
         const res = this.assetLoader.getResource(this.environmentUrl);
         if (res) {
+            res.antiAlias = this._antiAlias;
             this.environmentResource = res;
 
             // if loaded but not needed, immediately unload

@@ -562,18 +562,19 @@ class GSplatShadowRenderer {
         this._fillFrustumPlanes(frustum);
 
         // World-space size threshold for the minPixelSize fine cull. The directional shadow camera
-        // is orthographic, so the projected pixel size is linear in world size: focal = resolution /
-        // orthoHeight (the forward projector's focal = viewportWidth * projMat00, and ortho projMat00
-        // = 1 / orthoHeight). The forward gate is max(radiusX, radiusY) < minPixelSize with the
-        // radius ~ sqrt(2) * focal * extent plus a 0.3 px² variance floor; inverting that to a single
-        // world extent gives sqrt(max(0, minPixelSize²/2 - 0.3)) / focal. The shader compares this to
-        // the max scale axis, an upper bound on the projected extent, so the cull stays conservative
-        // (never drops a splat the forward path keeps). A threshold of 0 disables the size test.
+        // is orthographic, so the projected size is linear in world size: focal = resolution /
+        // orthoHeight (the splat shaders' focal = viewport size * projMat00, and ortho projMat00
+        // = 1 / orthoHeight). The shadow draw culls with gsplatFootprintSmallerThan (gsplatHelpersVS):
+        // lambda1 + GSPLAT_CULL_LOWPASS (0.3) < minPixelSize² / 8, with lambda1 <= (focal * extent)²
+        // for the max world-space extent. Inverting that gives sqrt(max(0, minPixelSize² / 8 - 0.3)) /
+        // focal. The shader compares this to the max scale axis, an upper bound on the projected
+        // extent, so the cull stays conservative (never drops a splat the shadow draw keeps). A
+        // threshold of 0 disables the size test.
         const orthoHeight = shadowCamera.orthoHeight;
         const shadowRes = entry.light._shadowResolution;
         const minPixelSize = gsplatParams.minPixelSize;
         const focal = (orthoHeight > 0 && shadowRes > 0) ? shadowRes / orthoHeight : 0;
-        const t2 = minPixelSize * minPixelSize * 0.5 - 0.3;
+        const t2 = minPixelSize * minPixelSize * 0.125 - 0.3;
         const worldSizeThreshold = (focal > 0 && t2 > 0) ? Math.sqrt(t2) / focal : 0;
 
         // grow the visible-index buffer to hold all active splats (worst case: nothing culled)
@@ -703,7 +704,7 @@ class GSplatShadowRenderer {
         const meshInstance = this._createMeshInstance(light, material);
 
         // register as a shadow caster so cullComposition's shadow-caster culling includes it
-        meshInstance.castShadow = true;
+        meshInstance.castShadows = true;
         this.layer.addShadowCasters([meshInstance]);
 
         const countBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);

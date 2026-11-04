@@ -572,7 +572,7 @@ class Gizmo extends EventHandler {
      * @private
      */
     _onPointerUp(e) {
-        // a cancelled pointer has no button, and ends the drag without a hit
+        // a canceled pointer has no button, and ends the drag without a hit
         const cancel = e.type === 'pointercancel';
         if ((!cancel && !this.mouseButtons[e.button]) || e.pointerId !== this._pointerId) {
             return;

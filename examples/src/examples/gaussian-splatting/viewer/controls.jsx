@@ -45,10 +45,23 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
                 <LabelGroup text='Anti-alias'>
-                    <BooleanInput
-                        type='toggle'
+                    <SelectInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'data.antialias' }}
+                        options={[
+                            { v: 'auto', t: 'Auto (from file)' },
+                            { v: 'on', t: 'On' },
+                            { v: 'off', t: 'Off' }
+                        ]}
+                    />
+                </LabelGroup>
+                <LabelGroup text='AA Filter Size'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.antiAliasFilterSize' }}
+                        min={0.05}
+                        max={0.5}
+                        precision={2}
                     />
                 </LabelGroup>
                 <LabelGroup text='SH Update Angle'>

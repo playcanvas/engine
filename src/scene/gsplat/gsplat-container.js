@@ -114,6 +114,25 @@ class GSplatContainer extends GSplatResourceBase {
     }
 
     /**
+     * Sets the bounding box of the splats, in the local space of the container. Set it to the
+     * bounds of the splats written to the container, as it is used to cull them.
+     *
+     * @type {BoundingBox}
+     */
+    set aabb(value) {
+        this._aabb = value;
+    }
+
+    /**
+     * Gets the bounding box of the splats, in the local space of the container.
+     *
+     * @type {BoundingBox}
+     */
+    get aabb() {
+        return this._aabb;
+    }
+
+    /**
      * CPU-side xyz per splat. Allocated lazily on first read; GPU-only rendering can omit touching
      * this property to avoid the extra buffer.
      *

@@ -13,6 +13,11 @@ vec3 getCenter() {
     return vec3(uintBitsToFloat(cachedTransformA.r), uintBitsToFloat(cachedTransformA.g), uintBitsToFloat(cachedTransformA.b));
 }
 
+// Anti-aliasing flag stored in the lowest bit of center.x by writeSplat. Call after getCenter().
+bool getAntiAlias() {
+    return (cachedTransformA.r & 1u) != 0u;
+}
+
 float getOpacity() {
     #ifdef GSPLAT_COLOR_FLOAT
         cachedColor = loadDataColor();

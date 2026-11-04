@@ -362,7 +362,7 @@ class Picker {
         try {
             pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
         } catch (error) {
-            // Mapping can be cancelled before the device loss notification arrives. Other failures
+            // Mapping can be canceled before the device loss notification arrives. Other failures
             // on a valid device must still be reported.
             if (this.deviceValid && !this.device.isContextLost() && error.name !== 'AbortError') {
                 throw error;

@@ -130,6 +130,8 @@ const createSphere = (label, x) => {
     return sphere.render.meshInstances[0];
 };
 
+const linearColor = new Color();
+
 // converts a hue (0..1) to a linear RGB triple, the form a material_diffuse override expects
 const hueToLinear = (hue, target, saturation = 0.7, value = 0.9) => {
     hue -= Math.floor(hue);
@@ -146,9 +148,10 @@ const hueToLinear = (hue, target, saturation = 0.7, value = 0.9) => {
         [t, p, value],
         [value, p, q]
     ][sector];
-    target[0] = Math.pow(rgb[0], 2.2);
-    target[1] = Math.pow(rgb[1], 2.2);
-    target[2] = Math.pow(rgb[2], 2.2);
+    linearColor.set(rgb[0], rgb[1], rgb[2]).linear();
+    target[0] = linearColor.r;
+    target[1] = linearColor.g;
+    target[2] = linearColor.b;
     return target;
 };
 

@@ -270,7 +270,7 @@ class FramePass {
      * It can also be called directly, to render the pass on its own, outside of a frame, for
      * example to render into a texture once. The pass is then not prepared the way a frame
      * prepares it: its {@link FramePass#frameUpdate} is not called, its before and after passes do
-     * not render, and the frame graph does not merge it with neighbouring passes, nor ask it to
+     * not render, and the frame graph does not merge it with neighboring passes, nor ask it to
      * store the attachments a later pass loads. A {@link RenderPass} rendered on its own keeps the
      * textures of its render target: its color buffers, resolved when multisampled, and its depth
      * buffer texture. It does not keep the samples of a multisampled attachment, the stencil, or a

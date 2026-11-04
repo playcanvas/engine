@@ -176,6 +176,34 @@ describe('GlbParser', function () {
         });
     });
 
+    describe('KHR_materials_sheen', function () {
+
+        const parseExtension = (extension) => {
+            return parseMaterial(undefined, { KHR_materials_sheen: extension });
+        };
+
+        it('imports the sheen color factor in gamma space', async function () {
+            const material = await parseExtension({ sheenColorFactor: [0.5, 0.25, 1] });
+
+            expect(material.useSheen).to.equal(true);
+            expect(material.sheen).to.deep.equal(new Color(0.5, 0.25, 1).gamma());
+        });
+
+        it('defaults the sheen color to black when the sheen color factor is omitted', async function () {
+            const material = await parseExtension({ sheenRoughnessFactor: 0.5 });
+
+            expect(material.useSheen).to.equal(true);
+            expect(material.sheen).to.deep.equal(new Color(0, 0, 0));
+        });
+
+        it('defaults the sheen color to black when only a sheen color texture is given', async function () {
+            const material = await parseExtension({ sheenColorTexture: { index: 0 } });
+
+            // the factor multiplies the texture, so the texture alone gives no sheen
+            expect(material.sheen).to.deep.equal(new Color(0, 0, 0));
+        });
+    });
+
     describe('flat shading of primitives without normals', function () {
 
         // three vertices, and indices referencing all three of them - enough to form a single

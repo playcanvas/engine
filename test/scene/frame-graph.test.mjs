@@ -385,7 +385,7 @@ describe('FrameGraph', function () {
             target.destroy();
         });
 
-        it('does not merge a pass which does not execute with its neighbour', function () {
+        it('does not merge a pass which does not execute with its neighbor', function () {
             for (const skipped of ['first', 'second']) {
                 const first = createPass('First', true);
                 const second = createPass('Second');

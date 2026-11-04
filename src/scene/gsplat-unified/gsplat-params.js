@@ -66,6 +66,12 @@ class GSplatParams {
     _dataFormat = GSPLATDATA_COMPACT;
 
     /**
+     * @type {boolean|undefined}
+     * @private
+     */
+    _antiAlias = undefined;
+
+    /**
      * Creates a new GSplatParams instance.
      *
      * @param {GraphicsDevice} device - The graphics device.
@@ -79,9 +85,10 @@ class GSplatParams {
         this._material.setParameter('alphaClip', 0.3);
         this._material.setParameter('alphaClipForward', 1.0 / 255.0);
         this._material.setParameter('minPixelSize', 2.0);
-        this._material.setParameter('minContribution', 3.0);
+        this._material.setParameter('minContribution', 2.0);
         this._material.setParameter('foveationStrength', 0);
         this._material.setParameter('foveationCenter', 0.3);
+        this._material.setParameter('antiAliasFilterSize', 0.3);
     }
 
     /**
@@ -781,7 +788,7 @@ class GSplatParams {
      * Sets the minimum visual contribution threshold for the {@link GSPLAT_RENDERER_RASTER_GPU_SORT}
      * renderer. Splats whose total screen contribution (opacity * projected area) falls below this value are
      * discarded. Higher values cull more aggressively, improving performance at the cost of quality.
-     * Set to 0 to disable contribution culling. Defaults to 3.
+     * Set to 0 to disable contribution culling. Defaults to 2.
      *
      * @type {number}
      */
@@ -796,15 +803,15 @@ class GSplatParams {
      * @type {number}
      */
     get minContribution() {
-        return this._material.getParameter('minContribution')?.data ?? 3.0;
+        return this._material.getParameter('minContribution')?.data ?? 2.0;
     }
 
     /**
      * Sets the foveated contribution culling strength. Only used by the
      * {@link GSPLAT_RENDERER_RASTER_GPU_SORT} renderer. When greater than zero, the contribution
-     * culling threshold is raised radially from the screen centre: the effective threshold is
+     * culling threshold is raised radially from the screen center: the effective threshold is
      * `minContribution + foveationStrength * smoothstep(foveationCenter, 1, length(ndc))`, so the
-     * centre of the screen is unaffected and low-contribution splats are culled increasingly
+     * center of the screen is unaffected and low-contribution splats are culled increasingly
      * toward the edges, reaching full strength at the screen edge and beyond (corners). Set to 0
      * to disable. Defaults to 0.
      *
@@ -825,9 +832,9 @@ class GSplatParams {
     }
 
     /**
-     * Sets the protected centre radius for foveated contribution culling. Only used by the
+     * Sets the protected center radius for foveated contribution culling. Only used by the
      * {@link GSPLAT_RENDERER_RASTER_GPU_SORT} renderer. Expressed in NDC radius units (0 at the
-     * screen centre, 1 at the edge): within this radius {@link foveationStrength} has no effect,
+     * screen center, 1 at the edge): within this radius {@link foveationStrength} has no effect,
      * and the falloff ramps smoothly from this radius to the screen edge. Defaults to 0.3.
      *
      * @type {number}
@@ -838,7 +845,7 @@ class GSplatParams {
     }
 
     /**
-     * Gets the protected centre radius for foveated contribution culling.
+     * Gets the protected center radius for foveated contribution culling.
      *
      * @type {number}
      */
@@ -847,29 +854,55 @@ class GSplatParams {
     }
 
     /**
-     * Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     * Sets whether Gaussian splats are rendered with anti-aliasing compensation, the opacity
+     * correction that splats trained with anti-aliasing (a screen-space filter, as in Mip-Splatting)
+     * need to look right. When undefined, each splat follows the
+     * {@link GSplatResourceBase#antiAlias} or {@link GSplatOctreeResource#antiAlias} of its
+     * resource, which is set from the file when it records the training mode, so a scene can mix
+     * splats trained with and without anti-aliasing. Set to true or false to render every splat
+     * with or without it. Defaults to undefined.
      *
-     * This option is intended for splat data that was generated with anti-aliasing
-     * enabled during training/export. It improves visual stability and reduces
-     * flickering for very small or distant splats.
+     * Rendering splats trained with anti-aliasing without the compensation makes small and distant
+     * splats too bright, and rendering other splats with it makes them too faint.
      *
-     * If the source splats were generated without anti-aliasing, enabling this
-     * option may slightly soften the image or alter opacity.
-     *
-     * @type {boolean}
+     * @type {boolean|undefined}
      */
     set antiAlias(value) {
-        this._material.setDefine('GSPLAT_AA', value);
+        this._antiAlias = value;
+    }
+
+    /**
+     * Gets whether Gaussian splats are rendered with anti-aliasing compensation, or undefined when
+     * each splat follows its resource.
+     *
+     * @type {boolean|undefined}
+     */
+    get antiAlias() {
+        return this._antiAlias;
+    }
+
+    /**
+     * Sets the size of the screen-space filter that splats trained with anti-aliasing were trained
+     * with: the variance of the filter, in pixels squared. It applies to the splats rendered with
+     * the anti-aliasing compensation (see {@link GSplatParams#antiAlias}); other splats use the 0.3
+     * filter of standard training. Set it to the value the splats were trained with: 0.3 for the
+     * anti-aliased mode of gsplat, 0.1 for Mip-Splatting and the mip mode of Brush. Defaults to 0.3.
+     *
+     * @type {number}
+     */
+    set antiAliasFilterSize(value) {
+        this._material.setParameter('antiAliasFilterSize', value);
         this._material.update();
     }
 
     /**
-     * Gets whether anti-aliasing compensation is enabled.
+     * Gets the size of the screen-space filter that splats trained with anti-aliasing were trained
+     * with.
      *
-     * @type {boolean}
+     * @type {number}
      */
-    get antiAlias() {
-        return !!this._material.getDefine('GSPLAT_AA');
+    get antiAliasFilterSize() {
+        return this._material.getParameter('antiAliasFilterSize')?.data ?? 0.3;
     }
 
     /**

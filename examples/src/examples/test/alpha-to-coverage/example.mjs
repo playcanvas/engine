@@ -4,7 +4,7 @@
 // Internal test for `Material#alphaToCoverage`. One opacity ramp, three rows - **top:** alpha to
 // coverage, **middle:** alpha blending, **bottom:** opaque. It needs a multi-sampled target whose
 // first color attachment has an alpha channel, so the top row falls back to opaque with **MSAA**
-// off - and, on WebGPU only, with the `111110F` **Format**, which has no alpha channel.
+// off - and, on WebGPU only, with the `RG11B10F` **Format**, which has no alpha channel.
 
 import {
     AppBase,

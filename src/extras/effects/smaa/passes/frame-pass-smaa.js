@@ -26,7 +26,7 @@ const clearColor = new Color(0, 0, 0, 0);
 /**
  * Subpixel Morphological Anti-Aliasing (SMAA 1x), in three passes over the scene: the edges are
  * detected, the area each pixel on an edge would be covered by the edge before it was aliased is
- * looked up from the shape of the edge, and the pixels are blended with their neighbours by those
+ * looked up from the shape of the edge, and the pixels are blended with their neighbors by those
  * areas into a new scene texture.
  *
  * @ignore
@@ -128,7 +128,7 @@ class FramePassSmaa extends FramePass {
         edgePass.init(this.edgesTarget, options());
         edgePass.setClearColor(clearColor);
 
-        // the areas the pixels on the edges blend with their neighbours by
+        // the areas the pixels on the edges blend with their neighbors by
         const weightsPass = new RenderPassSmaa(device, this, 'Weights', 'smaaWeightsPS');
         weightsPass.init(this.weightsTarget, options());
         weightsPass.setClearColor(clearColor);

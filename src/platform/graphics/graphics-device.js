@@ -13,7 +13,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
     SEMANTIC_POSITION, TYPE_FLOAT32,
-    PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RG11B10F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
@@ -636,7 +636,7 @@ class GraphicsDevice extends EventHandler {
     textureHalfFloatRenderable;
 
     /**
-     * True if small-float textures with format {@link PIXELFORMAT_111110F} can be used as a frame
+     * True if small-float textures with format {@link PIXELFORMAT_RG11B10F} can be used as a frame
      * buffer. This is always true on WebGL2, but optional on WebGPU device.
      *
      * @type {boolean}
@@ -1376,6 +1376,17 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        Debug.assert(false);
+    }
+
+    /**
      * Sets the specified blend state.
      *
      * @param {BlendState} blendState - New blend state.
@@ -1938,7 +1949,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_R16F}
      * - {@link PIXELFORMAT_R32F}
      * - {@link PIXELFORMAT_RG16F}
@@ -1960,12 +1971,12 @@ class GraphicsDevice extends EventHandler {
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
 
-                case PIXELFORMAT_111110F: {
+                case PIXELFORMAT_RG11B10F: {
                     if (this.textureRG11B10Renderable) {
                         return format;
                     }

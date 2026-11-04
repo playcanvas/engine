@@ -380,7 +380,7 @@ export const createMaterials = () => {
 
 /** @type {Record<string, Livery>} */
 export const LIVERIES = {
-    // two tone air superiority grey
+    // two tone air superiority gray
     player: {
         body: [140, 150, 162],
         belly: [178, 186, 194],
@@ -609,7 +609,7 @@ const buildAirframe = (livery, twinTail) => {
 const buildMissile = () => {
     const builder = new MeshBuilder();
     const white = [226, 226, 222];
-    const grey = [96, 100, 104];
+    const gray = [96, 100, 104];
     const band = [190, 160, 40];
 
     builder.lathe(
@@ -624,7 +624,7 @@ const buildMissile = () => {
         10,
         (ring) => {
             if (ring <= 1) {
-                return grey;
+                return gray;
             }
             return ring === 2 ? band : white;
         }
@@ -643,7 +643,7 @@ const buildMissile = () => {
                 [0.08, -0.58]
             ],
             0.02,
-            grey
+            gray
         );
         builder.plate(
             m,
@@ -654,7 +654,7 @@ const buildMissile = () => {
                 [0.08, 1.45]
             ],
             0.025,
-            grey
+            gray
         );
     }
     return builder;

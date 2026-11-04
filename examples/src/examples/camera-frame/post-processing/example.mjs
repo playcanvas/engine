@@ -1,10 +1,10 @@
 // @config
 //
 // The post-processing of a CameraFrame, with each effect in its own panel: anti-aliasing, bloom,
-// ambient occlusion, depth of field, volumetric fog, lens flares, auto exposure, color grading,
-// color enhancement, a color lookup table, vignette and fringing. Enable an effect to show its
-// settings. Of the two lines of text, the upper one is on the World layer and is post-processed,
-// the lower one is on the UI layer, rendered after the post-processing.
+// ambient occlusion, depth of field, volumetric fog, lens flares, auto exposure, color grading
+// with its channel mixer, color enhancement, a color lookup table, vignette and fringing. Enable
+// an effect to show its settings. Of the two lines of text, the upper one is on the World layer
+// and is post-processed, the lower one is on the UI layer, rendered after the post-processing.
 
 import {
     AppBase,
@@ -69,6 +69,72 @@ const FLARE_SHAPES = [
     'glint'
 ];
 const LUTS = ['lut-teal-orange', 'lut-late-sunset', 'lut-moonlight', 'lut-sofia', 'lut-bw'];
+
+// The channel mixer presets of the grading: the weights of the red, green and blue input channels
+// in the red, green and blue output channels. Selecting a preset sets the weights, which can then
+// be edited.
+const MONOCHROME = [0.2126, 0.7152, 0.0722];
+const MIXER_PRESETS = {
+    none: [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+    ],
+    // black and white, using the luminance weights of linear sRGB in all three output channels
+    monochrome: [MONOCHROME, MONOCHROME, MONOCHROME],
+    sepia: [
+        [0.393, 0.769, 0.189],
+        [0.349, 0.686, 0.168],
+        [0.272, 0.534, 0.131]
+    ],
+    swapRedBlue: [
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0]
+    ],
+    // false-color infrared film: greens turn red, and reds turn green
+    infraredFilm: [
+        [0.2, 1, 0],
+        [0.9, 0.1, 0],
+        [0, 0.1, 0.9]
+    ],
+    // the luminance, boosted into the green channel
+    nightVision: [
+        [0.06, 0.21, 0.02],
+        [0.43, 1.43, 0.14],
+        [0.06, 0.21, 0.02]
+    ],
+    // the red light is absorbed, as deep under water
+    deepSea: [
+        [0.15, 0.1, 0],
+        [0.15, 0.85, 0.15],
+        [0.2, 0.35, 0.95]
+    ],
+    // a dusty orange world under an orange sky
+    redPlanet: [
+        [0.6, 0.6, 0.2],
+        [0.25, 0.35, 0.1],
+        [0.05, 0.1, 0.1]
+    ],
+    // neon lights: warm colors turn hot pink, and cool colors violet
+    neonNights: [
+        [1, 0, 0.6],
+        [0, 0.6, 0.2],
+        [0.3, 0.4, 1.2]
+    ],
+    // the channels rotated: reds turn blue, greens turn red and blues turn green
+    alienPlanet: [
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+    ],
+    // every hue rotated half way around the color wheel, while the grays stay gray
+    oppositeHues: [
+        [-0.333, 0.667, 0.667],
+        [0.667, -0.333, 0.667],
+        [0.667, 0.667, -0.333]
+    ]
+};
 
 const assets = {
     room: new Asset('room', 'container', { url: './assets/models/area-lights-room.glb' }),
@@ -185,7 +251,11 @@ data.set('settings', {
         saturation: 1,
         brightness: 1,
         contrast: 1,
-        tint: [1, 1, 1]
+        tint: [1, 1, 1],
+        mixer: 'none',
+        mixerRed: MIXER_PRESETS.none[0],
+        mixerGreen: MIXER_PRESETS.none[1],
+        mixerBlue: MIXER_PRESETS.none[2]
     },
     colorEnhance: {
         enabled: false,
@@ -453,7 +523,7 @@ const smaa = new SmaaEffect(device);
 cameraFrame.addEffect(smaa);
 
 // The lens flares of the orb and the doors. Each look places its elements along the axis from the
-// light through the centre of the screen. Offsets of 0 sit on the light, 1 at the centre, 2
+// light through the center of the screen. Offsets of 0 sit on the light, 1 at the center, 2
 // mirrored across it. Sizes are fractions of the screen height.
 const orbLook = {
     elements: [
@@ -565,6 +635,9 @@ const applySettings = () => {
     grading.brightness = settings.grading.brightness;
     grading.contrast = settings.grading.contrast;
     grading.tint.fromArray(settings.grading.tint);
+    grading.mixerRed.fromArray(settings.grading.mixerRed);
+    grading.mixerGreen.fromArray(settings.grading.mixerGreen);
+    grading.mixerBlue.fromArray(settings.grading.mixerBlue);
 
     const colorEnhance = cameraFrame.colorEnhance;
     colorEnhance.enabled = settings.colorEnhance.enabled;
@@ -605,6 +678,14 @@ const applySettings = () => {
 };
 applySettings();
 data.on('*:set', applySettings);
+
+// a channel mixer preset sets the weights of the three output channels
+data.on('settings.grading.mixer:set', (/** @type {string} */ name) => {
+    const [red, green, blue] = MIXER_PRESETS[name];
+    data.set('settings.grading.mixerRed', red);
+    data.set('settings.grading.mixerGreen', green);
+    data.set('settings.grading.mixerBlue', blue);
+});
 
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {

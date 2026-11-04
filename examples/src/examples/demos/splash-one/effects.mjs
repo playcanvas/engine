@@ -1043,7 +1043,7 @@ export const PRESETS = {
         collide: true
     },
 
-    // the tracers of the missile defence gun, streaking straight out
+    // the tracers of the missile defense gun, streaking straight out
     tracer: {
         life: [0.35, 0.45],
         size0: 0.16,
