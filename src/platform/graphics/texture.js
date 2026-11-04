@@ -5,7 +5,7 @@ import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, MIPMAPFILTER_BOX,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
@@ -171,6 +171,9 @@ class Texture {
     /** @protected */
     _numLevelsRequested;
 
+    /** @protected */
+    _mipmapFilter = MIPMAPFILTER_BOX;
+
     /**
      * Create a new Texture instance.
      *
@@ -237,6 +240,13 @@ class Texture {
      * @param {number} [options.numLevels] - Specifies the number of mip levels to generate. If not
      * specified, the number is calculated based on the texture size. When this property is set,
      * the mipmaps property is ignored.
+     * @param {string} [options.mipmapFilter] - The filter used to generate the mipmaps of the
+     * texture from its rendered content. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}
+     * - {@link MIPMAPFILTER_GAUSSIAN}
+     *
+     * Defaults to {@link MIPMAPFILTER_BOX}. See {@link Texture#mipmapFilter}.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
      * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
@@ -362,6 +372,7 @@ class Texture {
         }
 
         this._mipmaps = (options.mipmaps ?? true) && this._samples === 1;
+        this._mipmapFilter = options.mipmapFilter ?? MIPMAPFILTER_BOX;
         this._numLevelsRequested = options.numLevels;
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
@@ -873,6 +884,33 @@ class Texture {
      */
     get mipmaps() {
         return this._mipmaps;
+    }
+
+    /**
+     * Sets the filter used to generate the mipmaps of the texture on the GPU, from the content
+     * rendered to it, such as the color buffer of a render target with mipmaps. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}: averages each block of 2x2 texels of the previous mip level.
+     * - {@link MIPMAPFILTER_GAUSSIAN}: a wider, smooth filter, for textures whose small mip levels
+     * are sampled to blur them, such as a planar reflection of rough surfaces.
+     *
+     * The Gaussian filter applies to 2D textures of filterable formats. Cubemaps, texture arrays,
+     * volume textures, and the mipmaps generated for texture data uploaded from the CPU use the box
+     * filter. Defaults to {@link MIPMAPFILTER_BOX}.
+     *
+     * @type {string}
+     */
+    set mipmapFilter(value) {
+        this._mipmapFilter = value;
+    }
+
+    /**
+     * Gets the filter used to generate the mipmaps of the texture on the GPU.
+     *
+     * @type {string}
+     */
+    get mipmapFilter() {
+        return this._mipmapFilter;
     }
 
     /**

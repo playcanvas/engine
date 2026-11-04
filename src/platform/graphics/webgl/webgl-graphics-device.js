@@ -9,7 +9,9 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
+    MIPMAPFILTER_GAUSSIAN,
     PIXELFORMAT_R8, PIXELFORMAT_RG8, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -48,6 +50,7 @@ import { WebglRenderTarget } from './webgl-render-target.js';
 import { WebglUploadStream } from './webgl-upload-stream.js';
 import { WebglXrBridge } from './webgl-xr-bridge.js';
 import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
+import { WebglMipmapRenderer } from './webgl-mipmap-renderer.js';
 import { BlendState } from '../blend-state.js';
 import { validateClearValues } from '../render-pass.js';
 import { DepthState } from '../depth-state.js';
@@ -104,6 +107,9 @@ const getPixelFormatChannelsForRgbaReadback = (format) => {
 };
 
 const invalidateAttachments = [];
+
+// formats which can only be filtered when the device supports OES_texture_float_linear
+const float32Formats = new Set([PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGBA32F]);
 
 // The extensions a bare device (DEVICETYPE_WEBGL2_BARE) keeps exposed - only those
 // available on 99%+ of devices, as reported by https://web3dsurvey.com/webgl2. Everything else the
@@ -177,6 +183,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _xrMsaaCopy = null;
+
+    /**
+     * Helper generating mipmaps with the Gaussian filter, which WebGL does not provide. Created
+     * lazily.
+     *
+     * @type {WebglMipmapRenderer|null}
+     * @private
+     */
+    _mipmapRenderer = null;
 
     /**
      * Copies out of a pixel buffer waiting to run at the start of the next frame, for the reads
@@ -724,6 +739,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._xrMsaaCopy?.destroy();
         this._xrMsaaCopy = null;
 
+        this._mipmapRenderer?.destroy();
+        this._mipmapRenderer = null;
+
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
         this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
@@ -1216,6 +1234,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // release dynamic uniform buffers (their GL buffers are gone with the context)
         this.dynamicBuffers.loseContext();
 
+        this._mipmapRenderer?.loseContext();
+
         this.fire('devicelost');
     }
 
@@ -1689,9 +1709,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         // TODO: this regenerates the mipmaps of all cubemap faces / array layers,
                         // not only the one rendered to (#9688)
-                        this.activeTexture(this.maxCombinedTextures - 1);
-                        this.bindTexture(colorBuffer);
-                        this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                        this.generateMipmaps(colorBuffer);
 
                         DebugGraphics.popGpuMarker(this);
                     }
@@ -1771,13 +1789,31 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
                 // TODO: this regenerates the mipmaps of all cubemap faces / array layers, not only
                 // the one rendered to (#9688)
-                this.activeTexture(this.maxCombinedTextures - 1);
-                this.bindTexture(colorBuffer);
-                this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                this.generateMipmaps(colorBuffer);
             }
         }
 
         DebugGraphics.popGpuMarker(this);
+    }
+
+    /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}. WebGL's own mipmap generation is used for the box filter,
+     * and for the textures the Gaussian filter does not apply to.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        if (texture.mipmapFilter === MIPMAPFILTER_GAUSSIAN && !texture.cubemap && !texture.array && !texture.volume &&
+            (this.textureFloatFilterable || !float32Formats.has(texture.format))) {
+            this._mipmapRenderer ??= new WebglMipmapRenderer(this);
+            this._mipmapRenderer.generate(texture);
+        } else {
+            this.activeTexture(this.maxCombinedTextures - 1);
+            this.bindTexture(texture);
+            this.gl.generateMipmap(texture.impl._glTarget);
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
+import { MIPMAPFILTER_BOX } from '../platform/graphics/constants.js';
 import { SceneColorMapHandle } from '../platform/graphics/scene-color-map-handle.js';
 import { SceneDepthMapHandle } from '../platform/graphics/scene-depth-map-handle.js';
 import {
@@ -169,6 +170,23 @@ class Camera {
      * @ignore
      */
     sceneColorMapHandle = new SceneColorMapHandle();
+
+    /**
+     * Whether the scene color map has mipmaps. See {@link CameraComponent#sceneColorMapMipmaps}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    sceneColorMapMipmaps = true;
+
+    /**
+     * The filter used to generate the mipmaps of the scene color map. See
+     * {@link CameraComponent#sceneColorMapMipmapFilter}.
+     *
+     * @type {string}
+     * @ignore
+     */
+    sceneColorMapMipmapFilter = MIPMAPFILTER_BOX;
 
     /** @type {number} */
     jitter = 0;
@@ -918,6 +936,8 @@ class Camera {
         this.aperture = other.aperture;
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
+        this.sceneColorMapMipmaps = other.sceneColorMapMipmaps;
+        this.sceneColorMapMipmapFilter = other.sceneColorMapMipmapFilter;
 
         this._clipPlanes.copy(other._clipPlanes);
         this._updateClipPlanes();
