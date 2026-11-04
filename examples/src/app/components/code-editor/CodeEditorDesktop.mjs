@@ -572,14 +572,14 @@ class CodeEditorDesktop extends CodeEditorBase {
         if (scripts.length) {
             tabs.push(jsx('div', { key: 'script-tabs-divider', className: 'code-editor-tabs-divider' }));
         }
-        // a plain button rather than the pcui one, which has no title for the full specifier
+        // a plain button rather than the pcui one, which takes no tooltip for the full specifier
         for (const spec of scripts) {
             const selected = spec === selectedScript;
             tabs.push(jsx('button', {
                 key: spec,
                 type: 'button',
                 className: `pcui-button code-editor-script-tab${selected ? ' selected code-editor-tab-with-link' : ''}`,
-                title: `${spec} (read-only)`,
+                'data-tip': `${spec} (read-only)`,
                 onClick: () => this.selectScript(spec)
             }, scriptTabName(spec)));
             if (selected) {
@@ -612,7 +612,7 @@ class CodeEditorDesktop extends CodeEditorBase {
             href: `${GITHUB_ROOT}/blob/main/${path}`,
             target: '_blank',
             rel: 'noopener noreferrer',
-            title: label,
+            'data-tip': label,
             'aria-label': label
         }, jsx('svg', {
             viewBox: '0 0 24 24',
@@ -703,7 +703,7 @@ class CodeEditorDesktop extends CodeEditorBase {
                         type: 'button',
                         id: 'play-button',
                         className: 'pcui-button',
-                        title: 'Reload example',
+                        'data-tip': 'Reload example',
                         'aria-label': 'Reload example',
                         onClick: () => iframe.fire('hotReload')
                     }, jsx('svg', {
@@ -721,8 +721,9 @@ class CodeEditorDesktop extends CodeEditorBase {
                     )),
                     jsx('button', {
                         type: 'button',
-                        className: 'pcui-button code-editor-download',
-                        'aria-label': 'Download as Vite project',
+                        className: 'pcui-button',
+                        'data-tip': this.state.downloading ? 'Preparing download…' : 'Download as a Vite project (.zip)',
+                        'aria-label': 'Download as a Vite project (.zip)',
                         disabled: this.state.downloading,
                         onClick: this._onDownload
                     }, jsx('svg', {
@@ -732,15 +733,13 @@ class CodeEditorDesktop extends CodeEditorBase {
                         strokeWidth: 2,
                         strokeLinecap: 'round',
                         strokeLinejoin: 'round',
-                        width: 14,
-                        height: 14
+                        width: 15,
+                        height: 15
                     },
                     jsx('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
                     jsx('polyline', { points: '7 10 12 15 17 10' }),
                     jsx('line', { x1: 12, y1: 15, x2: 12, y2: 3 })
-                    ), jsx('span', {
-                        className: 'code-editor-download-label'
-                    }, this.state.downloading ? 'Preparing…' : 'Download'))
+                    ))
                 ),
                 jsx(
                     Container,
