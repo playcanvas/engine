@@ -1527,10 +1527,11 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
      * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
-     * @param {number} [settings.render.gsplatMinContribution] - Minimum visual contribution threshold for the compute gsplat renderer. Defaults to 3.
+     * @param {number} [settings.render.gsplatMinContribution] - Minimum visual contribution threshold for the compute gsplat renderer. Defaults to 2.
      * @param {number} [settings.render.gsplatFoveationStrength] - Foveated contribution culling strength. Defaults to 0.
      * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
-     * @param {boolean} [settings.render.gsplatAntiAlias] - Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     * @param {boolean} [settings.render.gsplatAntiAlias] - Whether Gaussian splats are rendered with anti-aliasing compensation. When
+     * not set, each splat follows its resource; see {@link GSplatParams#antiAlias}.
      * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.
      * @param {boolean} [settings.render.gsplatUseTonemap] - Whether to apply the camera's tonemapping and the
      * scene exposure to Gaussian splats. Defaults to true.
@@ -1823,8 +1824,17 @@ class AppBase extends EventHandler {
      * update. However, if called outside of the engine frame update, calling destroy() will
      * destroy the application immediately.
      *
+     * On WebGL, the canvas keeps its WebGL context until the canvas is garbage collected. Browsers
+     * limit the number of live WebGL contexts on a page, and beyond the limit they lose the oldest
+     * one, which can belong to another running application. A page that destroys applications
+     * whose canvases it doesn't reuse can release the context, as shown below. A released context
+     * can't be used by a new application on the same canvas.
+     *
      * @example
      * app.destroy();
+     *
+     * // on WebGL, also release the context of a canvas that won't be reused
+     * canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')?.loseContext();
      */
     destroy() {
         if (this._inFrameUpdate) {

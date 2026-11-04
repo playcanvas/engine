@@ -14,7 +14,8 @@ import {
     GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_FORWARD,
     GSPLAT_SHADOW,
-    GSPLAT_DEBUG_AABBS
+    GSPLAT_DEBUG_AABBS,
+    PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { getLodDebugColors, lodDebugColorIndex } from './gsplat-lod-colors.js';
 
@@ -139,11 +140,44 @@ class GSplatManager {
      */
     _centersVersions = new Map();
 
+    /**
+     * Whether any resource of the latest world state is flagged as trained with anti-aliasing,
+     * and whether flagged and unflagged resources are mixed. Updated on each new world state.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _resourcesAntiAlias = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _resourcesAntiAliasMixed = false;
+
+    /**
+     * The anti-aliasing compensation resolved for this frame: whether it is compiled in, and
+     * whether it applies only to the splats flagged in the work buffer.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _antiAlias = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _antiAliasMixed = false;
+
     /** @type {Vec3} */
     lastSortCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
     /** @type {Vec3} */
     lastSortCameraFwd = new Vec3(Infinity, Infinity, Infinity);
+
+    /** @type {string|null} */
+    lastSortKeyMode = null;
 
     /** @type {boolean} */
     sortNeeded = true;
@@ -389,7 +423,13 @@ class GSplatManager {
         p.minContribution = gsplat.minContribution;
         p.foveationStrength = gsplat.foveationStrength;
         p.foveationCenter = gsplat.foveationCenter;
-        p.antiAlias = gsplat.antiAlias;
+        p.antiAliasFilterSize = gsplat.antiAliasFilterSize;
+
+        // resolved here rather than taken from the end of update(): the GPU path fills and
+        // dispatches the forward view earlier in update(), and must see the current setting
+        this._resolveAntiAlias();
+        p.antiAlias = this._antiAlias;
+        p.antiAliasMixed = this._antiAliasMixed;
         p.fisheye = gsplat.fisheye;
         p.material = gsplat.material;
         p.varyings = gsplat.varyings;
@@ -583,21 +623,33 @@ class GSplatManager {
 
     /**
      * Tests if the camera has moved enough to require re-sorting.
+     * - A change of sort keys (see {@link _sortKeyMode}) always re-sorts
      * - For radial sorting: only position matters (rotation doesn't affect sort order)
-     * - For directional sorting: only forward direction matters (position doesn't affect sort order)
+     * - For directional sorting: forward direction matters, and position too when the depth keys
+     *   are log spaced
      *
      * @returns {boolean} True if camera moved enough to require re-sorting, otherwise false.
      */
     testCameraMovedForSort() {
+        // a switch of projection or sort mode needs a new order, even from a camera that is still
+        if (this._sortKeyMode() !== this.lastSortKeyMode) {
+            return true;
+        }
+
         const epsilon = 0.001;
+        const moved = this.lastSortCameraPos.distance(this.cameraNode.getPosition()) > epsilon;
 
         if (this.gsplat.radialSorting) {
             // For radial sorting, only position changes matter
-            const currentCameraPos = this.cameraNode.getPosition();
-            return this.lastSortCameraPos.distance(currentCameraPos) > epsilon;
+            return moved;
         }
 
-        // For directional sorting, only forward direction changes matter
+        // For directional sorting, forward direction changes matter, and position changes too when
+        // the depth keys are log spaced: they are measured from the camera, and the splats at or
+        // behind it share the nearest key, so a move that brings them into view needs a new order
+        if (moved && this.lastSortKeyMode === 'logDepth') {
+            return true;
+        }
         if (Number.isFinite(this.lastSortCameraFwd.x)) {
             const currentCameraFwd = this.cameraNode.forward;
             const dot = Math.min(1, Math.max(-1, this.lastSortCameraFwd.dot(currentCameraFwd)));
@@ -606,6 +658,30 @@ class GSplatManager {
 
         // first run, force update to initialize last orientation
         return true;
+    }
+
+    /**
+     * Whether a directional CPU sort spaces its depth keys by log depth, which needs a perspective,
+     * non-fisheye camera. An orthographic or fisheye camera can draw splats at or behind it, so its
+     * depth keys keep the bins.
+     *
+     * @returns {boolean} True when the depth keys are log spaced.
+     * @private
+     */
+    _logDepthKeys() {
+        return this.cameraNode.camera.projection !== PROJECTION_ORTHOGRAPHIC && !(this.gsplat.fisheye > 0);
+    }
+
+    /**
+     * The keys a CPU sort gives the splats: 'radial', 'logDepth' (see {@link _logDepthKeys}) or
+     * 'depthBins'.
+     *
+     * @returns {string} The sort key mode.
+     * @private
+     */
+    _sortKeyMode() {
+        if (this.gsplat.radialSorting) return 'radial';
+        return this._logDepthKeys() ? 'logDepth' : 'depthBins';
     }
 
     /**
@@ -653,7 +729,10 @@ class GSplatManager {
         }
         if (this._updateResult.overdrawDirty) this.renderer.updateOverdrawMode(this.gsplat);
         if (this._updateResult.sortNeeded) this.sortNeeded = true;
-        if (this._updateResult.newVersion) this._feedCpuSorterCenters();
+        if (this._updateResult.newVersion) {
+            this._feedCpuSorterCenters();
+            this._updateResourcesAntiAlias();
+        }
 
         // tick cooldowns once per frame per unique octree, across the worlds of all managers
         this.world.tickCooldowns(token);
@@ -769,6 +848,7 @@ class GSplatManager {
         // The CPU path posts to the worker only when a re-sort is needed. The version lifecycle
         // (markSorted on the first sort of a version) stays here in the manager.
         if (lastState) {
+            let sortSent = true;
             if (this.renderer.usesGpuSort) {
                 this._markSortedIfNeeded(lastState);
 
@@ -781,15 +861,18 @@ class GSplatManager {
                     this.renderer.prepareRenderView(this.world, lastState, this._fillRenderViewParams());
                 }
             } else if (this.sortNeeded) {
-                this.sortCpu(lastState);
+                sortSent = this.sortCpu(lastState);
             }
 
-            if (this.sortNeeded) {
+            // The CPU sorter turns a sort away while one of the same version is in flight, so the
+            // request stays until it is sent: the camera tracking below must be the pose sorted for
+            if (this.sortNeeded && sortSent) {
                 this.sortNeeded = false;
 
                 // Update camera tracking for the next CPU re-sort check.
                 this.lastSortCameraPos.copy(this.cameraNode.getPosition());
                 this.lastSortCameraFwd.copy(this.cameraNode.forward);
+                this.lastSortKeyMode = this._sortKeyMode();
             }
         }
 
@@ -816,7 +899,11 @@ class GSplatManager {
 
         // Renderer per-frame update (material syncing, deferred setup). Must run after
         // fireFrameReadyEvent(): listeners may change material state (e.g. antiAlias), and
-        // syncing here applies it this same frame before frameEnd() clears the dirty flag.
+        // syncing here applies it this same frame before frameEnd() clears the dirty flag. The
+        // anti-aliasing is resolved again for the same reason (the quad renderer applies it in its
+        // material; the GPU path resolved it when it filled the forward view above).
+        this._resolveAntiAlias();
+        this.renderer.setAntiAlias(this._antiAlias, this._antiAliasMixed);
         this.renderer.frameUpdate(this.gsplat);
 
         // return the number of active splats for stats
@@ -832,6 +919,48 @@ class GSplatManager {
      */
     updateShadows() {
         this.shadowRenderer?.cull(this.gsplat);
+    }
+
+    /**
+     * Records which anti-aliasing compensation the resources of the latest world-state version
+     * ask for. Called after the world creates a new world-state version.
+     *
+     * The rendered version can lag the latest one by a few frames. Adding a resource can only turn
+     * the result to mixed, which renders every splat correctly, so only a removed resource's splats
+     * can briefly render with the compensation of the remaining ones.
+     *
+     * @private
+     */
+    _updateResourcesAntiAlias() {
+        const state = this.world.getState(this.world.lastWorldStateVersion);
+        if (!state) return;
+
+        let flagged = 0;
+        const splats = state.splats;
+        for (let i = 0; i < splats.length; i++) {
+            if (splats[i].resource.antiAlias) {
+                flagged++;
+            }
+        }
+        this._resourcesAntiAlias = flagged > 0;
+        this._resourcesAntiAliasMixed = flagged > 0 && flagged < splats.length;
+    }
+
+    /**
+     * Resolves the anti-aliasing compensation for this frame: {@link GSplatParams#antiAlias} when
+     * set, otherwise what the resources ask for.
+     *
+     * @private
+     */
+    _resolveAntiAlias() {
+        const antiAlias = this.gsplat.antiAlias;
+        if (antiAlias === true || antiAlias === false) {
+            this._antiAlias = antiAlias;
+            this._antiAliasMixed = false;
+        } else {
+            this._antiAlias = this._resourcesAntiAlias;
+            this._antiAliasMixed = this._resourcesAntiAliasMixed;
+        }
     }
 
     /**
@@ -867,10 +996,11 @@ class GSplatManager {
      * Sorts the splats using CPU worker (asynchronous).
      *
      * @param {GSplatWorldState} lastState - The last world state.
+     * @returns {boolean} True if the sort was sent to the worker; false if it was turned away.
      */
     sortCpu(lastState) {
         Debug.assert(this.cpuSorter, 'CPU sorter not initialized');
-        if (!this.cpuSorter) return;
+        if (!this.cpuSorter) return false;
 
         // Get camera's world-space properties
         const cameraNode = this.cameraNode;
@@ -920,7 +1050,7 @@ class GSplatManager {
             });
         });
 
-        this.cpuSorter.setSortParams(sorterRequest, radialSort);
+        return this.cpuSorter.setSortParams(sorterRequest, radialSort, cameraNode.camera.nearClip, this._logDepthKeys());
     }
 }
 

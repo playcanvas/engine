@@ -376,6 +376,7 @@ class SogBundleParser {
             const resource = decompress ?
                 new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
                 new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+            resource.antiAlias = data.meta.model === 'antialiased';
 
             // the sog resource now owns the textures in `data` (when decompressing, the
             // decompressed data was copied out instead and the textures stay with the assets)

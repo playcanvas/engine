@@ -598,7 +598,8 @@ class GSplatWorld {
      */
     _updateWorldState(requireCenters) {
 
-        // Check for state changes (format version, modifier hash, numSplats)
+        // Check for state changes (format version, modifier hash, numSplats, anti-aliasing flag)
+        this._stateTracker.antiAliasChanged = false;
         let stateChanged = this._stateTracker.hasChanges(this._layerPlacements);
         for (const [, inst] of this._octreeInstances) {
             if (this._stateTracker.hasChanges(inst.activePlacements)) {
@@ -693,8 +694,9 @@ class GSplatWorld {
         }
 
         // When placements are added/removed, boundsBaseIndex values shift.
-        // Force a full rebuild so no stale indices remain.
-        if (this._placementSetChanged) {
+        // Force a full rebuild so no stale indices remain. A changed anti-aliasing flag is stored
+        // per splat in the work buffer, so it needs every splat copied again too.
+        if (this._placementSetChanged || this._stateTracker.antiAliasChanged) {
             newState.fullRebuild = true;
         }
 

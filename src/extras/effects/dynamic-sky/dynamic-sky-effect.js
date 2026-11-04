@@ -13,6 +13,7 @@ import { BlendState } from '../../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { LAYERID_SKYBOX, PROJECTION_PERSPECTIVE, SKYTYPE_INFINITE } from '../../../scene/constants.js';
+import { FogParams } from '../../../scene/fog-params.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { EnvLighting } from '../../../scene/graphics/env-lighting.js';
 import { getBlueNoiseTexture } from '../../../scene/graphics/noise-textures.js';
@@ -32,17 +33,22 @@ import glslAtmospherePS from './glsl/atmosphere-ps.js';
 import glslBakePS from './glsl/bake-ps.js';
 import glslCloudBufferPS from './glsl/cloud-buffer-ps.js';
 import glslCloudsPS from './glsl/clouds-ps.js';
+import glslHazeFogPS from './glsl/haze-fog-ps.js';
+import glslHazePS from './glsl/haze-ps.js';
 import glslLightingBlendPS from './glsl/lighting-blend-ps.js';
 import glslSkyPS from './glsl/sky-ps.js';
 import wgslAtmospherePS from './wgsl/atmosphere-ps.js';
 import wgslBakePS from './wgsl/bake-ps.js';
 import wgslCloudBufferPS from './wgsl/cloud-buffer-ps.js';
 import wgslCloudsPS from './wgsl/clouds-ps.js';
+import wgslHazeFogPS from './wgsl/haze-fog-ps.js';
+import wgslHazePS from './wgsl/haze-ps.js';
 import wgslLightingBlendPS from './wgsl/lighting-blend-ps.js';
 import wgslSkyPS from './wgsl/sky-ps.js';
 
 /**
  * @import { CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from '../../render-passes/camera-frame-effect.js'
+ * @import { CameraComponent } from '../../../framework/components/camera/component.js'
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { LightComponent } from '../../../framework/components/light/component.js'
@@ -112,6 +118,24 @@ const cloudQualityValue = (values, quality) => {
 // wraps a value into the 0..period range
 const wrap = (value, period) => value - Math.floor(value / period) * period;
 
+// the type of the fog an effect with the haze gives its camera. The camera sets the FOG define of its
+// shaders to the type in upper case, which the fog chunk of the effect hazes the lit materials for
+const HAZE_FOG = 'dynamicskyhaze';
+
+/**
+ * Sets up the fog chunk of the effect in place of the fog chunk the device has, which it keeps as
+ * the fog of the scene - once, for all the effects of the device.
+ *
+ * @param {Map<string, string>} chunks - The shader chunks of the device, of a shader language.
+ * @param {string} hazeFog - The fog chunk of the effect, in the shader language.
+ */
+const setupFogChunk = (chunks, hazeFog) => {
+    if (chunks.get('fogPS') !== hazeFog) {
+        chunks.set('dynamicSkySceneFogPS', chunks.get('fogPS'));
+        chunks.set('fogPS', hazeFog);
+    }
+};
+
 const tmpX = new Vec3();
 const tmpZ = new Vec3();
 const tmpSrc = new Vec3();
@@ -119,9 +143,16 @@ const tmpMoon = new Vec3();
 const tmpMat = new Mat4();
 const tmpQuat = new Quat();
 const tmpView = new Mat4();
+const tmpLinear = new Color();
 
 // the rotation of the sky without the rotation of the sky of the scene
 const IDENTITY_MAT3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+
+// the blue of the day sky that does not come from the sun - see dynamicSkyDay
+const SKY_BASE = [0, 0.0003, 0.00075];
+
+// the day sky's color, while it is evaluated on the CPU
+const tmpColor = [0, 0, 0];
 
 // the texture coordinates of the reprojection's vertex shader, unmodified
 const UV_MOD = [1, 1, 0, 0];
@@ -145,9 +176,47 @@ const UV_MOD = [1, 1, 0, 0];
  * cameras without the effect, such as the cameras rendering planar reflections, render the sky of
  * the scene from that environment atlas - a still image of this sky.
  *
+ * The effect can also haze the scene with the sky, see {@link DynamicSkyEffect#haze}: with their
+ * distance, the lit materials fade into the color of the sky behind them, in place of the fog of
+ * the camera.
+ *
  * In XR, the sky and the flat clouds render for each view, like the rest of the scene. The
  * volumetric clouds render to their texture for the view of the camera alone, so they streak where
  * the view of an eye extends past it - use {@link CLOUDTYPE_FLAT} clouds in XR.
+ *
+ * The shaders of the scene's own materials can evaluate the sky too, for example to fade distant
+ * ground into the color of the sky behind it. The effect sets the uniforms of its sky on the
+ * graphics device every frame, and its shader chunk `dynamicSkyAtmospherePS`, in GLSL and WGSL,
+ * evaluates the sky from them. Include the chunk in a shader, and `dynamicSkyBase(dir, ambient)`
+ * returns the radiance of the sky in a direction, without the sun disc, the stars and the moon, and
+ * sets `ambient` to the light of the sky around it. The direction is in the space of the sky - a
+ * world space direction turned by the rotation of the sky of the scene, `dynSkyRotation`, which the
+ * effect sets with the other uniforms, and with X flipped:
+ *
+ * ```glsl
+ * #include "dynamicSkyAtmospherePS"
+ * uniform mat3 dynSkyRotation;
+ *
+ * vec3 skyColor(vec3 worldDir) {
+ *     vec3 dir = worldDir * dynSkyRotation;
+ *     dir.x = -dir.x;
+ *     vec3 ambient;
+ *     return dynamicSkyBase(dir, ambient);
+ * }
+ * ```
+ *
+ * The chunk `dynamicSkyHazePS` applies the haze of the sky, see {@link DynamicSkyEffect#haze}, in
+ * the shaders that the haze does not reach on its own - `dynamicSkyHaze(color, cameraPos, worldPos)`
+ * returns a linear color seen through it:
+ *
+ * ```glsl
+ * #include "dynamicSkyHazePS"
+ *
+ * vec3 hazed = dynamicSkyHaze(color, view_position, vPositionW);
+ * ```
+ *
+ * With more than one dynamic sky, a material renders with the sky that was updated last. On the
+ * CPU, {@link DynamicSkyEffect#getSkyColor} evaluates the same sky in a direction.
  *
  * The sky does not work together with the volumetric fog of the camera frame,
  * {@link CameraFrame#volumetricFog}: the clouds cast no shadows into the fog, and the fog is not lit
@@ -453,6 +522,61 @@ class DynamicSkyEffect extends CameraFrameEffect {
     windDirection = 45;
 
     /**
+     * Whether the sky hazes the scene the camera renders - the aerial perspective. With their
+     * distance, surfaces fade into the color of the sky behind them: warm toward a low sun, blue
+     * away from it, and the gradient of the night sky after the sunset. The haze is densest at
+     * {@link DynamicSkyEffect#hazeBaseHeight} and thins out with the height above it, see
+     * {@link DynamicSkyEffect#hazeHeight}, so the valleys stay hazy while the view from high up is
+     * clear.
+     *
+     * The haze takes the place of the fog of the camera, {@link Scene#fog} or
+     * {@link CameraComponent#fog}: while the haze is enabled, the effect gives its camera a fog of
+     * its own, and gives the camera its fog back once the haze is disabled. The lit materials the
+     * camera renders, such as {@link StandardMaterial}, fade into the sky, while the other shaders,
+     * such as those of the particles and the gaussian splats, render without fog - custom shaders
+     * can apply the haze with the chunk `dynamicSkyHazePS`, see the description of the class. A
+     * material opts out of the haze, rendering without fog, with {@link StandardMaterial#useFog},
+     * or by setting the define `DYNAMIC_SKY_NO_HAZE`:
+     *
+     * ```javascript
+     * material.setDefine('DYNAMIC_SKY_NO_HAZE', true);
+     * material.update();
+     * ```
+     *
+     * A material replacing the chunk `fogPS` with its own is not hazed, and finds the define `FOG`
+     * of its shaders set to `DYNAMICSKYHAZE` on the camera. Enabling or disabling the haze compiles
+     * the shaders of the lit materials the camera renders again. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    haze = false;
+
+    /**
+     * The density of the haze at its {@link DynamicSkyEffect#hazeBaseHeight}, per world unit - the
+     * fraction of the light it scatters over a unit of distance. A level view at that height is
+     * hidden by 95% of the haze at about 3 / density. Defaults to 0.0005.
+     *
+     * @type {number}
+     */
+    hazeDensity = 0.0005;
+
+    /**
+     * The height over which the density of the haze falls to about a third, in world units. Lower
+     * values keep the haze closer to the ground. Defaults to 1000.
+     *
+     * @type {number}
+     */
+    hazeHeight = 1000;
+
+    /**
+     * The height the haze is densest at, in world units - usually the lowest ground of the scene,
+     * such as the level of the sea. Below it, the haze grows denser still. Defaults to 0.
+     *
+     * @type {number}
+     */
+    hazeBaseHeight = 0;
+
+    /**
      * Whether the effect generates the lighting of the scene from its sky - the environment atlas
      * lighting the materials, assigned to {@link Scene#envAtlas}. Only one effect should do so, the
      * one of the main camera. The lighting is generated when the effect is first used, and again
@@ -594,6 +718,13 @@ class DynamicSkyEffect extends CameraFrameEffect {
     /** @private */
     _cloudLightDir = new Float32Array(3);
 
+    /**
+     * The density of the haze, one over its height, and its base height.
+     *
+     * @private
+     */
+    _hazeParams = new Float32Array(4);
+
     /** @private */
     _invView = new Float32Array(16);
 
@@ -606,8 +737,12 @@ class DynamicSkyEffect extends CameraFrameEffect {
     /** @private */
     _bufferProj = new Float32Array(2);
 
-    /** @private */
-    _rotation = new Float32Array(9);
+    /**
+     * The rotation of the sky of the scene, the identity until the first frame sets it.
+     *
+     * @private
+     */
+    _rotation = new Float32Array(IDENTITY_MAT3);
 
     /** @private */
     _frameIndex = 0;
@@ -666,6 +801,31 @@ class DynamicSkyEffect extends CameraFrameEffect {
      * @private
      */
     _passesCameraFrame = null;
+
+    /**
+     * The fog the effect gives its camera while the haze is enabled, of the type the fog chunk of
+     * the effect hazes the lit materials for.
+     *
+     * @type {FogParams}
+     * @private
+     */
+    _hazeFog = new FogParams();
+
+    /**
+     * The camera given the fog of the haze, while it has it.
+     *
+     * @type {CameraComponent|null}
+     * @private
+     */
+    _hazeCamera = null;
+
+    /**
+     * The fog the camera had before it was given the fog of the haze, to give back to it.
+     *
+     * @type {FogParams|null}
+     * @private
+     */
+    _hazeCameraFog = null;
 
     /**
      * @type {FramePassDynamicSkyLighting|null}
@@ -870,6 +1030,16 @@ class DynamicSkyEffect extends CameraFrameEffect {
         wgsl.set('dynamicSkyCloudBufferPS', wgslCloudBufferPS);
         wgsl.set('dynamicSkyBakePS', wgslBakePS);
         wgsl.set('dynamicSkyLightingBlendPS', wgslLightingBlendPS);
+        glsl.set('dynamicSkyHazePS', glslHazePS);
+        wgsl.set('dynamicSkyHazePS', wgslHazePS);
+
+        // the fog of the lit materials, which the sky hazes on the cameras given the fog of the haze -
+        // otherwise the fog of the scene, as before. A global chunk becomes a part of a shader as the
+        // shader is generated, and so it does of all those with the fog of the haze, which are all
+        // generated after this, as no shader had that fog before
+        setupFogChunk(glsl, glslHazeFogPS);
+        setupFogChunk(wgsl, wgslHazeFogPS);
+        this._hazeFog.type = HAZE_FOG;
 
         const values = this._skyUniforms;
         values.set('dynSkySunDir', this._sunDirValue);
@@ -885,6 +1055,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         values.set('dynSkyCloudVolume', this._cloudVolume);
         values.set('dynSkyCloudLight', this._cloudLight);
         values.set('dynSkyCloudLightDir', this._cloudLightDir);
+        values.set('dynSkyHaze', this._hazeParams);
         values.set('dynSkyInvView', this._invView);
         values.set('dynSkyProjScale', this._projScale);
         values.set('dynSkyRotation', this._rotation);
@@ -967,6 +1138,85 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._bakeRequested = true;
     }
 
+    /**
+     * Gets the color of the sky in a direction - its linear radiance, without the sun disc, the
+     * stars and the moon, as `dynamicSkyBase` of the shader chunk `dynamicSkyAtmospherePS`
+     * evaluates it. Use it for lighting worked out on the CPU, such as the light the sky gives to
+     * particles. It evaluates the sky as of the last {@link CameraFrame#update}.
+     *
+     * @param {Vec3} direction - The direction, in the world space. It does not need to be
+     * normalized.
+     * @param {Color} [color] - The color to receive the result. A new one is created if not given.
+     * @returns {Color} The color of the sky.
+     * @example
+     * // the light of the sky from straight above
+     * const zenith = sky.getSkyColor(Vec3.UP);
+     */
+    getSkyColor(direction, color = new Color()) {
+
+        // to the space of the sky, as its shaders derive it - turned by the rotation of the sky of
+        // the scene, and with X flipped
+        const r = this._rotation;
+        const { x: wx, y: wy, z: wz } = direction;
+        let x = wx * r[0] + wy * r[1] + wz * r[2];
+        let y = wx * r[3] + wy * r[4] + wz * r[5];
+        let z = wx * r[6] + wy * r[7] + wz * r[8];
+        const length = Math.hypot(x, y, z) || 1;
+        x = -x / length;
+        y /= length;
+        z /= length;
+
+        const uniforms = this._skyUniforms;
+        const sun = this._sunDirValue;
+        const nightBlend = uniforms.get('dynSkyNightBlend') ?? 0;
+        let red = 0;
+        let green = 0;
+        let blue = 0;
+
+        // the day sky - see dynamicSkyDay
+        if (nightBlend < 1) {
+            const zenith = Math.acos(Math.max(0, y));
+            const denom = Math.cos(zenith) + 0.15 * Math.pow(Math.max(93.885 - zenith * math.RAD_TO_DEG, 0), -1.253);
+            const cosTheta = x * sun[0] + y * sun[1] + z * sun[2];
+            const c = cosTheta * 0.5 + 0.5;
+            const rayleighPhase = (3 / (16 * Math.PI)) * (1 + c * c);
+            const g = uniforms.get('dynSkyMieG') ?? 0;
+            const g2 = g * g;
+            const miePhase = (1 / (4 * Math.PI)) * (1 - g2) / Math.pow(Math.max(1 - 2 * g * cosTheta + g2, 0), 1.5);
+            const sunE = uniforms.get('dynSkySunE') ?? 0;
+            const luminance = uniforms.get('dynSkyLuminance') ?? 0;
+            const horizon = math.clamp(Math.pow(1 - sun[1], 5), 0, 1);
+            const day = tmpColor;
+            for (let i = 0; i < 3; i++) {
+                const betaR = this._betaR[i];
+                const betaM = this._betaM[i];
+                const fex = Math.exp(-(betaR * 8.4e3 + betaM * 1.25e3) / denom);
+                const ratio = (betaR * rayleighPhase + betaM * miePhase) / (betaR + betaM);
+                let lin = Math.pow(sunE * ratio * (1 - fex), 1.5);
+                lin *= 1 + (Math.pow(sunE * ratio * fex, 0.5) - 1) * horizon;
+                day[i] = ((lin + 0.1 * fex) * 0.04 + SKY_BASE[i]) * luminance;
+            }
+            red = day[0] * (1 - nightBlend);
+            green = day[1] * (1 - nightBlend);
+            blue = day[2] * (1 - nightBlend);
+        }
+
+        // the night sky without its lights - see dynamicSkyNightBase
+        if (nightBlend > 0) {
+            const night = this._nightColor;
+            const gradient = math.lerp(1.1, 0.4, Math.max(y, 0));
+            const hx = sun[0] + 1e-5;
+            const hz = sun[2];
+            const toSun = Math.max((x * hx + z * hz) / Math.hypot(hx, hz), 0);
+            const glow = Math.pow(toSun, 5) * math.clamp(1 + sun[1] * 4, 0, 1) * this._nightParams[3];
+            red += (night[0] * gradient + glow) * nightBlend;
+            green += (night[1] * gradient + glow * 0.45) * nightBlend;
+            blue += (night[2] * gradient + glow * 0.15) * nightBlend;
+        }
+
+        return color.set(red, green, blue, 1);
+    }
+
     /** @private */
     _onDeviceRestored() {
         this._bakeRequested = true;
@@ -996,6 +1246,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         // the lighting, generated before the scene renders on the frames it is due
         this._lightingPass = new FramePassDynamicSkyLighting(device, this);
         passes.preScene.push(this._lightingPass);
+
 
         // the volumetric clouds, rendered to a texture of their own
         if (this._cloudsBuffered) {
@@ -1042,6 +1293,7 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._layer = null;
         this._camera = null;
         this._passesCameraFrame = null;
+        this._restoreCameraFog();
 
         this._lightingPass?.destroy();
         this._lightingPass = null;
@@ -1061,6 +1313,52 @@ class DynamicSkyEffect extends CameraFrameEffect {
      */
     buildKey() {
         return `${this._cloudsBuffered}`;
+    }
+
+    /**
+     * @ignore
+     */
+    _detach() {
+
+        // a removed effect keeps its passes until it is destroyed, but no longer hazes its camera
+        this._restoreCameraFog();
+        super._detach();
+    }
+
+    /**
+     * Gives the camera the fog of the haze while the haze is enabled, in place of the fog it has,
+     * which the fog chunk of the effect hazes the lit materials for.
+     *
+     * @private
+     */
+    _updateHazeFog() {
+        if (this.haze) {
+            if (!this._hazeCamera) {
+                const cameraComponent = this.cameraFrame.cameraComponent;
+                this._hazeCamera = cameraComponent;
+                this._hazeCameraFog = cameraComponent.fog;
+                cameraComponent.fog = this._hazeFog;
+            }
+        } else {
+            this._restoreCameraFog();
+        }
+    }
+
+    /**
+     * Gives the camera given the fog of the haze its fog back - unless the camera was given another
+     * fog since.
+     *
+     * @private
+     */
+    _restoreCameraFog() {
+        const cameraComponent = this._hazeCamera;
+        if (cameraComponent) {
+            if (cameraComponent.fog === this._hazeFog) {
+                cameraComponent.fog = this._hazeCameraFog;
+            }
+            this._hazeCamera = null;
+            this._hazeCameraFog = null;
+        }
     }
 
     /**
@@ -1239,9 +1537,10 @@ class DynamicSkyEffect extends CameraFrameEffect {
         // are lit by their own moonlight
         const cloudIntensity = (this.sunIntensity * math.smoothstep(0, 0.3, y) +
             this.cloudNightBrightness * nightFactor) * this.cloudBrightness;
-        this._cloudLight[0] = Math.pow(sunColor.r, 2.2) * cloudIntensity;
-        this._cloudLight[1] = Math.pow(sunColor.g, 2.2) * cloudIntensity;
-        this._cloudLight[2] = Math.pow(sunColor.b, 2.2) * cloudIntensity;
+        tmpLinear.linear(sunColor);
+        this._cloudLight[0] = tmpLinear.r * cloudIntensity;
+        this._cloudLight[1] = tmpLinear.g * cloudIntensity;
+        this._cloudLight[2] = tmpLinear.b * cloudIntensity;
         this._cloudLightDir[0] = -src.x;
         this._cloudLightDir[1] = src.y;
         this._cloudLightDir[2] = src.z;
@@ -1450,6 +1749,12 @@ class DynamicSkyEffect extends CameraFrameEffect {
         this._updateLight();
         this._updateClouds();
         this._updateDefines();
+        this._updateHazeFog();
+
+        const haze = this._hazeParams;
+        haze[0] = Math.max(this.hazeDensity, 0);
+        haze[1] = 1 / Math.max(this.hazeHeight, 1e-3);
+        haze[2] = this.hazeBaseHeight;
 
         // the lighting is due when the sun or the moon moved enough, or a setting of the sky
         // changed by more than a small fraction since the lighting was generated - settings
@@ -1549,6 +1854,10 @@ class DynamicSkyEffect extends CameraFrameEffect {
         }
 
         this._applyToMaterial();
+
+        // the values of the sky on the device too, for the shaders of the scene's own materials,
+        // see the description of the class
+        this._bindSkyUniforms();
     }
 
     /**

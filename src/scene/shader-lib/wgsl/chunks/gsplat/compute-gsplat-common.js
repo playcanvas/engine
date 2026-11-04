@@ -38,7 +38,7 @@ fn computeSplatCov(
     scale: half3,
     viewMatrix: mat4x4f,
     viewProj: mat4x4f,
-    focal: vec2f,           // focal length in pixels, per axis
+    focal: vec2f,           // viewport size * projection scale per axis (= 2 x the focal length in pixels)
     viewportWidth: f32,
     viewportHeight: f32,
     nearClip: f32,
@@ -51,6 +51,7 @@ fn computeSplatCov(
     foveationStrength: f32,
     foveationCenter: f32,
     plateau: f32,           // over-unity plateau shape D' (1 = plain gaussian)
+    antiAliasFilterSize: f32,   // GSplatParams#antiAliasFilterSize, in pixels squared
     #ifdef GSPLAT_FISHEYE
         fisheye_k: f32,
         fisheye_inv_k: f32,
@@ -176,8 +177,42 @@ fn computeSplatCov(
     let b = dot(b0, b1);
     let cRaw = dot(b1, b1);
 
-    let a = aRaw + 0.3;
-    let c = cRaw + 0.3;
+    // an over-unity plateau profile extends (D'-1) + 2.83 / sqrt(D') sigma, against the gaussian's
+    // 2.83 sigma, and carries I(D') = p^2/2 + 1/D' + p/2 sqrt(2 pi / D') (p = D'-1) times its mass
+    var grow = 1.0;
+    var mass = 1.0;
+    if (plateau > 1.0) {
+        let p = plateau - 1.0;
+        grow = (p + 2.8284271 / sqrt(plateau)) / 2.8284271;
+        mass = 0.5 * p * p + 1.0 / plateau + 0.5 * p * sqrt(6.283185 / plateau);
+    }
+
+    // The size and contribution culls measure the footprint with GSPLAT_CULL_LOWPASS, the rendered footprint
+    // uses GSPLAT_LOWPASS (see gsplatHelpersVS). The size cull runs first, before the contribution and AA math,
+    // against the drawn footprint: grown by the plateau, so its threshold shrinks to match.
+    let aCull = aRaw + GSPLAT_CULL_LOWPASS;
+    let cCull = cRaw + GSPLAT_CULL_LOWPASS;
+    if (gsplatFootprintSmallerThan(aCull, b, cCull, minPixelSize / grow)) {
+        return result;
+    }
+
+    // Screen-space filter: the classic dilation, or for compensated splats the filter they were
+    // trained with (antiAliasFilterSize is in pixels squared, the covariance in half pixel units).
+    var lowpass = GSPLAT_LOWPASS;
+    #if GSPLAT_AA
+        var compensated = true;
+        #ifdef GSPLAT_AA_MIXED
+            // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
+            // in the work buffer are compensated
+            compensated = getAntiAlias();
+        #endif
+        if (compensated) {
+            lowpass = 4.0 * antiAliasFilterSize;
+        }
+    #endif
+
+    let a = aRaw + lowpass;
+    let c = cRaw + lowpass;
 
     let det = a * c - b * b;
     if (det <= 0.0) {
@@ -188,7 +223,7 @@ fn computeSplatCov(
         // AA compensation: ratio of pre-blur to post-blur determinant. Matches the
         // quad renderer's GSPLAT_AA branch in gsplatCorner.js initCornerCov.
         let detOrig = aRaw * cRaw - b * b;
-        result.aaFactor = sqrt(max(detOrig / det, 0.0));
+        result.aaFactor = select(1.0, sqrt(max(detOrig / det, 0.0)), compensated);
     #endif
 
     // Rejects splats whose total visual contribution (opacity * projected area) is
@@ -211,17 +246,7 @@ fn computeSplatCov(
     let fovT = saturate((fovR - foveationCenter) / max(1.0 - foveationCenter, 1e-4));
     let effMinContribution = minContribution + foveationStrength * fovT * fovT * (3.0 - 2.0 * fovT);
 
-    // an over-unity plateau profile extends (D'-1) + 2.83 / sqrt(D') sigma, against the gaussian's
-    // 2.83 sigma, and carries I(D') = p^2/2 + 1/D' + p/2 sqrt(2 pi / D') (p = D'-1) times its mass
-    var grow = 1.0;
-    var mass = 1.0;
-    if (plateau > 1.0) {
-        let p = plateau - 1.0;
-        grow = (p + 2.8284271 / sqrt(plateau)) / 2.8284271;
-        mass = 0.5 * p * p + 1.0 / plateau + 0.5 * p * sqrt(6.283185 / plateau);
-    }
-
-    let totalContribution = opacity * mass * 6.283185 * sqrt(det);
+    let totalContribution = opacity * mass * 6.283185 * sqrt(aCull * cCull - b * b);
     if (totalContribution < effMinContribution) {
         return result;
     }
@@ -234,10 +259,6 @@ fn computeSplatCov(
     // the culls use the drawn footprint, grown for an over-unity plateau
     let radiusX = min(radiusXUncapped, maxRadius) * grow;
     let radiusY = min(radiusYUncapped, maxRadius) * grow;
-
-    if (max(radiusX, radiusY) < minPixelSize) {
-        return result;
-    }
 
     // Frustum cull: reject splats entirely off-screen
     #ifdef GSPLAT_XR

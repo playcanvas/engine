@@ -35,6 +35,7 @@ fn projectSplatCommon(
     minContribution: f32,
     foveationStrength: f32,
     foveationCenter: f32,
+    antiAliasFilterSize: f32,
     viewMatrix: mat4x4f,
     viewProj: mat4x4f,
     focal: vec2f,
@@ -91,7 +92,7 @@ fn projectSplatCommon(
         focal, viewportWidth, viewportHeight,
         nearClip, farClip, opacity, minPixelSize,
         isOrtho, alphaClip, minContribution,
-        foveationStrength, foveationCenter, plateau,
+        foveationStrength, foveationCenter, plateau, antiAliasFilterSize,
         #ifdef GSPLAT_FISHEYE
             fisheye_k, fisheye_inv_k,
             fisheye_projMat00, fisheye_projMat11,

@@ -1,5 +1,10 @@
 import { math } from './math.js';
 
+// The sRGB transfer functions (IEC 61966-2-1), which GPUs apply when they sample an sRGB texture
+// or write an sRGB render target, so a color converted here matches theirs exactly
+const srgbToLinear = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+const linearToSrgb = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+
 /**
  * An RGBA color.
  *
@@ -199,7 +204,8 @@ class Color {
     }
 
     /**
-     * Converts the color from gamma to linear color space.
+     * Converts the color from gamma (sRGB) to linear color space, using the exact sRGB transfer
+     * function. Alpha is left unchanged.
      *
      * @param {Color} [src] - The color to convert to linear color space. If not set, the operation
      * is done in place.
@@ -207,31 +213,32 @@ class Color {
      * @example
      * const c = new Color(0.5, 0.5, 0.5, 1);
      * c.linear();
-     * // c is now approximately [0.218, 0.218, 0.218, 1]
+     * // c is now approximately [0.214, 0.214, 0.214, 1]
      */
     linear(src = this) {
-        this.r = Math.pow(src.r, 2.2);
-        this.g = Math.pow(src.g, 2.2);
-        this.b = Math.pow(src.b, 2.2);
+        this.r = srgbToLinear(src.r);
+        this.g = srgbToLinear(src.g);
+        this.b = srgbToLinear(src.b);
         this.a = src.a;
         return this;
     }
 
     /**
-     * Converts the color from linear to gamma color space.
+     * Converts the color from linear to gamma (sRGB) color space, using the exact sRGB transfer
+     * function. Alpha is left unchanged.
      *
      * @param {Color} [src] - The color to convert to gamma color space. If not set, the operation is
      * done in place.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new Color(0.218, 0.218, 0.218, 1);
+     * const c = new Color(0.214, 0.214, 0.214, 1);
      * c.gamma();
      * // c is now approximately [0.5, 0.5, 0.5, 1]
      */
     gamma(src = this) {
-        this.r = Math.pow(src.r, 1 / 2.2);
-        this.g = Math.pow(src.g, 1 / 2.2);
-        this.b = Math.pow(src.b, 1 / 2.2);
+        this.r = linearToSrgb(src.r);
+        this.g = linearToSrgb(src.g);
+        this.b = linearToSrgb(src.b);
         this.a = src.a;
         return this;
     }

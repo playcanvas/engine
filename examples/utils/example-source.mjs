@@ -146,6 +146,8 @@ export const stripConfig = (source) => {
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
  * @property {boolean} [NO_MINISTATS] - No ministats.
  * @property {boolean} [NO_INSPECTOR] - No inspector toggle in the toolbar, for examples that create their own panel.
+ * @property {boolean} [CREDITS_HIDDEN] - The credits overlay starts hidden, for examples whose own UI it would cover.
+ * The credits button still shows it.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
  * @property {boolean} [WEBGPU_BARE_DISABLED] - If webgpu bare is disabled.
  * @property {boolean} [WEBGL_BARE_DISABLED] - If webgl bare is disabled.

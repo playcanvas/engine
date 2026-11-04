@@ -162,6 +162,7 @@ const STANDARD_MAT_PROPS = [
     ['opacityVertexColorChannel', 'string'],
     ['parallaxMode', 'string'],
     ['pixelSnap', 'boolean'],
+    ['planarReflectionMap', 'Texture|null'],
     ['refractionMap', 'Texture|null'],
     ['refractionMapChannel', 'string'],
     ['refractionMapOffset', 'Vec2'],

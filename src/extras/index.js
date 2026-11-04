@@ -24,6 +24,9 @@ export { WireRenderer } from './renderers/wire-renderer.js';
 // GRID
 export { Grid } from './grid/grid.js';
 
+// VOXELS
+export * from './voxel/voxel-occupancy.js';
+
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';

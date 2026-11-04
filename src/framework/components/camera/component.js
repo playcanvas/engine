@@ -716,9 +716,11 @@ class CameraComponent extends Component {
      * Sets the layer id of the layer on which the post-processing of the camera stops being applied
      * to. Defaults to {@link LAYERID_UI}, which causes post-processing to not be applied to UI
      * layer and any following layers for the camera. Set to `undefined` for post-processing to be
-     * applied to all layers of the camera.
+     * applied to all layers of the camera. Only applies to the deprecated post effects queue.
      *
      * @type {number}
+     * @deprecated Use {@link CameraFrame} instead.
+     * @ignore
      */
     set disablePostEffectsLayer(layer) {
         this._disablePostEffectsLayer = layer;
@@ -730,6 +732,8 @@ class CameraComponent extends Component {
      * to.
      *
      * @type {number}
+     * @deprecated Use {@link CameraFrame} instead.
+     * @ignore
      */
     get disablePostEffectsLayer() {
         return this._disablePostEffectsLayer;
@@ -951,11 +955,17 @@ class CameraComponent extends Component {
      * camera.
      *
      * @type {PostEffectQueue}
+     * @deprecated Use {@link CameraFrame} instead.
+     * @ignore
      */
     get postEffects() {
         return this._postEffects;
     }
 
+    /**
+     * @type {boolean}
+     * @ignore
+     */
     get postEffectsEnabled() {
         return this._postEffects.enabled;
     }
@@ -1287,20 +1297,26 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 2D screen space to 3D world space.
      *
-     * Screen space is measured in CSS pixels of the application's canvas element, the units of
-     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
-     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
-     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
-     * `display: none`, or not laid out yet - measures zero, and the returned coordinate is then not
-     * finite.
+     * By default, screen space is measured in CSS pixels of the application's canvas element, the
+     * units of mouse and touch event positions, not device pixels. The canvas size used for the
+     * conversion is measured on the page once per application update; an `OffscreenCanvas` uses its
+     * `width` and `height` instead. A canvas that is not laid out on the page - detached, hidden
+     * with `display: none`, or not laid out yet - measures zero, and the returned coordinate is
+     * then not finite.
      *
-     * @param {number} screenx - X coordinate on PlayCanvas' canvas element. Should be in the range
-     * 0 to `canvas.offsetWidth` of the application's canvas element.
-     * @param {number} screeny - Y coordinate on PlayCanvas' canvas element. Should be in the range
-     * 0 to `canvas.offsetHeight` of the application's canvas element.
+     * Pass `width` and `height` to measure screen space in other units: for example
+     * {@link GraphicsDevice#width} and {@link GraphicsDevice#height} for device pixels, or the size
+     * of the camera's render target when it is used as a texture.
+     *
+     * @param {number} screenx - X coordinate in screen space, in the range 0 to `width`.
+     * @param {number} screeny - Y coordinate in screen space, in the range 0 to `height`.
      * @param {number} cameraz - The distance from the camera in world space to create the new
      * point.
      * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
+     * @param {number} [width] - The width of screen space. Defaults to the width of the canvas
+     * element in CSS pixels.
+     * @param {number} [height] - The height of screen space. Defaults to the height of the canvas
+     * element in CSS pixels.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
      * const start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
@@ -1313,20 +1329,23 @@ class CameraComponent extends Component {
      * }
      * @returns {Vec3} The world space coordinate.
      */
-    screenToWorld(screenx, screeny, cameraz, worldCoord) {
-        const device = this.system.app.graphicsDevice;
-        const { width, height } = device.clientRect;
-        return this._camera.screenToWorld(screenx, screeny, cameraz, width, height, worldCoord);
+    screenToWorld(screenx, screeny, cameraz, worldCoord, width, height) {
+        const { clientRect } = this.system.app.graphicsDevice;
+        return this._camera.screenToWorld(screenx, screeny, cameraz, width ?? clientRect.width, height ?? clientRect.height, worldCoord);
     }
 
     /**
      * Convert a point from 3D world space to 2D screen space.
      *
-     * The returned `x` and `y` are in CSS pixels of the application's canvas element, the units of
-     * mouse and touch event positions, not device pixels. The canvas size used for the conversion
-     * is measured on the page once per application update; an `OffscreenCanvas` uses its `width`
-     * and `height` instead. A canvas that is not laid out on the page - detached, hidden with
-     * `display: none`, or not laid out yet - measures zero, and `x` and `y` are then zero.
+     * By default, the returned `x` and `y` are in CSS pixels of the application's canvas element,
+     * the units of mouse and touch event positions, not device pixels. The canvas size used for the
+     * conversion is measured on the page once per application update; an `OffscreenCanvas` uses its
+     * `width` and `height` instead. A canvas that is not laid out on the page - detached, hidden
+     * with `display: none`, or not laid out yet - measures zero, and `x` and `y` are then zero.
+     *
+     * Pass `width` and `height` to measure screen space in other units: for example
+     * {@link GraphicsDevice#width} and {@link GraphicsDevice#height} for device pixels, or the size
+     * of the camera's render target when it is used as a texture.
      *
      * The returned `z` is the unnormalized clip space depth, not a behind-the-camera flag: it also
      * goes negative for points in front of a perspective camera that are nearer than twice the
@@ -1337,12 +1356,19 @@ class CameraComponent extends Component {
      *
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
+     * @param {number} [width] - The width of screen space. Defaults to the width of the canvas
+     * element in CSS pixels.
+     * @param {number} [height] - The height of screen space. Defaults to the height of the canvas
+     * element in CSS pixels.
      * @returns {Vec3} The screen space coordinate.
+     * @example
+     * // The pixel position of a point in the texture of a camera that renders into a render target
+     * const { width, height } = entity.camera.renderTarget;
+     * const pixel = entity.camera.worldToScreen(point, undefined, width, height);
      */
-    worldToScreen(worldCoord, screenCoord) {
-        const device = this.system.app.graphicsDevice;
-        const { width, height } = device.clientRect;
-        return this._camera.worldToScreen(worldCoord, width, height, screenCoord);
+    worldToScreen(worldCoord, screenCoord, width, height) {
+        const { clientRect } = this.system.app.graphicsDevice;
+        return this._camera.worldToScreen(worldCoord, width ?? clientRect.width, height ?? clientRect.height, screenCoord);
     }
 
     /**

@@ -594,7 +594,7 @@ class CodeEditorDesktop extends CodeEditorBase {
                             const [, category, example] = getHashPath().split('/');
                             const examplePath = `${category}/${example || getFirstExample(category)}`;
                             window.open(
-                                `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.example.mjs`
+                                `https://github.com/playcanvas/engine/tree/main/examples/src/examples/${examplePath}`
                             );
                         }
                     }, jsx('svg', {

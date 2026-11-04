@@ -38,6 +38,7 @@ import { exampleRedirects } from '../src/app/redirects.mjs';
  * @typedef {object} ExampleTargets
  * @property {CopyTarget[]} sources - transformed source files.
  * @property {CopyTarget[]} assets - copied asset files.
+ * @property {CopyTarget[]} thumbnails - copied thumbnail files.
  * @property {ExampleHtmlTarget[]} html - iframe html targets.
  * @property {ExampleMetadata[]} share - share page targets.
  * @property {ExampleRedirect[]} redirects - old example paths.
@@ -68,11 +69,12 @@ export const EXAMPLE_TARGET = 'esnext';
 export const EXAMPLE_TEMPLATE = 'templates/example.html';
 export const SHARE_TEMPLATE = 'templates/share.html';
 export const IFRAME_DIR = 'dist/iframe';
+export const THUMBNAIL_DIR = 'dist/thumbnails';
+export const THUMBNAIL_SIZES = /** @type {const} */ (['large', 'small']);
 export const STATIC_TARGETS = [
     { src: './src/static', dest: 'dist/' },
     { src: './iframe', dest: 'dist/iframe' },
     { src: './assets', dest: 'dist/static/assets/' },
-    { src: './thumbnails', dest: 'dist/thumbnails/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     {
         src: './node_modules/@playcanvas/observer/dist/index.mjs',
@@ -184,22 +186,42 @@ export const getExample = (name) => {
 
 /**
  * @param {ExampleMetadata} item - example metadata.
- * @param {string} file - example file suffix.
+ * @param {string} file - example file name.
  * @returns {string} source file path.
  */
 export const getExamplePath = (item, file) => {
-    return path.join(item.path, `${item.exampleNameKebab}.${file}`);
+    return path.join(item.path, file);
 };
 
 /**
- * @param {Pick<ExampleMetadata, 'path' | 'exampleNameKebab'>} item - example metadata.
- * @returns {string[]} example file suffixes.
+ * @param {typeof THUMBNAIL_SIZES[number]} size - thumbnail size.
+ * @returns {string} thumbnail file name in the example folder.
  */
-export const getFiles = ({ path: dir, exampleNameKebab }) => {
-    const prefix = `${exampleNameKebab}.`;
-    return fs.readdirSync(dir)
-    .filter(file => file.startsWith(prefix))
-    .map(file => file.replace(prefix, ''));
+export const thumbnailFile = size => `thumbnail-${size}.webp`;
+
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @param {typeof THUMBNAIL_SIZES[number]} size - thumbnail size.
+ * @returns {string} thumbnail file path.
+ */
+export const getThumbnailPath = (item, size) => getExamplePath(item, thumbnailFile(size));
+
+const THUMBNAIL_FILES = new Set(THUMBNAIL_SIZES.map(thumbnailFile));
+
+/**
+ * The thumbnails are not part of the example: the browser serves them on their own.
+ *
+ * @param {string} file - file name in an example folder.
+ * @returns {boolean} true if the file is part of the example.
+ */
+export const isExampleFile = file => !file.startsWith('.') && !THUMBNAIL_FILES.has(file);
+
+/**
+ * @param {Pick<ExampleMetadata, 'path'>} item - example metadata.
+ * @returns {string[]} example file names.
+ */
+export const getFiles = ({ path: dir }) => {
+    return fs.readdirSync(dir).filter(isExampleFile);
 };
 
 /**
@@ -207,8 +229,7 @@ export const getFiles = ({ path: dir, exampleNameKebab }) => {
  * @returns {Promise<ExampleConfig>} parsed example config.
  */
 export const readExampleConfig = async (item) => {
-    const src = path.join(item.path, `${item.exampleNameKebab}.example.mjs`);
-    const code = await fs.promises.readFile(src, 'utf8');
+    const code = await fs.promises.readFile(getExamplePath(item, 'example.mjs'), 'utf8');
     return parseConfig(code);
 };
 
@@ -344,10 +365,10 @@ export const writeRedirect = async ({ name, item }) => {
     await fs.promises.writeFile(`${dir}/index.html`, await createShareHtml(item));
 
     // an image cannot redirect, so the thumbnails are copied under the old name
-    await Promise.all(['large', 'small'].map(async (size) => {
-        const src = `thumbnails/${targetName(item)}_${size}.webp`;
+    await Promise.all(THUMBNAIL_SIZES.map(async (size) => {
+        const src = getThumbnailPath(item, size);
         if (await exists(src)) {
-            await copyFile({ src, dest: `dist/thumbnails/${name}_${size}.webp` });
+            await copyFile({ src, dest: `${THUMBNAIL_DIR}/${name}_${size}.webp` });
         }
     }));
 };
@@ -358,6 +379,7 @@ export const writeRedirect = async ({ name, item }) => {
 export const getExampleTargets = () => {
     const sources = [];
     const assets = [];
+    const thumbnails = [];
     const html = [];
     const share = [];
 
@@ -378,9 +400,17 @@ export const getExampleTargets = () => {
             }
             assets.push({ src: input, dest: output });
         }
+
+        // served flat under the example's target name, the URL the sidebar and share pages use
+        for (const size of THUMBNAIL_SIZES) {
+            const src = getThumbnailPath(item, size);
+            if (fs.existsSync(src)) {
+                thumbnails.push({ src, dest: `${THUMBNAIL_DIR}/${name}_${size}.webp` });
+            }
+        }
     }
 
-    return { sources, assets, html, share, redirects: getRedirects() };
+    return { sources, assets, thumbnails, html, share, redirects: getRedirects() };
 };
 
 /**

@@ -5,7 +5,10 @@ import {
     Vec3,
     Texture,
     RenderTarget,
+    PIXELFORMAT_RGBA16F,
     PIXELFORMAT_SRGBA8,
+    GAMMA_NONE,
+    TONEMAP_NONE,
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
     FILTER_LINEAR_MIPMAP_LINEAR
@@ -18,6 +21,8 @@ const _reflectedTarget = new Vec3();
 const _plane = new Plane();
 const _clipPoint = new Vec3();
 const _clipNormal = new Vec3();
+const _projMatrix = new Mat4();
+const _viewMatrix = new Mat4();
 
 /**
  * PlanarRenderer script renders the scene from a camera mirrored (reflection mode) or matching
@@ -53,8 +58,11 @@ const _clipNormal = new Vec3();
  * });
  * app.root.addChild(reflectionCamera);
  *
- * // each frame, after the main camera was updated
+ * // each frame, after the main camera was updated, a material reflects the texture
  * const texture = planarRenderer.frameUpdate();
+ * material.planarReflectionMap = texture;
+ * material.planarReflectionMatrix = planarRenderer.viewProjectionMatrix;
+ * material.update();
  * @category Rendering
  */
 class PlanarRenderer extends Script {
@@ -102,6 +110,19 @@ class PlanarRenderer extends Script {
      * @type {boolean}
      */
     depth = true;
+
+    /**
+     * If set to true, the texture stores high dynamic range colors, so that bright light sources
+     * keep their brightness in it. The camera then renders linear colors, without tone mapping and
+     * gamma correction, which are applied by the camera rendering the material using the texture.
+     * Its own tone mapping and gamma correction are restored when the texture is low dynamic range
+     * again. Falls back to a low dynamic range texture when the device cannot render to half-float
+     * textures.
+     *
+     * @attribute
+     * @type {boolean}
+     */
+    hdr = false;
 
     /**
      * A point on the plane.
@@ -158,6 +179,34 @@ class PlanarRenderer extends Script {
      */
     _viewSpaceClipPlane = [0, 0, 0, 0];
 
+    /**
+     * The view projection matrix of the planar camera.
+     *
+     * @type {Mat4}
+     * @private
+     */
+    _viewProjectionMatrix = new Mat4();
+
+    /**
+     * The tone mapping and gamma correction of the camera, stored while it renders to a high
+     * dynamic range texture, and restored when it renders to a low dynamic range texture again.
+     *
+     * @type {{ toneMapping: number, gammaCorrection: number }|null}
+     * @private
+     */
+    _ldrColorSettings = null;
+
+    /**
+     * Gets the view projection matrix of the camera, which projects world space positions into
+     * the texture. Updated by {@link PlanarRenderer#frameUpdate}, and typically assigned to
+     * {@link StandardMaterial#planarReflectionMatrix} together with the texture.
+     *
+     * @type {Mat4}
+     */
+    get viewProjectionMatrix() {
+        return this._viewProjectionMatrix;
+    }
+
     initialize() {
 
         // sceneCameraEntity needs to be set
@@ -187,8 +236,37 @@ class PlanarRenderer extends Script {
         this.on('destroy', () => {
             evtPostRender.off();
             planarCamera.calculateProjection = null;
+            this._updateColorSettings(false);
             this._destroyRenderTarget();
         });
+    }
+
+    /**
+     * Switches the camera to render linear colors into a high dynamic range texture, which are
+     * tone mapped and gamma corrected later, by the camera rendering the material using the
+     * texture. Its own settings are stored, and restored for a low dynamic range texture.
+     *
+     * @param {boolean} hdr - Whether the camera renders to a high dynamic range texture.
+     * @private
+     */
+    _updateColorSettings(hdr) {
+        const planarCamera = this.entity.camera;
+        if (!planarCamera) {
+            return;
+        }
+
+        if (hdr && !this._ldrColorSettings) {
+            this._ldrColorSettings = {
+                toneMapping: planarCamera.toneMapping,
+                gammaCorrection: planarCamera.gammaCorrection
+            };
+            planarCamera.toneMapping = TONEMAP_NONE;
+            planarCamera.gammaCorrection = GAMMA_NONE;
+        } else if (!hdr && this._ldrColorSettings) {
+            planarCamera.toneMapping = this._ldrColorSettings.toneMapping;
+            planarCamera.gammaCorrection = this._ldrColorSettings.gammaCorrection;
+            this._ldrColorSettings = null;
+        }
     }
 
     _destroyRenderTarget() {
@@ -215,8 +293,11 @@ class PlanarRenderer extends Script {
         const width = Math.min(Math.floor(sceneCameraWidth * this.scale), device.maxTextureSize);
         const height = Math.min(Math.floor(sceneCameraHeight * this.scale), device.maxTextureSize);
 
+        const format = this.hdr && device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : PIXELFORMAT_SRGBA8;
+
         const planarCamera = this.entity.camera;
-        if (!planarCamera.renderTarget || planarCamera.renderTarget.width !== width || planarCamera.renderTarget.height !== height) {
+        const rt = planarCamera.renderTarget;
+        if (!rt || rt.width !== width || rt.height !== height || this._texture?.format !== format) {
 
             // destroy old render target
             this._destroyRenderTarget();
@@ -226,7 +307,7 @@ class PlanarRenderer extends Script {
                 name: `${this.entity.name}:PlanarRenderer`,
                 width: width,
                 height: height,
-                format: PIXELFORMAT_SRGBA8,
+                format: format,
                 mipmaps: this.mipmaps,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -238,6 +319,8 @@ class PlanarRenderer extends Script {
                 colorBuffer: this._texture,
                 depth: this.depth
             });
+
+            this._updateColorSettings(format === PIXELFORMAT_RGBA16F);
         }
     }
 
@@ -388,6 +471,11 @@ class PlanarRenderer extends Script {
             } else {
                 planarCamera.calculateProjection = null;
             }
+
+            // the view projection matrix, built the same way as the projection of the camera
+            this._calculateProjection(_projMatrix);
+            _viewMatrix.copy(this.entity.getWorldTransform()).invert();
+            this._viewProjectionMatrix.mul2(_projMatrix, _viewMatrix);
 
             return this._texture;
         }

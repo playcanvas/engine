@@ -38,6 +38,12 @@ class GSplatQuadRenderer extends GSplatRenderer {
     _lastFisheyeEnabled = false;
 
     /** @private */
+    _lastAntiAlias = false;
+
+    /** @private */
+    _lastAntiAliasMixed = false;
+
+    /** @private */
     _lastSourceChunksKey = '';
 
     /** @private */
@@ -80,6 +86,8 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
         this._internalDefines.add('GSPLAT_SEPARATE_OPACITY');
         this._internalDefines.add('GSPLAT_FISHEYE');
+        this._internalDefines.add('GSPLAT_AA');
+        this._internalDefines.add('GSPLAT_AA_MIXED');
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_OVERDRAW');
@@ -284,6 +292,16 @@ class GSplatQuadRenderer extends GSplatRenderer {
             this._material.setParameter('splatOrder', this.workBuffer.orderBuffer);
         } else {
             this._material.setParameter('splatOrder', this.workBuffer.orderTexture);
+        }
+    }
+
+    setAntiAlias(antiAlias, mixed) {
+        if (antiAlias !== this._lastAntiAlias || mixed !== this._lastAntiAliasMixed) {
+            this._lastAntiAlias = antiAlias;
+            this._lastAntiAliasMixed = mixed;
+            this._material.setDefine('GSPLAT_AA', antiAlias);
+            this._material.setDefine('GSPLAT_AA_MIXED', mixed);
+            this._material.update();
         }
     }
 

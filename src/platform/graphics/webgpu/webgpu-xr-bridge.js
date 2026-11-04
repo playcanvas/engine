@@ -7,6 +7,10 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 
+// how many frames in a row that cannot acquire a texture pass between attempts to make the
+// projection layer again, after the first: about a second at a headset's frame rate
+const LAYER_RETRY_FRAMES = 60;
+
 /**
  * WebGPU graphics implementation for {@link XrBridge}.
  *
@@ -34,6 +38,16 @@ class WebgpuXrBridge {
     _cachedFramebufferSize = new Vec2();
 
     /**
+     * The number of frames in a row that could not acquire a texture from the projection layer. The
+     * layer is made again on the second of them, so a single failure does not make it again, and
+     * then every LAYER_RETRY_FRAMES while they go on failing, until a frame acquires one.
+     *
+     * @type {number}
+     * @private
+     */
+    _acquireFailures = 0;
+
+    /**
      * @param {XrBridge} xrBridge - The XR bridge.
      */
     constructor(xrBridge) {
@@ -47,6 +61,7 @@ class WebgpuXrBridge {
     destroy(device) {
         this._binding = null;
         this._layer = null;
+        this._acquireFailures = 0;
         this._cachedFramebufferSize.set(0, 0);
         device._clearXrState();
     }
@@ -69,13 +84,30 @@ class WebgpuXrBridge {
             return;
         }
 
+        // the views' depth textures and array layers, cleared only once every view has acquired its
+        // texture, so a frame that fails part way encodes nothing from a layer about to be destroyed
+        let depthClears = null;
+
         const subImages = device.xrSubImages;
         for (let i = 0; i < pose.views.length; i++) {
             let sub;
             try {
                 sub = this._binding.getViewSubImage(this._layer, pose.views[i]);
             } catch (e) {
+                // drop the views acquired before this one, which would otherwise render into a
+                // layer that is about to be destroyed
+                subImages.length = 0;
                 this.xrBridge._onBindingError?.(e);
+                // A runtime can lose the projection layer's textures, after which every
+                // getViewSubImage fails to acquire one and nothing reaches the display: the Quest
+                // Browser does when the headset sleeps and wakes. Once a second frame in a row fails,
+                // a new binding and layer, as after a lost device, take effect from the next frame;
+                // while they go on failing, or cannot be made, they are made again about once a
+                // second rather than every frame.
+                const failures = ++this._acquireFailures;
+                if (failures === 2 || (failures > 2 && (failures - 2) % LAYER_RETRY_FRAMES === 0)) {
+                    this._recreatePresentation();
+                }
                 return;
             }
 
@@ -107,7 +139,8 @@ class WebgpuXrBridge {
             // Remove once Safari is fixed.
             const depthTexture = sub.depthStencilTexture;
             if (depthTexture) {
-                this._clearDepth(depthTexture, viewDescriptor?.baseArrayLayer ?? 0);
+                depthClears ??= [];
+                depthClears.push(depthTexture, viewDescriptor?.baseArrayLayer ?? 0);
             }
 
             // Prefer the view descriptor's format when present: WebXR runtimes may use it to
@@ -122,10 +155,17 @@ class WebgpuXrBridge {
             });
         }
 
+        if (depthClears) {
+            for (let i = 0; i < depthClears.length; i += 2) {
+                this._clearDepth(depthClears[i], depthClears[i + 1]);
+            }
+        }
+
         // First view: seeds device.xr* for WebGPU frameStart (runs before per-eye rendering) and
         // caches texture size for getFramebufferSize when the projection layer omits dimensions.
         const first = subImages[0];
         if (first) {
+            this._acquireFailures = 0;
             device.xrColorTexture = first.colorTexture;
             device.xrColorTextureViewFormat = first.viewFormat;
             // align the engine-level backbuffer format with the runtime's projection-layer format so
@@ -134,6 +174,46 @@ class WebgpuXrBridge {
             // start of the next beginFrame and on session teardown
             device.setXrBackBufferFormat(first.viewFormat);
             this._cachedFramebufferSize.set(first.colorTexture.width, first.colorTexture.height);
+        }
+    }
+
+    /**
+     * Makes the WebXR WebGPU binding and projection layer again for the current session, with the
+     * session's own framebuffer scale and the lost layer's fixed foveation, and destroys the lost
+     * layer. The depth range is left as it is, as one changed earlier in the frame is not yet in
+     * the session's render state. Reports, rather than throws, a failure to make them, which keeps
+     * the lost binding and layer.
+     *
+     * @private
+     */
+    _recreatePresentation() {
+        const bridge = this.xrBridge;
+        const session = bridge._session;
+        if (!session) {
+            return;
+        }
+
+        const lost = this._layer;
+        try {
+            bridge.attachPresentation(session, {
+                framebufferScaleFactor: bridge._framebufferScaleFactor,
+                onBindingError: bridge._onBindingError
+            });
+        } catch (ex) {
+            // this runs inside the XR frame, which an exception would abandon
+            bridge._onBindingError?.(ex);
+            return;
+        }
+
+        const layer = this._layer;
+        if (layer !== lost) {
+            // keep the fixed foveation the application set on the lost layer
+            if ((lost.fixedFoveation ?? null) !== null && (layer.fixedFoveation ?? null) !== null) {
+                layer.fixedFoveation = lost.fixedFoveation;
+            }
+
+            // free the lost layer's textures now rather than once it is garbage collected
+            lost.destroy?.();
         }
     }
 
@@ -231,12 +311,18 @@ class WebgpuXrBridge {
     }
 
     /**
+     * Makes the binding and projection layer and presents the layer. Both are kept only once both
+     * are made, so a failure to make the layer leaves the bridge's binding and layer as they were.
+     *
      * @param {XRSession} session - XR session.
      * @param {object} options - Presentation options.
      * @param {number} options.framebufferScaleFactor - Resolved framebuffer scale factor.
-     * @param {number} options.depthNear - Depth near plane.
-     * @param {number} options.depthFar - Depth far plane.
-     * @param {Function} [options.onBindingError] - Called if XRGPUBinding construction fails.
+     * @param {number} [options.depthNear] - Depth near plane. The session's is left as it is when
+     * omitted, as are both of its planes if either is.
+     * @param {number} [options.depthFar] - Depth far plane.
+     * @param {Function} [options.onBindingError] - Called with the binding's errors: failing to
+     * construct it, failing to acquire a view's texture (on every frame that fails), and failing to
+     * make the projection layer again after that.
      */
     attachPresentation(session, options) {
         const XRGPUBindingCtor = globalThis.XRGPUBinding;
@@ -248,14 +334,15 @@ class WebgpuXrBridge {
         const device = this.xrBridge.device;
         const wgpu = device.wgpu;
 
+        let binding;
         try {
-            this._binding = new XRGPUBindingCtor(session, wgpu);
+            binding = new XRGPUBindingCtor(session, wgpu);
         } catch (ex) {
             this.xrBridge._onBindingError?.(ex);
             return;
         }
 
-        const colorFormat = this._binding.getPreferredColorFormat();
+        const colorFormat = binding.getPreferredColorFormat();
 
         const layerOpts = {
             colorFormat,
@@ -263,23 +350,28 @@ class WebgpuXrBridge {
         };
 
         // Prefer texture-array for stereo (per-eye array layers); some runtimes only support 'texture'.
+        let layer;
         try {
-            this._layer = this._binding.createProjectionLayer({
+            layer = binding.createProjectionLayer({
                 ...layerOpts,
                 textureType: 'texture-array'
             });
         } catch {
-            this._layer = this._binding.createProjectionLayer({
+            layer = binding.createProjectionLayer({
                 ...layerOpts,
                 textureType: 'texture'
             });
         }
 
-        session.updateRenderState({
-            layers: [this._layer],
-            depthNear: options.depthNear,
-            depthFar: options.depthFar
-        });
+        this._binding = binding;
+        this._layer = layer;
+
+        const renderState = { layers: [layer] };
+        if (options.depthNear !== undefined && options.depthFar !== undefined) {
+            renderState.depthNear = options.depthNear;
+            renderState.depthFar = options.depthFar;
+        }
+        session.updateRenderState(renderState);
     }
 
     /**
@@ -355,6 +447,7 @@ class WebgpuXrBridge {
 
         this._binding = null;
         this._layer = null;
+        this._acquireFailures = 0;
         this._cachedFramebufferSize.set(0, 0);
         device._clearXrState();
 

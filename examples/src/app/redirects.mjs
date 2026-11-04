@@ -1,9 +1,10 @@
 /**
  * Examples that moved to another category or were renamed, mapping the old `category/example`
- * path to the current one. Old links keep working: the examples browser redirects these routes,
- * and the build writes iframe, share and thumbnail files under the old names for sites that
- * embed or link to those directly. Keep entries long after a move, as links to the old path live
- * on outside this repository, and repoint them if the example moves again.
+ * path to the current one, and removed examples, mapping their path to the most similar example.
+ * Old links keep working: the examples browser redirects these routes, and the build writes
+ * iframe, share and thumbnail files under the old names for sites that embed or link to those
+ * directly. Keep entries long after a move, as links to the old path live on outside this
+ * repository, and repoint them if the example moves again.
  *
  * @type {Record<string, string>}
  */
@@ -28,8 +29,10 @@ export const exampleRedirects = {
     'graphics/lights-baked': 'lights-and-shadows/lights-baked',
     'graphics/lights-baked-a-o': 'lights-and-shadows/lights-baked-a-o',
     'graphics/lights-non-clustered': 'lights-and-shadows/lights-non-clustered',
+    'graphics/model-outline': 'graphics/outlines-colored',
     'graphics/multi-render-targets': 'render-targets/multi-render-targets',
     'graphics/painter': 'render-targets/painter',
+    'graphics/post-effects': 'camera-frame/post-processing',
     'graphics/post-processing': 'camera-frame/post-processing',
     'graphics/render-pass': 'render-targets/render-pass-camera',
     'graphics/render-to-texture': 'render-targets/render-to-texture',

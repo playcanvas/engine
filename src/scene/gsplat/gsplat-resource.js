@@ -20,9 +20,18 @@ const getSHData = (gsplatData, numCoeffs) => {
     return result;
 };
 
-/** @ignore */
+/**
+ * A Gaussian splat resource that stores uncompressed splat data. Created when loading uncompressed
+ * PLY files and glTF files with the `KHR_gaussian_splatting` extension, and for compressed PLY or
+ * SOG files whose asset data sets `decompress` to true.
+ *
+ * @category Graphics
+ */
 class GSplatResource extends GSplatResourceBase {
-    /** @type {0 | 1 | 2 | 3 | 4} */
+    /**
+     * @type {0 | 1 | 2 | 3 | 4}
+     * @ignore
+     */
     shBands;
 
     /**
@@ -37,6 +46,7 @@ class GSplatResource extends GSplatResourceBase {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatData} gsplatData - The splat data.
      * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
+     * @ignore
      */
     constructor(device, gsplatData, options = {}) {
         super(device, gsplatData, options);
@@ -109,6 +119,7 @@ class GSplatResource extends GSplatResourceBase {
      * `opacity_excess` property: the opacity above 1 that merged (decimated) gaussians carry.
      *
      * @param {GSplatData} gsplatData - The source data
+     * @ignore
      */
     updateColorData(gsplatData) {
         const texture = this.streams.getTexture('splatColor');
@@ -150,6 +161,7 @@ class GSplatResource extends GSplatResourceBase {
 
     /**
      * @param {GSplatData} gsplatData - The source data
+     * @ignore
      */
     updateTransformData(gsplatData) {
 
@@ -195,6 +207,7 @@ class GSplatResource extends GSplatResourceBase {
 
     /**
      * @param {GSplatData} gsplatData - The source data
+     * @ignore
      */
     updateSHData(gsplatData) {
         const sh1to3Texture = this.streams.getTexture('splatSH_1to3');
