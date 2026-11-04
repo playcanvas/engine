@@ -2346,6 +2346,45 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     box-shadow: none !important;
 }
 
+/* separates the example's own files from the read-only scripts it imports */
+.tabs-container > .code-editor-tabs-divider {
+    flex: none;
+    width: 1px;
+    margin: 5px 3px;
+    background-color: var(--pc-border);
+}
+
+.tabs-container > .pcui-button.code-editor-script-tab {
+    font-style: italic;
+}
+
+/* the GitHub link follows the selected tab as a sibling, joined to it into one pill */
+.tabs-container > .pcui-button.code-editor-tab-with-link {
+    padding-right: 4px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.tabs-container > .pcui-button.code-editor-tab-github {
+    flex: none;
+    width: 24px;
+    margin-left: -2px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    color: var(--pc-text-secondary);
+    background-color: var(--pc-active);
+    text-decoration: none;
+}
+
+.tabs-container > .pcui-button.code-editor-tab-github:hover {
+    color: var(--pc-text);
+    background-color: var(--pc-active);
+}
+
 #embed-button.selected {
     background-color: #f60;
     color: white;
