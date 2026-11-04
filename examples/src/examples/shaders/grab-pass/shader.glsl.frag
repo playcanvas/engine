@@ -1,46 +1,30 @@
-// use the special uSceneColorMap texture, which is a built-in texture containing
-// a copy of the color buffer at the point of capture, inside the Depth layer.
+// the color of the scene behind the glass, grabbed by the Depth layer, with mipmaps
 uniform sampler2D uSceneColorMap;
 
-// normal map providing offsets
+// the bumps of the glass, and its roughness, frosted around a clear logo
 uniform sampler2D uOffsetMap;
-
-// roughness map
 uniform sampler2D uRoughnessMap;
 
-// tint colors
-uniform vec3 tints[4];
-
-// engine built-in constant storing render target size in .xy and inverse size in .zw
+// the size of the render target in .xy, and its inverse in .zw
 uniform vec4 screen_size;
 
 varying vec2 texCoord;
+varying vec3 viewNormal;
 
 void main(void)
 {
     float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;
 
-    // sample offset texture - used to add distortion to the sampled background
-    vec2 offset = texture2D(uOffsetMap, texCoord).rg;
-    offset = 2.0 * offset - 1.0;
+    // the view through the glass bends at its rounded edges, and on its bumps
+    vec3 normal = normalize(viewNormal);
+    vec2 bumps = texture2D(uOffsetMap, texCoord).rg * 2.0 - 1.0;
+    vec2 offset = -normal.xy * 0.08 + bumps * (0.2 + roughness) * 0.015;
 
-    // offset strength
-    offset *= (0.2 + roughness) * 0.015;
-
-    // get normalized uv coordinates for canvas
+    // the rougher the glass, the smaller and more blurred the mip level the scene is sampled from
     vec2 grabUv = gl_FragCoord.xy * screen_size.zw;
+    vec3 color = texture2DLod(uSceneColorMap, grabUv + offset, roughness * 7.0).rgb;
 
-    // roughness dictates which mipmap level gets used, in 0..4 range
-    float mipmap = roughness * 5.0;
-
-    // get background pixel color with distorted offset
-    vec3 grabColor = texture2DLod(uSceneColorMap, grabUv + offset, mipmap).rgb;
-
-    // tint the material based on mipmap
-    float tintIndex = clamp(mipmap, 0.0, 3.0);
-    grabColor *= tints[int(tintIndex)];
-
-    // brighten the refracted texture a little bit
-    // brighten even more the rough parts of the glass
-    gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
+    // the frosted glass and its edges are a little brighter
+    float edge = 1.0 - abs(normal.z);
+    gl_FragColor = vec4(color + roughness * 0.06 + edge * edge * 0.3, 1.0);
 }

@@ -1376,6 +1376,17 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        Debug.assert(false);
+    }
+
+    /**
      * Sets the specified blend state.
      *
      * @param {BlendState} blendState - New blend state.

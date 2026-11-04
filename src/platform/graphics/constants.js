@@ -502,6 +502,23 @@ export const FILTER_LINEAR_MIPMAP_NEAREST = 4;
 export const FILTER_LINEAR_MIPMAP_LINEAR = 5;
 
 /**
+ * Generate each mip level of a texture by averaging blocks of 2x2 texels of the previous level.
+ *
+ * @category Graphics
+ */
+export const MIPMAPFILTER_BOX = 'box';
+
+/**
+ * Generate each mip level of a texture from the previous level with a wider, smooth filter,
+ * approximating a Gaussian blur. Sampling the small mip levels of such a texture to blur it, for
+ * example in the reflection of a rough surface, avoids the blocks and the flickering of the box
+ * filter. Generating the mip levels is more expensive than with {@link MIPMAPFILTER_BOX}.
+ *
+ * @category Graphics
+ */
+export const MIPMAPFILTER_GAUSSIAN = 'gaussian';
+
+/**
  * Never pass.
  *
  * @category Graphics
