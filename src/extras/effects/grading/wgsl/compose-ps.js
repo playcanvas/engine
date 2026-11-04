@@ -1,11 +1,17 @@
 export default /* wgsl */`
     uniform brightnessContrastSaturation: vec3f;
-    uniform tint: vec3f;
+    uniform gradingMixerRed: vec3f;
+    uniform gradingMixerGreen: vec3f;
+    uniform gradingMixerBlue: vec3f;
 
     // for all parameters, 1.0 is the no-change value
     fn colorGradingHDR(color: vec3f, brt: f32, sat: f32, con: f32) -> vec3f {
-        // tint
-        var colorOut = color * uniform.tint;
+        // channel mixer, with the tint folded into its rows
+        var colorOut = vec3f(
+            dot(uniform.gradingMixerRed, color),
+            dot(uniform.gradingMixerGreen, color),
+            dot(uniform.gradingMixerBlue, color)
+        );
 
         // brightness
         colorOut = colorOut * brt;
