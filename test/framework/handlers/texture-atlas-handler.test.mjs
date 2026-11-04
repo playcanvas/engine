@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { Bundle } from '../../../src/framework/bundle/bundle.js';
 import { FILTER_NEAREST } from '../../../src/platform/graphics/constants.js';
 import { Sprite } from '../../../src/scene/sprite.js';
 import { createApp } from '../../app.mjs';
@@ -241,6 +242,52 @@ describe('TextureAtlasHandler', function () {
                     done();
                 });
             });
+        });
+    });
+
+    describe('bundles', function () {
+
+        // a loaded bundle holds the image, as the file of a texture asset of it
+        const loadFromBundle = (json, image, done) => {
+            const imageAsset = new Asset('image', 'texture', { url: image });
+            app.assets.add(imageAsset);
+            const bundle = new Bundle();
+            bundle.addFile(image, new DataView(new ArrayBuffer(8)));
+            const bundleAsset = new Asset('bundle', 'bundle', null, { assets: [imageAsset.id] });
+            app.assets.add(bundleAsset);
+            bundleAsset.resource = bundle;
+            bundleAsset.loaded = true;
+
+            // record what the texture handler loads, decoding nothing
+            const requests = [];
+            app.loader.getHandler('texture').load = (request, callback) => {
+                requests.push(request);
+                callback(null, { width: 32, height: 32 });
+            };
+
+            loadAtlas(json, null, (err, asset) => {
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                expect(requests).to.have.length(1);
+                expect(requests[0].original).to.equal(image);
+                expect(requests[0].load).to.match(/^blob:/);
+                expect(asset.resource.texture).to.not.equal(imageAsset.resource);
+                done();
+            });
+        };
+
+        it('loads a sprite sheet\'s image from the bundle', function (done) {
+            // the server doesn't have this image
+            const json = '/test/assets/sprites/sprite-sheet-missing-image.json';
+            loadFromBundle(json, '/test/assets/sprites/missing.png', done);
+        });
+
+        it('loads the PNG of the same name from the bundle', function (done) {
+            const json = '/test/assets/sprites/red-atlas.json';
+            loadFromBundle(json, '/test/assets/sprites/red-atlas.png', done);
         });
     });
 

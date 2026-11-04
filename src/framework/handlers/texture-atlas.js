@@ -14,6 +14,7 @@ import { isSpriteSheet, parseSpriteSheet } from '../parsers/sprite-sheet.js';
 import { ResourceHandler } from './handler.js';
 
 /**
+ * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { AppBase } from '../app-base.js'
  */
 
@@ -131,37 +132,85 @@ class TextureAtlasHandler extends ResourceHandler {
                 const textureAsset = asset && new Asset(asset.name, 'texture', { url: textureUrl },
                     asset.data, asset.options);
 
-                // the atlas owns its texture and destroys it, so the texture is created here,
-                // rather than taken from the loader's cache, where it can belong to other assets
-                handler.load({ load: textureUrl, original: textureUrl }, (err, textureData) => {
+                this._loadImage(textureUrl, textureAsset, (err, texture) => {
                     if (err) {
-                        // name the image, as some image loads fail with only a status code
-                        callback(`Error loading texture atlas image: ${textureUrl} [${err}]`);
+                        callback(err);
                         return;
                     }
 
-                    let texture = null;
                     let data = response;
-                    try {
-                        texture = handler.open(textureUrl, textureData, textureAsset);
-                        if (spriteSheet) {
+                    if (spriteSheet) {
+                        try {
                             const { width, height } = texture;
                             data = { frames: parseSpriteSheet(response, width, height) };
+                        } catch (e) {
+                            texture.destroy();
+                            callback(`Error loading texture atlas ${url.original}: ${e.message}`);
+                            return;
                         }
-                    } catch (e) {
-                        texture?.destroy();
-                        callback(`Error loading texture atlas ${url.original}: ${e.message ?? e}`);
-                        return;
                     }
 
                     callback(null, {
                         data: data,
                         texture: texture
                     });
-                }, textureAsset);
+                });
             });
         } else {
             handler.load(url, callback);
+        }
+    }
+
+    /**
+     * Loads the image of a JSON file into a texture of the atlas's own, as the atlas destroys its
+     * texture: the loader's cache could provide a texture another asset owns. A loaded bundle that
+     * holds the image provides it, as it would through the loader.
+     *
+     * @param {string} textureUrl - The url of the image.
+     * @param {Asset} [textureAsset] - The asset whose texture settings create the texture.
+     * @param {function(string|null, Texture=): void} callback - Called with an error or the
+     * texture.
+     * @private
+     */
+    _loadImage(textureUrl, textureAsset, callback) {
+        const handler = this._loader.getHandler('texture');
+
+        const load = (request) => {
+            handler.load(request, (err, data) => {
+                if (request.load !== textureUrl) {
+                    URL.revokeObjectURL(request.load);
+                }
+
+                let texture = null;
+                if (!err) {
+                    try {
+                        texture = handler.open(textureUrl, data, textureAsset);
+                    } catch (e) {
+                        err = e.message ?? e;
+                    }
+                }
+
+                if (err) {
+                    // name the image, as some image loads fail with only a status code
+                    callback(`Error loading texture atlas image: ${textureUrl} [${err}]`);
+                } else {
+                    callback(null, texture);
+                }
+            }, textureAsset);
+        };
+
+        const file = textureUrl.split('?')[0];
+        const bundles = this._app.enableBundles ? this._app.bundles : null;
+        if (bundles?.hasUrl(file) && bundles.urlIsLoadedOrLoading(file)) {
+            bundles.loadUrl(file, (err, data) => {
+                if (err) {
+                    callback(`Error loading texture atlas image: ${textureUrl} [${err}]`);
+                    return;
+                }
+                load({ load: URL.createObjectURL(new Blob([data])), original: file });
+            });
+        } else {
+            load({ load: textureUrl, original: textureUrl });
         }
     }
 
