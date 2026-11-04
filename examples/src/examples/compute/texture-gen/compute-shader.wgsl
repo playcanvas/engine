@@ -41,8 +41,8 @@ fn main(@builtin(global_invocation_id) global_id : vec3u) {
     let line = abs(fract(v * 2.0) - 0.5);
     color += palette(0.5 * v + 0.1 * t + ubCompute.hue + 0.5) * (1.0 - smoothstep(0.0, 0.12, line));
 
-    // Load the texel of the input texture, the white logo on grey, and lay the logo over the
-    // pattern. Only the white of the logo is kept, the grey around it leaves the pattern as it is.
+    // Load the texel of the input texture, the white logo on gray, and lay the logo over the
+    // pattern. Only the white of the logo is kept, the gray around it leaves the pattern as it is.
     let logo = textureLoad(inputTexture, vec2i(global_id.xy), 0).r;
     color = mix(color, vec3f(1.0), smoothstep(0.75, 0.95, logo) * 0.9);
 

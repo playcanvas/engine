@@ -171,7 +171,7 @@ class TransformFeedback {
             });
 
             // create the matching output buffer when only an input was given by the single buffer
-            // form, preserving the long standing behaviour of that form
+            // form, preserving the long standing behavior of that form
             if (input && output === undefined && !descriptors) {
                 output = this._createOutputBuffer(input, usage);
                 this._ownedOutputBuffers.push(output);

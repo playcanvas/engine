@@ -36,7 +36,7 @@ export default /* glsl */`
     void main(void) {
         vec2 texel = smaaMetrics.xy;
 
-        // the blending weights of the pixel, along with those its right and bottom neighbours
+        // the blending weights of the pixel, along with those its right and bottom neighbors
         // hold for it
         vec4 a;
         a.x = texture2DLod(smaaBlendTexture, uv0 + vec2(texel.x, 0.0), 0.0).a;
@@ -45,7 +45,7 @@ export default /* glsl */`
 
         vec4 color = texture2DLod(smaaColorTexture, uv0, 0.0);
 
-        // a pixel on an edge blends with its neighbours on either side, along the direction of the
+        // a pixel on an edge blends with its neighbors on either side, along the direction of the
         // stronger edge
         if (dot(a, vec4(1.0)) >= 1.0e-5) {
             bool horizontal = max(a.x, a.z) > max(a.y, a.w);

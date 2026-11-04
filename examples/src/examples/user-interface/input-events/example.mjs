@@ -289,7 +289,7 @@ const drop = (/** @type {number} */ x, /** @type {number} */ y) => {
 };
 app.mouse.on('mousedown', (event) => drop(event.x, event.y));
 
-// A tap is followed by emulated mouse events, which would drop a second marker. Cancelling the
+// A tap is followed by emulated mouse events, which would drop a second marker. Canceling the
 // touch stops them
 app.touch.on('touchstart', (event) => {
     const { x, y } = event.changedTouches[0];

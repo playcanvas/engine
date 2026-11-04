@@ -453,7 +453,7 @@ const smaa = new SmaaEffect(device);
 cameraFrame.addEffect(smaa);
 
 // The lens flares of the orb and the doors. Each look places its elements along the axis from the
-// light through the centre of the screen. Offsets of 0 sit on the light, 1 at the centre, 2
+// light through the center of the screen. Offsets of 0 sit on the light, 1 at the center, 2
 // mirrored across it. Sizes are fractions of the screen height.
 const orbLook = {
     elements: [

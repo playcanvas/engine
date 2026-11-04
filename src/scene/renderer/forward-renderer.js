@@ -308,7 +308,7 @@ class ForwardRenderer extends Renderer {
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
 
         // when the FramePassMultiView wrapper is iterating XR views, render only the active one
-        // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behaviour
+        // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behavior
         // of rendering all views or the single non-XR view)
         const activeView = device.xrCurrentViewIndex ?? -1;
         const viewListStart = (viewList && activeView >= 0) ? activeView : 0;

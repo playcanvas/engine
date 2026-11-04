@@ -11,9 +11,9 @@ export default /* glsl */`
         color = color * brt;
 
         // saturation
-        float grey = dot(color, vec3(0.3, 0.59, 0.11));
-        grey = grey / max(1.0, max(color.r, max(color.g, color.b)));    // Normalize luminance in HDR to preserve intensity
-        color = mix(vec3(grey), color, sat);
+        float gray = dot(color, vec3(0.3, 0.59, 0.11));
+        gray = gray / max(1.0, max(color.r, max(color.g, color.b)));    // Normalize luminance in HDR to preserve intensity
+        color = mix(vec3(gray), color, sat);
 
         // contrast
         return mix(vec3(0.5), color, con);

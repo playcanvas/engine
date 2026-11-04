@@ -131,7 +131,7 @@ app.scene.skyboxIntensity = 0.3;
 
 // ----- The generated textures -----
 
-// The input texture: the white PlayCanvas logo on grey
+// The input texture: the white PlayCanvas logo on gray
 const logo = assets.logo.resource;
 
 // a compute shader that generates a texture

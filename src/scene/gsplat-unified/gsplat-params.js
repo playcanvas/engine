@@ -809,9 +809,9 @@ class GSplatParams {
     /**
      * Sets the foveated contribution culling strength. Only used by the
      * {@link GSPLAT_RENDERER_RASTER_GPU_SORT} renderer. When greater than zero, the contribution
-     * culling threshold is raised radially from the screen centre: the effective threshold is
+     * culling threshold is raised radially from the screen center: the effective threshold is
      * `minContribution + foveationStrength * smoothstep(foveationCenter, 1, length(ndc))`, so the
-     * centre of the screen is unaffected and low-contribution splats are culled increasingly
+     * center of the screen is unaffected and low-contribution splats are culled increasingly
      * toward the edges, reaching full strength at the screen edge and beyond (corners). Set to 0
      * to disable. Defaults to 0.
      *
@@ -832,9 +832,9 @@ class GSplatParams {
     }
 
     /**
-     * Sets the protected centre radius for foveated contribution culling. Only used by the
+     * Sets the protected center radius for foveated contribution culling. Only used by the
      * {@link GSPLAT_RENDERER_RASTER_GPU_SORT} renderer. Expressed in NDC radius units (0 at the
-     * screen centre, 1 at the edge): within this radius {@link foveationStrength} has no effect,
+     * screen center, 1 at the edge): within this radius {@link foveationStrength} has no effect,
      * and the falloff ramps smoothly from this radius to the screen edge. Defaults to 0.3.
      *
      * @type {number}
@@ -845,7 +845,7 @@ class GSplatParams {
     }
 
     /**
-     * Gets the protected centre radius for foveated contribution culling.
+     * Gets the protected center radius for foveated contribution culling.
      *
      * @type {number}
      */

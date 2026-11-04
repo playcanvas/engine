@@ -218,13 +218,13 @@ fn computeSplatCov(
     // negligible. Near the camera, projected areas are large so contributions naturally
     // exceed the threshold; at distance, areas shrink and low-impact splats are culled.
     //
-    // Foveation: the threshold is raised radially from the screen centre. Within
+    // Foveation: the threshold is raised radially from the screen center. Within
     // foveationCenter (NDC radius) there is no effect; the boost ramps with a smoothstep
     // to full foveationStrength at the screen edge (r = 1) and beyond (corners). With
     // strength 0 this is an exact no-op.
     let fovNdc = screen * vec2f(2.0 / viewportWidth, 2.0 / viewportHeight) - vec2f(1.0);
     #ifdef GSPLAT_XR
-        // Stereo: use the smaller of the two eyes' radii, so a splat near the centre of either
+        // Stereo: use the smaller of the two eyes' radii, so a splat near the center of either
         // eye is protected (the foveated boost only applies where it is peripheral in both).
         let fovR = min(length(fovNdc), length(ndc1));
     #else
