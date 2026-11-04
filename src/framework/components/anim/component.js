@@ -871,13 +871,14 @@ class AnimComponent extends Component {
 
     /**
      * @param {string} name - The name of the anim component layer to find.
-     * @returns {AnimComponentLayer|null} The layer, or null if not found.
+     * @returns {AnimComponentLayer} The layer, or null if not found. Typed as non-null, as it was
+     * before the rename, so existing callers keep compiling under strictNullChecks.
      * @deprecated Use {@link AnimComponent#findLayer} instead.
      * @ignore
      */
     findAnimationLayer(name) {
         Debug.deprecated('AnimComponent#findAnimationLayer is deprecated. Use AnimComponent#findLayer instead.');
-        return this.findLayer(name);
+        return /** @type {AnimComponentLayer} */ (this.findLayer(name));
     }
 
     // ---- deprecated block end ----
