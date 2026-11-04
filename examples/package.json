@@ -35,6 +35,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/react-router-dom": "5.3.3",
+    "3d-tiles-renderer": "0.5.4",
     "cross-env": "10.1.0",
     "esbuild": "0.28.2",
     "eslint": "9.39.5",
@@ -56,6 +57,9 @@
   },
   "overrides": {
     "@playcanvas/inspector": {
+      "playcanvas": "$playcanvas"
+    },
+    "3d-tiles-renderer": {
       "playcanvas": "$playcanvas"
     }
   },
