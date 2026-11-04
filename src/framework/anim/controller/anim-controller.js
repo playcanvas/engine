@@ -250,6 +250,21 @@ class AnimController {
         return this._states[stateName];
     }
 
+    /**
+     * The rate at which the time in the active state advances. This is the playback speed of the
+     * state's first clip rather than the state speed, as the two can differ, for example in blend
+     * trees. Exit times, the state progress and the end of non-looping states are then all measured
+     * against what the clip actually plays.
+     *
+     * @type {number}
+     * @private
+     */
+    get _activeStateTimeScale() {
+        const animations = this.activeStateAnimations;
+        const activeClip = animations.length > 0 ? this._animEvaluator.findClip(animations[0].name) : null;
+        return activeClip ? activeClip.speed : this.activeState.speed;
+    }
+
     _getActiveStateProgressForTime(time) {
         if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY) {
             return 1.0;
@@ -257,12 +272,9 @@ class AnimController {
 
         const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
         if (activeClip) {
-            // the time in state already advances at the state speed, so convert it back to the
-            // clip's own playback time rather than applying the speed a second time. The clip speed
-            // can differ from the state speed, for example in blend trees.
-            const stateSpeed = this.activeState.speed;
-            const clipTime = stateSpeed !== 0 ? time * Math.abs(activeClip.speed) / stateSpeed : time;
-            return clipTime / activeClip.track.duration;
+            // the time in state advances at the clip speed, so it is already the clip's playback
+            // time. For a clip playing in reverse it runs from 0 towards negative values.
+            return (activeClip.speed < 0 ? -time : time) / activeClip.track.duration;
         }
 
         return null;
@@ -620,13 +632,14 @@ class AnimController {
         let clip;
         // update time when looping or when the active state is not at the end of its duration
         if (this.activeState.loop || this._timeInState < this.activeStateDuration) {
+            const timeScale = this._activeStateTimeScale;
             this._timeInStateBefore = this._timeInState;
-            this._timeInState += dt * this.activeState.speed;
+            this._timeInState += dt * timeScale;
             // if the active state is not looping and the time in state is greater than the duration, set the time in state to the state duration
-            // and update the delta time accordingly. The time in state advances at the state speed, so divide by it to get back to real time
+            // and update the delta time accordingly. The time in state advances at the time scale, so divide by it to get back to real time
             if (!this.activeState.loop && this._timeInState > this.activeStateDuration) {
                 this._timeInState = this.activeStateDuration;
-                dt = (this.activeStateDuration - this._timeInStateBefore) / this.activeState.speed;
+                dt = (this.activeStateDuration - this._timeInStateBefore) / timeScale;
             }
         }
 

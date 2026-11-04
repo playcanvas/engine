@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { AnimController } from '../../../../src/framework/anim/controller/anim-controller.js';
-import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
+import { ANIM_BLEND_1D, ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
@@ -409,25 +409,34 @@ describe('AnimController', function () {
         const duration = 4;
 
         // creates a controller with states 'A' and 'B' that move to each other on the given exit
-        // time (or stay in 'A' when no exit time is given), playing 'A' from its start
-        const createController = (speed, loop, exitTime = null) => {
+        // time (or stay in 'A' when no exit time is given), playing 'A' from its start. 'A' can
+        // optionally be a blend tree of two clips, or have its speed set when its track is assigned.
+        const createController = (speed, loop, exitTime = null, { blendTree = null, assignSpeed } = {}) => {
             const graph = new Entity();
             const animBinder = new AnimComponentBinder({ entity: graph }, graph, 'layer', {}, 0);
             animBinder.resolve = () => {};
             const states = [
                 { name: 'START' },
-                { name: 'A', speed, loop },
+                { name: 'A', speed, loop, blendTree },
                 { name: 'B', speed, loop }
             ];
             const transitions = [{ from: 'START', to: 'A' }];
             if (exitTime !== null) {
                 transitions.push({ from: 'A', to: 'B', exitTime }, { from: 'B', to: 'A', exitTime });
             }
-            const animController = new AnimController(new AnimEvaluator(animBinder), states, transitions, true, null, () => null, () => {});
+            const parameters = {
+                'blend': { name: 'blend', type: 'FLOAT', value: 0.5 }
+            };
+            const animController = new AnimController(new AnimEvaluator(animBinder), states, transitions, true, null, name => parameters[name], () => {});
             const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
             const inputs = [new AnimData(1, [0, 2, 4])];
             const outputs = [new AnimData(1, [0, 1, 2])];
-            animController.assignAnimation('A', new AnimTrack('trackA', duration, inputs, outputs, curves));
+            if (blendTree) {
+                animController.assignAnimation('A.c1', new AnimTrack('trackA1', duration, inputs, outputs, curves));
+                animController.assignAnimation('A.c2', new AnimTrack('trackA2', duration, inputs, outputs, curves));
+            } else {
+                animController.assignAnimation('A', new AnimTrack('trackA', duration, inputs, outputs, curves), assignSpeed);
+            }
             animController.assignAnimation('B', new AnimTrack('trackB', duration, inputs, outputs, curves));
             animController.play('A');
             return animController;
@@ -454,6 +463,41 @@ describe('AnimController', function () {
                 expect(animController.activeStateName).to.equal('A');
                 updateFrames(animController, 1);
                 expect(animController.activeStateName).to.equal('B');
+            });
+        });
+
+        // the clips play at their own speed rather than the state speed in these states, so the
+        // exit time has to follow the clip speed
+        [
+            {
+                name: 'a blend tree with a state speed of 2 and children at speed 1',
+                options: {
+                    blendTree: {
+                        type: ANIM_BLEND_1D,
+                        parameter: 'blend',
+                        syncAnimations: true,
+                        children: [{ name: 'c1', point: 0, speed: 1 }, { name: 'c2', point: 1, speed: 1 }]
+                    }
+                },
+                speed: 2
+            },
+            {
+                name: 'a state whose speed is changed when its track is assigned',
+                options: { assignSpeed: 2 },
+                speed: 1
+            }
+        ].forEach(({ name, options, speed }) => {
+            [true, false].forEach((loop) => {
+                it(`transitions on an exit time of 1 once the clip has played once in ${name} (loop ${loop})`, function () {
+                    const animController = createController(speed, loop, 1, options);
+                    const clipSpeed = animController.animEvaluator.clips[0].speed;
+                    expect(clipSpeed).to.not.equal(animController.activeState.speed);
+                    const frames = duration / Math.abs(clipSpeed) / dt;
+                    updateFrames(animController, frames - 1);
+                    expect(animController.activeStateName).to.equal('A');
+                    updateFrames(animController, 1);
+                    expect(animController.activeStateName).to.equal('B');
+                });
             });
         });
 
