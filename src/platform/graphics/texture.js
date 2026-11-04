@@ -56,7 +56,7 @@ const releaseSource = (source) => {
  * Note on **HDR texture format** support:
  * 1. **As textures**:
  *     - float (i.e. {@link PIXELFORMAT_RGBA32F}), half-float (i.e. {@link PIXELFORMAT_RGBA16F}) and
- * small-float ({@link PIXELFORMAT_111110F}) formats are always supported on both WebGL2 and WebGPU
+ * small-float ({@link PIXELFORMAT_RG11B10F}) formats are always supported on both WebGL2 and WebGPU
  * with point sampling.
  *     - half-float and small-float formats are always supported on WebGL2 and WebGPU with linear
  * sampling.
@@ -204,7 +204,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
@@ -991,7 +991,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
@@ -1209,7 +1209,7 @@ class Texture {
      * @type {boolean}
      */
     get pot() {
-        return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
+        return math.isPowerOfTwo(this._width) && math.isPowerOfTwo(this._height);
     }
 
     // get the texture's encoding type

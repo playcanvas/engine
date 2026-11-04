@@ -109,8 +109,8 @@ class GSplatQuadRenderer extends GSplatRenderer {
         const isForward = (renderMode & GSPLAT_FORWARD) !== 0;
         const isShadow = (renderMode & GSPLAT_SHADOW) !== 0;
 
-        // Update mesh instance castShadow state FIRST, before adding to arrays
-        this.meshInstance.castShadow = isShadow;
+        // Update mesh instance castShadows state FIRST, before adding to arrays
+        this.meshInstance.castShadows = isShadow;
 
         // Remove from old arrays if needed
         if (wasForward && !isForward) {
