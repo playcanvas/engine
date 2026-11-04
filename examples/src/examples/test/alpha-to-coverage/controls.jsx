@@ -9,7 +9,7 @@ import {
 } from '@playcanvas/pcui/react';
 import { useEffect, useState } from 'react';
 
-import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8 } from 'playcanvas';
+import { PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8 } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -73,7 +73,7 @@ export function Controls({ observer }) {
                             options={[
                                 { v: PIXELFORMAT_RGBA8, t: 'RGBA8 (alpha)' },
                                 { v: PIXELFORMAT_RGBA16F, t: 'RGBA16F (alpha)' },
-                                { v: PIXELFORMAT_111110F, t: '111110F (no alpha)' }
+                                { v: PIXELFORMAT_RG11B10F, t: 'RG11B10F (no alpha)' }
                             ]}
                         />
                     </LabelGroup>

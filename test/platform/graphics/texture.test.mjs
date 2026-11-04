@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 
+import { PIXELFORMAT_111110F } from '../../../src/deprecated/deprecated.js';
 import {
-    PIXELFORMAT_111110F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB,
+    PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, TEXTURELOCK_READ, isMultisampleCapablePixelFormat
 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -117,10 +118,14 @@ describe('Texture', function () {
             expect(device._vram.tex).to.equal(before);
         });
 
-        it('reports multisample capability per format, including feature-gated 111110F', function () {
+        it('reports multisample capability per format, including feature-gated RG11B10F', function () {
             expect(isMultisampleCapablePixelFormat(PIXELFORMAT_RGBA8)).to.be.true;
-            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F)).to.be.true;
+            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_RG11B10F)).to.be.true;
             expect(isMultisampleCapablePixelFormat(PIXELFORMAT_RGBA32F)).to.be.false;
+        });
+
+        it('keeps the deprecated PIXELFORMAT_111110F as an alias of PIXELFORMAT_RG11B10F', function () {
+            expect(PIXELFORMAT_111110F).to.equal(PIXELFORMAT_RG11B10F);
         });
 
         it('asserts on a multisampled texture with an incapable format', function () {
@@ -136,7 +141,7 @@ describe('Texture', function () {
                 errors.push(args.join(' '));
             };
             try {
-                const texture = new Texture(device, { format: PIXELFORMAT_111110F, width: 8, height: 8, samples: 4 });
+                const texture = new Texture(device, { format: PIXELFORMAT_RG11B10F, width: 8, height: 8, samples: 4 });
                 expect(errors).to.have.lengthOf(0);
                 texture.destroy();
 

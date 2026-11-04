@@ -321,7 +321,7 @@ const compositeNode = new GraphNode('Alpha composite');
 compositeNode.setLocalPosition(0, 0.4, 0);
 const composite = new MeshInstance(compositeMesh, matComposite, compositeNode);
 composite.cull = false;
-composite.castShadow = false;
+composite.castShadows = false;
 worldLayer.addMeshInstances([composite]);
 
 const syncSceneRt = () => {

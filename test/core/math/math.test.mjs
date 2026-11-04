@@ -242,32 +242,37 @@ describe('math', function () {
 
     });
 
-    describe('#powerOfTwo', function () {
+    describe('#isPowerOfTwo', function () {
 
         it('returns true when the value is a power of two', function () {
-            expect(math.powerOfTwo(1)).to.be.true;
-            expect(math.powerOfTwo(2)).to.be.true;
-            expect(math.powerOfTwo(4)).to.be.true;
-            expect(math.powerOfTwo(8)).to.be.true;
-            expect(math.powerOfTwo(16)).to.be.true;
-            expect(math.powerOfTwo(32)).to.be.true;
-            expect(math.powerOfTwo(64)).to.be.true;
-            expect(math.powerOfTwo(128)).to.be.true;
-            expect(math.powerOfTwo(256)).to.be.true;
-            expect(math.powerOfTwo(512)).to.be.true;
+            expect(math.isPowerOfTwo(1)).to.be.true;
+            expect(math.isPowerOfTwo(2)).to.be.true;
+            expect(math.isPowerOfTwo(4)).to.be.true;
+            expect(math.isPowerOfTwo(8)).to.be.true;
+            expect(math.isPowerOfTwo(16)).to.be.true;
+            expect(math.isPowerOfTwo(32)).to.be.true;
+            expect(math.isPowerOfTwo(64)).to.be.true;
+            expect(math.isPowerOfTwo(128)).to.be.true;
+            expect(math.isPowerOfTwo(256)).to.be.true;
+            expect(math.isPowerOfTwo(512)).to.be.true;
         });
 
         it('returns false when the value is not a power of two', function () {
-            expect(math.powerOfTwo(0)).to.be.false;
-            expect(math.powerOfTwo(3)).to.be.false;
-            expect(math.powerOfTwo(5)).to.be.false;
-            expect(math.powerOfTwo(6)).to.be.false;
-            expect(math.powerOfTwo(7)).to.be.false;
-            expect(math.powerOfTwo(9)).to.be.false;
-            expect(math.powerOfTwo(10)).to.be.false;
-            expect(math.powerOfTwo(11)).to.be.false;
-            expect(math.powerOfTwo(12)).to.be.false;
-            expect(math.powerOfTwo(13)).to.be.false;
+            expect(math.isPowerOfTwo(0)).to.be.false;
+            expect(math.isPowerOfTwo(3)).to.be.false;
+            expect(math.isPowerOfTwo(5)).to.be.false;
+            expect(math.isPowerOfTwo(6)).to.be.false;
+            expect(math.isPowerOfTwo(7)).to.be.false;
+            expect(math.isPowerOfTwo(9)).to.be.false;
+            expect(math.isPowerOfTwo(10)).to.be.false;
+            expect(math.isPowerOfTwo(11)).to.be.false;
+            expect(math.isPowerOfTwo(12)).to.be.false;
+            expect(math.isPowerOfTwo(13)).to.be.false;
+        });
+
+        it('forwards the deprecated powerOfTwo to isPowerOfTwo', function () {
+            expect(math.powerOfTwo(32)).to.be.true;
+            expect(math.powerOfTwo(17)).to.be.false;
         });
 
     });

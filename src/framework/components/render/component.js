@@ -359,9 +359,9 @@ class RenderComponent extends Component {
                     mi[i].node = this.entity;
                 }
 
-                mi[i].castShadow = this._castShadows;
+                mi[i].castShadows = this._castShadows;
                 mi[i].shadowCascadeMask = this._shadowCascadeMask;
-                mi[i].receiveShadow = this._receiveShadows;
+                mi[i].receiveShadows = this._receiveShadows;
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setCustomAabb(this._customAabb);
@@ -439,7 +439,7 @@ class RenderComponent extends Component {
                 }
 
                 for (let i = 0; i < mi.length; i++) {
-                    mi[i].castShadow = value;
+                    mi[i].castShadows = value;
                 }
 
                 if (!this._castShadows && value) {
@@ -516,7 +516,7 @@ class RenderComponent extends Component {
             const mi = this._meshInstances;
             if (mi) {
                 for (let i = 0; i < mi.length; i++) {
-                    mi[i].receiveShadow = value;
+                    mi[i].receiveShadows = value;
                 }
             }
         }

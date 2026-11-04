@@ -26,7 +26,7 @@ import {
     GSplatHandler,
     LightComponentSystem,
     Mouse,
-    PIXELFORMAT_111110F,
+    PIXELFORMAT_RG11B10F,
     PIXELFORMAT_RGBA16F,
     PIXELFORMAT_RGBA32F,
     RESOLUTION_AUTO,
@@ -266,7 +266,7 @@ app.root.addChild(light);
 
 // Setup CameraFrame
 const cameraFrame = new CameraFrame(app, camera.camera);
-cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_111110F];
+cameraFrame.rendering.renderFormats = [PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RG11B10F];
 cameraFrame.rendering.samples = 1;
 cameraFrame.grading.enabled = true;
 

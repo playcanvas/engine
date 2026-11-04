@@ -7,7 +7,7 @@ import {
     SliderInput
 } from '@playcanvas/pcui/react';
 
-import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from 'playcanvas';
+import { PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -86,7 +86,7 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.renderFormat' }}
                         type='number'
                         options={[
-                            { v: PIXELFORMAT_111110F, t: 'RG11B10F' },
+                            { v: PIXELFORMAT_RG11B10F, t: 'RG11B10F' },
                             { v: PIXELFORMAT_RGBA16F, t: 'RGBA16F' },
                             { v: PIXELFORMAT_RGBA32F, t: 'RGBA32F' }
                         ]}

@@ -148,6 +148,27 @@ describe('BoundingBox', function () {
 
     });
 
+    describe('#intersectsBoundingBox', function () {
+
+        it('returns true for overlapping and touching boxes', function () {
+            const a = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            expect(a.intersectsBoundingBox(new BoundingBox(new Vec3(1.5, 0, 0), new Vec3(1, 1, 1)))).to.equal(true);
+            expect(a.intersectsBoundingBox(new BoundingBox(new Vec3(2, 0, 0), new Vec3(1, 1, 1)))).to.equal(true);
+        });
+
+        it('returns false for separated boxes', function () {
+            const a = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            expect(a.intersectsBoundingBox(new BoundingBox(new Vec3(0, 2.1, 0), new Vec3(1, 1, 1)))).to.equal(false);
+        });
+
+        it('forwards the deprecated intersects to intersectsBoundingBox', function () {
+            const a = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            expect(a.intersects(new BoundingBox(new Vec3(1.5, 0, 0), new Vec3(1, 1, 1)))).to.equal(true);
+            expect(a.intersects(new BoundingBox(new Vec3(0, 0, 3), new Vec3(1, 1, 1)))).to.equal(false);
+        });
+
+    });
+
     describe('#closestPoint', function () {
 
         it('returns the point itself when inside the box', function () {

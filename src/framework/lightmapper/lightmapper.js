@@ -798,7 +798,7 @@ class Lightmapper {
         } else {
 
             // for other light types, test if light affects the node
-            if (!bakeLight.lightBounds.intersects(bakeNode.bounds)) {
+            if (!bakeLight.lightBounds.intersectsBoundingBox(bakeNode.bounds)) {
                 lightAffectsNode = false;
             }
         }

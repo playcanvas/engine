@@ -3,7 +3,7 @@
 import {
     CameraFrame as EngineCameraFrame, Script, Color,
     TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from 'playcanvas';
 
 /**
@@ -50,7 +50,7 @@ const toneMappingMap = new Map([
 
 const renderFormatMap = new Map([
     [RenderFormat.RGBA8, PIXELFORMAT_RGBA8],
-    [RenderFormat.RG11B10, PIXELFORMAT_111110F],
+    [RenderFormat.RG11B10, PIXELFORMAT_RG11B10F],
     [RenderFormat.RGBA16, PIXELFORMAT_RGBA16F],
     [RenderFormat.RGBA32, PIXELFORMAT_RGBA32F]
 ]);
@@ -76,7 +76,7 @@ const resolveToneMapping = (value) => {
  * @returns {number} The engine pixel format constant.
  */
 const resolveRenderFormat = (value) => {
-    return typeof value === 'number' ? value : (renderFormatMap.get(value) ?? PIXELFORMAT_111110F);
+    return typeof value === 'number' ? value : (renderFormatMap.get(value) ?? PIXELFORMAT_RG11B10F);
 };
 
 /** @enum {string} */

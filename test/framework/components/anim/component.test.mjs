@@ -56,16 +56,16 @@ describe('AnimComponent', function () {
 
             // both layers are reproduced on the clone
             expect(clone.anim.layers.length).to.equal(2);
-            expect(clone.anim.findAnimationLayer('Base')).to.not.equal(null);
-            expect(clone.anim.findAnimationLayer('UpperBody')).to.not.equal(null);
+            expect(clone.anim.findLayer('Base')).to.not.equal(null);
+            expect(clone.anim.findLayer('UpperBody')).to.not.equal(null);
 
             // the dynamically-added layer keeps its blend type
-            expect(clone.anim.findAnimationLayer('Base').blendType).to.equal(ANIM_LAYER_OVERWRITE);
-            expect(clone.anim.findAnimationLayer('UpperBody').blendType).to.equal(ANIM_LAYER_ADDITIVE);
+            expect(clone.anim.findLayer('Base').blendType).to.equal(ANIM_LAYER_OVERWRITE);
+            expect(clone.anim.findLayer('UpperBody').blendType).to.equal(ANIM_LAYER_ADDITIVE);
 
             // states (and their assigned animations) are reproduced on both layers
-            expect(clone.anim.findAnimationLayer('Base').states).to.have.members(['START', 'Idle', 'Walk']);
-            expect(clone.anim.findAnimationLayer('UpperBody').states).to.have.members(['START', 'Eager', 'Dance']);
+            expect(clone.anim.findLayer('Base').states).to.have.members(['START', 'Idle', 'Walk']);
+            expect(clone.anim.findLayer('UpperBody').states).to.have.members(['START', 'Eager', 'Dance']);
             expect(clone.anim.playable).to.equal(true);
 
             // the clone owns independent layer instances
@@ -84,9 +84,32 @@ describe('AnimComponent', function () {
             }).to.not.throw();
 
             expect(clone.anim.layers.length).to.equal(1);
-            expect(clone.anim.findAnimationLayer('Base').states).to.have.members(['START', 'Idle']);
+            expect(clone.anim.findLayer('Base').states).to.have.members(['START', 'Idle']);
             expect(clone.anim.playable).to.equal(true);
         });
+    });
+
+    describe('#findLayer', function () {
+
+        it('returns the named layer, or null when there is none', function () {
+            const entity = new Entity('model', app);
+            app.root.addChild(entity);
+            entity.addComponent('anim', { activate: true });
+            const upperBody = entity.anim.addLayer('UpperBody');
+
+            expect(entity.anim.findLayer('UpperBody')).to.equal(upperBody);
+            expect(entity.anim.findLayer('Missing')).to.equal(null);
+        });
+
+        it('forwards the deprecated findAnimationLayer to findLayer', function () {
+            const entity = new Entity('model', app);
+            app.root.addChild(entity);
+            entity.addComponent('anim', { activate: true });
+            const upperBody = entity.anim.addLayer('UpperBody');
+
+            expect(entity.anim.findAnimationLayer('UpperBody')).to.equal(upperBody);
+        });
+
     });
 
     describe('morph target weights', function () {
