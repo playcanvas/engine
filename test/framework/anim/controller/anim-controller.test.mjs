@@ -527,6 +527,31 @@ describe('AnimController', function () {
             expect(animController.animEvaluator.clips[0].time).to.be.closeTo(duration, 1e-9);
         });
 
+        // the START and END states play no animation, so an exit time on a transition out of them
+        // could never be met and used to leave the controller stuck in them
+        [
+            { from: 'START', exitTime: 0.5, loop: true },
+            { from: 'START', exitTime: 0.5, loop: false },
+            { from: 'START', exitTime: 1, loop: true },
+            { from: 'START', exitTime: 2, loop: true },
+            { from: 'END', exitTime: 0.5, loop: true }
+        ].forEach(({ from, exitTime, loop }) => {
+            it(`ignores an exit time of ${exitTime} on a transition out of the ${from} state (loop ${loop})`, function () {
+                const graph = new Entity();
+                const animBinder = new AnimComponentBinder({ entity: graph }, graph, 'layer', {}, 0);
+                animBinder.resolve = () => {};
+                const states = [{ name: 'START', loop }, { name: 'END', loop }, { name: 'A' }];
+                const transitions = [{ from, to: 'A', exitTime }];
+                const animController = new AnimController(new AnimEvaluator(animBinder), states, transitions, true, null, () => null, () => {});
+                animController.activeState = from;
+                const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
+                animController.assignAnimation('A', new AnimTrack('trackA', duration, [new AnimData(1, [0, 2, 4])], [new AnimData(1, [0, 1, 2])], curves));
+                expect(animController.playing).to.equal(true);
+                animController.update(dt);
+                expect(animController.activeStateName).to.equal('A');
+            });
+        });
+
     });
 
 });

@@ -16,6 +16,10 @@ import { AnimTransition } from './anim-transition.js';
  * @import { EventHandler } from '../../../core/event-handler.js'
  */
 
+// The START and END states play no animation, so they have no timeline to measure the exit time
+// of a transition out of them against.
+const hasTimeline = stateName => stateName !== ANIM_STATE_START && stateName !== ANIM_STATE_END;
+
 /**
  * The AnimController manages the animations for its entity, based on the provided state graph and
  * parameters. Its update method determines which state the controller should be in based on the
@@ -137,6 +141,13 @@ class AnimController {
             return new AnimTransition({
                 ...transition
             });
+        });
+        Debug.call(() => {
+            for (const transition of this._transitions) {
+                if (transition.hasExitTime && !hasTimeline(transition.from)) {
+                    Debug.warnOnce(`AnimController: The exit time of the transition from ${transition.from} to ${transition.to} is ignored, as the ${transition.from} state plays no animation.`);
+                }
+            }
         });
         this._activate = activate;
     }
@@ -401,8 +412,9 @@ class AnimController {
             if (transition.to === this.activeStateName) {
                 return false;
             }
-            // when an exit time is present, we should only exit if it falls within the current frame delta time
-            if (transition.hasExitTime) {
+            // when an exit time is present, we should only exit if it falls within the current frame delta time.
+            // A transition out of a state without a timeline ignores its exit time, as it could never be met
+            if (transition.hasExitTime && hasTimeline(transition.from)) {
                 let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
                 let progress = this._getActiveStateProgressForTime(this._timeInState);
                 // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
