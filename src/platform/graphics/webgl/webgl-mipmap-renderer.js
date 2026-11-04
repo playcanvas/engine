@@ -8,6 +8,7 @@ import { DepthState } from '../depth-state.js';
 import { Shader } from '../shader.js';
 import { ShaderDefinitionUtils } from '../shader-definition-utils.js';
 import { Texture } from '../texture.js';
+import { TextureUtils } from '../texture-utils.js';
 
 /**
  * @import { ScopeId } from '../scope-id.js'
@@ -283,9 +284,13 @@ class WebglMipmapRenderer {
         device.setDrawStates(BlendState.NOBLEND, DepthState.NODEPTH);
         device.setShader(this._getShader());
 
+        // WebGL defines the whole mip chain, whatever the number of levels of the texture, and
+        // samples all of it, so all of its levels are generated, as WebGL's own generation does
+        const numLevels = TextureUtils.calcMipLevelsCount(texture.width, texture.height);
+
         let width = texture.width;
         let height = texture.height;
-        for (let level = 1; level < texture.numLevels; level++) {
+        for (let level = 1; level < numLevels; level++) {
             this._sourceLevel[0] = 1 / width;
             this._sourceLevel[1] = 1 / height;
             this._sourceLevel[2] = level - 1;
