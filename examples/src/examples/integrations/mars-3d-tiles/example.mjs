@@ -230,14 +230,38 @@ const skyTiles = createTiles(SKY_URL, (material) => {
 });
 skyTiles.lruCache = groundTiles.lruCache;
 
-// the rover, playing its deployment and drive animation once and then holding the final pose, as
-// looping it would snap the rover back to its stowed starting pose
+// the rover. Its clip deploys it during the first 10 seconds and then drives it. The whole clip
+// plays once, and then only the drive section plays, alternating in reverse and forward, as
+// looping the clip would snap the rover back to its stowed starting pose
 const rover = assets.rover.resource.instantiateRenderEntity({
     castShadows: true,
     receiveShadows: true
 });
+const roverTrack = assets.rover.resource.animations[0].resource;
+const driveStart = 10 / roverTrack.duration;
 rover.addComponent('anim', { activate: true });
-rover.anim.assignAnimation('Drive', assets.rover.resource.animations[0].resource, undefined, 1, false);
+rover.anim.loadStateGraph({
+    layers: [
+        {
+            name: 'Base',
+            states: [
+                { name: 'START' },
+                { name: 'Deploy', speed: 1, loop: false },
+                { name: 'Reverse', speed: -1, loop: false },
+                { name: 'Forward', speed: 1, loop: false }
+            ],
+            transitions: [
+                { from: 'START', to: 'Deploy' },
+                // a reversed state starts at the end of the clip, and leaves it at the drive start
+                { from: 'Deploy', to: 'Reverse', exitTime: 1 },
+                { from: 'Reverse', to: 'Forward', exitTime: 1 - driveStart, transitionOffset: driveStart },
+                { from: 'Forward', to: 'Reverse', exitTime: 1 }
+            ]
+        }
+    ],
+    parameters: {}
+});
+['Deploy', 'Reverse', 'Forward'].forEach((state) => rover.anim.baseLayer.assignAnimation(state, roverTrack));
 rover.setLocalEulerAngles(0, 180, 0);
 app.root.addChild(rover);
 
