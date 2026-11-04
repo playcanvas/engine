@@ -15,7 +15,7 @@ mat4 getModelMatrix() {
     float s = sin(yaw);
     float c = cos(yaw);
 
-    // colour the cone by the direction it is travelling, so the heading stored in .w is visible
+    // color the cone by the direction it is traveling, so the heading stored in .w is visible
     vInstColor = 0.55 + 0.45 * cos(6.28318 * (yaw / 6.28318 + vec3(0.0, 0.33, 0.67)));
 
     // The cone geometry points along its local +Y, so map local +Y onto the heading and pick any

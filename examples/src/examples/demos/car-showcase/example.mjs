@@ -93,9 +93,9 @@ const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
 
-// The showroom was modelled and lit in Blender. The lighting of its walls, ceiling, floor and
+// The showroom was modeled and lit in Blender. The lighting of its walls, ceiling, floor and
 // platform is baked into their emissive textures. The environment atlas is the empty room rendered
-// from its centre, without the ceiling strips, which are lights here, prefiltered into the sharp and
+// from its center, without the ceiling strips, which are lights here, prefiltered into the sharp and
 // blurred reflections and the ambient lighting.
 const assets = {
     car: new Asset('car', 'container', { url: './assets/models/car-concept.glb' }),
@@ -141,7 +141,7 @@ const STUDIO_BRIGHTNESS = 1.3;
 const ENV_INTENSITY = 2 * STUDIO_BRIGHTNESS;
 app.scene.skyboxIntensity = ENV_INTENSITY;
 
-// The reflections are projected onto the box of the room, from the centre of which the environment
+// The reflections are projected onto the box of the room, from the center of which the environment
 // was rendered, so the reflections of its lights are where the lights are
 const roomBox = new BoundingBox(new Vec3(0, 2.5, 0), new Vec3(9, 2.5, 11));
 [assets.room, assets.car].forEach((asset) => {

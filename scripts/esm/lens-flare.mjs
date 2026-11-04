@@ -40,7 +40,7 @@ class LensFlareShape {
     name = '';
 
     /**
-     * The texture of the shape, with the shape in the colour channels and its coverage in alpha.
+     * The texture of the shape, with the shape in the color channels and its coverage in alpha.
      *
      * @type {Asset}
      * @resource texture
@@ -50,7 +50,7 @@ class LensFlareShape {
 
 /**
  * One element of the look of a {@link LensFlareScript}: a shape placed on the axis from the light
- * through the centre of the screen.
+ * through the center of the screen.
  *
  * @interface
  * @category Post-Processing
@@ -64,7 +64,7 @@ class LensFlareElement {
     shape = '';
 
     /**
-     * The position along the axis: 0 at the light, 1 at the centre of the screen, 2 mirrored
+     * The position along the axis: 0 at the light, 1 at the center of the screen, 2 mirrored
      * across it, negative beyond the light.
      *
      * @range [-1, 3]
@@ -291,7 +291,7 @@ class LensFlareScript extends Script {
     intensity = 1;
 
     /**
-     * The colour of the flare.
+     * The color of the flare.
      *
      * @attribute
      */
@@ -308,7 +308,7 @@ class LensFlareScript extends Script {
     scale = 1;
 
     /**
-     * Whether the colour of the light tints the flare.
+     * Whether the color of the light tints the flare.
      *
      * @attribute
      */

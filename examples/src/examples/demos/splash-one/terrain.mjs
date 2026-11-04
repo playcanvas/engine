@@ -290,7 +290,7 @@ const terrainGLSL = /* glsl */ `
         return alongX * w.x + alongZ * w.y;
     }
 
-    // Bare rock - in broad bands of darker and lighter grey along its strata, which tilt and waver, with
+    // Bare rock - in broad bands of darker and lighter gray along its strata, which tilt and waver, with
     // patches of buff and of ochre staining, streaked dark down the faces by gullies, and with a little
     // lichen where it is not too steep. The gullies also bend the normal across the face - a relief the coarse
     // grid of the terrain is far too smooth to have - returned in tilt, in the world.
@@ -600,7 +600,7 @@ const terrainGLSL = /* glsl */ `
                      vec3(0.26, 0.24, 0.1);
         field *= 0.82 + 0.36 * terrainHash(nearestId + 5.0);
 
-        // plough lines running across each field in its own direction, and half the fields mown or
+        // plow lines running across each field in its own direction, and half the fields mown or
         // harvested in broad strips
         float angle = terrainHash(nearestId + 17.0) * 3.1416;
         float across = dot(p, vec2(cos(angle), sin(angle)));
@@ -871,7 +871,7 @@ const terrainWGSL = /* wgsl */ `
         tilt: vec3f
     }
 
-    // Bare rock - in broad bands of darker and lighter grey along its strata, which tilt and waver, with
+    // Bare rock - in broad bands of darker and lighter gray along its strata, which tilt and waver, with
     // patches of buff and of ochre staining, streaked dark down the faces by gullies, and with a little
     // lichen where it is not too steep. The gullies also bend the normal across the face - a relief the coarse
     // grid of the terrain is far too smooth to have - returned in tilt, in the world.
@@ -1228,7 +1228,7 @@ const terrainWGSL = /* wgsl */ `
         }
         field = field * (0.82 + 0.36 * terrainHash(nearestId + 5.0));
 
-        // plough lines running across each field in its own direction, and half the fields mown or
+        // plow lines running across each field in its own direction, and half the fields mown or
         // harvested in broad strips
         let angle = terrainHash(nearestId + 17.0) * 3.1416;
         let across = dot(p, vec2f(cos(angle), sin(angle)));

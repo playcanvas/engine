@@ -731,7 +731,7 @@ class RenderPass extends FramePass {
     /**
      * Renders the pass, as {@link FramePass#render} describes, starting its GPU render pass right
      * before {@link FramePass#execute} and ending it right after. A pass the frame graph merged
-     * with a neighbouring pass on the same render target shares a single GPU render pass with it.
+     * with a neighboring pass on the same render target shares a single GPU render pass with it.
      * The pass needs to be initialized with {@link RenderPass#init} before it renders.
      */
     render() {
@@ -751,9 +751,9 @@ class RenderPass extends FramePass {
             this.before();
             this.onBefore?.(this);
 
-            // the frame graph merged this pass with a neighbouring one, sharing its GPU render pass,
+            // the frame graph merged this pass with a neighboring one, sharing its GPU render pass,
             // only if both execute
-            Debug.assert(this.executeEnabled || !(this._skipStart || this._skipEnd), `The render pass '${this.name}' was merged with a neighbouring pass, but its executeEnabled was set to false after the frame graph was compiled, for example in its before() or onBefore. Set it before the frame renders, at the latest in its frameUpdate.`, this);
+            Debug.assert(this.executeEnabled || !(this._skipStart || this._skipEnd), `The render pass '${this.name}' was merged with a neighboring pass, but its executeEnabled was set to false after the frame graph was compiled, for example in its before() or onBefore. Set it before the frame renders, at the latest in its frameUpdate.`, this);
 
             if (this.executeEnabled) {
 

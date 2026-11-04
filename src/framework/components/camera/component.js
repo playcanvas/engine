@@ -65,7 +65,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
- * For ready-made camera behaviour, attach the `CameraControls` script from
+ * For ready-made camera behavior, attach the `CameraControls` script from
  * `playcanvas/scripts/esm/camera-controls.mjs`, which provides orbit, fly and pan driven by mouse,
  * touch and gamepad input.
  *

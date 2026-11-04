@@ -143,7 +143,7 @@ class ComputePass extends FramePass {
 
     /**
      * Dispatches the compute instances in {@link ComputePass#computes}, in order, in a single
-     * compute pass labelled with {@link FramePass#name}. Does nothing when there are none.
+     * compute pass labeled with {@link FramePass#name}. Does nothing when there are none.
      */
     execute() {
         const { computes } = this;

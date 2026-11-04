@@ -13,7 +13,7 @@ struct ub_compute {
 @group(0) @binding(1) var<storage, read_write> vertices: array<f32>;
 
 // The point of the blob surface in the given direction from its center: a unit sphere, pushed in
-// and out by a few waves travelling over it
+// and out by a few waves traveling over it
 fn surface(dir: vec3f) -> vec3f {
     let t = ubCompute.time;
     let swell = sin(dir.x * 3.0 + t * 1.1) * sin(dir.y * 2.5 + t * 1.3) * sin(dir.z * 3.0 + t * 0.9);

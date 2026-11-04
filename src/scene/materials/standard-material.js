@@ -2214,7 +2214,7 @@ class StandardMaterial extends Material {
     }
 }
 
-// registers the default value and copy behaviour of a property, used by reset and copy
+// registers the default value and copy behavior of a property, used by reset and copy
 const registerProp = (name, constructorFunc, copyFromBacking = false) => {
     _props[name] = {
         value: constructorFunc,
@@ -2569,11 +2569,11 @@ function _defineDeprecatedAlias(newName, oldName) {
 function _defineRemovedTint(name) {
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: function () {
-            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
+            Debug.removed(`StandardMaterial#${name} was removed, and the behavior is as if ${name} was always true`);
             return true;
         },
         set: function (value) {
-            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
+            Debug.removed(`StandardMaterial#${name} was removed, and the behavior is as if ${name} was always true`);
         }
     });
 }
