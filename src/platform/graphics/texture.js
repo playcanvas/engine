@@ -5,7 +5,7 @@ import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, MIPMAPFILTER_BOX,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
@@ -56,7 +56,7 @@ const releaseSource = (source) => {
  * Note on **HDR texture format** support:
  * 1. **As textures**:
  *     - float (i.e. {@link PIXELFORMAT_RGBA32F}), half-float (i.e. {@link PIXELFORMAT_RGBA16F}) and
- * small-float ({@link PIXELFORMAT_111110F}) formats are always supported on both WebGL2 and WebGPU
+ * small-float ({@link PIXELFORMAT_RG11B10F}) formats are always supported on both WebGL2 and WebGPU
  * with point sampling.
  *     - half-float and small-float formats are always supported on WebGL2 and WebGPU with linear
  * sampling.
@@ -171,6 +171,9 @@ class Texture {
     /** @protected */
     _numLevelsRequested;
 
+    /** @protected */
+    _mipmapFilter = MIPMAPFILTER_BOX;
+
     /**
      * Create a new Texture instance.
      *
@@ -201,7 +204,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
@@ -237,6 +240,13 @@ class Texture {
      * @param {number} [options.numLevels] - Specifies the number of mip levels to generate. If not
      * specified, the number is calculated based on the texture size. When this property is set,
      * the mipmaps property is ignored.
+     * @param {string} [options.mipmapFilter] - The filter used to generate the mipmaps of the
+     * texture from its rendered content. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}
+     * - {@link MIPMAPFILTER_GAUSSIAN}
+     *
+     * Defaults to {@link MIPMAPFILTER_BOX}. See {@link Texture#mipmapFilter}.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
      * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
@@ -362,6 +372,7 @@ class Texture {
         }
 
         this._mipmaps = (options.mipmaps ?? true) && this._samples === 1;
+        this._mipmapFilter = options.mipmapFilter ?? MIPMAPFILTER_BOX;
         this._numLevelsRequested = options.numLevels;
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
@@ -876,6 +887,33 @@ class Texture {
     }
 
     /**
+     * Sets the filter used to generate the mipmaps of the texture on the GPU, from the content
+     * rendered to it, such as the color buffer of a render target with mipmaps. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}: averages each block of 2x2 texels of the previous mip level.
+     * - {@link MIPMAPFILTER_GAUSSIAN}: a wider, smooth filter, for textures whose small mip levels
+     * are sampled to blur them, such as a planar reflection of rough surfaces.
+     *
+     * The Gaussian filter applies to 2D textures of filterable formats. Cubemaps, texture arrays,
+     * volume textures, and the mipmaps generated for texture data uploaded from the CPU use the box
+     * filter. Defaults to {@link MIPMAPFILTER_BOX}.
+     *
+     * @type {string}
+     */
+    set mipmapFilter(value) {
+        this._mipmapFilter = value;
+    }
+
+    /**
+     * Gets the filter used to generate the mipmaps of the texture on the GPU.
+     *
+     * @type {string}
+     */
+    get mipmapFilter() {
+        return this._mipmapFilter;
+    }
+
+    /**
      * Gets the number of mip levels.
      *
      * @type {number}
@@ -953,7 +991,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
@@ -1171,7 +1209,7 @@ class Texture {
      * @type {boolean}
      */
     get pot() {
-        return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
+        return math.isPowerOfTwo(this._width) && math.isPowerOfTwo(this._height);
     }
 
     // get the texture's encoding type

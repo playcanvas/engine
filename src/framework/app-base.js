@@ -1129,7 +1129,7 @@ class AppBase extends EventHandler {
         } else {
             // without requestAnimationFrame, as in Node.js (even with jsdom), there is no main
             // loop and the application is driven by calling update directly. A pending frame is
-            // cancelled on each tick and on destroy, so both functions are required.
+            // canceled on each tick and on destroy, so both functions are required.
             const hasFrameLoop = typeof requestAnimationFrame === 'function' &&
                 typeof cancelAnimationFrame === 'function';
             this.frameRequestId = hasFrameLoop ? requestAnimationFrame(this.tick) : null;
@@ -1529,7 +1529,7 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
      * @param {number} [settings.render.gsplatMinContribution] - Minimum visual contribution threshold for the compute gsplat renderer. Defaults to 2.
      * @param {number} [settings.render.gsplatFoveationStrength] - Foveated contribution culling strength. Defaults to 0.
-     * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
+     * @param {number} [settings.render.gsplatFoveationCenter] - Protected center radius for foveated contribution culling. Defaults to 0.3.
      * @param {boolean} [settings.render.gsplatAntiAlias] - Whether Gaussian splats are rendered with anti-aliasing compensation. When
      * not set, each splat follows its resource; see {@link GSplatParams#antiAlias}.
      * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.

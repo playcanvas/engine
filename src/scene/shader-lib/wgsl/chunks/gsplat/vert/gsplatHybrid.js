@@ -18,7 +18,7 @@
 // Linear view depth (used for fog / overdraw / prepass) is reconstructed from
 // clipPos via the clipToViewZ uniform = -inverse(matrix_projection)[row 2].
 // This is correct for both perspective and orthographic projections; for
-// perspective it collapses to clip.w, matching the previous behaviour exactly.
+// perspective it collapses to clip.w, matching the previous behavior exactly.
 export default /* wgsl */`
 
 #include "gsplatHelpersVS"

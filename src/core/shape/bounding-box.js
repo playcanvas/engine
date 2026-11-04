@@ -1,3 +1,4 @@
+import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /**
@@ -22,10 +23,10 @@ const tmpVecE = new Vec3();
  * into world space with {@link setFromTransformedAabb}, which is how the engine derives a mesh
  * instance's world bounds from its mesh's local bounds.
  *
- * Tests such as {@link intersects}, {@link containsPoint} and {@link intersectsRay} return a
- * boolean and allocate nothing. {@link closestPoint} writes into an optional result vector, while
- * {@link getMin} and {@link getMax} return the box's own cached vectors, which should be treated as
- * read-only. The constructor copies the vectors it is given.
+ * Tests such as {@link intersectsBoundingBox}, {@link containsPoint} and {@link intersectsRay}
+ * return a boolean and allocate nothing. {@link closestPoint} writes into an optional result
+ * vector, while {@link getMin} and {@link getMax} return the box's own cached vectors, which should
+ * be treated as read-only. The constructor copies the vectors it is given.
  *
  * @example
  * // Enclose every mesh instance of a render component in one box
@@ -171,7 +172,7 @@ class BoundingBox {
      * @param {BoundingBox} other - Bounding box to test against.
      * @returns {boolean} True if there is an intersection.
      */
-    intersects(other) {
+    intersectsBoundingBox(other) {
         const aMax = this.getMax();
         const aMin = this.getMin();
         const bMax = other.getMax();
@@ -187,23 +188,24 @@ class BoundingBox {
         const tMax = tmpVecB.copy(this.getMax()).sub(ray.origin);
         const dir = ray.direction;
 
-        // Ensure that we are not dividing it by zero
+        // Ensure that we are not dividing it by zero. A ray parallel to a slab is inside it when
+        // min <= origin <= max, so a ray lying in either face plane of the slab is inside it.
         if (dir.x === 0) {
-            tMin.x = tMin.x < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            tMin.x = tMin.x <= 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
             tMax.x = tMax.x < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
         } else {
             tMin.x /= dir.x;
             tMax.x /= dir.x;
         }
         if (dir.y === 0) {
-            tMin.y = tMin.y < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            tMin.y = tMin.y <= 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
             tMax.y = tMax.y < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
         } else {
             tMin.y /= dir.y;
             tMax.y /= dir.y;
         }
         if (dir.z === 0) {
-            tMin.z = tMin.z < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            tMin.z = tMin.z <= 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
             tMax.z = tMax.z < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
         } else {
             tMin.z /= dir.z;
@@ -216,10 +218,12 @@ class BoundingBox {
         const minMax = Math.min(Math.min(realMax.x, realMax.y), realMax.z);
         const maxMin = Math.max(Math.max(realMin.x, realMin.y), realMin.z);
 
-        const intersects = minMax >= maxMin && maxMin >= 0;
+        // the box must not be entirely behind the ray; a ray starting inside the box (maxMin < 0)
+        // intersects it where it leaves the box
+        const intersects = minMax >= maxMin && minMax >= 0;
 
         if (intersects) {
-            point.copy(ray.direction).mulScalar(maxMin).add(ray.origin);
+            point.copy(ray.direction).mulScalar(maxMin >= 0 ? maxMin : minMax).add(ray.origin);
         }
 
         return intersects;
@@ -270,11 +274,11 @@ class BoundingBox {
     }
 
     /**
-     * Test if a ray intersects with the AABB.
+     * Test if a ray intersects with the AABB. A ray that starts inside the AABB intersects it.
      *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
-     * into here.
+     * into here. For a ray that starts inside the AABB, this is the point where the ray leaves it.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
@@ -524,6 +528,21 @@ class BoundingBox {
         tmpVecB.add2(this.getMax(), expandMax);
         this.setMinMax(tmpVecA, tmpVecB);
     }
+
+    // ---- deprecated block start ----
+
+    /**
+     * @param {BoundingBox} other - Bounding box to test against.
+     * @returns {boolean} True if there is an intersection.
+     * @deprecated Use {@link BoundingBox#intersectsBoundingBox} instead.
+     * @ignore
+     */
+    intersects(other) {
+        Debug.deprecated('BoundingBox#intersects is deprecated. Use BoundingBox#intersectsBoundingBox instead.');
+        return this.intersectsBoundingBox(other);
+    }
+
+    // ---- deprecated block end ----
 }
 
 export { BoundingBox };

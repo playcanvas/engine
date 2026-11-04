@@ -719,14 +719,14 @@ export const PAD_SELECT = 8;
 export const PAD_START = 9;
 
 /**
- * The button when depressing the left analogue stick.
+ * The button when depressing the left analog stick.
  *
  * @category Input Devices
  */
 export const PAD_L_STICK_BUTTON = 10;
 
 /**
- * The button when depressing the right analogue stick.
+ * The button when depressing the right analog stick.
  *
  * @category Input Devices
  */
@@ -768,28 +768,28 @@ export const PAD_RIGHT = 15;
 export const PAD_VENDOR = 16;
 
 /**
- * Horizontal axis on the left analogue stick.
+ * Horizontal axis on the left analog stick.
  *
  * @category Input Devices
  */
 export const PAD_L_STICK_X = 0;
 
 /**
- * Vertical axis on the left analogue stick.
+ * Vertical axis on the left analog stick.
  *
  * @category Input Devices
  */
 export const PAD_L_STICK_Y = 1;
 
 /**
- * Horizontal axis on the right analogue stick.
+ * Horizontal axis on the right analog stick.
  *
  * @category Input Devices
  */
 export const PAD_R_STICK_X = 2;
 
 /**
- * Vertical axis on the right analogue stick.
+ * Vertical axis on the right analog stick.
  *
  * @category Input Devices
  */

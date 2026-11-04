@@ -756,7 +756,7 @@ export class Sounds {
     }
 
     /**
-     * The missile defence gun - a rotary cannon, firing so fast the shots blur into one ripping buzz.
+     * The missile defense gun - a rotary cannon, firing so fast the shots blur into one ripping buzz.
      */
     gun() {
         const context = this.context;

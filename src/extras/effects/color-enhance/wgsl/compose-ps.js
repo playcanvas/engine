@@ -42,10 +42,10 @@ export default /* wgsl */`
 
             lum = dot(colorOut, vec3f(0.2126, 0.7152, 0.0722));
             let normalizedLum = lum / max(1.0, maxChannel);
-            let grey = vec3f(normalizedLum) * maxChannel;
+            let gray = vec3f(normalizedLum) * maxChannel;
 
             let satBoost = uniform.colorEnhanceParams.z * (1.0 - sat);
-            colorOut = mix(grey, colorOut, 1.0 + satBoost);
+            colorOut = mix(gray, colorOut, 1.0 + satBoost);
         }
 
         // Dehaze - skip if zero (coherent branch)

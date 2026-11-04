@@ -640,7 +640,7 @@ class GSplatProjector {
      * @param {number} params.minContribution - Minimum total contribution before culling.
      * @param {number} params.foveationStrength - Foveated culling strength added to
      * `minContribution` toward the screen edges (0 disables).
-     * @param {number} params.foveationCenter - Protected centre radius (NDC units) within which
+     * @param {number} params.foveationCenter - Protected center radius (NDC units) within which
      * foveated culling has no effect.
      * @param {number} [params.antiAliasFilterSize] - Variance in pixels squared of the screen-space
      * filter of the splats rendered with the anti-aliasing compensation.

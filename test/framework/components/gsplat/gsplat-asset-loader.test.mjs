@@ -41,7 +41,7 @@ describe('GSplatAssetLoader', function () {
         return loader._urlToAsset.get(url);
     };
 
-    // Simulates a load that was cancelled mid-flight (e.g. LOD moved on) and resolved via the
+    // Simulates a load that was canceled mid-flight (e.g. LOD moved on) and resolved via the
     // success callback with no resource, as opposed to a genuine error.
     const resolveAsCancelledWithNoResource = () => {
         const asset = lastAsset();
@@ -70,7 +70,7 @@ describe('GSplatAssetLoader', function () {
 
     describe('#load', function () {
 
-        it('retries indefinitely when a previous load was cancelled with no resource', function () {
+        it('retries indefinitely when a previous load was canceled with no resource', function () {
             const url = 'http://example.com/chunk.json';
 
             loader.load(url);
@@ -228,7 +228,7 @@ describe('GSplatAssetLoader', function () {
 
     describe('#hasFailed', function () {
 
-        it('returns false while a load is in progress, cancelled, or never attempted', function () {
+        it('returns false while a load is in progress, canceled, or never attempted', function () {
             const url = 'http://example.com/chunk.json';
             expect(loader.hasFailed(url)).to.equal(false);
 
@@ -262,7 +262,7 @@ describe('GSplatAssetLoader', function () {
 
     describe('cancellation while in flight', function () {
 
-        it('does not warn or error when a load is cancelled before it resolves (routine LOD churn)', function () {
+        it('does not warn or error when a load is canceled before it resolves (routine LOD churn)', function () {
             const url = 'http://example.com/chunk.json';
             const warnSpy = spy(console, 'warn');
             const errorSpy = spy(console, 'error');
@@ -285,7 +285,7 @@ describe('GSplatAssetLoader', function () {
             expect(loader.hasFailed(url)).to.equal(false);
 
             // A later re-request (e.g. the camera swings back) starts a fresh attempt rather
-            // than being blocked by residual state from the cancelled one.
+            // than being blocked by residual state from the canceled one.
             loader.load(url);
             expect(loadCalls).to.equal(2);
         });

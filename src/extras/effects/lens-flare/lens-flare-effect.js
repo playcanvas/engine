@@ -38,7 +38,7 @@ const directionalDepth = 0.98;
 /**
  * The lens flare effect: draws the flares of the lights, or of any positions, in the scene. A
  * flare is a {@link LensFlare}, following its light, whose look places shapes along the axis from
- * the light through the centre of the screen. The shapes are textures, given to the effect as a
+ * the light through the center of the screen. The shapes are textures, given to the effect as a
  * {@link LensFlareShapeLibrary} it copies into one texture array shared by all its flares. The
  * flares fade as their source is covered by the scene, measured against the scene depth, as it
  * leaves the screen, and for a spot light as the camera leaves its cone.
@@ -493,7 +493,7 @@ class LensFlareEffect extends CameraFrameEffect {
                 }
             }
 
-            // the colour, tinted by the light and scaled by its intensity
+            // the color, tinted by the light and scaled by its intensity
             const color = flare.color;
             let intensity = flare.intensity;
             if (light && flare.useLightIntensity) {

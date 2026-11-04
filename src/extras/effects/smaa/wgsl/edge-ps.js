@@ -34,7 +34,7 @@ export default /* wgsl */`
         var output: FragmentOutput;
         let texel = uniform.smaaMetrics.xy;
 
-        // the brightness differences to the left and the top neighbours
+        // the brightness differences to the left and the top neighbors
         let L = smaaLuma(uv0);
         let Lleft = smaaLuma(uv0 - vec2f(texel.x, 0.0));
         let Ltop = smaaLuma(uv0 - vec2f(0.0, texel.y));
@@ -46,7 +46,7 @@ export default /* wgsl */`
             discard;
         }
 
-        // the differences to the right and the bottom neighbours
+        // the differences to the right and the bottom neighbors
         let Lright = smaaLuma(uv0 + vec2f(texel.x, 0.0));
         let Lbottom = smaaLuma(uv0 + vec2f(0.0, texel.y));
         delta = vec4f(delta.xy, abs(L - vec2f(Lright, Lbottom)));

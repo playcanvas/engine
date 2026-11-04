@@ -106,7 +106,7 @@ app.scene.sky.type = SKYTYPE_DOME;
 app.scene.sky.node.setLocalScale(new Vec3(30, 30, 30));
 app.scene.sky.center = new Vec3(0, 0.05, 0);
 
-// A UV test texture: an 8x8 grid of cells, with the hue changing along u and each cell labelled with
+// A UV test texture: an 8x8 grid of cells, with the hue changing along u and each cell labeled with
 // its column and row, so the orientation and any stretching of the UVs are easy to see
 const cells = 8;
 const cellSize = 64;
@@ -145,7 +145,7 @@ data.set('settings', {
 });
 
 // The shapes in two rows, the front one first, each in its own metal: silver, gold, copper, and
-// anodized aluminium in a few colors. All render component primitive shape types are included. The
+// anodized aluminum in a few colors. All render component primitive shape types are included. The
 // rounded box is not one of them, so its mesh is generated from a RoundedBoxGeometry.
 /** @type {{ type: RenderComponent['type'] | 'rounded-box', color: Color }[][]} */
 const rows = [

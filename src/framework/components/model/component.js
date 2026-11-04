@@ -384,8 +384,8 @@ class ModelComponent extends Component {
             const meshInstances = this._model.meshInstances;
 
             for (let i = 0; i < meshInstances.length; i++) {
-                meshInstances[i].castShadow = this._castShadows;
-                meshInstances[i].receiveShadow = this._receiveShadows;
+                meshInstances[i].castShadows = this._castShadows;
+                meshInstances[i].receiveShadows = this._receiveShadows;
                 meshInstances[i].setCustomAabb(this._customAabb);
             }
 
@@ -481,7 +481,7 @@ class ModelComponent extends Component {
 
             const meshInstances = model.meshInstances;
             for (let i = 0; i < meshInstances.length; i++) {
-                meshInstances[i].castShadow = value;
+                meshInstances[i].castShadows = value;
             }
 
             if (!this._castShadows && value) {
@@ -518,7 +518,7 @@ class ModelComponent extends Component {
         if (this._model) {
             const meshInstances = this._model.meshInstances;
             for (let i = 0, len = meshInstances.length; i < len; i++) {
-                meshInstances[i].receiveShadow = value;
+                meshInstances[i].receiveShadows = value;
             }
         }
     }

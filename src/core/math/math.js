@@ -1,3 +1,5 @@
+import { Debug } from '../debug.js';
+
 /**
  * Math API.
  *
@@ -188,11 +190,22 @@ const math = {
      * @param {number} x - Number to check for power-of-two property.
      * @returns {boolean} true if power-of-two and false otherwise.
      * @example
-     * math.powerOfTwo(32); // returns true
-     * math.powerOfTwo(17); // returns false
+     * math.isPowerOfTwo(32); // returns true
+     * math.isPowerOfTwo(17); // returns false
+     */
+    isPowerOfTwo(x) {
+        return ((x !== 0) && !(x & (x - 1)));
+    },
+
+    /**
+     * @param {number} x - Number to check for power-of-two property.
+     * @returns {boolean} true if power-of-two and false otherwise.
+     * @deprecated Use {@link math.isPowerOfTwo} instead.
+     * @ignore
      */
     powerOfTwo(x) {
-        return ((x !== 0) && !(x & (x - 1)));
+        Debug.deprecated('math.powerOfTwo is deprecated. Use math.isPowerOfTwo instead.');
+        return math.isPowerOfTwo(x);
     },
 
     /**

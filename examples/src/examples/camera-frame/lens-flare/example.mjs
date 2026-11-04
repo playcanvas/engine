@@ -48,7 +48,7 @@ const assets = {
 };
 
 // The lens flare shapes: procedurally generated textures, see assets/textures/lens-flare/lens-flare.txt, with the
-// shape in the colour channels and its coverage in alpha
+// shape in the color channels and its coverage in alpha
 const flareShapeNames = [
     'glow_soft',
     'glow_disc',
@@ -147,7 +147,7 @@ const createPrimitive = (type, position, scale, material) => {
     return entity;
 };
 
-// Helper creating an emissive material of a colour, bright enough to bloom
+// Helper creating an emissive material of a color, bright enough to bloom
 const createEmissiveMaterial = (color, intensity) => {
     const material = new StandardMaterial();
     material.diffuse = Color.BLACK;
@@ -167,7 +167,7 @@ createPrimitive('box', new Vec3(0, 4, -14), new Vec3(12, 8, 1), wallMaterial);
 createPrimitive('box', new Vec3(10, 3.5, 8), new Vec3(1.5, 7, 1.5), wallMaterial);
 createPrimitive('box', new Vec3(-10, 2, 6), new Vec3(1.5, 4, 1.5), wallMaterial);
 
-// The sun: a directional light, which the dynamic sky aims, colours and dims with the sun
+// The sun: a directional light, which the dynamic sky aims, colors and dims with the sun
 const sun = new Entity('Sun');
 sun.addComponent('light', {
     type: 'directional',
@@ -285,7 +285,7 @@ app.root.addChild(cameraEntity);
 // ------ Lens flares ------
 
 // The looks: the elements each kind of light places along the axis from the light through the
-// centre of the screen. Offsets of 0 sit on the light, 1 at the centre, 2 mirrored across it.
+// center of the screen. Offsets of 0 sit on the light, 1 at the center, 2 mirrored across it.
 // Sizes are fractions of the screen height, and the shapes are the textures loaded above. The
 // intensities are relative to the light, as a flare is scaled by the intensity of its light.
 const sunLook = {

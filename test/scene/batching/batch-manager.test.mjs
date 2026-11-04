@@ -180,7 +180,7 @@ describe('BatchManager', function () {
     });
 
 
-    it('prepare: splits batches when castShadow differs', function () {
+    it('prepare: splits batches when castShadows differs', function () {
         const e1 = new Entity();
         e1.addComponent('model', {
             type: 'box',
@@ -195,14 +195,14 @@ describe('BatchManager', function () {
         app.root.addChild(e1);
         app.root.addChild(e2);
 
-        e1.model.meshInstances[0].castShadow = false;
-        e2.model.meshInstances[0].castShadow = true;
+        e1.model.meshInstances[0].castShadows = false;
+        e2.model.meshInstances[0].castShadows = true;
 
         app.batcher.generate();
 
         const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
         expect(layer.meshInstances.length).to.equal(2);
-        const flags = layer.meshInstances.map(mi => mi.castShadow).sort();
+        const flags = layer.meshInstances.map(mi => mi.castShadows).sort();
         expect(flags).to.deep.equal([false, true]);
     });
 

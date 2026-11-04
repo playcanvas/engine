@@ -134,7 +134,7 @@ class XrHand extends EventHandler {
 
                 this._joints.push(joint);
                 this._jointsById[jointId] = joint;
-                if (joint.tip) {
+                if (joint.isTip) {
                     this._tips.push(joint);
                     finger._tip = joint;
                 }
@@ -165,11 +165,11 @@ class XrHand extends EventHandler {
                 if (pose) {
                     joint.update(pose);
 
-                    if (joint.wrist && !this._tracking) {
+                    if (joint.isWrist && !this._tracking) {
                         this._tracking = true;
                         this.fire('tracking');
                     }
-                } else if (joint.wrist) {
+                } else if (joint.isWrist) {
                     // lost tracking
 
                     if (this._tracking) {
