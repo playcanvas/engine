@@ -306,6 +306,9 @@ data.set('data', {
     // anti-aliasing compensation: 'auto' follows the training mode the file records, 'on' and 'off'
     // force it for every splat
     antialias: 'auto',
+    // the screen-space filter the anti-aliased splats were trained with, in pixels squared: 0.3 for
+    // gsplat's anti-aliased mode, 0.1 for Mip-Splatting and Brush's mip mode
+    antiAliasFilterSize: 0.3,
     // re-evaluate spherical harmonics every frame the camera moves, as with higher SH bands
     // even a degree of stale view direction is visible
     colorUpdateAngle: 0,
@@ -651,6 +654,8 @@ data.on('*:set', (/** @type {string} */ path) => {
     } else if (path === 'data.antialias') {
         const mode = data.get('data.antialias');
         app.scene.gsplat.antiAlias = mode === 'auto' ? undefined : mode === 'on';
+    } else if (path === 'data.antiAliasFilterSize') {
+        app.scene.gsplat.antiAliasFilterSize = data.get('data.antiAliasFilterSize');
     } else if (path === 'data.orientation') {
         // Apply orientation to splat entity
         if (splatEntity) {

@@ -1,19 +1,19 @@
 // @config
 // @flag WEBGL_DISABLED
 //
-// @credit
-// title: UXR Icosahedron
-// author: enealefons
-// source: https://sketchfab.com/3d-models/uxr-icosahedron-66c69bd0538a455197aebe81ae3a4961
-// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+// A compute shader counts the colors of every pixel the camera renders into a histogram of the red,
+// green and blue channels and the luminance. The panel draws the histogram straight from the GPU
+// buffer the compute shader wrote, so it is never read back to the CPU. Three colored spot lights
+// circle a ceramic knot, moving the channels apart and together.
 
 import {
     AppBase,
     AppOptions,
     Asset,
     AssetListLoader,
+    BLEND_NORMAL,
     BUFFERUSAGE_COPY_DST,
-    BUFFERUSAGE_COPY_SRC,
+    CULLFACE_NONE,
     CameraComponentSystem,
     Color,
     Compute,
@@ -21,53 +21,65 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
+    FOG_LINEAR,
+    LAYERID_DEPTH,
+    LAYERID_IMMEDIATE,
+    LAYERID_UI,
+    LAYERID_WORLD,
     LightComponentSystem,
+    Mesh,
+    MeshInstance,
     MiniStats,
+    Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     SHADERLANGUAGE_WGSL,
     ScriptComponentSystem,
     Shader,
+    ShaderMaterial,
+    StandardMaterial,
     StorageBuffer,
     TEXTURETYPE_RGBP,
-    TONEMAP_ACES,
+    TONEMAP_NEUTRAL,
     TextureHandler,
-    createGraphicsDevice,
-    createScript,
-    math
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
-import { deviceType } from 'examples/context';
+import { data, deviceType } from 'examples/context';
 
 import computeShaderWgsl from './compute-shader.wgsl';
+import panelFragmentWgsl from './panel.wgsl.frag';
+import panelVertexWgsl from './panel.wgsl.vert';
 
-// Note: the example is based on this article:
+// Note: the compute shader is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
-// A simpler but less performant version of the compute shader is used for simplicity.
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    solid: new Asset('solid', 'container', { url: './assets/models/icosahedron.glb' }),
-    helipad: new Asset(
-        'helipad-env-atlas',
+    knot: new Asset('knot', 'container', { url: './assets/models/trefoil-knot.glb' }),
+    envAtlas: new Asset(
+        'env-atlas',
         'texture',
-        { url: './assets/cubemaps/helipad-env-atlas.png' },
+        { url: './assets/cubemaps/product-studio-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
-const gfxOptions = {
+const device = await createGraphicsDevice(canvas, {
     deviceTypes: [deviceType]
-};
-
-const device = await createGraphicsDevice(canvas, gfxOptions);
+});
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
@@ -78,10 +90,6 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
-app.start();
-
-// The compute dispatches and compute passes of each frame are shown next to the other stats
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -98,38 +106,89 @@ await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
-// Setup skydome
-app.scene.skyboxMip = 2;
-app.scene.skyboxIntensity = 0.3;
-app.scene.envAtlas = assets.helipad.resource;
+app.start();
 
-// Create camera entity
-const camera = new Entity('camera');
-camera.addComponent('camera', {
-    toneMapping: TONEMAP_ACES
+// The compute dispatches and compute passes of each frame are shown next to the other stats
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
+
+data.set('settings', {
+    exposure: 1,
+    speed: 1
 });
+
+// The studio environment gives the knot soft reflections and a little ambient light. The camera
+// does not render the skybox layer, so the background is the black clear color, and the floor
+// fades to black in the distance.
+app.scene.envAtlas = assets.envAtlas.resource;
+app.scene.skyboxIntensity = 0.15;
+app.scene.fog.type = FOG_LINEAR;
+app.scene.fog.color = Color.BLACK;
+app.scene.fog.start = 8;
+app.scene.fog.end = 18;
+
+// ----- The scene -----
+
+// The knot, a model made for this example, floating above the floor
+const knot = assets.knot.resource.instantiateRenderEntity();
+knot.setLocalPosition(0, 1.9, 0);
+knot.setLocalScale(0.8, 0.8, 0.8);
+app.root.addChild(knot);
+
+const floorMaterial = new StandardMaterial();
+floorMaterial.diffuse = new Color(0.35, 0.35, 0.37);
+floorMaterial.gloss = 0.4;
+floorMaterial.update();
+
+const floor = new Entity('Floor');
+floor.addComponent('render', { type: 'plane', material: floorMaterial });
+floor.setLocalScale(40, 1, 40);
+app.root.addChild(floor);
+
+// Three colored spot lights, which circle above the knot and shine down on it. Where their light
+// overlaps, the colors add up to white.
+const lights = ['#ff3da8', '#3dd8ff', '#ffb43d'].map((color) => {
+    const light = new Entity('SpotLight');
+    light.addComponent('light', {
+        type: 'spot',
+        color: new Color().fromString(color),
+        intensity: 4,
+        range: 20,
+        innerConeAngle: 14,
+        outerConeAngle: 26,
+        castShadows: true,
+        shadowResolution: 1024,
+        shadowBias: 0.2,
+        normalOffsetBias: 0.05
+    });
+    app.root.addChild(light);
+    return light;
+});
+
+// ----- The camera -----
+
+const camera = new Entity('Camera');
+camera.addComponent('camera', {
+    clearColor: Color.BLACK,
+    toneMapping: TONEMAP_NEUTRAL,
+    // the depth layer is where the camera captures the color map of the scene
+    layers: [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_UI]
+});
+camera.addComponent('script');
+camera.setLocalPosition(0, 3.5, 7.5);
 app.root.addChild(camera);
-camera.setPosition(0, 0, 5);
+
+const cameraControls = /** @type {CameraControls} */ (camera.script.create(CameraControls));
+cameraControls.focusPoint = new Vec3(0, 1.6, 0);
+cameraControls.enableFly = false;
+cameraControls.pitchRange = new Vec2(-80, 5);
+cameraControls.zoomRange = new Vec2(3, 15);
 
 // Enable the camera to render the scene's color map. This allows us to use the rendered scene as an
-// input for the histogram compute shader.
+// input for the histogram compute shader. The color map is captured once the opaque objects are
+// rendered, so the histogram panel, rendered later in the UI layer, is not part of it.
 camera.camera.requestSceneColorMap(true);
 
-// Create directional light entity
-const light = new Entity('light');
-light.addComponent('light', {
-    type: 'directional',
-    color: new Color(1, 1, 1),
-    intensity: 15
-});
-app.root.addChild(light);
-light.setEulerAngles(45, 0, 40);
-
-// A helper script that rotates the entity
-const Rotator = createScript('rotator');
-Rotator.prototype.update = function (/** @type {number} */ dt) {
-    this.entity.rotate(5 * dt, 10 * dt, -15 * dt);
-};
+// ----- The histogram -----
 
 // A compute shader that will compute the histogram of the scene color map and write the result to
 // the storage buffer. Its resources use the simplified WGSL syntax, and are reflected automatically.
@@ -141,13 +200,13 @@ const shader = device.supportsCompute
       })
     : null;
 
-// Create a storage buffer to which the compute shader will write the histogram values.
+// Create a storage buffer to which the compute shader will write the histogram values, 256 bins
+// for each of the red, green and blue channels and the luminance
 const numBins = 256;
 const histogramStorageBuffer = new StorageBuffer(
     device,
-    numBins * 4, // 4 bytes per value, storing unsigned int
-    BUFFERUSAGE_COPY_SRC | // needed for reading back the data to CPU
-        BUFFERUSAGE_COPY_DST // needed for clearing the buffer
+    4 * numBins * 4, // 4 bytes per value, storing unsigned int
+    BUFFERUSAGE_COPY_DST // needed for clearing the buffer
 );
 
 // Create an instance of the compute shader, and set the input and output data. The scene color map
@@ -157,14 +216,6 @@ const compute = new Compute(device, shader, 'ComputeHistogram');
 compute.setSceneColorMap(camera.camera.sceneColorMapHandle);
 compute.setParameter('bins', histogramStorageBuffer);
 
-// Instantiate the spinning mesh
-const solid = assets.solid.resource.instantiateRenderEntity();
-solid.addComponent('script');
-solid.script.create('rotator');
-solid.setLocalPosition(0, 0.4, 0);
-solid.setLocalScale(0.35, 0.35, 0.35);
-app.root.addChild(solid);
-
 // The compute shader runs after the camera renders, so it processes the color map of the frame the
 // camera rendered
 const computePass = new ComputePass(device, [compute]);
@@ -173,63 +224,93 @@ if (device.supportsCompute) {
     camera.camera.afterPasses.push(computePass);
 }
 
-// The line positions of the most recently read histogram. Lines are drawn for a single frame, so
-// these are drawn every frame, until the next histogram is read.
-/** @type {number[]|null} */
-let histogramPositions = null;
+// The material of the panel. Its shader reads the histogram from the storage buffer, and draws the
+// panel with the histogram in it.
+const panelMaterial = new ShaderMaterial({
+    uniqueName: 'HistogramPanel',
+    vertexWGSL: panelVertexWgsl,
+    fragmentWGSL: panelFragmentWgsl
+});
+panelMaterial.name = 'HistogramPanel';
+panelMaterial.setParameter('bins', histogramStorageBuffer);
 
-let readGeneration = 0;
-const onDeviceLost = device.on('devicelost', () => {
-    readGeneration++;
+// The number of pixels the histogram counted is set when the compute pass runs, which is after the
+// panel renders in the first frame. The histogram is empty then, so any count shows it the same.
+panelMaterial.setParameter('pixelCount', 1);
+
+panelMaterial.blendType = BLEND_NORMAL;
+panelMaterial.depthTest = false;
+panelMaterial.depthWrite = false;
+panelMaterial.cull = CULLFACE_NONE;
+panelMaterial.update();
+
+// The panel is a quad without a vertex buffer, its corners placed on the screen by the vertex
+// shader. It is rendered in the UI layer, on top of the scene.
+const panelMesh = new Mesh(device);
+panelMesh.setIndices([0, 1, 2, 2, 1, 3]);
+panelMesh.update();
+const panelMeshInstance = new MeshInstance(panelMesh, panelMaterial);
+panelMeshInstance.cull = false;
+
+const panel = new Entity('HistogramPanel');
+panel.addComponent('render', {
+    meshInstances: [panelMeshInstance],
+    layers: [LAYERID_UI]
 });
-app.on('destroy', () => {
-    readGeneration++;
-    onDeviceLost.off();
-});
+app.root.addChild(panel);
+
+// The page element the panel is drawn over, which sets its size and place, and holds its labels
+const panelElement = document.createElement('div');
+panelElement.style.cssText = `
+    position: absolute; right: 20px; bottom: 20px; width: min(570px, calc(100% - 40px)); height: 255px;
+    box-sizing: border-box; padding: 14px 16px; pointer-events: none; display: flex; justify-content: space-between;
+    font: 600 11px system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: #a7afbd;`;
+panelElement.innerHTML = `
+    <span>Histogram</span>
+    <span><span style="color: #ff5a6e">R</span>&nbsp;&nbsp;<span style="color: #4cd97b">G</span>&nbsp;&nbsp;<span
+        style="color: #5b8cff">B</span>&nbsp;&nbsp;<span style="color: #ffffff">L</span></span>`;
+document.body.appendChild(panelElement);
+app.on('destroy', () => panelElement.remove());
 
 // Right before the compute pass dispatches, set up the size of the dispatch, a thread for each
 // texel of the color map the camera just rendered, and clear the storage buffer, to avoid the
-// accumulation buildup
+// accumulation buildup. The panel was rendered earlier in the frame, and shows the histogram of the
+// previous frame.
 computePass.onBefore = () => {
     const { width, height } = camera.camera.sceneColorMapHandle;
     compute.setupDispatchThreads(width, height);
     histogramStorageBuffer.clear();
+    panelMaterial.setParameter('pixelCount', width * height);
 };
 
-// After the compute pass dispatches, read back the histogram data from the storage buffer. The
-// returned promise is resolved later, when the GPU is done running the compute pass, and so the
-// histogram on the screen is up to a few frames behind.
-computePass.onAfter = () => {
-    const histogramData = new Uint32Array(numBins);
-    const generation = readGeneration;
-    histogramStorageBuffer
-        .read(0, undefined, histogramData)
-        .then((/** @type {Uint32Array} */ data) => {
-            // A request can settle after recovery or application destruction.
-            if (generation !== readGeneration) return;
+let time = 0;
+app.on('update', (/** @type {number} */ dt) => {
+    const settings = data.get('settings');
+    time += dt * settings.speed;
+    app.scene.exposure = settings.exposure;
 
-            const scale = 1 / 50000;
-            const positions = [];
-            for (let x = 0; x < data.length; x++) {
-                const value = math.clamp(data[x] * scale, 0, 0.2);
-                positions.push(x * 0.001, -0.35, 4);
-                positions.push(x * 0.001, value - 0.35, 4);
-            }
-            histogramPositions = positions;
-        })
-        .catch((error) => {
-            // Interrupted reads are replaced by fresh results on subsequent frames.
-            if (error.name !== 'AbortError' && generation === readGeneration && !device.isContextLost()) {
-                throw error;
-            }
-        });
-};
+    // the lights circle the knot, a third of a turn apart, and rise and fall
+    lights.forEach((light, i) => {
+        const angle = time * 0.6 + (i * Math.PI * 2) / 3;
+        light.setLocalPosition(4 * Math.cos(angle), 5.5 + Math.sin(time * 0.9 + i * 2), 4 * Math.sin(angle));
+        light.lookAt(0, 1.2, 0);
+        light.rotateLocal(90, 0, 0);
+    });
 
-app.on('update', () => {
-    // Render the most recently read histogram using lines
-    if (histogramPositions) {
-        app.drawLineArrays(histogramPositions, Color.YELLOW);
-    }
+    // slowly turn the knot
+    knot.setLocalEulerAngles(0, time * 12, 0);
+
+    // place the panel over its page element, converting its rectangle to normalized device
+    // coordinates
+    const rect = panelElement.getBoundingClientRect();
+    const bounds = canvas.getBoundingClientRect();
+    panelMaterial.setParameter('panelRect', [
+        ((rect.left - bounds.left) / bounds.width) * 2 - 1,
+        1 - ((rect.bottom - bounds.top) / bounds.height) * 2,
+        ((rect.right - bounds.left) / bounds.width) * 2 - 1,
+        1 - ((rect.top - bounds.top) / bounds.height) * 2
+    ]);
+    panelMaterial.setParameter('panelSize', [rect.width, rect.height]);
 });
 
 export { miniStats };
