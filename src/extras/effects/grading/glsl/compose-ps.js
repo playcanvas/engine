@@ -1,11 +1,13 @@
 export default /* glsl */`
     uniform vec3 brightnessContrastSaturation;
-    uniform vec3 tint;
+    uniform vec3 gradingMixerRed;
+    uniform vec3 gradingMixerGreen;
+    uniform vec3 gradingMixerBlue;
 
     // for all parameters, 1.0 is the no-change value
     vec3 colorGradingHDR(vec3 color, float brt, float sat, float con) {
-        // tint
-        color *= tint;
+        // channel mixer, with the tint folded into its rows
+        color = vec3(dot(gradingMixerRed, color), dot(gradingMixerGreen, color), dot(gradingMixerBlue, color));
 
         // brightness
         color = color * brt;

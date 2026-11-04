@@ -1,7 +1,7 @@
-// Camera Frame v 1.3
+// Camera Frame v 1.4
 
 import {
-    CameraFrame as EngineCameraFrame, Script, Color,
+    CameraFrame as EngineCameraFrame, Script, Color, Vec3,
     TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY,
     PIXELFORMAT_RGBA8, PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from 'playcanvas';
@@ -313,6 +313,33 @@ class Grading {
      * @visibleif {enabled}
      */
     tint = new Color(1, 1, 1, 1);
+
+    /**
+     * The channel mixer weights of the red output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerRed = new Vec3(1, 0, 0);
+
+    /**
+     * The channel mixer weights of the green output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerGreen = new Vec3(0, 1, 0);
+
+    /**
+     * The channel mixer weights of the blue output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerBlue = new Vec3(0, 0, 1);
 }
 
 /**
@@ -888,6 +915,9 @@ class CameraFrame extends Script {
             dstGrading.contrast = grading.contrast;
             dstGrading.saturation = grading.saturation;
             dstGrading.tint.copy(grading.tint);
+            dstGrading.mixerRed.copy(grading.mixerRed);
+            dstGrading.mixerGreen.copy(grading.mixerGreen);
+            dstGrading.mixerBlue.copy(grading.mixerBlue);
         }
 
         // colorLUT
