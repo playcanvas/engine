@@ -2261,35 +2261,6 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     margin-right: 0px;
 }
 
-.code-editor-menu-container > .pcui-button.code-editor-download {
-    flex: 0 0 auto;
-    width: auto;
-    gap: 6px;
-    padding: 0 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    color: #fff;
-    background-color: var(--pc-accent);
-}
-
-.code-editor-menu-container > .pcui-button.code-editor-download:hover {
-    color: #fff;
-    background-color: var(--pc-accent-hover);
-}
-
-.code-editor-menu-container > .pcui-button.code-editor-download:disabled {
-    opacity: 0.6;
-    cursor: default;
-}
-
-.code-editor-download-label {
-    font-size: 12px;
-    line-height: 1;
-    font-weight: 600;
-}
-
 .tabs-container {
     flex-grow: 1;
     min-width: 0;
@@ -2320,7 +2291,7 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     transition: color 100ms, background-color 100ms;
 }
 
-.tabs-container > .pcui-button:hover, .code-editor-menu-container > .pcui-button:not(.code-editor-download):hover {
+.tabs-container > .pcui-button:hover, .code-editor-menu-container > .pcui-button:hover {
     color: var(--pc-text);
     background-color: var(--pc-hover);
 }
@@ -2333,6 +2304,35 @@ body.mobile-panel-resizing #appInner.mobile-landscape #sideBar.mobile-sheet::aft
     justify-content: center;
     padding: 0;
     color: var(--pc-text-secondary);
+}
+
+/* tooltip of elements with a data-tip attribute, shown sooner than a title (see tooltip.mjs) */
+.app-tip {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    max-width: 320px;
+    padding: 5px 8px;
+    background: var(--pc-surface-raised);
+    color: var(--pc-text);
+    border: 1px solid var(--pc-border-strong);
+    border-radius: var(--pc-radius-sm);
+    box-shadow: var(--pc-shadow);
+    font-family: var(--pc-font);
+    font-size: 12px;
+    line-height: 1.35;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+}
+
+/* the download button while the project zip is being built */
+.code-editor-menu-container > .pcui-button:disabled,
+.code-editor-menu-container > .pcui-button:disabled:hover {
+    opacity: 0.6;
+    cursor: default;
+    color: var(--pc-text-secondary);
+    background-color: transparent;
 }
 
 .tabs-container > .pcui-button.selected,
