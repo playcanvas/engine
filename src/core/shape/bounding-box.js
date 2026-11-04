@@ -187,23 +187,24 @@ class BoundingBox {
         const tMax = tmpVecB.copy(this.getMax()).sub(ray.origin);
         const dir = ray.direction;
 
-        // Ensure that we are not dividing it by zero
+        // Ensure that we are not dividing it by zero. A ray parallel to a slab is inside it when
+        // min <= origin <= max, so a ray lying in either face plane of the slab is inside it.
         if (dir.x === 0) {
-            tMin.x = tMin.x < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            tMin.x = tMin.x <= 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
             tMax.x = tMax.x < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
         } else {
             tMin.x /= dir.x;
             tMax.x /= dir.x;
         }
         if (dir.y === 0) {
-            tMin.y = tMin.y < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            tMin.y = tMin.y <= 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
             tMax.y = tMax.y < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
         } else {
             tMin.y /= dir.y;
             tMax.y /= dir.y;
         }
         if (dir.z === 0) {
-            tMin.z = tMin.z < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            tMin.z = tMin.z <= 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
             tMax.z = tMax.z < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
         } else {
             tMin.z /= dir.z;
@@ -216,10 +217,12 @@ class BoundingBox {
         const minMax = Math.min(Math.min(realMax.x, realMax.y), realMax.z);
         const maxMin = Math.max(Math.max(realMin.x, realMin.y), realMin.z);
 
-        const intersects = minMax >= maxMin && maxMin >= 0;
+        // the box must not be entirely behind the ray; a ray starting inside the box (maxMin < 0)
+        // intersects it where it leaves the box
+        const intersects = minMax >= maxMin && minMax >= 0;
 
         if (intersects) {
-            point.copy(ray.direction).mulScalar(maxMin).add(ray.origin);
+            point.copy(ray.direction).mulScalar(maxMin >= 0 ? maxMin : minMax).add(ray.origin);
         }
 
         return intersects;
@@ -270,11 +273,11 @@ class BoundingBox {
     }
 
     /**
-     * Test if a ray intersects with the AABB.
+     * Test if a ray intersects with the AABB. A ray that starts inside the AABB intersects it.
      *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
-     * into here.
+     * into here. For a ray that starts inside the AABB, this is the point where the ray leaves it.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
