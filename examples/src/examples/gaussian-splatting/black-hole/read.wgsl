@@ -161,8 +161,10 @@ fn diskImage(p: vec3f, image: f32, size: f32) {
     let radial = normalize(vec3f(p.x, 0.0, p.z));
     let orbit = vec3f(-radial.z, 0.0, radial.x);
     // a splat is straight while the arc it is part of bends around the hole, so the lens only
-    // stretches each of its axes up to a seventh of its distance from the hole
-    let cap = mix(1e6, 0.15 * lens.x / size, lensing);
+    // stretches each of its axes up to a seventh of its distance from the hole. The cap holds
+    // part way through turning the lensing on or off too, when the stretch toward the line from
+    // the camera through the hole is only partly applied but still huge.
+    let cap = max(0.15 * lens.x / size, DISK_ALONG);
     let ao = capLength(vec2f(dot(outward, orbit), dot(around, orbit)) * DISK_ALONG, cap);
     let ar = capLength(vec2f(dot(outward, radial), dot(around, radial)) * DISK_ACROSS, cap);
     let an = capLength(vec2f(outward.y, around.y) * DISK_FLAT, cap);
@@ -235,11 +237,15 @@ fn computeImage() {
     let image = look.w;
     let t = uniform.bhTime;
 
+    // the secondary and photon ring images only exist with the lensing; part way through turning
+    // it on or off they are between where the source is and where its image is, so they fade in
+    // only near the end
+    let lensed = smoothstep(0.6, 1.0, uniform.bhLensing);
     var visible = 1.0;
     if (image == 1.0) {
-        visible = uniform.bhLensing;
+        visible = lensed;
     } else if (image == 2.0) {
-        visible = uniform.bhLensing * uniform.bhRing;
+        visible = lensed * uniform.bhRing;
     }
 
     if (kind == 0.0) {
