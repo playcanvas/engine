@@ -5,7 +5,8 @@ import {
     LabelGroup,
     Panel,
     SelectInput,
-    SliderInput
+    SliderInput,
+    VectorInput
 } from '@playcanvas/pcui/react';
 import { useEffect, useState } from 'react';
 
@@ -206,6 +207,25 @@ export function Controls({ observer }) {
         </LabelGroup>
     );
 
+    /**
+     * @param {string} text - The label.
+     * @param {string} path - The path of the setting.
+     * @returns {ReactElement} The vector input.
+     */
+    const vector = (text, path) => (
+        <LabelGroup text={text}>
+            <VectorInput
+                dimensions={3}
+                binding={new BindingTwoWay()}
+                link={{ observer, path: `settings.${path}` }}
+                min={-2}
+                max={2}
+                step={0.05}
+                precision={3}
+            />
+        </LabelGroup>
+    );
+
     return (
         <>
             <Panel headerText='Camera Frame'>
@@ -283,6 +303,22 @@ export function Controls({ observer }) {
                 {slider('Brightness', 'grading.brightness', 0, 3)}
                 {slider('Contrast', 'grading.contrast', 0.5, 1.5)}
                 {color('Tint', 'grading.tint')}
+                {select('Mixer', 'grading.mixer', [
+                    { v: 'none', t: 'None' },
+                    { v: 'monochrome', t: 'Monochrome' },
+                    { v: 'sepia', t: 'Sepia' },
+                    { v: 'swapRedBlue', t: 'Swap Red and Blue' },
+                    { v: 'infraredFilm', t: 'Infrared Film' },
+                    { v: 'nightVision', t: 'Night Vision' },
+                    { v: 'deepSea', t: 'Deep Sea' },
+                    { v: 'redPlanet', t: 'Red Planet' },
+                    { v: 'neonNights', t: 'Neon Nights' },
+                    { v: 'alienPlanet', t: 'Alien Planet' },
+                    { v: 'oppositeHues', t: 'Opposite Hues' }
+                ])}
+                {vector('Mixer Red', 'grading.mixerRed')}
+                {vector('Mixer Green', 'grading.mixerGreen')}
+                {vector('Mixer Blue', 'grading.mixerBlue')}
             </EffectPanel>
             <EffectPanel observer={observer} name='colorEnhance' title='Color Enhance'>
                 {slider('Shadows', 'colorEnhance.shadows', -3, 3)}
