@@ -353,6 +353,19 @@ describe('BoundingBox', function () {
             expect(box.intersectsRay(ray, new Vec3())).to.equal(false);
         });
 
+        it('returns true for a ray lying in a face plane of the box', function () {
+            const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
+            [-1, 1].forEach((y) => {
+                const ray = new Ray(new Vec3(-3, y, 0), new Vec3(1, 0, 0));
+                const point = new Vec3();
+                expect(box.intersectsRay(ray)).to.equal(true);
+                expect(box.intersectsRay(ray, point)).to.equal(true);
+                expect(point.x).to.equal(-1);
+                expect(point.y).to.equal(y);
+                expect(point.z).to.equal(0);
+            });
+        });
+
     });
 
 });
