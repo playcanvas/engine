@@ -19,8 +19,14 @@ function typeStr(t) {
         case 'intrinsic': return t.name;
         case 'literal': return typeof t.value === 'string' ? JSON.stringify(t.value) : `${t.value}`;
         case 'reference': return t.name + (t.typeArguments?.length ? `<${t.typeArguments.map(typeStr).join(', ')}>` : '');
-        case 'array': return `${typeStr(t.elementType)}[]`;
-        case 'union': return t.types.map(typeStr).join(' | ');
+        case 'array': {
+            const el = typeStr(t.elementType);
+            return ['union', 'intersection'].includes(t.elementType?.type) ? `(${el})[]` : `${el}[]`;
+        }
+        // TypeScript orders union members by internal type id, which depends on the order it first
+        // meets each type in the whole program, so an unrelated change can reorder them. Sort them
+        // to keep the surface stable.
+        case 'union': return t.types.map(typeStr).sort().join(' | ');
         case 'intersection': return t.types.map(typeStr).join(' & ');
         case 'tuple': return `[${(t.elements || []).map(typeStr).join(', ')}]`;
         case 'query': return `typeof ${typeStr(t.queryType)}`;
