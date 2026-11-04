@@ -2045,8 +2045,8 @@ class StandardMaterial extends Material {
             this._setParameter('texture_planarReflectionMap', this.planarReflectionMap);
             this._setParameter('planarReflectionMatrix', this._planarReflectionMatrix.data);
 
-            // rough surfaces sample the mip levels of the texture, up to the last one it has
-            this._setParameter('planarReflectionMaxLevel', this.planarReflectionMap.numLevels - 1);
+            // rough surfaces sample the mip levels of the texture, when it has them
+            this._setParameter('planarReflectionMipmaps', this.planarReflectionMap.mipmaps ? 1 : 0);
         }
 
         // remove unused params

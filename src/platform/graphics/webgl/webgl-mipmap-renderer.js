@@ -18,6 +18,7 @@ import { Texture } from '../texture.js';
  * @typedef {object} ScratchTarget
  * @property {Texture} texture - The texture the mip levels are rendered to.
  * @property {WebGLFramebuffer|null} framebuffer - Its framebuffer, null until created.
+ * @ignore
  */
 
 const _quadPrimitive = {
@@ -248,6 +249,13 @@ class WebglMipmapRenderer {
 
         device.activeTexture(device.maxCombinedTextures - 1);
         device.bindTexture(texture);
+
+        // apply the pending sampling setup of the texture now, which the draws below would apply
+        // otherwise, replacing the setup the levels are sampled with
+        if (texture.impl.dirtyParameterFlags) {
+            device.setTextureParameters(texture);
+            texture.impl.dirtyParameterFlags = 0;
+        }
 
         // let WebGL define the mip levels the first time, they are replaced below
         if (!this._allocated.has(glTexture)) {

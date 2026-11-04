@@ -3,7 +3,7 @@
 export default /* glsl */`
 uniform sampler2D texture_planarReflectionMap;
 uniform mat4 planarReflectionMatrix;
-uniform float planarReflectionMaxLevel;
+uniform float planarReflectionMipmaps;
 uniform float material_reflectivity;
 
 // The weights of the cubic B-spline of the four texels around a sample position.
@@ -49,9 +49,10 @@ vec3 calcReflection(vec3 reflDir, float gloss) {
     vec2 uv = getGrabScreenPos(clipPos);
 
     // rougher surfaces sample the smaller mipmaps of the texture, blurring the reflection, up to
-    // the last mip level the texture has
-    float width = float(textureSize(texture_planarReflectionMap, 0).x);
-    float lod = min((1.0 - gloss) * log2(width), planarReflectionMaxLevel);
+    // its last mip level, when it has mipmaps
+    vec2 size = vec2(textureSize(texture_planarReflectionMap, 0));
+    float maxLevel = floor(log2(max(size.x, size.y))) * planarReflectionMipmaps;
+    float lod = min((1.0 - gloss) * log2(size.x), maxLevel);
     float level = floor(lod);
 
     // the top level is sampled bilinearly, which keeps a mirror sharp, and the blurred levels by

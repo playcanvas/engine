@@ -4,7 +4,6 @@ export default /* wgsl */`
 var texture_planarReflectionMap: texture_2d<f32>;
 var texture_planarReflectionMapSampler: sampler;
 uniform planarReflectionMatrix: mat4x4f;
-uniform planarReflectionMaxLevel: f32;
 uniform material_reflectivity: f32;
 
 // The weights of the cubic B-spline of the four texels around a sample position.
@@ -50,9 +49,10 @@ fn calcReflection(reflDir: vec3f, gloss: f32) -> vec3f {
     let uv = getGrabScreenPos(clipPos);
 
     // rougher surfaces sample the smaller mipmaps of the texture, blurring the reflection, up to
-    // the last mip level the texture has
+    // the last mip level it has
     let width = f32(textureDimensions(texture_planarReflectionMap, 0).x);
-    let lod = min((1.0 - gloss) * log2(width), uniform.planarReflectionMaxLevel);
+    let maxLevel = f32(textureNumLevels(texture_planarReflectionMap) - 1u);
+    let lod = min((1.0 - gloss) * log2(width), maxLevel);
     let level = floor(lod);
 
     // the top level is sampled bilinearly, which keeps a mirror sharp, and the blurred levels by
