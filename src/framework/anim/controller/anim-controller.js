@@ -257,7 +257,12 @@ class AnimController {
 
         const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
         if (activeClip) {
-            return activeClip.progressForTime(time);
+            // the time in state already advances at the state speed, so convert it back to the
+            // clip's own playback time rather than applying the speed a second time. The clip speed
+            // can differ from the state speed, for example in blend trees.
+            const stateSpeed = this.activeState.speed;
+            const clipTime = stateSpeed !== 0 ? time * Math.abs(activeClip.speed) / stateSpeed : time;
+            return clipTime / activeClip.track.duration;
         }
 
         return null;
@@ -618,10 +623,10 @@ class AnimController {
             this._timeInStateBefore = this._timeInState;
             this._timeInState += dt * this.activeState.speed;
             // if the active state is not looping and the time in state is greater than the duration, set the time in state to the state duration
-            // and update the delta time accordingly
+            // and update the delta time accordingly. The time in state advances at the state speed, so divide by it to get back to real time
             if (!this.activeState.loop && this._timeInState > this.activeStateDuration) {
                 this._timeInState = this.activeStateDuration;
-                dt = this.activeStateDuration - this._timeInStateBefore;
+                dt = (this.activeStateDuration - this._timeInStateBefore) / this.activeState.speed;
             }
         }
 

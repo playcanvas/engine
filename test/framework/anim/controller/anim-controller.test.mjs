@@ -401,4 +401,88 @@ describe('AnimController', function () {
 
     });
 
+    describe('#update', function () {
+
+        // dt and the track duration are exact binary fractions, so the progress lands exactly on
+        // the exit time instead of drifting past it
+        const dt = 1 / 16;
+        const duration = 4;
+
+        // creates a controller with states 'A' and 'B' that move to each other on the given exit
+        // time (or stay in 'A' when no exit time is given), playing 'A' from its start
+        const createController = (speed, loop, exitTime = null) => {
+            const graph = new Entity();
+            const animBinder = new AnimComponentBinder({ entity: graph }, graph, 'layer', {}, 0);
+            animBinder.resolve = () => {};
+            const states = [
+                { name: 'START' },
+                { name: 'A', speed, loop },
+                { name: 'B', speed, loop }
+            ];
+            const transitions = [{ from: 'START', to: 'A' }];
+            if (exitTime !== null) {
+                transitions.push({ from: 'A', to: 'B', exitTime }, { from: 'B', to: 'A', exitTime });
+            }
+            const animController = new AnimController(new AnimEvaluator(animBinder), states, transitions, true, null, () => null, () => {});
+            const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
+            const inputs = [new AnimData(1, [0, 2, 4])];
+            const outputs = [new AnimData(1, [0, 1, 2])];
+            animController.assignAnimation('A', new AnimTrack('trackA', duration, inputs, outputs, curves));
+            animController.assignAnimation('B', new AnimTrack('trackB', duration, inputs, outputs, curves));
+            animController.play('A');
+            return animController;
+        };
+
+        const updateFrames = (animController, frames) => {
+            for (let i = 0; i < frames; i++) {
+                animController.update(dt);
+            }
+        };
+
+        [
+            { speed: 1, loop: true },
+            { speed: 2, loop: true },
+            { speed: 0.5, loop: true },
+            { speed: -2, loop: true },
+            { speed: 2, loop: false },
+            { speed: 0.5, loop: false }
+        ].forEach(({ speed, loop }) => {
+            it(`transitions on an exit time of 1 once the clip has played once (speed ${speed}, loop ${loop})`, function () {
+                const animController = createController(speed, loop, 1);
+                const frames = duration / Math.abs(speed) / dt;
+                updateFrames(animController, frames - 1);
+                expect(animController.activeStateName).to.equal('A');
+                updateFrames(animController, 1);
+                expect(animController.activeStateName).to.equal('B');
+            });
+        });
+
+        it('transitions on an exit time of 2 once the clip has played twice', function () {
+            const animController = createController(2, true, 2);
+            const frames = 2 * duration / 2 / dt;
+            updateFrames(animController, frames - 1);
+            expect(animController.activeStateName).to.equal('A');
+            updateFrames(animController, 1);
+            expect(animController.activeStateName).to.equal('B');
+        });
+
+        it('reports a progress of 1 at the end of a non looping state with a speed other than 1', function () {
+            const animController = createController(2, false);
+            updateFrames(animController, 2 * duration / 2 / dt);
+            expect(animController.activeStateProgress).to.equal(1);
+        });
+
+        it('advances the clip to the end of a non looping state on the frame the state finishes', function () {
+            const animController = createController(0.5, false);
+            // 0.3 s frames advance the state by 0.15, so the 27th frame overshoots the end of the
+            // track and is shortened to the 0.2 s it takes the clip to reach the end
+            for (let i = 0; i < 27; i++) {
+                animController.update(0.3);
+            }
+            expect(animController.activeStateCurrentTime).to.equal(duration);
+            expect(animController.animEvaluator.clips[0].time).to.be.closeTo(duration, 1e-9);
+        });
+
+    });
+
 });
