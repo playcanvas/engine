@@ -1431,7 +1431,7 @@ class StandardMaterial extends Material {
      */
     set metalness(value) {
         if (this._metalness !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._metalness, value);
+            // only a uniform, the shader applies any metalness
             this._metalness = value;
             this._markPropertyModified(_properties.metalness);
         }

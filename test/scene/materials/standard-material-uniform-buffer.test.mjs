@@ -297,8 +297,8 @@ describe('StandardMaterial uniform buffer', function () {
                 material[name] = value;
                 return material._dirtyShader;
             };
-            expect(dirtyAfter('metalness', 0.5), 'leaving 1').to.equal(true);
-            expect(dirtyAfter('metalness', 0.25), 'staying fractional').to.equal(false);
+            expect(dirtyAfter('metalness', 0.5), 'metalness never selects shader code').to.equal(false);
+            expect(dirtyAfter('metalness', 1), 'metalness never selects shader code').to.equal(false);
             expect(dirtyAfter('gloss', 0), 'reaching 0').to.equal(true);
             expect(dirtyAfter('heightMapBase', 1), 'height map base never selects shader code').to.equal(false);
             expect(dirtyAfter('parallaxShadowSamples', 4), 'leaving 0').to.equal(true);

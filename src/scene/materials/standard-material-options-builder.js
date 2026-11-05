@@ -235,7 +235,9 @@ class StandardMaterialOptionsBuilder {
         const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
 
         options.specularityFactorTint = specularityFactorTint;
-        options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1);
+        // the metalness constant is always applied, as gloss is, so that a material with a metalness
+        // of 1 shares the shader of one with a lower metalness, and a change of it never recompiles
+        options.metalnessTint = stdMat.useMetalness;
         options.glossTint = true;
         options.diffuseEncoding = stdMat.diffuseMap?.encoding;
         options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
