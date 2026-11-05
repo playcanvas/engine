@@ -44,10 +44,11 @@ void main(void) {
             getTBN(dTangentW, dBinormalW, dVertexNormalW);
         #endif
 
-        // after the TBN matrix, which is built from the unflipped normal
-        #ifdef LIT_TWO_SIDED_LIGHTING
+        // after the TBN matrix, which is built from the unflipped normal. twoSidedLighting is 0 or 1,
+        // the same for every pixel the material renders.
+        if (material_twoSidedLighting != 0.0) {
             handleTwoSidedLighting();
-        #endif
+        }
     #endif
 
     // invoke frontend functions

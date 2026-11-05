@@ -98,6 +98,14 @@ class LitMaterial extends Material {
     hasClearCoatNormals = false;
 
     /** @ignore */
+    updateUniforms(device, scene) {
+        super.updateUniforms(device, scene);
+
+        // a uniform, the shader always contains the flip of the normals of the back faces
+        this.setParameter('material_twoSidedLighting', this.twoSidedLighting ? 1 : 0);
+    }
+
+    /** @ignore */
     getShaderVariant(params) {
 
         options.usedUvs = this.usedUvs.slice();

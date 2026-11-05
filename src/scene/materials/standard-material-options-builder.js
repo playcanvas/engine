@@ -273,7 +273,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
         options.litOptions.ambientSH = !!stdMat.ambientSH;
-        options.litOptions.twoSidedLighting = stdMat.twoSidedLighting;
         options.litOptions.occludeSpecular = stdMat.occludeSpecular;
         options.litOptions.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
 

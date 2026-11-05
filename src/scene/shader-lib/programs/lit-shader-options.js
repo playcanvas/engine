@@ -110,7 +110,10 @@ class LitShaderOptions {
     ssao = false;
 
     /**
-     * The value of {@link StandardMaterial#twoSidedLighting}.
+     * Not used. The shader applies {@link StandardMaterial#twoSidedLighting} with a uniform, so it
+     * does not take part in shader generation.
+     *
+     * @deprecated
      */
     twoSidedLighting = false;
 

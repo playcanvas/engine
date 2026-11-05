@@ -36,6 +36,10 @@ vec3 sSpecularLight;
     uniform float material_alphaFade;
 #endif
 
+#ifdef LIT_NEEDS_NORMAL
+    uniform float material_twoSidedLighting;
+#endif
+
 #ifdef LIT_SSAO
     uniform sampler2D ssaoTexture;
     uniform vec2 ssaoTextureSizeInv;

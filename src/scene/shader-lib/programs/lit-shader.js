@@ -109,6 +109,13 @@ class LitShader {
         this.device = device;
         this.options = options;
 
+        // only set by a StandardMaterial#onUpdateShader callback, as the shader no longer reads it
+        Debug.call(() => {
+            if (options.twoSidedLighting) {
+                Debug.deprecated('LitShaderOptions#twoSidedLighting is not used. Set StandardMaterial#twoSidedLighting instead, which the shader applies with a uniform.');
+            }
+        });
+
         // shader language
         const userChunks = options.shaderChunks;
         this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
@@ -539,7 +546,6 @@ class LitShader {
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');
         this.fDefineSet(options.separateAmbient, 'LIT_SEPARATE_AMBIENT');
-        this.fDefineSet(options.twoSidedLighting, 'LIT_TWO_SIDED_LIGHTING');
         this.fDefineSet(options.lightMapEnabled, 'LIT_LIGHTMAP');
         this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
         this.fDefineSet(options.skyboxIntensity > 0, 'LIT_SKYBOX_INTENSITY');
