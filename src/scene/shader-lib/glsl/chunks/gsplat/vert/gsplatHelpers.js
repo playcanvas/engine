@@ -40,15 +40,15 @@ bool gsplatFootprintSmallerThan(float a, float b, float c, float size) {
 // fragment depend on D. D is the shape whose drawn profile, with the exp(-4) floor subtracted as normExp
 // does, carries exactly A times the drawn mass of a plain gaussian of opacity 1. D = 1 is the plain gaussian.
 
-// The shape D for opacity A: 1 up to A = 1, then fitted in t = A - 1 to within 1.8e-4 (D <= 1.76).
+// The shape D for opacity A: 1 up to A = 1. The exact relation has no closed-form inverse; this quadratic
+// in t = A - 1 matches its drawn mass to within 0.4%, the precision of the SOG v3 opacity byte (D <= 1.77).
 float gsplatPlateauShape(float A) {
     float t = clamp(A - 1.0, 0.0, 0.5625);
-    float s = sqrt(t);
-    return 1.0 + t * (1.682517 + s * (-0.3263874 + s * (-0.5976628 + 0.5884379 * s)));
+    return 1.0 + t * (1.5 - 0.25 * t);
 }
 
 // The squeeze e: the unsqueezed profile's extent, (D - 1) + 2 sqrt(2 / D) sigma, over the plain gaussian's
-// 2 sqrt(2) sigma (0.98 to 1.03 for D <= 1.76; 1 at D = 1).
+// 2 sqrt(2) sigma (0.98 to 1.03 for D <= 1.77; 1 at D = 1).
 float gsplatPlateauExtent(float D) {
     return (D - 1.0) * 0.35355339 + inversesqrt(D);
 }

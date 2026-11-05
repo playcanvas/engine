@@ -10,13 +10,12 @@ import wgslHelpers from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/vert/g
 describe('gsplatHelpersVS plateau shape', function () {
     const coefficients = (source) => {
         const body = source.slice(source.indexOf('gsplatPlateauShape'));
-        const m = body.match(/return 1\.0 \+ t \* \(([-\d.]+) \+ s \* \(([-\d.]+) \+ s \* \(([-\d.]+) \+ ([-\d.]+) \* s\)\)\)/);
+        const m = body.match(/return 1\.0 \+ t \* \(([\d.]+) - ([\d.]+) \* t\)/);
         return m.slice(1).map(Number);
     };
-    const shape = ([c0, c1, c2, c3], A) => {
+    const shape = ([a, b], A) => {
         const t = Math.min(Math.max(A - 1, 0), 0.5625);
-        const s = Math.sqrt(t);
-        return 1 + t * (c0 + s * (c1 + s * (c2 + c3 * s)));
+        return 1 + t * (a - b * t);
     };
 
     // The drawn mass of a unit-peak splat over its quad, as gsplatPS evaluates it: the profile mapped to
@@ -45,7 +44,8 @@ describe('gsplatHelpersVS plateau shape', function () {
         const c = coefficients(glslHelpers);
         const plain = drawnMass(1);
         for (let A = 1.025; A <= 1.5625; A += 0.025) {
-            expect(drawnMass(shape(c, A)) / plain / A).to.be.closeTo(1, 5e-4);
+            // within the precision of the SOG v3 opacity byte (about 0.4% at the top of its range)
+            expect(drawnMass(shape(c, A)) / plain / A).to.be.closeTo(1, 4.5e-3);
         }
     });
 });
