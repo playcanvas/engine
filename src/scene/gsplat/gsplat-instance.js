@@ -85,7 +85,6 @@ class GSplatInstance {
             this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
             this._material.setParameter('alphaClipForward', 1.0 / 255.0);
-            this._material.setParameter('opacityExcessMax', 0);
         } else {
             this._material = new ShaderMaterial({
                 uniqueName: 'SplatMaterial',
@@ -154,7 +153,6 @@ class GSplatInstance {
             this._material.setDefine('{GSPLAT_INSTANCE_SIZE}', String(GSplatResourceBase.instanceSize));
             this.setMaterialOrderData(this._material);
             this._material.setParameter('alphaClipForward', 1.0 / 255.0);
-            this._material.setParameter('opacityExcessMax', 0);
 
             if (this.meshInstance) {
                 this.meshInstance.material = value;
@@ -181,7 +179,6 @@ class GSplatInstance {
         this.setMaterialOrderData(material);
         material.setParameter('alphaClip', 0.3);
         material.setParameter('alphaClipForward', 1.0 / 255.0);
-        material.setParameter('opacityExcessMax', 0);
         material.setParameter('minPixelSize', 2.0);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
         // opacityDitherPS picks its noise source off STD_OPACITY_DITHER, and nothing sets it for a

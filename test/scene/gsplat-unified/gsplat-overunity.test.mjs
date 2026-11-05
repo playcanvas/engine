@@ -2,33 +2,10 @@ import { expect } from 'chai';
 
 import { FloatPacking } from '../../../src/core/math/float-packing.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-import { GSPLATDATA_COMPACT, GSPLATDATA_LARGE } from '../../../src/scene/constants.js';
 import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
-import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
 import glslHelpers from '../../../src/scene/shader-lib/glsl/chunks/gsplat/vert/gsplatHelpers.js';
 import wgslHelpers from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/vert/gsplatHelpers.js';
-
-describe('GSplatParams#compensation', function () {
-    it('defaults to on, adds no work buffer streams, and sets the opacity drawn above 1', function () {
-        const device = new NullGraphicsDevice({ width: 1, height: 1 });
-        for (const dataFormat of [GSPLATDATA_COMPACT, GSPLATDATA_LARGE]) {
-            const params = new GSplatParams(device);
-            params.dataFormat = dataFormat;
-            const streams = params.format.extraStreams.length;
-            const excessMax = () => params.material.getParameter('opacityExcessMax').data;
-            expect(params.compensation).to.equal(true);
-            expect(excessMax()).to.equal(0.5625);
-            params.compensation = false;
-            expect(params.compensation).to.equal(false);
-            expect(excessMax()).to.equal(0);
-            params.compensation = true;
-            expect(excessMax()).to.equal(0.5625);
-            expect(params.format.extraStreams.length).to.equal(streams);
-        }
-        device.destroy();
-    });
-});
 
 describe('gsplatHelpersVS plateau shape', function () {
     const coefficients = (source) => {

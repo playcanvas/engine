@@ -84,7 +84,6 @@ class GSplatParams {
 
         this._material.setParameter('alphaClip', 0.3);
         this._material.setParameter('alphaClipForward', 1.0 / 255.0);
-        this._material.setParameter('opacityExcessMax', 0.5625);
         this._material.setParameter('minPixelSize', 2.0);
         this._material.setParameter('minContribution', 2.0);
         this._material.setParameter('foveationStrength', 0);
@@ -422,33 +421,6 @@ class GSplatParams {
      */
     get enableIds() {
         return this._enableIds;
-    }
-
-    /**
-     * Whether to draw over-unity opacity. Decimated splat data (SOG v3) can carry gaussians whose
-     * true opacity exceeds 1 - the mass of several merged gaussians that an opacity of at most 1
-     * cannot hold. When enabled, these are drawn with a flat-topped (plateau) profile that carries
-     * that mass: an opaque core joined smoothly to a gaussian edge, within the same footprint as an
-     * ordinary gaussian. Opacity is drawn up to 1.5625; above that, merges over-count overlapping
-     * gaussians, so it is clamped. When disabled, it is clamped to 1. Scenes without such data are
-     * drawn the same either way. Defaults to true.
-     *
-     * Intended mainly for debugging and comparison.
-     *
-     * @type {boolean}
-     */
-    set compensation(value) {
-        this._material.setParameter('opacityExcessMax', value ? 0.5625 : 0);
-        this._material.update();
-    }
-
-    /**
-     * Gets whether over-unity opacity is drawn.
-     *
-     * @type {boolean}
-     */
-    get compensation() {
-        return (this._material.getParameter('opacityExcessMax')?.data ?? 0.5625) > 0;
     }
 
     /**

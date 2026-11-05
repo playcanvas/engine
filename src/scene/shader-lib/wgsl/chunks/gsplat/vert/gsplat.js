@@ -66,9 +66,6 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         var clr: half4 = half4(getColor());
     #endif
 
-    // opacity above 1 is kept only while over-unity opacity is drawn, and capped before anything scales it
-    clr.a = min(clr.a, half(1.0 + uniform.opacityExcessMax));
-
     #if GSPLAT_AA
         clr.a = clr.a * corner.aaFactor;
     #endif

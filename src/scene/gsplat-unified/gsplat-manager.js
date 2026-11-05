@@ -416,7 +416,6 @@ class GSplatManager {
         p.foveationStrength = gsplat.foveationStrength;
         p.foveationCenter = gsplat.foveationCenter;
         p.antiAliasFilterSize = gsplat.antiAliasFilterSize;
-        p.compensation = gsplat.compensation;
 
         // resolved here rather than taken from the end of update(): the GPU path fills and
         // dispatches the forward view earlier in update(), and must see the current setting

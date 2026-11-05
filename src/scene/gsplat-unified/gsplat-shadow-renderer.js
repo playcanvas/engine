@@ -670,7 +670,6 @@ class GSplatShadowRenderer {
         material.setParameter('numSplatsStorage', entry.countBuffer);
         material.setParameter('splatTextureSize', textureSize);
         material.setParameter('alphaClip', gsplatParams.alphaClip);
-        material.setParameter('opacityExcessMax', gsplatParams.compensation ? 0.5625 : 0);
 
         entry.meshInstance.visible = true;
         if (entry.meshInstance.instancingCount <= 0) {

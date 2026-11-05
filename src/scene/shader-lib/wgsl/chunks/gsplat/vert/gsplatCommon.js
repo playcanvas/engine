@@ -18,9 +18,6 @@ uniform alphaClip: f32;
 uniform alphaClipForward: f32;
 #endif
 
-// opacity drawn above 1 (see GSplatParams#compensation): 0.5625 when over-unity opacity is drawn, else 0
-uniform opacityExcessMax: f32;
-
 // modify the gaussian corner; uses alphaClip (non-forward) or alphaClipForward (forward) to match frag
 fn clipCorner(corner: ptr<function, SplatCorner>, alpha: half) {
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
