@@ -354,32 +354,6 @@ class CameraControls extends Script {
     _pressedButton = -1;
 
     /**
-     * The index of the mouse button which made the movement set aside at the press of another
-     * button since the last update, or -1. The movement is applied by the action of its own
-     * button, not of the button pressed after it.
-     *
-     * @type {number}
-     * @private
-     */
-    _heldButton = -1;
-
-    /**
-     * The mouse movement set aside at the press of another button, made by the held button.
-     *
-     * @type {Vec2}
-     * @private
-     */
-    _heldMove = new Vec2();
-
-    /**
-     * The position of the cursor at the end of the movement set aside, in CSS pixels.
-     *
-     * @type {Vec2}
-     * @private
-     */
-    _heldPointer = new Vec2();
-
-    /**
      * @type {boolean}
      * @private
      */
@@ -402,17 +376,12 @@ class CameraControls extends Script {
         if (event.type === 'pointerdown' && event.pointerType === 'mouse' &&
             event.button >= 0 && event.button < this._buttonActions.length) {
 
-            // the movement since the last update belongs to the drag before this press, so it is
-            // set aside with the button which made it
+            // the movement since the last update belongs to the drag before this press. An update
+            // applies one action, so the movement is dropped when that drag had another action,
+            // rather than applied by the action of this button
             const owner = this._pressedButton >= 0 ? this._pressedButton : this._activeButton;
-            const [dx, dy] = this._desktopInput.deltas.mouse.read();
-            if (owner >= 0 && (dx !== 0 || dy !== 0)) {
-                if (this._heldButton < 0) {
-                    this._heldButton = owner;
-                }
-                this._heldMove.x += dx;
-                this._heldMove.y += dy;
-                this._heldPointer.copy(this._pointer);
+            if (owner >= 0 && this._buttonActions[owner] !== this._buttonActions[event.button]) {
+                this._desktopInput.deltas.mouse.read();
             }
             this._pressedButton = event.button;
         }
@@ -856,8 +825,6 @@ class CameraControls extends Script {
             // discard inputs
             this._activeButton = -1;
             this._pressedButton = -1;
-            this._heldButton = -1;
-            this._heldMove.set(0, 0);
             this._desktopInput.read();
             this._orbitMobileInput.read();
             this._flyMobileInput.read();
@@ -1086,14 +1053,7 @@ class CameraControls extends Script {
         v.add(wheelMove.mulScalar(orbit * zoomDeltaMult));
         deltas.move.append([v.x, v.y, v.z]);
 
-        // desktop mouse: the movement set aside at a press, by the button which made it, and then
-        // the movement since, by the active button
-        if (this._heldButton >= 0) {
-            this._appendMouseMove(this._buttonActions[this._heldButton], this._heldPointer,
-                this._heldMove.x, this._heldMove.y, orbit);
-            this._heldButton = -1;
-            this._heldMove.set(0, 0);
-        }
+        // desktop mouse
         this._appendMouseMove(action, this._pointer, mouse[0], mouse[1], orbit);
 
         // the movement of the button has been applied, until it is released
