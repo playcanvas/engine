@@ -23,6 +23,7 @@ export const exampleRedirects = {
     'graphics/clustered-spot-shadows': 'lights-and-shadows/clustered-spot-shadows',
     'graphics/custom-compose-shader': 'camera-frame/custom-compose-shader',
     'graphics/depth-of-field': 'camera-frame/depth-of-field',
+    'graphics/grid': 'debug/grid',
     'graphics/hdr': 'camera-frame/hdr',
     'graphics/light-physical-units': 'lights-and-shadows/light-physical-units',
     'graphics/lights': 'lights-and-shadows/lights',
