@@ -10,6 +10,7 @@ import {
     OrbitController,
     Pose,
     PROJECTION_PERSPECTIVE,
+    Quat,
     Script,
     Vec2,
     Vec3
@@ -34,6 +35,9 @@ const tmpBefore = new Vec3();
 const tmpAfter = new Vec3();
 const tmpFocus = new Vec3();
 const tmpPan = new Vec3();
+const tmpRight = new Vec3();
+const tmpForward = new Vec3();
+const tmpYaw = new Quat();
 
 const pose = new Pose();
 
@@ -149,27 +153,26 @@ const screenToPlane = (camera, x, y, height, out) => {
  * @param {number} dx - The mouse delta x value.
  * @param {number} dy - The mouse delta y value.
  * @param {number} height - The height of the plane.
+ * @param {number} yaw - The yaw of the view, in degrees.
  * @param {Vec3} out - The vector to receive the pan.
  * @returns {Vec3} The pan, which is zero when the plane is not in view under the cursor.
  * @private
  */
-const screenToGroundPan = (camera, x, y, dx, dy, height, out) => {
+const screenToGroundPan = (camera, x, y, dx, dy, height, yaw, out) => {
     const before = screenToPlane(camera, x - dx, y - dy, height, tmpBefore);
     const after = screenToPlane(camera, x, y, height, tmpAfter);
     if (!before || !after) {
         return out.set(0, 0, 0);
     }
 
-    // the view moves against the cursor, measured along its directions level with the plane
+    // the view moves against the cursor, measured along the right and forward directions turned
+    // by the yaw alone - the directions the orbit controller moves the focus point along. The
+    // directions of the camera itself would flip once it looks past straight down
     before.sub(after);
-    const { right, forward } = camera.entity;
-    const rightLength = Math.hypot(right.x, right.z);
-    const forwardLength = Math.hypot(forward.x, forward.z);
-    return out.set(
-        rightLength > 0 ? (before.x * right.x + before.z * right.z) / rightLength : 0,
-        forwardLength > 0 ? (before.x * forward.x + before.z * forward.z) / forwardLength : 0,
-        0
-    );
+    tmpYaw.setFromEulerAngles(0, yaw, 0);
+    const right = tmpYaw.transformVector(Vec3.RIGHT, tmpRight);
+    const forward = tmpYaw.transformVector(Vec3.FORWARD, tmpForward);
+    return out.set(before.dot(right), before.dot(forward), 0);
 };
 
 /**
@@ -341,6 +344,16 @@ class CameraControls extends Script {
     _activeButton = -1;
 
     /**
+     * The index of the mouse button pressed since the last update, or -1. It is taken from the
+     * press itself, as the button deltas of a press and a release between two updates cancel out,
+     * while the movement of the drag in between is still to be applied.
+     *
+     * @type {number}
+     * @private
+     */
+    _pressedButton = -1;
+
+    /**
      * @type {boolean}
      * @private
      */
@@ -360,6 +373,10 @@ class CameraControls extends Script {
      */
     _onPointer = (event) => {
         this._pointer.set(event.offsetX, event.offsetY);
+        if (event.type === 'pointerdown' && event.pointerType === 'mouse' &&
+            event.button >= 0 && event.button < this._buttonActions.length) {
+            this._pressedButton = event.button;
+        }
     };
 
     /**
@@ -799,6 +816,7 @@ class CameraControls extends Script {
         this.on('state', () => {
             // discard inputs
             this._activeButton = -1;
+            this._pressedButton = -1;
             this._desktopInput.read();
             this._orbitMobileInput.read();
             this._flyMobileInput.read();
@@ -958,23 +976,18 @@ class CameraControls extends Script {
 
         // a pressed button starts the mode of its action, and the mouse movement follows the
         // action of the last button pressed
-        let orbitPressed = wheel[0] !== 0;
-        let lookPressed = false;
-        for (let i = 0; i < this._buttonActions.length; i++) {
-            if (button[i] !== 1) {
-                continue;
-            }
-            this._activeButton = i;
-            const pressed = this._buttonActions[i];
-            orbitPressed ||= pressed === 'orbit' || pressed === 'pan';
-            lookPressed ||= pressed === 'look';
+        const pressedButton = this._pressedButton;
+        this._pressedButton = -1;
+        if (pressedButton >= 0) {
+            this._activeButton = pressedButton;
         }
+        const pressed = pressedButton >= 0 ? this._buttonActions[pressedButton] : 'none';
         const action = this._activeButton >= 0 ? this._buttonActions[this._activeButton] : 'none';
 
-        if (orbitPressed) {
+        if (wheel[0] !== 0 || pressed === 'orbit' || pressed === 'pan') {
             // mouse wheel, or a button which orbits or pans
             this._setMode('orbit');
-        } else if (lookPressed || this._state.axis.length() > 0) {
+        } else if (pressed === 'look' || this._state.axis.length() > 0) {
             // a button which looks, or any movement
             this._setMode('fly');
         }
@@ -1007,7 +1020,7 @@ class CameraControls extends Script {
         v.add(keyMove.mulScalar(fly * moveMult));
         const panMove = this._groundPan ?
             screenToGroundPan(this._camera, this._pointer.x, this._pointer.y, mouse[0], mouse[1],
-                this._pose.getFocus(tmpFocus).y, tmpPan) :
+                this._pose.getFocus(tmpFocus).y, this._pose.angles.y, tmpPan) :
             screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
         v.add(panMove.mulScalar(orbit * desktopPan * +this.enablePan));
         const wheelMove = tmpV2.set(0, 0, wheel[0]);

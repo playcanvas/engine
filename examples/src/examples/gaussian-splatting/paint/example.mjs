@@ -393,8 +393,16 @@ app.mouse.on(EVENT_MOUSEUP, (e) => {
     }
 });
 
+// The mouse does not report a release outside the canvas, so a stroke dragged out of it ends on
+// any release in the window
+const stopPainting = () => {
+    isPainting = false;
+};
+window.addEventListener('mouseup', stopPainting);
+
 // Cleanup on destroy
 app.on('destroy', () => {
+    window.removeEventListener('mouseup', stopPainting);
     for (const paintable of paintables) {
         paintable.processor?.destroy();
     }
