@@ -11,7 +11,6 @@ struct ProjectedSplatCommon {
     splatId: u32,
     center: vec3f,
     opacity: f32,
-    plateau: f32,
     proj: SplatCov2D
 }
 
@@ -24,7 +23,7 @@ fn invalidProjectedSplatCommon() -> ProjectedSplatCommon {
     cov.viewDepth = 0.0;
     cov.valid = false;
 
-    return ProjectedSplatCommon(false, 0u, vec3f(0.0), 0.0, 1.0, cov);
+    return ProjectedSplatCommon(false, 0u, vec3f(0.0), 0.0, cov);
 }
 
 fn projectSplatCommon(
@@ -79,20 +78,13 @@ fn projectSplatCommon(
     var scale: vec3f = getScale();
     modifySplatRotationScale(originalCenter, center, &rotation, &scale);
 
-    // over-unity plateau shape D' (1 = plain gaussian); the culls use its grown footprint
-    #ifdef GSPLAT_OVERUNITY
-        let plateau = 1.0 + 0.75 * loadSplatPlateau().r;
-    #else
-        let plateau = 1.0;
-    #endif
-
     let proj = computeSplatCov(
         center, half4(rotation.wxyz), half3(scale),
         viewMatrix, viewProj,
         focal, viewportWidth, viewportHeight,
         nearClip, farClip, opacity, minPixelSize,
         isOrtho, alphaClip, minContribution,
-        foveationStrength, foveationCenter, plateau, antiAliasFilterSize,
+        foveationStrength, foveationCenter, antiAliasFilterSize,
         #ifdef GSPLAT_FISHEYE
             fisheye_k, fisheye_inv_k,
             fisheye_projMat00, fisheye_projMat11,
@@ -106,7 +98,7 @@ fn projectSplatCommon(
         return invalidProjectedSplatCommon();
     }
 
-    return ProjectedSplatCommon(true, splatId, center, opacity, plateau, proj);
+    return ProjectedSplatCommon(true, splatId, center, opacity, proj);
 }
 `;
 

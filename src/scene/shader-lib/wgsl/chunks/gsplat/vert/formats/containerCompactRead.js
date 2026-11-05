@@ -17,8 +17,10 @@ fn getAntiAlias() -> bool {
     return (cachedTransformA.r & 1u) != 0u;
 }
 
+// opacity as the SOG v3 byte (see containerCompactWrite): 0..1.5625
 fn getOpacity() -> f32 {
-    return f32(cachedTransformA.a >> 24u) / 255.0;
+    let o = f32(cachedTransformA.a >> 24u) / 204.0;
+    return o * o;
 }
 
 fn getColor() -> vec3f {

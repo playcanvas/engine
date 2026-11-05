@@ -50,7 +50,6 @@ fn computeSplatCov(
     minContribution: f32,
     foveationStrength: f32,
     foveationCenter: f32,
-    plateau: f32,           // over-unity plateau shape D' (1 = plain gaussian)
     antiAliasFilterSize: f32,   // GSplatParams#antiAliasFilterSize, in pixels squared
     #ifdef GSPLAT_FISHEYE
         fisheye_k: f32,
@@ -177,22 +176,11 @@ fn computeSplatCov(
     let b = dot(b0, b1);
     let cRaw = dot(b1, b1);
 
-    // an over-unity plateau profile extends (D'-1) + 2.83 / sqrt(D') sigma, against the gaussian's
-    // 2.83 sigma, and carries I(D') = p^2/2 + 1/D' + p/2 sqrt(2 pi / D') (p = D'-1) times its mass
-    var grow = 1.0;
-    var mass = 1.0;
-    if (plateau > 1.0) {
-        let p = plateau - 1.0;
-        grow = (p + 2.8284271 / sqrt(plateau)) / 2.8284271;
-        mass = 0.5 * p * p + 1.0 / plateau + 0.5 * p * sqrt(6.283185 / plateau);
-    }
-
     // The size and contribution culls measure the footprint with GSPLAT_CULL_LOWPASS, the rendered footprint
-    // uses GSPLAT_LOWPASS (see gsplatHelpersVS). The size cull runs first, before the contribution and AA math,
-    // against the drawn footprint: grown by the plateau, so its threshold shrinks to match.
+    // uses GSPLAT_LOWPASS (see gsplatHelpersVS). The size cull runs first, before the contribution and AA math.
     let aCull = aRaw + GSPLAT_CULL_LOWPASS;
     let cCull = cRaw + GSPLAT_CULL_LOWPASS;
-    if (gsplatFootprintSmallerThan(aCull, b, cCull, minPixelSize / grow)) {
+    if (gsplatFootprintSmallerThan(aCull, b, cCull, minPixelSize)) {
         return result;
     }
 
@@ -246,7 +234,7 @@ fn computeSplatCov(
     let fovT = saturate((fovR - foveationCenter) / max(1.0 - foveationCenter, 1e-4));
     let effMinContribution = minContribution + foveationStrength * fovT * fovT * (3.0 - 2.0 * fovT);
 
-    let totalContribution = opacity * mass * 6.283185 * sqrt(aCull * cCull - b * b);
+    let totalContribution = opacity * 6.283185 * sqrt(aCull * cCull - b * b);
     if (totalContribution < effMinContribution) {
         return result;
     }
@@ -255,10 +243,8 @@ fn computeSplatCov(
     let maxRadius = vmin;
     let radiusXUncapped = sqrt(2.0 * a);
     let radiusYUncapped = sqrt(2.0 * c);
-
-    // the culls use the drawn footprint, grown for an over-unity plateau
-    let radiusX = min(radiusXUncapped, maxRadius) * grow;
-    let radiusY = min(radiusYUncapped, maxRadius) * grow;
+    let radiusX = min(radiusXUncapped, maxRadius);
+    let radiusY = min(radiusYUncapped, maxRadius);
 
     // Frustum cull: reject splats entirely off-screen
     #ifdef GSPLAT_XR

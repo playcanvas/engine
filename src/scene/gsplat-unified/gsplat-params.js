@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import {
-    PIXELFORMAT_R8, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
-    PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U, pixelFormatInfo
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
+    PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
@@ -423,88 +423,20 @@ class GSplatParams {
         return this._enableIds;
     }
 
-    /** @private */
-    _compensation = true;
-
-    /**
-     * Incremented whenever {@link GSplatParams#compensation} changes, so managers re-check
-     * whether their resources need the over-unity stream.
-     *
-     * @ignore
-     */
-    _compensationVersion = 0;
-
     /**
      * Whether to draw over-unity opacity. Decimated splat data (SOG v3) can carry gaussians whose
      * true opacity exceeds 1 - the mass of several merged gaussians that an opacity of at most 1
      * cannot hold. When enabled, these are drawn with a flat-topped (plateau) profile that carries
-     * that mass: an opaque core joined smoothly to a gaussian edge. Opacity is drawn up to 1.5625;
-     * above that, merges over-count overlapping gaussians, so it is clamped. When disabled, their opacity
-     * is clamped to 1. The extra work buffer stream this
-     * needs (1 byte per splat) is only allocated once such data is rendered. Defaults to true.
+     * that mass: an opaque core joined smoothly to a gaussian edge, within the same footprint as an
+     * ordinary gaussian. Opacity is drawn up to 1.5625; above that, merges over-count overlapping
+     * gaussians, so it is clamped. When disabled, it is clamped to 1. Scenes without such data are
+     * drawn the same either way. Defaults to true.
      *
      * Intended mainly for debugging and comparison.
      *
      * @type {boolean}
      */
-    set compensation(value) {
-        if (this._compensation !== value) {
-            this._compensation = value;
-            this._compensationVersion++;
-            if (!value) {
-                this._enableOverUnity(false);
-            }
-        }
-    }
-
-    /**
-     * Gets whether over-unity opacity is drawn.
-     *
-     * @type {boolean}
-     */
-    get compensation() {
-        return this._compensation;
-    }
-
-    /**
-     * Adds or removes the work buffer stream carrying the per-splat plateau shape of over-unity
-     * opacity (see {@link GSplatParams#compensation}). The stream is R8 and holds (D - 1) / 0.75,
-     * so 0 is an ordinary gaussian and the plateau shape D ranges up to 1.75 (true opacity 1.5625).
-     *
-     * @param {boolean} enable - Whether the stream should exist.
-     * @ignore
-     */
-    _enableOverUnity(enable) {
-        const has = !!this._format.getStream('splatPlateau');
-        if (enable && !has && this._compensation) {
-            if (this._plateauStreamFits()) {
-                this._format.addExtraStreams([{ name: 'splatPlateau', format: PIXELFORMAT_R8 }]);
-            } else {
-                Debug.warnOnce('GSplatParams: over-unity opacity is drawn clamped to 1, as the work buffer has no room for its plateau stream within this device\'s color attachment limits. GSPLATDATA_COMPACT leaves room for it.');
-            }
-        } else if (!enable && has) {
-            this._format.removeExtraStreams(['splatPlateau']);
-        }
-    }
-
-    /**
-     * Whether the work buffer can take the R8 plateau stream within the device's color attachment
-     * limits: the attachment count, and on WebGPU the bytes per sample (32 at the spec minimum,
-     * which GSPLATDATA_LARGE alone fills). Each stream is counted at its size rounded up to 4 bytes,
-     * an upper bound on its cost with alignment padding.
-     *
-     * @returns {boolean} True if the stream fits.
-     * @private
-     */
-    _plateauStreamFits() {
-        const streams = [...this._format.streams, ...this._format.extraStreams, { format: PIXELFORMAT_R8 }];
-        if (streams.length > this._device.maxColorAttachments) return false;
-        const limit = this._device.limits?.maxColorAttachmentBytesPerSample;
-        if (!limit) return true;
-        let bytes = 0;
-        for (const s of streams) bytes += Math.ceil((pixelFormatInfo.get(s.format)?.size ?? 16) / 4) * 4;
-        return bytes <= limit;
-    }
+    compensation = true;
 
     /**
      * Distance threshold in world units to trigger LOD updates for camera and gsplat instances.
@@ -1098,10 +1030,8 @@ class GSplatParams {
         if (this._dataFormat !== value) {
             this._dataFormat = value;
 
-            // capture extra streams from the old format (the plateau stream is re-added below, only if
-            // the new layout has room for it)
-            const hadPlateau = !!this._format.getStream('splatPlateau');
-            const extraStreams = this._format.extraStreams.filter(s => s.name !== 'splatPlateau').map(s => ({
+            // capture extra streams from the old format
+            const extraStreams = this._format.extraStreams.map(s => ({
                 name: s.name,
                 format: s.format,
                 storage: s.storage
@@ -1113,9 +1043,6 @@ class GSplatParams {
             // re-add extra streams
             if (extraStreams.length > 0) {
                 this._format.addExtraStreams(extraStreams);
-            }
-            if (hadPlateau) {
-                this._enableOverUnity(true);
             }
 
             this.dirty = true;

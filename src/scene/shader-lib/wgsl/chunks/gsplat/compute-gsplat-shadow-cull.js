@@ -77,15 +77,7 @@ fn fineCull(splatId: u32) -> bool {
     // extent maps below the precomputed per-light threshold is sub-pixel in the shadow map. The max
     // scale axis is an orientation-independent upper bound on the projected radius (conservative —
     // never culls a splat the forward path would keep). A threshold of 0 disables the test.
-    // An over-unity plateau profile extends (D'-1) + 2.83 / sqrt(D') sigma against the gaussian's
-    // 2.83 sigma, so both tests use the grown extent.
-    var maxScale = max(scale.x, max(scale.y, scale.z));
-    #ifdef GSPLAT_OVERUNITY
-        let plateau = 1.0 + 0.75 * loadSplatPlateau().r;
-        if (plateau > 1.0) {
-            maxScale = maxScale * ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
-        }
-    #endif
+    let maxScale = max(scale.x, max(scale.y, scale.z));
     if (maxScale < uniforms.worldSizeThreshold) {
         return false;
     }

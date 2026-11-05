@@ -8,7 +8,7 @@ varying mediump vec2 gaussianUV;
 flat varying mediump vec4 gaussianColor;
 
 #ifdef GSPLAT_OVERUNITY
-    // plateau shape D' of over-unity opacity, 1 for a plain gaussian (see gsplatCopyToWorkbuffer)
+    // plateau shape D of over-unity opacity, 1 for a plain gaussian (see gsplatHelpersVS)
     flat varying float gaussianPlateau;
 #endif
 
@@ -51,14 +51,6 @@ void main(void) {
         gl_Position = discardVec;
         return;
     }
-
-    #ifdef GSPLAT_OVERUNITY
-        // over-unity plateau shape, read before initCorner, which culls by the grown footprint
-        cornerPlateau = 1.0 + 0.75 * loadSplatPlateau().r;
-        if (cornerPlateau > 1.0) {
-            cornerGrow = ((cornerPlateau - 1.0) + 2.8284271 / sqrt(cornerPlateau)) / 2.8284271;
-        }
-    #endif
 
     // project center to screen space
     SplatCorner corner;
@@ -109,13 +101,14 @@ void main(void) {
         return;
     }
 
-    // trim the quad to where alpha falls to the clip threshold (grown to the plateau profile's
-    // extent for over-unity opacity)
     clipCorner(corner, clr.w);
 
+    // alpha above 1 selects the over-unity plateau shape and draws with peak 1 (see gsplatHelpersVS);
+    // without GSPLAT_OVERUNITY it is simply clamped
     #ifdef GSPLAT_OVERUNITY
-        gaussianPlateau = cornerPlateau;
+        gaussianPlateau = gsplatPlateauShape(clr.w);
     #endif
+    clr.w = min(clr.w, 1.0);
 
     // write output
     #if GSPLAT_2DGS

@@ -83,14 +83,8 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let cov = transpose(T) * Vrk * T;
 
     // early-out gaussians smaller than minPixelSize, before paying for the eigen-decomposition (the vmin
-    // cap below is left out: it only matters on a viewport under minPixelSize / 2 pixels). An over-unity
-    // plateau is drawn cornerGrow times wider, so its threshold shrinks to match.
-    #ifdef GSPLAT_OVERUNITY
-        let cullSize = uniform.minPixelSize / cornerGrow;
-    #else
-        let cullSize = uniform.minPixelSize;
-    #endif
-    if (gsplatFootprintSmallerThan(cov[0][0] + GSPLAT_CULL_LOWPASS, cov[0][1], cov[1][1] + GSPLAT_CULL_LOWPASS, cullSize)) {
+    // cap below is left out: it only matters on a viewport under minPixelSize / 2 pixels)
+    if (gsplatFootprintSmallerThan(cov[0][0] + GSPLAT_CULL_LOWPASS, cov[0][1], cov[1][1] + GSPLAT_CULL_LOWPASS, uniform.minPixelSize)) {
         return false;
     }
 
@@ -129,17 +123,10 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
     let l1 = 2.0 * min(sqrt(2.0 * lambda1), vmin);
     let l2 = 2.0 * min(sqrt(2.0 * lambda2), vmin);
 
-    // the drawn footprint, grown for an over-unity plateau
-    #ifdef GSPLAT_OVERUNITY
-        let extent = max(l1, l2) * cornerGrow;
-    #else
-        let extent = max(l1, l2);
-    #endif
-
     let c = center.proj.ww * uniform.viewport_size.zw;
 
     // cull against frustum x/y axes
-    if (any((abs(center.proj.xy) - vec2f(extent) * c) > center.proj.ww)) {
+    if (any((abs(center.proj.xy) - vec2f(max(l1, l2)) * c) > center.proj.ww)) {
         return false;
     }
 

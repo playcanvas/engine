@@ -44,6 +44,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
     _lastAntiAliasMixed = false;
 
     /** @private */
+    _lastOverUnity = false;
+
+    /** @private */
     _lastSourceChunksKey = '';
 
     /** @private */
@@ -305,6 +308,14 @@ class GSplatQuadRenderer extends GSplatRenderer {
         }
     }
 
+    setOverUnity(overUnity) {
+        if (overUnity !== this._lastOverUnity) {
+            this._lastOverUnity = overUnity;
+            this._material.setDefine('GSPLAT_OVERUNITY', overUnity);
+            this._material.update();
+        }
+    }
+
     frameUpdate(params) {
 
         // Whether the splats contribute to the scene depth. This only selects the blend state, as the
@@ -368,9 +379,6 @@ class GSplatQuadRenderer extends GSplatRenderer {
         const hasPcId = !!this.workBuffer.format.getStream('pcId');
         this._material.setDefine('GSPLAT_UNIFIED_ID', hasPcId);
         this._material.setDefine('PICK_CUSTOM_ID', hasPcId);
-
-        // GSPLAT_OVERUNITY draws the over-unity plateau profile (see GSplatParams#compensation)
-        this._material.setDefine('GSPLAT_OVERUNITY', !!this.workBuffer.format.getStream('splatPlateau'));
     }
 
     /**

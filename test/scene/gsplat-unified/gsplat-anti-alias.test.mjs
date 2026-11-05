@@ -219,6 +219,7 @@ describe('GSplat anti-aliasing', function () {
                     requiresBounds: false,
                     prepareRenderView: (world, lastState, p) => dispatched.push({ antiAlias: p.antiAlias, mixed: p.antiAliasMixed }),
                     setAntiAlias() {},
+                    setOverUnity() {},
                     frameUpdate() {}
                 },
                 // the streaming pass records the resources of a new world state, as it does on

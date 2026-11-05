@@ -20,13 +20,7 @@ fn getCenter() -> vec3f {
 }
 
 fn getColor() -> vec4f {
-    var color = loadSplatColor();
-    // the opacity may exceed 1 for merged (decimated) gaussians; carried through only when the
-    // renderer draws over-unity opacity (GSPLAT_OVERUNITY)
-    #ifndef GSPLAT_OVERUNITY
-        color.a = min(color.a, 1.0);
-    #endif
-    return color;
+    return loadSplatColor();
 }
 
 fn getRotation() -> vec4f {

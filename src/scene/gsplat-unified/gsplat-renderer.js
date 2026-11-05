@@ -243,6 +243,15 @@ class GSplatRenderer {
     }
 
     /**
+     * Sets whether over-unity opacity is drawn (see {@link GSplatParams#compensation}): opacity
+     * above 1 selects the plateau profile instead of being clamped to 1.
+     *
+     * @param {boolean} overUnity - Whether over-unity opacity is drawn.
+     */
+    setOverUnity(overUnity) {
+    }
+
+    /**
      * Updates the overdraw visualization mode.
      *
      * @param {object} params - The gsplat parameters.

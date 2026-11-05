@@ -134,6 +134,14 @@ class GSplatHybridRenderer extends GSplatRenderer {
     _cacheStride = CACHE_STRIDE;
 
     /**
+     * Whether over-unity opacity is drawn (see {@link GSplatParams#compensation}).
+     *
+     * @type {boolean}
+     * @private
+     */
+    _overUnity = false;
+
+    /**
      * GPU radix sorter for the projected cache indices.
      *
      * @type {ComputeRadixSort|null}
@@ -476,7 +484,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         // a single storage buffer binding. Past that every bind group using it is invalid and
         // nothing renders, so dispatch nothing and let the manager fall back to CPU sorting. The
         // draw is hidden as well, as its storage buffers are never assigned on this path.
-        const cacheBytes = elementCount * (CACHE_STRIDE + params.varyings.words + this._plateauWords()) * 4;
+        const cacheBytes = elementCount * (CACHE_STRIDE + params.varyings.words) * 4;
         const maxBindingSize = this.device.limits.maxStorageBufferBindingSize;
         if (cacheBytes > maxBindingSize) {
             if (!this.bindingLimitExceeded) {
@@ -552,7 +560,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             antiAliasMixed: params.antiAliasMixed,
             isStereo,
             material: params.material,
-            userCacheWords: params.varyings.words + this._plateauWords()
+            userCacheWords: params.varyings.words
         });
 
         projector.writeIndirectArgs(
@@ -751,7 +759,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
             this._pickMaterial.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
             this._pickMaterial.setDefine('{CACHE_STRIDE}', this._cacheStride);
-            this._pickMaterial.setDefine('GSPLAT_OVERUNITY', !!this._material.getDefine('GSPLAT_OVERUNITY'));
+            this._pickMaterial.setDefine('GSPLAT_OVERUNITY', this._overUnity);
             this._pickMaterial.setDefine('SH_BANDS', '0');
             this._pickMaterial.setDefine('GSPLAT_INDIRECT_DRAW', true);
             this._pickMaterial.setDefine('DITHER_NONE', '');
@@ -867,19 +875,14 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this._material.update();
         }
 
-        // keep the projection cache stride in sync with the user varying streams and the
-        // over-unity plateau word
-        const plateauWords = this._plateauWords();
-        const cacheStride = CACHE_STRIDE + params.varyings.words + plateauWords;
-        const overUnity = plateauWords > 0;
-        if (cacheStride !== this._cacheStride || overUnity !== !!this._material.getDefine('GSPLAT_OVERUNITY')) {
+        // keep the projection cache stride in sync with the user varying streams
+        const cacheStride = CACHE_STRIDE + params.varyings.words;
+        if (cacheStride !== this._cacheStride) {
             this._cacheStride = cacheStride;
             this._material.setDefine('{CACHE_STRIDE}', cacheStride);
-            this._material.setDefine('GSPLAT_OVERUNITY', overUnity);
             this._material.update();
             if (this._pickMaterial) {
                 this._pickMaterial.setDefine('{CACHE_STRIDE}', cacheStride);
-                this._pickMaterial.setDefine('GSPLAT_OVERUNITY', overUnity);
                 this._pickMaterial.update();
             }
         }
@@ -944,15 +947,16 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._material.update();
     }
 
-    /**
-     * Cache words for the over-unity plateau shape: one when the work buffer carries it (see
-     * GSplatParams#compensation).
-     *
-     * @returns {number} The word count.
-     * @private
-     */
-    _plateauWords() {
-        return this.workBuffer?.format.getStream('splatPlateau') ? 1 : 0;
+    setOverUnity(overUnity) {
+        if (overUnity !== this._overUnity) {
+            this._overUnity = overUnity;
+            this._material.setDefine('GSPLAT_OVERUNITY', overUnity);
+            this._material.update();
+            if (this._pickMaterial) {
+                this._pickMaterial.setDefine('GSPLAT_OVERUNITY', overUnity);
+                this._pickMaterial.update();
+            }
+        }
     }
 
     /**

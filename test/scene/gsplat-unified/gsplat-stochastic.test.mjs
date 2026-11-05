@@ -91,18 +91,6 @@ describe('GSplat stochastic rendering', function () {
         expect(renderer.projector.dispatch.called).to.equal(false);
     });
 
-    it('counts the over-unity plateau word against the storage binding limit', function () {
-        const renderer = pipeline();
-        renderer.meshInstance = { visible: true };
-        renderer.workBuffer = { format: { getStream: name => (name === 'splatPlateau' ? {} : undefined) } };
-
-        // 1000 splats at 8 cache words plus the plateau word need 36000 bytes
-        renderer.device.limits.maxStorageBufferBindingSize = 35999;
-        expect(render(renderer, false)).to.equal(null);
-        expect(renderer.bindingLimitExceeded).to.equal(true);
-        expect(renderer.projector.dispatch.called).to.equal(false);
-    });
-
     it('creates the sorter only when needed and retains it across mode changes', function () {
         const renderer = pipeline();
         renderer.gpuSorter = null;

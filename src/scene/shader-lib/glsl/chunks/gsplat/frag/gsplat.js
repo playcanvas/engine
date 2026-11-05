@@ -62,33 +62,18 @@ void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
 
     #ifdef GSPLAT_OVERUNITY
-        // over-unity opacity: the quad was grown to the plateau extent (see gsplatVS)
-        float plateau = gaussianPlateau;
-        float extent2 = 1.0;
-        if (plateau > 1.0) {
-            float grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
-            extent2 = grow * grow;
-        }
-        if (A > extent2) {
-            discard;
-        }
-    #else
-        if (A > 1.0) {
-            discard;
-        }
+        // the over-unity plateau profile (see gsplatHelpersVS), squeezed by gsplatPlateauExtent to
+        // end at the quad edge, as the A at which the plain gaussian has the same alpha
+        float e = (gaussianPlateau - 1.0) * 0.35355339 + inversesqrt(gaussianPlateau);
+        float s = max(0.0, 2.8284271 * sqrt(A) * e - (gaussianPlateau - 1.0));
+        A = gaussianPlateau * s * s * 0.125;
     #endif
+
+    if (A > 1.0) {
+        discard;
+    }
 
     mediump float alpha = normExp(A) * gaussianColor.a;
-
-    #ifdef GSPLAT_OVERUNITY
-        if (plateau > 1.0) {
-            // exp(-D'/2 * max(0, r - (D'-1))^2) with r in sigma: an opaque core of radius
-            // (D'-1) sigma, reaching the same exp(-4) floor as the gaussian at the quad edge
-            float r = 2.8284271 * sqrt(A);
-            float s = max(0.0, r - (plateau - 1.0));
-            alpha = (exp(-0.5 * plateau * s * s) - EXP4) * INV_EXP4 * gaussianColor.a;
-        }
-    #endif
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < alphaClip) {

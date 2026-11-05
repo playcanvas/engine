@@ -9,15 +9,6 @@ export default /* glsl */`
 #include "gsplatReadVS"
 #include "gsplatSourceVS"
 #include "gsplatCenterVS"
-
-#ifdef GSPLAT_OVERUNITY
-// the current splat's over-unity plateau shape D' (1 = plain gaussian), and the factor by which
-// its extent, (D'-1) + 2.83 / sqrt(D') sigma, exceeds the gaussian's 2.83 sigma. Set before
-// initCorner, which culls by the grown footprint.
-float cornerPlateau = 1.0;
-float cornerGrow = 1.0;
-#endif
-
 #include "gsplatCornerVS"
 #include "gsplatOutputVS"
 
@@ -34,14 +25,11 @@ void clipCorner(inout SplatCorner corner, float alpha) {
     #else
         float alphaClipValue = alphaClipForward;
     #endif
-    float clip = min(1.0, sqrt(max(0.0, log(alpha / alphaClipValue))) * 0.5);
     #ifdef GSPLAT_OVERUNITY
-        if (cornerPlateau > 1.0) {
-            // the plateau profile falls to alphaClip at (D'-1) + sqrt(2 ln(alpha / alphaClip) / D')
-            // sigma, capped at its extent; uv keeps measuring distance in units of 2.83 sigma
-            float edge = (cornerPlateau - 1.0) + sqrt(max(0.0, 2.0 * log(alpha / alphaClipValue) / cornerPlateau));
-            clip = min(cornerGrow, edge / 2.8284271);
-        }
+        // alpha above 1 is drawn with peak 1 and the plateau profile (see gsplatHelpersVS)
+        float clip = gsplatPlateauClip(gsplatPlateauShape(alpha), min(alpha, 1.0), alphaClipValue);
+    #else
+        float clip = min(1.0, sqrt(max(0.0, log(alpha / alphaClipValue))) * 0.5);
     #endif
     corner.offset *= clip;
     corner.uv *= clip;

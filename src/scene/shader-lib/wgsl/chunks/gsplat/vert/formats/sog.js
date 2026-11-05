@@ -96,13 +96,9 @@ fn getColor() -> vec4f {
         rgb = vec3f(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
         #ifdef SOG_V3
             // true opacity (1.25 * byte / 255)^2: 0..1.5625, above 1 for merged (decimated)
-            // gaussians; carried through only when the renderer draws over-unity opacity
+            // gaussians (see gsplatHelpersVS)
             let o = 1.25 * c.w;
-            #ifdef GSPLAT_OVERUNITY
-                alpha = o * o;
-            #else
-                alpha = min(o * o, 1.0);
-            #endif
+            alpha = o * o;
         #else
             alpha = c.w;
         #endif

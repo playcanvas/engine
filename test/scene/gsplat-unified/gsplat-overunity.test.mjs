@@ -1,79 +1,56 @@
 import { expect } from 'chai';
 
 import { FloatPacking } from '../../../src/core/math/float-packing.js';
-import { PIXELFORMAT_R8 } from '../../../src/platform/graphics/constants.js';
 import { GSPLATDATA_COMPACT, GSPLATDATA_LARGE } from '../../../src/scene/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
 import { GSplatSogResource } from '../../../src/scene/gsplat/gsplat-sog-resource.js';
 import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
+import glslHelpers from '../../../src/scene/shader-lib/glsl/chunks/gsplat/vert/gsplatHelpers.js';
+import wgslHelpers from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/vert/gsplatHelpers.js';
 
 describe('GSplatParams#compensation', function () {
-    let device;
-
-    beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 1, height: 1 });
-    });
-
-    afterEach(function () {
+    it('defaults to on and adds no work buffer streams', function () {
+        const device = new NullGraphicsDevice({ width: 1, height: 1 });
+        for (const dataFormat of [GSPLATDATA_COMPACT, GSPLATDATA_LARGE]) {
+            const params = new GSplatParams(device);
+            params.dataFormat = dataFormat;
+            const streams = params.format.extraStreams.length;
+            expect(params.compensation).to.equal(true);
+            params.compensation = false;
+            params.compensation = true;
+            expect(params.format.extraStreams.length).to.equal(streams);
+        }
         device.destroy();
     });
+});
 
-    it('defaults to on and adds the plateau stream only on request', function () {
-        const params = new GSplatParams(device);
-        expect(params.compensation).to.equal(true);
-        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
+describe('gsplatHelpersVS plateau shape', function () {
+    // the unsqueezed plateau mass I(D) and the squeeze e(D) (see gsplatHelpersVS)
+    const mass = (D) => {
+        const p = D - 1;
+        return 0.5 * p * p + 1 / D + 0.5 * p * Math.sqrt(2 * Math.PI / D);
+    };
+    const extent = D => (D - 1) / Math.sqrt(8) + 1 / Math.sqrt(D);
+    const coefficients = (source) => {
+        const body = source.slice(source.indexOf('gsplatPlateauShape'));
+        const m = body.match(/return 1\.0 \+ t \* \(([-\d.]+) \+ s \* \(([-\d.]+) \+ s \* \(([-\d.]+) \+ ([-\d.]+) \* s\)\)\)/);
+        return m.slice(1).map(Number);
+    };
 
-        params._enableOverUnity(true);
-        expect(params.format.getStream('splatPlateau')?.format).to.equal(PIXELFORMAT_R8);
+    it('uses the same fit in GLSL and WGSL', function () {
+        expect(coefficients(glslHelpers)).to.deep.equal(coefficients(wgslHelpers));
     });
 
-    it('removes the stream when switched off and does not re-add it while off', function () {
-        const params = new GSplatParams(device);
-        params._enableOverUnity(true);
-        const version = params._compensationVersion;
-
-        params.compensation = false;
-        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
-        expect(params._compensationVersion).to.equal(version + 1);
-
-        params._enableOverUnity(true);
-        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
-
-        params.compensation = true;
-        params._enableOverUnity(true);
-        expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
-    });
-
-    it('adds the stream only where it fits the color attachment limits', function () {
-        // the WebGPU spec minimum: GSPLATDATA_LARGE (32 bytes/splat) has no room for it
-        device.limits = { maxColorAttachmentBytesPerSample: 32 };
-        device.maxColorAttachments = 8;
-        const params = new GSplatParams(device);
-        params._enableOverUnity(true);
-        expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
-
-        params.dataFormat = GSPLATDATA_LARGE;
-        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
-        params._enableOverUnity(true);
-        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
-
-        // a device allowing more bytes per sample keeps it in the large layout
-        device.limits = { maxColorAttachmentBytesPerSample: 64 };
-        params._enableOverUnity(true);
-        expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
-
-        // and switching layout carries it across while it fits
-        params.dataFormat = GSPLATDATA_COMPACT;
-        expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
-    });
-
-    it('respects the color attachment count', function () {
-        device.maxColorAttachments = 3;
-        const params = new GSplatParams(device);
-        params._enableOverUnity(true);
-        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
+    it('draws each opacity in (1, 1.5625] with its exact mass', function () {
+        const [c0, c1, c2, c3] = coefficients(glslHelpers);
+        for (let A = 1.001; A <= 1.5625; A += 0.001) {
+            const t = A - 1;
+            const s = Math.sqrt(t);
+            const D = 1 + t * (c0 + s * (c1 + s * (c2 + c3 * s)));
+            expect(mass(D) / extent(D) ** 2 / A).to.be.closeTo(1, 2e-4);
+        }
     });
 });
 

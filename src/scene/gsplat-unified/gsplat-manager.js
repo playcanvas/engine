@@ -72,14 +72,6 @@ class GSplatManager {
     /** @type {GSplatParams} */
     gsplat;
 
-    /**
-     * World state version and compensation setting last checked for over-unity resources.
-     *
-     * @type {string}
-     * @private
-     */
-    _overUnityCheckKey = '';
-
     /** @type {GSplatRenderer} */
     renderer;
 
@@ -154,6 +146,15 @@ class GSplatManager {
      * @private
      */
     _resourcesAntiAliasMixed = false;
+
+    /**
+     * Whether a resource of the latest world-state version carries opacity above 1 (see
+     * {@link GSplatParams#compensation}).
+     *
+     * @type {boolean}
+     * @private
+     */
+    _resourcesOverUnity = false;
 
     /**
      * The anti-aliasing compensation resolved for this frame: whether it is compiled in, and
@@ -710,7 +711,12 @@ class GSplatManager {
 
         // Detect work-buffer format changes (wholesale swap + extra streams) before world.update,
         // which reads the work buffer.
-        let bufferRecreated = this._syncFormat();
+        this.world.syncFormat(this._formatResult);
+        if (this._formatResult.bufferRecreated) {
+            this.renderer.setDataSource(this.world.workBuffer);
+            this.shadowRenderer?.setDataSource(this.world.workBuffer);
+        }
+        if (this._formatResult.sortNeeded) this.sortNeeded = true;
 
         // Check for runtime renderer mode changes and transition if needed.
         this.prepareRendererMode();
@@ -721,64 +727,19 @@ class GSplatManager {
 
         // World LOD / streaming / world-state creation.
         this.world.update(this.cameraNode, allowLodUpdate, !!this.cpuSorter, this._updateResult);
-
-        // a resource needing the plateau stream just arrived: attach the stream before this
-        // frame's bake, so the bake writes it
-        if (this._checkOverUnity()) {
-            bufferRecreated = this._syncFormat() || bufferRecreated;
-        }
         if (this._updateResult.overdrawDirty) this.renderer.updateOverdrawMode(this.gsplat);
         if (this._updateResult.sortNeeded) this.sortNeeded = true;
         if (this._updateResult.newVersion) {
             this._feedCpuSorterCenters();
             this._updateResourcesAntiAlias();
+            this._updateResourcesOverUnity();
         }
 
         // tick cooldowns once per frame per unique octree, across the worlds of all managers
         this.world.tickCooldowns(token);
 
-        this._streamAdvanced = this._updateResult.newVersion || bufferRecreated;
+        this._streamAdvanced = this._updateResult.newVersion || this._formatResult.bufferRecreated;
         return this._streamAdvanced;
-    }
-
-    /**
-     * Syncs the work buffer with the format and hands a recreated buffer to the renderers.
-     *
-     * @returns {boolean} True if the work buffer was recreated.
-     * @private
-     */
-    _syncFormat() {
-        this.world.syncFormat(this._formatResult);
-        if (this._formatResult.bufferRecreated) {
-            this.renderer.setDataSource(this.world.workBuffer);
-            this.shadowRenderer?.setDataSource(this.world.workBuffer);
-        }
-        if (this._formatResult.sortNeeded) this.sortNeeded = true;
-        return this._formatResult.bufferRecreated;
-    }
-
-    /**
-     * Enables the over-unity work buffer stream once a resource that needs it is in the world.
-     *
-     * @returns {boolean} True if the stream was enabled.
-     * @private
-     */
-    _checkOverUnity() {
-        const gsplat = this.gsplat;
-        if (!gsplat.compensation || gsplat.format.getStream('splatPlateau')) return false;
-
-        // only re-scan when the world's splats, the compensation setting or the data layout changed
-        const key = `${this.world.lastWorldStateVersion}:${gsplat._compensationVersion}:${gsplat.dataFormat}`;
-        if (key === this._overUnityCheckKey) return false;
-        this._overUnityCheckKey = key;
-
-        const state = this.world.getState(this.world.lastWorldStateVersion);
-        if (state?.splats.some(splat => splat.resource.hasOverUnity)) {
-            gsplat._enableOverUnity(true);
-            // the stream is skipped when the work buffer has no room for it (see GSplatParams)
-            return !!gsplat.format.getStream('splatPlateau');
-        }
-        return false;
     }
 
     update() {
@@ -905,6 +866,9 @@ class GSplatManager {
         // material; the GPU path resolved it when it filled the forward view above).
         this._resolveAntiAlias();
         this.renderer.setAntiAlias(this._antiAlias, this._antiAliasMixed);
+        const overUnity = this.gsplat.compensation && this._resourcesOverUnity;
+        this.renderer.setOverUnity(overUnity);
+        this.shadowRenderer?.setOverUnity(overUnity);
         this.renderer.frameUpdate(this.gsplat);
 
         // return the number of active splats for stats
@@ -945,6 +909,19 @@ class GSplatManager {
         }
         this._resourcesAntiAlias = flagged > 0;
         this._resourcesAntiAliasMixed = flagged > 0 && flagged < splats.length;
+    }
+
+    /**
+     * Records whether a resource of the latest world-state version carries opacity above 1. Called
+     * after the world creates a new world-state version.
+     *
+     * @private
+     */
+    _updateResourcesOverUnity() {
+        const state = this.world.getState(this.world.lastWorldStateVersion);
+        if (state) {
+            this._resourcesOverUnity = state.splats.some(splat => splat.resource.hasOverUnity);
+        }
     }
 
     /**

@@ -70,7 +70,7 @@ varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
 #ifdef GSPLAT_OVERUNITY
-    // plateau shape D' of over-unity opacity (see gsplatVS)
+    // plateau shape D of over-unity opacity (see gsplatHelpersVS)
     varying @interpolate(flat, either) gaussianPlateau: f32;
 #endif
 
@@ -142,7 +142,9 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         let v2 = unpack2x16float(projCache[base + 6u]);
 
         let rgba = unpack4x8unorm(projCache[base + 7u]);
-        let alpha = half(rgba.a);
+        // alpha is cached as the SOG v3 opacity byte, (1.25 * v)^2 (see the projector)
+        let alphaRoot = 1.25 * rgba.a;
+        let alpha = half(alphaRoot * alphaRoot);
         var clr: half4 = half4(half(rgba.r), half(rgba.g), half(rgba.b), alpha);
     #else
         let proj = vec4f(
@@ -179,21 +181,16 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #else
         let alphaClipValue = half(uniform.alphaClipForward);
     #endif
-    var clip = f32(min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5)));
-
     #ifdef GSPLAT_OVERUNITY
-        // trim to where the plateau profile falls to alphaClip, capped at its extent, exactly as
-        // gsplatVS does
-        let plateau = bitcast<f32>(projCache[base + {CACHE_STRIDE}u - 1u]);
-        if (plateau > 1.0) {
-            let grow = ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
-            let edge = (plateau - 1.0) + sqrt(max(0.0, 2.0 * log(f32(alpha) / f32(alphaClipValue)) / plateau));
-            clip = min(grow, edge / 2.8284271);
-        }
+        // alpha above 1 selects the over-unity plateau shape and draws with peak 1 (see gsplatHelpersVS)
+        let plateau = gsplatPlateauShape(f32(alpha));
+        let clip = gsplatPlateauClip(plateau, min(f32(alpha), 1.0), f32(alphaClipValue));
         output.gaussianPlateau = plateau;
+    #else
+        let clip = f32(min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5)));
     #endif
-
-    var cornerClipped = cornerUV * clip;
+    let cornerClipped = cornerUV * clip;
+    let peakAlpha = min(alpha, half(1.0));
 
     // Convert pixel-space offset into clip-space. proj.w is the real clipPos.w,
     // so c == clip.w / viewport matches gsplatCorner.js line 97 for both
@@ -228,12 +225,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // Overdraw mode renders a flat color ramp; depth-shade input not needed.
         let t: f32 = clamp(viewDepth / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
-        let outAlpha = alpha * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
+        let outAlpha = peakAlpha * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), outAlpha);
     #else
         output.gaussianColor = half4(
             half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)), viewDepth)),
-            alpha
+            peakAlpha
         );
     #endif
 
