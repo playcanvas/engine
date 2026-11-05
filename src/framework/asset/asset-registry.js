@@ -468,6 +468,7 @@ class AssetRegistry extends EventHandler {
         }
 
         const file = asset.file;
+        const unloadCount = asset._unloadCount;
 
         const _fireLoad = () => {
             this.fire('load', asset);
@@ -517,6 +518,15 @@ class AssetRegistry extends EventHandler {
 
         // load has completed on the resource
         const _loaded = (err, resource, extra) => {
+            // the asset was unloaded while this load was in flight, so a resource it delivers is
+            // not wanted; a handler that cancelled on unload delivers none and completes as usual
+            if (asset._unloadCount !== unloadCount && !err && resource !== null && resource !== undefined) {
+                if (!asset.loading && file) {
+                    this._loader.clearCache(asset.getFileUrl(), asset.type);
+                }
+                return;
+            }
+
             asset.loaded = true;
             asset.loading = false;
 
