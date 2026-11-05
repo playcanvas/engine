@@ -354,6 +354,32 @@ class CameraControls extends Script {
     _pressedButton = -1;
 
     /**
+     * The index of the mouse button which made the movement set aside at the press of another
+     * button since the last update, or -1. The movement is applied by the action of its own
+     * button, not of the button pressed after it.
+     *
+     * @type {number}
+     * @private
+     */
+    _heldButton = -1;
+
+    /**
+     * The mouse movement set aside at the press of another button, made by the held button.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _heldMove = new Vec2();
+
+    /**
+     * The position of the cursor at the end of the movement set aside, in CSS pixels.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _heldPointer = new Vec2();
+
+    /**
      * @type {boolean}
      * @private
      */
@@ -375,6 +401,19 @@ class CameraControls extends Script {
         this._pointer.set(event.offsetX, event.offsetY);
         if (event.type === 'pointerdown' && event.pointerType === 'mouse' &&
             event.button >= 0 && event.button < this._buttonActions.length) {
+
+            // the movement since the last update belongs to the drag before this press, so it is
+            // set aside with the button which made it
+            const owner = this._pressedButton >= 0 ? this._pressedButton : this._activeButton;
+            const [dx, dy] = this._desktopInput.deltas.mouse.read();
+            if (owner >= 0 && (dx !== 0 || dy !== 0)) {
+                if (this._heldButton < 0) {
+                    this._heldButton = owner;
+                }
+                this._heldMove.x += dx;
+                this._heldMove.y += dy;
+                this._heldPointer.copy(this._pointer);
+            }
             this._pressedButton = event.button;
         }
     };
@@ -817,6 +856,8 @@ class CameraControls extends Script {
             // discard inputs
             this._activeButton = -1;
             this._pressedButton = -1;
+            this._heldButton = -1;
+            this._heldMove.set(0, 0);
             this._desktopInput.read();
             this._orbitMobileInput.read();
             this._flyMobileInput.read();
@@ -855,6 +896,34 @@ class CameraControls extends Script {
             return;
         }
         this._buttonActions[button] = action;
+    }
+
+    /**
+     * Appends the pan and the rotation of a mouse movement, by the action of the button which
+     * made it.
+     *
+     * @param {MouseAction} action - The action of the button.
+     * @param {Vec2} pointer - The position of the cursor at the end of the movement, in CSS pixels.
+     * @param {number} dx - The mouse delta x value.
+     * @param {number} dy - The mouse delta y value.
+     * @param {number} orbit - 1 in the orbit mode, otherwise 0.
+     * @private
+     */
+    _appendMouseMove(action, pointer, dx, dy, orbit) {
+        // a button ignored by the camera leaves its mouse movement to the application. Panning
+        // follows the pan action, or shift with any other
+        const follow = +(action !== 'none');
+        const pan = +(action === 'pan' || (this._state.shift && follow));
+
+        const panMove = this._groundPan ?
+            screenToGroundPan(this._camera, pointer.x, pointer.y, dx, dy,
+                this._pose.getFocus(tmpFocus).y, this._pose.angles.y, tmpPan) :
+            screenToWorld(this._camera, dx, dy, this._pose.distance, tmpPan);
+        panMove.mulScalar(orbit * pan * +this.enablePan);
+        frame.deltas.move.append([panMove.x, panMove.y, panMove.z]);
+
+        const rotate = follow * (1 - orbit * pan) * this.rotateSpeed;
+        frame.deltas.rotate.append([dx * rotate, dy * rotate, 0]);
     }
 
     /**
@@ -995,11 +1064,6 @@ class CameraControls extends Script {
         const orbit = +(this._mode === 'orbit');
         const fly = +(this._mode === 'fly');
         const double = +(this._state.touches > 1);
-
-        // a button ignored by the camera leaves its mouse movement to the application. Panning
-        // follows the pan action, or shift with any other
-        const desktopMouse = +(action !== 'none');
-        const desktopPan = +(action === 'pan' || (this._state.shift && desktopMouse));
         const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
         // rate-based multipliers (keyboard, gamepad, virtual joystick)
@@ -1018,20 +1082,19 @@ class CameraControls extends Script {
         const v = tmpV1.set(0, 0, 0);
         const keyMove = this._state.axis.clone().normalize();
         v.add(keyMove.mulScalar(fly * moveMult));
-        const panMove = this._groundPan ?
-            screenToGroundPan(this._camera, this._pointer.x, this._pointer.y, mouse[0], mouse[1],
-                this._pose.getFocus(tmpFocus).y, this._pose.angles.y, tmpPan) :
-            screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
-        v.add(panMove.mulScalar(orbit * desktopPan * +this.enablePan));
         const wheelMove = tmpV2.set(0, 0, wheel[0]);
         v.add(wheelMove.mulScalar(orbit * zoomDeltaMult));
         deltas.move.append([v.x, v.y, v.z]);
 
-        // desktop rotate
-        v.set(0, 0, 0);
-        const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar(desktopMouse * (1 - (orbit * desktopPan)) * rotateDeltaMult));
-        deltas.rotate.append([v.x, v.y, v.z]);
+        // desktop mouse: the movement set aside at a press, by the button which made it, and then
+        // the movement since, by the active button
+        if (this._heldButton >= 0) {
+            this._appendMouseMove(this._buttonActions[this._heldButton], this._heldPointer,
+                this._heldMove.x, this._heldMove.y, orbit);
+            this._heldButton = -1;
+            this._heldMove.set(0, 0);
+        }
+        this._appendMouseMove(action, this._pointer, mouse[0], mouse[1], orbit);
 
         // the movement of the button has been applied, until it is released
         if (this._activeButton >= 0 && this._state.mouse[this._activeButton] <= 0) {
