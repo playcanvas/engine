@@ -57,15 +57,13 @@ float normExp(float x) {
 void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
 
-    // over-unity opacity (see gsplatHelpersVS): an alpha above 1 is the plateau shape D, drawn with peak
-    // alpha 1 as the plateau profile squeezed to end at the quad edge, mapped to the A at which the plain
-    // gaussian has the same alpha
+    // over-unity opacity (see gsplatHelpersVS): an alpha above 1 is 1 + the core radius, drawn with peak
+    // alpha 1 as the plain gaussian's falloff stretched from the core to the quad edge
     mediump float peak = gaussianColor.a;
     if (peak > 1.0) {
-        float D = peak;
-        float e = (D - 1.0) * 0.35355339 + inversesqrt(D);
-        float s = max(0.0, 2.8284271 * sqrt(A) * e - (D - 1.0));
-        A = D * s * s * 0.125;
+        float core = peak - 1.0;
+        float c = max(0.0, sqrt(A) - core) / (1.0 - core);
+        A = c * c;
         peak = 1.0;
     }
 

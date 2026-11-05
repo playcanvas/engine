@@ -110,9 +110,9 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     clipCorner(&corner, clr.w);
 
     // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
-    // the plateau shape D instead, drawn with peak alpha 1
+    // 1 + the core radius instead, drawn with peak alpha 1
     if (clr.w > half(1.0)) {
-        clr.w = half(gsplatPlateauShape(f32(clr.w)));
+        clr.w = half(1.0 + gsplatPlateauCore(f32(clr.w)));
     }
 
     // write output

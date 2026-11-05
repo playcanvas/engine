@@ -99,9 +99,9 @@ void main(void) {
     clipCorner(corner, clr.w);
 
     // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
-    // the plateau shape D instead, drawn with peak alpha 1
+    // 1 + the core radius instead, drawn with peak alpha 1
     if (clr.w > 1.0) {
-        clr.w = gsplatPlateauShape(clr.w);
+        clr.w = 1.0 + gsplatPlateauCore(clr.w);
     }
 
     // write output

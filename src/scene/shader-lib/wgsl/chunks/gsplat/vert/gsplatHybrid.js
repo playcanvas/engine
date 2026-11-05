@@ -176,15 +176,15 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #else
         let alphaClipValue = half(uniform.alphaClipForward);
     #endif
-    var clip = f32(min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5)));
+    var clip = f32(min(half(1.0), sqrt(max(half(0.0), log(min(alpha, half(1.0)) / alphaClipValue))) * half(0.5)));
 
-    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is the
-    // plateau shape D instead, drawn with peak alpha 1 and trimmed to its profile
+    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
+    // 1 + the core radius instead, drawn with peak alpha 1, and the plain trim is stretched past the core
     var shapeAlpha = alpha;
     if (alpha > half(1.0)) {
-        let plateau = gsplatPlateauShape(f32(alpha));
-        clip = gsplatPlateauClip(plateau, 1.0, f32(alphaClipValue));
-        shapeAlpha = half(plateau);
+        let core = gsplatPlateauCore(f32(alpha));
+        clip = core + (1.0 - core) * clip;
+        shapeAlpha = half(1.0 + core);
     }
     let cornerClipped = cornerUV * clip;
 

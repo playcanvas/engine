@@ -7,45 +7,41 @@ import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
 import glslHelpers from '../../../src/scene/shader-lib/glsl/chunks/gsplat/vert/gsplatHelpers.js';
 import wgslHelpers from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/vert/gsplatHelpers.js';
 
-describe('gsplatHelpersVS plateau shape', function () {
-    const coefficients = (source) => {
-        const body = source.slice(source.indexOf('gsplatPlateauShape'));
-        const m = body.match(/return 1\.0 \+ t \* \(([\d.]+) - ([\d.]+) \* t\)/);
+describe('gsplatHelpersVS plateau core', function () {
+    const constants = (source) => {
+        const body = source.slice(source.indexOf('gsplatPlateauCore'));
+        const m = body.match(/return sqrt\(([\d.]+) \+ ([\d.]+) \* t\) - ([\d.]+)/);
         return m.slice(1).map(Number);
     };
-    const shape = ([a, b], A) => {
-        const t = Math.min(Math.max(A - 1, 0), 0.5625);
-        return 1 + t * (a - b * t);
-    };
+    const core = ([p, q, r], A) => Math.sqrt(p + q * Math.min(Math.max(A - 1, 0), 0.5625)) - r;
 
-    // The drawn mass of a unit-peak splat over its quad, as gsplatPS evaluates it: the profile mapped to
-    // the plain gaussian's A = |uv|^2, then normExp, discarded past A = 1. uv runs over the unit disc.
+    // The drawn mass of a unit-peak splat over its quad, as gsplatPS evaluates it: the radius r = |uv|
+    // remapped past the core, then normExp. uv runs over the unit disc.
     const EXP4 = Math.exp(-4);
-    const drawnMass = (D) => {
-        const e = (D - 1) * 0.35355339 + 1 / Math.sqrt(D);
+    const drawnMass = (u0) => {
         const steps = 20000;
         let mass = 0;
         for (let i = 0; i < steps; i++) {
-            const u = (i + 0.5) / steps;
-            const s = Math.max(0, 2.8284271 * u * e - (D - 1));
-            const A = D * s * s * 0.125;
-            if (A <= 1) {
-                mass += ((Math.exp(-4 * A) - EXP4) / (1 - EXP4)) * 2 * Math.PI * u / steps;
-            }
+            const r = (i + 0.5) / steps;
+            const c = Math.max(0, r - u0) / (1 - u0);
+            mass += ((Math.exp(-4 * c * c) - EXP4) / (1 - EXP4)) * 2 * Math.PI * r / steps;
         }
         return mass;
     };
 
-    it('uses the same fit in GLSL and WGSL', function () {
-        expect(coefficients(glslHelpers)).to.deep.equal(coefficients(wgslHelpers));
+    it('uses the same constants in GLSL and WGSL', function () {
+        expect(constants(glslHelpers)).to.deep.equal(constants(wgslHelpers));
+    });
+
+    it('is the plain gaussian at opacity 1', function () {
+        expect(core(constants(glslHelpers), 1)).to.be.closeTo(0, 1e-7);
     });
 
     it('draws each opacity in (1, 1.5625] with its mass, relative to a plain gaussian of opacity 1', function () {
-        const c = coefficients(glslHelpers);
-        const plain = drawnMass(1);
+        const c = constants(glslHelpers);
+        const plain = drawnMass(0);
         for (let A = 1.025; A <= 1.5625; A += 0.025) {
-            // within the precision of the SOG v3 opacity byte (about 0.4% at the top of its range)
-            expect(drawnMass(shape(c, A)) / plain / A).to.be.closeTo(1, 4.5e-3);
+            expect(drawnMass(core(c, A)) / plain / A).to.be.closeTo(1, 1e-6);
         }
     });
 });

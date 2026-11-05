@@ -64,15 +64,13 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     var A: half = dot(gaussianUV, gaussianUV);
 
-    // over-unity opacity (see gsplatHelpersVS): an alpha above 1 is the plateau shape D, drawn with peak
-    // alpha 1 as the plateau profile squeezed to end at the quad edge, mapped to the A at which the plain
-    // gaussian has the same alpha
+    // over-unity opacity (see gsplatHelpersVS): an alpha above 1 is 1 + the core radius, drawn with peak
+    // alpha 1 as the plain gaussian's falloff stretched from the core to the quad edge
     var peak: half = gaussianColor.a;
     if (peak > half(1.0)) {
-        let D = f32(peak);
-        let e = (D - 1.0) * 0.35355339 + inverseSqrt(D);
-        let s = max(0.0, 2.8284271 * sqrt(f32(A)) * e - (D - 1.0));
-        A = half(D * s * s * 0.125);
+        let core = f32(peak) - 1.0;
+        let c = max(0.0, sqrt(f32(A)) - core) / (1.0 - core);
+        A = half(c * c);
         peak = half(1.0);
     }
 

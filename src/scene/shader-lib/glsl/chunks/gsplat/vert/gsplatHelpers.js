@@ -33,30 +33,16 @@ bool gsplatFootprintSmallerThan(float a, float b, float c, float size) {
 
 // Over-unity opacity: a gaussian whose opacity A exceeds 1 - the mass of several gaussians merged by
 // decimation, stored by SOG v3 and the PLY opacity_excess column up to 1.5625, the top of the SOG v3
-// opacity byte - is drawn with peak alpha 1 and the plateau profile
-// exp(-D/2 * max(0, r * e - (D - 1))^2), r in sigma: an opaque core joined smoothly to a gaussian edge,
-// squeezed by e = gsplatPlateauExtent(D) so that it reaches the plain gaussian's exp(-4) floor at the same
-// 2 sqrt(2) sigma. The quad, culls and extent are therefore the plain gaussian's; only the trim and the
-// fragment depend on D. D is the shape whose drawn profile, with the exp(-4) floor subtracted as normExp
-// does, carries exactly A times the drawn mass of a plain gaussian of opacity 1. D = 1 is the plain gaussian.
+// opacity byte - is drawn with peak alpha 1 as an opaque core of radius u0, a fraction of the quad, with the
+// plain gaussian's falloff stretched over the rest of the quad: normExp(((r - u0) / (1 - u0))^2), r = |uv|.
+// The quad, culls and extent are therefore the plain gaussian's, and u0 = 0 is the plain gaussian.
 
-// The shape D for opacity A: 1 up to A = 1. The exact relation has no closed-form inverse; this quadratic
-// in t = A - 1 matches its drawn mass to within 0.4%, the precision of the SOG v3 opacity byte (D <= 1.77).
-float gsplatPlateauShape(float A) {
+// The core radius u0 for opacity A: 0 up to A = 1. The drawn mass relative to a plain gaussian of opacity 1
+// is 1 + (a u0^2 + b u0) / G1, where G0 and G1 integrate normExp(c^2) and c normExp(c^2) over c in [0, 1],
+// a = 1/2 - G0 + G1 and b = G0 - 2 G1, so the u0 drawing exactly A times that mass is this root
+// (u0 <= 0.2625).
+float gsplatPlateauCore(float A) {
     float t = clamp(A - 1.0, 0.0, 0.5625);
-    return 1.0 + t * (1.5 - 0.25 * t);
-}
-
-// The squeeze e: the unsqueezed profile's extent, (D - 1) + 2 sqrt(2 / D) sigma, over the plain gaussian's
-// 2 sqrt(2) sigma (0.98 to 1.03 for D <= 1.77; 1 at D = 1).
-float gsplatPlateauExtent(float D) {
-    return (D - 1.0) * 0.35355339 + inversesqrt(D);
-}
-
-// The trim: the fraction of the quad at which a profile of peak alpha falls to alphaClip,
-// ((D - 1) + sqrt(2 ln(alpha / alphaClip) / D)) / e sigma over 2 sqrt(2) sigma, capped at 1.
-float gsplatPlateauClip(float D, float alpha, float alphaClip) {
-    float edge = (D - 1.0) * 0.35355339 + 0.5 * sqrt(max(0.0, log(alpha / alphaClip)) / D);
-    return min(1.0, edge / gsplatPlateauExtent(D));
+    return sqrt(0.28986718 + 0.62504992 * t) - 0.53839315;
 }
 `;
