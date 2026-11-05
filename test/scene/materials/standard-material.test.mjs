@@ -602,7 +602,6 @@ describe('StandardMaterial', function () {
             for (const [name, from, to] of [
                 ['refraction', 0, 1],
                 ['refraction', 1, 0],
-                ['metalness', 1, 0],
                 ['clearCoat', 0, 1],
                 ['clearCoat', 0, 0.5]
             ]) {
@@ -628,6 +627,19 @@ describe('StandardMaterial', function () {
             material.clearCoat = 0.7;
             material.update();
             expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('does not invalidate shaders when metalness changes, to and from 0 and 1', function () {
+            const material = new StandardMaterial();
+            material.useMetalness = true;
+            material.update();
+            const variant = addVariant(material);
+
+            for (const metalness of [0, 0.5, 1, 0.25, 1]) {
+                material.metalness = metalness;
+                material.update();
+                expect(material.variants.get(1), `metalness ${metalness}`).to.equal(variant);
+            }
         });
 
         it('invalidates shaders only when diffuseTransmission crosses 0', function () {
@@ -910,6 +922,35 @@ describe('StandardMaterial', function () {
             expect(material.variants.size).to.equal(0);
         });
 
+    });
+
+    describe('metalness constant', function () {
+        const scene = { envAtlas: null, skybox: null, _skyboxRotationShaderInclude: false };
+        const cameraShaderParams = new CameraShaderParams();
+        const noLights = new LightList();
+
+        const metalnessTint = (material) => {
+            const options = new StandardMaterialOptions();
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights);
+            return options.metalnessTint;
+        };
+
+        it('applies the metalness constant whatever the metalness, when metalness is used', function () {
+            const material = new StandardMaterial();
+            material.useMetalness = true;
+            for (const metalness of [0, 0.5, 1]) {
+                material.metalness = metalness;
+                material.update();
+                expect(metalnessTint(material), `metalness ${metalness}`).to.equal(true);
+            }
+        });
+
+        it('does not apply the metalness constant when metalness is not used', function () {
+            const material = new StandardMaterial();
+            material.metalness = 0.5;
+            material.update();
+            expect(metalnessTint(material)).to.equal(false);
+        });
     });
 
     describe('environment textures', function () {
