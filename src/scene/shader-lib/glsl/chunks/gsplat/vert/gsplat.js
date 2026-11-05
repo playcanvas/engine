@@ -54,7 +54,7 @@ void main(void) {
 
     #ifdef GSPLAT_OVERUNITY
         // over-unity plateau shape, read before initCorner, which culls by the grown footprint
-        cornerPlateau = 1.0 + 0.8 * loadSplatPlateau().r;
+        cornerPlateau = 1.0 + 0.75 * loadSplatPlateau().r;
         if (cornerPlateau > 1.0) {
             cornerGrow = ((cornerPlateau - 1.0) + 2.8284271 / sqrt(cornerPlateau)) / 2.8284271;
         }

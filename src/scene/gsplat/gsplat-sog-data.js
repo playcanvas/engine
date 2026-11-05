@@ -39,20 +39,17 @@ const readImageDataAsync = (texture) => {
 const shCoeffs = shBands => ({ 1: 3, 2: 8, 3: 15, 4: 24 })[shBands] ?? 0;
 
 /**
- * Decodes the SOG v3 opacity byte to true opacity: bytes up to 224 hold opacity 0..1 as its square
- * root (fine steps at the low opacities translucent layers are built from), bytes above 224 hold
- * the over-unity range (1, 1.6] linearly.
+ * Decodes the SOG v3 opacity byte to true opacity, (b / 204)^2 = (1.25 * b / 255)^2: the square root
+ * gives fine steps at the low opacities translucent layers are built from, byte 204 is exactly 1,
+ * and bytes above it hold the over-unity range up to 1.5625.
  *
  * @param {number} b - The byte, 0..255.
- * @returns {number} True opacity, 0..1.6.
+ * @returns {number} True opacity, 0..1.5625.
  * @ignore
  */
 const decodeSogOpacity = (b) => {
-    if (b <= 224) {
-        const s = b / 224;
-        return s * s;
-    }
-    return 1 + 0.6 * (b - 224) / 31;
+    const s = b / 204;
+    return s * s;
 };
 
 const resolve = (scope, values) => {
@@ -216,8 +213,8 @@ class GSplatSogData {
     blind = null;
 
     /**
-     * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a = decoded opacity
-     * byte (V3, unused in V2). Built from meta codebooks in prepareCodebook(). Null for V1 assets.
+     * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
+     * Built from meta codebooks in prepareCodebook(). Null for V1 assets.
      *
      * @type {Texture|null}
      */
@@ -519,7 +516,7 @@ class GSplatSogData {
      * - .r = scales codebook
      * - .g = sh0 codebook
      * - .b = shN codebook
-     * - .a = true opacity of each opacity byte (V3, see decodeSogOpacity; 0 in V2)
+     * - .a = 0 (unused)
      *
      * @private
      */
@@ -533,7 +530,6 @@ class GSplatSogData {
         const scalesCb = scales.codebook;
         const sh0Cb = sh0.codebook;
         const shNCb = shN?.codebook;
-        const v3 = this.meta.version === 3;
 
         const data = new Float32Array(256 * 4);
         for (let i = 0; i < 256; i++) data[i * 4]     = scalesCb[i];
@@ -541,10 +537,7 @@ class GSplatSogData {
         if (shNCb) {
             for (let i = 0; i < 256; i++) data[i * 4 + 2] = shNCb[i];
         }
-        if (v3) {
-            for (let i = 0; i < 256; i++) data[i * 4 + 3] = decodeSogOpacity(i);
-        }
-        // .b stays 0 when no SH, .a when V2
+        // .a unused (stays 0 from Float32Array init; .b also 0 when no SH)
 
         const urlSuffix = this.url ? `_${this.url}` : '';
         this.codebookTexture = new Texture(device, {

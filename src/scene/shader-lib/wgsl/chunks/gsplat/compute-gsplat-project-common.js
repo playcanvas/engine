@@ -81,7 +81,7 @@ fn projectSplatCommon(
 
     // over-unity plateau shape D' (1 = plain gaussian); the culls use its grown footprint
     #ifdef GSPLAT_OVERUNITY
-        let plateau = 1.0 + 0.8 * loadSplatPlateau().r;
+        let plateau = 1.0 + 0.75 * loadSplatPlateau().r;
     #else
         let plateau = 1.0;
     #endif

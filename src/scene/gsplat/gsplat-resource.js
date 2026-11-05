@@ -145,8 +145,8 @@ class GSplatResource extends GSplatResourceBase {
             const b = (cb[i] * SH_C0 + 0.5);
             let a = activated ? ca[i] : 1 / (1 + Math.exp(-ca[i]));
             if (excess && excess[i] > 0) {
-                // drawn up to 1.6 (see GSplatParams#compensation)
-                a = Math.min(a + excess[i], 1.6);
+                // drawn up to 1.5625 (see GSplatParams#compensation)
+                a = Math.min(a + excess[i], 1.5625);
                 overUnity = true;
             }
 

@@ -18,11 +18,10 @@ const float norm = sqrt(2.0);
 
 #ifdef SOG_V2
     // 256x1 RGBA32F LUT (V2 and V3):
-    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a = decoded opacity byte (V3)
-    float lutScales(int b)  { return texelFetch(sogCodebook, ivec2(b, 0), 0).r; }
-    float lutSh0(int b)     { return texelFetch(sogCodebook, ivec2(b, 0), 0).g; }
-    float lutShN(int b)     { return texelFetch(sogCodebook, ivec2(b, 0), 0).b; }
-    float lutOpacity(int b) { return texelFetch(sogCodebook, ivec2(b, 0), 0).a; }
+    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a unused
+    float lutScales(int b) { return texelFetch(sogCodebook, ivec2(b, 0), 0).r; }
+    float lutSh0(int b)    { return texelFetch(sogCodebook, ivec2(b, 0), 0).g; }
+    float lutShN(int b)    { return texelFetch(sogCodebook, ivec2(b, 0), 0).b; }
 #endif
 
 // geometry getters are provided by gsplatWorkBufferGeometryPS when sourcing from the work buffer
@@ -84,12 +83,13 @@ vec4 getColor() {
         ivec3 i = ivec3(c.xyz * 255.0 + 0.5);
         vec3 rgb = vec3(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
         #ifdef SOG_V3
-            // true opacity, may exceed 1 for merged (decimated) gaussians; carried
-            // through only when the renderer draws over-unity opacity (GSPLAT_OVERUNITY)
+            // true opacity (1.25 * byte / 255)^2: 0..1.5625, above 1 for merged (decimated)
+            // gaussians; carried through only when the renderer draws over-unity opacity
+            float o = 1.25 * c.w;
             #ifdef GSPLAT_OVERUNITY
-                float alpha = lutOpacity(int(c.w * 255.0 + 0.5));
+                float alpha = o * o;
             #else
-                float alpha = min(lutOpacity(int(c.w * 255.0 + 0.5)), 1.0);
+                float alpha = min(o * o, 1.0);
             #endif
         #else
             float alpha = c.w;

@@ -39,14 +39,14 @@ uniform vec3 uColorMultiply;
     // Over-unity opacity: a gaussian whose true opacity A exceeds 1 is drawn with the plateau
     // profile exp(-D/2 * max(0, r - (D - 1))^2) (r in sigma), an opaque core joined smoothly to a
     // gaussian edge, at the shape D that carries exactly its mass, I(D) = (D-1)^2/2 + 1/D +
-    // (D-1)/2 * sqrt(2 pi / D) = min(A, 1.6). Opacity above 1.6 is drawn as 1.6 (it comes from merges
-    // over-counting overlapping children). D - 1 is fitted in t = A - 1 to within 1.3e-3, and stored
-    // as (D - 1) / 0.8 (0 = plain gaussian; D <= 1.79).
+    // (D-1)/2 * sqrt(2 pi / D) = min(A, 1.5625), the top of the SOG v3 opacity byte. Opacity above it
+    // comes from merges over-counting overlapping children and is drawn as 1.5625. D - 1 is fitted in
+    // t = A - 1 to within 1.1e-3, and stored as (D - 1) / 0.75 (0 = plain gaussian; D <= 1.75).
     float encodePlateau(float A) {
-        float t = clamp(A - 1.0, 0.0, 0.6);
+        float t = clamp(A - 1.0, 0.0, 0.5625);
         float s = sqrt(t);
-        float d = t * (4.22155 + s * (-8.513261 + s * (9.054768 - 3.787433 * s)));
-        return d / 0.8;
+        float d = t * (4.25226 + s * (-8.714667 + s * (9.469937 - 4.05976 * s)));
+        return d / 0.75;
     }
 #endif
 

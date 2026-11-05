@@ -438,8 +438,8 @@ class GSplatParams {
      * Whether to draw over-unity opacity. Decimated splat data (SOG v3) can carry gaussians whose
      * true opacity exceeds 1 - the mass of several merged gaussians that an opacity of at most 1
      * cannot hold. When enabled, these are drawn with a flat-topped (plateau) profile that carries
-     * that mass: an opaque core joined smoothly to a gaussian edge. Opacity is drawn up to 1.6; above
-     * that, merges over-count overlapping gaussians, so it is clamped. When disabled, their opacity
+     * that mass: an opaque core joined smoothly to a gaussian edge. Opacity is drawn up to 1.5625;
+     * above that, merges over-count overlapping gaussians, so it is clamped. When disabled, their opacity
      * is clamped to 1. The extra work buffer stream this
      * needs (1 byte per splat) is only allocated once such data is rendered. Defaults to true.
      *
@@ -468,8 +468,8 @@ class GSplatParams {
 
     /**
      * Adds or removes the work buffer stream carrying the per-splat plateau shape of over-unity
-     * opacity (see {@link GSplatParams#compensation}). The stream is R8 and holds (D - 1) / 0.8,
-     * so 0 is an ordinary gaussian and the plateau shape D ranges up to 1.8 (true opacity 1.6).
+     * opacity (see {@link GSplatParams#compensation}). The stream is R8 and holds (D - 1) / 0.75,
+     * so 0 is an ordinary gaussian and the plateau shape D ranges up to 1.75 (true opacity 1.5625).
      *
      * @param {boolean} enable - Whether the stream should exist.
      * @ignore

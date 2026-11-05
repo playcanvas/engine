@@ -71,17 +71,17 @@ describe('GSplatSogData v3', function () {
         }
     });
 
-    it('decodes the opacity byte: sqrt below 224, linear to 1.6 above', function () {
+    it('decodes the opacity byte as (b / 204)^2, exact at 0 and 1, up to 1.5625', function () {
         const c = new Vec4();
         const read = (b) => {
             makeData([128, 128, 128], b).createIter(null, null, null, c).read(0);
             return c.w;
         };
         expect(read(0)).to.equal(0);
-        expect(read(112)).to.be.closeTo(0.25, 1e-12);
-        expect(read(224)).to.equal(1);
-        expect(read(255)).to.be.closeTo(1.6, 1e-12);
-        expect(read(240)).to.be.closeTo(1 + 0.6 * 16 / 31, 1e-12);
+        expect(read(102)).to.be.closeTo(0.25, 1e-12);
+        expect(read(204)).to.equal(1);
+        expect(read(255)).to.be.closeTo(1.5625, 1e-12);
+        expect(read(230)).to.be.closeTo((230 / 204) ** 2, 1e-12);
     });
 
     it('reads 24 coefficients per channel for 4 bands', function () {

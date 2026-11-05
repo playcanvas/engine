@@ -22,7 +22,6 @@ const norm: f32 = sqrt(2.0);
     fn lutScales(b: i32) -> f32  { return textureLoad(sogCodebook, vec2i(b, 0), 0).r; }
     fn lutSh0(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).g; }
     fn lutShN(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }
-    fn lutOpacity(b: i32) -> f32 { return textureLoad(sogCodebook, vec2i(b, 0), 0).a; }
 #endif
 
 // geometry getters are provided by gsplatWorkBufferGeometryPS when sourcing from the work buffer
@@ -96,12 +95,13 @@ fn getColor() -> vec4f {
         let i = vec3i(c.xyz * 255.0 + 0.5);
         rgb = vec3f(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
         #ifdef SOG_V3
-            // true opacity, may exceed 1 for merged (decimated) gaussians; carried
-            // through only when the renderer draws over-unity opacity (GSPLAT_OVERUNITY)
+            // true opacity (1.25 * byte / 255)^2: 0..1.5625, above 1 for merged (decimated)
+            // gaussians; carried through only when the renderer draws over-unity opacity
+            let o = 1.25 * c.w;
             #ifdef GSPLAT_OVERUNITY
-                alpha = lutOpacity(i32(c.w * 255.0 + 0.5));
+                alpha = o * o;
             #else
-                alpha = min(lutOpacity(i32(c.w * 255.0 + 0.5)), 1.0);
+                alpha = min(o * o, 1.0);
             #endif
         #else
             alpha = c.w;
