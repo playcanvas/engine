@@ -18,6 +18,9 @@ uniform float alphaClip;
 uniform float alphaClipForward;
 #endif
 
+// opacity drawn above 1 (see GSplatParams#compensation): 0.5625 when over-unity opacity is drawn, else 0
+uniform float opacityExcessMax;
+
 // modify the gaussian corner; uses alphaClip (non-forward) or alphaClipForward (forward) to match frag
 void clipCorner(inout SplatCorner corner, float alpha) {
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
@@ -25,12 +28,11 @@ void clipCorner(inout SplatCorner corner, float alpha) {
     #else
         float alphaClipValue = alphaClipForward;
     #endif
-    #ifdef GSPLAT_OVERUNITY
-        // alpha above 1 is drawn with peak 1 and the plateau profile (see gsplatHelpersVS)
-        float clip = gsplatPlateauClip(gsplatPlateauShape(alpha), min(alpha, 1.0), alphaClipValue);
-    #else
-        float clip = min(1.0, sqrt(max(0.0, log(alpha / alphaClipValue))) * 0.5);
-    #endif
+    float clip = min(1.0, sqrt(max(0.0, log(alpha / alphaClipValue))) * 0.5);
+    if (alpha > 1.0) {
+        // over-unity opacity: drawn with peak 1 and the plateau profile (see gsplatHelpersVS)
+        clip = gsplatPlateauClip(gsplatPlateauShape(alpha), 1.0, alphaClipValue);
+    }
     corner.offset *= clip;
     corner.uv *= clip;
 }

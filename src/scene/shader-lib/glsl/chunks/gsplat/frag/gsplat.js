@@ -30,10 +30,6 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 flat varying mediump vec4 gaussianColor;
 
-#ifdef GSPLAT_OVERUNITY
-    flat varying float gaussianPlateau;
-#endif
-
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     flat varying uint vPickId;
 #endif
@@ -61,19 +57,23 @@ float normExp(float x) {
 void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
 
-    #ifdef GSPLAT_OVERUNITY
-        // the over-unity plateau profile (see gsplatHelpersVS), squeezed by gsplatPlateauExtent to
-        // end at the quad edge, as the A at which the plain gaussian has the same alpha
-        float e = (gaussianPlateau - 1.0) * 0.35355339 + inversesqrt(gaussianPlateau);
-        float s = max(0.0, 2.8284271 * sqrt(A) * e - (gaussianPlateau - 1.0));
-        A = gaussianPlateau * s * s * 0.125;
-    #endif
+    // over-unity opacity (see gsplatHelpersVS): an alpha above 1 is the plateau shape D, drawn with peak
+    // alpha 1 as the plateau profile squeezed to end at the quad edge, mapped to the A at which the plain
+    // gaussian has the same alpha
+    mediump float peak = gaussianColor.a;
+    if (peak > 1.0) {
+        float D = peak;
+        float e = (D - 1.0) * 0.35355339 + inversesqrt(D);
+        float s = max(0.0, 2.8284271 * sqrt(A) * e - (D - 1.0));
+        A = D * s * s * 0.125;
+        peak = 1.0;
+    }
 
     if (A > 1.0) {
         discard;
     }
 
-    mediump float alpha = normExp(A) * gaussianColor.a;
+    mediump float alpha = normExp(A) * peak;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < alphaClip) {

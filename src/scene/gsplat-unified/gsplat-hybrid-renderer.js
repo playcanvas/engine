@@ -134,14 +134,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
     _cacheStride = CACHE_STRIDE;
 
     /**
-     * Whether over-unity opacity is drawn (see {@link GSplatParams#compensation}).
-     *
-     * @type {boolean}
-     * @private
-     */
-    _overUnity = false;
-
-    /**
      * GPU radix sorter for the projected cache indices.
      *
      * @type {ComputeRadixSort|null}
@@ -240,7 +232,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_UNIFIED_ID');
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_OVERDRAW');
-        this._internalDefines.add('GSPLAT_OVERUNITY');
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_XR');
@@ -552,7 +543,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             foveationStrength: params.foveationStrength,
             foveationCenter: params.foveationCenter,
             antiAliasFilterSize: params.antiAliasFilterSize,
-            opacityMax: params.overUnity ? 1.5625 : 1,
+            opacityMax: params.compensation ? 1.5625 : 1,
             viewportWidth,
             viewportHeight,
             pickMode,
@@ -760,7 +751,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
             this._pickMaterial.setDefine('{GSPLAT_INSTANCE_SIZE}', GSplatResourceBase.instanceSize);
             this._pickMaterial.setDefine('{CACHE_STRIDE}', this._cacheStride);
-            this._pickMaterial.setDefine('GSPLAT_OVERUNITY', this._overUnity);
             this._pickMaterial.setDefine('SH_BANDS', '0');
             this._pickMaterial.setDefine('GSPLAT_INDIRECT_DRAW', true);
             this._pickMaterial.setDefine('DITHER_NONE', '');
@@ -946,18 +936,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
         }
 
         this._material.update();
-    }
-
-    setOverUnity(overUnity) {
-        if (overUnity !== this._overUnity) {
-            this._overUnity = overUnity;
-            this._material.setDefine('GSPLAT_OVERUNITY', overUnity);
-            this._material.update();
-            if (this._pickMaterial) {
-                this._pickMaterial.setDefine('GSPLAT_OVERUNITY', overUnity);
-                this._pickMaterial.update();
-            }
-        }
     }
 
     /**

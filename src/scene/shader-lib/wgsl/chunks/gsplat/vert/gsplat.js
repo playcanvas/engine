@@ -7,11 +7,6 @@ export default /* wgsl */`
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
-#ifdef GSPLAT_OVERUNITY
-    // plateau shape D of over-unity opacity, 1 for a plain gaussian (see gsplatHelpersVS)
-    varying @interpolate(flat, either) gaussianPlateau: f32;
-#endif
-
 #ifndef DITHER_NONE
     varying @interpolate(flat, either) id: f32;
 #endif
@@ -71,10 +66,8 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         var clr: half4 = half4(getColor());
     #endif
 
-    // without over-unity drawing, opacity above 1 is clamped before anything scales it
-    #ifndef GSPLAT_OVERUNITY
-        clr.a = min(clr.a, half(1.0));
-    #endif
+    // opacity above 1 is kept only while over-unity opacity is drawn, and capped before anything scales it
+    clr.a = min(clr.a, half(1.0 + uniform.opacityExcessMax));
 
     #if GSPLAT_AA
         clr.a = clr.a * corner.aaFactor;
@@ -119,12 +112,11 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     clipCorner(&corner, clr.w);
 
-    // alpha above 1 selects the over-unity plateau shape and draws with peak 1 (see gsplatHelpersVS);
-    // without GSPLAT_OVERUNITY it is simply clamped
-    #ifdef GSPLAT_OVERUNITY
-        output.gaussianPlateau = gsplatPlateauShape(f32(clr.w));
-    #endif
-    clr.w = min(clr.w, half(1.0));
+    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
+    // the plateau shape D instead, drawn with peak alpha 1
+    if (clr.w > half(1.0)) {
+        clr.w = half(gsplatPlateauShape(f32(clr.w)));
+    }
 
     // write output
     #if GSPLAT_2DGS
@@ -146,7 +138,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // Overdraw visualization mode: color by elevation
         let t: f32 = clamp(center.modelCenterOriginal.y / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
-        clr.a = clr.a * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
+        clr.a = min(clr.a, half(1.0)) * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), clr.a);
     #else
         output.gaussianColor = half4(half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)), -center.view.z)), clr.w);

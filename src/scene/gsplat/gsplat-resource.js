@@ -35,14 +35,6 @@ class GSplatResource extends GSplatResourceBase {
     shBands;
 
     /**
-     * Whether the color data holds an opacity above 1 (see {@link updateColorData}).
-     *
-     * @type {boolean}
-     * @private
-     */
-    _hasOverUnity = false;
-
-    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatData} gsplatData - The splat data.
      * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
@@ -104,10 +96,6 @@ class GSplatResource extends GSplatResourceBase {
         defines.set('SH_BANDS', this.shBands);
     }
 
-    get hasOverUnity() {
-        return this._hasOverUnity;
-    }
-
     get extras() {
         return this.gsplatData.extras;
     }
@@ -138,7 +126,6 @@ class GSplatResource extends GSplatResourceBase {
 
         const SH_C0 = 0.28209479177387814;
 
-        let overUnity = false;
         for (let i = 0; i < this.numSplats; ++i) {
             const r = (cr[i] * SH_C0 + 0.5);
             const g = (cg[i] * SH_C0 + 0.5);
@@ -147,7 +134,6 @@ class GSplatResource extends GSplatResourceBase {
             if (excess && excess[i] > 0) {
                 // drawn up to 1.5625 (see GSplatParams#compensation)
                 a = Math.min(a + excess[i], 1.5625);
-                overUnity = true;
             }
 
             data[i * 4 + 0] = float2Half(r);
@@ -157,7 +143,6 @@ class GSplatResource extends GSplatResourceBase {
         }
 
         texture.unlock();
-        this._hasOverUnity = overUnity;
     }
 
     /**

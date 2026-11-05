@@ -44,9 +44,6 @@ class GSplatQuadRenderer extends GSplatRenderer {
     _lastAntiAliasMixed = false;
 
     /** @private */
-    _lastOverUnity = false;
-
-    /** @private */
     _lastSourceChunksKey = '';
 
     /** @private */
@@ -94,7 +91,6 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_OVERDRAW');
-        this._internalDefines.add('GSPLAT_OVERUNITY');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -304,14 +300,6 @@ class GSplatQuadRenderer extends GSplatRenderer {
             this._lastAntiAliasMixed = mixed;
             this._material.setDefine('GSPLAT_AA', antiAlias);
             this._material.setDefine('GSPLAT_AA_MIXED', mixed);
-            this._material.update();
-        }
-    }
-
-    setOverUnity(overUnity) {
-        if (overUnity !== this._lastOverUnity) {
-            this._lastOverUnity = overUnity;
-            this._material.setDefine('GSPLAT_OVERUNITY', overUnity);
             this._material.update();
         }
     }

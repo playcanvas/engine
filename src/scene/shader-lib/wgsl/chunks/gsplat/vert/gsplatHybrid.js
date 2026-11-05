@@ -69,11 +69,6 @@ var<storage, read> numSplatsStorage: array<u32>;
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
-#ifdef GSPLAT_OVERUNITY
-    // plateau shape D of over-unity opacity (see gsplatHelpersVS)
-    varying @interpolate(flat, either) gaussianPlateau: f32;
-#endif
-
 // Must match the fragment side exactly (see gsplatPS) - the dither id is the only consumer.
 #if defined(GSPLAT_STOCHASTIC) && !defined(DITHER_NONE)
     varying @interpolate(flat, either) stochasticId: u32;
@@ -181,16 +176,17 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #else
         let alphaClipValue = half(uniform.alphaClipForward);
     #endif
-    #ifdef GSPLAT_OVERUNITY
-        // alpha above 1 selects the over-unity plateau shape and draws with peak 1 (see gsplatHelpersVS)
+    var clip = f32(min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5)));
+
+    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is the
+    // plateau shape D instead, drawn with peak alpha 1 and trimmed to its profile
+    var shapeAlpha = alpha;
+    if (alpha > half(1.0)) {
         let plateau = gsplatPlateauShape(f32(alpha));
-        let clip = gsplatPlateauClip(plateau, min(f32(alpha), 1.0), f32(alphaClipValue));
-        output.gaussianPlateau = plateau;
-    #else
-        let clip = f32(min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5)));
-    #endif
+        clip = gsplatPlateauClip(plateau, 1.0, f32(alphaClipValue));
+        shapeAlpha = half(plateau);
+    }
     let cornerClipped = cornerUV * clip;
-    let peakAlpha = min(alpha, half(1.0));
 
     // Convert pixel-space offset into clip-space. proj.w is the real clipPos.w,
     // so c == clip.w / viewport matches gsplatCorner.js line 97 for both
@@ -225,12 +221,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // Overdraw mode renders a flat color ramp; depth-shade input not needed.
         let t: f32 = clamp(viewDepth / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
-        let outAlpha = peakAlpha * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
+        let outAlpha = min(alpha, half(1.0)) * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), outAlpha);
     #else
         output.gaussianColor = half4(
             half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)), viewDepth)),
-            peakAlpha
+            shapeAlpha
         );
     #endif
 

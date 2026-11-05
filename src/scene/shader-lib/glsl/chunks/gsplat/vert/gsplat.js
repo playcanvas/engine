@@ -7,11 +7,6 @@ export default /* glsl */`
 varying mediump vec2 gaussianUV;
 flat varying mediump vec4 gaussianColor;
 
-#ifdef GSPLAT_OVERUNITY
-    // plateau shape D of over-unity opacity, 1 for a plain gaussian (see gsplatHelpersVS)
-    flat varying float gaussianPlateau;
-#endif
-
 #ifndef DITHER_NONE
     flat varying float id;
 #endif
@@ -67,10 +62,8 @@ void main(void) {
         vec4 clr = getColor();
     #endif
 
-    // without over-unity drawing, opacity above 1 is clamped before anything scales it
-    #ifndef GSPLAT_OVERUNITY
-        clr.a = min(clr.a, 1.0);
-    #endif
+    // opacity above 1 is kept only while over-unity opacity is drawn, and capped before anything scales it
+    clr.a = min(clr.a, 1.0 + opacityExcessMax);
 
     #if GSPLAT_AA
         // apply AA compensation
@@ -108,12 +101,11 @@ void main(void) {
 
     clipCorner(corner, clr.w);
 
-    // alpha above 1 selects the over-unity plateau shape and draws with peak 1 (see gsplatHelpersVS);
-    // without GSPLAT_OVERUNITY it is simply clamped
-    #ifdef GSPLAT_OVERUNITY
-        gaussianPlateau = gsplatPlateauShape(clr.w);
-    #endif
-    clr.w = min(clr.w, 1.0);
+    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
+    // the plateau shape D instead, drawn with peak alpha 1
+    if (clr.w > 1.0) {
+        clr.w = gsplatPlateauShape(clr.w);
+    }
 
     // write output
     #if GSPLAT_2DGS
@@ -129,7 +121,7 @@ void main(void) {
         // Overdraw visualization mode: color by elevation
         float t = clamp(modelCenter.y / 20.0, 0.0, 1.0);
         vec3 rampColor = textureLod(colorRamp, vec2(t, 0.5), 0.0).rgb;
-        clr.a *= (1.0 / 32.0) * colorRampIntensity;
+        clr.a = min(clr.a, 1.0) * (1.0 / 32.0) * colorRampIntensity;
         gaussianColor = vec4(rampColor, clr.a);
     #else
         gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0), -center.view.z), clr.w);

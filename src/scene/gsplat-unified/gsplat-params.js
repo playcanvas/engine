@@ -84,6 +84,7 @@ class GSplatParams {
 
         this._material.setParameter('alphaClip', 0.3);
         this._material.setParameter('alphaClipForward', 1.0 / 255.0);
+        this._material.setParameter('opacityExcessMax', 0.5625);
         this._material.setParameter('minPixelSize', 2.0);
         this._material.setParameter('minContribution', 2.0);
         this._material.setParameter('foveationStrength', 0);
@@ -436,7 +437,19 @@ class GSplatParams {
      *
      * @type {boolean}
      */
-    compensation = true;
+    set compensation(value) {
+        this._material.setParameter('opacityExcessMax', value ? 0.5625 : 0);
+        this._material.update();
+    }
+
+    /**
+     * Gets whether over-unity opacity is drawn.
+     *
+     * @type {boolean}
+     */
+    get compensation() {
+        return (this._material.getParameter('opacityExcessMax')?.data ?? 0.5625) > 0;
+    }
 
     /**
      * Distance threshold in world units to trigger LOD updates for camera and gsplat instances.

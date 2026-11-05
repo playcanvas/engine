@@ -5,21 +5,25 @@ import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-gra
 import { GSPLATDATA_COMPACT, GSPLATDATA_LARGE } from '../../../src/scene/constants.js';
 import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
-import { GSplatSogResource } from '../../../src/scene/gsplat/gsplat-sog-resource.js';
 import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
 import glslHelpers from '../../../src/scene/shader-lib/glsl/chunks/gsplat/vert/gsplatHelpers.js';
 import wgslHelpers from '../../../src/scene/shader-lib/wgsl/chunks/gsplat/vert/gsplatHelpers.js';
 
 describe('GSplatParams#compensation', function () {
-    it('defaults to on and adds no work buffer streams', function () {
+    it('defaults to on, adds no work buffer streams, and sets the opacity drawn above 1', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
         for (const dataFormat of [GSPLATDATA_COMPACT, GSPLATDATA_LARGE]) {
             const params = new GSplatParams(device);
             params.dataFormat = dataFormat;
             const streams = params.format.extraStreams.length;
+            const excessMax = () => params.material.getParameter('opacityExcessMax').data;
             expect(params.compensation).to.equal(true);
+            expect(excessMax()).to.equal(0.5625);
             params.compensation = false;
+            expect(params.compensation).to.equal(false);
+            expect(excessMax()).to.equal(0);
             params.compensation = true;
+            expect(excessMax()).to.equal(0.5625);
             expect(params.format.extraStreams.length).to.equal(streams);
         }
         device.destroy();
@@ -69,17 +73,6 @@ describe('gsplatHelpersVS plateau shape', function () {
     });
 });
 
-describe('GSplatSogResource#hasOverUnity', function () {
-    const resource = meta => Object.assign(Object.create(GSplatSogResource.prototype), { gsplatData: { meta } });
-
-    it('is true only for v3 data whose stored opacity exceeds 1', function () {
-        expect(resource({ version: 3, opacity: { max: 1.5625 } }).hasOverUnity).to.equal(true);
-        expect(resource({ version: 3, opacity: { max: 1 } }).hasOverUnity).to.equal(false);
-        expect(resource({ version: 3 }).hasOverUnity).to.equal(false);
-        expect(resource({ version: 2 }).hasOverUnity).to.equal(false);
-    });
-});
-
 describe('GSplatResource opacity_excess', function () {
     // Two PLY-style gaussians: logit opacity 0 (= 0.5), with an optional opacity_excess column.
     const makeData = (excess) => {
@@ -95,10 +88,9 @@ describe('GSplatResource opacity_excess', function () {
         return [levels[3], levels[7]];
     };
 
-    it('adds opacity_excess to the uploaded opacity, clamped at 1.5625, and reports over-unity', function () {
+    it('adds opacity_excess to the uploaded opacity, clamped at 1.5625', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
         const resource = new GSplatResource(device, makeData([2.5, 0.75]));
-        expect(resource.hasOverUnity).to.equal(true);
         expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(1.5625), FloatPacking.float2Half(1.25)]);
         resource.destroy();
         device.destroy();
@@ -108,7 +100,6 @@ describe('GSplatResource opacity_excess', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
         for (const data of [makeData(null), makeData([0, 0])]) {
             const resource = new GSplatResource(device, data);
-            expect(resource.hasOverUnity).to.equal(false);
             expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(0.5), FloatPacking.float2Half(0.5)]);
             resource.destroy();
         }

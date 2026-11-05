@@ -148,24 +148,6 @@ class GSplatManager {
     _resourcesAntiAliasMixed = false;
 
     /**
-     * Whether a resource of the latest world-state version carries opacity above 1 (see
-     * {@link GSplatParams#compensation}).
-     *
-     * @type {boolean}
-     * @private
-     */
-    _resourcesOverUnity = false;
-
-    /**
-     * Whether over-unity opacity is drawn this frame: {@link GSplatParams#compensation} with a
-     * resource that carries it.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _overUnity = false;
-
-    /**
      * The anti-aliasing compensation resolved for this frame: whether it is compiled in, and
      * whether it applies only to the splats flagged in the work buffer.
      *
@@ -434,14 +416,13 @@ class GSplatManager {
         p.foveationStrength = gsplat.foveationStrength;
         p.foveationCenter = gsplat.foveationCenter;
         p.antiAliasFilterSize = gsplat.antiAliasFilterSize;
+        p.compensation = gsplat.compensation;
 
         // resolved here rather than taken from the end of update(): the GPU path fills and
         // dispatches the forward view earlier in update(), and must see the current setting
         this._resolveAntiAlias();
         p.antiAlias = this._antiAlias;
         p.antiAliasMixed = this._antiAliasMixed;
-        this._resolveOverUnity();
-        p.overUnity = this._overUnity;
         p.fisheye = gsplat.fisheye;
         p.material = gsplat.material;
         p.varyings = gsplat.varyings;
@@ -743,7 +724,6 @@ class GSplatManager {
         if (this._updateResult.newVersion) {
             this._feedCpuSorterCenters();
             this._updateResourcesAntiAlias();
-            this._updateResourcesOverUnity();
         }
 
         // tick cooldowns once per frame per unique octree, across the worlds of all managers
@@ -877,9 +857,6 @@ class GSplatManager {
         // material; the GPU path resolved it when it filled the forward view above).
         this._resolveAntiAlias();
         this.renderer.setAntiAlias(this._antiAlias, this._antiAliasMixed);
-        this._resolveOverUnity();
-        this.renderer.setOverUnity(this._overUnity);
-        this.shadowRenderer?.setOverUnity(this._overUnity);
         this.renderer.frameUpdate(this.gsplat);
 
         // return the number of active splats for stats
@@ -920,28 +897,6 @@ class GSplatManager {
         }
         this._resourcesAntiAlias = flagged > 0;
         this._resourcesAntiAliasMixed = flagged > 0 && flagged < splats.length;
-    }
-
-    /**
-     * Records whether a resource of the latest world-state version carries opacity above 1. Called
-     * after the world creates a new world-state version.
-     *
-     * @private
-     */
-    _updateResourcesOverUnity() {
-        const state = this.world.getState(this.world.lastWorldStateVersion);
-        if (state) {
-            this._resourcesOverUnity = state.splats.some(splat => splat.resource.hasOverUnity);
-        }
-    }
-
-    /**
-     * Resolves whether over-unity opacity is drawn this frame (see {@link GSplatParams#compensation}).
-     *
-     * @private
-     */
-    _resolveOverUnity() {
-        this._overUnity = this.gsplat.compensation && this._resourcesOverUnity;
     }
 
     /**

@@ -32,10 +32,10 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @property {number} foveationStrength - Foveation strength.
  * @property {number} foveationCenter - Foveation center.
  * @property {number} antiAliasFilterSize - Variance in pixels squared of the anti-aliasing filter.
+ * @property {boolean} compensation - Whether over-unity opacity is drawn (see GSplatParams#compensation).
  * @property {boolean} antiAlias - Whether the anti-aliasing compensation is compiled in.
  * @property {boolean} antiAliasMixed - Whether the compensation is applied only to the splats
  * flagged as trained with anti-aliasing (a per-splat bit in the work buffer), not to all of them.
- * @property {boolean} overUnity - Whether over-unity opacity is drawn (see GSplatParams#compensation).
  * @property {number} fisheye - Fisheye projection strength.
  * @property {ShaderMaterial} material - The scene gsplat template material.
  * @property {GSplatVaryings} varyings - User varying streams (provides the cache `words` count).
@@ -241,15 +241,6 @@ class GSplatRenderer {
      * @param {boolean} mixed - Whether it applies only to the splats flagged in the work buffer.
      */
     setAntiAlias(antiAlias, mixed) {
-    }
-
-    /**
-     * Sets whether over-unity opacity is drawn (see {@link GSplatParams#compensation}): opacity
-     * above 1 selects the plateau profile instead of being clamped to 1.
-     *
-     * @param {boolean} overUnity - Whether over-unity opacity is drawn.
-     */
-    setOverUnity(overUnity) {
     }
 
     /**

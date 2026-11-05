@@ -186,13 +186,12 @@ describe('GSplat anti-aliasing', function () {
 
         // A GPU-sort manager whose update() records the anti-aliasing each forward view is
         // dispatched with. Everything update() calls besides the parameter resolution is stubbed.
-        const makeGpuManager = (flags, overUnityFlags = flags.map(() => false)) => {
-            const state = { splats: flags.map((antiAlias, i) => ({ resource: { antiAlias, hasOverUnity: overUnityFlags[i] } })) };
+        const makeGpuManager = (flags) => {
+            const state = { splats: flags.map(antiAlias => ({ resource: { antiAlias } })) };
             const dispatched = [];
-            const overUnity = { dispatched: [], drawn: [] };
             const manager = Object.create(GSplatManager.prototype);
             Object.assign(manager, {
-                gsplat: { antiAlias: undefined, compensation: true, dirty: false },
+                gsplat: { antiAlias: undefined, dirty: false },
                 renderMode: GSPLAT_FORWARD,
                 sortNeeded: false,
                 cpuSorter: null,
@@ -218,25 +217,20 @@ describe('GSplat anti-aliasing', function () {
                 renderer: {
                     usesGpuSort: true,
                     requiresBounds: false,
-                    prepareRenderView: (world, lastState, p) => {
-                        dispatched.push({ antiAlias: p.antiAlias, mixed: p.antiAliasMixed });
-                        overUnity.dispatched.push(p.overUnity);
-                    },
+                    prepareRenderView: (world, lastState, p) => dispatched.push({ antiAlias: p.antiAlias, mixed: p.antiAliasMixed }),
                     setAntiAlias() {},
-                    setOverUnity: value => overUnity.drawn.push(value),
                     frameUpdate() {}
                 },
                 // the streaming pass records the resources of a new world state, as it does on
                 // the first frame
                 updateStreaming() {
                     this._updateResourcesAntiAlias();
-                    this._updateResourcesOverUnity();
                 },
                 testCameraMovedForSort: () => false,
                 _markSortedIfNeeded() {},
                 fireFrameReadyEvent() {}
             });
-            return { manager, dispatched, overUnity };
+            return { manager, dispatched };
         };
 
         it('dispatches the GPU view with the anti-aliasing of the same frame', function () {
@@ -250,17 +244,6 @@ describe('GSplat anti-aliasing', function () {
             manager.gsplat.antiAlias = false;
             manager.update();
             expect(dispatched[1]).to.deep.equal({ antiAlias: false, mixed: false });
-        });
-
-        it('dispatches the GPU view with the over-unity setting the draw uses, from the first frame', function () {
-            const { manager, overUnity } = makeGpuManager([false], [true]);
-            manager.update();
-            manager.gsplat.compensation = false;
-            manager.update();
-            manager.gsplat.compensation = true;
-            manager.update();
-            expect(overUnity.dispatched).to.deep.equal([true, false, true]);
-            expect(overUnity.drawn).to.deep.equal(overUnity.dispatched);
         });
 
         it('dispatches the GPU view in the mixed mode from the first frame', function () {

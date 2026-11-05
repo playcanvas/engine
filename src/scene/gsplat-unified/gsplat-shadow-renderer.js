@@ -154,14 +154,6 @@ class GSplatShadowRenderer {
     // Compute dispatched once per light per frame would have all dispatches read the last-written
     // uniforms (frustum planes / draw slot) — making all but one light's shadow draw empty.
 
-    /**
-     * Whether over-unity opacity is drawn (see {@link GSplatParams#compensation}).
-     *
-     * @type {boolean}
-     * @private
-     */
-    _overUnity = false;
-
     /** @type {Shader|null} */
     _cullShader = null;
 
@@ -373,22 +365,6 @@ class GSplatShadowRenderer {
             this._configureMaterialWorkBuffer(entry.material);
             entry.material.update();
         });
-    }
-
-    /**
-     * Sets whether over-unity opacity is drawn into the shadow maps (see
-     * {@link GSplatParams#compensation}).
-     *
-     * @param {boolean} overUnity - Whether over-unity opacity is drawn.
-     */
-    setOverUnity(overUnity) {
-        if (overUnity !== this._overUnity) {
-            this._overUnity = overUnity;
-            this.entries.forEach((entry) => {
-                entry.material.setDefine('GSPLAT_OVERUNITY', overUnity);
-                entry.material.update();
-            });
-        }
     }
 
     /**
@@ -694,6 +670,7 @@ class GSplatShadowRenderer {
         material.setParameter('numSplatsStorage', entry.countBuffer);
         material.setParameter('splatTextureSize', textureSize);
         material.setParameter('alphaClip', gsplatParams.alphaClip);
+        material.setParameter('opacityExcessMax', gsplatParams.compensation ? 0.5625 : 0);
 
         entry.meshInstance.visible = true;
         if (entry.meshInstance.instancingCount <= 0) {
@@ -838,9 +815,6 @@ class GSplatShadowRenderer {
         const hasPcId = !!wbFormat.getStream('pcId');
         material.setDefine('GSPLAT_UNIFIED_ID', hasPcId);
         material.setDefine('PICK_CUSTOM_ID', hasPcId);
-
-        // over-unity opacity (see GSplatParams#compensation)
-        material.setDefine('GSPLAT_OVERUNITY', this._overUnity);
 
         // bind work buffer textures
         for (const stream of wbFormat.resourceStreams) {

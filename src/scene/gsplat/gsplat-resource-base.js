@@ -274,17 +274,6 @@ class GSplatResourceBase {
         return undefined;
     }
 
-    /**
-     * Whether the resource carries gaussians with a true opacity above 1 (see
-     * {@link GSplatParams#compensation}).
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    get hasOverUnity() {
-        return false;
-    }
-
     static createMesh(device) {
         // number of quads to combine into a single instance. this is to increase occupancy
         // in the vertex shader.
