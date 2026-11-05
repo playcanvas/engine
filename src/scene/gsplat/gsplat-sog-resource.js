@@ -167,13 +167,9 @@ class GSplatSogResource extends GSplatResourceBase {
         const gsplatData = /** @type {GSplatSogData} */ (this.gsplatData);
         defines.set('SH_BANDS', gsplatData.shBands);
         const { meta } = gsplatData;
-        if (meta.version >= 2) {
-            // codebook dequantization, shared by V2 and V3
-            defines.set('SOG_V2', '');
-        }
-        if (meta.version === 3) {
-            defines.set('SOG_V3', '');
-        }
+        // the format version (v1 files have none): 2 and up dequantize through codebooks, 3 adds the
+        // exp-map rotations, squared opacity and 24-bit SH labels
+        defines.set('SOG_VERSION', meta.version ?? 1);
         if (gsplatData.blind) {
             defines.set('SOG_BLIND', '');
             defines.set('SOG_BLIND_BYTES', meta.blind.bytes);

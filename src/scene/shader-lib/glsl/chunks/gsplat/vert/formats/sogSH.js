@@ -1,7 +1,7 @@
 // Spherical Harmonics for SOG GSplat format - reads directly from source textures
 export default /* glsl */`
 #if SH_BANDS > 0
-    #ifndef SOG_V2
+    #if SOG_VERSION < 2
         uniform float shN_mins;
         uniform float shN_maxs;
     #endif
@@ -10,7 +10,7 @@ export default /* glsl */`
         // extract the centroid palette index from sh_labels: 16-bit (bytes 0 and 1), 24-bit in v3
         vec4 labels = texelFetch(sh_labels, splat.uv, 0);
         int n = int(labels.x * 255.0 + 0.5) + int(labels.y * 255.0 + 0.5) * 256;
-        #ifdef SOG_V3
+        #if SOG_VERSION >= 3
             n += int(labels.z * 255.0 + 0.5) * 65536;
         #endif
 
@@ -21,7 +21,7 @@ export default /* glsl */`
         // read consecutive texels for this centroid
         for (int i = 0; i < SH_COEFFS; i++) {
             vec4 t = texelFetch(sh_centroids, ivec2(u + i, v), 0);
-            #ifdef SOG_V2
+            #if SOG_VERSION >= 2
                 ivec3 idx = ivec3(t.xyz * 255.0 + 0.5);
                 sh[i] = vec3(lutShN(idx.x), lutShN(idx.y), lutShN(idx.z));
             #else

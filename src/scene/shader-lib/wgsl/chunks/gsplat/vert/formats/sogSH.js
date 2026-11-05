@@ -1,14 +1,14 @@
 // Spherical Harmonics for SOG GSplat format - reads directly from source textures
 export default /* wgsl */`
 #if SH_BANDS > 0
-    #ifndef SOG_V2
+    #if SOG_VERSION < 2
         uniform shN_mins: f32;
         uniform shN_maxs: f32;
     #endif
 
     fn readSHTexel(u: i32, v: i32) -> half3 {
         let t = textureLoad(sh_centroids, vec2i(u, v), 0);
-        #ifdef SOG_V2
+        #if SOG_VERSION >= 2
             let idx = vec3i(t.xyz * 255.0 + 0.5);
             return half3(vec3f(lutShN(idx.x), lutShN(idx.y), lutShN(idx.z)));
         #else
@@ -19,7 +19,7 @@ export default /* wgsl */`
     fn readSHData(sh: ptr<function, array<half3, SH_COEFFS>>, scale: ptr<function, f32>) {
         // extract the centroid palette index from sh_labels: 16-bit (bytes 0 and 1), 24-bit in v3
         let labels = textureLoad(sh_labels, splat.uv, 0);
-        #ifdef SOG_V3
+        #if SOG_VERSION >= 3
             let n = i32(labels.x * 255.0 + 0.5) + i32(labels.y * 255.0 + 0.5) * 256 + i32(labels.z * 255.0 + 0.5) * 65536;
         #else
             let n = i32(labels.x * 255.0 + 0.5) + i32(labels.y * 255.0 + 0.5) * 256;

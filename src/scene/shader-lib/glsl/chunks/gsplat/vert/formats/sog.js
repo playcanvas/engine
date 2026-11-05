@@ -4,7 +4,7 @@ export default /* glsl */`
 uniform vec3 means_mins;
 uniform vec3 means_maxs;
 
-#ifndef SOG_V2
+#if SOG_VERSION < 2
     // V1: linear min/max dequantization (no codebooks)
     uniform vec3 scales_mins;
     uniform vec3 scales_maxs;
@@ -16,7 +16,7 @@ uniform vec3 means_maxs;
 const float SH_C0 = 0.28209479177387814;
 const float norm = sqrt(2.0);
 
-#ifdef SOG_V2
+#if SOG_VERSION >= 2
     // 256x1 RGBA32F LUT (V2 and V3):
     //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a unused
     float lutScales(int b) { return texelFetch(sogCodebook, ivec2(b, 0), 0).r; }
@@ -36,7 +36,7 @@ vec3 getCenter() {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
-#ifdef SOG_V3
+#if SOG_VERSION >= 3
 // decode rotation quaternion from a 24-bit exponential map, one byte in each of the means_l,
 // means_u and scales alpha channels: p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
 vec4 getRotation() {
@@ -66,7 +66,7 @@ vec4 getRotation() {
 
 vec3 getScale() {
     vec3 s = texelFetch(scales, splat.uv, 0).xyz;
-    #ifdef SOG_V2
+    #if SOG_VERSION >= 2
         ivec3 i = ivec3(s * 255.0 + 0.5);
         vec3 logS = vec3(lutScales(i.x), lutScales(i.y), lutScales(i.z));
     #else
@@ -79,10 +79,10 @@ vec3 getScale() {
 
 vec4 getColor() {
     vec4 c = texelFetch(sh0, splat.uv, 0);
-    #ifdef SOG_V2
+    #if SOG_VERSION >= 2
         ivec3 i = ivec3(c.xyz * 255.0 + 0.5);
         vec3 rgb = vec3(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
-        #ifdef SOG_V3
+        #if SOG_VERSION >= 3
             // true opacity (1.25 * byte / 255)^2: 0..1.5625, above 1 for merged (decimated)
             // gaussians (see gsplatHelpersVS)
             float o = 1.25 * c.w;
