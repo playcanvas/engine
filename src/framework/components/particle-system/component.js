@@ -2340,8 +2340,17 @@ class ParticleSystemComponent extends Component {
     /**
      * Unfreezes the simulation.
      */
-    unpause() {
+    resume() {
         this._paused = false;
+    }
+
+    /**
+     * @deprecated Use {@link ParticleSystemComponent#resume} instead.
+     * @ignore
+     */
+    unpause() {
+        Debug.deprecated('ParticleSystemComponent#unpause is deprecated. Use ParticleSystemComponent#resume instead.');
+        this.resume();
     }
 
     /**

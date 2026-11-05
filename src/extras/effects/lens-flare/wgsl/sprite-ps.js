@@ -1,5 +1,5 @@
 // Shades a lens flare element with its shape, read from the layer of the shape texture array the
-// element uses, tinted by the colour its vertex shader resolved. The result is added to the flare
+// element uses, tinted by the color its vertex shader resolved. The result is added to the flare
 // texture.
 export default /* wgsl */`
     var lensFlareShapes: texture_2d_array<f32>;

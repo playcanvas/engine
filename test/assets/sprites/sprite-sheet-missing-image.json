@@ -1,0 +1,11 @@
+{
+    "frames": {
+        "frame.png": {
+            "frame": { "x": 0, "y": 0, "w": 16, "h": 16 }
+        }
+    },
+    "meta": {
+        "image": "missing.png",
+        "size": { "w": 32, "h": 32 }
+    }
+}

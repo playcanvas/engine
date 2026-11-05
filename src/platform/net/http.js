@@ -559,7 +559,7 @@ class Http {
             const status = xhr.status;
             if (status === 0) {
                 // Over http(s), status 0 means the request failed or was blocked (network, CORS,
-                // cancelled), and a failed response has an empty responseURL. Non-http schemes
+                // canceled), and a failed response has an empty responseURL. Non-http schemes
                 // served by an embedded browser or WebView (file:// in CefSharp or Chrome with
                 // file access, ionic://, capacitor://, app:// and so on) have no HTTP status and
                 // report 0 on success, so a response that resolved to such a URL is a success.

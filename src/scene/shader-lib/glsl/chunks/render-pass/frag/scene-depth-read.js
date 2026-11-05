@@ -17,7 +17,7 @@ export default /* glsl */`
 
     void main() {
 
-        // the centre of this output pixel, as a fraction of the region
+        // the center of this output pixel, as a fraction of the region
         vec2 cell = (floor(gl_FragCoord.xy) + 0.5) / uDepthReadGrid;
 
         // The region is given with its origin in the bottom left, as the camera's own rect is, while
@@ -25,8 +25,8 @@ export default /* glsl */`
         // effect makes. Without it the region read is the one mirrored about the middle of the view.
         vec2 uv = getImageEffectUV(uDepthReadRect.xy + cell * uDepthReadRect.zw);
 
-        // snap to the centre of the nearest depth texel. Depth cannot be filtered - the average of a
-        // near and a far surface unprojects to empty space - and sampling a texel centre is what makes
+        // snap to the center of the nearest depth texel. Depth cannot be filtered - the average of a
+        // near and a far surface unprojects to empty space - and sampling a texel center is what makes
         // the linear sampler of the unpacked formats return that texel exactly.
         vec2 size = vec2(textureSize(uSceneDepthMap, 0));
         uv = (floor(uv * size) + 0.5) / size;

@@ -137,7 +137,7 @@ layer.addMeshInstances(groundInstances);
 const treeMesh = treeAsset.resource.renders[0].resource.meshes[0];
 const treeMaterial = treeAsset.resource.materials[0].resource;
 const forest = new MeshInstance(treeMesh, treeMaterial, new GraphNode('Instanced forest'));
-forest.castShadow = true;
+forest.castShadows = true;
 
 // Calibrate the raw mesh once: center its footprint and bring its lowest vertex to ground
 // level. The inspected static mesh is 7.4634 units tall, with its base at Y = -4.5498.
@@ -197,7 +197,7 @@ const forestInstances = [forest];
 layer.addMeshInstances(forestInstances);
 
 // Layer membership persists. Removing and re-adding the forest preserves its mesh, material,
-// shader caches and instance buffer. Set castShadow before adding it to register shadow casters.
+// shader caches and instance buffer. Set castShadows before adding it to register shadow casters.
 const showTreesEvent = data.on('settings.showTrees:set', (value) => {
     if (value) {
         layer.addMeshInstances(forestInstances);

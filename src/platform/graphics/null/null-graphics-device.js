@@ -178,6 +178,9 @@ class NullGraphicsDevice extends GraphicsDevice {
         return true;
     }
 
+    generateMipmaps(texture) {
+    }
+
     // #if _DEBUG
     pushMarker(name) {
     }

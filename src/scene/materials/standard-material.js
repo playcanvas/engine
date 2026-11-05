@@ -24,7 +24,7 @@ import { EnvLighting } from '../graphics/env-lighting.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
-import { MaterialProperty, convertColorToLinear, convertFloat } from './material-property.js';
+import { MaterialProperty, convertBoolean, convertColorToLinear, convertFloat } from './material-property.js';
 import { getMaterialLayout } from './material-uniform-buffer-layout.js';
 import { getTextureDescriptors, getTextureIdentifiers, getTextureSharing } from './standard-material-textures.js';
 import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
@@ -111,6 +111,8 @@ const _properties = {
     normalDetailMapBumpiness: new MaterialProperty('normalDetailMapBumpiness', 'material_normalDetailMapBumpiness', UNIFORMTYPE_FLOAT, convertFloat),
     reflectivity: new MaterialProperty('reflectivity', 'material_reflectivity', UNIFORMTYPE_FLOAT, convertFloat),
     occludeSpecularIntensity: new MaterialProperty('occludeSpecularIntensity', 'material_occludeSpecularIntensity', UNIFORMTYPE_FLOAT, convertFloat),
+    occludeDirect: new MaterialProperty('occludeDirect', 'material_occludeDirect', UNIFORMTYPE_FLOAT, convertBoolean),
+    twoSidedLighting: new MaterialProperty('twoSidedLighting', 'material_twoSidedLighting', UNIFORMTYPE_FLOAT, convertBoolean),
     refraction: new MaterialProperty('refraction', 'material_refraction', UNIFORMTYPE_FLOAT, convertFloat),
     refractionIndex: new MaterialProperty('refractionIndex', 'material_refractionIndex', UNIFORMTYPE_FLOAT, convertFloat),
     dispersion: new MaterialProperty('dispersion', 'material_dispersion', UNIFORMTYPE_FLOAT, convertFloat),
@@ -1431,7 +1433,7 @@ class StandardMaterial extends Material {
      */
     set metalness(value) {
         if (this._metalness !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._metalness, value);
+            // only a uniform, the shader applies any metalness
             this._metalness = value;
             this._markPropertyModified(_properties.metalness);
         }
@@ -2044,6 +2046,9 @@ class StandardMaterial extends Material {
         if (this.planarReflectionMap) {
             this._setParameter('texture_planarReflectionMap', this.planarReflectionMap);
             this._setParameter('planarReflectionMatrix', this._planarReflectionMatrix.data);
+
+            // rough surfaces sample the mip levels of the texture, when it has them
+            this._setParameter('planarReflectionMipmaps', this.planarReflectionMap.mipmaps ? 1 : 0);
         }
 
         // remove unused params
@@ -2211,7 +2216,7 @@ class StandardMaterial extends Material {
     }
 }
 
-// registers the default value and copy behaviour of a property, used by reset and copy
+// registers the default value and copy behavior of a property, used by reset and copy
 const registerProp = (name, constructorFunc, copyFromBacking = false) => {
     _props[name] = {
         value: constructorFunc,
@@ -2443,7 +2448,15 @@ function _defineMaterialProps() {
     _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('useSheen', false);
     _defineFlag('enableGGXSpecular', false);
-    _defineFlag('occludeDirect', false);
+    // a uniform, the shader always contains both ways of applying the ambient occlusion
+    defineProp({
+        name: 'occludeDirect',
+        defaultValue: false,
+        dirtyShaderFunc: () => false,
+        onSet: function () {
+            this._markPropertyModified(_properties.occludeDirect);
+        }
+    });
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
@@ -2455,7 +2468,15 @@ function _defineMaterialProps() {
     _defineFlag('useSkybox', true);
     _defineFlag('forceUv1', false);
     _defineFlag('pixelSnap', false);
-    _defineFlag('twoSidedLighting', false);
+    // a uniform, the shader always contains the flip of the normals of the back faces
+    defineProp({
+        name: 'twoSidedLighting',
+        defaultValue: false,
+        dirtyShaderFunc: () => false,
+        onSet: function () {
+            this._markPropertyModified(_properties.twoSidedLighting);
+        }
+    });
     _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
     _defineFlag('msdfTextAttribute', false);
     _defineFlag('useIridescence', false);
@@ -2566,11 +2587,11 @@ function _defineDeprecatedAlias(newName, oldName) {
 function _defineRemovedTint(name) {
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: function () {
-            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
+            Debug.removed(`StandardMaterial#${name} was removed, and the behavior is as if ${name} was always true`);
             return true;
         },
         set: function (value) {
-            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
+            Debug.removed(`StandardMaterial#${name} was removed, and the behavior is as if ${name} was always true`);
         }
     });
 }

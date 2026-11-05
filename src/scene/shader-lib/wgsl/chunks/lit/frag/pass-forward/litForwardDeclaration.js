@@ -36,6 +36,14 @@ var<private> sSpecularLight: vec3f;
     uniform material_alphaFade: f32;
 #endif
 
+#ifdef LIT_AO
+    uniform material_occludeDirect: f32;
+#endif
+
+#ifdef LIT_NEEDS_NORMAL
+    uniform material_twoSidedLighting: f32;
+#endif
+
 #ifdef LIT_SSAO
     var ssaoTexture : texture_2d<f32>;
     var ssaoTextureSampler : sampler;

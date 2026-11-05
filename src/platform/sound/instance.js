@@ -10,7 +10,7 @@ const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
 const STATE_STOPPED = 2;
 
-// A scheduled stop cannot be cancelled through the Web Audio API, only replaced by a later one, so
+// A scheduled stop cannot be canceled through the Web Audio API, only replaced by a later one, so
 // an unwanted stop is pushed this many seconds into the future instead.
 const STOP_NEVER_DELAY = 1e6;
 

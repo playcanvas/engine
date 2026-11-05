@@ -375,7 +375,7 @@ const SHIP_COOLDOWN = 10;
 // the water a ship needs under it, in meters
 const SHIP_DEPTH = 9;
 
-// The jet's own missile defence - a gun under the nose that shoots down an enemy missile homing on the
+// The jet's own missile defense - a gun under the nose that shoots down an enemy missile homing on the
 // jet just before it would hit, once it is in range or about to arrive, whichever comes first. It has
 // a few shots, fired one after another at the missiles of a salvo as they come in, which recharge one
 // at a time - so a salvo is taken care of, while another soon after needs a hard turn or flares. The
@@ -2912,7 +2912,7 @@ const updateMissiles = (dt) => {
 };
 
 // --------------------------------------------------------------------------------------------
-// the missile defence and repairs
+// the missile defense and repairs
 
 /** @type {Missile|null} */
 let defenseTarget = null;
@@ -3149,7 +3149,7 @@ const updatePlayerFlight = (dt) => {
     }
 
     // the bank angle against the horizon, and how close to level flight the nose is - neither the
-    // levelling nor the turn assist mean anything when pointing straight up or down
+    // leveling nor the turn assist mean anything when pointing straight up or down
     player.refreshAxes();
     const level = 1 - Math.abs(player.forward.y);
     const bank = Math.atan2(-player.right.y, player.up.y);
@@ -3684,8 +3684,8 @@ const updateCamera = (dt) => {
         // The camera rolls with the jet, but levels out part of a gentle bank. Flying with the mouse it
         // keeps the horizon almost level, as the aim it follows does not roll at all.
         _v1.copy(Vec3.UP).sub(_v2.copy(cameraForward).mulScalar(cameraForward.y)).normalize();
-        const levelling = aiming ? 0.88 : 0.55 * math.clamp(player.up.y / 0.5, 0, 1);
-        _v2.lerp(player.up, _v1, levelling).normalize();
+        const leveling = aiming ? 0.88 : 0.55 * math.clamp(player.up.y / 0.5, 0, 1);
+        _v2.lerp(player.up, _v1, leveling).normalize();
         cameraUp.lerp(cameraUp, _v2, 1 - Math.exp(-CAMERA_ROLL_FOLLOW * dt));
         cameraUp.sub(_v1.copy(cameraForward).mulScalar(cameraUp.dot(cameraForward))).normalize();
 
@@ -3954,7 +3954,7 @@ const startMission = () => {
         name: operationName,
         conditions: `${timeOfDayName()} · ${weatherName()} · WIND ${Math.round(windSpeed)} M/S · SECTOR ${terrain.seed}`,
         objectives: objectives.join('\n'),
-        loadout: [`${missilesLeft} MISSILES`, `${FLARE_COUNT} FLARES`, `MISSILE DEFENCE · ${DEFENSE_SHOTS} SHOTS`].join(
+        loadout: [`${missilesLeft} MISSILES`, `${FLARE_COUNT} FLARES`, `MISSILE DEFENSE · ${DEFENSE_SHOTS} SHOTS`].join(
             '\n'
         )
     });

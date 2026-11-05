@@ -230,7 +230,7 @@ describe('ShadowRendererLocal', function () {
         it('excludes a caster which does not cast shadows', function () {
             const light = createLight(new Vec3(0, 0, 0));
             const caster = createCaster(new Vec3(50, 0, 0), 1);
-            caster.castShadow = false;
+            caster.castShadows = false;
 
             const faces = cullFaces(light, [caster]);
             faces.forEach(face => expect(face.size).to.equal(0));

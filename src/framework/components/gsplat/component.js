@@ -281,7 +281,7 @@ class GSplatComponent extends Component {
             if (!mi.node) {
                 mi.node = this.entity;
             }
-            mi.castShadow = this._castShadows;
+            mi.castShadows = this._castShadows;
             mi.setCustomAabb(this._customAabb);
 
             if (this.enabled && this.entity.enabled) {
@@ -363,7 +363,7 @@ class GSplatComponent extends Component {
                     }
                 }
 
-                mi.castShadow = value;
+                mi.castShadows = value;
 
                 if (!this._castShadows && value) {
                     for (let i = 0; i < layers.length; i++) {

@@ -717,7 +717,7 @@ class GSplatShadowRenderer {
         const meshInstance = this._createMeshInstance(light, material);
 
         // register as a shadow caster so cullComposition's shadow-caster culling includes it
-        meshInstance.castShadow = true;
+        meshInstance.castShadows = true;
         this.layer.addShadowCasters([meshInstance]);
 
         const countBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);

@@ -15,7 +15,7 @@ export default /* glsl */`
             return vec3(texture2DLod(smaaEdgesTexture, smaaDebugUv(), 0.0).rg, 0.0);
         }
 
-        // the 'smaaweights' debug view: how much each pixel blends with its neighbours, red along
+        // the 'smaaweights' debug view: how much each pixel blends with its neighbors, red along
         // horizontal edges and green along vertical ones
         vec3 debugSmaaweights() {
             vec4 weights = texture2DLod(smaaWeightsTexture, smaaDebugUv(), 0.0);

@@ -1,5 +1,5 @@
 // Averages the scene into the meter, a small fixed size grid. Each texel of the meter is the average
-// of the whole block of scene texels it covers - the blocks of neighbouring texels meet without a
+// of the whole block of scene texels it covers - the blocks of neighboring texels meet without a
 // gap or an overlap, so a small bright light counts once wherever it is, rather than flickering in
 // and out between samples as the camera moves. Each texel stores the brightness of its block, as
 // its position along the range of the histogram in 16 bits, see FramePassLuminanceHistogram.

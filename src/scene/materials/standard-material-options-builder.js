@@ -235,7 +235,9 @@ class StandardMaterialOptionsBuilder {
         const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
 
         options.specularityFactorTint = specularityFactorTint;
-        options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1);
+        // the metalness constant is always applied, as gloss is, so that a material with a metalness
+        // of 1 shares the shader of one with a lower metalness, and a change of it never recompiles
+        options.metalnessTint = stdMat.useMetalness;
         options.glossTint = true;
         options.diffuseEncoding = stdMat.diffuseMap?.encoding;
         options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
@@ -271,7 +273,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
         options.litOptions.ambientSH = !!stdMat.ambientSH;
-        options.litOptions.twoSidedLighting = stdMat.twoSidedLighting;
         options.litOptions.occludeSpecular = stdMat.occludeSpecular;
         options.litOptions.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
 
@@ -284,7 +285,6 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.cubeMapProjection = stdMat.cubeMapProjection;
 
-        options.litOptions.occludeDirect = stdMat.occludeDirect;
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;

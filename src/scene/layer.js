@@ -751,7 +751,7 @@ class Layer {
 
         for (let i = 0; i < meshInstances.length; i++) {
             const mi = meshInstances[i];
-            if (mi.castShadow && !shadowCastersSet.has(mi)) {
+            if (mi.castShadows && !shadowCastersSet.has(mi)) {
                 shadowCastersSet.add(mi);
                 shadowCasters?.push(mi);
             }

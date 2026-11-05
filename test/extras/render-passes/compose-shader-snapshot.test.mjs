@@ -44,7 +44,7 @@ import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections
  * Snapshot of the compose shader source across the combinations of effects it can be built for, in
  * both shader languages. The composition is being restructured around registered effects, and the
  * restructuring must not change the program any combination compiles to. This test pins the
- * preprocessed fragment source of each combination, normalised for whitespace - the restructured
+ * preprocessed fragment source of each combination, normalized for whitespace - the restructured
  * chunk leaves blank lines where nothing is included - so any change to what a combination compiles
  * to fails here rather than in a renderer.
  *
@@ -280,7 +280,7 @@ describe('RenderPassCompose shader snapshot', function () {
         active.forEach(effect => effect.update());
         pass.effects = active;
         if (combination.customChunks) {
-            // the documented customisation path: user chunks at the three legacy injection points
+            // the documented customization path: user chunks at the three legacy injection points
             pass._customComposeChunks.set('composeDeclarationsPS', 'uniform float custom;');
             pass._customComposeChunks.set('composeMainStartPS', 'float customStart = 1.0;');
             pass._customComposeChunks.set('composeMainEndPS', 'result *= customStart;');
@@ -310,8 +310,8 @@ describe('RenderPassCompose shader snapshot', function () {
         });
     };
 
-    const normalise = source => source.replace(/\s+/g, ' ').trim();
-    const digest = source => createHash('sha1').update(normalise(source)).digest('hex');
+    const normalize = source => source.replace(/\s+/g, ' ').trim();
+    const digest = source => createHash('sha1').update(normalize(source)).digest('hex');
 
     // the depth an effect reads is decoded the way the producer stored it, whichever that is, and the
     // depth chunk is declared once however many times it is included

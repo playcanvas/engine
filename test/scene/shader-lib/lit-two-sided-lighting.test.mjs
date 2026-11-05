@@ -168,12 +168,14 @@ describe('Lit shader two sided lighting', function () {
         expectInOrder(mainBody(source), flatNormal, flipCall, frontEndCall);
     });
 
-    it('leaves the normals of a one sided material alone', function () {
+    it('flips only when the material uniform enables it, so one and two sided materials share a shader', function () {
         const normalMapped = (material) => {
             material.normalMap = texture();
         };
         for (const setup of [undefined, normalMapped]) {
-            expect(forwardSource(setup, false)).to.not.include('handleTwoSidedLighting');
+            const oneSided = forwardSource(setup, false);
+            expect(oneSided).to.equal(forwardSource(setup, true));
+            expectInOrder(mainBody(oneSided), 'material_twoSidedLighting', flipCall);
         }
     });
 });

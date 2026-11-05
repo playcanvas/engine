@@ -65,7 +65,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
- * For ready-made camera behaviour, attach the `CameraControls` script from
+ * For ready-made camera behavior, attach the `CameraControls` script from
  * `playcanvas/scripts/esm/camera-controls.mjs`, which provides orbit, fly and pan driven by mouse,
  * touch and gamepad input.
  *
@@ -1128,6 +1128,54 @@ class CameraComponent extends Component {
      */
     get sceneColorMapHandle() {
         return this._camera.sceneColorMapHandle;
+    }
+
+    /**
+     * Sets whether the scene color map of this camera has mipmaps. Rough refractive materials
+     * sample its small mip levels, which blur what is behind them. Without mipmaps, they sample the
+     * full resolution map, and refract sharply. This saves generating the mipmaps each frame, and
+     * the memory of about a third of the map, where only sharp refraction is needed, such as of
+     * clear glass or a heat haze. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set sceneColorMapMipmaps(value) {
+        this._camera.sceneColorMapMipmaps = value;
+    }
+
+    /**
+     * Gets whether the scene color map of this camera has mipmaps.
+     *
+     * @type {boolean}
+     */
+    get sceneColorMapMipmaps() {
+        return this._camera.sceneColorMapMipmaps;
+    }
+
+    /**
+     * Sets the filter used to generate the mipmaps of the scene color map of this camera, when it
+     * has them, see {@link CameraComponent#sceneColorMapMipmaps}. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}: averages each block of 2x2 texels of the previous mip level.
+     * - {@link MIPMAPFILTER_GAUSSIAN}: a wider, smooth filter, which avoids the blocks and the
+     * flickering of the box filter in the blurred refraction, at a higher cost of generating the
+     * mipmaps.
+     *
+     * Defaults to {@link MIPMAPFILTER_BOX}. See {@link Texture#mipmapFilter}.
+     *
+     * @type {string}
+     */
+    set sceneColorMapMipmapFilter(value) {
+        this._camera.sceneColorMapMipmapFilter = value;
+    }
+
+    /**
+     * Gets the filter used to generate the mipmaps of the scene color map of this camera.
+     *
+     * @type {string}
+     */
+    get sceneColorMapMipmapFilter() {
+        return this._camera.sceneColorMapMipmapFilter;
     }
 
     /**

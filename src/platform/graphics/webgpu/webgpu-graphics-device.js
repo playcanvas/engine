@@ -1735,7 +1735,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (colorOps.genMipmaps) {
                 const renderTarget = renderPass.renderTarget;
                 const colorBuffer = renderTarget._colorBuffers[i];
-                this.mipmapRenderer.generate(colorBuffer.impl, renderTarget.getLayer(colorBuffer));
+                this.mipmapRenderer.generate(colorBuffer.impl, renderTarget.getLayer(colorBuffer), colorBuffer.mipmapFilter);
             }
         }
 
@@ -2107,6 +2107,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(storageBuffer.buffer);
         Debug.assert(data);
         this.wgpu.queue.writeBuffer(storageBuffer.buffer, bufferOffset, data, dataOffset, size);
+    }
+
+    /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        this.mipmapRenderer.generate(texture.impl, undefined, texture.mipmapFilter);
     }
 
     /**
