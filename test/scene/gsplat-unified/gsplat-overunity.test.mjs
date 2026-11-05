@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
 import { FloatPacking } from '../../../src/core/math/float-packing.js';
-import { GSPLATDATA_COMPACT, GSPLATDATA_LARGE } from '../../../src/scene/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { GSPLATDATA_COMPACT, GSPLATDATA_LARGE } from '../../../src/scene/constants.js';
 import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
 import { GSplatSogResource } from '../../../src/scene/gsplat/gsplat-sog-resource.js';
@@ -27,29 +27,44 @@ describe('GSplatParams#compensation', function () {
 });
 
 describe('gsplatHelpersVS plateau shape', function () {
-    // the unsqueezed plateau mass I(D) and the squeeze e(D) (see gsplatHelpersVS)
-    const mass = (D) => {
-        const p = D - 1;
-        return 0.5 * p * p + 1 / D + 0.5 * p * Math.sqrt(2 * Math.PI / D);
-    };
-    const extent = D => (D - 1) / Math.sqrt(8) + 1 / Math.sqrt(D);
     const coefficients = (source) => {
         const body = source.slice(source.indexOf('gsplatPlateauShape'));
         const m = body.match(/return 1\.0 \+ t \* \(([-\d.]+) \+ s \* \(([-\d.]+) \+ s \* \(([-\d.]+) \+ ([-\d.]+) \* s\)\)\)/);
         return m.slice(1).map(Number);
+    };
+    const shape = ([c0, c1, c2, c3], A) => {
+        const t = Math.min(Math.max(A - 1, 0), 0.5625);
+        const s = Math.sqrt(t);
+        return 1 + t * (c0 + s * (c1 + s * (c2 + c3 * s)));
+    };
+
+    // The drawn mass of a unit-peak splat over its quad, as gsplatPS evaluates it: the profile mapped to
+    // the plain gaussian's A = |uv|^2, then normExp, discarded past A = 1. uv runs over the unit disc.
+    const EXP4 = Math.exp(-4);
+    const drawnMass = (D) => {
+        const e = (D - 1) * 0.35355339 + 1 / Math.sqrt(D);
+        const steps = 20000;
+        let mass = 0;
+        for (let i = 0; i < steps; i++) {
+            const u = (i + 0.5) / steps;
+            const s = Math.max(0, 2.8284271 * u * e - (D - 1));
+            const A = D * s * s * 0.125;
+            if (A <= 1) {
+                mass += ((Math.exp(-4 * A) - EXP4) / (1 - EXP4)) * 2 * Math.PI * u / steps;
+            }
+        }
+        return mass;
     };
 
     it('uses the same fit in GLSL and WGSL', function () {
         expect(coefficients(glslHelpers)).to.deep.equal(coefficients(wgslHelpers));
     });
 
-    it('draws each opacity in (1, 1.5625] with its exact mass', function () {
-        const [c0, c1, c2, c3] = coefficients(glslHelpers);
-        for (let A = 1.001; A <= 1.5625; A += 0.001) {
-            const t = A - 1;
-            const s = Math.sqrt(t);
-            const D = 1 + t * (c0 + s * (c1 + s * (c2 + c3 * s)));
-            expect(mass(D) / extent(D) ** 2 / A).to.be.closeTo(1, 2e-4);
+    it('draws each opacity in (1, 1.5625] with its mass, relative to a plain gaussian of opacity 1', function () {
+        const c = coefficients(glslHelpers);
+        const plain = drawnMass(1);
+        for (let A = 1.025; A <= 1.5625; A += 0.025) {
+            expect(drawnMass(shape(c, A)) / plain / A).to.be.closeTo(1, 5e-4);
         }
     });
 });

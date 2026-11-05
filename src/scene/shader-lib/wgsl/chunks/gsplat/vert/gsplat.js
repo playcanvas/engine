@@ -71,6 +71,11 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         var clr: half4 = half4(getColor());
     #endif
 
+    // without over-unity drawing, opacity above 1 is clamped before anything scales it
+    #ifndef GSPLAT_OVERUNITY
+        clr.a = min(clr.a, half(1.0));
+    #endif
+
     #if GSPLAT_AA
         clr.a = clr.a * corner.aaFactor;
     #endif

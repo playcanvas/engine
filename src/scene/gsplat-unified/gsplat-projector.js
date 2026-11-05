@@ -301,6 +301,7 @@ class GSplatProjector {
             new UniformFormat('foveationStrength', UNIFORMTYPE_FLOAT),
             new UniformFormat('foveationCenter', UNIFORMTYPE_FLOAT),
             new UniformFormat('antiAliasFilterSize', UNIFORMTYPE_FLOAT),
+            new UniformFormat('opacityMax', UNIFORMTYPE_FLOAT),
             new UniformFormat('sortKeyMinBits', UNIFORMTYPE_INT),
             new UniformFormat('sortKeyScale', UNIFORMTYPE_FLOAT),
             new UniformFormat('maxSortKey', UNIFORMTYPE_UINT)
@@ -644,6 +645,8 @@ class GSplatProjector {
      * foveated culling has no effect.
      * @param {number} [params.antiAliasFilterSize] - Variance in pixels squared of the screen-space
      * filter of the splats rendered with the anti-aliasing compensation.
+     * @param {number} [params.opacityMax] - Opacity cap applied before the anti-aliasing
+     * compensation: 1, or 1.5625 while over-unity opacity is drawn (see GSplatParams#compensation).
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
      * @param {boolean} [params.stochastic] - Write stable splat IDs instead of sort keys. The
@@ -667,7 +670,7 @@ class GSplatProjector {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
             totalCapacity, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
-            foveationStrength = 0, foveationCenter = 0.3, antiAliasFilterSize = 0.3,
+            foveationStrength = 0, foveationCenter = 0.3, antiAliasFilterSize = 0.3, opacityMax = 1,
             viewportWidth, viewportHeight,
             pickMode = false,
             stochastic = false,
@@ -804,6 +807,7 @@ class GSplatProjector {
         compute.setParameter('foveationStrength', foveationStrength);
         compute.setParameter('foveationCenter', foveationCenter);
         compute.setParameter('antiAliasFilterSize', antiAliasFilterSize);
+        compute.setParameter('opacityMax', opacityMax);
         compute.setParameter('isOrtho', orthographic ? 1 : 0);
         compute.setParameter('splatTextureSize', workBuffer.textureSize);
         compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);

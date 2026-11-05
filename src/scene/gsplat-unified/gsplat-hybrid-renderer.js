@@ -552,6 +552,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             foveationStrength: params.foveationStrength,
             foveationCenter: params.foveationCenter,
             antiAliasFilterSize: params.antiAliasFilterSize,
+            opacityMax: params.overUnity ? 1.5625 : 1,
             viewportWidth,
             viewportHeight,
             pickMode,

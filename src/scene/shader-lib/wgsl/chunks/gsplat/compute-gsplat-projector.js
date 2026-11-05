@@ -61,6 +61,7 @@ struct ProjectorUniforms {
     foveationStrength: f32,
     foveationCenter: f32,
     antiAliasFilterSize: f32,
+    opacityMax: f32,
     sortKeyMinBits: i32,
     sortKeyScale: f32,
     maxSortKey: u32,
@@ -250,12 +251,16 @@ fn main(
         #ifdef PICK_MODE
             // picking does not apply AA opacity compensation (it only gates on a binary
             // opacity threshold), but the modifier may still adjust alpha.
-            var clr = vec4f(getColor(), opacity);
+            // opacity above 1 is kept only while over-unity opacity is drawn, and capped before
+            // anything scales it
+            var clr = vec4f(getColor(), min(opacity, uniforms.opacityMax));
             modifySplatColor(center, &clr);
             pcId = loadPcId().r;
             alpha = clr.a;
         #else
-            var clr = vec4f(getColor(), opacity);
+            // opacity above 1 is kept only while over-unity opacity is drawn, and capped before
+            // anything scales it
+            var clr = vec4f(getColor(), min(opacity, uniforms.opacityMax));
             #if GSPLAT_AA
                 // Bake the AA opacity compensation into the cached alpha (the hybrid VS
                 // reads it pre-modulated). Only compiled for the non-pick variant.

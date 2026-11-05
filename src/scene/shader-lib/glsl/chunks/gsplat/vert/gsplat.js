@@ -67,6 +67,11 @@ void main(void) {
         vec4 clr = getColor();
     #endif
 
+    // without over-unity drawing, opacity above 1 is clamped before anything scales it
+    #ifndef GSPLAT_OVERUNITY
+        clr.a = min(clr.a, 1.0);
+    #endif
+
     #if GSPLAT_AA
         // apply AA compensation
         clr.a *= corner.aaFactor;

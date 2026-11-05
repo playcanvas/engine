@@ -35,6 +35,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @property {boolean} antiAlias - Whether the anti-aliasing compensation is compiled in.
  * @property {boolean} antiAliasMixed - Whether the compensation is applied only to the splats
  * flagged as trained with anti-aliasing (a per-splat bit in the work buffer), not to all of them.
+ * @property {boolean} overUnity - Whether over-unity opacity is drawn (see GSplatParams#compensation).
  * @property {number} fisheye - Fisheye projection strength.
  * @property {ShaderMaterial} material - The scene gsplat template material.
  * @property {GSplatVaryings} varyings - User varying streams (provides the cache `words` count).

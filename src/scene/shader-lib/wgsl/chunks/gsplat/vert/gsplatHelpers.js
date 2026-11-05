@@ -36,18 +36,18 @@ fn gsplatFootprintSmallerThan(a: f32, b: f32, c: f32, size: f32) -> bool {
 // exp(-D/2 * max(0, r * e - (D - 1))^2), r in sigma: an opaque core joined smoothly to a gaussian edge,
 // squeezed by e = gsplatPlateauExtent(D) so that it reaches the plain gaussian's exp(-4) floor at the same
 // 2 sqrt(2) sigma. The quad, culls and extent are therefore the plain gaussian's; only the trim and the
-// fragment depend on D. D is the shape that carries exactly A: I(D) / e^2 = A, with the unsqueezed mass
-// I(D) = (D-1)^2/2 + 1/D + (D-1)/2 sqrt(2 pi / D). D = 1 is the plain gaussian.
+// fragment depend on D. D is the shape whose drawn profile, with the exp(-4) floor subtracted as normExp
+// does, carries exactly A times the drawn mass of a plain gaussian of opacity 1. D = 1 is the plain gaussian.
 
-// The shape D for opacity A: 1 up to A = 1, then fitted in t = A - 1 to within 2.3e-4 (D <= 1.84).
+// The shape D for opacity A: 1 up to A = 1, then fitted in t = A - 1 to within 1.8e-4 (D <= 1.76).
 fn gsplatPlateauShape(A: f32) -> f32 {
     let t = clamp(A - 1.0, 0.0, 0.5625);
     let s = sqrt(t);
-    return 1.0 + t * (1.885151 + s * (-0.4472323 + s * (-0.6204184 + 0.6875631 * s)));
+    return 1.0 + t * (1.682517 + s * (-0.3263874 + s * (-0.5976628 + 0.5884379 * s)));
 }
 
 // The squeeze e: the unsqueezed profile's extent, (D - 1) + 2 sqrt(2 / D) sigma, over the plain gaussian's
-// 2 sqrt(2) sigma (0.98 to 1.03 for D <= 1.84; 1 at D = 1).
+// 2 sqrt(2) sigma (0.98 to 1.03 for D <= 1.76; 1 at D = 1).
 fn gsplatPlateauExtent(D: f32) -> f32 {
     return (D - 1.0) * 0.35355339 + inverseSqrt(D);
 }

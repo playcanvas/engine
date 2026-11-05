@@ -157,6 +157,15 @@ class GSplatManager {
     _resourcesOverUnity = false;
 
     /**
+     * Whether over-unity opacity is drawn this frame: {@link GSplatParams#compensation} with a
+     * resource that carries it.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _overUnity = false;
+
+    /**
      * The anti-aliasing compensation resolved for this frame: whether it is compiled in, and
      * whether it applies only to the splats flagged in the work buffer.
      *
@@ -431,6 +440,8 @@ class GSplatManager {
         this._resolveAntiAlias();
         p.antiAlias = this._antiAlias;
         p.antiAliasMixed = this._antiAliasMixed;
+        this._resolveOverUnity();
+        p.overUnity = this._overUnity;
         p.fisheye = gsplat.fisheye;
         p.material = gsplat.material;
         p.varyings = gsplat.varyings;
@@ -866,9 +877,9 @@ class GSplatManager {
         // material; the GPU path resolved it when it filled the forward view above).
         this._resolveAntiAlias();
         this.renderer.setAntiAlias(this._antiAlias, this._antiAliasMixed);
-        const overUnity = this.gsplat.compensation && this._resourcesOverUnity;
-        this.renderer.setOverUnity(overUnity);
-        this.shadowRenderer?.setOverUnity(overUnity);
+        this._resolveOverUnity();
+        this.renderer.setOverUnity(this._overUnity);
+        this.shadowRenderer?.setOverUnity(this._overUnity);
         this.renderer.frameUpdate(this.gsplat);
 
         // return the number of active splats for stats
@@ -922,6 +933,15 @@ class GSplatManager {
         if (state) {
             this._resourcesOverUnity = state.splats.some(splat => splat.resource.hasOverUnity);
         }
+    }
+
+    /**
+     * Resolves whether over-unity opacity is drawn this frame (see {@link GSplatParams#compensation}).
+     *
+     * @private
+     */
+    _resolveOverUnity() {
+        this._overUnity = this.gsplat.compensation && this._resourcesOverUnity;
     }
 
     /**
