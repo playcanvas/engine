@@ -109,13 +109,6 @@ class LitShader {
         this.device = device;
         this.options = options;
 
-        // only set by a StandardMaterial#onUpdateShader callback, as the shader no longer reads it
-        Debug.call(() => {
-            if (options.occludeDirect) {
-                Debug.deprecated('LitShaderOptions#occludeDirect is not used. Set StandardMaterial#occludeDirect instead, which the shader applies with a uniform.');
-            }
-        });
-
         // shader language
         const userChunks = options.shaderChunks;
         this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
