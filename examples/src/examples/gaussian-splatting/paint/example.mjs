@@ -278,17 +278,17 @@ camera.setLocalPosition(cameraPos);
 camera.lookAt(focusPos);
 app.root.addChild(camera);
 
-// Add camera controls (LMB orbit, MMB pan, wheel zoom)
+// Add camera controls (LMB orbit, MMB pan, wheel zoom). The camera ignores the right button, which
+// is left to the painting
 camera.addComponent('script');
-const cameraControls = /** @type {CameraControls} */ (
-    camera.script.create(CameraControls, {
-        properties: {
-            enableFly: false,
-            focusPoint: focusPos,
-            pitchRange: new Vec2(-90, 90)
-        }
-    })
-);
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        rightButton: 'none',
+        focusPoint: focusPos,
+        pitchRange: new Vec2(-90, 90)
+    }
+});
 
 // Paint state
 let isPainting = false;
@@ -374,12 +374,11 @@ const paintAt = (x, y) => {
     });
 };
 
-// RMB paint - disable camera controls while painting
+// RMB paint
 app.mouse.on(EVENT_MOUSEDOWN, (e) => {
     if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = true;
         pickerDirty = true;
-        cameraControls.enabled = false;
         paintAt(e.x, e.y);
     }
 });
@@ -391,13 +390,7 @@ app.mouse.on(EVENT_MOUSEMOVE, (e) => {
 app.mouse.on(EVENT_MOUSEUP, (e) => {
     if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = false;
-        cameraControls.enabled = true;
     }
-});
-
-window.addEventListener('mouseup', () => {
-    isPainting = false;
-    cameraControls.enabled = true;
 });
 
 // Cleanup on destroy
