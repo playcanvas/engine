@@ -44,6 +44,7 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
+    WasmModule,
     createGraphicsDevice,
     math
 } from 'playcanvas';
@@ -92,6 +93,13 @@ app.setCanvasResolution(RESOLUTION_AUTO);
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => window.removeEventListener('resize', resize));
+
+// The meshes of the car are Draco compressed, and the textures of the car and the showroom are WebP
+WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: './assets/wasm/draco/draco.wasm.js',
+    wasmUrl: './assets/wasm/draco/draco.wasm.wasm',
+    fallbackUrl: './assets/wasm/draco/draco.js'
+});
 
 // The showroom was modeled and lit in Blender. The lighting of its walls, ceiling, floor and
 // platform is baked into their emissive textures. The environment atlas is the empty room rendered
@@ -213,6 +221,10 @@ room.findComponents('render').forEach((render) => {
 const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 app.scene.lighting.areaLightsEnabled = true;
+
+// None of the lights casts shadows, so the clustered lighting compiles no shadow code into the
+// shaders of the materials
+app.scene.lighting.shadowsEnabled = false;
 
 const STRIP_LIGHT_INTENSITY = 30;
 const stripBounds = /** @type {Entity} */ (room.findByName('LightStrips')).render.meshInstances[0].aabb;
