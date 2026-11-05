@@ -124,11 +124,11 @@ let depthLayer;
  *
  * Relevant Engine API examples:
  *
- * - [Particle Animated Index](https://playcanvas.github.io/#/graphics/particles-anim-index)
- * - [Particle Mesh](https://playcanvas.github.io/#/graphics/particles-mesh)
- * - [Particle Random Sprites](https://playcanvas.github.io/#/graphics/particles-random-sprites)
- * - [Particle Snow](https://playcanvas.github.io/#/graphics/particles-snow)
- * - [Particle Spark](https://playcanvas.github.io/#/graphics/particles-spark)
+ * - [Particle Animated Index](https://playcanvas.github.io/#/particles/anim-index)
+ * - [Particle Mesh](https://playcanvas.github.io/#/particles/mesh)
+ * - [Particle Random Sprites](https://playcanvas.github.io/#/particles/random-sprites)
+ * - [Particle Snow](https://playcanvas.github.io/#/particles/snow)
+ * - [Particle Spark](https://playcanvas.github.io/#/particles/spark)
  * - [Particles in a user interface](https://playcanvas.github.io/#/user-interface/particle-system)
  *
  * @hideconstructor
