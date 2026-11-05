@@ -476,7 +476,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         // a single storage buffer binding. Past that every bind group using it is invalid and
         // nothing renders, so dispatch nothing and let the manager fall back to CPU sorting. The
         // draw is hidden as well, as its storage buffers are never assigned on this path.
-        const cacheBytes = elementCount * (CACHE_STRIDE + params.varyings.words) * 4;
+        const cacheBytes = elementCount * (CACHE_STRIDE + params.varyings.words + this._plateauWords()) * 4;
         const maxBindingSize = this.device.limits.maxStorageBufferBindingSize;
         if (cacheBytes > maxBindingSize) {
             if (!this.bindingLimitExceeded) {

@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { FloatPacking } from '../../../src/core/math/float-packing.js';
 import { PIXELFORMAT_R8 } from '../../../src/platform/graphics/constants.js';
+import { GSPLATDATA_COMPACT, GSPLATDATA_LARGE } from '../../../src/scene/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
@@ -43,6 +44,36 @@ describe('GSplatParams#compensation', function () {
         params.compensation = true;
         params._enableOverUnity(true);
         expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
+    });
+
+    it('adds the stream only where it fits the color attachment limits', function () {
+        // the WebGPU spec minimum: GSPLATDATA_LARGE (32 bytes/splat) has no room for it
+        device.limits = { maxColorAttachmentBytesPerSample: 32 };
+        device.maxColorAttachments = 8;
+        const params = new GSplatParams(device);
+        params._enableOverUnity(true);
+        expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
+
+        params.dataFormat = GSPLATDATA_LARGE;
+        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
+        params._enableOverUnity(true);
+        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
+
+        // a device allowing more bytes per sample keeps it in the large layout
+        device.limits = { maxColorAttachmentBytesPerSample: 64 };
+        params._enableOverUnity(true);
+        expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
+
+        // and switching layout carries it across while it fits
+        params.dataFormat = GSPLATDATA_COMPACT;
+        expect(params.format.getStream('splatPlateau')).to.not.equal(undefined);
+    });
+
+    it('respects the color attachment count', function () {
+        device.maxColorAttachments = 3;
+        const params = new GSplatParams(device);
+        params._enableOverUnity(true);
+        expect(params.format.getStream('splatPlateau')).to.equal(undefined);
     });
 });
 

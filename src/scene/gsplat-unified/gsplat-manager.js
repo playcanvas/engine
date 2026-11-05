@@ -767,15 +767,16 @@ class GSplatManager {
         const gsplat = this.gsplat;
         if (!gsplat.compensation || gsplat.format.getStream('splatPlateau')) return false;
 
-        // only re-scan when the world's splats or the compensation setting changed
-        const key = `${this.world.lastWorldStateVersion}:${gsplat._compensationVersion}`;
+        // only re-scan when the world's splats, the compensation setting or the data layout changed
+        const key = `${this.world.lastWorldStateVersion}:${gsplat._compensationVersion}:${gsplat.dataFormat}`;
         if (key === this._overUnityCheckKey) return false;
         this._overUnityCheckKey = key;
 
         const state = this.world.getState(this.world.lastWorldStateVersion);
         if (state?.splats.some(splat => splat.resource.hasOverUnity)) {
             gsplat._enableOverUnity(true);
-            return true;
+            // the stream is skipped when the work buffer has no room for it (see GSplatParams)
+            return !!gsplat.format.getStream('splatPlateau');
         }
         return false;
     }
