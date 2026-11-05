@@ -58,14 +58,17 @@ void main(void) {
     mediump float A = dot(gaussianUV, gaussianUV);
 
     // over-unity opacity (see gsplatHelpersVS): an alpha above 1 is 1 + the core radius, drawn with peak
-    // alpha 1 as the plain gaussian's falloff stretched from the core to the quad edge
+    // alpha 1 as the plain gaussian's falloff stretched from the core to the quad edge. Overdraw mode
+    // passes a scaled opacity instead, so it keeps the plain profile.
     mediump float peak = gaussianColor.a;
-    if (peak > 1.0) {
-        float core = peak - 1.0;
-        float c = max(0.0, sqrt(A) - core) / (1.0 - core);
-        A = c * c;
-        peak = 1.0;
-    }
+    #ifndef GSPLAT_OVERDRAW
+        if (peak > 1.0) {
+            float core = peak - 1.0;
+            float c = max(0.0, sqrt(A) - core) / (1.0 - core);
+            A = c * c;
+            peak = 1.0;
+        }
+    #endif
 
     if (A > 1.0) {
         discard;
