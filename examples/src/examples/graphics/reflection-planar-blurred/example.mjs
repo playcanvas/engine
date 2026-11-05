@@ -130,6 +130,7 @@ const reflectionScript = groundReflector.script.create(BlurredPlanarReflection);
 
 // Set properties directly
 reflectionScript.mainCamera = camera;
+reflectionScript.sceneColorMap = true; // the sunglasses lens uses refraction
 reflectionScript.resolution = 1.0;
 reflectionScript.blurAmount = 0.5;
 reflectionScript.intensity = 1.0;
