@@ -98,6 +98,14 @@ class LitMaterial extends Material {
     hasClearCoatNormals = false;
 
     /** @ignore */
+    updateUniforms(device, scene) {
+        super.updateUniforms(device, scene);
+
+        // a uniform, the shader always contains both ways of applying the ambient occlusion
+        this.setParameter('material_occludeDirect', this.occludeDirect ? 1 : 0);
+    }
+
+    /** @ignore */
     getShaderVariant(params) {
 
         options.usedUvs = this.usedUvs.slice();

@@ -109,6 +109,13 @@ class LitShader {
         this.device = device;
         this.options = options;
 
+        // only set by a StandardMaterial#onUpdateShader callback, as the shader no longer reads it
+        Debug.call(() => {
+            if (options.occludeDirect) {
+                Debug.deprecated('LitShaderOptions#occludeDirect is not used. Set StandardMaterial#occludeDirect instead, which the shader applies with a uniform.');
+            }
+        });
+
         // shader language
         const userChunks = options.shaderChunks;
         this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
@@ -561,7 +568,6 @@ class LitShader {
         this.fDefineSet(options.useMsdf, 'LIT_MSDF');
         this.fDefineSet(options.ssao, 'LIT_SSAO');
         this.fDefineSet(options.useAo, 'LIT_AO');
-        this.fDefineSet(options.occludeDirect, 'LIT_OCCLUDE_DIRECT');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(options.shadowCatcher, 'LIT_SHADOW_CATCHER');
         this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);

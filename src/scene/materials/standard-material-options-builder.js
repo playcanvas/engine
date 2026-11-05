@@ -286,7 +286,6 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.cubeMapProjection = stdMat.cubeMapProjection;
 
-        options.litOptions.occludeDirect = stdMat.occludeDirect;
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;

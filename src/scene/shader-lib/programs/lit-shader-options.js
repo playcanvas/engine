@@ -115,7 +115,10 @@ class LitShaderOptions {
     twoSidedLighting = false;
 
     /**
-     * The value of {@link StandardMaterial#occludeDirect}.
+     * Not used. The shader applies {@link StandardMaterial#occludeDirect} with a uniform, so it
+     * does not take part in shader generation.
+     *
+     * @deprecated
      */
     occludeDirect = false;
 

@@ -113,4 +113,16 @@ const convertFloat = (value, storage, offset) => {
     storage[offset] = value;
 };
 
-export { MaterialProperty, convertColorToLinear, convertFloat };
+/**
+ * Writes a boolean to a float uniform value, as 1 or 0.
+ *
+ * @param {boolean} value - The boolean.
+ * @param {Float32Array} storage - The uniform buffer storage.
+ * @param {number} offset - The element offset of the uniform in the storage.
+ * @ignore
+ */
+const convertBoolean = (value, storage, offset) => {
+    storage[offset] = value ? 1 : 0;
+};
+
+export { MaterialProperty, convertBoolean, convertColorToLinear, convertFloat };

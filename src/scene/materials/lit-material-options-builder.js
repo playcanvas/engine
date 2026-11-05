@@ -68,7 +68,6 @@ class LitMaterialOptionsBuilder {
 
         litOptions.ambientSH = material.ambientSH;
         litOptions.twoSidedLighting = material.twoSidedLighting;
-        litOptions.occludeDirect = material.occludeDirect;
         litOptions.occludeSpecular = material.occludeSpecular;
         litOptions.occludeSpecularFloat = (material.occludeSpecularIntensity !== 1.0);
 
