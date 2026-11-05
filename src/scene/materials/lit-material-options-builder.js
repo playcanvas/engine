@@ -67,7 +67,6 @@ class LitMaterialOptionsBuilder {
         litOptions.pixelSnap = material.pixelSnap;
 
         litOptions.ambientSH = material.ambientSH;
-        litOptions.occludeDirect = material.occludeDirect;
         litOptions.occludeSpecular = material.occludeSpecular;
         litOptions.occludeSpecularFloat = (material.occludeSpecularIntensity !== 1.0);
 

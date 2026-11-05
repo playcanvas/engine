@@ -111,6 +111,7 @@ const _properties = {
     normalDetailMapBumpiness: new MaterialProperty('normalDetailMapBumpiness', 'material_normalDetailMapBumpiness', UNIFORMTYPE_FLOAT, convertFloat),
     reflectivity: new MaterialProperty('reflectivity', 'material_reflectivity', UNIFORMTYPE_FLOAT, convertFloat),
     occludeSpecularIntensity: new MaterialProperty('occludeSpecularIntensity', 'material_occludeSpecularIntensity', UNIFORMTYPE_FLOAT, convertFloat),
+    occludeDirect: new MaterialProperty('occludeDirect', 'material_occludeDirect', UNIFORMTYPE_FLOAT, convertBoolean),
     twoSidedLighting: new MaterialProperty('twoSidedLighting', 'material_twoSidedLighting', UNIFORMTYPE_FLOAT, convertBoolean),
     refraction: new MaterialProperty('refraction', 'material_refraction', UNIFORMTYPE_FLOAT, convertFloat),
     refractionIndex: new MaterialProperty('refractionIndex', 'material_refractionIndex', UNIFORMTYPE_FLOAT, convertFloat),
@@ -2447,7 +2448,15 @@ function _defineMaterialProps() {
     _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('useSheen', false);
     _defineFlag('enableGGXSpecular', false);
-    _defineFlag('occludeDirect', false);
+    // a uniform, the shader always contains both ways of applying the ambient occlusion
+    defineProp({
+        name: 'occludeDirect',
+        defaultValue: false,
+        dirtyShaderFunc: () => false,
+        onSet: function () {
+            this._markPropertyModified(_properties.occludeDirect);
+        }
+    });
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)

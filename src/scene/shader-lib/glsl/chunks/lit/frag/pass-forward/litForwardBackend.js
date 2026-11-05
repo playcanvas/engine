@@ -75,10 +75,10 @@ void evaluateBackend() {
         dDiffuseTransmissionLight *= litArgs_ambient;
     #endif
 
+    // the ambient occlusion darkens the ambient light here, and with occludeDirect, which is 0 or 1,
+    // the direct light as well, once that is added below
     #ifdef LIT_AO
-        #ifndef LIT_OCCLUDE_DIRECT
-            occludeDiffuse(litArgs_ao);
-        #endif
+        occludeDiffuse(mix(litArgs_ao, 1.0, material_occludeDirect));
     #endif
 
     #ifdef LIT_LIGHTMAP
@@ -222,9 +222,7 @@ void evaluateBackend() {
 
     // apply ambient occlusion
     #ifdef LIT_AO
-        #ifdef LIT_OCCLUDE_DIRECT
-            occludeDiffuse(litArgs_ao);
-        #endif
+        occludeDiffuse(mix(1.0, litArgs_ao, material_occludeDirect));
 
         #if LIT_OCCLUDE_SPECULAR != NONE
             occludeSpecular(litArgs_gloss, litArgs_ao, litArgs_worldNormal, dViewDirW);
