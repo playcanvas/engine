@@ -18,7 +18,7 @@ const float norm = sqrt(2.0);
 
 #ifdef SOG_V2
     // 256x1 RGBA32F LUT (V2 and V3):
-    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a = opacity codebook (V3)
+    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a = decoded opacity byte (V3)
     float lutScales(int b)  { return texelFetch(sogCodebook, ivec2(b, 0), 0).r; }
     float lutSh0(int b)     { return texelFetch(sogCodebook, ivec2(b, 0), 0).g; }
     float lutShN(int b)     { return texelFetch(sogCodebook, ivec2(b, 0), 0).b; }

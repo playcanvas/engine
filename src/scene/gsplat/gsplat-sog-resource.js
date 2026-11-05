@@ -193,7 +193,7 @@ class GSplatSogResource extends GSplatResourceBase {
     // v3 stores the true opacity, which merged (decimated) gaussians can carry above 1
     get hasOverUnity() {
         const { meta } = /** @type {GSplatSogData} */ (this.gsplatData);
-        return meta.version === 3 && meta.opacity.codebook.some(v => v > 1);
+        return meta.version === 3 && (meta.opacity?.max ?? 1) > 1;
     }
 }
 

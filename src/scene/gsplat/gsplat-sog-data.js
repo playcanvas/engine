@@ -38,6 +38,23 @@ const readImageDataAsync = (texture) => {
 // SH coefficients per color channel for a band count (4 bands: SOG v3)
 const shCoeffs = shBands => ({ 1: 3, 2: 8, 3: 15, 4: 24 })[shBands] ?? 0;
 
+/**
+ * Decodes the SOG v3 opacity byte to true opacity: bytes up to 224 hold opacity 0..1 as its square
+ * root (fine steps at the low opacities translucent layers are built from), bytes above 224 hold
+ * the over-unity range (1, 1.6] linearly.
+ *
+ * @param {number} b - The byte, 0..255.
+ * @returns {number} True opacity, 0..1.6.
+ * @ignore
+ */
+const decodeSogOpacity = (b) => {
+    if (b <= 224) {
+        const s = b / 224;
+        return s * s;
+    }
+    return 1 + 0.6 * (b - 224) / 31;
+};
+
 const resolve = (scope, values) => {
     for (const key in values) {
         scope.resolve(key).setValue(values[key]);
@@ -51,7 +68,7 @@ class GSplatSogIterator {
 
         // extract means for centers
         const { meta, shBands } = data;
-        const { means, scales, sh0, shN, opacity } = meta;
+        const { means, scales, sh0, shN } = meta;
         const v3 = meta.version === 3;
         // v2 and v3 dequantize through codebooks, v1 through min/max ranges
         const codebooks = meta.version >= 2;
@@ -124,8 +141,8 @@ class GSplatSogIterator {
                     const r = sh0.codebook[sh0_data[i * 4 + 0]];
                     const g = sh0.codebook[sh0_data[i * 4 + 1]];
                     const b = sh0.codebook[sh0_data[i * 4 + 2]];
-                    // v3 indexes the opacity codebook (true opacity, may exceed 1)
-                    const a = v3 ? opacity.codebook[sh0_data[i * 4 + 3]] : sh0_data[i * 4 + 3] / 255;
+                    // v3 stores the true opacity, which may exceed 1
+                    const a = v3 ? decodeSogOpacity(sh0_data[i * 4 + 3]) : sh0_data[i * 4 + 3] / 255;
                     c.set(
                         0.5 + r * SH_C0,
                         0.5 + g * SH_C0,
@@ -199,8 +216,8 @@ class GSplatSogData {
     blind = null;
 
     /**
-     * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a = opacity (V3,
-     * unused in V2). Built from meta codebooks in prepareCodebook(). Null for V1 assets.
+     * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a = decoded opacity
+     * byte (V3, unused in V2). Built from meta codebooks in prepareCodebook(). Null for V1 assets.
      *
      * @type {Texture|null}
      */
@@ -347,7 +364,7 @@ class GSplatSogData {
         }
 
         // v3 opacity above 1 (merged gaussians) round-trips as the PLY opacity_excess column
-        const hasExcess = meta.version === 3 && meta.opacity.codebook.some(v => v > 1);
+        const hasExcess = meta.version === 3 && (meta.opacity?.max ?? 1) > 1;
         if (hasExcess) {
             members.push('opacity_excess');
         }
@@ -502,7 +519,7 @@ class GSplatSogData {
      * - .r = scales codebook
      * - .g = sh0 codebook
      * - .b = shN codebook
-     * - .a = opacity codebook (V3; 0 in V2)
+     * - .a = true opacity of each opacity byte (V3, see decodeSogOpacity; 0 in V2)
      *
      * @private
      */
@@ -512,11 +529,11 @@ class GSplatSogData {
         const device = this.means_l.device;
         const { scales, sh0, shN } = this.meta;
 
-        // scales and sh0 codebooks are mandatory for V2/V3, opacity for V3; shN only present when SH > 0
+        // scales and sh0 codebooks are mandatory for V2/V3; shN only present when SH > 0
         const scalesCb = scales.codebook;
         const sh0Cb = sh0.codebook;
         const shNCb = shN?.codebook;
-        const opacityCb = this.meta.opacity?.codebook;
+        const v3 = this.meta.version === 3;
 
         const data = new Float32Array(256 * 4);
         for (let i = 0; i < 256; i++) data[i * 4]     = scalesCb[i];
@@ -524,8 +541,8 @@ class GSplatSogData {
         if (shNCb) {
             for (let i = 0; i < 256; i++) data[i * 4 + 2] = shNCb[i];
         }
-        if (opacityCb) {
-            for (let i = 0; i < 256; i++) data[i * 4 + 3] = opacityCb[i];
+        if (v3) {
+            for (let i = 0; i < 256; i++) data[i * 4 + 3] = decodeSogOpacity(i);
         }
         // .b stays 0 when no SH, .a when V2
 

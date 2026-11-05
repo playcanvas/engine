@@ -81,7 +81,7 @@ fn fineCull(splatId: u32) -> bool {
     // 2.83 sigma, so both tests use the grown extent.
     var maxScale = max(scale.x, max(scale.y, scale.z));
     #ifdef GSPLAT_OVERUNITY
-        let plateau = exp2(loadSplatPlateau().r * 6.0);
+        let plateau = 1.0 + 0.8 * loadSplatPlateau().r;
         if (plateau > 1.0) {
             maxScale = maxScale * ((plateau - 1.0) + 2.8284271 / sqrt(plateau)) / 2.8284271;
         }

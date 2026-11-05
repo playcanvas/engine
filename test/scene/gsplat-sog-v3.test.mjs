@@ -25,7 +25,7 @@ const meta = (extra = {}) => ({
     means: { mins: [0, 0, 0], maxs: [1, 1, 1] },
     scales: { codebook: Array.from({ length: 256 }, (_, i) => i / 255) },
     sh0: { codebook: Array.from({ length: 256 }, (_, i) => i / 255 - 0.5) },
-    opacity: { codebook: Array.from({ length: 256 }, (_, i) => (i < 192 ? i / 191 : 1 + (i - 191))) },
+    opacity: { max: 1.6 },
     ...extra
 });
 
@@ -71,12 +71,17 @@ describe('GSplatSogData v3', function () {
         }
     });
 
-    it('reads opacity through the opacity codebook, including values above 1', function () {
+    it('decodes the opacity byte: sqrt below 224, linear to 1.6 above', function () {
         const c = new Vec4();
-        makeData([128, 128, 128], 96).createIter(null, null, null, c).read(0);
-        expect(c.w).to.be.closeTo(96 / 191, 1e-9);
-        makeData([128, 128, 128], 200).createIter(null, null, null, c).read(0);
-        expect(c.w).to.equal(10);
+        const read = (b) => {
+            makeData([128, 128, 128], b).createIter(null, null, null, c).read(0);
+            return c.w;
+        };
+        expect(read(0)).to.equal(0);
+        expect(read(112)).to.be.closeTo(0.25, 1e-12);
+        expect(read(224)).to.equal(1);
+        expect(read(255)).to.be.closeTo(1.6, 1e-12);
+        expect(read(240)).to.be.closeTo(1 + 0.6 * 16 / 31, 1e-12);
     });
 
     it('reads 24 coefficients per channel for 4 bands', function () {

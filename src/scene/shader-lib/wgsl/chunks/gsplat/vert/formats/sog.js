@@ -18,7 +18,7 @@ const norm: f32 = sqrt(2.0);
 
 #ifdef SOG_V2
     // 256x1 RGBA32F LUT (V2 and V3):
-    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a = opacity codebook (V3)
+    //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a = decoded opacity byte (V3)
     fn lutScales(b: i32) -> f32  { return textureLoad(sogCodebook, vec2i(b, 0), 0).r; }
     fn lutSh0(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).g; }
     fn lutShN(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }

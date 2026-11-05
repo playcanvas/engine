@@ -49,9 +49,10 @@ describe('GSplatParams#compensation', function () {
 describe('GSplatSogResource#hasOverUnity', function () {
     const resource = meta => Object.assign(Object.create(GSplatSogResource.prototype), { gsplatData: { meta } });
 
-    it('is true only for v3 data whose opacity codebook exceeds 1', function () {
-        expect(resource({ version: 3, opacity: { codebook: [0, 0.5, 1, 2.5] } }).hasOverUnity).to.equal(true);
-        expect(resource({ version: 3, opacity: { codebook: [0, 0.5, 1] } }).hasOverUnity).to.equal(false);
+    it('is true only for v3 data whose stored opacity exceeds 1', function () {
+        expect(resource({ version: 3, opacity: { max: 1.6 } }).hasOverUnity).to.equal(true);
+        expect(resource({ version: 3, opacity: { max: 1 } }).hasOverUnity).to.equal(false);
+        expect(resource({ version: 3 }).hasOverUnity).to.equal(false);
         expect(resource({ version: 2 }).hasOverUnity).to.equal(false);
     });
 });
@@ -71,11 +72,11 @@ describe('GSplatResource opacity_excess', function () {
         return [levels[3], levels[7]];
     };
 
-    it('adds opacity_excess to the uploaded opacity and reports over-unity', function () {
+    it('adds opacity_excess to the uploaded opacity, clamped at 1.6, and reports over-unity', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
-        const resource = new GSplatResource(device, makeData([2.5, 0]));
+        const resource = new GSplatResource(device, makeData([2.5, 0.75]));
         expect(resource.hasOverUnity).to.equal(true);
-        expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(3), FloatPacking.float2Half(0.5)]);
+        expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(1.6), FloatPacking.float2Half(1.25)]);
         resource.destroy();
         device.destroy();
     });

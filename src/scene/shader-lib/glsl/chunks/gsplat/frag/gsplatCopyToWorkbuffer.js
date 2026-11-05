@@ -38,25 +38,15 @@ uniform vec3 uColorMultiply;
 #ifdef GSPLAT_OVERUNITY
     // Over-unity opacity: a gaussian whose true opacity A exceeds 1 is drawn with the plateau
     // profile exp(-D/2 * max(0, r - (D - 1))^2) (r in sigma), an opaque core joined smoothly to a
-    // gaussian edge, which carries mass I(D) = (D-1)^2/2 + 1/D + (D-1)/2 * sqrt(2 pi / D).
-    float plateauMass(float D) {
-        float p = D - 1.0;
-        return 0.5 * p * p + 1.0 / D + 0.5 * p * sqrt(6.283185307 / D);
-    }
-
-    // The plateau shape for true opacity A, encoded as log2(D') / 6 (0 = plain gaussian). D solves
-    // I(D) = A; the drawn shape D' = 1 + 0.4 (D - 1) shrinks the opaque core, as a core carrying
-    // all of the mass over-occludes.
+    // gaussian edge, at the shape D that carries exactly its mass, I(D) = (D-1)^2/2 + 1/D +
+    // (D-1)/2 * sqrt(2 pi / D) = min(A, 1.6). Opacity above 1.6 is drawn as 1.6 (it comes from merges
+    // over-counting overlapping children). D - 1 is fitted in t = A - 1 to within 1.3e-3, and stored
+    // as (D - 1) / 0.8 (0 = plain gaussian; D <= 1.79).
     float encodePlateau(float A) {
-        if (A <= 1.0) return 0.0;
-        float lo = 1.0;
-        float hi = 1.0 + sqrt(2.0 * A);
-        for (int k = 0; k < 24; k++) {
-            float mid = 0.5 * (lo + hi);
-            if (plateauMass(mid) < A) lo = mid; else hi = mid;
-        }
-        float D = 1.0 + 0.4 * (0.5 * (lo + hi) - 1.0);
-        return clamp(log2(D) / 6.0, 0.0, 1.0);
+        float t = clamp(A - 1.0, 0.0, 0.6);
+        float s = sqrt(t);
+        float d = t * (4.22155 + s * (-8.513261 + s * (9.054768 - 3.787433 * s)));
+        return d / 0.8;
     }
 #endif
 
