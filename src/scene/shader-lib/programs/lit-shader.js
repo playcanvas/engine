@@ -539,7 +539,6 @@ class LitShader {
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');
         this.fDefineSet(options.separateAmbient, 'LIT_SEPARATE_AMBIENT');
-        this.fDefineSet(options.twoSidedLighting, 'LIT_TWO_SIDED_LIGHTING');
         this.fDefineSet(options.lightMapEnabled, 'LIT_LIGHTMAP');
         this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
         this.fDefineSet(options.skyboxIntensity > 0, 'LIT_SKYBOX_INTENSITY');

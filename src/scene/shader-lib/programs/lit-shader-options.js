@@ -110,11 +110,6 @@ class LitShaderOptions {
     ssao = false;
 
     /**
-     * The value of {@link StandardMaterial#twoSidedLighting}.
-     */
-    twoSidedLighting = false;
-
-    /**
      * The value of {@link StandardMaterial#occludeSpecular}.
      */
     occludeSpecular = 0;
