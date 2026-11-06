@@ -19,6 +19,12 @@ export function Controls({ observer }) {
     return (
         <>
             <Panel headerText='Lights'>
+                <LabelGroup text='Rect'>
+                    <BooleanInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'script.rect.enabled' }}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Rect (lm)'>
                     <SliderInput
                         binding={new BindingTwoWay()}
@@ -27,12 +33,24 @@ export function Controls({ observer }) {
                         max={800000.0}
                     />
                 </LabelGroup>
+                <LabelGroup text='Point'>
+                    <BooleanInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'script.point.enabled' }}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Point (lm)'>
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'script.point.luminance' }}
                         min={0.0}
-                        max={800000.0}
+                        max={2000000.0}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Spot'>
+                    <BooleanInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'script.spot.enabled' }}
                     />
                 </LabelGroup>
                 <LabelGroup text='Spot (lm)'>
@@ -40,7 +58,7 @@ export function Controls({ observer }) {
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'script.spot.luminance' }}
                         min={0.0}
-                        max={200000.0}
+                        max={1000000.0}
                     />
                 </LabelGroup>
                 <LabelGroup text='Spot angle'>
@@ -66,7 +84,7 @@ export function Controls({ observer }) {
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'script.camera.shutter' }}
                         min={1.0}
-                        max={1000.0}
+                        max={8000.0}
                     />
                 </LabelGroup>
                 <LabelGroup text='ISO'>
