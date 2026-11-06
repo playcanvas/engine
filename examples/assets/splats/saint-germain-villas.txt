@@ -1,0 +1,8 @@
+Model Information:
+* title:	SAINT GERMAIN – POMPERTUZAT
+* source:	https://superspl.at/scene/1a31ac64
+* author:	Stéphane Agullo (https://superspl.at/user?id=sa3d)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
