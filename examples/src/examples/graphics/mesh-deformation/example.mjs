@@ -1,5 +1,7 @@
-// Mesh deformation: vertex positions are read from the mesh once, then modified on the CPU every
-// frame (a wave travelling up the statue) and written back with mesh.setPositions() and mesh.update().
+// @config
+//
+// The vertex positions of the statue's meshes are modified on the CPU every frame, and uploaded
+// with `mesh.setPositions()` and `mesh.update()`.
 
 import {
     AppBase,
