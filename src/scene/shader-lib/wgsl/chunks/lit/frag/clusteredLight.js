@@ -438,6 +438,13 @@ fn evaluateLight(
 
         #endif
 
+        // the base layer below the sheen is also scaled for the direction of the light
+        #ifdef LIT_SHEEN
+            let baseAttenuation: f32 = falloffAttenuation * getSheenLightScaling(worldNormal, lightDirNormW);
+        #else
+            let baseAttenuation: f32 = falloffAttenuation;
+        #endif
+
         // diffuse / specular / clearcoat
         #ifdef CLUSTER_AREALIGHTS
 
@@ -445,7 +452,7 @@ fn evaluateLight(
 
             // area light diffuse
             {
-                var areaDiffuse: vec3f = (diffuseAttenuation * falloffAttenuation) * light.color * cookieAttenuation;
+                var areaDiffuse: vec3f = (diffuseAttenuation * baseAttenuation) * light.color * cookieAttenuation;
 
                 #if defined(LIT_SPECULAR)
                     areaDiffuse = mix(areaDiffuse, vec3f(0.0), dLTCSpecFres);
@@ -479,7 +486,7 @@ fn evaluateLight(
                     areaLightSpecular = getSphereLightSpecular(worldNormal, viewDir);
                 }
 
-                dSpecularLight = dSpecularLight + dLTCSpecFres * areaLightSpecular * falloffAttenuation * light.color * cookieAttenuation;
+                dSpecularLight = dSpecularLight + dLTCSpecFres * areaLightSpecular * baseAttenuation * light.color * cookieAttenuation;
 
                 #ifdef LIT_CLEARCOAT
 
@@ -508,7 +515,7 @@ fn evaluateLight(
 
             // punctual light diffuse
             {
-                var punctualDiffuse: vec3f = falloffAttenuation * light.color * cookieAttenuation;
+                var punctualDiffuse: vec3f = baseAttenuation * light.color * cookieAttenuation;
 
                 #if defined(CLUSTER_AREALIGHTS)
                 #if defined(LIT_SPECULAR)
@@ -539,7 +546,7 @@ fn evaluateLight(
                 // specular
                 #ifdef LIT_SPECULAR_FRESNEL
                     dSpecularLight = dSpecularLight +
-                        getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, lightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation *
+                        getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, lightDirNormW, gloss, tbn) * baseAttenuation * light.color * cookieAttenuation *
                         getFresnel(
                             dot(viewDir, halfDir),
                             gloss,
@@ -550,7 +557,7 @@ fn evaluateLight(
                         #endif
                             );
                 #else
-                    dSpecularLight = dSpecularLight + getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, lightDirNormW, gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * specularity;
+                    dSpecularLight = dSpecularLight + getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, lightDirNormW, gloss, tbn) * baseAttenuation * light.color * cookieAttenuation * specularity;
                 #endif
 
                 #ifdef LIT_CLEARCOAT

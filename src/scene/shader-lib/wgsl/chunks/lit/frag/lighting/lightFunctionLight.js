@@ -169,15 +169,22 @@ fn evaluateLight{i}(
         dAtten = dAtten * getParallaxSelfShadow(dLightDirNormW);
     #endif
 
+    // the base layer below the sheen is also scaled for the direction of the light
+    #ifdef LIT_SHEEN
+        let baseAtten: f32 = dAtten * getSheenLightScaling(litArgs_worldNormal, dLightDirNormW);
+    #else
+        let baseAtten: f32 = dAtten;
+    #endif
+
     #if LIGHT{i}SHAPE != PUNCTUAL
         // area light - they do not mix diffuse lighting into specular attenuation
         #ifdef LIT_SPECULAR
-            dDiffuseLight = dDiffuseLight + (((attenDiffuse * dAtten) * lightColor) * (1.0 - dLTCSpecFres));
+            dDiffuseLight = dDiffuseLight + (((attenDiffuse * baseAtten) * lightColor) * (1.0 - dLTCSpecFres));
             #ifdef LIT_DIFFUSE_TRANSMISSION
                 dDiffuseTransmissionLight = dDiffuseTransmissionLight + ((attenTransmission * lightColor) * (1.0 - dLTCSpecFres));
             #endif
         #else
-            dDiffuseLight = dDiffuseLight + ((attenDiffuse * dAtten) * lightColor);
+            dDiffuseLight = dDiffuseLight + ((attenDiffuse * baseAtten) * lightColor);
             #ifdef LIT_DIFFUSE_TRANSMISSION
                 dDiffuseTransmissionLight = dDiffuseTransmissionLight + (attenTransmission * lightColor);
             #endif
@@ -185,12 +192,12 @@ fn evaluateLight{i}(
     #else
         // punctual light
         #if defined(AREA_LIGHTS) && defined(LIT_SPECULAR)
-            dDiffuseLight = dDiffuseLight + ((dAtten * lightColor) * (1.0 - litArgs_specularity));
+            dDiffuseLight = dDiffuseLight + ((baseAtten * lightColor) * (1.0 - litArgs_specularity));
             #ifdef LIT_DIFFUSE_TRANSMISSION
                 dDiffuseTransmissionLight = dDiffuseTransmissionLight + ((attenTransmission * lightColor) * (1.0 - litArgs_specularity));
             #endif
         #else
-            dDiffuseLight = dDiffuseLight + (dAtten * lightColor);
+            dDiffuseLight = dDiffuseLight + (baseAtten * lightColor);
             #ifdef LIT_DIFFUSE_TRANSMISSION
                 dDiffuseTransmissionLight = dDiffuseTransmissionLight + (attenTransmission * lightColor);
             #endif
@@ -214,11 +221,11 @@ fn evaluateLight{i}(
 
             #ifdef LIT_SPECULAR
                 #if LIGHT{i}SHAPE == RECT
-                    dSpecularLight = dSpecularLight + (dLTCSpecFres * getRectLightSpecular(litArgs_worldNormal, dViewDirW) * dAtten * lightColor);
+                    dSpecularLight = dSpecularLight + (dLTCSpecFres * getRectLightSpecular(litArgs_worldNormal, dViewDirW) * baseAtten * lightColor);
                 #elif LIGHT{i}SHAPE == DISK
-                    dSpecularLight = dSpecularLight + (dLTCSpecFres * getDiskLightSpecular(litArgs_worldNormal, dViewDirW) * dAtten * lightColor);
+                    dSpecularLight = dSpecularLight + (dLTCSpecFres * getDiskLightSpecular(litArgs_worldNormal, dViewDirW) * baseAtten * lightColor);
                 #elif LIGHT{i}SHAPE == SPHERE
-                    dSpecularLight = dSpecularLight + (dLTCSpecFres * getSphereLightSpecular(litArgs_worldNormal, dViewDirW) * dAtten * lightColor);
+                    dSpecularLight = dSpecularLight + (dLTCSpecFres * getSphereLightSpecular(litArgs_worldNormal, dViewDirW) * baseAtten * lightColor);
                 #endif
             #endif
 
@@ -248,7 +255,7 @@ fn evaluateLight{i}(
 
             #ifdef LIT_SPECULAR
 
-                var lightSpecular: vec3f = getLightSpecular(halfDirW, dReflDirW, litArgs_worldNormal, dViewDirW, dLightDirNormW, litArgs_gloss, dTBN) * dAtten * lightColor;
+                var lightSpecular: vec3f = getLightSpecular(halfDirW, dReflDirW, litArgs_worldNormal, dViewDirW, dLightDirNormW, litArgs_gloss, dTBN) * baseAtten * lightColor;
                 #ifdef LIGHT{i}FRESNEL
 
                     #if defined(LIT_IRIDESCENCE)
