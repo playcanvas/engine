@@ -391,7 +391,7 @@ class GSplatProcessor {
             return info.returnType;
         });
 
-        // Create defines - start from the source resource's format-specific defines (e.g. SOG_V2)
+        // Create defines - start from the source resource's format-specific defines (e.g. SOG_VERSION)
         // so the shared read chunk compiles for the correct variant, then override SH_BANDS.
         const defines = new Map();
         this._srcResource.configureMaterialDefines(defines);

@@ -26,8 +26,12 @@ class GSplatSogResource extends GSplatResourceBase {
         super(device, gsplatData, options);
 
         const { meta, means_l } = gsplatData;
-        const isV2 = meta.version === 2;
+        // V2 and V3 both dequantize through the codebook LUT; V3 drops the quats texture (the
+        // rotation is packed into the alpha channels of means_l, means_u and scales)
+        const isV2 = meta.version >= 2;
+        const isV3 = meta.version === 3;
         const hasSH = gsplatData.shBands > 0;
+        const hasBlind = !!gsplatData.blind;
 
         // splat texture dimensions come from the source means_l texture - used for the
         // splatTextureSize uniform and for sizing the order texture
@@ -39,12 +43,17 @@ class GSplatSogResource extends GSplatResourceBase {
         // not destroyed here)
         this.streams.textures.set('means_l', gsplatData.means_l);
         this.streams.textures.set('means_u', gsplatData.means_u);
-        this.streams.textures.set('quats', gsplatData.quats);
+        if (!isV3) {
+            this.streams.textures.set('quats', gsplatData.quats);
+        }
         this.streams.textures.set('scales', gsplatData.scales);
         this.streams.textures.set('sh0', gsplatData.sh0);
         if (hasSH) {
             this.streams.textures.set('sh_labels', gsplatData.sh_labels);
             this.streams.textures.set('sh_centroids', gsplatData.sh_centroids);
+        }
+        if (hasBlind) {
+            this.streams.textures.set('blind', gsplatData.blind);
         }
         if (isV2) {
             // V2 always declares the sogCodebook stream below, so the texture must exist or the
@@ -59,13 +68,17 @@ class GSplatSogResource extends GSplatResourceBase {
         const streams = [
             { name: 'means_l', format: PIXELFORMAT_RGBA8 },
             { name: 'means_u', format: PIXELFORMAT_RGBA8 },
-            { name: 'quats', format: PIXELFORMAT_RGBA8 },
+            ...(isV3 ? [] : [{ name: 'quats', format: PIXELFORMAT_RGBA8 }]),
             { name: 'scales', format: PIXELFORMAT_RGBA8 },
             { name: 'sh0', format: PIXELFORMAT_RGBA8 }
         ];
         if (hasSH) {
             streams.push({ name: 'sh_labels', format: PIXELFORMAT_RGBA8 });
             streams.push({ name: 'sh_centroids', format: PIXELFORMAT_RGBA8 });
+        }
+        if (hasBlind) {
+            // per-gaussian user data, read in shaders via getBlind() (see the sog chunk)
+            streams.push({ name: 'blind', format: PIXELFORMAT_RGBA8 });
         }
         if (isV2) {
             streams.push({ name: 'sogCodebook', format: PIXELFORMAT_RGBA32F });
@@ -98,6 +111,7 @@ class GSplatSogResource extends GSplatResourceBase {
         d.sh0?.setReleaseSourceAfterUpload();
         d.sh_centroids?.setReleaseSourceAfterUpload();
         d.sh_labels?.setReleaseSourceAfterUpload();
+        d.blind?.setReleaseSourceAfterUpload();
     }
 
     /** @protected */
@@ -110,6 +124,7 @@ class GSplatSogResource extends GSplatResourceBase {
         this.streams.textures.delete('sh0');
         this.streams.textures.delete('sh_labels');
         this.streams.textures.delete('sh_centroids');
+        this.streams.textures.delete('blind');
         this.streams.textures.delete('sogCodebook');
         /** @type {GSplatSogData} */ (this.gsplatData).destroy();
         super._actualDestroy();
@@ -131,7 +146,7 @@ class GSplatSogResource extends GSplatResourceBase {
             this.parameters.set('means_maxs', meta.means.maxs);
         }
 
-        if (meta.version !== 2) {
+        if (!(meta.version >= 2)) {
             // V1: upload full min/max arrays for linear dequantization
             if (meta.scales) {
                 this.parameters.set('scales_mins', meta.scales.mins);
@@ -151,8 +166,13 @@ class GSplatSogResource extends GSplatResourceBase {
     configureMaterialDefines(defines) {
         const gsplatData = /** @type {GSplatSogData} */ (this.gsplatData);
         defines.set('SH_BANDS', gsplatData.shBands);
-        if (gsplatData.meta.version === 2) {
-            defines.set('SOG_V2', '');
+        const { meta } = gsplatData;
+        // the format version (v1 files have none): 2 and up dequantize through codebooks, 3 adds the
+        // exp-map rotations, squared opacity and 24-bit SH labels
+        defines.set('SOG_VERSION', meta.version ?? 1);
+        if (gsplatData.blind) {
+            defines.set('SOG_BLIND', '');
+            defines.set('SOG_BLIND_BYTES', meta.blind.bytes);
         }
     }
 
@@ -160,6 +180,10 @@ class GSplatSogResource extends GSplatResourceBase {
     // letting color-only (SH) updates skip the means/quats/scales source reads
     get supportsWorkBufferGeometry() {
         return true;
+    }
+
+    get extras() {
+        return /** @type {GSplatSogData} */ (this.gsplatData).meta.extras;
     }
 }
 

@@ -96,10 +96,15 @@ class GSplatResource extends GSplatResourceBase {
         defines.set('SH_BANDS', this.shBands);
     }
 
+    get extras() {
+        return this.gsplatData.extras;
+    }
+
     /**
      * Updates pixel data of splatColor texture based on the supplied color components and opacity.
      * Assumes that the texture is using an RGBA format where RGB are color components influenced
-     * by SH spherical harmonics and A is opacity after a sigmoid transformation.
+     * by SH spherical harmonics and A is opacity after a sigmoid transformation, plus the optional
+     * `opacity_excess` property: the opacity above 1 that merged (decimated) gaussians carry.
      *
      * @param {GSplatData} gsplatData - The source data
      * @ignore
@@ -116,6 +121,7 @@ class GSplatResource extends GSplatResourceBase {
         const cg = gsplatData.getProp('f_dc_1');
         const cb = gsplatData.getProp('f_dc_2');
         const ca = gsplatData.getProp('opacity');
+        const excess = gsplatData.getProp('opacity_excess');
         const activated = gsplatData.activated;
 
         const SH_C0 = 0.28209479177387814;
@@ -124,7 +130,11 @@ class GSplatResource extends GSplatResourceBase {
             const r = (cr[i] * SH_C0 + 0.5);
             const g = (cg[i] * SH_C0 + 0.5);
             const b = (cb[i] * SH_C0 + 0.5);
-            const a = activated ? ca[i] : 1 / (1 + Math.exp(-ca[i]));
+            let a = activated ? ca[i] : 1 / (1 + Math.exp(-ca[i]));
+            if (excess && excess[i] > 0) {
+                // drawn up to 1.5625, the top of the SOG v3 opacity byte (see gsplatHelpersVS)
+                a = Math.min(a + excess[i], 1.5625);
+            }
 
             data[i * 4 + 0] = float2Half(r);
             data[i * 4 + 1] = float2Half(g);

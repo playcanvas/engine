@@ -258,8 +258,13 @@ class SogBundleParser {
                 return;
             }
 
-            // extract filenames from meta.json
-            const filenames = ['means', 'scales', 'quats', 'sh0', 'shN'].map(key => meta[key]?.files ?? []).flat();
+            if (meta.version !== undefined && meta.version !== 2 && meta.version !== 3) {
+                callback(`Error loading gsplat: unsupported SOG version ${meta.version} in ${url.original}`);
+                return;
+            }
+
+            // extract filenames from meta.json (v3 has no quats and may carry blind data)
+            const filenames = ['means', 'scales', 'quats', 'sh0', 'shN', 'blind'].map(key => meta[key]?.files ?? []).flat();
 
             const promises = [];
             for (const filename of filenames) {
@@ -333,11 +338,12 @@ class SogBundleParser {
             data.numSplats = meta.count;
             data.means_l = textures[meta.means.files[0]].resource;
             data.means_u = textures[meta.means.files[1]].resource;
-            data.quats = textures[meta.quats.files[0]].resource;
+            data.quats = meta.quats ? textures[meta.quats.files[0]].resource : null;
             data.scales = textures[meta.scales.files[0]].resource;
             data.sh0 = textures[meta.sh0.files[0]].resource;
             data.sh_centroids = textures[meta.shN?.files[0]]?.resource;
             data.sh_labels = textures[meta.shN?.files[1]]?.resource;
+            data.blind = meta.blind ? textures[meta.blind.files[0]]?.resource ?? null : null;
             data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
             if (!decompress) {

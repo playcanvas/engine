@@ -62,7 +62,20 @@ varying @interpolate(flat, either) gaussianColor: half4;
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
-    let A: half = dot(gaussianUV, gaussianUV);
+    var A: half = dot(gaussianUV, gaussianUV);
+
+    // over-unity opacity (see gsplatHelpersVS): an alpha above 1 is 1 + the core radius, drawn with peak
+    // alpha 1 as the plain gaussian's falloff stretched from the core to the quad edge. Overdraw mode
+    // passes a scaled opacity instead, so it keeps the plain profile.
+    var peak: half = gaussianColor.a;
+    #ifndef GSPLAT_OVERDRAW
+        if (peak > half(1.0)) {
+            let core = f32(peak) - 1.0;
+            let c = max(0.0, sqrt(f32(A)) - core) / (1.0 - core);
+            A = half(c * c);
+            peak = half(1.0);
+        }
+    #endif
 
     // note: no early return after the discard - it would make the control flow non-uniform,
     // preventing user gsplatModifyPS chunks from using derivatives (fwidth etc.)
@@ -71,7 +84,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     }
 
     // evaluate alpha
-    var alpha: half = normExp(A) * gaussianColor.a;
+    var alpha: half = normExp(A) * peak;
 
     #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
         if (alpha < half(uniform.alphaClip)) {

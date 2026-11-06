@@ -30,4 +30,19 @@ bool gsplatFootprintSmallerThan(float a, float b, float c, float size) {
     float t = size * size * 0.125;
     return t > 0.5 * (a + c) && (t - a) * (t - c) > b * b;
 }
+
+// Over-unity opacity: a gaussian whose opacity A exceeds 1 - the mass of several gaussians merged by
+// decimation, stored by SOG v3 and the PLY opacity_excess column up to 1.5625, the top of the SOG v3
+// opacity byte - is drawn with peak alpha 1 as an opaque core of radius u0, a fraction of the quad, with the
+// plain gaussian's falloff stretched over the rest of the quad: normExp(((r - u0) / (1 - u0))^2), r = |uv|.
+// The quad, culls and extent are therefore the plain gaussian's, and u0 = 0 is the plain gaussian.
+
+// The core radius u0 for opacity A: 0 up to A = 1. The drawn mass relative to a plain gaussian of opacity 1
+// is 1 + (a u0^2 + b u0) / G1, where G0 and G1 integrate normExp(c^2) and c normExp(c^2) over c in [0, 1],
+// a = 1/2 - G0 + G1 and b = G0 - 2 G1, so the u0 drawing exactly A times that mass is this root
+// (u0 <= 0.2625).
+float gsplatPlateauCore(float A) {
+    float t = clamp(A - 1.0, 0.0, 0.5625);
+    return sqrt(0.28986718 + 0.62504992 * t) - 0.53839315;
+}
 `;
