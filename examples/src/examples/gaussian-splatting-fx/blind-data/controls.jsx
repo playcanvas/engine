@@ -3,6 +3,7 @@ import {
     BooleanInput,
     LabelGroup,
     Panel,
+    SelectInput,
     SliderInput
 } from '@playcanvas/pcui/react';
 
@@ -18,6 +19,19 @@ import {
 export function Controls({ observer }) {
     return (
         <Panel headerText='Settings'>
+            <LabelGroup text='View'>
+                <SelectInput
+                    type='number'
+                    binding={new BindingTwoWay()}
+                    link={{ observer, path: 'view' }}
+                    value={observer.get('view') ?? 0}
+                    options={[
+                        { v: 0, t: 'Effect' },
+                        { v: 1, t: 'Logo Field' },
+                        { v: 2, t: 'Edge Field' }
+                    ]}
+                />
+            </LabelGroup>
             <LabelGroup text='Animate'>
                 <BooleanInput
                     type='toggle'

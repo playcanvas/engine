@@ -1,7 +1,8 @@
 // @config
 //
 // Shows per-gaussian blind data stored in a SOG v3 file, used to add a shine to the logo and
-// recolor the rest of the splat with hue waves running out from the logo.
+// recolor the rest of the splat with hue waves running out from the logo. The View option shows the
+// blind fields themselves.
 
 import {
     AppBase,
@@ -105,6 +106,7 @@ camera.script.create(CameraControls, {
     }
 });
 
+data.set('view', 0);
 data.set('animate', true);
 data.set('shine', 1);
 data.set('hue', 0);
@@ -117,6 +119,7 @@ const updateParameters = () => {
     logo.gsplat.setParameter('uShine', data.get('shine'));
     logo.gsplat.setParameter('uHue', ((data.get('hue') + time * 30) * Math.PI) / 180);
     logo.gsplat.setParameter('uWaves', data.get('waves'));
+    logo.gsplat.setParameter('uView', data.get('view'));
 };
 updateParameters();
 data.on('*:set', updateParameters);
