@@ -4,8 +4,8 @@ export default /* glsl */`
 // the 'bytes' little-endian bytes of an RGBA8 texel starting at byte 'offset' (0 = R)
 uint sogBlindBits(vec4 texel, uint offset, uint bytes) {
     uvec4 b = uvec4(texel * 255.0 + 0.5);
-    uint packed = b.x | (b.y << 8u) | (b.z << 16u) | (b.w << 24u);
-    return (packed >> (8u * offset)) & (0xffffffffu >> (32u - 8u * bytes));
+    uint word = b.x | (b.y << 8u) | (b.z << 16u) | (b.w << 24u);
+    return (word >> (8u * offset)) & (0xffffffffu >> (32u - 8u * bytes));
 }
 
 float sogBlindF16(uint bits) {

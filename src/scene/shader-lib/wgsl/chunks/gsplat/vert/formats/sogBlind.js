@@ -4,8 +4,8 @@ export default /* wgsl */`
 // the 'bytes' little-endian bytes of an RGBA8 texel starting at byte 'offset' (0 = R)
 fn sogBlindBits(texel: vec4f, offset: u32, bytes: u32) -> u32 {
     let b = vec4u(texel * 255.0 + 0.5);
-    let packed = b.x | (b.y << 8u) | (b.z << 16u) | (b.w << 24u);
-    return (packed >> (8u * offset)) & (0xffffffffu >> (32u - 8u * bytes));
+    let word = b.x | (b.y << 8u) | (b.z << 16u) | (b.w << 24u);
+    return (word >> (8u * offset)) & (0xffffffffu >> (32u - 8u * bytes));
 }
 
 fn sogBlindF16(bits: u32) -> f32 {
