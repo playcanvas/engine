@@ -266,7 +266,8 @@ fn main(
             alpha = clr.a;
         #endif
 
-        valid = true;
+        // cull splats the color modifier faded out, so they get no slot, cache entry or sort key
+        valid = alpha > uniforms.alphaClip;
     }
 
     // Reserve a per-workgroup slot for this thread.
