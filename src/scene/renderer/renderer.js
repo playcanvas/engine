@@ -1,6 +1,7 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
+import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
@@ -67,6 +68,7 @@ const _dynamicBindGroup = new DynamicBindGroup();
 // Reusable scratch passed to GraphicsDevice.clear so the per-frame call site
 // does not allocate a fresh options object + color array.
 const _tempClearColor = [0, 0, 0, 1];
+const _tempClearColorLinear = new Color();
 const _tempClearOptions = {
     color: _tempClearColor,
     depth: 1,
@@ -663,8 +665,12 @@ class Renderer {
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
             // this clear is not attachment aware, and clears all the color attachments of the
-            // render target to the color of the attachment 0
-            const c = camera._clearColor;
+            // render target to the color of the attachment 0. The color is in sRGB space, and a
+            // color buffer of an sRGB format encodes the value it is cleared to, so it is cleared
+            // to the linear value instead
+            const srgb = (flags & CLEARFLAG_COLOR) !== 0 &&
+                (device.renderTarget ?? device.backBuffer)?.isColorBufferSrgb(0);
+            const c = srgb ? _tempClearColorLinear.linear(camera._clearColor) : camera._clearColor;
             _tempClearColor[0] = c.r;
             _tempClearColor[1] = c.g;
             _tempClearColor[2] = c.b;
