@@ -261,12 +261,14 @@ class SpriteComponentSystem extends ComponentSystem {
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
                 const { entity } = components[id];
-                // if sprite component is enabled advance its current clip
+                // if sprite component is enabled advance its current clip, and follow any change
+                // to the filtering of a 9-sliced frame's texture
                 if (entity.sprite.enabled && entity.enabled) {
                     const sprite = entity.sprite;
                     if (sprite._currentClip) {
                         sprite._currentClip._update(dt);
                     }
+                    sprite._tileHalfTexel.update();
                 }
             }
         }
