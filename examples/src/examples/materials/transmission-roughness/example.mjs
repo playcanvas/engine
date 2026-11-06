@@ -16,6 +16,7 @@ import {
     FILLMODE_FILL_WINDOW,
     Keyboard,
     LightComponentSystem,
+    MIPMAPFILTER_GAUSSIAN,
     Mouse,
     Quat,
     RESOLUTION_AUTO,
@@ -112,6 +113,9 @@ camera.addComponent('camera', {
 
 // The color grab pass is needed for transmission effects
 camera.camera.requestSceneColorMap(true);
+
+// Gaussian mip levels give smooth blur for rough transmission, instead of the blocky default box filter
+camera.camera.sceneColorMapMipmapFilter = MIPMAPFILTER_GAUSSIAN;
 
 camera.setLocalPosition(2.1, 0, 0);
 camera.addComponent('script');
