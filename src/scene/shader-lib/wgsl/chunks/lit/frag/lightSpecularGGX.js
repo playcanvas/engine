@@ -15,9 +15,8 @@ fn calcLightSpecular(gloss: f32, worldNormal: vec3f, viewDir: vec3f, h: vec3f, l
     let D: f32 = alpha / (PI * denom * denom);
 
     // Smith G (height-correlated)
-    let alpha2: f32 = alpha * alpha;
-    let lambdaV: f32 = NoL * sqrt(NoV * NoV * (1.0 - alpha2) + alpha2);
-    let lambdaL: f32 = NoV * sqrt(NoL * NoL * (1.0 - alpha2) + alpha2);
+    let lambdaV: f32 = NoL * sqrt(NoV * NoV * (1.0 - alpha) + alpha);
+    let lambdaL: f32 = NoV * sqrt(NoL * NoL * (1.0 - alpha) + alpha);
     let G: f32 = 0.5 / max(lambdaV + lambdaL, 0.00001);
 
     return D * G;
