@@ -308,7 +308,7 @@ data.set('data', {
     antialias: 'auto',
     // the screen-space filter the anti-aliased splats were trained with, in pixels squared: 0.3 for
     // gsplat's anti-aliased mode, 0.1 for Mip-Splatting and Brush's mip mode
-    antiAliasFilterSize: 0.3,
+    antiAliasFilterSize: 0.1,
     // re-evaluate spherical harmonics every frame the camera moves, as with higher SH bands
     // even a degree of stale view direction is visible
     colorUpdateAngle: 0,
