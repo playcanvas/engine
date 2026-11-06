@@ -1,7 +1,6 @@
 // @config
 //
-// The vertex positions of the statue's meshes are modified on the CPU every frame, and uploaded
-// with `mesh.setPositions()` and `mesh.update()`.
+// The vertex positions of the statue's meshes are modified on the CPU every frame.
 
 import {
     AppBase,
