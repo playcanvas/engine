@@ -1,5 +1,7 @@
 // @config
 //
+// Lights specified in physical units (lumens, lux), exposed through a camera with aperture, shutter and ISO.
+//
 // @credit
 // title: Sheen Chair
 // author: Wayfair LLC
@@ -13,15 +15,19 @@ import {
     AssetListLoader,
     CULLFACE_NONE,
     CameraComponentSystem,
+    CameraFrame,
     Color,
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
+    FOG_EXP2,
+    Gizmo,
     JsonHandler,
     Keyboard,
     LIGHTFALLOFF_INVERSESQUARED,
     LIGHTSHAPE_RECT,
     LightComponentSystem,
+    LightGizmo,
     Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -40,10 +46,6 @@ import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType, win } from 'examples/context';
 
-/**
- * @import { LightComponent } from 'playcanvas'
- */
-
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
@@ -54,11 +56,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    lights: new Asset('lights', 'container', { url: './assets/models/Lights.glb' }),
     sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
-    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
-    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
     luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
 };
 
@@ -103,9 +101,17 @@ await new Promise((resolve) => {
 
 app.start();
 
+// Dark gallery look: the environment only provides soft ambient light, the skybox itself is hidden
+const backgroundColor = new Color(0.02, 0.022, 0.03);
 app.scene.skyboxMip = 1;
-app.scene.ambientLight.set(1, 0, 0);
-app.scene.ambientLuminance = 20000;
+app.scene.layers.getLayerByName('Skybox').enabled = false;
+app.scene.ambientLight.set(0.5, 0.55, 0.7);
+app.scene.ambientLuminance = 4000;
+
+// Fade the floor into the background
+app.scene.fog.type = FOG_EXP2;
+app.scene.fog.color.copy(backgroundColor);
+app.scene.fog.density = 0.03;
 
 // Enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
@@ -114,44 +120,29 @@ app.scene.lighting.areaLightsEnabled = true;
 const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
-const sheen1 = assets.sheen.resource.instantiateRenderEntity({
-    castShadows: true
+// A row of chairs in alternating fabrics, the outer ones turned in a little
+[
+    { x: 0.3, z: -2.5, yaw: 15, variant: 'Peacock Velvet' },
+    { x: 4, z: 0, yaw: 0, variant: 'Peacock Velvet' },
+    { x: 7, z: 0, yaw: 0, variant: 'Mango Velvet' },
+    { x: 10, z: -2.5, yaw: -15, variant: 'Mango Velvet' }
+].forEach(({ x, z, yaw, variant }) => {
+    const chair = assets.sheen.resource.instantiateRenderEntity({
+        castShadows: true
+    });
+    chair.setLocalScale(3, 3, 3);
+    chair.setLocalPosition(x, -1.0, z);
+    chair.setLocalEulerAngles(0, yaw, 0);
+    assets.sheen.resource.applyMaterialVariant(chair, variant);
+    app.root.addChild(chair);
 });
-sheen1.setLocalScale(new Vec3(3, 3, 3));
-sheen1.setLocalPosition(7, -1.0, 0);
-app.root.addChild(sheen1);
 
-const sheen2 = assets.sheen.resource.instantiateRenderEntity({
-    castShadows: true
-});
-sheen2.setLocalScale(new Vec3(3, 3, 3));
-sheen2.setLocalPosition(4, -1.0, 0);
-assets.sheen.resource.applyMaterialVariant(sheen2, 'Peacock Velvet');
-app.root.addChild(sheen2);
-
-const lights = assets.lights.resource.instantiateRenderEntity({
-    castShadows: true
-});
-// Enable all lights from the glb
-/** @type {Array<LightComponent>} */
-const lightComponents = lights.findComponents('light');
-lightComponents.forEach((component) => {
-    component.enabled = true;
-});
-lights.setLocalPosition(10, 0, 0);
-app.root.addChild(lights);
-
+// Dark polished floor
 const material = new StandardMaterial();
-material.diffuseMap = assets.color.resource;
-material.normalMap = assets.normal.resource;
-material.gloss = 0.8;
-material.glossMap = assets.gloss.resource;
-material.metalness = 0.7;
-material.useMetalness = true;
-
-material.diffuseMapTiling.set(17, 17);
-material.normalMapTiling.set(17, 17);
-material.glossMapTiling.set(17, 17);
+material.diffuse = new Color(0.15, 0.15, 0.17);
+material.gloss = 0.65;
+material.useMetalness = false;
+material.specular = new Color(0.7, 0.7, 0.7);
 material.update();
 
 const plane = new Entity();
@@ -159,7 +150,7 @@ plane.addComponent('render', {
     type: 'plane',
     material: material
 });
-plane.setLocalScale(new Vec3(100, 0, 100));
+plane.setLocalScale(new Vec3(300, 0, 300));
 plane.setLocalPosition(0, -1.0, 0);
 app.root.addChild(plane);
 
@@ -168,16 +159,19 @@ data.set('script', {
         luminance: 100000
     },
     sky: {
-        luminance: 20000
+        luminance: 6000
     },
     spot: {
-        luminance: 200000,
-        aperture: 45
+        enabled: true,
+        luminance: 600000,
+        aperture: 30
     },
     point: {
-        luminance: 100000
+        enabled: true,
+        luminance: 1200000
     },
     rect: {
+        enabled: true,
         luminance: 200000
     },
     camera: {
@@ -201,7 +195,7 @@ app.scene.skyboxLuminance = data.get('script.sky.luminance');
 const directionalLight = new Entity();
 directionalLight.addComponent('light', {
     type: 'directional',
-    color: Color.WHITE,
+    color: new Color(1, 0.94, 0.85),
     castShadows: true,
     luminance: data.get('script.sun.luminance'),
     shadowBias: 0.2,
@@ -214,20 +208,24 @@ app.root.addChild(directionalLight);
 const omniLight = new Entity();
 omniLight.addComponent('light', {
     type: 'omni',
-    color: Color.WHITE,
+    range: 7,
+    falloffMode: LIGHTFALLOFF_INVERSESQUARED,
+    color: new Color(1, 0.4, 0.75),
     castShadows: false,
     luminance: data.get('script.point.luminance'),
     shadowBias: 0.2,
     normalOffsetBias: 0.05,
     shadowResolution: 2048
 });
-omniLight.setLocalPosition(0, 5, 0);
+omniLight.setLocalPosition(-0.5, 1.2, -5);
 app.root.addChild(omniLight);
 
 const spotLight = new Entity();
 spotLight.addComponent('light', {
     type: 'spot',
-    color: Color.WHITE,
+    range: 8,
+    falloffMode: LIGHTFALLOFF_INVERSESQUARED,
+    color: new Color(0.55, 0.75, 1),
     castShadows: false,
     luminance: data.get('script.spot.luminance'),
     shadowBias: 0.2,
@@ -236,15 +234,17 @@ spotLight.addComponent('light', {
     outerConeAngle: data.get('script.spot.aperture'),
     innerConeAngle: 0
 });
-spotLight.setEulerAngles(0, 0, 0);
-spotLight.setLocalPosition(10, 5, 5);
+spotLight.setLocalPosition(10, 1.5, -5);
+// A spot light shines along its local -Y axis
+spotLight.lookAt(new Vec3(9.5, 0, 0));
+spotLight.rotateLocal(90, 0, 0);
 app.root.addChild(spotLight);
 
 const areaLight = new Entity();
 areaLight.addComponent('light', {
     type: 'spot',
     shape: LIGHTSHAPE_RECT,
-    color: Color.YELLOW,
+    color: new Color(1, 0.72, 0.38),
     range: 9999,
     luminance: data.get('script.rect.luminance'),
     falloffMode: LIGHTFALLOFF_INVERSESQUARED,
@@ -258,7 +258,7 @@ areaLight.setLocalPosition(5, 3, -5);
 
 // Emissive material that is the light source color
 const brightMaterial = new StandardMaterial();
-brightMaterial.emissive = Color.YELLOW;
+brightMaterial.emissive = areaLight.light.color;
 brightMaterial.emissiveIntensity = areaLight.light.luminance;
 brightMaterial.useLighting = false;
 brightMaterial.cull = CULLFACE_NONE;
@@ -277,24 +277,38 @@ app.root.addChild(areaLight);
 // Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new Color(0.4, 0.45, 0.5),
+    clearColor: backgroundColor,
+    fov: 40,
     aperture: data.get('script.camera.aperture'),
     shutter: 1 / data.get('script.camera.shutter'),
     sensitivity: data.get('script.camera.sensitivity')
 });
-camera.setLocalPosition(0, 5, 11);
+camera.setLocalPosition(11, 4, 13);
 
 camera.camera.requestSceneColorMap(true);
 camera.addComponent('script');
 camera.script.create(CameraControls, {
     properties: {
         enableFly: false,
-        focusPoint: new Vec3(7, 0.03, 0.03),
+        focusPoint: new Vec3(6.5, 1.5, -1),
         pitchRange: new Vec2(-90, 90),
         zoomRange: new Vec2(1, 400)
     }
 });
 app.root.addChild(camera);
+
+// Tone mapping and vignette
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
+cameraFrame.vignette.intensity = 0.6;
+cameraFrame.update();
+
+// Draw the shape of each light, in the color of the light
+const gizmoLayer = Gizmo.createLayer(app, 'Helpers', undefined, true);
+const lightGizmo = new LightGizmo(camera.camera, gizmoLayer);
+lightGizmo.handles = false;
+lightGizmo.useLightColor = true;
+lightGizmo.attach([omniLight, spotLight]);
 
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'script.sun.luminance') {
@@ -307,6 +321,13 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         spotLight.light.outerConeAngle = value;
     } else if (path === 'script.point.luminance') {
         omniLight.light.luminance = value;
+    } else if (path === 'script.spot.enabled') {
+        spotLight.enabled = value;
+    } else if (path === 'script.point.enabled') {
+        omniLight.enabled = value;
+    } else if (path === 'script.rect.enabled') {
+        // also hides the emissive shape, which is a child of the light
+        areaLight.enabled = value;
     } else if (path === 'script.rect.luminance') {
         areaLight.light.luminance = value;
         brightMaterial.emissiveIntensity = value;
