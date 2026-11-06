@@ -41,6 +41,7 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GSplatTrees } from 'playcanvas/scripts/esm/gsplat/gsplat-trees.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -81,8 +82,8 @@ app.on('destroy', () => window.removeEventListener('resize', resize));
 const CAPTURE = {
     splatUrl: './assets/splats/saint-germain-villas.sog',
     // the view of the whole plot, turning around the middle of the houses
-    focusPoint: [-7.25, 3, -0.75],
-    cameraPosition: [-75.89, 40.83, -20.0],
+    focusPoint: /** @type {[number, number, number]} */ ([-7.25, 3, -0.75]),
+    cameraPosition: /** @type {[number, number, number]} */ ([-75.89, 40.83, -20.0]),
 
     // the villas still for sale, by number. The rest are sold.
     available: [2, 4, 6, 7, 9],
@@ -99,7 +100,7 @@ const CAPTURE = {
     // the villas, each the rectangles of its roofs: x0, x1, z0, z1, the height of the eaves, the kind of roof
     // - a gable with its ridge along x or z, or a shed, a single slope falling along z or x, away from the
     // main block - and how far the roof rises above the eaves
-    villas: [
+    villas: /** @type {{ name: string, rects: [number, number, number, number, number, string, number][] }[]} */ ([
         {
             name: 'Villa 1',
             rects: [
@@ -160,7 +161,31 @@ const CAPTURE = {
                 [-12.7, -6.8, 13.6, 16.9, 1.6, 'shed-z', 0.9]
             ]
         }
-    ],
+    ]),
+
+    // the trees, which the wind sways: x, z and the radius of the canopy, read off a top-down view
+    trees: /** @type {[number, number, number][]} */ ([
+        [-1.2, -25.6, 2.6],
+        [-26.0, -18.2, 2.2],
+        [-12.2, -18.6, 2.0],
+        [4.4, -13.2, 1.8],
+        [16.4, -15.6, 2.4],
+        [-32.8, -19.2, 2.4],
+        [-3.2, -3.6, 2.0],
+        [5.2, -0.8, 2.2],
+        [16.8, -3.2, 2.4],
+        [-18.8, -1.6, 2.4],
+        [-21.2, -4.6, 2.2],
+        [-21.4, 5.2, 2.8],
+        [-18.0, 12.0, 2.2],
+        [-14.8, 13.6, 2.2],
+        [10.0, 13.6, 2.2],
+        [16.4, 10.4, 2.4],
+        [-20.8, 17.2, 2.4],
+        [-19.2, 23.6, 2.4],
+        [-9.2, 26.8, 2.2],
+        [10.4, 28.4, 2.4]
+    ]),
 
     // the height of the ground the villas stand on
     groundY: 1.6,
@@ -206,6 +231,8 @@ const random = () => {
  * @property {string} tower - Tower name.
  * @property {number} floor - Floor number.
  * @property {number} floors - The floors of the tower.
+ * @property {boolean} villa - Whether it is a whole villa rather than an apartment.
+ * @property {number} plot - The area of the plot, for a villa.
  * @property {string} view - What the apartment looks out on.
  * @property {typeof VILLA_LAYOUTS[0]} layout - The layout.
  * @property {number} price - Asking price.
@@ -412,7 +439,8 @@ data.set('settings', {
     fill: 0.3,
     outline: 1,
     layout: -1,
-    maxPrice: 1000
+    maxPrice: 1000,
+    wind: 0.2
 });
 
 // ------ Camera ------
@@ -453,6 +481,25 @@ app.root.addChild(splat);
 app.scene.gsplat.splatBudget = 1000000;
 app.scene.gsplat.radialSorting = true;
 app.scene.gsplat.sceneDepthWrite = true;
+
+// ------ Wind ------
+// The trees sway with the reusable GSplatTrees script, see gaussian-splatting-fx/wind. Each tree is a
+// sphere with its bottom on the ground, a little larger than the canopy, and the splats in it sway more
+// the higher they are, so the trunks stay put. The trees are small, so the sway is too.
+splat.addComponent('script');
+const trees = /** @type {GSplatTrees} */ (/** @type {any} */ (splat.script).create(GSplatTrees));
+Object.assign(trees, { speed: 0.9, direction: 30, gustiness: 0.5, flutter: 0.35 });
+trees.setSpheres(
+    CAPTURE.trees.map(([x, z, canopy]) => {
+        const radius = canopy + 0.6;
+        return { center: new Vec3(x, CAPTURE.groundY + radius, z), radius };
+    })
+);
+const applyWind = () => {
+    trees.strength = data.get('settings.wind');
+};
+applyWind();
+data.on('settings.wind:set', applyWind);
 
 // ------ Camera frame ------
 // Something has to consume the scene depth for the camera to render it. This effect owns no pass and

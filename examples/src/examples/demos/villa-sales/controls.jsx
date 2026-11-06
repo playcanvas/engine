@@ -18,6 +18,17 @@ import {
 export function Controls({ observer }) {
     return (
         <>
+            <Panel headerText='Wind' collapsible collapsed>
+                <LabelGroup text='Strength'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.wind' }}
+                        min={0}
+                        max={0.5}
+                        precision={2}
+                    />
+                </LabelGroup>
+            </Panel>
             <Panel headerText='Overlay' collapsible collapsed>
                 <LabelGroup text='Show'>
                     <BooleanInput
