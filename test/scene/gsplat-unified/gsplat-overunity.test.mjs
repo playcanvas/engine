@@ -46,13 +46,13 @@ describe('gsplatHelpersVS plateau core', function () {
     });
 });
 
-describe('GSplatResource opacity_excess', function () {
-    // Two PLY-style gaussians: logit opacity 0 (= 0.5), with an optional opacity_excess column.
-    const makeData = (excess) => {
+describe('GSplatResource opacity_linear', function () {
+    // Two PLY-style gaussians: logit opacity 0 (= 0.5), with an optional opacity_linear column.
+    const makeData = (linear) => {
         const props = { x: 0, y: 0, z: 0, rot_0: 1, rot_1: 0, rot_2: 0, rot_3: 0, scale_0: 0, scale_1: 0, scale_2: 0, f_dc_0: 0, f_dc_1: 0, f_dc_2: 0, opacity: 0 };
         const properties = Object.entries(props).map(([name, v]) => ({ type: 'float', name, storage: new Float32Array(2).fill(v), byteSize: 4 }));
-        if (excess) {
-            properties.push({ type: 'float', name: 'opacity_excess', storage: Float32Array.from(excess), byteSize: 4 });
+        if (linear) {
+            properties.push({ type: 'float', name: 'opacity_linear', storage: Float32Array.from(linear), byteSize: 4 });
         }
         return new GSplatData([{ name: 'vertex', count: 2, properties }]);
     };
@@ -61,21 +61,27 @@ describe('GSplatResource opacity_excess', function () {
         return [levels[3], levels[7]];
     };
 
-    it('adds opacity_excess to the uploaded opacity, clamped at 1.5625', function () {
+    it('uploads opacity_linear as the opacity, clamped at 1.5625', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
-        const resource = new GSplatResource(device, makeData([2.5, 0.75]));
+        const resource = new GSplatResource(device, makeData([3, 1.25]));
         expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(1.5625), FloatPacking.float2Half(1.25)]);
         resource.destroy();
         device.destroy();
     });
 
-    it('is unchanged without excess', function () {
+    it('always wins over the opacity logit', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
-        for (const data of [makeData(null), makeData([0, 0])]) {
-            const resource = new GSplatResource(device, data);
-            expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(0.5), FloatPacking.float2Half(0.5)]);
-            resource.destroy();
-        }
+        const resource = new GSplatResource(device, makeData([0, 0.25]));
+        expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(0), FloatPacking.float2Half(0.25)]);
+        resource.destroy();
+        device.destroy();
+    });
+
+    it('uses the opacity logit without the column', function () {
+        const device = new NullGraphicsDevice({ width: 1, height: 1 });
+        const resource = new GSplatResource(device, makeData(null));
+        expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(0.5), FloatPacking.float2Half(0.5)]);
+        resource.destroy();
         device.destroy();
     });
 
