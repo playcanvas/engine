@@ -206,11 +206,11 @@ class GSplatSogData {
     sh_labels;
 
     /**
-     * V3 per-gaussian blind data (RGBA8, little-endian bytes), or null.
+     * V3 per-gaussian blind data textures (RGBA8), one per `meta.blind` entry.
      *
-     * @type {Texture|null}
+     * @type {Texture[]}
      */
-    blind = null;
+    blind = [];
 
     /**
      * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
@@ -257,7 +257,7 @@ class GSplatSogData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
-        this.blind?.destroy();
+        this.blind.forEach(t => t.destroy());
         this.codebookTexture?.destroy();
         this.codebookTexture = null;
     }
@@ -339,14 +339,14 @@ class GSplatSogData {
         // f_rest columns: 45 (3 bands, lower bands zero-padded) or 72 with a 4th band
         const restCount = shBands > 3 ? 72 : 45;
 
-        // copy back gpu texture data so cpu iterator has access to it
-        const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids, blind } = this;
+        // copy back gpu texture data so cpu iterator has access to it (v3 blind data is only read
+        // on the GPU, through the generated getBlind_<name>() accessors)
+        const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = this;
         means_l._levels[0] = await readImageDataAsync(means_l);
         means_u._levels[0] = await readImageDataAsync(means_u);
         if (quats) quats._levels[0] = await readImageDataAsync(quats);
         scales._levels[0] = await readImageDataAsync(scales);
         sh0._levels[0] = await readImageDataAsync(sh0);
-        const blindData = blind ? await readImageDataAsync(blind) : null;
 
         // allocate spherical harmonics data
         if (shBands > 0) {
@@ -420,20 +420,6 @@ class GSplatSogData {
                 storage: data[name]
             };
         });
-
-        // v3 blind data: little-endian bytes, as an unsigned integer column under its own name
-        if (blindData) {
-            const bytes = meta.blind.bytes;
-            const values = new Uint32Array(this.numSplats);
-            for (let i = 0; i < this.numSplats; ++i) {
-                let v = blindData[i * 4];
-                if (bytes > 1) v |= blindData[i * 4 + 1] << 8;
-                if (bytes > 2) v |= blindData[i * 4 + 2] << 16;
-                if (bytes > 3) v |= blindData[i * 4 + 3] << 24;
-                values[i] = v >>> 0;
-            }
-            properties.push({ name: meta.blind.name, type: 'uint', byteSize: 4, storage: values });
-        }
 
         const result = new GSplatData([{
             name: 'vertex',

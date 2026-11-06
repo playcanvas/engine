@@ -98,23 +98,5 @@ vec4 getColor() {
     return vec4(vec3(0.5) + rgb * SH_C0, alpha);
 }
 
-#ifdef SOG_BLIND
-// per-gaussian user data: SOG_BLIND_BYTES little-endian bytes of the blind texture
-uint getBlind() {
-    uvec4 b = uvec4(texelFetch(blind, splat.uv, 0) * 255.0 + 0.5);
-    uint v = b.x;
-    #if SOG_BLIND_BYTES > 1
-        v |= b.y << 8u;
-    #endif
-    #if SOG_BLIND_BYTES > 2
-        v |= b.z << 16u;
-    #endif
-    #if SOG_BLIND_BYTES > 3
-        v |= b.w << 24u;
-    #endif
-    return v;
-}
-#endif
-
 #include "gsplatSogSHVS"
 `;

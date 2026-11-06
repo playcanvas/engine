@@ -1,8 +1,10 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
 import { Quat } from '../../src/core/math/quat.js';
 import { Vec3 } from '../../src/core/math/vec3.js';
 import { Vec4 } from '../../src/core/math/vec4.js';
+import { blindAccessors, parseBlindFields } from '../../src/scene/gsplat/gsplat-sog-blind.js';
 import { GSplatSogData } from '../../src/scene/gsplat/gsplat-sog-data.js';
 import { GSplatSogResource } from '../../src/scene/gsplat/gsplat-sog-resource.js';
 import { GSplatOctreeResource } from '../../src/scene/gsplat-unified/gsplat-octree.resource.js';
@@ -117,5 +119,54 @@ describe('GSplatSogData v3', function () {
         expect(lod.extras).to.equal(extras);
         const none = Object.assign(Object.create(GSplatSogResource.prototype), { gsplatData: { meta: { version: 2 } } });
         expect(none.extras).to.equal(undefined);
+    });
+});
+
+describe('SOG v3 blind data', function () {
+    const blindMeta = {
+        blind: [
+            { files: ['blind_0.webp'], fields: [{ name: 'weight', type: 'f16' }, { name: 'seg-id', type: 'u16' }] },
+            { files: ['blind_1.webp'], fields: [{ name: 'depth', type: 'unorm8', range: [0.5, 2] }] },
+            { files: ['blind_2.webp'], fields: [{ name: 'f', type: 'f32' }] }
+        ]
+    };
+
+    it('packs fields in order with sanitized identifiers', function () {
+        const fields = parseBlindFields(blindMeta);
+        expect(fields.map(f => [f.texture, f.name, f.id, f.offset, f.bytes, f.min, f.max])).to.deep.equal([
+            [0, 'weight', 'weight', 0, 2, 0, 1],
+            [0, 'seg-id', 'seg_id', 2, 2, 0, 1],
+            [1, 'depth', 'depth', 0, 1, 0.5, 2],
+            [2, 'f', 'f', 0, 4, 0, 1]
+        ]);
+        expect(parseBlindFields({ blind: [{ files: ['a'], fields: [{ name: '_a', type: 'u8' }, { name: '-b-c-', type: 'u8' }] }] }).map(f => f.id)).to.deep.equal(['a', 'b_c']);
+        expect(parseBlindFields({})).to.deep.equal([]);
+    });
+
+    it('reports invalid fields in debug builds', function () {
+        const error = stub(console, 'error');
+        parseBlindFields({
+            blind: [{ files: ['a'], fields: [{ name: 'a', type: 'u9' }, { name: 'a', type: 'u32' }, { name: '_', type: 'u8' }] }]
+        });
+        const messages = error.args.map(args => args.join(' '));
+        restore();
+        expect(messages.some(m => m.includes('unknown type u9'))).to.equal(true);
+        expect(messages.some(m => m.includes('does not fit'))).to.equal(true);
+        expect(messages.some(m => m.includes('repeated shader identifier \'a\''))).to.equal(true);
+        expect(messages.some(m => m.includes('repeated shader identifier \'\''))).to.equal(true);
+    });
+
+    it('generates accessors from the field template', function () {
+        const fields = parseBlindFields(blindMeta);
+        const glsl = blindAccessors(fields, false);
+        expect(glsl).to.contain('#include "gsplatSogBlindVS"');
+        expect(glsl).to.contain('float getBlind_weight() { uint bits = sogBlindBits(loadBlind0(), 0u, 2u); return sogBlindF16(bits); }');
+        expect(glsl).to.contain('uint getBlind_seg_id() { uint bits = sogBlindBits(loadBlind0(), 2u, 2u); return bits; }');
+        expect(glsl).to.contain('float getBlind_depth() { uint bits = sogBlindBits(loadBlind1(), 0u, 1u); return sogBlindUnorm(bits, 255.0, 0.5, 2.0); }');
+        expect(glsl).to.contain('float getBlind_f() { uint bits = sogBlindBits(loadBlind2(), 0u, 4u); return sogBlindF32(bits); }');
+        const wgsl = blindAccessors(fields, true);
+        expect(wgsl).to.contain('fn getBlind_seg_id() -> u32 { let bits = sogBlindBits(loadBlind0(), 2u, 2u); return bits; }');
+        expect(wgsl).to.contain('fn getBlind_depth() -> f32 { let bits = sogBlindBits(loadBlind1(), 0u, 1u); return sogBlindUnorm(bits, 255.0, 0.5, 2.0); }');
+        expect(blindAccessors([], false)).to.equal('');
     });
 });

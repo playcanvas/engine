@@ -147,7 +147,8 @@ class SogParser {
         const base = window.document?.baseURI ?? window.location.href;
 
         subs.forEach((sub) => {
-            const files = meta[sub]?.files ?? [];
+            // blind is a list of textures, each with its own file
+            const files = sub === 'blind' ? (meta.blind ?? []).map(t => t.files[0]) : (meta[sub]?.files ?? []);
             textures[sub] = files.map((filename) => {
                 const texture = new Asset(filename, 'texture', {
                     url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, base).toString())).toString(),
@@ -208,7 +209,7 @@ class SogParser {
         textureAssets.forEach(t => assets.load(t));
 
         // wait for all textures to complete loading
-        await Promise.allSettled(promises);
+        const results = await Promise.allSettled(promises);
 
         if (this._shouldAbort(asset, unloaded)) {
             // Clean up texture assets that were created during the async load
@@ -217,6 +218,17 @@ class SogParser {
                 t.unload();
             });
             callback(null, null);
+            return;
+        }
+
+        // a texture that failed to load has no resource, so fail the whole load
+        const failed = results.findIndex(r => r.status === 'rejected');
+        if (failed !== -1) {
+            textureAssets.forEach((t) => {
+                assets.remove(t);
+                t.unload();
+            });
+            callback(`Error loading gsplat: failed to load ${textureAssets[failed].file.filename} in ${url.original}: ${results[failed].reason}`);
             return;
         }
 
@@ -232,7 +244,7 @@ class SogParser {
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
         data.sh_labels = textures.shN?.[1]?.resource;
-        data.blind = textures.blind?.[0]?.resource ?? null;
+        data.blind = textures.blind.map(t => t.resource);
         data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
         const decompress = asset.data?.decompress;
@@ -291,9 +303,14 @@ class SogParser {
      * @param {Asset} asset - Container asset.
      */
     load(url, callback, asset) {
+        // report a throw as a load error instead of leaving the asset loading forever
+        const loadTextures = (meta) => {
+            this.loadTextures(url, callback, asset, meta).catch(err => callback(`Error loading gsplat: ${url.original} [${err}]`));
+        };
+
         if (asset.data?.means) {
             // user can specify meta.json in asset data
-            this.loadTextures(url, callback, asset, asset.data);
+            loadTextures(asset.data);
         } else {
             // otherwise download meta.json using asset url
             if (typeof url === 'string') {
@@ -317,7 +334,7 @@ class SogParser {
                 }
 
                 if (!err) {
-                    this.loadTextures(url, callback, asset, meta);
+                    loadTextures(meta);
                 } else {
                     callback(`Error loading gsplat meta: ${url.original} [${err}]`);
                 }
