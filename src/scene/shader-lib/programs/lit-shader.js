@@ -9,7 +9,7 @@ import {
     semanticToLocation
 } from '../../../platform/graphics/constants.js';
 import {
-    LIGHTSHAPE_PUNCTUAL,
+    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_PICK,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
@@ -429,7 +429,15 @@ class LitShader {
         if (clusteredLightingEnabled && this.lighting) {
             fDefines.set('LIT_CLUSTERED_LIGHTS', true);
             if (options.clusteredLightingCookiesEnabled) fDefines.set('CLUSTER_COOKIES', true);
-            if (options.clusteredLightingAreaLightsEnabled) fDefines.set('CLUSTER_AREALIGHTS', true);
+            if (options.clusteredLightingAreaLightsEnabled) {
+                fDefines.set('CLUSTER_AREALIGHTS', true);
+
+                // only the code of the area light shapes enabled in the LightingParams
+                const shapes = options.clusteredLightingAreaLightShapes;
+                if (shapes & (1 << LIGHTSHAPE_RECT)) fDefines.set('CLUSTER_AREALIGHT_RECT', true);
+                if (shapes & (1 << LIGHTSHAPE_DISK)) fDefines.set('CLUSTER_AREALIGHT_DISK', true);
+                if (shapes & (1 << LIGHTSHAPE_SPHERE)) fDefines.set('CLUSTER_AREALIGHT_SPHERE', true);
+            }
             if (options.lightMaskDynamic) fDefines.set('CLUSTER_MESH_DYNAMIC_LIGHTS', true);
 
             // shadows

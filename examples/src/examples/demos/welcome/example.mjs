@@ -323,6 +323,11 @@ const areaLuts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (lu
 app.setAreaLightLuts(areaLuts.LTC_MAT_1, areaLuts.LTC_MAT_2);
 app.scene.lighting.areaLightsEnabled = true;
 
+// Both softboxes are rectangles, so the shaders of the materials compile no disk and sphere light
+// code, which makes them faster to compile
+app.scene.lighting.areaLightDiskEnabled = false;
+app.scene.lighting.areaLightSphereEnabled = false;
+
 // The shadows of the softboxes use the wide filter, and an atlas large enough for their edges to stay
 // smooth where they cross the bright highlights of the softboxes on the floor
 app.scene.lighting.shadowType = SHADOW_PCF5_32F;

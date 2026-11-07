@@ -103,12 +103,16 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
             options.litOptions.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
             options.litOptions.clusteredLightingShadowType = scene.lighting.shadowType;
-            options.litOptions.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+            // area light shapes the shaders support, none when area lights are disabled
+            const areaLightShapes = scene.lighting.areaLightShapes;
+            options.litOptions.clusteredLightingAreaLightsEnabled = areaLightShapes !== 0;
+            options.litOptions.clusteredLightingAreaLightShapes = areaLightShapes;
         } else {
             options.litOptions.clusteredLightingEnabled = false;
             options.litOptions.clusteredLightingCookiesEnabled = false;
             options.litOptions.clusteredLightingShadowsEnabled = false;
             options.litOptions.clusteredLightingAreaLightsEnabled = false;
+            options.litOptions.clusteredLightingAreaLightShapes = 0;
         }
     }
 

@@ -68,11 +68,10 @@ describe('Lit shader clear coat of area lights', function () {
         addLight(LIGHTSHAPE_RECT);
         const source = forwardShader(1);
 
-        expect(source).to.contain('getRectLightSpecularCC(clearcoat_worldNormal, viewDir)');
-        expect(source).to.contain('getDiskLightSpecularCC(clearcoat_worldNormal, viewDir)');
-        expect(source).to.contain('getSphereLightSpecularCC(clearcoat_worldNormal, viewDir)');
+        // the area light lobe loop evaluates the clear coat lobe with its own LTC matrix
+        expect(source).to.contain('getLTCLightInvMat(ccLTCUV)');
+        expect(source).to.contain('lobeInvMat = areaClearcoatInvMat;');
         expect(source).not.to.contain('LightSpecular(clearcoat_worldNormal');
-        expectClearcoatLTC(source);
     });
 
     it('uses the clear coat LTC matrix for area lights of every shape', function () {

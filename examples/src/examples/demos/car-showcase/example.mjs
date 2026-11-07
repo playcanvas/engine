@@ -222,6 +222,11 @@ const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 app.scene.lighting.areaLightsEnabled = true;
 
+// All the area lights are rectangles, so the shaders of the materials compile no disk and sphere
+// light code, which makes them much faster to compile, mostly on Windows
+app.scene.lighting.areaLightDiskEnabled = false;
+app.scene.lighting.areaLightSphereEnabled = false;
+
 // None of the lights casts shadows, so the clustered lighting compiles no shadow code into the
 // shaders of the materials
 app.scene.lighting.shadowsEnabled = false;
