@@ -150,8 +150,17 @@ void evaluateBackend() {
             dSpecularLight *= litArgs_specularity;
 
             #ifdef LIT_SPECULAR
+                // the clear coat reflects the area lights with its own reflectance, as it reflects the
+                // other lights and the environment: a dielectric, or no Fresnel without the Fresnel
+                // model. Its strength scales all of its light when combined.
+                #ifdef LIT_SPECULAR_FRESNEL
+                    float ccLTCReflectance = 0.04;
+                #else
+                    float ccLTCReflectance = 1.0;
+                #endif
+
                 // evaluate material based area lights data, shared by all area lights
-                calcLTCLightValues(litArgs_gloss, litArgs_worldNormal, dViewDirW, litArgs_specularity, litArgs_clearcoat_gloss, litArgs_clearcoat_worldNormal, litArgs_clearcoat_specularity);
+                calcLTCLightValues(litArgs_gloss, litArgs_worldNormal, dViewDirW, litArgs_specularity, litArgs_clearcoat_gloss, litArgs_clearcoat_worldNormal, ccLTCReflectance);
             #endif
         #endif
         
@@ -175,11 +184,6 @@ void evaluateBackend() {
         #endif
 
         #ifdef AREA_LIGHTS
-
-            #ifdef LIT_CLEARCOAT
-                // specular has to be accumulated differently if we want area lights to look correct
-                litArgs_clearcoat_specularity = 1.0;
-            #endif
 
             #ifdef LIT_SPECULAR
                 litArgs_specularity = vec3(1);
