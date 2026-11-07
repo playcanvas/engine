@@ -39,6 +39,8 @@ class SplatIterator {
         const cg = gsplatData.getProp('f_dc_1');
         const cb = gsplatData.getProp('f_dc_2');
         const ca = gsplatData.getProp('opacity');
+        // the true (linear) opacity, which always wins over `opacity` when present
+        const linear = gsplatData.getProp('opacity_linear');
 
         /**
          * Calculates the sigmoid of a given value.
@@ -79,7 +81,7 @@ class SplatIterator {
                     0.5 + cr[i] * SH_C0,
                     0.5 + cg[i] * SH_C0,
                     0.5 + cb[i] * SH_C0,
-                    activated ? ca[i] : sigmoid(ca[i])
+                    linear ? linear[i] : (activated ? ca[i] : sigmoid(ca[i]))
                 );
             }
         };

@@ -86,6 +86,40 @@ describe('GSplatSogData v3', function () {
         expect(read(230)).to.be.closeTo((230 / 204) ** 2, 1e-12);
     });
 
+    it('decompresses opacity above 1 to the true opacity in opacity_linear', async function () {
+        // two gaussians, alpha bytes 230 (A = (230 / 204)^2 > 1) and 102 (A = 0.25); the textures read back as stored
+        const readable = rgba => ({ ...tex(rgba), device: { isNull: false }, read: () => Promise.resolve(Uint8Array.from(rgba)) });
+        const data = new GSplatSogData();
+        data.meta = { ...meta(), count: 2 };
+        data.numSplats = 2;
+        data.means_l = readable([0, 0, 0, 128, 0, 0, 0, 128]);
+        data.means_u = readable([0, 0, 0, 128, 0, 0, 0, 128]);
+        data.scales = readable([0, 0, 0, 128, 0, 0, 0, 128]);
+        data.sh0 = readable([128, 128, 128, 230, 128, 128, 128, 102]);
+        data.quats = null;
+        const result = await data.decompress();
+        const linear = result.getProp('opacity_linear');
+        expect(linear[0]).to.be.closeTo((230 / 204) ** 2, 1e-6);
+        expect(linear[1]).to.be.closeTo(0.25, 1e-6);
+        // the logit holds the opacity clamped to 1, for readers that ignore opacity_linear
+        expect(result.getProp('opacity')[0]).to.equal(40);
+        expect(1 / (1 + Math.exp(-result.getProp('opacity')[1]))).to.be.closeTo(0.25, 1e-6);
+    });
+
+    it('decompresses without opacity_linear when no opacity exceeds 1', async function () {
+        const readable = rgba => ({ ...tex(rgba), device: { isNull: false }, read: () => Promise.resolve(Uint8Array.from(rgba)) });
+        const data = new GSplatSogData();
+        data.meta = meta({ opacity: undefined });
+        data.numSplats = 1;
+        data.means_l = readable([0, 0, 0, 128]);
+        data.means_u = readable([0, 0, 0, 128]);
+        data.scales = readable([0, 0, 0, 128]);
+        data.sh0 = readable([128, 128, 128, 102]);
+        data.quats = null;
+        const result = await data.decompress();
+        expect(result.getProp('opacity_linear')).to.equal(undefined);
+    });
+
     it('reads 24 coefficients per channel for 4 bands', function () {
         const data = makeData([128, 128, 128], 0, {
             shN: { count: 1, bands: 4, codebook: Array.from({ length: 256 }, (_, i) => i) }

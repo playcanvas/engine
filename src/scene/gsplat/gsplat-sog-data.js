@@ -360,10 +360,10 @@ class GSplatSogData {
             members.splice(members.indexOf('f_dc_0') + 1, 0, ...shMembers);
         }
 
-        // v3 opacity above 1 (merged gaussians) round-trips as the PLY opacity_excess column
-        const hasExcess = meta.version === 3 && (meta.opacity?.max ?? 1) > 1;
-        if (hasExcess) {
-            members.push('opacity_excess');
+        // v3 opacity above 1 (merged gaussians) round-trips as the PLY opacity_linear column
+        const hasLinear = meta.version === 3 && (meta.opacity?.max ?? 1) > 1;
+        if (hasLinear) {
+            members.push('opacity_linear');
         }
 
         // allocate uncompressed data
@@ -401,8 +401,8 @@ class GSplatSogData {
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
             // convert opacity to log sigmoid taking into account infinities at 0 and 1
             data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
-            if (hasExcess) {
-                data.opacity_excess[i] = c.w > 1 ? c.w - 1 : 0;
+            if (hasLinear) {
+                data.opacity_linear[i] = c.w;
             }
 
             if (sh) {
