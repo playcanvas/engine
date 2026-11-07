@@ -203,12 +203,13 @@ fn evaluateLight{i}(
         #if LIGHT{i}SHAPE != PUNCTUAL // area light
 
             #ifdef LIT_CLEARCOAT
+                // with the LTC matrix of the clear coat gloss (ccLTCUV)
                 #if LIGHT{i}SHAPE == RECT
-                    ccSpecularLight = ccSpecularLight + (ccLTCSpecFres * getRectLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor);
+                    ccSpecularLight = ccSpecularLight + (ccLTCSpecFres * getRectLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor);
                 #elif LIGHT{i}SHAPE == DISK
-                    ccSpecularLight = ccSpecularLight + (ccLTCSpecFres * getDiskLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor);
+                    ccSpecularLight = ccSpecularLight + (ccLTCSpecFres * getDiskLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor);
                 #elif LIGHT{i}SHAPE == SPHERE
-                    ccSpecularLight = ccSpecularLight + (ccLTCSpecFres * getSphereLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor);
+                    ccSpecularLight = ccSpecularLight + (ccLTCSpecFres * getSphereLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor);
                 #endif
             #endif
 

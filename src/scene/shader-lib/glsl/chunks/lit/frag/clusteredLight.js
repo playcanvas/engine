@@ -479,15 +479,15 @@ void evaluateLight(
 
                 #ifdef LIT_CLEARCOAT
 
-                    // area light specular clear coat
+                    // area light specular clear coat, with the LTC matrix of the clear coat gloss
                     float areaLightSpecularCC;
 
                     if (light.shape == {LIGHTSHAPE_RECT}) {
-                        areaLightSpecularCC = getRectLightSpecular(clearcoat_worldNormal, viewDir);
+                        areaLightSpecularCC = getRectLightSpecularCC(clearcoat_worldNormal, viewDir);
                     } else if (light.shape == {LIGHTSHAPE_DISK}) {
-                        areaLightSpecularCC = getDiskLightSpecular(clearcoat_worldNormal, viewDir);
+                        areaLightSpecularCC = getDiskLightSpecularCC(clearcoat_worldNormal, viewDir);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecular(clearcoat_worldNormal, viewDir);
+                        areaLightSpecularCC = getSphereLightSpecularCC(clearcoat_worldNormal, viewDir);
                     }
 
                     ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * falloffAttenuation * light.color  * cookieAttenuation;
