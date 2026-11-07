@@ -416,4 +416,19 @@ float getDiskLightSpecular(vec3 worldNormal, vec3 viewDir) {
 float getSphereLightSpecular(vec3 worldNormal, vec3 viewDir) {
     return calcDiskLightSpecular(worldNormal, viewDir, dLTCUV);
 }
+
+#ifdef LIT_CLEARCOAT
+    // the clear coat specular, with the LTC matrix of the clear coat gloss and normal
+    float getRectLightSpecularCC(vec3 worldNormal, vec3 viewDir) {
+        return calcRectLightSpecular(worldNormal, viewDir, ccLTCUV);
+    }
+
+    float getDiskLightSpecularCC(vec3 worldNormal, vec3 viewDir) {
+        return calcDiskLightSpecular(worldNormal, viewDir, ccLTCUV);
+    }
+
+    float getSphereLightSpecularCC(vec3 worldNormal, vec3 viewDir) {
+        return calcDiskLightSpecular(worldNormal, viewDir, ccLTCUV);
+    }
+#endif
 `;
