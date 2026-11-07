@@ -464,6 +464,47 @@ const DEFAULT_PAINT = 0;
     material.update();
 });
 
+// The paints share one shader, so a change of the paint compiles nothing. Each paint material has
+// every feature any paint uses: the normal map of the flakes, the clear coat, and the iridescent film
+// with its thickness texture. Where its own look has none of them, they are set to have no effect.
+const flakes = findMaterial(assets.car, 'Paint 1 Carmine');
+const film = findMaterial(assets.car, 'Paint 1 Pearl');
+
+// a clear coat or iridescence too faint to see, as a value of 0 leaves it out of the shader
+const FAINT = 1e-9;
+
+['Carmine', 'Pearl', 'Graphite'].forEach((look) => {
+    ['Paint 1', 'Paint 2'].forEach((slot) => {
+        const material = findMaterial(assets.car, `${slot} ${look}`);
+        if (!material.normalMap) {
+            // the flakes, flattened out by a bumpiness of 0
+            material.normalMap = flakes.normalMap;
+            material.normalMapTiling = flakes.normalMapTiling.clone();
+            material.normalMapOffset = flakes.normalMapOffset.clone();
+            material.bumpiness = 0;
+        }
+        if (!material.clearCoat) {
+            // the gloss is set as the coat of the flakes sets it, which the shader reads the same way
+            material.clearCoat = FAINT;
+            material.clearCoatGloss = flakes.clearCoatGloss;
+            material.clearCoatGlossInvert = flakes.clearCoatGlossInvert;
+        }
+        if (!material.useIridescence || !material.iridescence) {
+            material.useIridescence = true;
+            material.iridescence = FAINT;
+        }
+        if (!material.iridescenceThicknessMap) {
+            // the texture blends between two equal thicknesses, so the film keeps its one thickness
+            material.iridescenceThicknessMap = film.iridescenceThicknessMap;
+            material.iridescenceThicknessMapTiling = film.iridescenceThicknessMapTiling.clone();
+            material.iridescenceThicknessMapOffset = film.iridescenceThicknessMapOffset.clone();
+            material.iridescenceThicknessMapChannel = film.iridescenceThicknessMapChannel;
+            material.iridescenceThicknessMin = material.iridescenceThicknessMax;
+        }
+        material.update();
+    });
+});
+
 // The candy paint is tinted for the colors other than its own, and the pearl paint takes other base
 // colors and film thicknesses for other colors of its swirls
 const candyColor = findMaterial(assets.car, 'Paint 1 Carmine').diffuse.clone();

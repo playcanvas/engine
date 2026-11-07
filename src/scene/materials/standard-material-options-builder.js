@@ -264,7 +264,9 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = !equalish(stdMat.refractionIndex, DEFAULT_REFRACTION_INDEX);
 
-        options.iridescenceTint = stdMat.iridescence !== 1.0;
+        // the iridescence constant is always applied, as metalness is, so that an iridescence of 1
+        // shares the shader of a lower one, and a change of it never recompiles
+        options.iridescenceTint = true;
 
         options.glossInvert = stdMat.glossInvert;
         options.sheenGlossInvert = stdMat.sheenGlossInvert;
