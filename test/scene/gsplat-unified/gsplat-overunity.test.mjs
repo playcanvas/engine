@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { FloatPacking } from '../../../src/core/math/float-packing.js';
+import { Vec4 } from '../../../src/core/math/vec4.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { GSplatData } from '../../../src/scene/gsplat/gsplat-data.js';
 import { GSplatResource } from '../../../src/scene/gsplat/gsplat-resource.js';
@@ -83,6 +84,17 @@ describe('GSplatResource opacity_linear', function () {
         expect(alphas(resource)).to.deep.equal([FloatPacking.float2Half(0.5), FloatPacking.float2Half(0.5)]);
         resource.destroy();
         device.destroy();
+    });
+
+    it('reports opacity_linear as the alpha of the CPU iterator, and the logit without it', function () {
+        const alpha = (data) => {
+            const c = new Vec4();
+            data.createIter(null, null, null, c).read(1);
+            return c.w;
+        };
+        expect(alpha(makeData([0, 0.25]))).to.equal(0.25);
+        expect(alpha(makeData([3, 3]))).to.equal(3);
+        expect(alpha(makeData(null))).to.equal(0.5);
     });
 
     it('exposes the extras carried by the data (as decompressed SOG data sets them)', function () {
