@@ -55,7 +55,13 @@ const lightBufferDefines = `\n
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
 class LightsBuffer {
-    areaLightsEnabled = false;
+    /**
+     * Bit mask (1 << shape) of the area light shapes the lit shaders support, 0 when area lights
+     * are disabled.
+     *
+     * @type {number}
+     */
+    areaLightShapes = 0;
 
     /**
      * Texture storing properties of all lights, one row of pixels per light.
@@ -78,7 +84,7 @@ class LightsBuffer {
         // features
         this.cookiesEnabled = false;
         this.shadowsEnabled = false;
-        this.areaLightsEnabled = false;
+        this.areaLightShapes = 0;
 
         this._lightsTextureId = this.device.scope.resolve('lightsTexture');
 
@@ -196,7 +202,8 @@ class LightsBuffer {
         const isSpot = light._type === LIGHTTYPE_SPOT;
         const hasAtlasViewport = light.atlasViewportAllocated; // if the light does not have viewport, it does not fit to the atlas
         const isCookie = this.cookiesEnabled && !!light._cookie && hasAtlasViewport;
-        const isArea = this.areaLightsEnabled && light.shape !== LIGHTSHAPE_PUNCTUAL;
+        // the mask never contains the punctual shape
+        const isArea = (this.areaLightShapes & (1 << light.shape)) !== 0;
         const castShadows = this.shadowsEnabled && light.castShadows && hasAtlasViewport;
         const pos = light._node.getPosition();
 
@@ -251,8 +258,11 @@ class LightsBuffer {
             // here we have unused float
         }
 
-        // flags
-        dataUint[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 3] = light.getClusteredFlags(castShadows, isCookie);
+        // flags - a light of an area light shape the shaders do not support has its shape (bits
+        // 29 - 28) cleared, so it renders as a punctual light
+        let flags = light.getClusteredFlags(castShadows, isCookie);
+        if (!isArea) flags &= ~(0x3 << 28);
+        dataUint[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 3] = flags;
 
         // light projection matrix
         if (lightProjectionMatrix) {

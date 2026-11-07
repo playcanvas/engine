@@ -116,6 +116,11 @@ app.scene.fog.density = 0.03;
 // Enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
 
+// The only area light is a rectangle, so the shaders of the materials compile no disk and sphere
+// light code, which makes them faster to compile
+app.scene.lighting.areaLightDiskEnabled = false;
+app.scene.lighting.areaLightSphereEnabled = false;
+
 // Set the loaded area light LUT data
 const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
 app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
