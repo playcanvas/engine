@@ -37,6 +37,7 @@ class AnimTargetValue {
     constructor(component, type) {
         this._component = component;
         this.mask = new Int8Array(component.layers.length);
+        this._bound = new Int8Array(component.layers.length);
         this.weights = new Float32Array(component.layers.length);
         this.totalWeight = 0;
         this.counter = 0;
@@ -73,6 +74,33 @@ class AnimTargetValue {
                 this.mask = this.mask.fill(0, 0, index);
             }
             this.dirty = true;
+        }
+    }
+
+    /**
+     * Sets whether a layer animates this target and updates the mask of every layer. With
+     * normalized weights, a layer is masked out while an overwrite layer above it animates this
+     * target, whatever the order in which the layers started or stopped animating it.
+     *
+     * @param {number} index - The index of the layer.
+     * @param {number} value - 1 if the layer animates this target, 0 otherwise.
+     */
+    setLayerBound(index, value) {
+        const bound = this._bound;
+        const mask = this.mask;
+        bound[index] = value;
+        if (this._normalizeWeights) {
+            const layers = this._component.layers;
+            let overwritten = false;
+            for (let i = mask.length - 1; i >= 0; i--) {
+                mask[i] = overwritten ? 0 : bound[i];
+                if (bound[i] && layers[i].blendType === ANIM_LAYER_OVERWRITE) {
+                    overwritten = true;
+                }
+            }
+            this.dirty = true;
+        } else {
+            mask[index] = value;
         }
     }
 

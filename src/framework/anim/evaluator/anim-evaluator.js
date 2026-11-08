@@ -63,7 +63,8 @@ class AnimEvaluator {
                         target: resolved,           // resolved target instance
                         value: [],                  // storage for calculated value
                         curves: 0,                  // number of curves driving this target
-                        blendCounter: 0             // per-frame number of blends (used to identify first blend)
+                        blendCounter: 0,            // per-frame number of blends (used to identify first blend)
+                        layerTarget: null           // anim component target value this layer counts towards
                     };
 
                     for (let k = 0; k < target.target.components; ++k) {
@@ -81,8 +82,10 @@ class AnimEvaluator {
                             }
                             binder.animComponent.targets[resolved.targetPath] = new AnimTargetValue(binder.animComponent, type);
                         }
-                        binder.animComponent.targets[resolved.targetPath].layerCounter++;
-                        binder.animComponent.targets[resolved.targetPath].setMask(binder.layerIndex, 1);
+                        // keep a reference, the component replaces its targets map when it rebinds
+                        target.layerTarget = binder.animComponent.targets[resolved.targetPath];
+                        target.layerTarget.layerCounter++;
+                        target.layerTarget.setLayerBound(binder.layerIndex, 1);
                     }
                 }
 
@@ -111,28 +114,18 @@ class AnimEvaluator {
     removeClip(index) {
         const targets = this._targets;
         const binder = this._binder;
-
         const clips = this._clips;
-        const clip = clips[index];
-        const curves = clip.track.curves;
+        const outputs = this._outputs[index];
 
-        for (let i = 0; i < curves.length; ++i) {
-            const curve = curves[i];
-            const paths = curve.paths;
-            for (let j = 0; j < paths.length; ++j) {
-                const path = paths[j];
-
-                const target = this._binder.resolve(path);
-
-                if (target) {
-                    target.curves--;
-                    if (target.curves === 0) {
-                        binder.unresolve(path);
-                        delete targets[target.targetPath];
-                        if (binder.animComponent) {
-                            binder.animComponent.targets[target.targetPath].layerCounter--;
-                        }
-                    }
+        for (let i = 0; i < outputs.length; ++i) {
+            const target = outputs[i];
+            target.curves--;
+            if (target.curves === 0) {
+                delete targets[target.target.targetPath];
+                const layerTarget = target.layerTarget;
+                if (layerTarget) {
+                    layerTarget.layerCounter--;
+                    layerTarget.setLayerBound(binder.layerIndex, 0);
                 }
             }
         }
@@ -265,7 +258,8 @@ class AnimEvaluator {
                 // if this evaluator is associated with an anim component then we should blend the result of this evaluator with all other anim layer's evaluators
                 if (binder.animComponent && target.target.usesLayerBlending) {
                     const animTarget = binder.animComponent.targets[path];
-                    if (animTarget.counter === animTarget.layerCounter) {
+                    // a layer that stops animating this target leaves the counter ahead of layerCounter
+                    if (animTarget.counter >= animTarget.layerCounter) {
                         animTarget.counter = 0;
                     }
                     if (!animTarget.path) {
