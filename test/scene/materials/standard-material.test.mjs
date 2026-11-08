@@ -683,8 +683,8 @@ describe('StandardMaterial', function () {
             }
         });
 
-        it('invalidates shaders only when refraction or specularityFactor cross 0', function () {
-            for (const name of ['refraction', 'specularityFactor']) {
+        it('invalidates shaders only when a value enabling a feature crosses 0', function () {
+            for (const name of ['refraction', 'specularityFactor', 'dispersion', 'anisotropyIntensity', 'clearCoat', 'iridescence']) {
                 // a metalness material, whose specular a specularity factor of 0 disables
                 const material = new StandardMaterial();
                 material.useMetalness = true;
@@ -998,6 +998,38 @@ describe('StandardMaterial', function () {
                 material[name] = other;
                 material.update();
                 expect(shaderKey(material), name).to.equal(key);
+            }
+        });
+
+        // these setters do not invalidate the shaders, which is only correct while no value of them
+        // changes the shader
+        it('generates the same shader key for any value of the numbers only applied as uniforms', function () {
+            for (const name of [
+                'sheenGloss', 'gloss', 'aoIntensity', 'parallaxSamples', 'opacity', 'alphaFade', 'bumpiness',
+                'normalDetailMapBumpiness', 'reflectivity', 'clearCoatBumpiness', 'iridescenceRefractionIndex',
+                'iridescenceThicknessMin', 'iridescenceThicknessMax', 'anisotropyRotation',
+                'attenuationDistance', 'heightMapFactor', 'heightMapBase'
+            ]) {
+                // a material with the features which use these values
+                const material = new StandardMaterial();
+                material.useMetalness = true;
+                material.useSheen = true;
+                material.useIridescence = true;
+                material.iridescence = 0.5;
+                material.enableGGXSpecular = true;
+                material.anisotropyIntensity = 0.5;
+                material.clearCoat = 0.5;
+                material.useDynamicRefraction = true;
+                material.refraction = 0.5;
+                material.opacityFadesSpecular = false;
+
+                const keys = new Set();
+                for (const value of [0, 0.5, 1, 2]) {
+                    material[name] = value;
+                    material.update();
+                    keys.add(shaderKey(material));
+                }
+                expect(keys.size, name).to.equal(1);
             }
         });
     });
