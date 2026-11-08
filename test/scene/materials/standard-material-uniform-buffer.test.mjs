@@ -337,6 +337,10 @@ describe('StandardMaterial uniform buffer', function () {
             expect(dirtyAfter('parallaxShadowSamples', 5), 'staying above 0').to.equal(false);
             expect(dirtyAfter('refraction', 0.5), 'leaving 0').to.equal(true);
             expect(dirtyAfter('refraction', 0.7), 'staying fractional').to.equal(false);
+            expect(dirtyAfter('refraction', 1), 'refraction reaching 1').to.equal(false);
+            expect(dirtyAfter('refraction', 0), 'refraction reaching 0').to.equal(true);
+            expect(dirtyAfter('specularityFactor', 0.5), 'specularity factor leaving 1').to.equal(false);
+            expect(dirtyAfter('specularityFactor', 0), 'specularity factor reaching 0').to.equal(true);
             expect(dirtyAfter('refractionIndex', 0.5), 'refraction index never selects shader code').to.equal(false);
             expect(dirtyAfter('refractionIndex', 1.0 / 1.5), 'refraction index never selects shader code').to.equal(false);
             expect(dirtyAfter('thickness', 1), 'thickness never selects shader code').to.equal(false);

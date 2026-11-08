@@ -1018,7 +1018,8 @@ class StandardMaterial extends Material {
      */
     set specularityFactor(value) {
         if (this._specularityFactor !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._specularityFactor, value);
+            // the shader only depends on whether the factor enables the specular of a metalness material
+            this._dirtyShader = this._dirtyShader || (this._specularityFactor > 0) !== (value > 0);
             this._specularityFactor = value;
             this._markPropertyModified(_properties.specularityFactor);
         }
@@ -1330,7 +1331,8 @@ class StandardMaterial extends Material {
      */
     set refraction(value) {
         if (this._refraction !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._refraction, value);
+            // the shader only depends on whether there is any refraction
+            this._dirtyShader = this._dirtyShader || (this._refraction !== 0) !== (value !== 0);
             this._refraction = value;
             this._markPropertyModified(_properties.refraction);
         }

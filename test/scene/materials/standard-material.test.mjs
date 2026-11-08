@@ -683,15 +683,31 @@ describe('StandardMaterial', function () {
             }
         });
 
-        it('does not invalidate shaders when refraction moves close to 1', function () {
-            const material = new StandardMaterial();
-            material.refraction = 0.9;
-            material.update();
-            const variant = addVariant(material);
+        it('invalidates shaders only when refraction or specularityFactor cross 0', function () {
+            for (const name of ['refraction', 'specularityFactor']) {
+                // a metalness material, whose specular a specularity factor of 0 disables
+                const material = new StandardMaterial();
+                material.useMetalness = true;
+                material[name] = 0.5;
+                material.update();
+                const variant = addVariant(material);
 
-            material.refraction = 0.99995;
-            material.update();
-            expect(material.variants.get(1)).to.equal(variant);
+                // the value of 1 only changes a uniform, as any other value above 0 does
+                for (const value of [1, 0.99995, 0.25, 1]) {
+                    material[name] = value;
+                    material.update();
+                    expect(material.variants.get(1), `${name} ${value}`).to.equal(variant);
+                }
+
+                material[name] = 0;
+                material.update();
+                expect(material.variants.size, `${name} 0`).to.equal(0);
+
+                addVariant(material);
+                material[name] = 1;
+                material.update();
+                expect(material.variants.size, `${name} 0 -> 1`).to.equal(0);
+            }
         });
 
         const envTexture = encoding => ({ encoding });
