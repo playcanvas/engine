@@ -138,7 +138,6 @@ materialSpecFactor.metalnessMap = assets.other.resource;
 
 materialSpecFactor.useMetalnessSpecularColor = true;
 materialSpecFactor.specularityFactor = 0.5;
-materialSpecFactor.specularityFactorTint = true;
 materialSpecFactor.specularityFactorMap = assets.diffuse.resource;
 
 materialSpecFactor.specularMap = assets.colors.resource;

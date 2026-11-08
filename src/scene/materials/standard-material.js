@@ -157,8 +157,6 @@ const dirtyShaderOnZeroOrOne = (oldValue, newValue) => {
     return oldValue === 0 || oldValue === 1 || newValue === 0 || newValue === 1;
 };
 
-const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
-
 /**
  * @callback UpdateShaderCallback
  * Callback used by {@link StandardMaterial#onUpdateShader}.
@@ -254,10 +252,6 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * @property {boolean} specularVertexColor Multiply specular by the mesh vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} specularityFactorTint Force inclusion of the constant `specularityFactor`
- * when compositing with `specularityFactorMap` and/or specularity factor vertex colors. Defaults
- * to `false`. Setting this to `true` is rarely needed - the constant is automatically applied
- * whenever `specularityFactor` differs from 1. Provided as an explicit override.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is
  * null).
  * @property {number} specularityFactorMapUv Specularity factor map UV channel. Valid values are 0 to 7.
@@ -266,8 +260,8 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * between 0 and 1.
  * @property {number} specularityFactorMapRotation Controls the 2D rotation (in degrees) of the specularity factor map.
  * @property {string} specularityFactorMapChannel The channel used by the specularity factor texture to sample from (default is 'a').
- * @property {boolean} specularityFactorVertexColor Use mesh vertex colors for specularity factor. If specularityFactorMap or
- * are specularityFactorTint are set, they'll be multiplied by vertex colors.
+ * @property {boolean} specularityFactorVertexColor Use mesh vertex colors for specularity factor.
+ * They are multiplied by `specularityFactor`, and by `specularityFactorMap` if set.
  * @property {string} specularityFactorVertexColorChannel Vertex color channels to use for specularity factor. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
@@ -1024,7 +1018,8 @@ class StandardMaterial extends Material {
      */
     set specularityFactor(value) {
         if (this._specularityFactor !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._specularityFactor, value);
+            // the shader only depends on whether the factor enables the specular of a metalness material
+            this._dirtyShader = this._dirtyShader || (this._specularityFactor > 0) !== (value > 0);
             this._specularityFactor = value;
             this._markPropertyModified(_properties.specularityFactor);
         }
@@ -1314,7 +1309,6 @@ class StandardMaterial extends Material {
      */
     set occludeSpecularIntensity(value) {
         if (this._occludeSpecularIntensity !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._occludeSpecularIntensity, value);
             this._occludeSpecularIntensity = value;
             this._markPropertyModified(_properties.occludeSpecularIntensity);
         }
@@ -1337,8 +1331,8 @@ class StandardMaterial extends Material {
      */
     set refraction(value) {
         if (this._refraction !== value) {
-            // the shader options treat a refraction close to 1 as a constant (see StandardMaterialOptionsBuilder)
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._refraction, value) || equalish(this._refraction, 1) !== equalish(value, 1);
+            // the shader only depends on whether there is any refraction
+            this._dirtyShader = this._dirtyShader || (this._refraction !== 0) !== (value !== 0);
             this._refraction = value;
             this._markPropertyModified(_properties.refraction);
         }
@@ -1363,9 +1357,6 @@ class StandardMaterial extends Material {
      */
     set refractionIndex(value) {
         if (this._refractionIndex !== value) {
-            // the shader uses a constant for the default value and a uniform otherwise, so moving across it
-            // needs a new shader
-            this._dirtyShader = this._dirtyShader || equalish(this._refractionIndex, DEFAULT_REFRACTION_INDEX) !== equalish(value, DEFAULT_REFRACTION_INDEX);
             this._refractionIndex = value;
             this._markPropertyModified(_properties.refractionIndex);
         }
@@ -1411,7 +1402,6 @@ class StandardMaterial extends Material {
      */
     set thickness(value) {
         if (this._thickness !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._thickness, value);
             this._thickness = value;
             this._markPropertyModified(_properties.thickness);
         }
@@ -1502,7 +1492,6 @@ class StandardMaterial extends Material {
      */
     set clearCoatGloss(value) {
         if (this._clearCoatGloss !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._clearCoatGloss, value);
             this._clearCoatGloss = value;
             this._markPropertyModified(_properties.clearCoatGloss);
         }
@@ -2418,7 +2407,7 @@ function _defineMaterialProps() {
     registerProp('reflectivity', () => 1);
     registerProp('occludeSpecularIntensity', () => 1);
     registerProp('refraction', () => 0);
-    registerProp('refractionIndex', () => DEFAULT_REFRACTION_INDEX);
+    registerProp('refractionIndex', () => 1.0 / 1.5);
     registerProp('dispersion', () => 0);
     registerProp('thickness', () => 0);
     registerProp('metalness', () => 1);
@@ -2443,7 +2432,6 @@ function _defineMaterialProps() {
     _defineObject('ambientSH');
 
 
-    _defineFlag('specularityFactorTint', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('useSheen', false);
@@ -2601,6 +2589,7 @@ _defineRemovedTint('diffuseTint');
 _defineRemovedTint('emissiveTint');
 _defineRemovedTint('ambientTint');
 _defineRemovedTint('specularTint');
+_defineRemovedTint('specularityFactorTint');
 
 _defineDeprecatedAlias('aoVertexColor', 'aoMapVertexColor');
 _defineDeprecatedAlias('diffuseVertexColor', 'diffuseMapVertexColor');

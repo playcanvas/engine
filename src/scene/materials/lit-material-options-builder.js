@@ -72,7 +72,8 @@ class LitMaterialOptionsBuilder {
 
         litOptions.ambientSH = material.ambientSH;
         litOptions.occludeSpecular = material.occludeSpecular;
-        litOptions.occludeSpecularFloat = (material.occludeSpecularIntensity !== 1.0);
+        // the intensity is always applied, so that an intensity of 1 shares the shader of a lower one
+        litOptions.occludeSpecularFloat = true;
 
         litOptions.useMsdf = false;
         litOptions.msdfTextAttribute = false;
