@@ -685,9 +685,12 @@ describe('StandardMaterial', function () {
 
         it('invalidates shaders only when a value enabling a feature crosses 0', function () {
             for (const name of ['refraction', 'specularityFactor', 'dispersion', 'anisotropyIntensity', 'clearCoat', 'iridescence']) {
-                // a metalness material, whose specular a specularity factor of 0 disables
+                // a metalness material, whose specular a specularity factor of 0 disables, with the
+                // flags which enable iridescence and anisotropy
                 const material = new StandardMaterial();
                 material.useMetalness = true;
+                material.useIridescence = true;
+                material.enableGGXSpecular = true;
                 material[name] = 0.5;
                 material.update();
                 const variant = addVariant(material);
@@ -708,6 +711,40 @@ describe('StandardMaterial', function () {
                 material.update();
                 expect(material.variants.size, `${name} 0 -> 1`).to.equal(0);
             }
+        });
+
+        it('does not invalidate shaders when iridescence or anisotropy cross 0 while it cannot change the shader', function () {
+            const material = new StandardMaterial();
+            material.update();
+            const variant = addVariant(material);
+
+            // without useIridescence and without GGX specular, the features are off
+            for (const [name, value] of [['iridescence', 0.5], ['iridescence', 0], ['anisotropyIntensity', 0.5], ['anisotropyIntensity', 0]]) {
+                material[name] = value;
+                material.update();
+                expect(material.variants.get(1), `${name} ${value} while off`).to.equal(variant);
+            }
+
+            // an anisotropy map enables the anisotropy whatever the intensity
+            material.enableGGXSpecular = true;
+            material.anisotropyMap = { id: 1, format: 7, type: 'default' };
+            material.update();
+            const mapVariant = addVariant(material);
+            for (const value of [0.5, 0, 1]) {
+                material.anisotropyIntensity = value;
+                material.update();
+                expect(material.variants.get(1), `anisotropyIntensity ${value} with a map`).to.equal(mapVariant);
+            }
+
+            // enabling the features invalidates the shaders, through their flags
+            material.anisotropyMap = null;
+            material.update();
+            expect(material.variants.size, 'anisotropy map removed').to.equal(0);
+
+            addVariant(material);
+            material.useIridescence = true;
+            material.update();
+            expect(material.variants.size, 'useIridescence enabled').to.equal(0);
         });
 
         const envTexture = encoding => ({ encoding });

@@ -360,7 +360,10 @@ describe('StandardMaterial uniform buffer', function () {
                 }
             }
 
-            // features select shader code only when they cross 0, all of them starting at 0
+            // features select shader code only when they cross 0, all of them starting at 0, with the
+            // flags which enable iridescence and anisotropy
+            material.useIridescence = true;
+            material.enableGGXSpecular = true;
             for (const name of ['dispersion', 'anisotropyIntensity', 'clearCoat', 'iridescence']) {
                 expect(dirtyAfter(name, 0.5), `${name} leaving 0`).to.equal(true);
                 expect(dirtyAfter(name, 1), `${name} reaching 1`).to.equal(false);

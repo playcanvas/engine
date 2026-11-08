@@ -1428,8 +1428,11 @@ class StandardMaterial extends Material {
      */
     set anisotropyIntensity(value) {
         if (this._anisotropyIntensity !== value) {
-            // the shader only depends on whether there is any anisotropy
-            this._dirtyShader = this._dirtyShader || (this._anisotropyIntensity > 0) !== (value > 0);
+            // the shader only depends on whether there is any anisotropy, and only with GGX specular
+            // and no anisotropy map, which enables it whatever the intensity. Those invalidate the
+            // shaders themselves when they change.
+            this._dirtyShader = this._dirtyShader || (this.enableGGXSpecular && !this.anisotropyMap &&
+                (this._anisotropyIntensity > 0) !== (value > 0));
             this._anisotropyIntensity = value;
             this._markPropertyModified(_properties.anisotropyIntensity);
         }
@@ -1522,8 +1525,9 @@ class StandardMaterial extends Material {
      */
     set iridescence(value) {
         if (this._iridescence !== value) {
-            // the shader only depends on whether there is any iridescence
-            this._dirtyShader = this._dirtyShader || (this._iridescence !== 0) !== (value !== 0);
+            // the shader only depends on whether there is any iridescence, and only when it is
+            // enabled by useIridescence, which invalidates the shaders itself when it changes
+            this._dirtyShader = this._dirtyShader || (this.useIridescence && (this._iridescence !== 0) !== (value !== 0));
             this._iridescence = value;
             this._markPropertyModified(_properties.iridescence);
         }
