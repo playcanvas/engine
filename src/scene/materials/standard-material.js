@@ -148,15 +148,6 @@ const isBlack = (color) => {
     return color.r === 0 && color.g === 0 && color.b === 0;
 };
 
-// Shader options mostly depend on a number property being 0 or 1 (e.g. metalness < 1, clearCoat > 0),
-// so a change involving either of those values may need a new shader, including a direct 0 <-> 1
-// change. This is not always optimal and will sometimes trigger a redundant shader recompilation, but
-// a change between two fractional values never does. Properties with other thresholds pass their own
-// predicate.
-const dirtyShaderOnZeroOrOne = (oldValue, newValue) => {
-    return oldValue === 0 || oldValue === 1 || newValue === 0 || newValue === 1;
-};
-
 /**
  * @callback UpdateShaderCallback
  * Callback used by {@link StandardMaterial#onUpdateShader}.
@@ -1042,7 +1033,6 @@ class StandardMaterial extends Material {
      */
     set sheenGloss(value) {
         if (this._sheenGloss !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._sheenGloss, value);
             this._sheenGloss = value;
             this._markPropertyModified(_properties.sheenGloss);
         }
@@ -1066,7 +1056,6 @@ class StandardMaterial extends Material {
      */
     set gloss(value) {
         if (this._gloss !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._gloss, value);
             this._gloss = value;
             this._markPropertyModified(_properties.gloss);
         }
@@ -1088,7 +1077,6 @@ class StandardMaterial extends Material {
      */
     set aoIntensity(value) {
         if (this._aoIntensity !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._aoIntensity, value);
             this._aoIntensity = value;
             this._markPropertyModified(_properties.aoIntensity);
         }
@@ -1113,8 +1101,6 @@ class StandardMaterial extends Material {
      */
     set heightMapBase(value) {
         if (this._heightMapBase !== value) {
-            // the base only feeds a uniform, so unlike the generic number property it never invalidates the
-            // shader - the generic rule would rebuild for nothing when a slider lands on 0 or 1
             this._heightMapBase = value;
             this._markPropertyModified(_properties.heightMapBase);
         }
@@ -1139,7 +1125,6 @@ class StandardMaterial extends Material {
      */
     set parallaxSamples(value) {
         if (this._parallaxSamples !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._parallaxSamples, value);
             this._parallaxSamples = value;
             this._markPropertyModified(_properties.parallaxSamples);
         }
@@ -1165,8 +1150,8 @@ class StandardMaterial extends Material {
      */
     set parallaxShadowSamples(value) {
         if (this._parallaxShadowSamples !== value) {
-            // only crossing zero selects different shader code, that is what takes the march out of the
-            // shader - the generic 0 or 1 rule would rebuild for nothing when dragging the count from 1 to 2
+            // the shader only depends on whether there are any samples, as 0 takes the self shadowing
+            // march out of it
             this._dirtyShader = this._dirtyShader || (this._parallaxShadowSamples === 0) !== (value === 0);
             this._parallaxShadowSamples = value;
             this._markPropertyModified(_properties.parallaxShadowSamples);
@@ -1193,7 +1178,6 @@ class StandardMaterial extends Material {
      */
     set opacity(value) {
         if (this._opacity !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._opacity, value);
             this._opacity = value;
             this._markPropertyModified(_properties.opacity);
             // the dither scale is derived from the opacity as well
@@ -1217,7 +1201,6 @@ class StandardMaterial extends Material {
      */
     set alphaFade(value) {
         if (this._alphaFade !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._alphaFade, value);
             this._alphaFade = value;
             this._markPropertyModified(_properties.alphaFade);
         }
@@ -1241,7 +1224,6 @@ class StandardMaterial extends Material {
      */
     set bumpiness(value) {
         if (this._bumpiness !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._bumpiness, value);
             this._bumpiness = value;
             this._markPropertyModified(_properties.bumpiness);
         }
@@ -1265,7 +1247,6 @@ class StandardMaterial extends Material {
      */
     set normalDetailMapBumpiness(value) {
         if (this._normalDetailMapBumpiness !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._normalDetailMapBumpiness, value);
             this._normalDetailMapBumpiness = value;
             this._markPropertyModified(_properties.normalDetailMapBumpiness);
         }
@@ -1287,7 +1268,6 @@ class StandardMaterial extends Material {
      */
     set reflectivity(value) {
         if (this._reflectivity !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._reflectivity, value);
             this._reflectivity = value;
             this._markPropertyModified(_properties.reflectivity);
         }
@@ -1379,7 +1359,8 @@ class StandardMaterial extends Material {
      */
     set dispersion(value) {
         if (this._dispersion !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._dispersion, value);
+            // the shader only depends on whether there is any dispersion
+            this._dirtyShader = this._dirtyShader || (this._dispersion > 0) !== (value > 0);
             this._dispersion = value;
             this._markPropertyModified(_properties.dispersion);
         }
@@ -1447,7 +1428,11 @@ class StandardMaterial extends Material {
      */
     set anisotropyIntensity(value) {
         if (this._anisotropyIntensity !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._anisotropyIntensity, value);
+            // the shader only depends on whether there is any anisotropy, and only with GGX specular
+            // and no anisotropy map, which enables it whatever the intensity. Those invalidate the
+            // shaders themselves when they change.
+            this._dirtyShader = this._dirtyShader || (this.enableGGXSpecular && !this.anisotropyMap &&
+                (this._anisotropyIntensity > 0) !== (value > 0));
             this._anisotropyIntensity = value;
             this._markPropertyModified(_properties.anisotropyIntensity);
         }
@@ -1470,7 +1455,9 @@ class StandardMaterial extends Material {
      */
     set clearCoat(value) {
         if (this._clearCoat !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._clearCoat, value);
+            // the shader only depends on whether there is any clear coat, which enables both the
+            // clear coat and the specular
+            this._dirtyShader = this._dirtyShader || (this._clearCoat !== 0) !== (value !== 0) || (this._clearCoat > 0) !== (value > 0);
             this._clearCoat = value;
             this._markPropertyModified(_properties.clearCoat);
         }
@@ -1515,7 +1502,6 @@ class StandardMaterial extends Material {
      */
     set clearCoatBumpiness(value) {
         if (this._clearCoatBumpiness !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._clearCoatBumpiness, value);
             this._clearCoatBumpiness = value;
             this._markPropertyModified(_properties.clearCoatBumpiness);
         }
@@ -1539,7 +1525,9 @@ class StandardMaterial extends Material {
      */
     set iridescence(value) {
         if (this._iridescence !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescence, value);
+            // the shader only depends on whether there is any iridescence, and only when it is
+            // enabled by useIridescence, which invalidates the shaders itself when it changes
+            this._dirtyShader = this._dirtyShader || (this.useIridescence && (this._iridescence !== 0) !== (value !== 0));
             this._iridescence = value;
             this._markPropertyModified(_properties.iridescence);
         }
@@ -1563,7 +1551,6 @@ class StandardMaterial extends Material {
      */
     set iridescenceRefractionIndex(value) {
         if (this._iridescenceRefractionIndex !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescenceRefractionIndex, value);
             this._iridescenceRefractionIndex = value;
             this._markPropertyModified(_properties.iridescenceRefractionIndex);
         }
@@ -1586,7 +1573,6 @@ class StandardMaterial extends Material {
      */
     set iridescenceThicknessMin(value) {
         if (this._iridescenceThicknessMin !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescenceThicknessMin, value);
             this._iridescenceThicknessMin = value;
             this._markPropertyModified(_properties.iridescenceThicknessMin);
         }
@@ -1609,7 +1595,6 @@ class StandardMaterial extends Material {
      */
     set iridescenceThicknessMax(value) {
         if (this._iridescenceThicknessMax !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescenceThicknessMax, value);
             this._iridescenceThicknessMax = value;
             this._markPropertyModified(_properties.iridescenceThicknessMax);
         }
@@ -1683,7 +1668,6 @@ class StandardMaterial extends Material {
      */
     set anisotropyRotation(value) {
         if (this._anisotropyRotation !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._anisotropyRotation, value);
             this._anisotropyRotation = value;
             this._markPropertyModified(_properties.anisotropyRotation);
         }
@@ -1706,7 +1690,6 @@ class StandardMaterial extends Material {
      */
     set attenuationDistance(value) {
         if (this._attenuationDistance !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._attenuationDistance, value);
             this._attenuationDistance = value;
             this._markPropertyModified(_properties.attenuationDistance);
         }
@@ -1730,7 +1713,6 @@ class StandardMaterial extends Material {
      */
     set heightMapFactor(value) {
         if (this._heightMapFactor !== value) {
-            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._heightMapFactor, value);
             this._heightMapFactor = value;
             this._markPropertyModified(_properties.heightMapFactor);
         }
