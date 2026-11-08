@@ -337,8 +337,11 @@ describe('StandardMaterial uniform buffer', function () {
             expect(dirtyAfter('parallaxShadowSamples', 5), 'staying above 0').to.equal(false);
             expect(dirtyAfter('refraction', 0.5), 'leaving 0').to.equal(true);
             expect(dirtyAfter('refraction', 0.7), 'staying fractional').to.equal(false);
-            expect(dirtyAfter('refractionIndex', 0.5), 'leaving the default').to.equal(true);
-            expect(dirtyAfter('refractionIndex', 0.6), 'staying off the default').to.equal(false);
+            expect(dirtyAfter('refractionIndex', 0.5), 'refraction index never selects shader code').to.equal(false);
+            expect(dirtyAfter('refractionIndex', 1.0 / 1.5), 'refraction index never selects shader code').to.equal(false);
+            expect(dirtyAfter('thickness', 1), 'thickness never selects shader code').to.equal(false);
+            expect(dirtyAfter('occludeSpecularIntensity', 0), 'specular occlusion intensity never selects shader code').to.equal(false);
+            expect(dirtyAfter('clearCoatGloss', 0), 'clear coat gloss never selects shader code').to.equal(false);
             expect(dirtyAfter('ambient', new Color(0, 0, 0)), 'colors never do').to.equal(false);
             expect(dirtyAfter('alphaDither', 0.5), 'the dither alpha never does').to.equal(false);
             expect(dirtyAfter('heightMapFactor', 0.5), 'leaving 1').to.equal(true);

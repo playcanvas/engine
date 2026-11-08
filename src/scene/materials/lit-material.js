@@ -106,6 +106,9 @@ class LitMaterial extends Material {
 
         // a uniform, the shader always contains the flip of the normals of the back faces
         this.setParameter('material_twoSidedLighting', this.twoSidedLighting ? 1 : 0);
+
+        // a uniform, the shader always applies the intensity of the specular occlusion
+        this.setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
     }
 
     /** @ignore */

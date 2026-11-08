@@ -14,7 +14,6 @@ import {
 } from '../../../src/scene/constants.js';
 import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { Material } from '../../../src/scene/materials/material.js';
-import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterialValidator } from '../../../src/scene/materials/standard-material-validator.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
@@ -305,7 +304,6 @@ describe('StandardMaterial', function () {
         expect(material.specularityFactorMapTiling.x).to.equal(1);
         expect(material.specularityFactorMapTiling.y).to.equal(1);
         expect(material.specularityFactorMapUv).to.equal(0);
-        expect(material.specularityFactorTint).to.equal(false);
         expect(material.specularityFactorVertexColor).to.equal(false);
         expect(material.specularityFactorVertexColorChannel).to.equal('g');
 
@@ -666,39 +664,34 @@ describe('StandardMaterial', function () {
             expect(material.variants.size).to.equal(0);
         });
 
-        it('invalidates shaders when refractionIndex moves across its default constant', function () {
-            const defaultIndex = StandardMaterialOptionsBuilder.DEFAULT_REFRACTION_INDEX;
+        it('does not invalidate shaders when values always applied as uniforms change, to and from their neutral value', function () {
             const material = new StandardMaterial();
             material.update();
-            addVariant(material);
-
-            material.refractionIndex = defaultIndex + 0.0002;
-            material.update();
-            expect(material.variants.size).to.equal(0);
-
             const variant = addVariant(material);
-            material.refractionIndex = 0.8;
-            material.update();
-            expect(material.variants.get(1)).to.equal(variant);
 
-            material.refractionIndex = defaultIndex;
-            material.update();
-            expect(material.variants.size).to.equal(0);
+            for (const [name, values] of [
+                ['refractionIndex', [1.0 / 1.5 + 0.0002, 0.8, 1.0 / 1.5]],
+                ['thickness', [1, 0.5, 0]],
+                ['occludeSpecularIntensity', [0, 0.5, 1]],
+                ['clearCoatGloss', [0, 0.5, 1]]
+            ]) {
+                for (const value of values) {
+                    material[name] = value;
+                    material.update();
+                    expect(material.variants.get(1), `${name} ${value}`).to.equal(variant);
+                }
+            }
         });
 
-        it('invalidates shaders when refraction moves across the constant tint tolerance', function () {
+        it('does not invalidate shaders when refraction moves close to 1', function () {
             const material = new StandardMaterial();
             material.refraction = 0.9;
             material.update();
             const variant = addVariant(material);
 
-            material.refraction = 0.6;
-            material.update();
-            expect(material.variants.get(1)).to.equal(variant);
-
             material.refraction = 0.99995;
             material.update();
-            expect(material.variants.size).to.equal(0);
+            expect(material.variants.get(1)).to.equal(variant);
         });
 
         const envTexture = encoding => ({ encoding });
@@ -950,6 +943,46 @@ describe('StandardMaterial', function () {
             material.metalness = 0.5;
             material.update();
             expect(metalnessTint(material)).to.equal(false);
+        });
+    });
+
+    describe('constants applied as uniforms', function () {
+        const scene = { envAtlas: null, skybox: null, _skyboxRotationShaderInclude: false };
+        const cameraShaderParams = new CameraShaderParams();
+        const noLights = new LightList();
+
+        const shaderKey = (material) => {
+            const options = new StandardMaterialOptions();
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights);
+            return standard.generateKey(options);
+        };
+
+        it('generates the same shader key for a neutral value and any other value', function () {
+            for (const [name, neutral, other] of [
+                ['refractionIndex', 1.0 / 1.5, 1.0 / 2.0],
+                ['refraction', 1, 0.5],
+                ['thickness', 1, 0.5],
+                ['specularityFactor', 1, 0.5],
+                ['occludeSpecularIntensity', 1, 0.5],
+                ['clearCoatGloss', 0, 0.5]
+            ]) {
+                // a metalness material with the specular color of KHR_materials_specular, dynamic
+                // refraction and clear coat, so that every one of the values is used
+                const material = new StandardMaterial();
+                material.useMetalness = true;
+                material.useMetalnessSpecularColor = true;
+                material.useDynamicRefraction = true;
+                material.refraction = 0.5;
+                material.clearCoat = 0.5;
+
+                material[name] = neutral;
+                material.update();
+                const key = shaderKey(material);
+
+                material[name] = other;
+                material.update();
+                expect(shaderKey(material), name).to.equal(key);
+            }
         });
     });
 
