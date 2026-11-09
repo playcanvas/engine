@@ -35,34 +35,6 @@ import { Vec3 } from './vec3.js';
  */
 class Quat {
     /**
-     * The x component of the quaternion.
-     *
-     * @type {number}
-     */
-    x;
-
-    /**
-     * The y component of the quaternion.
-     *
-     * @type {number}
-     */
-    y;
-
-    /**
-     * The z component of the quaternion.
-     *
-     * @type {number}
-     */
-    z;
-
-    /**
-     * The w component of the quaternion.
-     *
-     * @type {number}
-     */
-    w;
-
-    /**
      * Creates a new Quat instance.
      *
      * @overload
@@ -91,16 +63,43 @@ class Quat {
      */
     constructor(x = 0, y = 0, z = 0, w = 1) {
         if (x.length === 4) {
-            this.x = x[0];
-            this.y = x[1];
-            this.z = x[2];
-            this.w = x[3];
-        } else {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.w = w;
+            w = x[3];
+            z = x[2];
+            y = x[1];
+            x = x[0];
         }
+
+        // Fields are assigned once here instead of declared as class fields. A declaration without
+        // an initializer stores undefined first, so V8 never unboxes the field as a double and
+        // every fractional write allocates a heap number.
+
+        /**
+         * The x component of the quaternion.
+         *
+         * @type {number}
+         */
+        this.x = x;
+
+        /**
+         * The y component of the quaternion.
+         *
+         * @type {number}
+         */
+        this.y = y;
+
+        /**
+         * The z component of the quaternion.
+         *
+         * @type {number}
+         */
+        this.z = z;
+
+        /**
+         * The w component of the quaternion.
+         *
+         * @type {number}
+         */
+        this.w = w;
     }
 
     /**

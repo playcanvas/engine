@@ -35,13 +35,6 @@ class BoundingSphere {
     center;
 
     /**
-     * The radius of the bounding sphere.
-     *
-     * @type {number}
-     */
-    radius;
-
-    /**
      * Creates a new BoundingSphere instance.
      *
      * @param {Vec3} [center] - The world space coordinate marking the center of the sphere. The
@@ -55,6 +48,15 @@ class BoundingSphere {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');
 
         this.center = center;
+
+        // Assigned here instead of declared as a class field, so V8 can store it as an unboxed
+        // double (see Vec3).
+
+        /**
+         * The radius of the bounding sphere.
+         *
+         * @type {number}
+         */
         this.radius = radius;
     }
 
