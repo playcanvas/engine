@@ -331,6 +331,12 @@ tiles.lruCache.maxBytesSize = 1 * 2 ** 30;
 tiles.setCamera(camera.camera);
 city.addChild(tiles.group);
 
+// Downloads and parses can still be in flight when the example is switched. Disposing the
+// renderer aborts them, so they do not touch the destroyed asset registry and device.
+app.on('destroy', () => {
+    tiles.dispose();
+});
+
 app.on('update', () => {
     tiles.errorTarget = data.get('data.tiles.errorTarget');
     tiles.update();
