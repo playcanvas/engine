@@ -28,29 +28,6 @@ const notBlack = (color) => {
 };
 
 class StandardMaterialOptionsBuilder {
-    /**
-     * The refraction index for which the shader uses a built-in constant instead of the
-     * material_refractionIndex uniform. Shared with StandardMaterial, which needs to invalidate its
-     * shaders when refractionIndex moves across this value.
-     *
-     * @type {number}
-     * @ignore
-     */
-    static DEFAULT_REFRACTION_INDEX = 1.0 / 1.5;
-
-    /**
-     * Compares two material numbers with the tolerance used to decide whether a shader constant can
-     * replace a uniform.
-     *
-     * @param {number} a - The first value.
-     * @param {number} b - The second value.
-     * @returns {boolean} True when the values are equal within tolerance.
-     * @ignore
-     */
-    static equalish(a, b) {
-        return Math.abs(a - b) < 1e-4;
-    }
-
     // Minimal options for Depth and Shadow passes, and the outline pass
     updateMinRef(options, scene, stdMat, objDefs, pass, lightList, vertexFormat, outlinePass = false) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
@@ -103,12 +80,16 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
             options.litOptions.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
             options.litOptions.clusteredLightingShadowType = scene.lighting.shadowType;
-            options.litOptions.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+            // area light shapes the shaders support, none when area lights are disabled
+            const areaLightShapes = scene.lighting.areaLightShapes;
+            options.litOptions.clusteredLightingAreaLightsEnabled = areaLightShapes !== 0;
+            options.litOptions.clusteredLightingAreaLightShapes = areaLightShapes;
         } else {
             options.litOptions.clusteredLightingEnabled = false;
             options.litOptions.clusteredLightingCookiesEnabled = false;
             options.litOptions.clusteredLightingShadowsEnabled = false;
             options.litOptions.clusteredLightingAreaLightsEnabled = false;
+            options.litOptions.clusteredLightingAreaLightShapes = 0;
         }
     }
 
@@ -227,26 +208,28 @@ class StandardMaterialOptionsBuilder {
 
         const useSpecularColor = (!stdMat.useMetalness || stdMat.useMetalnessSpecularColor);
 
-        const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
-                                      (stdMat.specularityFactorTint || stdMat.specularityFactor !== 1);
+        // the specularity factor constant is always applied with the metalness specular color
+        const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor;
 
         const isPackedNormalMap = texture => (texture ? (texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR) : false);
 
-        const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
-
-        options.specularityFactorTint = specularityFactorTint;
-        // the metalness constant is always applied, as gloss is, so that a material with a metalness
-        // of 1 shares the shader of one with a lower metalness, and a change of it never recompiles
+        // these constants are always applied, so that a material with their neutral value (such as
+        // a metalness or refraction of 1, or an index of refraction of 1 / 1.5) shares the shader of
+        // one with any other value, and a change of them never recompiles. Folding the neutral value
+        // into the shader would save only an instruction or two.
         options.metalnessTint = stdMat.useMetalness;
         options.glossTint = true;
+        options.iorTint = true;
+        options.refractionTint = true;
+        options.thicknessTint = true;
+        options.iridescenceTint = true;
+        options.specularityFactorTint = specularityFactorTint;
+
         options.diffuseEncoding = stdMat.diffuseMap?.encoding;
         options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
         options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.packedNormal = isPackedNormalMap(stdMat.normalMap);
-        options.refractionTint = !equalish(stdMat.refraction, 1.0);
-        options.refractionIndexTint = !equalish(stdMat.refractionIndex, DEFAULT_REFRACTION_INDEX);
-        options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
         options.specularEncoding = stdMat.specularMap?.encoding;
         options.sheenEncoding = stdMat.sheenMap?.encoding;
         options.diffuseTransmissionColorEncoding = stdMat.diffuseTransmissionColorMap?.encoding;
@@ -256,11 +239,7 @@ class StandardMaterialOptionsBuilder {
         options.normalDetailPackedNormal = isPackedNormalMap(stdMat.normalDetailMap);
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
         options.aoDetailMode = stdMat.aoDetailMode;
-        options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
-        options.iorTint = !equalish(stdMat.refractionIndex, DEFAULT_REFRACTION_INDEX);
-
-        options.iridescenceTint = stdMat.iridescence !== 1.0;
 
         options.glossInvert = stdMat.glossInvert;
         options.sheenGlossInvert = stdMat.sheenGlossInvert;
@@ -274,7 +253,8 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.ambientSH = !!stdMat.ambientSH;
         options.litOptions.occludeSpecular = stdMat.occludeSpecular;
-        options.litOptions.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
+        // the intensity is always applied, so that an intensity of 1 shares the shader of a lower one
+        options.litOptions.occludeSpecularFloat = true;
 
         options.litOptions.useMsdf = !!stdMat.msdfMap;
         options.litOptions.msdfTextAttribute = !!stdMat.msdfTextAttribute;

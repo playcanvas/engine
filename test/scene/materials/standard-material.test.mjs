@@ -14,7 +14,6 @@ import {
 } from '../../../src/scene/constants.js';
 import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { Material } from '../../../src/scene/materials/material.js';
-import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterialValidator } from '../../../src/scene/materials/standard-material-validator.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
@@ -305,7 +304,6 @@ describe('StandardMaterial', function () {
         expect(material.specularityFactorMapTiling.x).to.equal(1);
         expect(material.specularityFactorMapTiling.y).to.equal(1);
         expect(material.specularityFactorMapUv).to.equal(0);
-        expect(material.specularityFactorTint).to.equal(false);
         expect(material.specularityFactorVertexColor).to.equal(false);
         expect(material.specularityFactorVertexColorChannel).to.equal('g');
 
@@ -666,39 +664,87 @@ describe('StandardMaterial', function () {
             expect(material.variants.size).to.equal(0);
         });
 
-        it('invalidates shaders when refractionIndex moves across its default constant', function () {
-            const defaultIndex = StandardMaterialOptionsBuilder.DEFAULT_REFRACTION_INDEX;
+        it('does not invalidate shaders when values always applied as uniforms change, to and from their neutral value', function () {
             const material = new StandardMaterial();
             material.update();
-            addVariant(material);
-
-            material.refractionIndex = defaultIndex + 0.0002;
-            material.update();
-            expect(material.variants.size).to.equal(0);
-
             const variant = addVariant(material);
-            material.refractionIndex = 0.8;
-            material.update();
-            expect(material.variants.get(1)).to.equal(variant);
 
-            material.refractionIndex = defaultIndex;
-            material.update();
-            expect(material.variants.size).to.equal(0);
+            for (const [name, values] of [
+                ['refractionIndex', [1.0 / 1.5 + 0.0002, 0.8, 1.0 / 1.5]],
+                ['thickness', [1, 0.5, 0]],
+                ['occludeSpecularIntensity', [0, 0.5, 1]],
+                ['clearCoatGloss', [0, 0.5, 1]]
+            ]) {
+                for (const value of values) {
+                    material[name] = value;
+                    material.update();
+                    expect(material.variants.get(1), `${name} ${value}`).to.equal(variant);
+                }
+            }
         });
 
-        it('invalidates shaders when refraction moves across the constant tint tolerance', function () {
+        it('invalidates shaders only when a value enabling a feature crosses 0', function () {
+            for (const name of ['refraction', 'specularityFactor', 'dispersion', 'anisotropyIntensity', 'clearCoat', 'iridescence']) {
+                // a metalness material, whose specular a specularity factor of 0 disables, with the
+                // flags which enable iridescence and anisotropy
+                const material = new StandardMaterial();
+                material.useMetalness = true;
+                material.useIridescence = true;
+                material.enableGGXSpecular = true;
+                material[name] = 0.5;
+                material.update();
+                const variant = addVariant(material);
+
+                // the value of 1 only changes a uniform, as any other value above 0 does
+                for (const value of [1, 0.99995, 0.25, 1]) {
+                    material[name] = value;
+                    material.update();
+                    expect(material.variants.get(1), `${name} ${value}`).to.equal(variant);
+                }
+
+                material[name] = 0;
+                material.update();
+                expect(material.variants.size, `${name} 0`).to.equal(0);
+
+                addVariant(material);
+                material[name] = 1;
+                material.update();
+                expect(material.variants.size, `${name} 0 -> 1`).to.equal(0);
+            }
+        });
+
+        it('does not invalidate shaders when iridescence or anisotropy cross 0 while it cannot change the shader', function () {
             const material = new StandardMaterial();
-            material.refraction = 0.9;
             material.update();
             const variant = addVariant(material);
 
-            material.refraction = 0.6;
-            material.update();
-            expect(material.variants.get(1)).to.equal(variant);
+            // without useIridescence and without GGX specular, the features are off
+            for (const [name, value] of [['iridescence', 0.5], ['iridescence', 0], ['anisotropyIntensity', 0.5], ['anisotropyIntensity', 0]]) {
+                material[name] = value;
+                material.update();
+                expect(material.variants.get(1), `${name} ${value} while off`).to.equal(variant);
+            }
 
-            material.refraction = 0.99995;
+            // an anisotropy map enables the anisotropy whatever the intensity
+            material.enableGGXSpecular = true;
+            material.anisotropyMap = { id: 1, format: 7, type: 'default' };
             material.update();
-            expect(material.variants.size).to.equal(0);
+            const mapVariant = addVariant(material);
+            for (const value of [0.5, 0, 1]) {
+                material.anisotropyIntensity = value;
+                material.update();
+                expect(material.variants.get(1), `anisotropyIntensity ${value} with a map`).to.equal(mapVariant);
+            }
+
+            // enabling the features invalidates the shaders, through their flags
+            material.anisotropyMap = null;
+            material.update();
+            expect(material.variants.size, 'anisotropy map removed').to.equal(0);
+
+            addVariant(material);
+            material.useIridescence = true;
+            material.update();
+            expect(material.variants.size, 'useIridescence enabled').to.equal(0);
         });
 
         const envTexture = encoding => ({ encoding });
@@ -950,6 +996,78 @@ describe('StandardMaterial', function () {
             material.metalness = 0.5;
             material.update();
             expect(metalnessTint(material)).to.equal(false);
+        });
+    });
+
+    describe('constants applied as uniforms', function () {
+        const scene = { envAtlas: null, skybox: null, _skyboxRotationShaderInclude: false };
+        const cameraShaderParams = new CameraShaderParams();
+        const noLights = new LightList();
+
+        const shaderKey = (material) => {
+            const options = new StandardMaterialOptions();
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights);
+            return standard.generateKey(options);
+        };
+
+        it('generates the same shader key for a neutral value and any other value', function () {
+            for (const [name, neutral, other] of [
+                ['refractionIndex', 1.0 / 1.5, 1.0 / 2.0],
+                ['refraction', 1, 0.5],
+                ['thickness', 1, 0.5],
+                ['specularityFactor', 1, 0.5],
+                ['occludeSpecularIntensity', 1, 0.5],
+                ['clearCoatGloss', 0, 0.5]
+            ]) {
+                // a metalness material with the specular color of KHR_materials_specular, dynamic
+                // refraction and clear coat, so that every one of the values is used
+                const material = new StandardMaterial();
+                material.useMetalness = true;
+                material.useMetalnessSpecularColor = true;
+                material.useDynamicRefraction = true;
+                material.refraction = 0.5;
+                material.clearCoat = 0.5;
+
+                material[name] = neutral;
+                material.update();
+                const key = shaderKey(material);
+
+                material[name] = other;
+                material.update();
+                expect(shaderKey(material), name).to.equal(key);
+            }
+        });
+
+        // these setters do not invalidate the shaders, which is only correct while no value of them
+        // changes the shader
+        it('generates the same shader key for any value of the numbers only applied as uniforms', function () {
+            for (const name of [
+                'sheenGloss', 'gloss', 'aoIntensity', 'parallaxSamples', 'opacity', 'alphaFade', 'bumpiness',
+                'normalDetailMapBumpiness', 'reflectivity', 'clearCoatBumpiness', 'iridescenceRefractionIndex',
+                'iridescenceThicknessMin', 'iridescenceThicknessMax', 'anisotropyRotation',
+                'attenuationDistance', 'heightMapFactor', 'heightMapBase'
+            ]) {
+                // a material with the features which use these values
+                const material = new StandardMaterial();
+                material.useMetalness = true;
+                material.useSheen = true;
+                material.useIridescence = true;
+                material.iridescence = 0.5;
+                material.enableGGXSpecular = true;
+                material.anisotropyIntensity = 0.5;
+                material.clearCoat = 0.5;
+                material.useDynamicRefraction = true;
+                material.refraction = 0.5;
+                material.opacityFadesSpecular = false;
+
+                const keys = new Set();
+                for (const value of [0, 0.5, 1, 2]) {
+                    material[name] = value;
+                    material.update();
+                    keys.add(shaderKey(material));
+                }
+                expect(keys.size, name).to.equal(1);
+            }
         });
     });
 

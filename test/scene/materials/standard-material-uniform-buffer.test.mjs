@@ -331,17 +331,46 @@ describe('StandardMaterial uniform buffer', function () {
             };
             expect(dirtyAfter('metalness', 0.5), 'metalness never selects shader code').to.equal(false);
             expect(dirtyAfter('metalness', 1), 'metalness never selects shader code').to.equal(false);
-            expect(dirtyAfter('gloss', 0), 'reaching 0').to.equal(true);
             expect(dirtyAfter('heightMapBase', 1), 'height map base never selects shader code').to.equal(false);
             expect(dirtyAfter('parallaxShadowSamples', 4), 'leaving 0').to.equal(true);
             expect(dirtyAfter('parallaxShadowSamples', 5), 'staying above 0').to.equal(false);
             expect(dirtyAfter('refraction', 0.5), 'leaving 0').to.equal(true);
             expect(dirtyAfter('refraction', 0.7), 'staying fractional').to.equal(false);
-            expect(dirtyAfter('refractionIndex', 0.5), 'leaving the default').to.equal(true);
-            expect(dirtyAfter('refractionIndex', 0.6), 'staying off the default').to.equal(false);
+            expect(dirtyAfter('refraction', 1), 'refraction reaching 1').to.equal(false);
+            expect(dirtyAfter('refraction', 0), 'refraction reaching 0').to.equal(true);
+            expect(dirtyAfter('specularityFactor', 0.5), 'specularity factor leaving 1').to.equal(false);
+            expect(dirtyAfter('specularityFactor', 0), 'specularity factor reaching 0').to.equal(true);
+            expect(dirtyAfter('refractionIndex', 0.5), 'refraction index never selects shader code').to.equal(false);
+            expect(dirtyAfter('refractionIndex', 1.0 / 1.5), 'refraction index never selects shader code').to.equal(false);
+            expect(dirtyAfter('thickness', 1), 'thickness never selects shader code').to.equal(false);
+            expect(dirtyAfter('occludeSpecularIntensity', 0), 'specular occlusion intensity never selects shader code').to.equal(false);
+            expect(dirtyAfter('clearCoatGloss', 0), 'clear coat gloss never selects shader code').to.equal(false);
             expect(dirtyAfter('ambient', new Color(0, 0, 0)), 'colors never do').to.equal(false);
             expect(dirtyAfter('alphaDither', 0.5), 'the dither alpha never does').to.equal(false);
-            expect(dirtyAfter('heightMapFactor', 0.5), 'leaving 1').to.equal(true);
+
+            // numbers which are only applied as uniforms never select shader code, also at 0 and 1
+            for (const name of [
+                'sheenGloss', 'gloss', 'aoIntensity', 'parallaxSamples', 'opacity', 'alphaFade', 'bumpiness',
+                'normalDetailMapBumpiness', 'reflectivity', 'clearCoatBumpiness', 'iridescenceRefractionIndex',
+                'iridescenceThicknessMin', 'iridescenceThicknessMax', 'anisotropyRotation',
+                'attenuationDistance', 'heightMapFactor'
+            ]) {
+                for (const value of [0, 0.5, 1, 0]) {
+                    expect(dirtyAfter(name, value), `${name} ${value}`).to.equal(false);
+                }
+            }
+
+            // features select shader code only when they cross 0, all of them starting at 0, with the
+            // flags which enable iridescence and anisotropy
+            material.useIridescence = true;
+            material.enableGGXSpecular = true;
+            for (const name of ['dispersion', 'anisotropyIntensity', 'clearCoat', 'iridescence']) {
+                expect(dirtyAfter(name, 0.5), `${name} leaving 0`).to.equal(true);
+                expect(dirtyAfter(name, 1), `${name} reaching 1`).to.equal(false);
+                expect(dirtyAfter(name, 0.25), `${name} leaving 1`).to.equal(false);
+                expect(dirtyAfter(name, 0), `${name} reaching 0`).to.equal(true);
+                expect(dirtyAfter(name, 1), `${name} from 0 to 1`).to.equal(true);
+            }
         });
 
         it('does not mark a property modified when the assigned value is equal', function () {

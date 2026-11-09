@@ -241,6 +241,12 @@ fn evaluateLight(
     var diffuseAttenuation: f32 = 1.0;
     var falloffAttenuation: f32 = 1.0;
 
+    #ifdef CLUSTER_AREALIGHTS
+        // LTC specular terms of an area light, evaluated together with its diffuse term
+        var areaLightSpecular: f32 = 0.0;
+        var areaLightSpecularCC: f32 = 0.0;
+    #endif
+
     #ifdef LIT_DIFFUSE_TRANSMISSION
         // the whole attenuation of the light arriving at the back of the surface, which the diffuse
         // transmission lets through
@@ -259,13 +265,14 @@ fn evaluateLight(
         // area lights
         let areaData: ClusterLightAreaData = decodeClusterLightAreaData(light.lightIndex);
 
-        // handle light shape
-        if (light.shape == {LIGHTSHAPE_RECT}) {
-            calcRectLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
-        } else if (light.shape == {LIGHTSHAPE_DISK}) {
-            calcDiskLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
-        } else { // sphere
+        // handle light shape, only the enabled shapes are compiled (a disk uses the rect coordinates)
+        #ifdef CLUSTER_AREALIGHT_SPHERE
+        if (light.shape == {LIGHTSHAPE_SPHERE}) {
             calcSphereLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
+        } else
+        #endif
+        {
+            calcRectLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
         }
 
         falloffAttenuation = getFalloffWindow(light.range, lightDirW);
@@ -289,22 +296,72 @@ fn evaluateLight(
 
         if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
 
-            // handle light shape
-            if (light.shape == {LIGHTSHAPE_RECT}) {
-                diffuseAttenuation = getRectLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
-                #ifdef LIT_DIFFUSE_TRANSMISSION
-                    transmissionAttenuation = getRectLightDiffuse(-worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+            // All LTC evaluations of the light - diffuse (0), diffuse transmission (1), specular (2)
+            // and clear coat specular (3) - go through a single loop, so the large LTC functions are
+            // emitted once instead of once per term and shape. Shader compilers inline all calls,
+            // and on Windows (FXC / DXC) the compile time of the inlined copies dominates.
+            let areaIsRect: bool = light.shape == {LIGHTSHAPE_RECT};
+            let areaIsDisk: bool = light.shape == {LIGHTSHAPE_DISK};
+            let identityInvMat = mat3x3f(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
+
+            // LTC matrices of the specular and the clear coat specular, from their own gloss and normal
+            #ifdef LIT_SPECULAR
+                let areaSpecularInvMat: mat3x3f = getLTCLightInvMat(dLTCUV);
+            #endif
+            #ifdef LIT_CLEARCOAT
+                let areaClearcoatInvMat: mat3x3f = getLTCLightInvMat(ccLTCUV);
+            #endif
+
+            for (var lobe: i32 = 0; lobe < 4; lobe++) {
+
+                #ifndef LIT_DIFFUSE_TRANSMISSION
+                    if (lobe == 1) { continue; }
                 #endif
-            } else if (light.shape == {LIGHTSHAPE_DISK}) {
-                diffuseAttenuation = getDiskLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
-                #ifdef LIT_DIFFUSE_TRANSMISSION
-                    transmissionAttenuation = getDiskLightDiffuse(-worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #ifndef LIT_SPECULAR
+                    if (lobe == 2) { break; }
                 #endif
-            } else { // sphere
-                diffuseAttenuation = getSphereLightDiffuse(worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
-                #ifdef LIT_DIFFUSE_TRANSMISSION
-                    transmissionAttenuation = getSphereLightDiffuse(-worldNormal, viewDir, lightDirW, lightDirNormW) * 16.0;
+                #ifndef LIT_CLEARCOAT
+                    if (lobe == 3) { break; }
                 #endif
+
+                var lobeNormal: vec3f = select(worldNormal, -worldNormal, lobe == 1);
+                var lobeInvMat: mat3x3f = identityInvMat;
+                #ifdef LIT_SPECULAR
+                    if (lobe >= 2) { lobeInvMat = areaSpecularInvMat; }
+                #endif
+                #ifdef LIT_CLEARCOAT
+                    if (lobe == 3) {
+                        lobeNormal = clearcoat_worldNormal;
+                        lobeInvMat = areaClearcoatInvMat;
+                    }
+                #endif
+
+                // only the enabled area light shapes are compiled
+                var lobeValue: f32 = 0.0;
+                #ifdef CLUSTER_AREALIGHT_RECT
+                if (areaIsRect) {
+                    lobeValue = LTC_EvaluateRect(lobeNormal, viewDir, vPositionW, lobeInvMat, dLTCCoords);
+                } else
+                #endif
+                #if defined(CLUSTER_AREALIGHT_DISK) || defined(CLUSTER_AREALIGHT_SPHERE)
+                if (areaIsDisk || lobe >= 2) {
+                    // the specular of a sphere light uses the disk facing the reflection
+                    lobeValue = LTC_EvaluateDisk(lobeNormal, viewDir, vPositionW, lobeInvMat, dLTCCoords);
+                    if (lobe < 2) { lobeValue = FixNan(lobeValue); }
+                } else
+                #endif
+                {
+                    #ifdef CLUSTER_AREALIGHT_SPHERE
+                        lobeValue = getSphereLightDiffuse(lobeNormal, viewDir, lightDirW, lightDirNormW);
+                    #endif
+                }
+
+                if (lobe == 0) { diffuseAttenuation = lobeValue * 16.0; }
+                #ifdef LIT_DIFFUSE_TRANSMISSION
+                    if (lobe == 1) { transmissionAttenuation = lobeValue * 16.0; }
+                #endif
+                if (lobe == 2) { areaLightSpecular = lobeValue; }
+                if (lobe == 3) { areaLightSpecularCC = lobeValue; }
             }
 
             #ifdef LIT_DIFFUSE_TRANSMISSION
@@ -468,32 +525,12 @@ fn evaluateLight(
             // specular and clear coat are material settings and get included by a define based on the material
             #ifdef LIT_SPECULAR
 
-                // area light specular
-                var areaLightSpecular: f32; // Use var because assigned in if/else
-
-                if (light.shape == {LIGHTSHAPE_RECT}) {
-                    areaLightSpecular = getRectLightSpecular(worldNormal, viewDir);
-                } else if (light.shape == {LIGHTSHAPE_DISK}) {
-                    areaLightSpecular = getDiskLightSpecular(worldNormal, viewDir);
-                } else { // sphere
-                    areaLightSpecular = getSphereLightSpecular(worldNormal, viewDir);
-                }
-
+                // area light specular, evaluated together with the diffuse term
                 dSpecularLight = dSpecularLight + dLTCSpecFres * areaLightSpecular * falloffAttenuation * light.color * cookieAttenuation;
 
                 #ifdef LIT_CLEARCOAT
 
                     // area light specular clear coat
-                    var areaLightSpecularCC: f32; // Use var because assigned in if/else
-
-                    if (light.shape == {LIGHTSHAPE_RECT}) {
-                        areaLightSpecularCC = getRectLightSpecular(clearcoat_worldNormal, viewDir);
-                    } else if (light.shape == {LIGHTSHAPE_DISK}) {
-                        areaLightSpecularCC = getDiskLightSpecular(clearcoat_worldNormal, viewDir);
-                    } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecular(clearcoat_worldNormal, viewDir);
-                    }
-
                     ccSpecularLight = ccSpecularLight + ccLTCSpecFres * areaLightSpecularCC * falloffAttenuation * light.color  * cookieAttenuation;
 
                 #endif

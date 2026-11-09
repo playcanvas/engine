@@ -53,12 +53,16 @@ class LitMaterialOptionsBuilder {
             litOptions.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
             litOptions.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
             litOptions.clusteredLightingShadowType = scene.lighting.shadowType;
-            litOptions.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+            // area light shapes the shaders support, none when area lights are disabled
+            const areaLightShapes = scene.lighting.areaLightShapes;
+            litOptions.clusteredLightingAreaLightsEnabled = areaLightShapes !== 0;
+            litOptions.clusteredLightingAreaLightShapes = areaLightShapes;
         } else {
             litOptions.clusteredLightingEnabled = false;
             litOptions.clusteredLightingCookiesEnabled = false;
             litOptions.clusteredLightingShadowsEnabled = false;
             litOptions.clusteredLightingAreaLightsEnabled = false;
+            litOptions.clusteredLightingAreaLightShapes = 0;
         }
     }
 
@@ -68,7 +72,8 @@ class LitMaterialOptionsBuilder {
 
         litOptions.ambientSH = material.ambientSH;
         litOptions.occludeSpecular = material.occludeSpecular;
-        litOptions.occludeSpecularFloat = (material.occludeSpecularIntensity !== 1.0);
+        // the intensity is always applied, so that an intensity of 1 shares the shader of a lower one
+        litOptions.occludeSpecularFloat = true;
 
         litOptions.useMsdf = false;
         litOptions.msdfTextAttribute = false;
