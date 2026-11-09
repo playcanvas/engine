@@ -137,6 +137,11 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
         output.vModelScale = vec3f(length(dModelMatrix[0].xyz), length(dModelMatrix[1].xyz), length(dModelMatrix[2].xyz));
     #endif
 
+    #ifdef LIT_DITHER_ID
+        // per-mesh offset of the dither pattern, hashed from the position of the model matrix
+        output.vDitherId = 64.0 * fract(sin(dot(dModelMatrix[3].xyz, vec3f(12.9898, 78.233, 37.719))) * 43758.5453);
+    #endif
+
     #ifdef MSDF
         unpackMsdfParams();
 
