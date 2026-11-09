@@ -154,5 +154,11 @@
   },
   "engines": {
     "node": ">=18.3.0"
+  },
+  "allowScripts": {
+    "canvas": true,
+    "esbuild": true,
+    "unrs-resolver": true,
+    "webgpu": true
   }
 }
