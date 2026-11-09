@@ -1,6 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { SEMANTIC_POSITION } from '../platform/graphics/constants.js';
-import { drawQuadWithShader } from './graphics/quad-render-utils.js';
+import { RenderPassShaderQuad } from './graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { ShaderUtils } from './shader-lib/shader-utils.js';
@@ -18,6 +18,14 @@ import { BlendState } from '../platform/graphics/blend-state.js';
  * @category Graphics
  */
 class MorphInstance {
+    /**
+     * The pass blending the morph targets into the render targets, created when first needed.
+     *
+     * @type {RenderPassShaderQuad|null}
+     * @private
+     */
+    _morphPass = null;
+
     /**
      * Create a new MorphInstance instance.
      *
@@ -106,6 +114,9 @@ class MorphInstance {
 
         // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
+
+        this._morphPass?.destroy();
+        this._morphPass = null;
 
         const morph = this.morph;
         if (morph) {
@@ -218,8 +229,15 @@ class MorphInstance {
         this.morphFactor.setValue(this._shaderMorphWeights);
         this.morphIndex.setValue(this._shaderMorphIndex);
 
-        // render quad with shader
-        drawQuadWithShader(device, renderTarget, this.shader, undefined, undefined, 'MorphBlend');
+        // render quad with shader, using a pass reused for both render targets every frame
+        let morphPass = this._morphPass;
+        if (!morphPass) {
+            morphPass = this._morphPass = new RenderPassShaderQuad(device);
+            morphPass.name = 'MorphBlend';
+        }
+        morphPass.shader = this.shader;
+        morphPass.init(renderTarget);
+        morphPass.render();
     }
 
     _updateTextureMorph(activeCount) {

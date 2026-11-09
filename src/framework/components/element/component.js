@@ -1414,7 +1414,9 @@ class ElementComponent extends Component {
     /**
      * Sets the spacing between the letters of the text, as a multiplier on the default character
      * advance, defaulting to 1 (normal spacing). Values below 1 tighten the text and values above 1
-     * spread it out. Only works for {@link ELEMENTTYPE_TEXT} elements.
+     * spread it out. As it scales the advance of each character, wide characters are spread further
+     * apart than narrow ones - use {@link letterSpacing} to space all characters evenly. Only works
+     * for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {number}
      */
@@ -1430,6 +1432,33 @@ class ElementComponent extends Component {
     get spacing() {
         if (this._text) {
             return this._text.spacing;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the extra space between the letters of the text, as a fraction of the {@link fontSize},
+     * defaulting to 0. For example, 0.1 adds a tenth of the font size between each pair of
+     * characters, the same for every character, like the CSS `letter-spacing` property. Negative
+     * values tighten the text. The space only goes between characters, so it does not widen a line
+     * past its last character, and it is added on top of {@link spacing}. Only works for
+     * {@link ELEMENTTYPE_TEXT} elements.
+     *
+     * @type {number}
+     */
+    set letterSpacing(arg) {
+        this._setValue('letterSpacing', arg);
+    }
+
+    /**
+     * Gets the extra space between the letters of the text.
+     *
+     * @type {number}
+     */
+    get letterSpacing() {
+        if (this._text) {
+            return this._text.letterSpacing;
         }
 
         return null;
@@ -1528,7 +1557,7 @@ class ElementComponent extends Component {
      * `[0, 0]` is the bottom left and `[1, 1]` is the top right. Only works for
      * {@link ELEMENTTYPE_TEXT} elements.
      *
-     * @type {Vec2}
+     * @param {Vec2|number[]} arg - The alignment, as a Vec2 or an array of 2 numbers.
      */
     set alignment(arg) {
         this._setValue('alignment', arg);

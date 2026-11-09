@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { isModuleWithExternalDependencies, parseConfig, stripConfig } from './example-source.mjs';
+import { exampleRedirects } from '../src/app/redirects.mjs';
 
 /**
  * @import { ExampleConfig } from './example-source.mjs'
@@ -28,11 +29,19 @@ import { isModuleWithExternalDependencies, parseConfig, stripConfig } from './ex
  */
 
 /**
+ * @typedef {object} ExampleRedirect
+ * @property {string} name - target name of the old example path.
+ * @property {ExampleMetadata} item - example the old path redirects to.
+ */
+
+/**
  * @typedef {object} ExampleTargets
  * @property {CopyTarget[]} sources - transformed source files.
  * @property {CopyTarget[]} assets - copied asset files.
+ * @property {CopyTarget[]} thumbnails - copied thumbnail files.
  * @property {ExampleHtmlTarget[]} html - iframe html targets.
  * @property {ExampleMetadata[]} share - share page targets.
+ * @property {ExampleRedirect[]} redirects - old example paths.
  */
 
 /**
@@ -60,11 +69,12 @@ export const EXAMPLE_TARGET = 'esnext';
 export const EXAMPLE_TEMPLATE = 'templates/example.html';
 export const SHARE_TEMPLATE = 'templates/share.html';
 export const IFRAME_DIR = 'dist/iframe';
+export const THUMBNAIL_DIR = 'dist/thumbnails';
+export const THUMBNAIL_SIZES = /** @type {const} */ (['large', 'small']);
 export const STATIC_TARGETS = [
     { src: './src/static', dest: 'dist/' },
     { src: './iframe', dest: 'dist/iframe' },
     { src: './assets', dest: 'dist/static/assets/' },
-    { src: './thumbnails', dest: 'dist/thumbnails/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     {
         src: './node_modules/@playcanvas/observer/dist/index.mjs',
@@ -72,7 +82,8 @@ export const STATIC_TARGETS = [
     },
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
     { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
-    { src: './node_modules/@playcanvas/inspector/src', dest: 'dist/modules/inspector' }
+    { src: './node_modules/@playcanvas/inspector/src', dest: 'dist/modules/inspector' },
+    { src: './node_modules/3d-tiles-renderer/build', dest: 'dist/modules/3d-tiles-renderer' }
 ];
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.
@@ -176,22 +187,42 @@ export const getExample = (name) => {
 
 /**
  * @param {ExampleMetadata} item - example metadata.
- * @param {string} file - example file suffix.
+ * @param {string} file - example file name.
  * @returns {string} source file path.
  */
 export const getExamplePath = (item, file) => {
-    return path.join(item.path, `${item.exampleNameKebab}.${file}`);
+    return path.join(item.path, file);
 };
 
 /**
- * @param {Pick<ExampleMetadata, 'path' | 'exampleNameKebab'>} item - example metadata.
- * @returns {string[]} example file suffixes.
+ * @param {typeof THUMBNAIL_SIZES[number]} size - thumbnail size.
+ * @returns {string} thumbnail file name in the example folder.
  */
-export const getFiles = ({ path: dir, exampleNameKebab }) => {
-    const prefix = `${exampleNameKebab}.`;
-    return fs.readdirSync(dir)
-    .filter(file => file.startsWith(prefix))
-    .map(file => file.replace(prefix, ''));
+export const thumbnailFile = size => `thumbnail-${size}.webp`;
+
+/**
+ * @param {ExampleMetadata} item - example metadata.
+ * @param {typeof THUMBNAIL_SIZES[number]} size - thumbnail size.
+ * @returns {string} thumbnail file path.
+ */
+export const getThumbnailPath = (item, size) => getExamplePath(item, thumbnailFile(size));
+
+const THUMBNAIL_FILES = new Set(THUMBNAIL_SIZES.map(thumbnailFile));
+
+/**
+ * The thumbnails are not part of the example: the browser serves them on their own.
+ *
+ * @param {string} file - file name in an example folder.
+ * @returns {boolean} true if the file is part of the example.
+ */
+export const isExampleFile = file => !file.startsWith('.') && !THUMBNAIL_FILES.has(file);
+
+/**
+ * @param {Pick<ExampleMetadata, 'path'>} item - example metadata.
+ * @returns {string[]} example file names.
+ */
+export const getFiles = ({ path: dir }) => {
+    return fs.readdirSync(dir).filter(isExampleFile);
 };
 
 /**
@@ -199,8 +230,7 @@ export const getFiles = ({ path: dir, exampleNameKebab }) => {
  * @returns {Promise<ExampleConfig>} parsed example config.
  */
 export const readExampleConfig = async (item) => {
-    const src = path.join(item.path, `${item.exampleNameKebab}.example.mjs`);
-    const code = await fs.promises.readFile(src, 'utf8');
+    const code = await fs.promises.readFile(getExamplePath(item, 'example.mjs'), 'utf8');
     return parseConfig(code);
 };
 
@@ -279,11 +309,78 @@ export const writeShareHtml = async (item) => {
 };
 
 /**
+ * @param {string} name - target name of an old example path.
+ * @returns {ExampleMetadata | undefined} example the old path redirects to.
+ */
+export const getRedirect = (name) => {
+    const from = name.replace('_', '/');
+    return Object.hasOwn(exampleRedirects, from) ? getExample(exampleRedirects[from].replace('/', '_')) : undefined;
+};
+
+/**
+ * Resolves every redirect, failing on one that points at no example or hides an existing one, so
+ * the redirect table cannot silently go stale.
+ *
+ * @returns {ExampleRedirect[]} redirects.
+ */
+export const getRedirects = () => {
+    return Object.keys(exampleRedirects).map((from) => {
+        const name = from.replace('/', '_');
+        const item = getRedirect(name);
+        if (!item) {
+            throw new Error(`Redirect from ${from} points to ${exampleRedirects[from]}, which is not an example`);
+        }
+        if (getExample(name)) {
+            throw new Error(`Redirect from ${from} hides the example at that path`);
+        }
+        return { name, item };
+    });
+};
+
+/**
+ * @param {ExampleMetadata} item - example the old path redirects to.
+ * @returns {string} iframe html forwarding to the example, keeping the query.
+ */
+export const createRedirectHtml = item => `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script>location.replace('${targetName(item)}.html' + location.search + location.hash);</script>
+</head>
+</html>
+`;
+
+/**
+ * Writes the iframe page, share page and thumbnails of an old example path, for sites that embed
+ * or link to those directly.
+ *
+ * @param {ExampleRedirect} redirect - redirect.
+ * @returns {Promise<void>} completion promise.
+ */
+export const writeRedirect = async ({ name, item }) => {
+    await fs.promises.mkdir(IFRAME_DIR, { recursive: true });
+    await fs.promises.writeFile(`${IFRAME_DIR}/${name}.html`, createRedirectHtml(item));
+
+    const dir = `dist/share/${name}`;
+    await fs.promises.mkdir(dir, { recursive: true });
+    await fs.promises.writeFile(`${dir}/index.html`, await createShareHtml(item));
+
+    // an image cannot redirect, so the thumbnails are copied under the old name
+    await Promise.all(THUMBNAIL_SIZES.map(async (size) => {
+        const src = getThumbnailPath(item, size);
+        if (await exists(src)) {
+            await copyFile({ src, dest: `${THUMBNAIL_DIR}/${name}_${size}.webp` });
+        }
+    }));
+};
+
+/**
  * @returns {ExampleTargets} example build targets.
  */
 export const getExampleTargets = () => {
     const sources = [];
     const assets = [];
+    const thumbnails = [];
     const html = [];
     const share = [];
 
@@ -304,9 +401,17 @@ export const getExampleTargets = () => {
             }
             assets.push({ src: input, dest: output });
         }
+
+        // served flat under the example's target name, the URL the sidebar and share pages use
+        for (const size of THUMBNAIL_SIZES) {
+            const src = getThumbnailPath(item, size);
+            if (fs.existsSync(src)) {
+                thumbnails.push({ src, dest: `${THUMBNAIL_DIR}/${name}_${size}.webp` });
+            }
+        }
     }
 
-    return { sources, assets, html, share };
+    return { sources, assets, thumbnails, html, share, redirects: getRedirects() };
 };
 
 /**

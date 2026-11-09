@@ -10,8 +10,6 @@ class RenderPassShadowLocalClustered extends RenderPass {
     constructor(device, shadowRenderer, shadowRendererLocal) {
         super(device);
 
-        this.requiresCubemaps = false;
-
         this.shadowRenderer = shadowRenderer;
         this.shadowRendererLocal = shadowRendererLocal;
     }

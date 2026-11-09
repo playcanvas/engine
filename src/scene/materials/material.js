@@ -40,6 +40,7 @@ import { isViewTexture } from '../renderer/view-textures.js';
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { TextureView } from '../../platform/graphics/texture-view.js'
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
  * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  * @import { ShaderChunkMap } from '../shader-lib/shader-chunk-map.js';
@@ -142,7 +143,7 @@ class Material {
      * {@link Material#setDefine} (or {@link Material#copy}); direct mutation bypasses the cached
      * {@link Material#definesKey}.
      *
-     * @type {Map<string, string>}
+     * @type {Map<string, string|number|boolean>}
      * @ignore
      */
     defines = new Map();
@@ -177,7 +178,7 @@ class Material {
      * This requires a multi-sampled render target, and is silently ignored when rendering to a
      * single-sampled one. On WebGPU it additionally requires the first color attachment of the
      * render target to use a blendable format with an alpha channel, and is silently ignored
-     * otherwise - note that {@link PIXELFORMAT_111110F}, the default HDR format used by
+     * otherwise - note that {@link PIXELFORMAT_RG11B10F}, the default HDR format used by
      * {@link CameraFrame}, has no alpha channel.
      */
     alphaToCoverage = false;
@@ -1431,7 +1432,9 @@ class Material {
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the specified parameter.
+     * @param {number|number[]|ArrayBufferView|Texture|TextureView|StorageBuffer} data - The value for the
+     * specified parameter. A {@link TextureView} is only supported on WebGPU, see
+     * {@link Texture#getView}.
      */
     setParameter(name, data) {
 
@@ -1514,8 +1517,8 @@ class Material {
      * parts of the shader code.
      *
      * @param {string} name - The name of the define to set.
-     * @param {string|undefined|boolean} value - The value of the define. If undefined or false, the
-     * define is removed.
+     * @param {string|number|boolean|undefined} value - The value of the define. If undefined or
+     * false, the define is removed.
      *
      * A simple example on how to set a custom shader define value used by the shader processor.
      *

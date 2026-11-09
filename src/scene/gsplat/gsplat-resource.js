@@ -20,15 +20,25 @@ const getSHData = (gsplatData, numCoeffs) => {
     return result;
 };
 
-/** @ignore */
+/**
+ * A Gaussian splat resource that stores uncompressed splat data. Created when loading uncompressed
+ * PLY files and glTF files with the `KHR_gaussian_splatting` extension, and for compressed PLY or
+ * SOG files whose asset data sets `decompress` to true.
+ *
+ * @category Graphics
+ */
 class GSplatResource extends GSplatResourceBase {
-    /** @type {0 | 1 | 2 | 3} */
+    /**
+     * @type {0 | 1 | 2 | 3 | 4}
+     * @ignore
+     */
     shBands;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatData} gsplatData - The splat data.
      * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
+     * @ignore
      */
     constructor(device, gsplatData, options = {}) {
         super(device, gsplatData, options);
@@ -53,6 +63,11 @@ class GSplatResource extends GSplatResourceBase {
                 if (this.shBands > 2) {
                     streams.push({ name: 'splatSH_8to11', format: PIXELFORMAT_RGBA32U });
                     streams.push({ name: 'splatSH_12to15', format: PIXELFORMAT_RGBA32U });
+                    if (this.shBands > 3) {
+                        streams.push({ name: 'splatSH_16to19', format: PIXELFORMAT_RGBA32U });
+                        streams.push({ name: 'splatSH_20to23', format: PIXELFORMAT_RGBA32U });
+                        streams.push({ name: 'splatSH_24', format: PIXELFORMAT_R32U });
+                    }
                 } else {
                     streams.push({ name: 'splatSH_8to11', format: PIXELFORMAT_R32U });
                 }
@@ -81,12 +96,19 @@ class GSplatResource extends GSplatResourceBase {
         defines.set('SH_BANDS', this.shBands);
     }
 
+    get extras() {
+        return this.gsplatData.extras;
+    }
+
     /**
      * Updates pixel data of splatColor texture based on the supplied color components and opacity.
      * Assumes that the texture is using an RGBA format where RGB are color components influenced
-     * by SH spherical harmonics and A is opacity after a sigmoid transformation.
+     * by SH spherical harmonics and A is opacity after a sigmoid transformation, or the optional
+     * `opacity_linear` property when present: the true (linear) opacity, above 1 for merged
+     * (decimated) gaussians, which always wins over `opacity`.
      *
      * @param {GSplatData} gsplatData - The source data
+     * @ignore
      */
     updateColorData(gsplatData) {
         const texture = this.streams.getTexture('splatColor');
@@ -100,20 +122,32 @@ class GSplatResource extends GSplatResourceBase {
         const cg = gsplatData.getProp('f_dc_1');
         const cb = gsplatData.getProp('f_dc_2');
         const ca = gsplatData.getProp('opacity');
+        const linear = gsplatData.getProp('opacity_linear');
         const activated = gsplatData.activated;
 
         const SH_C0 = 0.28209479177387814;
 
-        for (let i = 0; i < this.numSplats; ++i) {
-            const r = (cr[i] * SH_C0 + 0.5);
-            const g = (cg[i] * SH_C0 + 0.5);
-            const b = (cb[i] * SH_C0 + 0.5);
-            const a = activated ? ca[i] : 1 / (1 + Math.exp(-ca[i]));
+        const numSplats = this.numSplats;
+        for (let i = 0; i < numSplats; ++i) {
+            data[i * 4 + 0] = float2Half(cr[i] * SH_C0 + 0.5);
+            data[i * 4 + 1] = float2Half(cg[i] * SH_C0 + 0.5);
+            data[i * 4 + 2] = float2Half(cb[i] * SH_C0 + 0.5);
+        }
 
-            data[i * 4 + 0] = float2Half(r);
-            data[i * 4 + 1] = float2Half(g);
-            data[i * 4 + 2] = float2Half(b);
-            data[i * 4 + 3] = float2Half(a);
+        // alpha: the source is the same for every splat, so choose it once
+        if (linear) {
+            // opacity_linear always wins, drawn up to 1.5625, the top of the SOG v3 opacity byte (see gsplatHelpersVS)
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(Math.min(linear[i], 1.5625));
+            }
+        } else if (activated) {
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(ca[i]);
+            }
+        } else {
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(1 / (1 + Math.exp(-ca[i])));
+            }
         }
 
         texture.unlock();
@@ -121,6 +155,7 @@ class GSplatResource extends GSplatResourceBase {
 
     /**
      * @param {GSplatData} gsplatData - The source data
+     * @ignore
      */
     updateTransformData(gsplatData) {
 
@@ -166,22 +201,30 @@ class GSplatResource extends GSplatResourceBase {
 
     /**
      * @param {GSplatData} gsplatData - The source data
+     * @ignore
      */
     updateSHData(gsplatData) {
         const sh1to3Texture = this.streams.getTexture('splatSH_1to3');
         const sh4to7Texture = this.streams.getTexture('splatSH_4to7');
         const sh8to11Texture = this.streams.getTexture('splatSH_8to11');
         const sh12to15Texture = this.streams.getTexture('splatSH_12to15');
+        const sh16to19Texture = this.streams.getTexture('splatSH_16to19');
+        const sh20to23Texture = this.streams.getTexture('splatSH_20to23');
+        const sh24Texture = this.streams.getTexture('splatSH_24');
 
         const sh1to3Data = sh1to3Texture.lock();
         const sh4to7Data = sh4to7Texture?.lock();
         const sh8to11Data = sh8to11Texture?.lock();
         const sh12to15Data = sh12to15Texture?.lock();
+        const sh16to19Data = sh16to19Texture?.lock();
+        const sh20to23Data = sh20to23Texture?.lock();
+        const sh24Data = sh24Texture?.lock();
 
         const numCoeffs = {
             1: 3,
             2: 8,
-            3: 15
+            3: 15,
+            4: 24
         }[this.shBands];
 
         const src = getSHData(gsplatData, numCoeffs * 3);
@@ -244,6 +287,20 @@ class GSplatResource extends GSplatResourceBase {
                     sh12to15Data[i * 4 + 1] = c[36] << 21 | c[37] << 11 | c[38];
                     sh12to15Data[i * 4 + 2] = c[39] << 21 | c[40] << 11 | c[41];
                     sh12to15Data[i * 4 + 3] = c[42] << 21 | c[43] << 11 | c[44];
+
+                    if (this.shBands > 3) {
+                        sh16to19Data[i * 4 + 0] = c[45] << 21 | c[46] << 11 | c[47];
+                        sh16to19Data[i * 4 + 1] = c[48] << 21 | c[49] << 11 | c[50];
+                        sh16to19Data[i * 4 + 2] = c[51] << 21 | c[52] << 11 | c[53];
+                        sh16to19Data[i * 4 + 3] = c[54] << 21 | c[55] << 11 | c[56];
+
+                        sh20to23Data[i * 4 + 0] = c[57] << 21 | c[58] << 11 | c[59];
+                        sh20to23Data[i * 4 + 1] = c[60] << 21 | c[61] << 11 | c[62];
+                        sh20to23Data[i * 4 + 2] = c[63] << 21 | c[64] << 11 | c[65];
+                        sh20to23Data[i * 4 + 3] = c[66] << 21 | c[67] << 11 | c[68];
+
+                        sh24Data[i] = c[69] << 21 | c[70] << 11 | c[71];
+                    }
                 } else {
                     sh8to11Data[i] = c[21] << 21 | c[22] << 11 | c[23];
                 }
@@ -254,6 +311,9 @@ class GSplatResource extends GSplatResourceBase {
         sh4to7Texture?.unlock();
         sh8to11Texture?.unlock();
         sh12to15Texture?.unlock();
+        sh16to19Texture?.unlock();
+        sh20to23Texture?.unlock();
+        sh24Texture?.unlock();
     }
 }
 

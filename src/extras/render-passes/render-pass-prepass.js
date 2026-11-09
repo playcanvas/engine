@@ -16,9 +16,6 @@ import { FloatPacking } from '../../core/math/float-packing.js';
 
 const tempMeshInstances = [];
 
-// uniform name of the depth texture
-const DEPTH_UNIFORM_NAME = 'uSceneDepthMap';
-
 /**
  * A render pass which typically executes before the rendering of the main scene, and renders data
  * that is required for the main rendering pass (and also in following passes) into separate render
@@ -100,10 +97,9 @@ class RenderPassPrepass extends RenderPass {
     }
 
     after() {
-        // Assign the linear depth texture to the uniform, and record it on the camera - the uniform is
-        // global, so anything after this frame wanting this camera's depth needs the camera's own record
-        this.device.scope.resolve(DEPTH_UNIFORM_NAME).setValue(this.linearDepthTexture);
-        this.camera.camera.publishSceneDepthMap(this.linearDepthTexture, this.device.renderVersion);
+        // publish the linear depth texture, which the pass writes outright
+        this.camera.camera.publishSceneDepthMap(this.linearDepthTexture, this.device.renderVersion,
+            true, this.linearDepthFormat === PIXELFORMAT_RGBA8, false, this.renderTarget.flipY);
     }
 
     execute() {

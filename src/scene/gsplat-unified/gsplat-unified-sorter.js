@@ -49,9 +49,10 @@ class GSplatUnifiedSorter extends EventHandler {
         this.scene = scene ?? null;
 
         // Build worker source with GSplatSortBinWeights class injected via stringification.
+        const workerPort = platform.environment === 'node' ? 'require("node:worker_threads").parentPort' : 'self';
         const workerSource = `
             const GSplatSortBinWeights = ${GSplatSortBinWeights.toString()};
-            (${UnifiedSortWorker.toString()})()
+            (${UnifiedSortWorker.toString()})(${workerPort})
         `;
 
         if (platform.environment === 'node') {
@@ -215,8 +216,14 @@ class GSplatUnifiedSorter extends EventHandler {
      *
      * @param {object} params - The sorting parameters - per-splat directions, offsets, scales, AABBs.
      * @param {boolean} radialSorting - Whether to use radial distance sorting.
+     * @param {number} nearClip - The camera's near clip distance, which log spaced sort keys start
+     * inside of.
+     * @param {boolean} logDepthKeys - Whether a directional sort's keys are log spaced, which needs
+     * a perspective, non-fisheye camera (radial sort keys always are).
+     * @returns {boolean} True if a sort job was sent; false if one is in flight for this version,
+     * in which case the caller asks again later.
      */
-    setSortParams(params, radialSorting) {
+    setSortParams(params, radialSorting, nearClip, logDepthKeys) {
 
         // only process job requests if we have a new version or no jobs are in flight
         if (this.hasNewVersion || this.jobsInFlight === 0) {
@@ -236,11 +243,15 @@ class GSplatUnifiedSorter extends EventHandler {
                 command: 'sort',
                 sortParams: params,
                 radialSorting: radialSorting,
+                nearClip: nearClip,
+                logDepthKeys: logDepthKeys,
                 order: orderData.buffer
             }, [
                 orderData.buffer
             ]);
+            return true;
         }
+        return false;
     }
 }
 

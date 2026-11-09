@@ -1,7 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_SKIN } from '../constants.js';
+import {
+    SHADERDEF_CLIP, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_SKIN
+} from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { shaderGeneratorShader } from '../shader-lib/programs/shader-generator-shader.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
@@ -155,6 +158,7 @@ class ShaderMaterial extends Material {
             useMorphPosition: (objDefs & SHADERDEF_MORPH_POSITION) !== 0,
             useMorphNormal: (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
             useMorphTextureBasedInt: (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0,
+            useClipPlanes: (objDefs & SHADERDEF_CLIP) !== 0,
 
             pass: params.pass,
             gamma: params.cameraShaderParams.shaderOutputGamma,

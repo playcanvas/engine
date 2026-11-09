@@ -365,10 +365,9 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
      * Allocates or resizes internal buffers.
      *
      * @param {number} elementCount - Number of elements to sort.
-     * @param {boolean} [forceRealloc] - Force buffer reallocation even if sizes match.
      * @private
      */
-    _allocateBuffers(elementCount, forceRealloc = false) {
+    _allocateBuffers(elementCount) {
         // Buffer sizing is driven by `capacity` (the high-water mark) to avoid
         // realloc churn when the workload shrinks. Dispatch/clear sizes must
         // track the CURRENT sort's elementCount - otherwise a 1M sort that
@@ -381,7 +380,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
 
         // See ComputeRadixSortMultipass._allocateBuffers: grow on any effective-count increase,
         // shrink only when a lowered capacity drops the thread-block count.
-        const needRealloc = forceRealloc || !this._keys0 ||
+        const needRealloc = !this._keys0 ||
             effectiveCount > this._allocatedElementCount ||
             allocThreadBlocks < this._allocatedThreadBlocks;
 
@@ -461,10 +460,9 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         this._hasInitialValues = hasInitialValues;
         this._skipLastPassKeyWrite = skipLastPassKeyWrite;
 
-        const prevDestructiveKeys = this._destructiveKeys;
-        this._destructiveKeys = destructiveKeys;
+        this._setDestructiveKeys(destructiveKeys);
 
-        this._allocateBuffers(elementCount, destructiveKeys !== prevDestructiveKeys);
+        this._allocateBuffers(elementCount);
         this._ensureBinningComputes(numPasses);
 
         if (destructiveKeys) {
@@ -584,10 +582,9 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         this._hasInitialValues = hasInitialValues;
         this._skipLastPassKeyWrite = skipLastPassKeyWrite;
 
-        const prevDestructiveKeys = this._destructiveKeys;
-        this._destructiveKeys = destructiveKeys;
+        this._setDestructiveKeys(destructiveKeys);
 
-        this._allocateBuffers(maxElementCount, destructiveKeys !== prevDestructiveKeys);
+        this._allocateBuffers(maxElementCount);
         this._ensureBinningComputes(numPasses);
 
         if (destructiveKeys) {

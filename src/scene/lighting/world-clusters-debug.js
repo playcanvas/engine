@@ -208,7 +208,7 @@ class WorldClustersDebug {
                 const node = new GraphNode('WorldClustersDebug');
                 this.meshInstance = new MeshInstance(mesh, material, node);
                 this.meshInstance.cull = false;
-                this.meshInstance.castShadow = false;
+                this.meshInstance.castShadows = false;
             }
 
             this._pendingMeshInstance = this.meshInstance;

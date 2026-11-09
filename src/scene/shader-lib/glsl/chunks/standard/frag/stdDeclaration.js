@@ -28,6 +28,10 @@ export default /* glsl */`
         // the ambient color of the material
         uniform vec3 material_ambient;
 
+        #ifdef LIT_DISPERSION
+            uniform float material_dispersion;
+        #endif
+
         #ifdef LIT_REFRACTION
             float dTransmission;
             float dThickness;
@@ -36,18 +40,6 @@ export default /* glsl */`
             #ifndef LIT_METALNESS
                 float dIor;
             #endif
-        #endif
-
-        #ifdef LIT_SCENE_COLOR
-            uniform sampler2D uSceneColorMap;
-        #endif
-
-        #ifdef LIT_SCREEN_SIZE
-            uniform vec4 screen_size;
-        #endif
-
-        #ifdef LIT_TRANSFORMS
-            uniform mat4 matrix_viewProjection;
         #endif
 
         // parallax
@@ -75,6 +67,19 @@ export default /* glsl */`
             uniform sampler2D texture_diffuseDetailMap;
         #endif
 
+        // diffuse transmission
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            float dDiffuseTransmission;
+            vec3 dDiffuseTransmissionColor;
+
+            #ifdef STD_DIFFUSETRANSMISSION_TEXTURE_ALLOCATE
+                uniform sampler2D texture_diffuseTransmissionMap;
+            #endif
+            #ifdef STD_DIFFUSETRANSMISSIONCOLOR_TEXTURE_ALLOCATE
+                uniform sampler2D texture_diffuseTransmissionColorMap;
+            #endif
+        #endif
+
         // normal
         #ifdef STD_NORMAL_TEXTURE_ALLOCATE
             uniform sampler2D texture_normalMap;
@@ -97,7 +102,7 @@ export default /* glsl */`
             float dIridescence;
             float dIridescenceThickness;
 
-            #ifdef STD_IRIDESCENCE_THICKNESS_TEXTURE_ALLOCATE
+            #ifdef STD_IRIDESCENCETHICKNESS_TEXTURE_ALLOCATE
                 uniform sampler2D texture_iridescenceThicknessMap;
             #endif
             #ifdef STD_IRIDESCENCE_TEXTURE_ALLOCATE

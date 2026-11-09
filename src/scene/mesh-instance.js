@@ -12,11 +12,15 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SHADERDEF_INSTANCEINDEX, SHADERDEF_MASK_SHIFT,
+    SHADERDEF_INSTANCEINDEX, SHADERDEF_AFFECT_DYNAMIC, SHADERDEF_AFFECT_LIGHTMAPPED, SHADERDEF_BAKE,
+    SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7,
+    SHADERDEF_CLIP,
     SHADOW_CASCADE_ALL,
     instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
+import { ClipPlanes, MAX_CLIP_PLANES } from './clip-planes.js';
+import { lightMaskToShaderDefs, shaderDefsToLightMask } from './light-mask.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
@@ -57,8 +61,10 @@ import { isViewTexture } from './renderer/view-textures.js';
  * @import { SkinInstance } from './skin-instance.js'
  * @import { StencilParameters } from '../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { TextureView } from '../platform/graphics/texture-view.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @import { Vec3 } from '../core/math/vec3.js'
+ * @import { Plane } from '../core/shape/plane.js'
  * @import { CameraComponent } from '../framework/components/camera/component.js';
  */
 
@@ -69,7 +75,42 @@ const _tempBoneAabb = new BoundingBox();
 const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
-const lookupHashes = new Uint32Array(5);
+const lookupHashes = new Uint32Array(4);
+
+// the shader define of each texture coordinate set of the mesh, by set index
+const uvShaderDefs = [SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7];
+
+// the shader defines that follow the vertex format of the mesh
+const FORMAT_SHADERDEFS = SHADERDEF_UV0 | SHADERDEF_UV1 | SHADERDEF_UV2 | SHADERDEF_UV3 | SHADERDEF_UV4 |
+    SHADERDEF_UV5 | SHADERDEF_UV6 | SHADERDEF_UV7 | SHADERDEF_VCOLOR | SHADERDEF_TANGENTS;
+
+/**
+ * Returns the shader defines that follow the vertex format of a mesh: the texture coordinate sets,
+ * vertex colors and tangents it provides.
+ *
+ * @param {VertexBuffer|null} vertexBuffer - The vertex buffer of the mesh.
+ * @returns {number} The shader defines.
+ */
+const getFormatShaderDefs = (vertexBuffer) => {
+    let shaderDefs = 0;
+    const format = vertexBuffer?.format;
+    if (format) {
+        for (let i = 0; i < uvShaderDefs.length; i++) {
+            if (format.hasUv(i)) {
+                shaderDefs |= uvShaderDefs[i];
+            }
+        }
+        shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
+        shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
+    }
+    return shaderDefs;
+};
+
+// the shader defines that hold the light mask
+const LIGHTMASK_SHADERDEFS = SHADERDEF_AFFECT_DYNAMIC | SHADERDEF_AFFECT_LIGHTMAPPED | SHADERDEF_BAKE;
+
+// the values of a light mask
+const LIGHTMASK_ALL = MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED | MASK_BAKE;
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -209,10 +250,10 @@ class ShaderInstance {
  * with {@link Layer#addMeshInstances}.
  *
  * Per-instance rendering state lives here rather than on the shared mesh or material:
- * {@link visible}, {@link castShadow} and `receiveShadow`, {@link cull} for frustum culling,
- * {@link drawOrder} for manual sorting, and {@link setParameter} for shader uniforms that override
- * the material's. {@link aabb} is the world-space bounds derived from the mesh bounds and the
- * node's transform, and can be assigned to override it.
+ * {@link visible}, {@link castShadows} and {@link receiveShadows}, {@link cull} for frustum
+ * culling, {@link drawOrder} for manual sorting, and {@link setParameter} for shader uniforms that
+ * override the material's. {@link aabb} is the world-space bounds derived from the mesh bounds and
+ * the node's transform, and can be assigned to override it.
  *
  * ### Instancing
  *
@@ -288,13 +329,15 @@ class MeshInstance {
      * casting without overhead of removing from scene. Note that this property does not add the
      * mesh instance to appropriate list of shadow casters on a {@link Layer}, but allows mesh to
      * be skipped from shadow casting while it is in the list already. Defaults to false.
+     *
+     * @type {boolean}
      */
-    castShadow = false;
+    castShadows = false;
 
     /**
      * Specifies a bitmask that controls which shadow cascades a mesh instance contributes
      * to when rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source.
-     * This setting is only effective if the {@link castShadow} property is enabled.
+     * This setting is only effective if the {@link castShadows} property is enabled.
      * Defaults to {@link SHADOW_CASCADE_ALL}, which means the mesh casts shadows into all available cascades.
      *
      * @type {number}
@@ -383,7 +426,10 @@ class MeshInstance {
     id = PickerId.get();
 
     /**
-     * Custom function used to customize culling (e.g. for 2D UI elements).
+     * Custom function used to customize culling (e.g. for 2D UI elements), or to render the mesh
+     * instance for some cameras only. Called with the camera, it returns whether the camera renders
+     * the mesh instance. Only used when {@link MeshInstance#cull} is enabled, but then also for the
+     * cameras which do not frustum cull.
      *
      * @type {Function|null}
      * @ignore
@@ -573,14 +619,6 @@ class MeshInstance {
     _updateAabbFunc = null;
 
     /**
-     * The internal sorting key used by the shadow renderer: the id of the shadow shader the mesh
-     * instance was last rendered with, scaled above the 22 bits of the id of its material.
-     *
-     * @ignore
-     */
-    _sortKeyShadow = 0;
-
-    /**
      * The internal sorting key used by the forward renderer, in case SORTMODE_MATERIALMESH sorting
      * is used.
      *
@@ -618,7 +656,7 @@ class MeshInstance {
     _morphInstance = null;
 
     /** @private */
-    _receiveShadow = true;
+    _receiveShadows = true;
 
     /** @private */
     _renderStyle = RENDERSTYLE_SOLID;
@@ -635,12 +673,21 @@ class MeshInstance {
     _shaderCache = new Map();
 
     /**
-     * The shader defines: 24 bits of flags, and the light mask in the top 8 bits, see
-     * SHADERDEF_MASK_SHIFT. Defaults to no flags and a mask of MASK_AFFECT_DYNAMIC.
+     * The shader defines, a combination of the SHADERDEF_ flags. Defaults to the flag of a light
+     * mask of MASK_AFFECT_DYNAMIC.
      *
      * @private
      */
-    _shaderDefs = MASK_AFFECT_DYNAMIC << SHADERDEF_MASK_SHIFT;
+    _shaderDefs = SHADERDEF_AFFECT_DYNAMIC;
+
+    /**
+     * The clipping of the mesh instance, see {@link MeshInstance#clippingPlanes}. Created on first
+     * use.
+     *
+     * @type {ClipPlanes|null}
+     * @private
+     */
+    _clipPlanes = null;
 
     /**
      * @type {CalculateSortDistanceCallback|null}
@@ -675,18 +722,12 @@ class MeshInstance {
         Debug.assert(!(mesh instanceof GraphNode), 'Incorrect parameters for MeshInstance\'s constructor. Use new MeshInstance(mesh, material, node)');
         Debug.call(() => initMeshInstanceDebug(this));
 
-        this.node = node;           // The node that defines the transform of the mesh instance
+        this._node = node;          // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
         mesh.incRefCount();
         this.material = material;   // The material with which to render this instance
 
-        if (mesh.vertexBuffer) {
-            const format = mesh.vertexBuffer.format;
-            this._shaderDefs |= format.hasUv(0) ? SHADERDEF_UV0 : 0;
-            this._shaderDefs |= format.hasUv(1) ? SHADERDEF_UV1 : 0;
-            this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
-            this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
-        }
+        this._updateFormatShaderDefs(mesh.vertexBuffer);
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
@@ -771,33 +812,40 @@ class MeshInstance {
     }
 
     /**
-     * Sets the graphics mesh being instanced.
+     * Sets the graphics mesh being instanced. The shaders of the mesh instance are set up for the
+     * vertex streams the mesh has when it is assigned, so assign the mesh again, even when it is
+     * already set, after {@link Mesh#update} adds or removes one of its vertex streams.
      *
      * @type {Mesh|null}
      */
     set mesh(mesh) {
 
-        if (mesh === this._mesh) {
-            return;
-        }
+        if (mesh !== this._mesh) {
 
-        if (this._mesh) {
+            if (this._mesh) {
 
-            // a mesh instance without a mesh is not drawn, so it releases its slot in the mesh
-            // instance storage, and gets a new one when drawn with a mesh again. Owners dropping a
-            // mesh instance without destroying it, such as the sprite component, clear its mesh
-            if (!mesh && this.storageSlot >= 0) {
-                this._mesh.device.meshInstanceStorage?.free(this.storageSlot);
-                this.storageSlot = -1;
+                // a mesh instance without a mesh is not drawn, so it releases its slot in the mesh
+                // instance storage, and gets a new one when drawn with a mesh again. Owners dropping
+                // a mesh instance without destroying it, such as the sprite component, clear its mesh
+                if (!mesh && this.storageSlot >= 0) {
+                    this._mesh.device.meshInstanceStorage?.free(this.storageSlot);
+                    this.storageSlot = -1;
+                }
+
+                this._mesh.decRefCount();
             }
 
-            this._mesh.decRefCount();
+            this._mesh = mesh;
+
+            if (mesh) {
+                mesh.incRefCount();
+            }
         }
 
-        this._mesh = mesh;
-
+        // the shader defines follow the vertex format of the mesh, so assigning the same mesh again
+        // updates them to a vertex buffer it got since
         if (mesh) {
-            mesh.incRefCount();
+            this._updateFormatShaderDefs(mesh.vertexBuffer);
         }
     }
 
@@ -932,6 +980,19 @@ class MeshInstance {
      */
     getShaderInstance(shaderPass, lightList, scene, cameraShaderParams, viewUniformFormat) {
 
+        Debug.call(() => {
+            // the shader defines follow the vertex format of the mesh only when it is assigned, so
+            // a mesh whose update added or removed a vertex stream needs to be assigned again, see
+            // Mesh#update
+            const vertexBuffer = this._mesh.vertexBuffer;
+            if (vertexBuffer !== this._debugFormatVertexBuffer) {
+                this._debugFormatVertexBuffer = vertexBuffer;
+                if (getFormatShaderDefs(vertexBuffer) !== (this._shaderDefs & FORMAT_SHADERDEFS)) {
+                    Debug.warnOnce(`The mesh of mesh instance ${this.node?.name ?? ''} has vertex streams its shaders are not set up for: an update added or removed one. Assign the mesh to the mesh instance again: meshInstance.mesh = mesh. See Mesh#update.`);
+                }
+            }
+        });
+
         const shaderDefs = this._shaderDefs;
 
         // unique hash for the required shader
@@ -939,9 +1000,6 @@ class MeshInstance {
         lookupHashes[1] = lightList.hash;
         lookupHashes[2] = shaderDefs;
         lookupHashes[3] = cameraShaderParams.hash;
-
-        // the uv sets the mesh provides decide which of the material's maps the shader samples
-        lookupHashes[4] = this.mesh.vertexBuffer?.format.uvMask ?? 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // look up the cache
@@ -1052,6 +1110,19 @@ class MeshInstance {
     }
 
     /**
+     * Takes the shader defines that follow the vertex format of the mesh from its vertex buffer.
+     *
+     * @param {VertexBuffer|null} vertexBuffer - The vertex buffer of the mesh.
+     * @private
+     */
+    _updateFormatShaderDefs(vertexBuffer) {
+        Debug.call(() => {
+            this._debugFormatVertexBuffer = vertexBuffer;
+        });
+        this._updateShaderDefs((this._shaderDefs & ~FORMAT_SHADERDEFS) | getFormatShaderDefs(vertexBuffer));
+    }
+
+    /**
      * Sets the callback to calculate sort distance. In some circumstances mesh instances are
      * sorted by a distance calculation to determine their rendering order. Set this callback to
      * override the default distance calculation, which gives the dot product of the camera forward
@@ -1074,15 +1145,25 @@ class MeshInstance {
         return this._calculateSortDistance;
     }
 
-    set receiveShadow(val) {
-        if (this._receiveShadow !== val) {
-            this._receiveShadow = val;
+    /**
+     * Sets whether this mesh instance receives shadows. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set receiveShadows(val) {
+        if (this._receiveShadows !== val) {
+            this._receiveShadows = val;
             this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
         }
     }
 
-    get receiveShadow() {
-        return this._receiveShadow;
+    /**
+     * Gets whether this mesh instance receives shadows.
+     *
+     * @type {boolean}
+     */
+    get receiveShadows() {
+        return this._receiveShadows;
     }
 
     set batching(val) {
@@ -1165,15 +1246,14 @@ class MeshInstance {
 
     /**
      * Sets the light mask of this mesh instance: which {@link LightComponent}s light it. The value
-     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`, and
-     * only its lowest 8 bits are used. Defaults to `MASK_AFFECT_DYNAMIC`.
+     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`; other
+     * bits are ignored. Defaults to `MASK_AFFECT_DYNAMIC`.
      *
      * @type {number}
      */
     set mask(val) {
-        Debug.assert((val & ~0xff) === 0, `MeshInstance#mask ${val} does not fit the 8 bits of the light mask`);
-        const flags = this._shaderDefs & ((1 << SHADERDEF_MASK_SHIFT) - 1);
-        this._updateShaderDefs(flags | ((val & 0xff) << SHADERDEF_MASK_SHIFT));
+        Debug.assert((val & ~LIGHTMASK_ALL) === 0, `MeshInstance#mask ${val} has bits other than MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED and MASK_BAKE`);
+        this._updateShaderDefs((this._shaderDefs & ~LIGHTMASK_SHADERDEFS) | lightMaskToShaderDefs(val));
     }
 
     /**
@@ -1182,7 +1262,142 @@ class MeshInstance {
      * @type {number}
      */
     get mask() {
-        return this._shaderDefs >>> SHADERDEF_MASK_SHIFT;
+        return shaderDefsToLightMask(this._shaderDefs);
+    }
+
+    /**
+     * Sets the planes that clip this mesh instance, in world space. The parts of the mesh behind
+     * any of the planes - on the side opposite to the plane normal - are not rendered, which cuts
+     * the mesh open along the planes. Use {@link clipIntersection} to clip only the parts behind
+     * all of the planes instead. Up to 8 planes are supported, and any more are ignored. Defaults
+     * to an empty array.
+     *
+     * The clipped parts are removed from every render pass: they cast no shadows, write no depth
+     * and cannot be picked with a {@link Picker}. The planes are copied, so changing a plane after
+     * the assignment has no effect until the array is assigned again. Only the first plane a mesh
+     * instance is given compiles new shaders - moving the planes or changing their number does not.
+     *
+     * The planes of the camera clip the mesh instance as well, see
+     * {@link CameraComponent#clippingPlanes}. Each set of planes clips with its own
+     * {@link clipIntersection}, and a part that either set clips is not rendered.
+     *
+     * A {@link RenderComponent} writes the clipping of its mesh instances, its planes and mode
+     * together, also when it has no planes: when its {@link RenderComponent#clippingPlanes} or
+     * {@link RenderComponent#clipIntersection} are assigned, and when it gets new mesh instances,
+     * such as when its asset loads or its type changes. Planes assigned to one of its mesh
+     * instances directly last until the component next writes its clipping. A batched mesh instance
+     * is drawn by its batch, so planes assigned to it apply once its batch group is rebuilt, see
+     * {@link BatchManager#markGroupDirty}. {@link RenderComponent#clippingPlanes} rebuilds the
+     * batch group itself. Cloning an entity copies the clipping of its render component, but not
+     * planes assigned to its mesh instances directly.
+     *
+     * {@link StandardMaterial} is clipped. The shader of a {@link ShaderMaterial} is clipped when
+     * its fragment shader includes the `clipPlanesPS` chunk and calls `applyClipPlanes` with the
+     * world space position of the fragment, both inside a `#ifdef CLIP_PLANES` block.
+     *
+     * Note that a cut through a closed mesh exposes its inside, which consists of the back faces
+     * of the mesh. These are not rendered unless the material renders both sides, see
+     * {@link Material#cull}.
+     *
+     * @type {Plane[]}
+     * @example
+     * // keep only the part of the mesh below a height of 1
+     * meshInstance.clippingPlanes = [
+     *     new Plane().setFromPointNormal(new Vec3(0, 1, 0), Vec3.DOWN)
+     * ];
+     */
+    set clippingPlanes(value) {
+        Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
+            `MeshInstance#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest are ` +
+            'ignored.', this);
+        if (this._clipPlanes || value?.length) {
+            (this._clipPlanes ??= new ClipPlanes()).set(value);
+            this._updateClipPlanes();
+        }
+    }
+
+    /**
+     * Gets the planes that clip this mesh instance, in world space. These are copies of the
+     * assigned planes, and changing them has no effect until the array is assigned again.
+     *
+     * @type {Plane[]}
+     */
+    get clippingPlanes() {
+        return (this._clipPlanes ??= new ClipPlanes()).returned;
+    }
+
+    /**
+     * Gets whether the mesh instance has clipping planes, as last assigned. Changes to the planes
+     * returned by {@link clippingPlanes} do not count until they are assigned.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get clipped() {
+        return (this._shaderDefs & SHADERDEF_CLIP) !== 0;
+    }
+
+    /**
+     * Sets whether only the parts of the mesh behind all of the {@link clippingPlanes} are clipped,
+     * instead of the parts behind any of them. With two planes this cuts a wedge out of the mesh,
+     * and with three a corner, as a cutaway does. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this.clipIntersection !== value) {
+            (this._clipPlanes ??= new ClipPlanes()).intersection = value;
+
+            // the uniforms are written from the planes as they were assigned, so changes to the
+            // returned planes stay unapplied
+            this._updateClipPlanes();
+        }
+    }
+
+    /**
+     * Gets whether only the parts of the mesh behind all of the {@link clippingPlanes} are
+     * clipped.
+     *
+     * @type {boolean}
+     */
+    get clipIntersection() {
+        return this._clipPlanes?.intersection ?? false;
+    }
+
+    /**
+     * Gives the mesh instance the clipping of its render component, the planes as assigned and the
+     * mode together, replacing its own. Null removes its clipping.
+     *
+     * @param {ClipPlanes|null} clipPlanes - The clipping of the render component.
+     * @ignore
+     */
+    _setClipPlanes(clipPlanes) {
+        if (this._clipPlanes || clipPlanes) {
+            (this._clipPlanes ??= new ClipPlanes()).copy(clipPlanes);
+            this._updateClipPlanes();
+        }
+    }
+
+    /**
+     * Writes the clipping into the uniforms the shader reads, and enables the clipping shader code
+     * when there is any plane.
+     *
+     * @private
+     */
+    _updateClipPlanes() {
+        const clipPlanes = this._clipPlanes;
+        if (clipPlanes.assigned.length > 0) {
+            clipPlanes.updateUniforms();
+
+            // set again to apply the new contents of the arrays
+            this.setParameter('clipPlanes[0]', clipPlanes.planesData);
+            this.setParameter('clipParams', clipPlanes.paramsData);
+            this._updateShaderDefs(this._shaderDefs | SHADERDEF_CLIP);
+        } else {
+            this.deleteParameter('clipPlanes[0]');
+            this.deleteParameter('clipParams');
+            this._updateShaderDefs(this._shaderDefs & ~SHADERDEF_CLIP);
+        }
     }
 
     /**
@@ -1565,7 +1780,8 @@ class MeshInstance {
      * guaranteed to be re-read on later draws.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
+     * @param {number|number[]|Texture|TextureView|Float32Array} data - The value for the specified
+     * parameter. A {@link TextureView} is only supported on WebGPU, see {@link Texture#getView}.
      */
     setParameter(name, data) {
 
@@ -1889,6 +2105,50 @@ class MeshInstance {
             this._skinInstance._updateBeforeCull = !this._customAabb;
         }
     }
+
+    // ---- deprecated block start ----
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#castShadows} instead.
+     * @ignore
+     */
+    set castShadow(value) {
+        Debug.deprecated('MeshInstance#castShadow is deprecated. Use MeshInstance#castShadows instead.');
+        this.castShadows = value;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#castShadows} instead.
+     * @ignore
+     */
+    get castShadow() {
+        Debug.deprecated('MeshInstance#castShadow is deprecated. Use MeshInstance#castShadows instead.');
+        return this.castShadows;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#receiveShadows} instead.
+     * @ignore
+     */
+    set receiveShadow(value) {
+        Debug.deprecated('MeshInstance#receiveShadow is deprecated. Use MeshInstance#receiveShadows instead.');
+        this.receiveShadows = value;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#receiveShadows} instead.
+     * @ignore
+     */
+    get receiveShadow() {
+        Debug.deprecated('MeshInstance#receiveShadow is deprecated. Use MeshInstance#receiveShadows instead.');
+        return this.receiveShadows;
+    }
+
+    // ---- deprecated block end ----
 }
 
 export { MeshInstance };

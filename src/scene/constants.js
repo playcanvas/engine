@@ -1,4 +1,5 @@
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import { SceneDepthMapHandle } from '../platform/graphics/scene-depth-map-handle.js';
 
 /**
  * Subtract the color of the source fragment from the destination fragment and write the result to
@@ -663,14 +664,19 @@ export const TONEMAP_FILMIC = 1;
 export const TONEMAP_HEJL = 2;
 
 /**
- * ACES filmic tonemapping curve.
+ * ACES filmic tonemapping curve, using Krzysztof Narkowicz's fit. A single curve is applied to each
+ * color channel, without the color space conversions of the ACES transforms. See
+ * {@link TONEMAP_ACES2} for a fit that includes them.
  *
  * @category Graphics
  */
 export const TONEMAP_ACES = 3;
 
 /**
- * ACES v2 filmic tonemapping curve.
+ * ACES filmic tonemapping curve, using Stephen Hill's fit of the ACES 1.x Reference Rendering
+ * Transform (RRT) and Output Device Transform (ODT), including their color space conversions. It
+ * follows the ACES reference more closely than {@link TONEMAP_ACES}. Despite the name, this is not
+ * ACES 2.0.
  *
  * @category Graphics
  */
@@ -690,6 +696,25 @@ export const TONEMAP_NEUTRAL = 5;
  */
 export const TONEMAP_NONE = 6;
 
+/**
+ * AgX tonemapping curve, the default view transform of Blender since version 4.0. Bright,
+ * saturated colors desaturate towards white, and the result is lower in contrast and saturation
+ * than {@link TONEMAP_ACES2}. This neutral, flat look is often used as a base for color grading.
+ * See {@link TONEMAP_AGX_PUNCHY} for a higher contrast version. Based on Filament's implementation
+ * of Blender's AgX.
+ *
+ * @category Graphics
+ */
+export const TONEMAP_AGX = 7;
+
+/**
+ * AgX tonemapping curve with its Punchy look, which raises the contrast and saturation of
+ * {@link TONEMAP_AGX}. Uses the parameters of Filament's Punchy look.
+ *
+ * @category Graphics
+ */
+export const TONEMAP_AGX_PUNCHY = 8;
+
 // names of the tonemaps
 export const tonemapNames = [
     'LINEAR',
@@ -698,7 +723,9 @@ export const tonemapNames = [
     'ACES',
     'ACES2',
     'NEUTRAL',
-    'NONE'
+    'NONE',
+    'AGX',
+    'AGX_PUNCHY'
 ];
 
 /**
@@ -734,13 +761,15 @@ export const REFLECTIONSRC_ENVATLAS = 'envAtlas';
 export const REFLECTIONSRC_ENVATLASHQ = 'envAtlasHQ';
 export const REFLECTIONSRC_CUBEMAP = 'cubeMap';
 export const REFLECTIONSRC_SPHEREMAP = 'sphereMap';
+export const REFLECTIONSRC_PLANAR = 'planar';
 
 export const reflectionSrcNames = {
     [REFLECTIONSRC_NONE]: 'NONE',
     [REFLECTIONSRC_ENVATLAS]: 'ENVATLAS',
     [REFLECTIONSRC_ENVATLASHQ]: 'ENVATLASHQ',
     [REFLECTIONSRC_CUBEMAP]: 'CUBEMAP',
-    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP'
+    [REFLECTIONSRC_SPHEREMAP]: 'SPHEREMAP',
+    [REFLECTIONSRC_PLANAR]: 'PLANAR'
 };
 
 // ambient source used by the shader generation
@@ -754,7 +783,7 @@ export const ambientSrcNames = {
     [AMBIENTSRC_CONSTANT]: 'CONSTANT'
 };
 
-// the shader defines of a mesh instance: flags in the lowest 24 bits, see SHADERDEF_MASK_SHIFT
+// the shader defines of a mesh instance
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;
 export const SHADERDEF_UV0 = 4;
@@ -772,8 +801,21 @@ export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
 export const SHADERDEF_BATCH = 16384;
 export const SHADERDEF_INSTANCEINDEX = 32768; // the draws use the instance index themselves
 
-// the shift of the light mask of a mesh instance, in the top 8 bits of its shader defines
-export const SHADERDEF_MASK_SHIFT = 24;
+// the light mask of a mesh instance, a flag for each of its values, see MeshInstance#mask
+export const SHADERDEF_AFFECT_DYNAMIC = 65536;
+export const SHADERDEF_AFFECT_LIGHTMAPPED = 131072;
+export const SHADERDEF_BAKE = 262144;
+
+// the texture coordinate sets of the mesh above SHADERDEF_UV0 and SHADERDEF_UV1
+export const SHADERDEF_UV2 = 524288;
+export const SHADERDEF_UV3 = 1048576;
+export const SHADERDEF_UV4 = 2097152;
+export const SHADERDEF_UV5 = 4194304;
+export const SHADERDEF_UV6 = 8388608;
+export const SHADERDEF_UV7 = 16777216;
+
+// the mesh instance has clipping planes, see MeshInstance#clippingPlanes
+export const SHADERDEF_CLIP = 33554432;
 
 /**
  * The shadow map is not to be updated.
@@ -1377,8 +1419,8 @@ export const GSPLAT_DEBUG_HEATMAP = 3;
 export const GSPLAT_DEBUG_AABBS = 4;
 
 /**
- * Debug rendering that draws world-space AABBs for each octree node of streamed GSplats,
- * colorized by the currently selected LOD.
+ * Debug rendering that draws world-space AABBs for the octree nodes streamed GSplats currently
+ * render, colorized by their LOD, and in gray the nodes still loading for the current view.
  *
  * @type {number}
  * @category Graphics
@@ -1434,7 +1476,7 @@ export const SCENETEXTURE_DEPTH = 'depth';
  * @ignore
  */
 export const sceneTextureUniformNames = {
-    [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
+    [SCENETEXTURE_DEPTH]: SceneDepthMapHandle.uniformName
 };
 
 /**

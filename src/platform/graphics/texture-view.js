@@ -8,11 +8,16 @@ const stringIds = new StringIds();
 
 /**
  * A TextureView specifies a texture and a subset of its mip levels and array layers. It is used
- * when binding textures to compute shaders to specify which portion of the texture should be
- * accessed. Create a TextureView using {@link Texture#getView}.
+ * when binding a texture to a compute shader or to a material, to specify which portion of the
+ * texture is accessed. Create a TextureView using {@link Texture#getView}.
  *
- * Note: TextureView is only supported on WebGPU. On WebGL, the full texture is always bound and
- * this class has no effect.
+ * A shader indexes the mip levels and array layers of a view relative to the view - array layer 0
+ * of a view is its first layer, `baseArrayLayer`. A view also allows a texture to be sampled in the
+ * same render pass that renders into a different layer or mip level of the texture, which is not
+ * possible when the whole texture is bound.
+ *
+ * Note: TextureView is only supported on WebGPU. On WebGL, the full texture is always bound,
+ * including all its mip levels and array layers.
  *
  * @category Graphics
  */

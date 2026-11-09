@@ -1,0 +1,9 @@
+Model Information:
+* title:	Car Concept
+* source:	https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept
+* author:	Eric Chadwick, Darmstadt Graphics Group GmbH, based on Concept Car 004 by Unity Fan (CC0)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+* note:	Khronos and 3D Commerce logos are trademarks of the Khronos Group, not covered by the license.

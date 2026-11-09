@@ -19,11 +19,18 @@ const strideCopy = (target, targetStride, src, srcStride, numEntries) => {
     }
 };
 
+/**
+ * A Gaussian splat resource that stores splat data in the compressed PLY format. Created when
+ * loading compressed PLY files, unless their asset data sets `decompress` to true.
+ *
+ * @category Graphics
+ */
 class GSplatCompressedResource extends GSplatResourceBase {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatCompressedData} gsplatData - The splat data.
      * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
+     * @ignore
      */
     constructor(device, gsplatData, options = {}) {
         super(device, gsplatData, options);

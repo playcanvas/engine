@@ -4,6 +4,7 @@ import sinon from 'sinon';
 import { Entity } from '../../../src/framework/entity.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
 import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME, SHADOWUPDATE_REALTIME, SHADOW_PCF3_32F, SHADOW_PCSS_32F, SHADOW_PCF5_32F } from '../../../src/scene/constants.js';
+import { LightSlotUniforms } from '../../../src/scene/lighting/light-slot-uniforms.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -155,6 +156,39 @@ describe('Directional shadow cull requests', function () {
         app.render();
         expect(cull.callCount).to.equal(2);
         expect(renderFace.callCount).to.equal(4);
+    });
+
+    [1, 4].forEach((numCascades) => {
+        it(`renders each camera with its own split distances with ${numCascades} cascades`, function () {
+            light.numCascades = numCascades;
+            light.shadowDistance = 40;
+            camera.nearClip = 0.1;
+            camera.farClip = 1000;
+            const second = createCamera();
+            second.nearClip = 1;
+            second.farClip = 15;
+
+            // the split distances the forward passes of each camera render with
+            const dispatched = new Map();
+            const dispatch = LightSlotUniforms.prototype._dispatchDirectional;
+            sinon.stub(LightSlotUniforms.prototype, '_dispatchDirectional').callsFake(function (directional, cam) {
+                if (!dispatched.has(cam)) dispatched.set(cam, []);
+                dispatched.get(cam).push(Array.from(directional._shadowCascadeDistances));
+                return dispatch.call(this, directional, cam);
+            });
+
+            app.render();
+
+            // the last split is the shadow distance of the camera: min(farClip, shadowDistance)
+            for (const [cam, shadowDistance] of [[camera.camera, 40], [second.camera, 15]]) {
+                const own = light.getRenderData(cam, 0).shadowCascadeDistances;
+                expect(dispatched.get(cam)).to.not.be.empty;
+                dispatched.get(cam).forEach((distances) => {
+                    expect(distances[3]).to.be.closeTo(shadowDistance, 1e-5);
+                    expect(distances).to.eql(Array.from(own));
+                });
+            }
+        });
     });
 
     it('binds cached shadows for a newly added camera without requesting a cull', function () {

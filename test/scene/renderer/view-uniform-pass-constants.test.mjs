@@ -138,6 +138,18 @@ describe('View uniform pass constants', function () {
         expect(Array.from(jitter.value)).to.deep.equal([0, 0, 0, 0]);
     });
 
+    it('renders an XR camera whose views have not arrived yet as a single view', function () {
+        // a camera is in a session from its start, and its views come with the session's first XR
+        // frame: an empty view list would set up no view bind group at all
+        const camera = app.root.findByName('camera').camera.camera;
+        camera._xrViews = [];
+
+        const viewList = app.renderer.setCameraUniforms(camera, null);
+        camera._xrViews = null;
+
+        expect(viewList).to.be.null;
+    });
+
     it('draws fogged, normal mapped, dithered and shadow casting mesh instances with only their matrices per draw', function () {
 
         // the shaders are processed on WebGPU

@@ -3,7 +3,10 @@ import sinon from 'sinon';
 
 import { Debug } from '../../src/core/debug.js';
 import { Entity } from '../../src/framework/entity.js';
-import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE, SHADERDEF_INSTANCEINDEX } from '../../src/scene/constants.js';
+import {
+    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    SHADERDEF_AFFECT_DYNAMIC, SHADERDEF_AFFECT_LIGHTMAPPED, SHADERDEF_BAKE, SHADERDEF_INSTANCEINDEX, SHADERDEF_UV7
+} from '../../src/scene/constants.js';
 import { Light } from '../../src/scene/light.js';
 import { LitMaterialOptionsBuilder } from '../../src/scene/materials/lit-material-options-builder.js';
 import { ShaderMaterial } from '../../src/scene/materials/shader-material.js';
@@ -14,8 +17,8 @@ import { createApp } from '../app.mjs';
 import { createGraphicsDevice } from '../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
-// The light mask of a mesh instance is packed with its shader define flags into one number, which
-// identifies its shader variants: the flags in the lowest 24 bits, and the mask in the top 8.
+// The light mask of a mesh instance is held in its shader defines as a flag for each of its values,
+// so it identifies the shader variants of the mesh instance like its other flags.
 describe('MeshInstance#mask', function () {
 
     let device;
@@ -31,30 +34,45 @@ describe('MeshInstance#mask', function () {
         device.destroy();
     });
 
+    const maskFlags = SHADERDEF_AFFECT_DYNAMIC | SHADERDEF_AFFECT_LIGHTMAPPED | SHADERDEF_BAKE;
+
     it('defaults to MASK_AFFECT_DYNAMIC', function () {
         expect(meshInstance.mask).to.equal(MASK_AFFECT_DYNAMIC);
+        expect(meshInstance._shaderDefs & maskFlags).to.equal(SHADERDEF_AFFECT_DYNAMIC);
     });
 
-    it('returns every 8 bit value it is given, the top bit included', function () {
-        for (let mask = 0; mask < 256; mask++) {
+    it('returns every combination of MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED and MASK_BAKE', function () {
+        for (let mask = 0; mask < 8; mask++) {
             meshInstance.mask = mask;
             expect(meshInstance.mask).to.equal(mask);
         }
     });
 
+    it('holds each value of the mask in its own shader define flag', function () {
+        const flags = [
+            [MASK_AFFECT_DYNAMIC, SHADERDEF_AFFECT_DYNAMIC],
+            [MASK_AFFECT_LIGHTMAPPED, SHADERDEF_AFFECT_LIGHTMAPPED],
+            [MASK_BAKE, SHADERDEF_BAKE]
+        ];
+        for (const [mask, flag] of flags) {
+            meshInstance.mask = mask;
+            expect(meshInstance._shaderDefs & maskFlags).to.equal(flag);
+        }
+    });
+
     it('keeps the flags when set, and the flags keep it', function () {
         meshInstance.setInstancing(true);
-        meshInstance.mask = MASK_BAKE | 0x80;
+        meshInstance.mask = MASK_BAKE | MASK_AFFECT_LIGHTMAPPED;
         expect(meshInstance._shaderDefs & SHADERDEF_INSTANCEINDEX).to.equal(SHADERDEF_INSTANCEINDEX);
 
         meshInstance.setInstancing(null);
-        expect(meshInstance.mask).to.equal(MASK_BAKE | 0x80);
+        expect(meshInstance.mask).to.equal(MASK_BAKE | MASK_AFFECT_LIGHTMAPPED);
     });
 
-    it('keeps the lowest 8 bits of a larger value, and asserts in debug builds', function () {
+    it('drops the bits of other values, and asserts in debug builds', function () {
         const assert = sinon.stub(Debug, 'assert');
         try {
-            meshInstance.mask = MASK_AFFECT_DYNAMIC | 0x100;
+            meshInstance.mask = MASK_AFFECT_DYNAMIC | 0x80;
             expect(meshInstance.mask).to.equal(MASK_AFFECT_DYNAMIC);
             expect(assert.calledWith(false)).to.equal(true);
         } finally {
@@ -63,29 +81,28 @@ describe('MeshInstance#mask', function () {
     });
 
     it('does not share a bit with the highest flag', function () {
-        const highestFlag = 1 << 23;
-        meshInstance._updateShaderDefs(meshInstance._shaderDefs | highestFlag);
+        meshInstance._updateShaderDefs(meshInstance._shaderDefs | SHADERDEF_UV7);
         expect(meshInstance.mask).to.equal(MASK_AFFECT_DYNAMIC);
 
-        meshInstance.mask = 0xff;
-        expect(meshInstance._shaderDefs & highestFlag).to.equal(highestFlag);
-        expect(meshInstance.mask).to.equal(0xff);
+        meshInstance.mask = MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED | MASK_BAKE;
+        expect(meshInstance._shaderDefs & SHADERDEF_UV7).to.equal(SHADERDEF_UV7);
+        expect(meshInstance.mask).to.equal(MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED | MASK_BAKE);
     });
 });
 
 describe('Light#mask', function () {
 
-    it('keeps the lowest 8 bits, as the mask of a mesh instance does, and asserts in debug builds', function () {
+    it('keeps the values a mesh instance holds, drops the others, and asserts in debug builds', function () {
         const device = createGraphicsDevice({ width: 1, height: 1 });
         const light = new Light(device, false);
         light.type = LIGHTTYPE_DIRECTIONAL;
 
-        light.mask = MASK_AFFECT_LIGHTMAPPED | 0x80;
-        expect(light.mask).to.equal(MASK_AFFECT_LIGHTMAPPED | 0x80);
+        light.mask = MASK_AFFECT_LIGHTMAPPED | MASK_BAKE;
+        expect(light.mask).to.equal(MASK_AFFECT_LIGHTMAPPED | MASK_BAKE);
 
         const assert = sinon.stub(Debug, 'assert');
         try {
-            light.mask = MASK_AFFECT_DYNAMIC | 0x100;
+            light.mask = MASK_AFFECT_DYNAMIC | 0x80;
             expect(light.mask).to.equal(MASK_AFFECT_DYNAMIC);
             expect(assert.calledWith(false)).to.equal(true);
         } finally {
@@ -122,10 +139,10 @@ describe('Standard material light mask', function () {
         const entity = new Entity('box');
         entity.addComponent('render', { type: 'box', material: new StandardMaterial() });
         app.root.addChild(entity);
-        entity.render.meshInstances[0].mask = MASK_AFFECT_LIGHTMAPPED | 0x80;
+        entity.render.meshInstances[0].mask = MASK_AFFECT_LIGHTMAPPED | MASK_BAKE;
         app.render();
 
         expect(selectLights.called).to.equal(true);
-        expect(selectLights.args.every(args => args[1] === (MASK_AFFECT_LIGHTMAPPED | 0x80))).to.equal(true);
+        expect(selectLights.args.every(args => args[1] === (MASK_AFFECT_LIGHTMAPPED | MASK_BAKE))).to.equal(true);
     });
 });

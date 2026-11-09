@@ -34,7 +34,9 @@ import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 import { Culler } from './culler.js';
+import { MeshInstanceSorter } from './mesh-instance-sorter.js';
 import { Camera } from '../camera.js';
+import { MAX_CLIP_PLANES } from '../clip-planes.js';
 
 /**
  * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js'
@@ -43,6 +45,7 @@ import { Camera } from '../camera.js';
  * @import { RenderView } from '../render-view.js'
  * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { RenderPassForward } from './render-pass-forward.js'
  * @import { Light } from '../light.js'
  * @import { LightList } from '../lighting/light-list.js'
  * @import { MeshInstance } from '../mesh-instance.js'
@@ -71,25 +74,21 @@ const _tempClearOptions = {
     flags: 0
 };
 
-// helton sequence of 2d offsets for jittering
-const _haltonSequence = [
-    new Vec2(0.5, 0.333333),
-    new Vec2(0.25, 0.666667),
-    new Vec2(0.75, 0.111111),
-    new Vec2(0.125, 0.444444),
-    new Vec2(0.625, 0.777778),
-    new Vec2(0.375, 0.222222),
-    new Vec2(0.875, 0.555556),
-    new Vec2(0.0625, 0.888889),
-    new Vec2(0.5625, 0.037037),
-    new Vec2(0.3125, 0.370370),
-    new Vec2(0.8125, 0.703704),
-    new Vec2(0.1875, 0.148148),
-    new Vec2(0.6875, 0.481481),
-    new Vec2(0.4375, 0.814815),
-    new Vec2(0.9375, 0.259259),
-    new Vec2(0.03125, 0.592593)
-];
+// the radical inverse of an index in a base, an element of the Halton sequence
+const halton = (index, base) => {
+    let result = 0;
+    let fraction = 1 / base;
+    for (let i = index; i > 0; i = Math.floor(i / base)) {
+        result += (i % base) * fraction;
+        fraction /= base;
+    }
+    return result;
+};
+
+// Halton sequence of 2d offsets for jittering. It is long enough for the temporal upscaling to place
+// samples across all pixels it upscales a lower resolution pixel to, and starts with the offsets
+// the TAA used before it was extended.
+const _haltonSequence = Array.from({ length: 128 }, (_, i) => new Vec2(halton(i + 1, 2), halton(i + 1, 3)));
 
 const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
@@ -99,6 +98,10 @@ const _tempSet = new Set();
 
 const _tempMeshInstances = [];
 const _tempMeshInstancesSkinned = [];
+
+// the clipping uniforms of a camera that has not had clipping planes
+const _noClipPlanes = new Float32Array(MAX_CLIP_PLANES * 4);
+const _noClipParams = new Float32Array(2);
 
 /**
  * A view bind group holding textures, see {@link Renderer#setupViewBindGroup}.
@@ -170,6 +173,15 @@ class Renderer {
     culler;
 
     /**
+     * Sorts the mesh instances of the forward and the shadow passes. A single instance shares its
+     * buffers between all of them.
+     *
+     * @type {MeshInstanceSorter}
+     * @ignore
+     */
+    meshInstanceSorter = new MeshInstanceSorter();
+
+    /**
      * @type {WorldClustersAllocator}
      * @ignore
      */
@@ -188,6 +200,16 @@ class Renderer {
      * @type {Light[]}
      */
     localLights = [];
+
+    /**
+     * The last RenderPassForward scheduled for each camera in the frame being built. Filled in by
+     * the passes as they are added to the frame graph, to work out the first and the last of them
+     * rendering each camera.
+     *
+     * @type {Map<Camera, RenderPassForward>}
+     * @ignore
+     */
+    cameraLastPasses = new Map();
 
     /**
      * Formats of the view uniform buffer, by clustered lighting mode and then by the light layout
@@ -333,6 +355,9 @@ class Renderer {
         this.device = graphicsDevice;
         this.scene = scene;
 
+        // the render passes rendering the scene find the renderer through it
+        scene.renderer = this;
+
         // TODO: allocate only when the scene has clustered lighting enabled
         this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
 
@@ -390,6 +415,8 @@ class Renderer {
         this.tbnBasis = scope.resolve('tbnBasis');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.cameraClipPlanesId = scope.resolve('camera_clipPlanes[0]');
+        this.cameraClipParamsId = scope.resolve('camera_clipParams');
         this.viewportSize = new Float32Array(4);
         this.viewportSizeId = scope.resolve('viewport_size');
         this.viewIndexId = scope.resolve('view_index');
@@ -415,6 +442,7 @@ class Renderer {
     }
 
     destroy() {
+        this.shadowRenderer.destroy();
         this.shadowRenderer = null;
         this._shadowRendererLocal = null;
         this._shadowRendererDirectional = null;
@@ -433,6 +461,12 @@ class Renderer {
 
         this._viewTextureBindGroups.forEach(bindGroup => bindGroup.destroy());
         this._viewTextureBindGroups.length = 0;
+
+        this.meshInstanceSorter = null;
+
+        if (this.scene.renderer === this) {
+            this.scene.renderer = null;
+        }
     }
 
     /**
@@ -470,8 +504,11 @@ class Renderer {
         // flipping proj matrix
         const flipY = target?.flipY;
 
+        // a session's views arrive with its first XR frame, so the camera can be in a session with
+        // none yet, which renders as a single view (as renderForwardInternal treats it): an empty
+        // list would bind no view bind group at all
         let viewList = null;
-        if (camera.xrActive) {
+        if (camera.xrActive && camera.xrViews.length) {
             viewList = camera.xrViews;
 
             // refresh the derived per-view matrices for all views
@@ -577,6 +614,12 @@ class Renderer {
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
 
+        // the clipping planes of the camera, see Camera#clippingPlanes. The planes are in world
+        // space, so all views share them
+        const clipPlanes = camera._clipPlanes;
+        this.cameraClipPlanesId.setValue(clipPlanes.planesData ?? _noClipPlanes);
+        this.cameraClipParamsId.setValue(clipPlanes.paramsData ?? _noClipParams);
+
         // viewport size. In stereo XR the XR session reports the per-eye viewport directly,
         // which is correct for both side-by-side single-texture and multi-pass per-eye-view
         // layouts — preferred over inferring from target.width.
@@ -592,8 +635,8 @@ class Renderer {
         this.viewportSize[3] = 1 / viewportHeight;
         this.viewportSizeId.setValue(this.viewportSize);
 
-        // exposure
-        this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
+        // exposure, scaled by the effects adapting it to the scene
+        this.exposureId.setValue((this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure) * camera.exposureScale);
 
         return viewList;
     }
@@ -833,6 +876,10 @@ class Renderer {
                 new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
                 new UniformFormat('projectionFlipY', UNIFORMTYPE_FLOAT),
                 new UniformFormat('tbnBasis', UNIFORMTYPE_FLOAT),
+
+                // the clipping planes of the camera
+                new UniformFormat('camera_clipPlanes', UNIFORMTYPE_VEC4, MAX_CLIP_PLANES),
+                new UniformFormat('camera_clipParams', UNIFORMTYPE_VEC2),
 
                 // the fog of the camera or the scene, set per layer
                 new UniformFormat('fog_color', UNIFORMTYPE_VEC3),
@@ -1438,6 +1485,9 @@ class Renderer {
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();
+
+        // no passes rendering the cameras scheduled yet
+        this.cameraLastPasses.clear();
     }
 }
 

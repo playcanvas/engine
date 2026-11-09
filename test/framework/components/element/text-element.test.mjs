@@ -2307,4 +2307,171 @@ describe('TextElement', function () {
         expect(pageB.visible).to.equal(true);
     });
 
+    describe('#letterSpacing', function () {
+
+        // distance from the left edge of each glyph quad to the left edge of the next one
+        function glyphSteps() {
+            const lefts = quadLefts();
+            return lefts.slice(1).map((left, i) => left - lefts[i]);
+        }
+
+        beforeEach(function () {
+            element.fontAsset = fontAsset;
+            element.autoWidth = true;
+            element.wrapLines = false;
+        });
+
+        it('defaults to 0', function () {
+            expect(element.letterSpacing).to.equal(0);
+        });
+
+        it('adds the same space between every pair of characters, however wide they are', function () {
+            element.text = 'MIW I';
+            const steps = glyphSteps();
+
+            element.letterSpacing = 0.25;
+            const spaced = glyphSteps();
+            expect(spaced.length).to.equal(4);
+            for (let i = 0; i < steps.length; i++) {
+                expect(spaced[i] - steps[i]).to.be.closeTo(0.25 * element.fontSize, 1e-4);
+            }
+        });
+
+        it('does not widen a line past its last character', function () {
+            element.text = 'MIWI';
+            const width = element.width;
+            element.letterSpacing = 0.25;
+            expect(element.width).to.be.closeTo(width + 3 * 0.25 * element.fontSize, 1e-4);
+
+            element.text = 'M';
+            const spacedSingle = element.width;
+            element.letterSpacing = 0;
+            expect(element.width).to.be.closeTo(spacedSingle, 1e-4);
+        });
+
+        it('tightens the text when negative', function () {
+            element.text = 'MIWI';
+            const width = element.width;
+            element.letterSpacing = -0.05;
+            expect(element.width).to.be.closeTo(width - 3 * 0.05 * element.fontSize, 1e-4);
+        });
+
+        it('scales with the font size', function () {
+            element.letterSpacing = 0.25;
+            element.text = 'MIWI';
+            const width = element.width;
+            element.fontSize *= 2;
+            expect(element.width).to.be.closeTo(width * 2, 1e-4);
+        });
+
+        it('is added on top of spacing', function () {
+            element.text = 'MIWI';
+            element.spacing = 1.5;
+            const steps = glyphSteps();
+
+            element.letterSpacing = 0.25;
+            const spaced = glyphSteps();
+            for (let i = 0; i < steps.length; i++) {
+                expect(spaced[i] - steps[i]).to.be.closeTo(0.25 * element.fontSize, 1e-4);
+            }
+        });
+
+        it('is taken into account when wrapping lines', function () {
+            element.text = 'abcde fghij';
+            const width = element.width;
+
+            element.autoWidth = false;
+            element.wrapLines = true;
+            element.width = width + 1;
+            assertLineContents(['abcde fghij']);
+
+            element.letterSpacing = 0.25;
+            assertLineContents(['abcde ', 'fghij']);
+        });
+
+        it('starts a wrapped line without space in front of its first character', function () {
+            element.letterSpacing = 0.25;
+            element.text = 'abcde';
+            const firstWidth = element.width;
+            element.text = 'fghij';
+            const secondWidth = element.width;
+
+            element.autoWidth = false;
+            element.wrapLines = true;
+            element.width = Math.max(firstWidth, secondWidth) + 1;
+            const alone = quadLefts();
+
+            element.text = 'abcde fghij';
+            assertLineContents(['abcde ', 'fghij']);
+            const wrapped = quadLefts().slice(6);
+            for (let i = 0; i < alone.length; i++) {
+                expect(wrapped[i]).to.be.closeTo(alone[i], 1e-4);
+            }
+        });
+
+        it('does not add space around zero width control characters missing from the font', function () {
+            element.letterSpacing = 0.25;
+            element.text = 'ab';
+            const width = element.width;
+
+            element.text = '‎a​b';
+            expect(element.width).to.be.closeTo(width, 1e-4);
+        });
+
+        it('does not add space around zero width control characters the font supplies', function () {
+            // the test font with zero advance glyphs for the controls, as a CanvasFont creates them
+            const data = structuredClone(fontAsset.resource.data);
+            for (const char of ['​', '‎']) {
+                data.chars[char] = {
+                    ...data.chars.a,
+                    id: char.codePointAt(0),
+                    letter: char,
+                    width: 0,
+                    height: 0,
+                    xadvance: 0
+                };
+            }
+            element.font = new Font(fontAsset.resource.textures, data);
+            element.letterSpacing = 0.25;
+            element.text = 'ab';
+            const width = element.width;
+
+            element.text = '‎a​b';
+            expect(element.width).to.be.closeTo(width, 1e-4);
+            assertLineContents(['‎a​b']);
+        });
+
+        it('spaces rtl text evenly, to the same width as ltr text', function () {
+            element.letterSpacing = 0.25;
+            element.text = 'MIWI';
+            const ltrWidth = element.width;
+
+            registerRtlHandler();
+            element.rtlReorder = true;
+            element.letterSpacing = 0;
+            element.text = 'MIWI';
+            const steps = glyphSteps();
+
+            element.letterSpacing = 0.25;
+            expect(element.width).to.be.closeTo(ltrWidth, 1e-4);
+            const spaced = glyphSteps();
+            for (let i = 0; i < steps.length; i++) {
+                expect(Math.abs(spaced[i] - steps[i])).to.be.closeTo(0.25 * element.fontSize, 1e-4);
+            }
+        });
+
+        it('is set from the component data and kept by a clone', function () {
+            const e = new Entity();
+            e.addComponent('element', {
+                type: 'text',
+                text: 'test',
+                fontAsset: assets.font,
+                letterSpacing: 0.3
+            });
+
+            expect(e.element.letterSpacing).to.equal(0.3);
+            expect(e.clone().element.letterSpacing).to.equal(0.3);
+        });
+    });
+
 });

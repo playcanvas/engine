@@ -7,8 +7,10 @@ class AnimTarget {
     /**
      * Create a new AnimTarget instance.
      *
-     * @param {(value: number[]) => void} func - This function will be called when a new animation value is output
-     * by the {@link AnimEvaluator}.
+     * @param {((value: number[]) => void)|{set: (value: number[]) => void, get: () => number[]}} func - This
+     * function will be called when a new animation value is output by the {@link AnimEvaluator}.
+     * Alternatively an object whose set function is called instead, and whose get function returns
+     * the base value of the target.
      * @param {'vector'|'quaternion'|'number'} type - The type of animation data this target
      * expects.
      * @param {number} components - The number of components on this target (this should ideally

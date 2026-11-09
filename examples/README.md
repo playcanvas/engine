@@ -159,12 +159,22 @@ re-signed by the same root CA, no re-install needed.
 
 ## Creating an example
 
-The available examples are written as classes in JavaScript under the paths `./src/examples/<category>/<exampleName>.example.mjs`.
-To create a new example you can copy any of the existing examples as a template.
+Each example lives in its own folder, `./src/examples/<category>/<exampleName>/`, which holds all of its files and its thumbnails:
+
+```
+src/examples/gaussian-splatting/editor/
+    example.mjs
+    controls.jsx
+    selector.mjs
+    thumbnail-large.webp
+    thumbnail-small.webp
+```
+
+To create a new example you can copy the folder of any of the existing examples as a template.
 
 Each example consists of two modules to define its behavior:
 
-### `<exampleName>.example.mjs`
+### `example.mjs`
 
 ```js
 import { Application } from 'playcanvas';
@@ -215,7 +225,7 @@ However, depending on external URLs is maybe not what you want as it breaks your
 
 Legacy non-module scripts should define any loading helper they need inside the example.
 
-### `<exampleName>.controls.jsx`
+### `controls.jsx`
 
 This file defines a PCUI based control panel — a React component used to display stats from your example or to give users a way of controlling it. It is a real `.jsx` file: import the components you need from `@playcanvas/pcui/react` and write JSX. The component must be named `Controls` and its only prop is the [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/).
 
@@ -253,22 +263,22 @@ console.log(data.get('flash'));
 
 ### Additional files
 
-Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be imported from the example using their relative file name:
+Any other file you wish to include in your example can be added to its folder (e.g. `shader.vert` and `shader.frag`). These files can be imported from the example using their relative file name:
 
 ```js
 import { Asset } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import shaderVert from './shader.vert';
 import shaderFrag from './shader.frag';
 import data from './data.json';
 
 const assets = {
-    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    orbit: new Asset('orbit', 'script', { url: './scripts/camera/orbit-camera.js' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 ```
 
-Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine script asset URLs use `./scripts/...`, and local `.mjs` files are imported as standard JavaScript modules. When using these modules outside the examples browser, configure your bundler to load text extensions as strings.
+Sidecar text files with `.frag`, `.vert`, `.wgsl`, `.glsl`, `.html`, `.css`, and `.txt` extensions are imported as strings. JSON files are imported as parsed values. Shared example assets use plain runtime URLs starting with `./assets/...`, shared engine ESM scripts are imported from `playcanvas/scripts/esm/...`, and local `.mjs` files are imported as standard JavaScript modules. Classic scripts are loaded as script assets from `./scripts/...`. When using these modules outside the examples browser, configure your bundler to load text extensions as strings.
 
 ### Testing your example
 Run `npm run dev` from the `Local examples browser development` section to serve the examples browser with Vite. Use `npm run develop` when automatic reloads should be disabled.
@@ -300,12 +310,17 @@ npm run build
 npm run serve
 ```
 
-3) **Generate thumbnails (Case-by-case basis)** This step will create the thumbnails directory for the browser. This only needs to be run if the examples thumbnails are updated or new examples are added.
+3) **Generate thumbnails (Case-by-case basis)** This step writes `thumbnail-large.webp` and `thumbnail-small.webp` into each example folder that does not have them yet. This only needs to be run if the examples thumbnails are updated or new examples are added.
 ```
 npm run build:thumbnails
 ```
 
 This command spawns its own `serve` instance on port 12321, so you don't need to care about that.
+
+CI fails when an example is missing either of its thumbnails. To run the same check locally:
+```
+npm run check:thumbnails
+```
 
 4) Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
 

@@ -19,7 +19,7 @@ describe('Layer mesh membership', function () {
         const mesh = new Mesh(device);
         instances = Array.from({ length: 8 }, () => {
             const instance = new MeshInstance(mesh, material);
-            instance.castShadow = true;
+            instance.castShadows = true;
             return instance;
         });
         layer = new Layer();
@@ -39,7 +39,7 @@ describe('Layer mesh membership', function () {
         const meshIterator = sinon.spy(layer.meshInstancesSet, Symbol.iterator);
         const casterIterator = sinon.spy(layer.shadowCastersSet, Symbol.iterator);
 
-        instances[1].castShadow = false;
+        instances[1].castShadows = false;
         layer.addMeshInstances([instances[0], instances[1], instances[0]]);
         layer.addMeshInstances([instances[2]]);
 
@@ -178,16 +178,16 @@ describe('Layer mesh membership', function () {
     });
 
     it('updates shadows even when the visible instance is already registered', function () {
-        instances[0].castShadow = false;
+        instances[0].castShadows = false;
         layer.addMeshInstances([instances[0]]);
         expect(layer.shadowCasters).to.be.empty;
 
-        instances[0].castShadow = true;
+        instances[0].castShadows = true;
         layer.addMeshInstances([instances[0]]);
         expect(layer.meshInstances).to.deep.equal([instances[0]]);
         expect(layer.shadowCasters).to.deep.equal([instances[0]]);
 
-        instances[0].castShadow = false;
+        instances[0].castShadows = false;
         layer.removeShadowCasters([instances[0]]);
         expect(layer.shadowCasters).to.be.empty;
         expect(layer.meshInstances).to.deep.equal([instances[0]]);
@@ -291,7 +291,7 @@ describe('Layer mesh membership', function () {
                 case 1:
                     layer.addMeshInstances([instance], skip);
                     meshes.add(instance);
-                    if (!skip && instance.castShadow) casters.add(instance);
+                    if (!skip && instance.castShadows) casters.add(instance);
                     break;
                 case 2:
                     layer.removeMeshInstances([instance], skip);
@@ -300,14 +300,14 @@ describe('Layer mesh membership', function () {
                     break;
                 case 3:
                     layer.addShadowCasters([instance]);
-                    if (instance.castShadow) casters.add(instance);
+                    if (instance.castShadows) casters.add(instance);
                     break;
                 case 4:
                     layer.removeShadowCasters([instance]);
                     casters.delete(instance);
                     break;
                 case 5:
-                    instance.castShadow = !instance.castShadow;
+                    instance.castShadows = !instance.castShadows;
                     break;
                 case 6:
                     layer.clearMeshInstances(skip);

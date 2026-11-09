@@ -7,16 +7,18 @@ fn decodeLinear(raw: vec4f) -> vec3f {
     return raw.rgb;
 }
 
+// the exact sRGB transfer, as the GPU decodes an sRGB texture, with (raw + 0.055) / 1.055 and
+// raw / 12.92 written as a multiply-add and a multiply
 fn decodeGammaFloat(raw: f32) -> f32 {
-    return pow(raw, 2.2);
+    return select(pow(raw * 0.9478672986 + 0.0521327014, 2.4), raw * 0.0773993808, raw <= 0.04045);
 }
 
 fn decodeGamma3(raw: vec3f) -> vec3f {
-    return pow(raw, vec3f(2.2));
+    return select(pow(raw * 0.9478672986 + vec3f(0.0521327014), vec3f(2.4)), raw * 0.0773993808, raw <= vec3f(0.04045));
 }
 
 fn decodeGamma(raw: vec4f) -> vec3f {
-    return pow(raw.xyz, vec3f(2.2));
+    return decodeGamma3(raw.xyz);
 }
 
 fn decodeRGBM(raw: vec4f) -> vec3f {

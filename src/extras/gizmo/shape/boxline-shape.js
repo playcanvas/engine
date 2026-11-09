@@ -4,11 +4,13 @@ import { Entity } from '../../../framework/entity.js';
 import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
 import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -23,45 +25,47 @@ const tmpQ1 = new Quat();
  * @property {number} [tolerance] - The tolerance for intersection tests
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class BoxLineShape extends Shape {
     /**
-     * The internal gap between the box and the line.
+     * The gap between the box and the line.
      *
      * @private
      */
     _gap = 0;
 
     /**
-     * The internal line thickness of the box line.
+     * The line thickness.
      *
      * @private
      */
     _lineThickness = 0.02;
 
     /**
-     * The internal line length of the box line.
+     * The line length.
      *
      * @private
      */
     _lineLength = 0.5;
 
     /**
-     * The internal box size of the box line.
+     * The box size.
      *
      * @private
      */
     _boxSize = 0.12;
 
     /**
-     * The internal tolerance of the box line.
+     * The intersection tolerance.
      *
      * @private
      */
     _tolerance = 0.1;
 
     /**
-     * The internal box entity of the box line.
+     * The box entity.
      *
      * @type {Entity}
      * @private
@@ -69,7 +73,7 @@ class BoxLineShape extends Shape {
     _box;
 
     /**
-     * The internal line entity of the box line.
+     * The line entity.
      *
      * @type {Entity}
      * @private
@@ -77,7 +81,7 @@ class BoxLineShape extends Shape {
     _line;
 
     /**
-     * The internal flipped state of the box line.
+     * The flipped state.
      *
      * @private
      */
@@ -98,13 +102,11 @@ class BoxLineShape extends Shape {
         this._boxSize = args.boxSize ?? this._boxSize;
         this._tolerance = args.tolerance ?? this._tolerance;
 
-        // intersect
         this.triData = [
             new TriData(new BoxGeometry()),
             new TriData(new CylinderGeometry(), 1)
         ];
 
-        // render
         this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
         this._createRenderComponent(this._box, [
@@ -116,7 +118,6 @@ class BoxLineShape extends Shape {
             Mesh.fromGeometry(this.device, new CylinderGeometry())
         ]);
 
-        // update transform
         this._update();
     }
 
@@ -140,7 +141,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Set the line thickness of the box line.
+     * Set the line thickness.
      *
      * @type {number}
      */
@@ -150,7 +151,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Get the line thickness of the box line.
+     * Get the line thickness.
      *
      * @type {number}
      */
@@ -159,7 +160,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Set the line length of the box line.
+     * Set the line length.
      *
      * @type {number}
      */
@@ -169,7 +170,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Get the line length of the box line.
+     * Get the line length.
      *
      * @type {number}
      */
@@ -178,7 +179,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Set the box size of the box line.
+     * Set the box size.
      *
      * @type {number}
      */
@@ -188,7 +189,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Get the box size of the box line.
+     * Get the box size.
      *
      * @type {number}
      */
@@ -197,7 +198,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Set the tolerance of the box line.
+     * Set the intersection tolerance.
      *
      * @type {number}
      */
@@ -207,7 +208,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Get the tolerance of the box line.
+     * Get the intersection tolerance.
      *
      * @type {number}
      */
@@ -216,7 +217,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Set the flipped state of the box line.
+     * Set the flipped state.
      *
      * @type {boolean}
      */
@@ -236,7 +237,7 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Get the flipped state of the box line.
+     * Get the flipped state.
      *
      * @type {boolean}
      */
@@ -245,13 +246,12 @@ class BoxLineShape extends Shape {
     }
 
     /**
-     * Update the shape's transform.
+     * Updates the transform.
      *
      * @protected
      * @override
      */
     _update() {
-        // intersect
         tmpV1.set(0, this._gap + this._boxSize * 0.5 + this._lineLength, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._boxSize, this._boxSize, this._boxSize);
@@ -261,7 +261,6 @@ class BoxLineShape extends Shape {
         tmpV2.set(this._lineThickness + this._tolerance, this._lineLength, this._lineThickness + this._tolerance);
         this.triData[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
-        // render
         this._box.setLocalPosition(0, this._gap + this._boxSize * 0.5 + this._lineLength, 0);
         this._box.setLocalScale(this._boxSize, this._boxSize, this._boxSize);
         this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);

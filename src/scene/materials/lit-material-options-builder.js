@@ -3,12 +3,13 @@ import {
     MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_MASK_SHIFT,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_CLIP,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
     SHADER_PREPASS, SCENETEXTURE_DEPTH
 } from '../constants.js';
+import { shaderDefsToLightMask } from '../light-mask.js';
 
 /**
  * @import { Light } from '../light.js'
@@ -42,6 +43,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
         litOptions.useMorphTextureBasedInt = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0;
         litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
+        litOptions.useClipPlanes = objDefs && (objDefs & SHADERDEF_CLIP) !== 0;
 
         litOptions.nineSlicedMode = material.nineSlicedMode || SPRITE_RENDERMODE_SIMPLE;
 
@@ -51,12 +53,16 @@ class LitMaterialOptionsBuilder {
             litOptions.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
             litOptions.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
             litOptions.clusteredLightingShadowType = scene.lighting.shadowType;
-            litOptions.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+            // area light shapes the shaders support, none when area lights are disabled
+            const areaLightShapes = scene.lighting.areaLightShapes;
+            litOptions.clusteredLightingAreaLightsEnabled = areaLightShapes !== 0;
+            litOptions.clusteredLightingAreaLightShapes = areaLightShapes;
         } else {
             litOptions.clusteredLightingEnabled = false;
             litOptions.clusteredLightingCookiesEnabled = false;
             litOptions.clusteredLightingShadowsEnabled = false;
             litOptions.clusteredLightingAreaLightsEnabled = false;
+            litOptions.clusteredLightingAreaLightShapes = 0;
         }
     }
 
@@ -65,10 +71,9 @@ class LitMaterialOptionsBuilder {
         litOptions.pixelSnap = material.pixelSnap;
 
         litOptions.ambientSH = material.ambientSH;
-        litOptions.twoSidedLighting = material.twoSidedLighting;
-        litOptions.occludeDirect = material.occludeDirect;
         litOptions.occludeSpecular = material.occludeSpecular;
-        litOptions.occludeSpecularFloat = (material.occludeSpecularIntensity !== 1.0);
+        // the intensity is always applied, so that an intensity of 1 shares the shader of a lower one
+        litOptions.occludeSpecularFloat = true;
 
         litOptions.useMsdf = false;
         litOptions.msdfTextAttribute = false;
@@ -88,9 +93,10 @@ class LitMaterialOptionsBuilder {
         litOptions.useClearCoat = material.hasClearCoat;
         litOptions.useSheen = material.hasSheen;
         litOptions.useIridescence = material.hasIridescence;
+        litOptions.useDiffuseTransmission = material.hasDiffuseTransmission;
         litOptions.useMetalness = material.hasMetalness;
         litOptions.useDynamicRefraction = material.dynamicRefraction;
-        litOptions.dispersion = material.dispersion > 0;
+        litOptions.dispersion = material.hasDispersion;
 
         litOptions.vertexColors = false;
         litOptions.lightMapEnabled = material.hasLighting;
@@ -99,7 +105,6 @@ class LitMaterialOptionsBuilder {
         litOptions.useNormals = material.hasNormals;
         litOptions.useClearCoatNormals = material.hasClearCoatNormals;
         litOptions.useAo = material.hasAo;
-        litOptions.diffuseMapEnabled = material.hasDiffuseMap;
     }
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {
@@ -144,7 +149,7 @@ class LitMaterialOptionsBuilder {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
-            const mask = objDefs ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? shaderDefsToLightMask(objDefs) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);

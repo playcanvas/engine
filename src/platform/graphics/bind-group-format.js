@@ -5,6 +5,7 @@ import {
     SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, PIXELFORMAT_RGBA8, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { SceneDepthMapHandle } from './scene-depth-map-handle.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -216,7 +217,7 @@ class BindTextureFormat extends BindBaseFormat {
 
         // a missing scene depth reads as the far plane, where a missing color is better off
         // obvious; anything else is a plain mistake, so make it obvious as well
-        this.substituteTexture = name === 'uSceneDepthMap' ? 'white' : 'pink';
+        this.substituteTexture = name === SceneDepthMapHandle.uniformName ? 'white' : 'pink';
 
         if (multisampled) {
             Debug.assert(textureDimension === TEXTUREDIMENSION_2D, `Multisampled texture binding '${name}' requires TEXTUREDIMENSION_2D.`);

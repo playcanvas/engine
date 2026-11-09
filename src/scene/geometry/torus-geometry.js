@@ -41,7 +41,7 @@ class TorusGeometry extends Geometry {
      * @param {object} [opts] - Options object.
      * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus.
      * Defaults to 0.2.
-     * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the
+     * @param {number} [opts.ringRadius] - The radius from the center of the torus to the center of the
      * tube. Defaults to 0.3.
      * @param {number} [opts.sectorAngle] - The sector angle in degrees of the ring of the torus.
      * Defaults to 2 * Math.PI.

@@ -37,7 +37,7 @@ describe('WebGPU destruction during recovery', function () {
         restored = sinon.spy();
         device.on('devicerestored', restored);
         restoreContext = sinon.stub(GraphicsDevice.prototype, 'restoreContext');
-        // Cancelled requests must never reach GPU resource creation.
+        // Canceled requests must never reach GPU resource creation.
         initDeviceCaps = sinon.stub(device, 'initDeviceCaps').throws(new Error('Unexpected GPU initialization'));
     });
 
@@ -119,7 +119,7 @@ describe('WebGPU destruction during recovery', function () {
         expectCancelled();
     });
 
-    it('still restores resources and emits the event when recovery is not cancelled', async function () {
+    it('still restores resources and emits the event when recovery is not canceled', async function () {
         sinon.stub(device, 'createDevice').callsFake(() => {
             device.gpuProfiler = { enabled: false, destroy() {} };
             return Promise.resolve(device);
@@ -128,5 +128,36 @@ describe('WebGPU destruction during recovery', function () {
         expect(device._destroyed).to.be.false;
         expect(restoreContext.calledOnce).to.be.true;
         expect(restored.calledOnce).to.be.true;
+    });
+
+    it('stays lost and emits devicerestorefailed when no replacement adapter is available', async function () {
+        // the browser blocks GPU access, for example after repeated GPU process crashes
+        gpu.requestAdapter.resolves(null);
+        const failed = sinon.spy();
+        device.on('devicerestorefailed', failed);
+        const consoleError = sinon.stub(console, 'error');
+
+        await device.handleDeviceLost({ reason: 'unknown', message: 'test loss' });
+
+        expect(failed.calledOnce).to.be.true;
+        expect(failed.firstCall.args[0]).to.be.an('error');
+        expect(device.contextLost).to.be.true;
+        expect(restoreContext.called).to.be.false;
+        expect(restored.called).to.be.false;
+        expect(consoleError.calledOnce).to.be.true;
+    });
+
+    it('does not emit devicerestorefailed when destroyed before a failed recovery completes', async function () {
+        sinon.stub(device, 'createDevice').callsFake(() => {
+            device.destroy();
+            return Promise.reject(new Error('Unable to retrieve a WebGPU adapter'));
+        });
+        // spy on fire, so that the check holds even if destroy removes the listeners
+        const fire = sinon.spy(device, 'fire');
+
+        await device.handleDeviceLost({ reason: 'unknown', message: 'test loss' });
+
+        expect(fire.neverCalledWith('devicerestorefailed')).to.be.true;
+        expectCancelled();
     });
 });

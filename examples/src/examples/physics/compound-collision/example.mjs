@@ -1,0 +1,447 @@
+import {
+    AppBase,
+    AppOptions,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    Color,
+    ContainerHandler,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    Keyboard,
+    LightComponentSystem,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TextureHandler,
+    WasmModule,
+    createGraphicsDevice
+} from 'playcanvas';
+
+import { deviceType } from 'examples/context';
+
+/**
+ * @import { RenderComponent, RigidBodyComponent } from 'playcanvas'
+ */
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+WasmModule.setConfig('Ammo', {
+    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+    fallbackUrl: './assets/wasm/ammo/ammo.js'
+});
+await new Promise((resolve) => {
+    WasmModule.getInstance('Ammo', () => resolve());
+});
+
+const gfxOptions = {
+    deviceTypes: [deviceType]
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.keyboard = new Keyboard(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    CollisionComponentSystem,
+    RigidBodyComponentSystem,
+    ElementComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+app.start();
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
+/**
+ * @param {Color} color - The diffuse color.
+ * @returns {StandardMaterial} The standard material.
+ */
+function createMaterial(color) {
+    const material = new StandardMaterial();
+    material.diffuse = color;
+    material.update();
+    return material;
+}
+
+// Create a couple of materials for our objects
+const red = createMaterial(new Color(0.7, 0.3, 0.3));
+const gray = createMaterial(new Color(0.7, 0.7, 0.7));
+
+/**
+ * @typedef {object} EntityData
+ * @property {string} name - The entity name.
+ * @property {number[]} [pos] - The local position.
+ * @property {number[]} [rot] - The local euler angles.
+ * @property {number[]} [scl] - The local scale.
+ * @property {{ type: string, options: object }[]} [components] - The components to add.
+ * @property {EntityData[]} [children] - The child entities.
+ */
+
+// Define a scene hierarchy in JSON format. This is loaded/parsed in
+// the parseScene function below
+/** @type {EntityData[]} */
+const scene = [
+    {
+        // The Chair entity has a collision component of type 'compound' and a
+        // rigidbody component. This means that any descendant entity with a
+        // collision component is added to a compound collision shape on the
+        // Chair entity. You can use compound collision shapes to define
+        // complex, rigid shapes.
+        name: 'Chair',
+        pos: [0, 1, 0],
+        components: [
+            {
+                type: 'collision',
+                options: {
+                    type: 'compound'
+                }
+            },
+            {
+                type: 'rigidbody',
+                options: {
+                    type: 'dynamic',
+                    friction: 0.5,
+                    mass: 10,
+                    restitution: 0.5
+                }
+            }
+        ],
+        children: [
+            {
+                name: 'Seat',
+                components: [
+                    {
+                        type: 'collision',
+                        options: {
+                            type: 'box',
+                            halfExtents: [0.25, 0.025, 0.25]
+                        }
+                    }
+                ],
+                children: [
+                    {
+                        name: 'Seat Model',
+                        scl: [0.5, 0.05, 0.5],
+                        components: [
+                            {
+                                type: 'render',
+                                options: {
+                                    type: 'box',
+                                    material: gray
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: 'Seat Back',
+                pos: [0, 0.3, -0.2],
+                components: [
+                    {
+                        type: 'collision',
+                        options: {
+                            type: 'box',
+                            halfExtents: [0.25, 0.2, 0.025]
+                        }
+                    }
+                ],
+                children: [
+                    {
+                        name: 'Seat Back Model',
+                        scl: [0.5, 0.4, 0.05],
+                        components: [
+                            {
+                                type: 'render',
+                                options: {
+                                    type: 'box',
+                                    material: gray
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: 'Leg 1',
+                pos: [0.2, -0.25, 0.2],
+                components: [
+                    {
+                        type: 'collision',
+                        options: {
+                            type: 'cylinder',
+                            height: 0.5,
+                            radius: 0.025
+                        }
+                    }
+                ],
+                children: [
+                    {
+                        name: 'Leg 1 Model',
+                        scl: [0.05, 0.5, 0.05],
+                        components: [
+                            {
+                                type: 'render',
+                                options: {
+                                    type: 'cylinder',
+                                    material: gray
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: 'Leg 2',
+                pos: [-0.2, -0.25, 0.2],
+                components: [
+                    {
+                        type: 'collision',
+                        options: {
+                            type: 'cylinder',
+                            height: 0.5,
+                            radius: 0.025
+                        }
+                    }
+                ],
+                children: [
+                    {
+                        name: 'Leg 2 Model',
+                        scl: [0.05, 0.5, 0.05],
+                        components: [
+                            {
+                                type: 'render',
+                                options: {
+                                    type: 'cylinder',
+                                    material: gray
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: 'Leg 3',
+                pos: [0.2, 0, -0.2],
+                components: [
+                    {
+                        type: 'collision',
+                        options: {
+                            type: 'cylinder',
+                            height: 1,
+                            radius: 0.025
+                        }
+                    }
+                ],
+                children: [
+                    {
+                        name: 'Leg 3 Model',
+                        scl: [0.05, 1, 0.05],
+                        components: [
+                            {
+                                type: 'render',
+                                options: {
+                                    type: 'cylinder',
+                                    material: gray
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: 'Leg 4',
+                pos: [-0.2, 0, -0.2],
+                components: [
+                    {
+                        type: 'collision',
+                        options: {
+                            type: 'cylinder',
+                            height: 1,
+                            radius: 0.025
+                        }
+                    }
+                ],
+                children: [
+                    {
+                        name: 'Leg 4 Model',
+                        scl: [0.05, 1, 0.05],
+                        components: [
+                            {
+                                type: 'render',
+                                options: {
+                                    type: 'cylinder',
+                                    material: gray
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        name: 'Ground',
+        pos: [0, -0.5, 0],
+        components: [
+            {
+                type: 'collision',
+                options: {
+                    type: 'box',
+                    halfExtents: [5, 0.5, 5]
+                }
+            },
+            {
+                type: 'rigidbody',
+                options: {
+                    type: 'static',
+                    restitution: 0.5
+                }
+            }
+        ],
+        children: [
+            {
+                name: 'Ground Model',
+                scl: [10, 1, 10],
+                components: [
+                    {
+                        type: 'render',
+                        options: {
+                            type: 'box',
+                            material: gray
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        name: 'Directional Light',
+        rot: [45, 130, 0],
+        components: [
+            {
+                type: 'light',
+                options: {
+                    type: 'directional',
+                    castShadows: true,
+                    shadowDistance: 8,
+                    shadowBias: 0.1,
+                    intensity: 1,
+                    normalOffsetBias: 0.05
+                }
+            }
+        ]
+    },
+    {
+        name: 'Camera',
+        pos: [0, 4, 7],
+        rot: [-30, 0, 0],
+        components: [
+            {
+                type: 'camera',
+                options: {
+                    clearColor: new Color(0.5, 0.5, 0.5)
+                }
+            }
+        ]
+    }
+];
+
+/**
+ * Convert an entity definition in the structure above to a Entity object
+ *
+ * @param {EntityData} e - The scene definition.
+ * @returns {Entity} The entity.
+ */
+function parseEntity(e) {
+    const entity = new Entity(e.name);
+
+    if (e.pos) {
+        entity.setLocalPosition(e.pos[0], e.pos[1], e.pos[2]);
+    }
+    if (e.rot) {
+        entity.setLocalEulerAngles(e.rot[0], e.rot[1], e.rot[2]);
+    }
+    if (e.scl) {
+        entity.setLocalScale(e.scl[0], e.scl[1], e.scl[2]);
+    }
+
+    if (e.components) {
+        e.components.forEach((c) => {
+            entity.addComponent(c.type, c.options);
+        });
+    }
+
+    if (e.children) {
+        e.children.forEach((child) => {
+            entity.addChild(parseEntity(child));
+        });
+    }
+
+    return entity;
+}
+
+// Parse the scene data above into entities and add them to the scene's root entity
+function parseScene(s) {
+    s.forEach((e) => {
+        app.root.addChild(parseEntity(e));
+    });
+}
+
+parseScene(scene);
+
+let numChairs = 0;
+
+// Clone the chair entity hierarchy and add it to the scene root
+function spawnChair() {
+    const chair = /** @type {Entity} */ (app.root.findByName('Chair'));
+    const clone = chair.clone();
+    clone.setLocalPosition(Math.random() * 1 - 0.5, Math.random() * 2 + 1, Math.random() * 1 - 0.5);
+    app.root.addChild(clone);
+    numChairs++;
+}
+
+// Set an update function on the application's update event
+let time = 0;
+app.on('update', (dt) => {
+    // Add a new chair every 250 ms
+    time += dt;
+    if (time > 0.25 && numChairs < 20) {
+        spawnChair();
+        time = 0;
+    }
+
+    // Show active bodies in red and frozen bodies in gray
+    app.root.findComponents('rigidbody').forEach((/** @type {RigidBodyComponent} */ body) => {
+        body.entity.findComponents('render').forEach((/** @type {RenderComponent} */ render) => {
+            render.material = body.isActive() ? red : gray;
+        });
+    });
+});

@@ -5,7 +5,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
-import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+import { RenderPassShaderQuad } from '../graphics/render-pass-shader-quad.js';
 
 import { EMITTERSHAPE_BOX } from '../constants.js';
 
@@ -17,6 +17,10 @@ const emitterMatrix3Inv = new Mat3();
 class ParticleGPUUpdater {
     constructor(emitter, gd) {
         this._emitter = emitter;
+
+        // the pass rendering the updated particle state, reused every frame
+        this.updatePass = new RenderPassShaderQuad(gd);
+        this.updatePass.name = 'ParticleUpdate';
 
         this.frameRandomUniform = new Float32Array(3);
         this.emitterPosUniform = new Float32Array(3);
@@ -55,6 +59,11 @@ class ParticleGPUUpdater {
         this.constantFaceTangent = gd.scope.resolve('faceTangent');
         this.constantFaceBinorm = gd.scope.resolve('faceBinorm');
         this.constantRadialSpeedDivMult = gd.scope.resolve('radialSpeedDivMult');
+    }
+
+    destroy() {
+        this.updatePass.destroy();
+        this.updatePass = null;
     }
 
     randomize() {
@@ -130,13 +139,13 @@ class ParticleGPUUpdater {
         texIN = emitter.beenReset ? emitter.particleTexStart : texIN;
         const texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
         this.constantParticleTexIN.setValue(texIN);
-        drawQuadWithShader(
-            device,
-            emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
-            !isOnStop ?
-                (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
-                emitter.shaderParticleUpdateOnStop,
-            undefined, undefined, 'ParticleUpdate');
+
+        const updatePass = this.updatePass;
+        updatePass.shader = !isOnStop ?
+            (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
+            emitter.shaderParticleUpdateOnStop;
+        updatePass.init(emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT);
+        updatePass.render();
 
         // this.constantParticleTexOUT.setValue(texOUT);
 

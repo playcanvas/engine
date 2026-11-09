@@ -398,8 +398,9 @@ class WebgpuRenderTarget {
                     this.depthAttachment.format = depthFormat;
                     this.depthAttachment.hasStencil = depthFormat === 'depth24plus-stencil8';
 
-                    // key for matching multi-sampled depth buffer
-                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthFormat}`;
+                    // key for matching multi-sampled depth buffer - render targets rendering to
+                    // different faces / layers of the depth buffer need their own
+                    const key = `${depthBuffer.id}:${renderTarget.getLayer(depthBuffer)}:${width}:${height}:${samples}:${depthFormat}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     const msTextures = getMultisampledTextureCache(device);
@@ -434,10 +435,28 @@ class WebgpuRenderTarget {
                 } else {
 
                     // use provided depth buffer
-                    const depthTexture = depthBuffer.impl.gpuTexture;
-                    this.depthAttachment.depthTexture = depthTexture;
+                    this.depthAttachment.depthTexture = depthBuffer.impl.gpuTexture;
 
-                    renderingView = depthTexture.createView();
+                    // render to mip level 0, as a render target with a depth buffer does not
+                    // support rendering to a mip level
+                    const mipLevelCount = 1;
+
+                    // single layer view - a layer of a 2d array texture, or a cubemap face, which
+                    // is a 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
+                    if (depthBuffer.cubemap || depthBuffer.array) {
+                        renderingView = depthBuffer.impl.createView({
+                            dimension: '2d',
+                            baseArrayLayer: renderTarget.layer,
+                            arrayLayerCount: 1,
+                            mipLevelCount,
+                            baseMipLevel: 0
+                        });
+                    } else {
+                        renderingView = depthBuffer.impl.createView({
+                            mipLevelCount,
+                            baseMipLevel: 0
+                        });
+                    }
                     DebugHelper.setLabel(renderingView, `${renderTarget.name}.depthView`);
                 }
             }
@@ -475,16 +494,18 @@ class WebgpuRenderTarget {
             // render to a single mip level
             const mipLevelCount = 1;
 
-            // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
-            if (colorBuffer.cubemap) {
+            // single layer view - a layer of a 2d array texture, or a cubemap face, which is a 2d
+            // array layer in order [+X, -X, +Y, -Y, +Z, -Z]
+            if (colorBuffer.cubemap || colorBuffer.array) {
                 colorView = colorBuffer.impl.createView({
                     dimension: '2d',
-                    baseArrayLayer: renderTarget.face,
+                    baseArrayLayer: renderTarget.layer,
                     arrayLayerCount: 1,
                     mipLevelCount,
                     baseMipLevel: mipLevel
                 });
             } else {
+                // a 2d texture, or a volume texture, whose depth slice is selected by the attachment
                 colorView = colorBuffer.impl.createView({
                     mipLevelCount,
                     baseMipLevel: mipLevel
@@ -564,6 +585,11 @@ class WebgpuRenderTarget {
         } else {
 
             colorAttachment.view = colorView;
+
+            // a volume texture renders to a depth slice of its 3d view
+            if (colorBuffer?.volume) {
+                colorAttachment.depthSlice = renderTarget.slice;
+            }
         }
 
         return colorAttachment;

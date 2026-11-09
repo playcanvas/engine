@@ -1,6 +1,7 @@
-function DracoWorker(jsUrl, wasmUrl) {
-    // In a browser/web worker this is `self`; in a Node worker_threads worker it's the parentPort.
-    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
+// `myself` is the worker's message port: `self` in a web worker, or the parentPort of a Node
+// worker_threads worker. The creator passes it in as source text, so that bundlers never see the
+// Node-only require.
+function DracoWorker(myself) {
 
     let draco;
 

@@ -1,0 +1,149 @@
+celestial-circus-pma.png
+	size: 2048, 1024
+	filter: Linear, Linear
+	pma: true
+	scale: 0.4
+arm-back-down
+	bounds: 204, 297, 38, 82
+arm-back-up
+	bounds: 2, 92, 83, 116
+arm-front-down
+	bounds: 88, 318, 36, 78
+arm-front-up
+	bounds: 733, 76, 77, 116
+bench
+	bounds: 409, 131, 189, 48
+body-bottom
+	bounds: 562, 260, 154, 124
+body-top
+	bounds: 433, 203, 126, 132
+	offsets: 0, 0, 126, 133
+chest
+	bounds: 847, 468, 104, 93
+cloud-back
+	bounds: 643, 416, 202, 165
+cloud-front
+	bounds: 624, 582, 325, 196
+	rotate: 180
+collar
+	bounds: 175, 752, 47, 26
+ear
+	bounds: 293, 750, 20, 28
+eye-back-shadow
+	bounds: 474, 768, 14, 10
+eye-front-shadow
+	bounds: 642, 764, 24, 14
+eye-reflex-back
+	bounds: 1012, 771, 8, 7
+eye-reflex-front
+	bounds: 668, 763, 10, 7
+eye-white-back
+	bounds: 353, 762, 13, 16
+eye-white-front
+	bounds: 556, 761, 22, 17
+eyelashes-down-back
+	bounds: 995, 764, 11, 6
+eyelashes-down-front
+	bounds: 995, 772, 15, 6
+eyelashes-top-back
+	bounds: 877, 768, 18, 10
+eyelashes-top-front
+	bounds: 851, 762, 30, 16
+face
+	bounds: 87, 64, 91, 102
+	offsets: 2, 0, 93, 102
+feathers-back
+	bounds: 596, 416, 46, 46
+feathers-front
+	bounds: 101, 460, 72, 86
+fringe-middle-back
+	bounds: 103, 502, 33, 52
+fringe-middle-front
+	bounds: 899, 103, 60, 50
+fringe-side-back
+	bounds: 413, 505, 27, 94
+fringe-side-front
+	bounds: 14, 557, 26, 93
+glove-bottom-back
+	bounds: 589, 737, 51, 41
+glove-bottom-front
+	bounds: 126, 730, 47, 48
+hair-back-1
+	bounds: 572, 170, 132, 306
+	rotate: 270
+hair-back-2
+	bounds: 163, 2, 80, 285
+hair-back-3
+	bounds: 952, 37, 70, 268
+hair-back-4
+	bounds: 14, 326, 88, 262
+hair-back-5
+	bounds: 934, 517, 88, 279
+	rotate: 90
+hair-back-6
+	bounds: 353, 63, 88, 286
+	rotate: 180
+hair-hat-shadow
+	bounds: 903, 737, 90, 41
+hand-back
+	bounds: 409, 82, 60, 47
+hand-front
+	bounds: 99, 398, 53, 60
+hat-back
+	bounds: 951, 690, 64, 45
+hat-front
+	bounds: 376, 722, 96, 56
+head-back
+	bounds: 600, 82, 102, 86
+jabot
+	bounds: 240, 78, 70, 55
+leg-back
+	bounds: 812, 130, 210, 333
+leg-front
+	bounds: 14, 210, 258, 320
+logo-brooch
+	bounds: 335, 753, 16, 25
+mouth
+	bounds: 668, 772, 22, 6
+neck
+	bounds: 515, 73, 39, 56
+nose
+	bounds: 895, 765, 6, 7
+nose-highlight
+	bounds: 28, 774, 4, 4
+nose-shadow
+	bounds: 580, 770, 7, 8
+pupil-back
+	bounds: 244, 764, 10, 14
+pupil-front
+	bounds: 14, 760, 12, 18
+rope-back
+	bounds: 2, 286, 10, 492
+rope-front
+	bounds: 2, 286, 10, 492
+rope-front-bottom
+	bounds: 471, 64, 42, 65
+skirt
+	bounds: 14, 532, 440, 246
+sock-bow
+	bounds: 258, 746, 33, 32
+spine-logo-body
+	bounds: 320, 746, 13, 32
+star-big
+	bounds: 224, 754, 18, 24
+star-medium
+	bounds: 368, 770, 6, 8
+star-small
+	bounds: 34, 774, 3, 4
+underskirt
+	bounds: 414, 333, 445, 228
+	rotate: 270
+underskirt-back
+	bounds: 243, 125, 433, 171
+	rotate: 90
+wing-back
+	bounds: 876, 576, 146, 252
+	rotate: 90
+wing-front
+	bounds: 718, 285, 304, 248
+	rotate: 180

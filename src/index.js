@@ -92,12 +92,15 @@ export { createGraphicsDevice } from './platform/graphics/graphics-device-create
 export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
+export { ComputePass } from './platform/graphics/compute-pass.js';
 export { DepthState } from './platform/graphics/depth-state.js';
 export { DrawCommands } from './platform/graphics/draw-commands.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
 export { RenderPass } from './platform/graphics/render-pass.js';
+export { SceneColorMapHandle } from './platform/graphics/scene-color-map-handle.js';
+export { SceneDepthMapHandle } from './platform/graphics/scene-depth-map-handle.js';
 export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
@@ -203,6 +206,7 @@ export { DomeGeometry } from './scene/geometry/dome-geometry.js';
 export { Geometry } from './scene/geometry/geometry.js';
 export { BoxGeometry } from './scene/geometry/box-geometry.js';
 export { PlaneGeometry } from './scene/geometry/plane-geometry.js';
+export { RoundedBoxGeometry } from './scene/geometry/rounded-box-geometry.js';
 export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
@@ -221,10 +225,12 @@ export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
 export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
+export { GSplatCompressedResource } from './scene/gsplat/gsplat-compressed-resource.js';
 export { GSplatContainer } from './scene/gsplat/gsplat-container.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatOctreeResource } from './scene/gsplat-unified/gsplat-octree.resource.js';
 export { GSplatProcessor } from './framework/gsplat/gsplat-processor.js';
 export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatVaryings } from './scene/gsplat-unified/gsplat-varyings.js';
@@ -358,6 +364,7 @@ export { SceneDepthReader } from './framework/graphics/scene-depth-reader.js';
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';
 export { dracoInitialize, dracoDecode } from './framework/parsers/draco-decoder.js';
+export { meshoptInitialize } from './framework/parsers/meshopt-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';

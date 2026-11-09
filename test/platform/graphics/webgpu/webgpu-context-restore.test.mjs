@@ -204,7 +204,11 @@ describe('WebGPU context restoration', function () {
     it('unregisters shader-generated layouts while leaving caller-owned layouts alive', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
         device._bindGroupFormats = new Set();
-        device.wgpu = { createBindGroupLayout: () => ({}) };
+        device.wgpu = {
+            createBindGroupLayout: () => ({}),
+            pushErrorScope() {},
+            popErrorScope: () => Promise.resolve(null)
+        };
         device.createBindGroupFormatImpl = format => new WebgpuBindGroupFormat(format);
         const generated = new BindGroupFormat(device, []);
         const shared = new BindGroupFormat(device, []);

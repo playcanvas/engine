@@ -1,0 +1,16 @@
+{
+    "frames": {
+        "rotated.png": {
+            "frame": { "x": 0, "y": 0, "w": 16, "h": 8 },
+            "rotated": true,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 16 },
+            "sourceSize": { "w": 8, "h": 16 }
+        }
+    },
+    "meta": {
+        "app": "https://www.codeandweb.com/texturepacker",
+        "image": "red-atlas.png",
+        "size": { "w": 32, "h": 32 }
+    }
+}

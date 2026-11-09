@@ -1,6 +1,8 @@
 // sort blind set of data
-function SortWorker() {
-    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
+// `myself` is the worker's message port: `self` in a web worker, or the parentPort of a Node
+// worker_threads worker. The creator passes it in as source text, so that bundlers never see the
+// Node-only require.
+function SortWorker(myself) {
 
     let order;
     let centers;

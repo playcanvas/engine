@@ -12,8 +12,15 @@ fn getCenter() -> vec3f {
     return vec3f(bitcast<f32>(cachedTransformA.r), bitcast<f32>(cachedTransformA.g), bitcast<f32>(cachedTransformA.b));
 }
 
+// Anti-aliasing flag stored in the lowest bit of center.x by writeSplat. Call after getCenter().
+fn getAntiAlias() -> bool {
+    return (cachedTransformA.r & 1u) != 0u;
+}
+
+// opacity as the SOG v3 byte (see containerCompactWrite): 0..1.5625
 fn getOpacity() -> f32 {
-    return f32(cachedTransformA.a >> 24u) / 255.0;
+    let o = f32(cachedTransformA.a >> 24u) / 204.0;
+    return o * o;
 }
 
 fn getColor() -> vec3f {

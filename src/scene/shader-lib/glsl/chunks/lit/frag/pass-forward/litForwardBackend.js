@@ -29,6 +29,11 @@ void evaluateBackend() {
                 litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0, 1.0);
             #endif
             litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);
+
+            // the diffuse transmission is a dielectric lobe, like the diffuse reflection
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                litArgs_diffuseTransmission_color = getAlbedoModulate(litArgs_diffuseTransmission_color, litArgs_metalness);
+            #endif
         #endif
 
         #ifdef LIT_IRIDESCENCE
@@ -38,10 +43,23 @@ void evaluateBackend() {
 
     // ambient
     #ifdef LIT_ADD_AMBIENT
+
+        // the ambient light arriving at the back of the surface, which the diffuse transmission
+        // lets through, is added to the diffuse light first and moved out of it
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            addAmbient(-litArgs_worldNormal);
+            dDiffuseTransmissionLight = dDiffuseLight;
+            dDiffuseLight = vec3(0);
+        #endif
+
         addAmbient(litArgs_worldNormal);
 
         #ifdef LIT_SPECULAR
             dDiffuseLight = dDiffuseLight * (1.0 - litArgs_specularity);
+
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight *= 1.0 - litArgs_specularity;
+            #endif
         #endif
 
         // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
@@ -51,14 +69,16 @@ void evaluateBackend() {
         #endif
     #endif
 
-    #ifndef LIT_OLD_AMBIENT
-        dDiffuseLight *= litArgs_ambient;
+    dDiffuseLight *= litArgs_ambient;
+
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        dDiffuseTransmissionLight *= litArgs_ambient;
     #endif
 
+    // the ambient occlusion darkens the ambient light here, and with occludeDirect, which is 0 or 1,
+    // the direct light as well, once that is added below
     #ifdef LIT_AO
-        #ifndef LIT_OCCLUDE_DIRECT
-            occludeDiffuse(litArgs_ao);
-        #endif
+        occludeDiffuse(mix(litArgs_ao, 1.0, material_occludeDirect));
     #endif
 
     #ifdef LIT_LIGHTMAP
@@ -130,8 +150,17 @@ void evaluateBackend() {
             dSpecularLight *= litArgs_specularity;
 
             #ifdef LIT_SPECULAR
+                // the clear coat reflects the area lights with its own reflectance, as it reflects the
+                // other lights and the environment: a dielectric, or no Fresnel without the Fresnel
+                // model. Its strength scales all of its light when combined.
+                #ifdef LIT_SPECULAR_FRESNEL
+                    float ccLTCReflectance = 0.04;
+                #else
+                    float ccLTCReflectance = 1.0;
+                #endif
+
                 // evaluate material based area lights data, shared by all area lights
-                calcLTCLightValues(litArgs_gloss, litArgs_worldNormal, dViewDirW, litArgs_specularity, litArgs_clearcoat_gloss, litArgs_clearcoat_worldNormal, litArgs_clearcoat_specularity);
+                calcLTCLightValues(litArgs_gloss, litArgs_worldNormal, dViewDirW, litArgs_specularity, litArgs_clearcoat_gloss, litArgs_clearcoat_worldNormal, ccLTCReflectance);
             #endif
         #endif
         
@@ -156,17 +185,19 @@ void evaluateBackend() {
 
         #ifdef AREA_LIGHTS
 
-            #ifdef LIT_CLEARCOAT
-                // specular has to be accumulated differently if we want area lights to look correct
-                litArgs_clearcoat_specularity = 1.0;
-            #endif
-
             #ifdef LIT_SPECULAR
                 litArgs_specularity = vec3(1);
             #endif
 
         #endif
 
+    #endif
+
+    // the diffuse transmission takes its share of the light entering the surface, and the diffuse
+    // reflection the rest
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        dDiffuseLight *= 1.0 - litArgs_diffuseTransmission_intensity;
+        dDiffuseTransmissionLight *= litArgs_diffuseTransmission_intensity;
     #endif
 
     // refraction is not gated on lighting / reflections, so that it also works without them
@@ -186,13 +217,16 @@ void evaluateBackend() {
                 litArgs_iridescence_intensity
             #endif
         );
+
+        // refraction replaces the diffuse transmission as it replaces the diffuse reflection
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            dDiffuseTransmissionLight *= 1.0 - litArgs_transmission;
+        #endif
     #endif
 
     // apply ambient occlusion
     #ifdef LIT_AO
-        #ifdef LIT_OCCLUDE_DIRECT
-            occludeDiffuse(litArgs_ao);
-        #endif
+        occludeDiffuse(mix(1.0, litArgs_ao, material_occludeDirect));
 
         #if LIT_OCCLUDE_SPECULAR != NONE
             occludeSpecular(litArgs_gloss, litArgs_ao, litArgs_worldNormal, dViewDirW);

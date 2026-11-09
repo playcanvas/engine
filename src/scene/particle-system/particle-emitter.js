@@ -1162,6 +1162,9 @@ class ParticleEmitter {
         this.camera = null;
 
         this._destroyResources();
+
+        this._gpuUpdater.destroy();
+        this._gpuUpdater = null;
     }
 }
 

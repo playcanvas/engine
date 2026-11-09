@@ -12,43 +12,22 @@ import {
     DITHER_NONE,
     PARALLAX_OCCLUSION,
     PARALLAX_OFFSET,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH, SHADERDEF_MASK_SHIFT,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH, SHADERDEF_CLIP,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
+    REFLECTIONSRC_PLANAR,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
     SCENETEXTURE_DEPTH
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
+import { shaderDefsToLightMask } from '../light-mask.js';
 
 const notBlack = (color) => {
     return color.r !== 0 || color.g !== 0 || color.b !== 0;
 };
 
 class StandardMaterialOptionsBuilder {
-    /**
-     * The refraction index for which the shader uses a built-in constant instead of the
-     * material_refractionIndex uniform. Shared with StandardMaterial, which needs to invalidate its
-     * shaders when refractionIndex moves across this value.
-     *
-     * @type {number}
-     * @ignore
-     */
-    static DEFAULT_REFRACTION_INDEX = 1.0 / 1.5;
-
-    /**
-     * Compares two material numbers with the tolerance used to decide whether a shader constant can
-     * replace a uniform.
-     *
-     * @param {number} a - The first value.
-     * @param {number} b - The second value.
-     * @returns {boolean} True when the values are equal within tolerance.
-     * @ignore
-     */
-    static equalish(a, b) {
-        return Math.abs(a - b) < 1e-4;
-    }
-
     // Minimal options for Depth and Shadow passes, and the outline pass
     updateMinRef(options, scene, stdMat, objDefs, pass, lightList, vertexFormat, outlinePass = false) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
@@ -91,6 +70,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
         options.litOptions.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
         options.litOptions.useMorphTextureBasedInt = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0;
+        options.litOptions.useClipPlanes = objDefs && (objDefs & SHADERDEF_CLIP) !== 0;
 
         options.litOptions.nineSlicedMode = stdMat.nineSlicedMode || 0;
 
@@ -100,12 +80,16 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.clusteredLightingCookiesEnabled = scene.lighting.cookiesEnabled;
             options.litOptions.clusteredLightingShadowsEnabled = scene.lighting.shadowsEnabled;
             options.litOptions.clusteredLightingShadowType = scene.lighting.shadowType;
-            options.litOptions.clusteredLightingAreaLightsEnabled = scene.lighting.areaLightsEnabled;
+            // area light shapes the shaders support, none when area lights are disabled
+            const areaLightShapes = scene.lighting.areaLightShapes;
+            options.litOptions.clusteredLightingAreaLightsEnabled = areaLightShapes !== 0;
+            options.litOptions.clusteredLightingAreaLightShapes = areaLightShapes;
         } else {
             options.litOptions.clusteredLightingEnabled = false;
             options.litOptions.clusteredLightingCookiesEnabled = false;
             options.litOptions.clusteredLightingShadowsEnabled = false;
             options.litOptions.clusteredLightingAreaLightsEnabled = false;
+            options.litOptions.clusteredLightingAreaLightShapes = 0;
         }
     }
 
@@ -139,7 +123,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useNormals = options.normalMap;
         options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
         options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.litOptions.ssao;
-        options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
     _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, textureIdentifiers) {
@@ -218,43 +201,45 @@ class StandardMaterialOptionsBuilder {
 
     _updateMaterialOptions(options, stdMat, scene) {
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
+                            stdMat.planarReflectionMap ||
                             notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
                             (stdMat.clearCoat > 0));
 
         const useSpecularColor = (!stdMat.useMetalness || stdMat.useMetalnessSpecularColor);
 
-        const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
-                                      (stdMat.specularityFactorTint || stdMat.specularityFactor !== 1);
+        // the specularity factor constant is always applied with the metalness specular color
+        const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor;
 
         const isPackedNormalMap = texture => (texture ? (texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR) : false);
 
-        const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
-
-        options.specularityFactorTint = specularityFactorTint;
-        options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1);
+        // these constants are always applied, so that a material with their neutral value (such as
+        // a metalness or refraction of 1, or an index of refraction of 1 / 1.5) shares the shader of
+        // one with any other value, and a change of them never recompiles. Folding the neutral value
+        // into the shader would save only an instruction or two.
+        options.metalnessTint = stdMat.useMetalness;
         options.glossTint = true;
+        options.iorTint = true;
+        options.refractionTint = true;
+        options.thicknessTint = true;
+        options.iridescenceTint = true;
+        options.specularityFactorTint = specularityFactorTint;
+
         options.diffuseEncoding = stdMat.diffuseMap?.encoding;
         options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
         options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.packedNormal = isPackedNormalMap(stdMat.normalMap);
-        options.refractionTint = !equalish(stdMat.refraction, 1.0);
-        options.refractionIndexTint = !equalish(stdMat.refractionIndex, DEFAULT_REFRACTION_INDEX);
-        options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
         options.specularEncoding = stdMat.specularMap?.encoding;
         options.sheenEncoding = stdMat.sheenMap?.encoding;
+        options.diffuseTransmissionColorEncoding = stdMat.diffuseTransmissionColorMap?.encoding;
         options.aoDetail = !!stdMat.aoDetailMap;
         options.diffuseDetail = !!stdMat.diffuseDetailMap;
         options.normalDetail = !!stdMat.normalMap;
         options.normalDetailPackedNormal = isPackedNormalMap(stdMat.normalDetailMap);
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
         options.aoDetailMode = stdMat.aoDetailMode;
-        options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
-        options.iorTint = !equalish(stdMat.refractionIndex, DEFAULT_REFRACTION_INDEX);
-
-        options.iridescenceTint = stdMat.iridescence !== 1.0;
 
         options.glossInvert = stdMat.glossInvert;
         options.sheenGlossInvert = stdMat.sheenGlossInvert;
@@ -267,9 +252,9 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
         options.litOptions.ambientSH = !!stdMat.ambientSH;
-        options.litOptions.twoSidedLighting = stdMat.twoSidedLighting;
         options.litOptions.occludeSpecular = stdMat.occludeSpecular;
-        options.litOptions.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
+        // the intensity is always applied, so that an intensity of 1 shares the shader of a lower one
+        options.litOptions.occludeSpecularFloat = true;
 
         options.litOptions.useMsdf = !!stdMat.msdfMap;
         options.litOptions.msdfTextAttribute = !!stdMat.msdfTextAttribute;
@@ -280,16 +265,20 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.cubeMapProjection = stdMat.cubeMapProjection;
 
-        options.litOptions.occludeDirect = stdMat.occludeDirect;
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.useAnisotropy = stdMat.enableGGXSpecular && (stdMat.anisotropyIntensity > 0 || !!stdMat.anisotropyMap);
         options.litOptions.fresnelModel = stdMat.fresnelModel;
-        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || options.litOptions.reflectionSource !== REFLECTIONSRC_NONE);
+        // the refraction without the scene color samples the reflections with the refracted ray,
+        // which a planar reflection, holding only the mirrored scene, cannot provide
+        const reflectionSource = options.litOptions.reflectionSource;
+        const useCubeRefraction = reflectionSource !== REFLECTIONSRC_NONE && reflectionSource !== REFLECTIONSRC_PLANAR;
+        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || useCubeRefraction);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;
         options.litOptions.useSheen = stdMat.useSheen;
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
+        options.litOptions.useDiffuseTransmission = stdMat.diffuseTransmission > 0;
         options.litOptions.useMetalness = stdMat.useMetalness;
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
         options.litOptions.dispersion = stdMat.dispersion > 0;
@@ -308,8 +297,12 @@ class StandardMaterialOptionsBuilder {
         const useSceneEnv = stdMat.useSkybox && !stdMat.envAtlas && !stdMat.cubeMap && !stdMat.sphereMap;
         let usingSceneEnv = false;
 
-        // source of environment reflections is as follows:
-        if (stdMat.envAtlas && stdMat.cubeMap) {
+        // source of environment reflections is as follows, a planar reflection replacing only the
+        // reflections, while the environment still provides the ambient lighting:
+        if (stdMat.planarReflectionMap) {
+            options.litOptions.reflectionSource = REFLECTIONSRC_PLANAR;
+            options.litOptions.reflectionEncoding = stdMat.planarReflectionMap.encoding;
+        } else if (stdMat.envAtlas && stdMat.cubeMap) {
             options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = stdMat.cubeMap.encoding;
@@ -349,6 +342,10 @@ class StandardMaterialOptionsBuilder {
             if (envAtlas) {
                 options.litOptions.ambientSource = AMBIENTSRC_ENVALATLAS;
                 options.litOptions.ambientEncoding = envAtlas.encoding;
+
+                // the ambient lighting alone can use the scene environment, when a planar
+                // reflection replaces the reflections
+                usingSceneEnv ||= envAtlas !== stdMat.envAtlas;
             } else {
                 options.litOptions.ambientSource = AMBIENTSRC_CONSTANT;
                 options.litOptions.ambientEncoding = null;
@@ -397,7 +394,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         if (stdMat.useLighting) {
-            const mask = objDefs ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? shaderDefsToLightMask(objDefs) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);

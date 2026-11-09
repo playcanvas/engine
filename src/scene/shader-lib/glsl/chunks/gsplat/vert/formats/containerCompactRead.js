@@ -12,8 +12,15 @@ vec3 getCenter() {
     return vec3(uintBitsToFloat(cachedTransformA.r), uintBitsToFloat(cachedTransformA.g), uintBitsToFloat(cachedTransformA.b));
 }
 
+// Anti-aliasing flag stored in the lowest bit of center.x by writeSplat. Call after getCenter().
+bool getAntiAlias() {
+    return (cachedTransformA.r & 1u) != 0u;
+}
+
+// opacity as the SOG v3 byte (see containerCompactWrite): 0..1.5625
 float getOpacity() {
-    return float(cachedTransformA.a >> 24u) / 255.0;
+    float o = float(cachedTransformA.a >> 24u) / 204.0;
+    return o * o;
 }
 
 vec3 getColor() {

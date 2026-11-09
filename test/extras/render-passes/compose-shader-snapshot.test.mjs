@@ -1,0 +1,370 @@
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { expect } from 'chai';
+
+import { MapUtils } from '../../../src/core/map-utils.js';
+import { Preprocessor } from '../../../src/core/preprocessor.js';
+import { BloomEffect } from '../../../src/extras/effects/bloom/bloom-effect.js';
+import { CasEffect } from '../../../src/extras/effects/cas/cas-effect.js';
+import { ColorEnhanceEffect } from '../../../src/extras/effects/color-enhance/color-enhance-effect.js';
+import { ColorLutEffect } from '../../../src/extras/effects/color-lut/color-lut-effect.js';
+import { DofEffect } from '../../../src/extras/effects/dof/dof-effect.js';
+import { FringingEffect } from '../../../src/extras/effects/fringing/fringing-effect.js';
+import { GradingEffect } from '../../../src/extras/effects/grading/grading-effect.js';
+import { SsaoEffect } from '../../../src/extras/effects/ssao/ssao-effect.js';
+import { VignetteEffect } from '../../../src/extras/effects/vignette/vignette-effect.js';
+import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
+import {
+    COMPOSESLOT_HDR, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE,
+    SSAOTYPE_LIGHTING
+} from '../../../src/extras/render-passes/constants.js';
+import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
+import {
+    ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8,
+    SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
+} from '../../../src/platform/graphics/constants.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { ShaderDefinitionUtils } from '../../../src/platform/graphics/shader-definition-utils.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
+import {
+    GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_AGX, TONEMAP_AGX_PUNCHY, TONEMAP_FILMIC,
+    TONEMAP_HEJL, TONEMAP_NEUTRAL
+} from '../../../src/scene/constants.js';
+import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
+import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
+import { ProgramLibrary } from '../../../src/scene/shader-lib/program-library.js';
+import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
+import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+
+/**
+ * Snapshot of the compose shader source across the combinations of effects it can be built for, in
+ * both shader languages. The composition is being restructured around registered effects, and the
+ * restructuring must not change the program any combination compiles to. This test pins the
+ * preprocessed fragment source of each combination, normalized for whitespace - the restructured
+ * chunk leaves blank lines where nothing is included - so any change to what a combination compiles
+ * to fails here rather than in a renderer.
+ *
+ * Update the fixture deliberately, having checked the diff is the intended one, with:
+ *
+ *     UPDATE_COMPOSE_SNAPSHOT=1 npx mocha test/extras/render-passes/compose-shader-snapshot.test.mjs
+ *
+ * To inspect a failing combination, set COMPOSE_SNAPSHOT_DUMP to a directory and the preprocessed
+ * source of every combination is written there, one file per combination and language.
+ */
+describe('RenderPassCompose shader snapshot', function () {
+
+    const fixturePath = join(dirname(fileURLToPath(import.meta.url)), 'compose-shader-snapshot.json');
+    const update = !!process.env.UPDATE_COMPOSE_SNAPSHOT;
+    const dumpDir = process.env.COMPOSE_SNAPSHOT_DUMP;
+
+    /** @type {NullGraphicsDevice} */
+    let device;
+
+    /** @type {Object<string, Texture>} */
+    let textures;
+
+    const createTexture = (name, width, height, format, srgb = false) => {
+        return new Texture(device, {
+            name,
+            width,
+            height,
+            format,
+            srgb,
+            mipmaps: false,
+            minFilter: FILTER_LINEAR,
+            magFilter: FILTER_LINEAR,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+    };
+
+    before(function () {
+        device = new NullGraphicsDevice({ width: 128, height: 128 });
+        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
+        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
+        setProgramLibrary(device, new ProgramLibrary(device));
+
+        textures = {
+            bloom: createTexture('bloom', 64, 64, PIXELFORMAT_RGBA16F),
+            ssao: createTexture('ssao', 128, 128, PIXELFORMAT_R32F),
+            lut: createTexture('lut', 256, 16, PIXELFORMAT_RGBA8, true),
+            lut2: createTexture('lut2', 256, 16, PIXELFORMAT_RGBA8, true)
+        };
+    });
+
+    after(function () {
+        Object.values(textures).forEach(texture => texture.destroy());
+        device.destroy();
+    });
+
+    // a compose pass in the state a CameraFrame would leave it in for the given combination. The
+    // pass is constructed fresh per combination so that no state leaks between them.
+    const createPass = () => {
+        const cameraComponent = { shaderParams: new CameraShaderParams() };
+        const pass = new RenderPassCompose(device, cameraComponent);
+        pass._gammaCorrection = GAMMA_SRGB;
+
+        // the built-in effects a CameraFrame registers, in the order it registers them. The
+        // combinations drive their state; only getShaderVariant is exercised, so the camera frame
+        // behind the effects is a stub supplying the scene format the sharpening reads, and the
+        // camera the occlusion is generated for
+        pass.fringing = new FringingEffect(device);
+        pass.cas = new CasEffect(device);
+        pass.dof = new DofEffect(device);
+        pass.ssao = new SsaoEffect(device);
+        pass.bloom = new BloomEffect(device);
+        pass.colorEnhance = new ColorEnhanceEffect(device);
+        pass.grading = new GradingEffect(device);
+        pass.colorLut = new ColorLutEffect(device);
+        pass.vignette = new VignetteEffect(device);
+        const effects = [pass.fringing, pass.cas, pass.dof, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F, cameraComponent };
+        effects.forEach((effect) => {
+            effect.cameraFrame = cameraFrame;
+        });
+        pass.builtInEffects = effects;
+
+        // the effects whose passes exist, which the frame passes create when they are built
+        pass.passEffects = [];
+        return pass;
+    };
+
+    // bloom contributes once its passes exist - here it creates them over the stand-in half
+    // resolution scene texture
+    const enableBloom = (pass) => {
+        pass.bloom.intensity = 0.05;
+        pass.bloom.createPasses({ [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom }, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
+        pass.passEffects.push(pass.bloom);
+    };
+
+    // the occlusion likewise, created over a stand-in scene depth
+    const enableSsao = (pass, type) => {
+        pass.ssao.type = type;
+        const depth = { texture: textures.ssao, defines: new Map(), key: '' };
+        const resources = { [FRAMERESOURCE_DEPTH]: depth, [FRAMERESOURCE_PREPASSDEPTH]: depth };
+        pass.ssao.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
+        pass.passEffects.push(pass.ssao);
+    };
+
+    // a composed effect reading the scene depth, with the depth stored the way the scene pass stores
+    // it - an average of the reciprocals - or the way the prepass does, outright. Its chunk can also
+    // include the depth chunk itself, which the composition includes for it too.
+    const addDepthEffect = (pass, { prepass = false, includeChunk = false } = {}) => {
+        const include = includeChunk ? '#include "screenDepthPS"\n' : '';
+        const effect = new CameraFrameEffect(device, 'depthTint', {
+            slot: COMPOSESLOT_HDR,
+            glsl: `${include}vec3 applyDepthTint(vec3 color, vec2 uv) { return color * fract(getLinearScreenDepth(uv)); }`,
+            wgsl: `${include}fn applyDepthTint(color: vec3f, uv: vec2f) -> vec3f { return color * fract(getLinearScreenDepth(uv)); }`,
+            requires: [prepass ? FRAMERESOURCE_PREPASSDEPTH : FRAMERESOURCE_DEPTH]
+        });
+        pass.builtInEffects.push(effect);
+
+        const { shaderParams } = pass.cameraComponent;
+        shaderParams.sceneDepthMapLinear = true;
+        shaderParams.sceneDepthMapPacked = false;
+        shaderParams.sceneDepthMapReciprocal = !prepass;
+        pass.sceneDepthAvailable = true;
+    };
+
+    // the depth of field likewise, its low quality setup upscaling its quarter resolution blur
+    const enableDof = (pass, highQuality) => {
+        pass.dof.enabled = true;
+        pass.dof.highQuality = highQuality;
+        const resources = {
+            [FRAMERESOURCE_DEPTH]: { texture: textures.ssao, defines: new Map(), key: '' },
+            [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom
+        };
+        pass.dof.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
+        pass.passEffects.push(pass.dof);
+    };
+
+    const enableAll = (pass) => {
+        enableBloom(pass);
+        enableSsao(pass, SSAOTYPE_COMBINE);
+        enableDof(pass, false);
+        pass.grading.enabled = true;
+        pass.colorEnhance.enabled = true;
+        pass.colorLut.texture = textures.lut;
+        pass.colorLut.texture2 = textures.lut2;
+        pass.vignette.intensity = 0.3;
+        pass.fringing.intensity = 10;
+        pass.cas.sharpness = 0.5;
+    };
+
+    const withDepth = (pass, available) => {
+        const { shaderParams } = pass.cameraComponent;
+        shaderParams.sceneDepthMapLinear = available;
+        shaderParams.sceneDepthMapPacked = false;
+        shaderParams.sceneDepthMapReciprocal = false;
+        pass.sceneDepthAvailable = available;
+    };
+
+    /**
+     * @typedef {object} Combination
+     * @property {string} name - The name, which keys the snapshot.
+     * @property {boolean} [all] - Whether every effect is enabled before `set` is applied.
+     * @property {boolean} [depth] - Whether the scene depth is available, when the combination cares.
+     * @property {boolean} [customChunks] - Whether the legacy user injection points are filled.
+     * @property {(pass: RenderPassCompose, textures: Object<string, Texture>) => object|void} [set] - Applies
+     * state to the pass: either returns properties to assign to it, or acts on it directly.
+     */
+
+    /** @type {Combination[]} */
+    const combinations = [
+        { name: 'off' },
+        { name: 'off-gamma-none', set: () => ({ _gammaCorrection: GAMMA_NONE }) },
+        { name: 'bloom', set: pass => enableBloom(pass) },
+        { name: 'dof', set: pass => enableDof(pass, true) },
+        { name: 'dof-upscale', set: pass => enableDof(pass, false) },
+        { name: 'ssao', set: pass => enableSsao(pass, SSAOTYPE_COMBINE) },
+        { name: 'ssao-lighting', set: pass => enableSsao(pass, SSAOTYPE_LIGHTING) },
+        {
+            name: 'ssao-lighting-debug',
+            set: (pass) => {
+                enableSsao(pass, SSAOTYPE_LIGHTING);
+                return { debug: 'ssao' };
+            }
+        },
+        { name: 'grading', set: pass => (pass.grading.enabled = true) },
+        { name: 'color-enhance', set: pass => (pass.colorEnhance.enabled = true) },
+        { name: 'color-lut', set: (pass, t) => (pass.colorLut.texture = t.lut) },
+        {
+            name: 'color-lut2',
+            set: (pass, t) => {
+                pass.colorLut.texture = t.lut;
+                pass.colorLut.texture2 = t.lut2;
+            }
+        },
+        { name: 'vignette', set: pass => (pass.vignette.intensity = 0.3) },
+        { name: 'fringing', set: pass => (pass.fringing.intensity = 10) },
+        { name: 'cas-hdr', set: pass => (pass.cas.sharpness = 0.5) },
+        {
+            name: 'cas-ldr',
+            set: (pass) => {
+                pass.cas.sharpness = 0.5;
+                pass.cas.cameraFrame.hdrFormat = PIXELFORMAT_RGBA8;
+            }
+        },
+        { name: 'depth-effect-scene', set: pass => addDepthEffect(pass) },
+        { name: 'depth-effect-prepass', set: pass => addDepthEffect(pass, { prepass: true }) },
+        { name: 'depth-effect-double-include', set: pass => addDepthEffect(pass, { includeChunk: true }) },
+        { name: 'all', all: true },
+        { name: 'all-gamma-none', all: true, set: () => ({ _gammaCorrection: GAMMA_NONE }) },
+        ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY].map(toneMapping => ({
+            name: `all-tonemap-${toneMapping}`, all: true, set: () => ({ toneMapping })
+        })),
+        ...['scene', 'bloom', 'dofcoc', 'dofblur', 'ssao', 'vignette'].map(debug => ({
+            name: `all-debug-${debug}`, all: true, set: () => ({ debug })
+        })),
+        { name: 'all-debug-depth', all: true, depth: true, set: () => ({ debug: 'depth' }) },
+        { name: 'all-debug-depthmissing', all: true, depth: false, set: () => ({ debug: 'depth' }) },
+        { name: 'all-custom-chunks', all: true, customChunks: true }
+    ];
+
+    const apply = (pass, combination) => {
+        if (combination.all) enableAll(pass);
+        if (combination.depth !== undefined) withDepth(pass, combination.depth);
+        if (combination.set) {
+            const properties = combination.set(pass, textures);
+            if (properties && typeof properties === 'object') Object.assign(pass, properties);
+        }
+        // the effects applied the way CameraFrame#update applies them: the active ones take part -
+        // those owning passes once their passes exist - each applying its parameters, the defines
+        // among them
+        const active = pass.builtInEffects.filter(effect => effect.active &&
+            (!effect._ownsPasses || pass.passEffects.includes(effect)));
+        active.forEach(effect => effect.update());
+        pass.effects = active;
+        if (combination.customChunks) {
+            // the documented customization path: user chunks at the three legacy injection points
+            pass._customComposeChunks.set('composeDeclarationsPS', 'uniform float custom;');
+            pass._customComposeChunks.set('composeMainStartPS', 'float customStart = 1.0;');
+            pass._customComposeChunks.set('composeMainEndPS', 'result *= customStart;');
+        }
+    };
+
+    // the include map a shader build would resolve against: the device chunks, the user chunks the
+    // combination set, and whatever the variant supplies
+    const includesFor = (pass, shaderLanguage, includes) => {
+        const chunks = ShaderChunks.get(device, shaderLanguage);
+        const custom = new Map();
+        pass._customComposeChunks.forEach((value, name) => {
+            if (value) custom.set(name, value);
+        });
+        return MapUtils.merge(chunks, custom, includes);
+    };
+
+    // what Shader does to the fragment source before compiling it, minus the platform preamble that
+    // is identical for every combination
+    const preprocess = (pass, shaderLanguage) => {
+        const { defines, includes } = pass.getShaderVariant(shaderLanguage);
+        const chunks = ShaderChunks.get(device, shaderLanguage);
+        const source = ShaderDefinitionUtils.getDefinesCode(device, defines) + chunks.get('composePS');
+        return Preprocessor.run(source, includesFor(pass, shaderLanguage, includes), {
+            stripDefines: shaderLanguage === SHADERLANGUAGE_WGSL,
+            sourceName: `compose ${shaderLanguage}`
+        });
+    };
+
+    const normalize = source => source.replace(/\s+/g, ' ').trim();
+    const digest = source => createHash('sha1').update(normalize(source)).digest('hex');
+
+    // the depth an effect reads is decoded the way the producer stored it, whichever that is, and the
+    // depth chunk is declared once however many times it is included
+    for (const shaderLanguage of [SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL]) {
+        it(`decodes the scene depth for an effect requiring it as its producer stores it, ${shaderLanguage}`, function () {
+            const glsl = shaderLanguage === SHADERLANGUAGE_GLSL;
+            const reciprocal = glsl ? 'recip > 0.0 ? 1.0 / recip' : 'select(uniform.camera_params.y, 1.0 / recip';
+            const sampler = glsl ? 'uniform highp sampler2D uSceneDepthMap;' : 'var uSceneDepthMap:';
+            const count = (source, text) => source.split(text).length - 1;
+
+            for (const [options, isReciprocal] of [[{}, true], [{ prepass: true }, false], [{ includeChunk: true }, true]]) {
+                const pass = createPass();
+                apply(pass, { name: 'depth', set: p => addDepthEffect(p, options) });
+                const source = preprocess(pass, shaderLanguage);
+                expect(source.includes(reciprocal), JSON.stringify(options)).to.equal(isReciprocal);
+                expect(count(source, sampler), JSON.stringify(options)).to.equal(1);
+                expect(source).to.include('applyDepthTint(result, uv)');
+            }
+        });
+    }
+
+    const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, 'utf8')) : {};
+    const actual = {};
+
+    for (const shaderLanguage of [SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL]) {
+        for (const combination of combinations) {
+            const { name } = combination;
+            const id = `${name}:${shaderLanguage}`;
+
+            it(`compiles the same program for ${id}`, function () {
+                const pass = createPass();
+                apply(pass, combination);
+
+                const source = preprocess(pass, shaderLanguage);
+                expect(source, 'preprocessing failed').to.be.a('string').and.not.equal('');
+
+                if (dumpDir) {
+                    mkdirSync(dumpDir, { recursive: true });
+                    writeFileSync(join(dumpDir, `${name}.${shaderLanguage}.txt`), source);
+                }
+
+                actual[id] = digest(source);
+                if (!update) {
+                    expect(fixture[id], `no snapshot for ${id} - run with UPDATE_COMPOSE_SNAPSHOT=1`).to.be.a('string');
+                    expect(actual[id], `${id} compiles to a different program than the snapshot`).to.equal(fixture[id]);
+                }
+            });
+        }
+    }
+
+    after(function () {
+        if (update) {
+            writeFileSync(fixturePath, `${JSON.stringify(actual, null, 4)}\n`);
+        }
+    });
+});

@@ -160,6 +160,8 @@ class MiniStats {
         this._destroyed = false;
         this._geometryDirty = true;
         this._layoutDirty = true;
+        this._clientWidth = -1;
+        this._clientHeight = -1;
         this._scroll = 0;
         this._maxScroll = 0;
         this._overallHeight = 0;
@@ -282,6 +284,10 @@ class MiniStats {
         ],
         gsplatsCopy: [
             { name: 'GsplatsCopy', stats: ['frame.gsplatBufferCopy'], decimalPlaces: 1, multiplier: 1, unitsName: '%', watermark: 100 }
+        ],
+        compute: [
+            { name: 'Dispatches', stats: ['frame.computeDispatches'], watermark: 100 },
+            { name: 'Compute passes', stats: ['frame.computePasses'], watermark: 100 }
         ]
     };
 
@@ -291,7 +297,9 @@ class MiniStats {
      * calls and frame time, followed by User, CPU, GPU and VRAM. In the detailed views, Engine
      * and User have collapsible headings, omitted when empty.
      *
-     * @param {string[]} [extraStats] - Presets to include: 'gsplats' or 'gsplatsCopy'.
+     * @param {string[]} [extraStats] - Presets to include: 'gsplats', 'gsplatsCopy' or 'compute'.
+     * The 'compute' preset shows the compute dispatches and compute passes of each frame, on
+     * devices supporting compute shaders.
      * @returns {MiniStatsOptions} The default options for MiniStats.
      * @example
      * const options = MiniStats.getDefaultOptions(['gsplats']);
@@ -578,6 +586,10 @@ class MiniStats {
         }
         const counterGroups = new Map();
         for (const entry of options.stats ?? []) {
+            // compute counters only exist on devices supporting compute shaders
+            if (!device.supportsCompute && entry.stats.some(path => path.startsWith('frame.compute'))) {
+                continue;
+            }
             const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
             const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
             if (entry.name === 'VRAM') {
@@ -756,6 +768,16 @@ class MiniStats {
 
     /** @private */
     render() {
+        // the layout is in css pixels, which can change without a resizecanvas event, e.g. a
+        // window resize with RESOLUTION_FIXED; the device measures the canvas in update(). Compared
+        // with its last value rather than the layout's size, as a host that only renders never
+        // refreshes it (resizecanvas covers that host)
+        const { width, height } = this.device.clientRect;
+        if (width !== this._clientWidth || height !== this._clientHeight) {
+            this._clientWidth = width;
+            this._clientHeight = height;
+            this._layoutDirty = true;
+        }
         if (this._layoutDirty) this.updateDiv();
         if (this._geometryDirty) {
             this.rebuildGeometry();

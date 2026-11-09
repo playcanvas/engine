@@ -1,6 +1,4 @@
-// #if _DEBUG
 import { version, revision } from '../core/core.js';
-// #endif
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
@@ -231,8 +229,6 @@ class AppBase extends EventHandler {
             this.frameRequestId = null;
         }
 
-        this._inFrameUpdate = true;
-
         setApplication(this);
 
         // have current application pointer in pc
@@ -252,6 +248,11 @@ class AppBase extends EventHandler {
         if (this.graphicsDevice.contextLost) {
             return;
         }
+
+        // set after the context lost check, which returns before the end of the frame where a
+        // deferred destroy runs. While the context is lost no frame work runs, so destroy() acts
+        // at once instead of waiting for a restore that may never come.
+        this._inFrameUpdate = true;
 
         this.stats.updateBasic(currentTime, dt, ms, this.renderer, this.graphicsDevice);
 
@@ -299,8 +300,11 @@ class AppBase extends EventHandler {
 
     /**
      * Scales the global time delta. Defaults to 1. Scripts, animation and physics all receive
-     * the scaled delta, so 0 stops them together. To pause or slow down physics alone while the
-     * rest of the application keeps running, use {@link RigidBodyComponentSystem#timeScale}.
+     * the scaled delta, so 0 freezes everything that advances with time. It does not pause
+     * scripts: their update and postUpdate methods are still called every frame with a dt of 0,
+     * so input handling, spawning, impulses and any other logic that is not multiplied by dt
+     * carry on. Give gameplay code its own pause check. To pause or slow down physics alone while
+     * the rest of the application keeps running, use {@link RigidBodyComponentSystem#timeScale}.
      *
      * @example
      * // Set the app to run at half speed
@@ -809,8 +813,9 @@ class AppBase extends EventHandler {
      *
      * Container-backed render assets wait for their referenced containers to be registered and
      * loaded. If a preloaded render asset's `data.containerAsset` refers to a container that is
-     * never registered, this method never calls its callback or fires `preload:end`. Debug builds
-     * warn when a render asset starts waiting for an unregistered container.
+     * never registered, this method never calls its callback or fires `preload:end`. Containers
+     * can be registered in any order before this method is called. Debug builds warn about
+     * preloaded render assets whose container is still unregistered when this method is called.
      *
      * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
@@ -843,6 +848,15 @@ class AppBase extends EventHandler {
         // for each asset
         assets.forEach((asset) => {
             if (!asset.loaded) {
+                // A container registered after this point is still picked up, but one that is never
+                // registered keeps preload from completing.
+                Debug.call(() => {
+                    const containerId = asset.type === 'render' && asset.data.containerAsset;
+                    if (containerId && !this.assets.get(containerId)) {
+                        Debug.warnOnce(`Preloaded render asset '${asset.name}' (${asset.id}) is waiting for container asset ${containerId}, which is not registered. Preload completes only after it is registered and loaded.`);
+                    }
+                });
+
                 asset.once('load', onAssetLoadOrError);
                 asset.once('error', onAssetLoadOrError);
                 this.assets.load(asset);
@@ -1115,7 +1129,7 @@ class AppBase extends EventHandler {
         } else {
             // without requestAnimationFrame, as in Node.js (even with jsdom), there is no main
             // loop and the application is driven by calling update directly. A pending frame is
-            // cancelled on each tick and on destroy, so both functions are required.
+            // canceled on each tick and on destroy, so both functions are required.
             const hasFrameLoop = typeof requestAnimationFrame === 'function' &&
                 typeof cancelAnimationFrame === 'function';
             this.frameRequestId = hasFrameLoop ? requestAnimationFrame(this.tick) : null;
@@ -1442,6 +1456,8 @@ class AppBase extends EventHandler {
      * - {@link TONEMAP_ACES}
      * - {@link TONEMAP_ACES2}
      * - {@link TONEMAP_NEUTRAL}
+     * - {@link TONEMAP_AGX}
+     * - {@link TONEMAP_AGX_PUNCHY}
      *
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness
      * of the scene.
@@ -1511,10 +1527,11 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
      * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
-     * @param {number} [settings.render.gsplatMinContribution] - Minimum visual contribution threshold for the compute gsplat renderer. Defaults to 3.
+     * @param {number} [settings.render.gsplatMinContribution] - Minimum visual contribution threshold for the compute gsplat renderer. Defaults to 2.
      * @param {number} [settings.render.gsplatFoveationStrength] - Foveated contribution culling strength. Defaults to 0.
-     * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
-     * @param {boolean} [settings.render.gsplatAntiAlias] - Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
+     * @param {number} [settings.render.gsplatFoveationCenter] - Protected center radius for foveated contribution culling. Defaults to 0.3.
+     * @param {boolean} [settings.render.gsplatAntiAlias] - Whether Gaussian splats are rendered with anti-aliasing compensation. When
+     * not set, each splat follows its resource; see {@link GSplatParams#antiAlias}.
      * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.
      * @param {boolean} [settings.render.gsplatUseTonemap] - Whether to apply the camera's tonemapping and the
      * scene exposure to Gaussian splats. Defaults to true.
@@ -1807,8 +1824,17 @@ class AppBase extends EventHandler {
      * update. However, if called outside of the engine frame update, calling destroy() will
      * destroy the application immediately.
      *
+     * On WebGL, the canvas keeps its WebGL context until the canvas is garbage collected. Browsers
+     * limit the number of live WebGL contexts on a page, and beyond the limit they lose the oldest
+     * one, which can belong to another running application. A page that destroys applications
+     * whose canvases it doesn't reuse can release the context, as shown below. A released context
+     * can't be used by a new application on the same canvas.
+     *
      * @example
      * app.destroy();
+     *
+     * // on WebGL, also release the context of a canvas that won't be reused
+     * canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')?.loseContext();
      */
     destroy() {
         if (this._inFrameUpdate) {
@@ -1940,7 +1966,10 @@ class AppBase extends EventHandler {
 
         script.app = null;
 
-        AppBase._applications[canvasId] = null;
+        // another application registered under the same canvas id since keeps its entry
+        if (AppBase._applications[canvasId] === this) {
+            AppBase._applications[canvasId] = null;
+        }
 
         if (getApplication() === this) {
             setApplication(null);

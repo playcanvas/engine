@@ -119,7 +119,8 @@ class EventHandler {
     }
 
     /**
-     * Attach an event handler to an event. This handler will be removed after being fired once.
+     * Attach an event handler to an event. The handler is removed before it is called, so it runs
+     * at most once, even if it fires the same event again or throws.
      *
      * @param {string} name - Name of the event to bind the callback to.
      * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
@@ -299,44 +300,30 @@ class EventHandler {
         if (!this._callbackActive.has(name)) {
             // when starting callbacks execution ensure we store a list of initial callbacks
             this._callbackActive.set(name, callbacksInitial);
-        } else if (this._callbackActive.get(name) !== callbacksInitial) {
-            // if we are trying to execute a callback while there is an active execution right now
-            // and the active list has been already modified,
-            // then we go to an unoptimized path and clone callbacks list to ensure execution consistency
+        } else {
+            // A nested fire needs its own list so it cannot clear the outer execution's active list.
             callbacks = callbacksInitial.slice();
         }
 
-        // eslint-disable-next-line no-unmodified-loop-condition
-        for (let i = 0; (callbacks || this._callbackActive.get(name)) && (i < (callbacks || this._callbackActive.get(name)).length); i++) {
-            const evt = (callbacks || this._callbackActive.get(name))[i];
-            if (!evt.callback) continue;
+        try {
+            // eslint-disable-next-line no-unmodified-loop-condition
+            for (let i = 0; (callbacks || this._callbackActive.get(name)) && (i < (callbacks || this._callbackActive.get(name)).length); i++) {
+                const evt = (callbacks || this._callbackActive.get(name))[i];
+                if (!evt.callback || evt._onceFired) continue;
 
-            evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-
-            if (evt._once) {
-                // check that callback still exists because user may have unsubscribed in the event handler
-                const existingCallback = this._callbacks.get(name);
-                const ind = existingCallback ? existingCallback.indexOf(evt) : -1;
-
-                if (ind !== -1) {
-                    if (this._callbackActive.get(name) === existingCallback) {
-                        this._callbackActive.set(name, this._callbackActive.get(name).slice());
-                    }
-
-                    const callbacks = this._callbacks.get(name);
-                    if (!callbacks) continue;
-                    callbacks[ind].removed = true;
-                    callbacks.splice(ind, 1);
-
-                    if (callbacks.length === 0) {
-                        this._callbacks.delete(name);
-                    }
+                if (evt._once) {
+                    // Consume before calling: the callback can fire this event again or throw.
+                    // Keep this separate from removed, since active lists retain unsubscribed listeners.
+                    evt._onceFired = true;
+                    this.offByHandle(evt);
                 }
-            }
-        }
 
-        if (!callbacks) {
-            this._callbackActive.delete(name);
+                evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+            }
+        } finally {
+            if (!callbacks) {
+                this._callbackActive.delete(name);
+            }
         }
 
         return this;

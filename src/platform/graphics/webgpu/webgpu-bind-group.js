@@ -1,4 +1,9 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import {
+    BUFFERUSAGE_STORAGE, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, SAMPLETYPE_FLOAT, pixelFormatInfo
+} from '../constants.js';
+import { DebugGraphics } from '../debug-graphics.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { TextureView } from '../texture-view.js';
 
@@ -36,10 +41,11 @@ class WebgpuBindGroup {
         this.bindGroup = null;
         const device = bindGroup.device;
 
+        // the descriptor creates the samplers and texture views the bind group uses
+        WebgpuDebug.validate(device);
+
         /** @type {GPUBindGroupDescriptor} */
         const desc = this.createDescriptor(device, bindGroup);
-
-        WebgpuDebug.validate(device);
 
         this.bindGroup = device.wgpu.createBindGroup(desc);
 
@@ -114,6 +120,22 @@ class WebgpuBindGroup {
             Debug.assert(view, `NULL texture view [${textureFormat.name}] (slot ${slot}) cannot be used by the bind group`);
             Debug.call(() => {
                 this.debugFormat += `${slot}: ${bindGroup.format.textureFormats[textureIndex].name}\n`;
+
+                // report a texture bound to a filterable float slot (such as texture_2d<f32>) which the
+                // device cannot filter - WebGPU rejects the bind group, and every draw using it then
+                // fails with an error which does not name the cause. Depth formats are never filterable
+                // as float, 32-bit float formats only with the float32-filterable feature.
+                if (textureFormat.sampleType === SAMPLETYPE_FLOAT) {
+                    const pixelFormat = texture.format;
+                    const depth = pixelFormat === PIXELFORMAT_DEPTH || pixelFormat === PIXELFORMAT_DEPTH16 || pixelFormat === PIXELFORMAT_DEPTHSTENCIL;
+                    const float32 = pixelFormat === PIXELFORMAT_R32F || pixelFormat === PIXELFORMAT_RG32F || pixelFormat === PIXELFORMAT_RGB32F || pixelFormat === PIXELFORMAT_RGBA32F;
+
+                    if (depth || (float32 && !device.textureFloatFilterable)) {
+                        const reason = depth ? 'depth formats cannot be filtered' : 'the device does not support the float32-filterable feature';
+                        const declaration = depth ? '\'texture_depth_2d\' or \'texture_2d<uff>\' in WGSL' : '\'texture_2d<uff>\' in WGSL, or a highp sampler in GLSL';
+                        Debug.errorOnce(`Texture '${texture.name}' of format ${pixelFormatInfo.get(pixelFormat)?.name} is bound to the filterable float slot '${textureFormat.name}' of bind group ${bindGroup.name ?? bindGroup.id}, but ${reason}, and so the bind group is invalid. Declare the texture as unfilterable - ${declaration} - and read it with textureLoad or a non-filtering sampler. Rendering [${DebugGraphics.toString()}]`, texture);
+                    }
+                }
             });
 
             entries.push({
@@ -170,6 +192,7 @@ class WebgpuBindGroup {
 
             Debug.assert(wgpuBuffer, `NULL storage buffer [${storageBufferFormats[bufferIndex].name}] (slot ${slot}, id ${buffer.id}, size ${buffer.byteSize}) cannot be used by the bind group`);
             Debug.call(() => {
+                if (!(buffer.impl.usageFlags & BUFFERUSAGE_STORAGE)) Debug.errorOnce(`${buffer.constructor.name} ${buffer.name ?? buffer.id} is bound to the storage buffer [${storageBufferFormats[bufferIndex].name}] (slot ${slot}) of bind group ${bindGroup.name ?? bindGroup.id}, but was created without storage usage, so the bind group is invalid. Create a VertexBuffer or IndexBuffer bound to a storage buffer with the storage option.`, buffer);
                 this.debugFormat += `${slot}: SB\n`;
             });
 

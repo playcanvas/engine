@@ -1,5 +1,15 @@
 // Write function for compact work buffer format (20 bytes/splat).
 export default /* glsl */`
+// Anti-aliasing flag of the splats being written (GSplatResourceBase#antiAlias), stored in the
+// lowest bit of center.x and read back by getAntiAlias(). That moves the center by at most one
+// float step. An infinite or NaN center.x is left as is, as the bit would change its value class.
+uniform uint uAntiAlias;
+
+uint gsplatPackCenterX(float x) {
+    uint bits = floatBitsToUint(x);
+    return (bits & 0x7f800000u) == 0x7f800000u ? bits : ((bits & ~1u) | uAntiAlias);
+}
+
 void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
     // Pack RGB as 11+11+10 bits into R32U, range [0, 4]
     vec3 rgb = clamp(color.rgb, 0.0, 4.0);
@@ -26,10 +36,11 @@ void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
         uint sxBits = scale.x < 1e-10 ? 0u : uint(clamp((log(scale.x) - logMin) * invLogRange + 0.5, 1.0, 255.0));
         uint syBits = scale.y < 1e-10 ? 0u : uint(clamp((log(scale.y) - logMin) * invLogRange + 0.5, 1.0, 255.0));
         uint szBits = scale.z < 1e-10 ? 0u : uint(clamp((log(scale.z) - logMin) * invLogRange + 0.5, 1.0, 255.0));
-        uint alphaBits = uint(clamp(color.a, 0.0, 1.0) * 255.0 + 0.5);
+        // opacity as the SOG v3 byte, (b / 204)^2: 0..1.5625, exact at 0 and 1 (byte 204)
+        uint alphaBits = uint(min(sqrt(clamp(color.a, 0.0, 1.5625)) * 204.0 + 0.5, 255.0));
         uint packedScaleAlpha = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
 
-        writeDataTransformA(uvec4(floatBitsToUint(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packedScaleAlpha));
+        writeDataTransformA(uvec4(gsplatPackCenterX(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packedScaleAlpha));
 
         writeDataTransformB(uvec4(packedQuat, 0u, 0u, 0u));
     #endif

@@ -78,7 +78,9 @@ class WebgpuDebug {
         const marker = WebgpuDebug._markers.pop();
         Debug.assert(header, 'Non matching end.');
 
-        const error = await device.wgpu.popErrorScope();
+        // The pop rejects when the device is lost, which is not an error to report. A mismatched
+        // scope is caught by the assert above.
+        const error = await device.wgpu.popErrorScope().catch(() => null);
         if (error) {
             const count = WebgpuDebug._loggedMessages.get(error.message) ?? 0;
             if (count < MAX_DUPLICATES) {
@@ -107,8 +109,9 @@ class WebgpuDebug {
         const marker = WebgpuDebug._markers.pop();
         Debug.assert(header, 'Non-matching error scope end.');
 
-        // Capture popErrorScope error (if any)
-        const error = await device.wgpu.popErrorScope();
+        // Capture popErrorScope error (if any). Both queries reject when the device is lost, which
+        // is not an error to report.
+        const error = await device.wgpu.popErrorScope().catch(() => null);
         let errorMessage = '';
 
         if (error) {
@@ -117,9 +120,9 @@ class WebgpuDebug {
         }
 
         // Get shader compilation errors
-        const compilationInfo = await shaderModule.getCompilationInfo();
+        const compilationInfo = await shaderModule.getCompilationInfo().catch(() => null);
 
-        if (compilationInfo.messages.length > 0) {
+        if (compilationInfo?.messages.length > 0) {
             // split source into lines
             const sourceLines = source.split('\n');
 

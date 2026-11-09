@@ -15,7 +15,7 @@ class SkyGeometry {
     }
 
     static infinite(device) {
-        return Mesh.fromGeometry(device, new BoxGeometry(device));
+        return Mesh.fromGeometry(device, new BoxGeometry());
     }
 
     static box(device) {

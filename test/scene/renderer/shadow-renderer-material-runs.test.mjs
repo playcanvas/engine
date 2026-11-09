@@ -14,7 +14,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
  */
 
 // The shadow render loop sets the state of a material when the material changes, as the forward
-// render loop does, and the casters are sorted by shader and material to make those runs long. A
+// render loop does, and the casters are sorted by material and mesh to make those runs long. A
 // mesh instance overriding some of the state has the material's values restored for the next
 // caster of the same material.
 describe('ShadowRenderer caster submission', function () {
@@ -83,7 +83,8 @@ describe('ShadowRenderer caster submission', function () {
         return records;
     };
 
-    // the shadow sort keys are assigned while rendering, so the second frame is the sorted one
+    // the first frame creates the shaders and their bind groups, so the second frame is the steady
+    // state of the render loop
     const renderSorted = () => {
         app.render();
         submits.length = 0;
@@ -276,20 +277,23 @@ describe('ShadowRenderer caster submission', function () {
         }
     });
 
-    describe('#sortCompareShader', function () {
+    it('submits the casters by their forward sort key, then by their mesh, both descending', function () {
+        const a = new StandardMaterial();
+        const b = new StandardMaterial();
+        for (let i = 0; i < 8; i++) {
+            const entity = new Entity(`shape${i}`);
+            entity.addComponent('render', { type: i % 3 ? 'box' : 'sphere', material: i % 2 ? b : a });
+            entity.setPosition(i * 2 - 7, 0, 0);
+            app.root.addChild(entity);
+        }
+        renderSorted();
+        app.render();
 
-        const caster = (shaderId, materialId, meshId) => ({
-            _sortKeyShadow: shaderId * 0x400000 + (materialId & 0x3fffff),
-            mesh: { id: meshId }
-        });
-
-        it('orders by shader, then by material, then by mesh', function () {
-            const compare = app.renderer.shadowRenderer.sortCompareShader;
-            const list = [caster(1, 5, 1), caster(2, 1, 1), caster(1, 7, 2), caster(1, 5, 3), caster(1, 7, 1)];
-            list.sort(compare);
-            expect(list.map(c => [c._sortKeyShadow >= 2 * 0x400000 ? 2 : 1, c._sortKeyShadow % 0x400000, c.mesh.id])).to.deep.equal([
-                [2, 1, 1], [1, 7, 2], [1, 7, 1], [1, 5, 3], [1, 5, 1]
-            ]);
-        });
+        expect(submits.length).to.be.greaterThan(0);
+        for (const casters of submits) {
+            const expected = casters.slice().sort((x, y) => (x._sortKeyForward === y._sortKeyForward ?
+                y.mesh.id - x.mesh.id : y._sortKeyForward - x._sortKeyForward));
+            expect(casters.every((caster, i) => caster === expected[i])).to.equal(true);
+        }
     });
 });

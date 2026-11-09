@@ -6,6 +6,9 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
+import { MIPMAPFILTER_BOX } from '../platform/graphics/constants.js';
+import { SceneColorMapHandle } from '../platform/graphics/scene-color-map-handle.js';
+import { SceneDepthMapHandle } from '../platform/graphics/scene-depth-map-handle.js';
 import {
     VIEW_CENTER, ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
@@ -13,10 +16,12 @@ import {
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
 import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
+import { ClipPlanes, MAX_CLIP_PLANES } from './clip-planes.js';
 
 /**
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Plane } from '../core/shape/plane.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { FogParams } from './fog-params.js'
@@ -127,34 +132,90 @@ class Camera {
 
     /**
      * Frame passes that execute before this camera's main scene rendering, after the camera's
-     * directional shadow passes. Entries are picked up by the RenderPassForward that renders
-     * this camera's layers.
+     * directional shadow passes. Entries are picked up by the first RenderPassForward rendering
+     * this camera's layers in the frame, including one in the camera's frame passes, so they do
+     * not execute when no RenderPassForward renders the camera. They cannot include a
+     * RenderPassForward, as that would be nested under the one picking them up. When rendering
+     * multiple XR views, they execute for each view, apart from a compute pass, which executes
+     * once, as selected by its xrViewIndex.
      *
      * @type {FramePass[]}
      */
     beforePasses = [];
 
     /**
-     * The scene depth texture most recently published for this camera, or null. The uniform it is
-     * published to is global - the last camera to render owns it - so anything wanting the depth of
-     * one camera in particular reads it from here instead. See {@link SceneDepthReader}.
+     * Frame passes that execute after everything this camera renders in the frame, including its
+     * frame passes when it uses those, and before the cameras rendering after it. When rendering
+     * multiple XR views, they execute once, after all the views.
      *
-     * @type {Texture|null}
-     * @ignore
+     * @type {FramePass[]}
      */
-    sceneDepthMap = null;
+    afterPasses = [];
 
     /**
-     * The render version {@link Camera#sceneDepthMap} was published in, so a consumer can tell a
-     * texture rendered this frame from one left over from an earlier one.
+     * The handle to the scene depth map most recently published for this camera. The uniform the
+     * depth map is published to is global - the last camera to render owns it - so anything wanting
+     * the depth of one camera in particular reads it from here instead. See {@link SceneDepthReader}.
      *
-     * @type {number}
+     * @type {SceneDepthMapHandle}
      * @ignore
      */
-    sceneDepthMapVersion = -1;
+    sceneDepthMapHandle = new SceneDepthMapHandle();
+
+    /**
+     * The handle to the scene color map most recently published for this camera. The uniform the
+     * color map is published to is global, the same as for the depth map.
+     *
+     * @type {SceneColorMapHandle}
+     * @ignore
+     */
+    sceneColorMapHandle = new SceneColorMapHandle();
+
+    /**
+     * Whether the scene color map has mipmaps. See {@link CameraComponent#sceneColorMapMipmaps}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    sceneColorMapMipmaps = true;
+
+    /**
+     * The filter used to generate the mipmaps of the scene color map. See
+     * {@link CameraComponent#sceneColorMapMipmapFilter}.
+     *
+     * @type {string}
+     * @ignore
+     */
+    sceneColorMapMipmapFilter = MIPMAPFILTER_BOX;
 
     /** @type {number} */
     jitter = 0;
+
+    /**
+     * The scale of the exposure the camera renders with, multiplying the exposure of the scene, or
+     * of the physical camera with physical units. Set every frame by the effects adapting the
+     * exposure, such as the auto exposure of the camera frame.
+     *
+     * @type {number}
+     */
+    exposureScale = 1;
+
+    /**
+     * Whether the camera renders the sky of the scene. Cleared by the camera frame while one of its
+     * effects renders the sky for the camera in its place.
+     *
+     * @type {boolean}
+     */
+    skyVisible = true;
+
+    /**
+     * The clipping of the camera, see {@link Camera#clippingPlanes}. The renderer sets its uniforms
+     * for each pass of the camera.
+     *
+     * @type {ClipPlanes}
+     * @ignore
+     */
+    _clipPlanes = new ClipPlanes();
 
     /**
      * A unique id of the camera, used where the camera needs to be referenced without retaining
@@ -260,20 +321,81 @@ class Camera {
 
         this.framePasses.length = 0;
         this.beforePasses.length = 0;
-        this.sceneDepthMap = null;
+        this.afterPasses.length = 0;
+
+        // the handles can outlive the camera, held by whatever consumes the maps, so they record that
+        // their camera is gone instead of just being dropped
+        const depthHandle = this.sceneDepthMapHandle;
+        depthHandle.texture = null;
+        depthHandle.destroyed = true;
+
+        const colorHandle = this.sceneColorMapHandle;
+        colorHandle.texture = null;
+        colorHandle.destroyed = true;
     }
 
     /**
-     * Records the scene depth texture a producer has published for this camera, alongside the render
-     * version it was published in.
+     * Publishes the scene depth texture a producer has rendered for this camera, together with how
+     * it is encoded. Each producer passes its own encoding, as different producers store the depth
+     * differently. The camera parameters, the inverse view projection matrix and the viewport the
+     * depth was rendered with are captured as well. The texture is recorded on the handle of this
+     * camera, and also set to the global uniform, which holds the depth of whichever camera
+     * published last.
      *
      * @param {Texture} texture - The texture the depth was rendered to.
      * @param {number} renderVersion - The render version it was rendered in.
+     * @param {boolean} linear - True when the texture stores the linear camera depth, false when it
+     * stores the depth buffer values.
+     * @param {boolean} packed - True when each linear depth is bit-packed into an RGBA8 texel.
+     * @param {boolean} reciprocal - True when the texture stores the reciprocals of the linear
+     * depths.
+     * @param {boolean} [flipY] - The flipY of the render target the camera rendered the depth with,
+     * which the texture matches the layout of. Defaults to false.
      * @ignore
      */
-    publishSceneDepthMap(texture, renderVersion) {
-        this.sceneDepthMap = texture;
-        this.sceneDepthMapVersion = renderVersion;
+    publishSceneDepthMap(texture, renderVersion, linear, packed, reciprocal, flipY = false) {
+        const handle = this.sceneDepthMapHandle;
+        handle.texture = texture;
+        handle.renderVersion = renderVersion;
+        handle.linear = linear;
+        handle.packed = linear && packed;
+        handle.reciprocal = linear && reciprocal;
+        this.fillShaderParams(handle.cameraParams);
+
+        // the matrices the shaders were given this frame, captured when the camera first rendered
+        // in it - see Camera#_storeShaderMatrices
+        handle.viewProjectionInverse.copy(this._viewProjInverse);
+
+        // the viewport the camera rendered to, the way Renderer#setupViewport sets it. WebGPU places
+        // it from the top of the target, unless the target stores its rows from the bottom
+        // (RENDERTARGET_ORIGIN_BOTTOM), as its flipY reflects
+        const { width, height } = texture;
+        const rect = this._rect;
+        const viewport = handle.viewport;
+        const y = Math.floor(rect.y * height);
+        viewport[0] = Math.floor(rect.x * width);
+        viewport[2] = Math.floor(rect.z * width);
+        viewport[3] = Math.floor(rect.w * height);
+        viewport[1] = flipY ? y : height - y - viewport[3];
+
+        SceneDepthMapHandle.setUniform(this.device, texture);
+    }
+
+    /**
+     * Publishes the scene color texture a producer has rendered for this camera, together with how
+     * it is encoded. The texture is recorded on the handle of this camera, and also set to the
+     * global uniform, which holds the color of whichever camera published last.
+     *
+     * @param {Texture} texture - The texture the color was rendered to.
+     * @param {boolean} gamma - True when the texture stores gamma encoded colors.
+     * @ignore
+     */
+    publishSceneColorMap(texture, gamma) {
+        const handle = this.sceneColorMapHandle;
+        handle.texture = texture;
+        handle.gamma = gamma;
+
+        SceneColorMapHandle.setUniform(this.device, texture);
     }
 
     /**
@@ -433,6 +555,53 @@ class Camera {
 
     get clearStencilBuffer() {
         return this._clearStencilBuffer;
+    }
+
+    /**
+     * Sets the planes that clip what the camera renders, in world space. The planes are copied.
+     * See {@link CameraComponent#clippingPlanes}.
+     *
+     * @type {Plane[]}
+     */
+    set clippingPlanes(value) {
+        Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
+            `CameraComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
+            'are ignored.');
+        this._clipPlanes.set(value);
+        this._updateClipPlanes();
+    }
+
+    get clippingPlanes() {
+        return this._clipPlanes.returned;
+    }
+
+    /**
+     * Sets whether only the parts behind all of the {@link Camera#clippingPlanes} are clipped,
+     * instead of the parts behind any of them.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this._clipPlanes.intersection !== value) {
+            this._clipPlanes.intersection = value;
+            this._updateClipPlanes();
+        }
+    }
+
+    get clipIntersection() {
+        return this._clipPlanes.intersection;
+    }
+
+    /**
+     * Writes the clipping into the uniforms the shader reads, from the planes as they were
+     * assigned, and enables the clipping shader code when there is any plane.
+     *
+     * @private
+     */
+    _updateClipPlanes() {
+        const clipPlanes = this._clipPlanes;
+        clipPlanes.updateUniforms();
+        this.shaderParams.clipPlanes = clipPlanes.assigned.length > 0;
     }
 
     set cullFaces(newValue) {
@@ -767,9 +936,15 @@ class Camera {
         this.aperture = other.aperture;
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
+        this.sceneColorMapMipmaps = other.sceneColorMapMipmaps;
+        this.sceneColorMapMipmapFilter = other.sceneColorMapMipmapFilter;
+
+        this._clipPlanes.copy(other._clipPlanes);
+        this._updateClipPlanes();
 
         this.shaderPassInfo = other.shaderPassInfo;
         this.jitter = other.jitter;
+        this.exposureScale = other.exposureScale;
 
         this._projMatDirty = true;
 
@@ -779,7 +954,7 @@ class Camera {
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
             if (!this.renderPassColorGrab) {
-                this.renderPassColorGrab = new FramePassColorGrab(device);
+                this.renderPassColorGrab = new FramePassColorGrab(device, this);
             }
         } else {
             this.renderPassColorGrab?.destroy();

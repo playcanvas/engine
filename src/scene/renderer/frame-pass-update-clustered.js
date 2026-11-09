@@ -49,6 +49,13 @@ class FramePassUpdateClustered extends FramePass {
     destroy() {
         this.cookiesRenderPass.destroy();
         this.cookiesRenderPass = null;
+
+        this.shadowRenderPass.destroy();
+        this.shadowRenderPass = null;
+
+        this.beforePasses.length = 0;
+
+        super.destroy();
     }
 
     execute() {

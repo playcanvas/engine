@@ -112,7 +112,7 @@ describe('RenderHandler', function () {
         expect(requests.size).to.equal(0);
     });
 
-    it('waits for a container to be added to the registry', function () {
+    it('waits for a container to be added to the registry without warning', function () {
         const warn = stub(Debug, 'warnOnce');
         const container = createContainer(false);
         const asset = createRender(container);
@@ -120,9 +120,8 @@ describe('RenderHandler', function () {
         asset.ready(ready);
         registry.load(asset);
         expect(ready.called).to.equal(false);
-        expect(warn.calledOnce).to.equal(true);
-        expect(warn.firstCall.args[0]).to.include(`'${asset.name}' (${asset.id})`);
-        expect(warn.firstCall.args[0]).to.include(`container asset ${container.id}, which is not registered yet`);
+        // Registering the container later is valid, so only AppBase#preload diagnoses a missing one.
+        expect(warn.called).to.equal(false);
 
         registry.add(container);
         expect(ready.called).to.equal(false);

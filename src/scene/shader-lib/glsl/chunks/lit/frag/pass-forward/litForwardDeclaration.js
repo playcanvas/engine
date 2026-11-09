@@ -25,19 +25,41 @@ vec3 ccSpecularLight;
 float ccSpecularityNoFres;
 vec3 sSpecularLight;
 
-// FRAGMENT SHADER INPUTS: UNIFORMS
-
-#ifdef LIT_DISPERSION
-    uniform float material_dispersion;
+#ifdef LIT_DIFFUSE_TRANSMISSION
+    // the light arriving at the back of the surface, which the diffuse transmission lets through
+    vec3 dDiffuseTransmissionLight = vec3(0.0);
 #endif
+
+// FRAGMENT SHADER INPUTS: UNIFORMS
 
 #ifndef LIT_OPACITY_FADES_SPECULAR
     uniform float material_alphaFade;
 #endif
 
+#ifdef LIT_AO
+    uniform float material_occludeDirect;
+#endif
+
+#ifdef LIT_NEEDS_NORMAL
+    uniform float material_twoSidedLighting;
+#endif
+
 #ifdef LIT_SSAO
     uniform sampler2D ssaoTexture;
     uniform vec2 ssaoTextureSizeInv;
+#endif
+
+// dynamic refraction
+#ifdef LIT_SCENE_COLOR
+    uniform sampler2D uSceneColorMap;
+#endif
+
+#ifdef LIT_SCREEN_SIZE
+    uniform vec4 screen_size;
+#endif
+
+#ifdef LIT_TRANSFORMS
+    uniform mat4 matrix_viewProjection;
 #endif
 
 // lighting and shadowing declarations
@@ -50,12 +72,6 @@ vec3 sSpecularLight;
 // LOOP - uniform declarations for all non-clustered lights
 #if LIGHT_COUNT > 0
     #include "lightDeclarationPS, LIGHT_COUNT"
-#endif
-
-#ifdef LIT_SPECULAR
-    #if LIT_FRESNEL_MODEL == NONE && !defined(LIT_REFLECTIONS) && !defined(LIT_DIFFUSE_MAP) 
-        #define LIT_OLD_AMBIENT
-    #endif
 #endif
 
 // lightmap baking

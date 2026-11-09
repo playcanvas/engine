@@ -1,0 +1,222 @@
+// @config
+// @flag HIDDEN
+
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    JsonHandler,
+    Keyboard,
+    LightComponentSystem,
+    LitMaterial,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SPECOCC_AO,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import { deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const assets = {
+    helipad: new Asset(
+        'helipad-env-atlas',
+        'texture',
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
+    ),
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
+};
+
+const gfxOptions = {
+    deviceTypes: [deviceType]
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ElementComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
+
+app.start();
+
+app.scene.envAtlas = assets.helipad.resource;
+
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(0.4, 0.45, 0.5)
+});
+camera.translate(0, 0.485, 1.94);
+camera.addComponent('script');
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(2, 15)
+    }
+});
+app.root.addChild(camera);
+
+// Create an Entity with a omni light component and a sphere model component.
+const light = new Entity();
+light.addComponent('light', {
+    type: 'omni',
+    color: Color.RED,
+    intensity: 2,
+    range: 10
+});
+light.translate(0, 1, 0);
+app.root.addChild(light);
+
+const material = new LitMaterial();
+material.setParameter('texture_envAtlas', assets.helipad.resource);
+material.setParameter('material_reflectivity', 1.0);
+material.setParameter('material_normalMapIntensity', 1.0);
+material.setParameter('texture_diffuseMap', assets.color.resource);
+material.setParameter('texture_glossMap', assets.gloss.resource);
+material.setParameter('texture_normalMap', assets.normal.resource);
+
+material.useSkybox = true;
+material.hasSpecular = true;
+
+material.hasSpecularityFactor = true;
+material.hasNormals = true;
+//    material.hasMetalness = true;
+material.hasMetalness = false;
+material.occludeSpecular = SPECOCC_AO;
+
+// Shadows not ported yet
+app.scene.lighting.shadowsEnabled = false;
+app.scene.lighting.cookiesEnabled = false;
+
+material.shaderChunkGLSL = /* glsl */ `
+
+        #include "litShaderCorePS"
+
+        uniform sampler2D texture_diffuseMap;
+        uniform sampler2D texture_glossMap;
+        uniform sampler2D texture_normalMap;
+        uniform float material_normalMapIntensity;
+        uniform vec3 material_specularRgb;
+
+        void evaluateFrontend() {
+            litArgs_emission = vec3(0, 0, 0);
+            litArgs_metalness = 0.5;
+            litArgs_specularity = material_specularRgb;
+            litArgs_specularityFactor = 1.0;
+            litArgs_gloss = texture2D(texture_glossMap, vUv0).r;
+
+            litArgs_ior = 0.1;
+
+            vec3 normalMap = texture2D(texture_normalMap, vUv0).xyz * 2.0 - 1.0;
+            litArgs_worldNormal = normalize(dTBN * mix(vec3(0,0,1), normalMap, material_normalMapIntensity));
+            litArgs_albedo = vec3(0.5) + texture2D(texture_diffuseMap, vUv0).xyz;
+
+            litArgs_ao = 0.0;
+            litArgs_opacity = 1.0;
+        }`;
+
+material.shaderChunkWGSL = /* wgsl */ `
+
+        #include "litShaderCorePS"
+
+        var texture_diffuseMap : texture_2d<f32>;
+        var texture_diffuseMapSampler : sampler;
+        var texture_glossMap : texture_2d<f32>;
+        var texture_glossMapSampler : sampler;
+        var texture_normalMap : texture_2d<f32>;
+        var texture_normalMapSampler : sampler;
+        uniform material_normalMapIntensity: f32;
+        uniform material_specularRgb: vec3f;
+
+        fn evaluateFrontend() {
+            litArgs_emission = vec3f(0.0, 0, 0);
+            litArgs_metalness = 0.5;
+            litArgs_specularity = uniform.material_specularRgb;
+            litArgs_specularityFactor = 1.0;
+            litArgs_gloss = textureSample(texture_glossMap, texture_glossMapSampler, vUv0).r;
+
+            litArgs_ior = 0.1;
+
+            var normalMap: vec3f = textureSample(texture_normalMap, texture_normalMapSampler, vUv0).xyz * 2.0 - 1.0;
+            litArgs_worldNormal = normalize(dTBN * mix(vec3(0,0,1), normalMap, uniform.material_normalMapIntensity));
+            litArgs_albedo = vec3f(0.5) + textureSample(texture_diffuseMap, texture_diffuseMapSampler, vUv0).xyz;
+
+            litArgs_ao = 0.0;
+            litArgs_opacity = 1.0;
+        }`;
+
+material.update();
+
+// Create primitive
+const primitive = new Entity();
+primitive.addComponent('render', {
+    type: 'sphere',
+    material: material
+});
+
+// Set position and scale and add it to scene
+app.root.addChild(primitive);
+
+let time = 0;
+app.on('update', (/** @type {number} */ dt) => {
+    time += dt;
+    material.setParameter('material_specularRgb', [
+        (Math.sin(time) + 1.0) * 0.5,
+        (Math.cos(time * 0.5) + 1.0) * 0.5,
+        (Math.sin(time * 0.7) + 1.0) * 0.5
+    ]);
+    material.setParameter('material_normalMapIntensity', (Math.sin(time) + 1.0) * 0.5);
+});

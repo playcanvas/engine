@@ -2,7 +2,8 @@ export default /* glsl */`
 
 float sheenD(vec3 normal, vec3 h, float roughness) {
     const float PI = 3.141592653589793;
-    float invR = 1.0 / (roughness * roughness);
+    // the floor on alpha keeps the distribution finite as the roughness reaches zero
+    float invR = 1.0 / max(roughness * roughness, 0.001);
     float cos2h = max(dot(normal, h), 0.0);
     cos2h *= cos2h;
     float sin2h = max(1.0 - cos2h, 0.0078125);
@@ -16,7 +17,7 @@ float sheenV(vec3 normal, vec3 viewDir, vec3 light) {
 }
 
 float getLightSpecularSheen(vec3 h, vec3 worldNormal, vec3 viewDir, vec3 lightDirNorm, float sheenGloss) {
-    float D = sheenD(worldNormal, h, sheenGloss);
+    float D = sheenD(worldNormal, h, 1.0 - sheenGloss);
     float V = sheenV(worldNormal, viewDir, -lightDirNorm);
     return D * V;
 }

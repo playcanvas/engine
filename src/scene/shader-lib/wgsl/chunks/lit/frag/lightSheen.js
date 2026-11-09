@@ -2,7 +2,8 @@ export default /* wgsl */`
 
 fn sheenD(normal: vec3f, h: vec3f, roughness: f32) -> f32 {
     let PI: f32 = 3.141592653589793;
-    let invR: f32 = 1.0 / (roughness * roughness);
+    // the floor on alpha keeps the distribution finite as the roughness reaches zero
+    let invR: f32 = 1.0 / max(roughness * roughness, 0.001);
     var cos2h: f32 = max(dot(normal, h), 0.0);
     cos2h = cos2h * cos2h;
     let sin2h: f32 = max(1.0 - cos2h, 0.0078125);
@@ -16,7 +17,7 @@ fn sheenV(normal: vec3f, viewDir: vec3f, light: vec3f) -> f32 {
 }
 
 fn getLightSpecularSheen(h: vec3f, worldNormal: vec3f, viewDir: vec3f, lightDirNorm: vec3f, sheenGloss: f32) -> f32 {
-    let D: f32 = sheenD(worldNormal, h, sheenGloss);
+    let D: f32 = sheenD(worldNormal, h, 1.0 - sheenGloss);
     let V: f32 = sheenV(worldNormal, viewDir, -lightDirNorm);
     return D * V;
 }`;

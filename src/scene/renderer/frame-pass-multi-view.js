@@ -10,7 +10,7 @@ import { FramePass } from '../../platform/graphics/frame-pass.js';
  * graphics device, swaps the backbuffer color view to the matching XR sub-image view descriptor,
  * and invokes each child's `render()`.
  *
- * The children are not added to {@link FrameGraph#renderPasses} - they are owned by the wrapper
+ * The children are not added to {@link FrameGraph#passes} - they are owned by the wrapper
  * and invoked from {@link FramePassMultiView#render}. This guarantees the frame graph's
  * pass-merging cannot accidentally merge eye-N's last pass with eye-(N+1)'s first pass.
  *

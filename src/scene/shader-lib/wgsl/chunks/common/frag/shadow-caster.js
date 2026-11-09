@@ -6,6 +6,10 @@
 // lights and VSM shadows for spot lights are not supported, as those require distance based depth.
 export default /* wgsl */`
 
+#if SHADOW_TYPE == VSM_16F || SHADOW_TYPE == VSM_32F
+    #include "shadowEVSMExponentPS"
+#endif
+
 fn getShadowOutput() -> vec4f {
 
     // rasterized depth
@@ -25,9 +29,9 @@ fn getShadowOutput() -> vec4f {
 
         // exponential warp of the depth, stored with its square
         #if SHADOW_TYPE == VSM_32F
-            let exponent: f32 = 15.0;
+            let exponent: f32 = VSM_EXPONENT_32F;
         #else
-            let exponent: f32 = 5.54;
+            let exponent: f32 = VSM_EXPONENT_16F;
         #endif
         depth = 2.0 * depth - 1.0;
         depth = exp(exponent * depth);

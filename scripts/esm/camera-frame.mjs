@@ -1,9 +1,9 @@
-// Camera Frame v 1.3
+// Camera Frame v 1.4
 
 import {
-    CameraFrame as EngineCameraFrame, Script, Color,
-    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    CameraFrame as EngineCameraFrame, Script, Color, Vec3,
+    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from 'playcanvas';
 
 /**
@@ -17,7 +17,9 @@ const ToneMapping = {
     HEJL: 'hejl',
     ACES: 'aces',
     ACES2: 'aces2',
-    NEUTRAL: 'neutral'
+    NEUTRAL: 'neutral',
+    AGX: 'agx',
+    AGX_PUNCHY: 'agx-punchy'
 };
 
 /** @enum {string} */
@@ -41,12 +43,14 @@ const toneMappingMap = new Map([
     [ToneMapping.HEJL, TONEMAP_HEJL],
     [ToneMapping.ACES, TONEMAP_ACES],
     [ToneMapping.ACES2, TONEMAP_ACES2],
-    [ToneMapping.NEUTRAL, TONEMAP_NEUTRAL]
+    [ToneMapping.NEUTRAL, TONEMAP_NEUTRAL],
+    [ToneMapping.AGX, TONEMAP_AGX],
+    [ToneMapping.AGX_PUNCHY, TONEMAP_AGX_PUNCHY]
 ]);
 
 const renderFormatMap = new Map([
     [RenderFormat.RGBA8, PIXELFORMAT_RGBA8],
-    [RenderFormat.RG11B10, PIXELFORMAT_111110F],
+    [RenderFormat.RG11B10, PIXELFORMAT_RG11B10F],
     [RenderFormat.RGBA16, PIXELFORMAT_RGBA16F],
     [RenderFormat.RGBA32, PIXELFORMAT_RGBA32F]
 ]);
@@ -72,7 +76,7 @@ const resolveToneMapping = (value) => {
  * @returns {number} The engine pixel format constant.
  */
 const resolveRenderFormat = (value) => {
-    return typeof value === 'number' ? value : (renderFormatMap.get(value) ?? PIXELFORMAT_111110F);
+    return typeof value === 'number' ? value : (renderFormatMap.get(value) ?? PIXELFORMAT_RG11B10F);
 };
 
 /** @enum {string} */
@@ -146,6 +150,9 @@ class Rendering {
     sharpness = 0.0;
 
     /**
+     * The debug view displayed in place of the output of the camera. The scripts of other effects,
+     * such as the lens flare, offer their own debug views, and the last one selected is displayed.
+     *
      * @attribute
      * @type {DebugType}
      */
@@ -260,6 +267,14 @@ class Bloom {
      * @step 0.01
      */
     threshold = 0;
+
+    /**
+     * Whether the bloom is generated from the full resolution scene instead of a half resolution
+     * copy, for a sharper and more stable glow, at a higher performance cost.
+     *
+     * @visibleif {enabled}
+     */
+    highQuality = false;
 }
 
 /**
@@ -298,6 +313,33 @@ class Grading {
      * @visibleif {enabled}
      */
     tint = new Color(1, 1, 1, 1);
+
+    /**
+     * The channel mixer weights of the red output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerRed = new Vec3(1, 0, 0);
+
+    /**
+     * The channel mixer weights of the green output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerGreen = new Vec3(0, 1, 0);
+
+    /**
+     * The channel mixer weights of the blue output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerBlue = new Vec3(0, 0, 1);
 }
 
 /**
@@ -474,6 +516,15 @@ class Taa {
      * @step 0.1
      */
     jitter = 1;
+
+    /**
+     * Whether TAA accumulates the frames rendered at a lower resolution, see
+     * rendering.renderTargetScale, at the full resolution, recovering detail the lower resolution
+     * loses.
+     *
+     * @visibleif {enabled}
+     */
+    upscale = false;
 }
 
 /**
@@ -776,7 +827,23 @@ class CameraFrame extends Script {
      */
     volumetricFog = new VolumetricFog();
 
+    /**
+     * The engine {@link EngineCameraFrame | CameraFrame} this script drives. Created in
+     * `initialize`, so it is undefined until the script is first enabled. This is the handle other
+     * scripts on the entity use to register their own effects with the frame - look the script up by
+     * type, `entity.script.get(CameraFrame)`, and call `addEffect` on this.
+     *
+     * @type {EngineCameraFrame}
+     */
     engineCameraFrame;
+
+    /**
+     * The debug setting last applied to the camera frame, which starts without a debug view.
+     *
+     * @type {DebugType}
+     * @private
+     */
+    _debug = DebugType.NONE;
 
     initialize() {
 
@@ -837,6 +904,7 @@ class CameraFrame extends Script {
         if (bloom.enabled) {
             dstBloom.blurLevel = bloom.blurLevel;
             dstBloom.threshold = bloom.threshold;
+            dstBloom.highQuality = bloom.highQuality;
         }
 
         // grading
@@ -847,6 +915,9 @@ class CameraFrame extends Script {
             dstGrading.contrast = grading.contrast;
             dstGrading.saturation = grading.saturation;
             dstGrading.tint.copy(grading.tint);
+            dstGrading.mixerRed.copy(grading.mixerRed);
+            dstGrading.mixerGreen.copy(grading.mixerGreen);
+            dstGrading.mixerBlue.copy(grading.mixerBlue);
         }
 
         // colorLUT
@@ -880,6 +951,7 @@ class CameraFrame extends Script {
         dstTaa.enabled = taa.enabled;
         if (taa.enabled) {
             dstTaa.jitter = taa.jitter;
+            dstTaa.upscale = taa.upscale;
         }
 
         // fringing
@@ -933,8 +1005,12 @@ class CameraFrame extends Script {
             dstVolumetricFog.scale = volumetricFog.scale;
         }
 
-        // debugging
-        cf.debug = rendering.debug;
+        // debugging - applied only when it changes, as the scripts of effects with debug views
+        // select them the same way, and the last change of either is displayed
+        if (rendering.debug !== this._debug) {
+            this._debug = rendering.debug;
+            cf.debug = rendering.debug === DebugType.NONE ? null : rendering.debug;
+        }
 
         cf.update();
     }

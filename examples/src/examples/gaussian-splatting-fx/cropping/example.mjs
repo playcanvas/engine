@@ -1,0 +1,266 @@
+// @config
+//
+// This example demonstrates AABB-based cropping of gaussian splats with animated bounds.
+
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GSplatCropShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-crop.mjs';
+
+import { data, deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const gfxOptions = {
+    deviceTypes: [deviceType],
+
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    antialias: false
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+const assets = {
+    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' })
+};
+
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
+
+app.start();
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+
+// Default precise mode to true, paused to false, edge scale to 0.5
+data.set('renderer', GSPLAT_RENDERER_AUTO);
+data.set('precise', true);
+data.set('edgeScale', 0.5);
+let paused = false;
+
+// Handle pause/play toggle
+data.on('togglePause', () => {
+    paused = !paused;
+});
+
+// Create hotel gsplat
+const hotel = new Entity('hotel');
+hotel.addComponent('gsplat', {
+    asset: assets.hotel
+});
+hotel.setLocalEulerAngles(180, 0, 0);
+app.root.addChild(hotel);
+
+// Add script component to the hotel entity
+hotel.addComponent('script');
+
+// Create the crop effect script
+const cropScript = hotel.script?.create(GSplatCropShaderEffect);
+
+// Set initial edge scale factor
+if (cropScript) {
+    cropScript.edgeScaleFactor = data.get('edgeScale');
+}
+
+// Handle edge scale changes
+data.on('edgeScale:set', () => {
+    if (cropScript) {
+        cropScript.edgeScaleFactor = data.get('edgeScale');
+    }
+});
+
+// Get the gsplat material
+const getMaterial = () => app.scene.gsplat?.material;
+
+// Set initial define state
+/**
+ * @param {boolean} precise - Whether to enable precise cropping
+ */
+const updatePreciseDefine = (precise) => {
+    const material = getMaterial();
+    if (material) {
+        if (precise) {
+            material.setDefine('GSPLAT_PRECISE_CROP', '');
+        } else {
+            material.defines.delete('GSPLAT_PRECISE_CROP');
+        }
+        material.update();
+    }
+};
+
+// Wait for material to be available, then set initial state
+const checkMaterial = () => {
+    const material = getMaterial();
+    if (material) {
+        updatePreciseDefine(data.get('precise'));
+    } else {
+        setTimeout(checkMaterial, 100);
+    }
+};
+checkMaterial();
+
+// Handle precise toggle changes
+data.on('precise:set', () => {
+    updatePreciseDefine(data.get('precise'));
+});
+
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: Color.BLACK,
+    fov: 80
+});
+camera.setLocalPosition(3, 1, 0.5);
+
+// Add camera controls
+camera.addComponent('script');
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script?.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            focusPoint: new Vec3(0, -0.009, 0.034),
+            pitchRange: new Vec2(-90, 90),
+            zoomRange: new Vec2(0.01, 2)
+        }
+    })
+);
+app.root.addChild(camera);
+
+// Setup bloom post-processing
+if (camera.camera) {
+    const cameraFrame = new CameraFrame(app, camera.camera);
+    cameraFrame.rendering.samples = 1;
+    cameraFrame.rendering.toneMapping = TONEMAP_ACES;
+    cameraFrame.bloom.intensity = 0.03;
+    cameraFrame.bloom.blurLevel = 6;
+    cameraFrame.update();
+}
+
+// Auto-rotate camera when idle
+let autoRotateEnabled = true;
+let lastInteractionTime = 0;
+const autoRotateDelay = 2; // seconds of inactivity before auto-rotate resumes
+const autoRotateSpeed = 10; // degrees per second
+const autoRotation = new Quat();
+const autoRotateFocus = new Vec3();
+const autoRotateOffset = new Vec3();
+
+// Detect user interaction (click/touch only, not mouse movement)
+const onUserInteraction = () => {
+    autoRotateEnabled = false;
+    lastInteractionTime = Date.now();
+};
+
+// Listen for click and touch events only
+if (app.mouse) {
+    app.mouse.on('mousedown', onUserInteraction);
+    app.mouse.on('mousewheel', onUserInteraction);
+}
+if (app.touch) {
+    app.touch.on('touchstart', onUserInteraction);
+}
+
+// Clean up event listeners on destroy
+app.on('destroy', () => {
+    if (app.mouse) {
+        app.mouse.off('mousedown', onUserInteraction);
+        app.mouse.off('mousewheel', onUserInteraction);
+    }
+    if (app.touch) {
+        app.touch.off('touchstart', onUserInteraction);
+    }
+});
+
+// Animate AABB size with soft bounce
+const period = 9.0; // seconds for one cycle
+const minSize = 0.4;
+const maxSize = 1.75;
+let elapsedTime = 0;
+
+app.on('update', (dt) => {
+    // Re-enable auto-rotate after delay
+    if (!autoRotateEnabled && (Date.now() - lastInteractionTime) / 1000 > autoRotateDelay) {
+        autoRotateEnabled = true;
+    }
+
+    // Apply auto-rotation
+    if (autoRotateEnabled) {
+        autoRotateFocus.copy(cameraControls.focusPoint);
+        autoRotateOffset.sub2(camera.getPosition(), autoRotateFocus);
+        autoRotation.setFromEulerAngles(0, autoRotateSpeed * dt, 0).transformVector(autoRotateOffset, autoRotateOffset);
+        camera.setPosition(autoRotateOffset.add(autoRotateFocus));
+        cameraControls.focusPoint = autoRotateFocus;
+    }
+
+    // Animate AABB with soft bounce (sin-based easing)
+    if (cropScript && !paused) {
+        elapsedTime += dt;
+        const t = (Math.sin((elapsedTime * Math.PI * 2) / period) + 1) / 2; // 0 to 1, soft bounce
+        const size = minSize + t * (maxSize - minSize);
+        const sizeXZ = size * 1.5; // 50% wider in X and Z directions
+        cropScript.aabbMin.set(-sizeXZ, -size, -sizeXZ);
+        cropScript.aabbMax.set(sizeXZ, size, sizeXZ);
+    }
+});

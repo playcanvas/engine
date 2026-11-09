@@ -17,6 +17,7 @@ import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameter
 
 /**
  * @import { Camera } from '../camera.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { FrameGraph } from '../frame-graph.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
@@ -132,6 +133,9 @@ class ForwardRenderer extends Renderer {
         this.screenSizeId = scope.resolve('screen_size');
         this.screenSizeLegacyId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
+
+        // mesh ID - used by the picker
+        this.meshInstanceIdId = scope.resolve('meshInstanceId');
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
@@ -304,7 +308,7 @@ class ForwardRenderer extends Renderer {
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
 
         // when the FramePassMultiView wrapper is iterating XR views, render only the active one
-        // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behaviour
+        // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behavior
         // of rendering all views or the single non-XR view)
         const activeView = device.xrCurrentViewIndex ?? -1;
         const viewListStart = (viewList && activeView >= 0) ? activeView : 0;
@@ -360,7 +364,7 @@ class ForwardRenderer extends Renderer {
             Debug.call(() => warnViewUniformMeshInstanceParameters(drawCall, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
             // mesh ID - used by the picker
-            device.scope.resolve('meshInstanceId').setValue(drawCall.id);
+            this.meshInstanceIdId.setValue(drawCall.id);
 
             const mesh = drawCall.mesh;
             this.setVertexBuffers(device, mesh);
@@ -495,7 +499,7 @@ class ForwardRenderer extends Renderer {
             const sortTime = now();
             // #endif
 
-            layer.sortVisible(camera, transparent);
+            layer.sortVisible(camera, transparent, this.meshInstanceSorter);
 
             // #if _PROFILER
             this._sortTime += now() - sortTime;
@@ -668,7 +672,7 @@ class ForwardRenderer extends Renderer {
             // clustered lighting passes
             const { shadowsEnabled, cookiesEnabled } = scene.lighting;
             this._renderPassUpdateClustered.update(shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
-            frameGraph.addRenderPass(this._renderPassUpdateClustered);
+            frameGraph.addPass(this._renderPassUpdateClustered);
 
         } else {
 
@@ -700,9 +704,12 @@ class ForwardRenderer extends Renderer {
                 // wrapper if the camera needs per-view replication
                 if (mv) frameGraph.beginMultiView(this.device);
                 camera.camera.framePasses.forEach((renderPass) => {
-                    frameGraph.addRenderPass(renderPass);
+                    frameGraph.addPass(renderPass);
                 });
                 if (mv) frameGraph.endMultiView();
+
+                // the camera renders using only its frame passes
+                this.addCameraAfterPasses(frameGraph, camera);
 
             } else {
 
@@ -747,25 +754,46 @@ class ForwardRenderer extends Renderer {
                         if (camera.renderSceneColorMap) {
                             const colorGrabPass = camera.camera.renderPassColorGrab;
                             colorGrabPass.source = camera.renderTarget;
-                            frameGraph.addRenderPass(colorGrabPass);
+                            frameGraph.addPass(colorGrabPass);
                         }
 
                         if (camera.renderSceneDepthMap) {
-                            frameGraph.addRenderPass(camera.camera.renderPassDepthGrab);
+                            frameGraph.addPass(camera.camera.renderPassDepthGrab);
                         }
                     }
 
                     // postprocessing
                     if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
                         const renderPass = new FramePassPostprocessing(this.device, this, renderAction);
-                        frameGraph.addRenderPass(renderPass);
+                        frameGraph.addPass(renderPass);
                     }
 
                     if (mv) frameGraph.endMultiView();
 
+                    // after the last block of passes the camera renders
+                    if (renderAction.lastCameraUse) {
+                        this.addCameraAfterPasses(frameGraph, camera);
+                    }
+
                     newStart = true;
                 }
             }
+        }
+    }
+
+    /**
+     * Adds the frame passes which execute after everything the camera renders in the frame. They
+     * are added outside of the scope capturing the passes of the XR views, so they execute once
+     * for all the views.
+     *
+     * @param {FrameGraph} frameGraph - The frame graph.
+     * @param {CameraComponent} camera - The camera component.
+     * @private
+     */
+    addCameraAfterPasses(frameGraph, camera) {
+        const { afterPasses } = camera.camera;
+        for (let i = 0; i < afterPasses.length; i++) {
+            frameGraph.addPass(afterPasses[i]);
         }
     }
 
@@ -790,15 +818,17 @@ class ForwardRenderer extends Renderer {
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
-        const renderPass = new RenderPassForward(this.device, layerComposition, this.scene, this);
+        // the render actions of the range use a single camera
+        const renderActions = layerComposition._renderActions;
+        const renderPass = new RenderPassForward(this.device, this.scene, renderActions[startIndex].camera);
+        renderPass.layerComposition = layerComposition;
         renderPass.init(renderTarget);
 
-        const renderActions = layerComposition._renderActions;
         for (let i = startIndex; i <= endIndex; i++) {
             renderPass.addLayerRenderStep(this._layerRenderStepFromRenderAction(renderActions[i]));
         }
 
-        frameGraph.addRenderPass(renderPass);
+        frameGraph.addPass(renderPass);
     }
 
     /**
@@ -815,8 +845,6 @@ class ForwardRenderer extends Renderer {
         step.clearColor = renderAction.clearColor;
         step.clearDepth = renderAction.clearDepth;
         step.clearStencil = renderAction.clearStencil;
-        step.firstCameraUse = renderAction.firstCameraUse;
-        step.lastCameraUse = renderAction.lastCameraUse;
         return step;
     }
 

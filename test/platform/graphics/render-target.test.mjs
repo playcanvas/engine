@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
-import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
+import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, pixelFormatInfo } from '../../../src/platform/graphics/constants.js';
+import { RenderPass } from '../../../src/platform/graphics/render-pass.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { createGraphicsDevice } from '../../device.mjs';
@@ -33,6 +34,105 @@ describe('RenderTarget', function () {
         renderTarget.destroy();
         colorBuffer.destroy();
     };
+
+    describe('#constructor: layer and face options', function () {
+
+        it('renders to the specified layer of a 2d array texture', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, arrayLength: 8, format: PIXELFORMAT_RGBA8 });
+            const rt = new RenderTarget({ colorBuffer, layer: 5 });
+            expect(rt.layer).to.equal(5);
+            expect(rt.face).to.equal(5);
+            rt.destroy();
+            colorBuffer.destroy();
+        });
+
+        it('renders to the specified face of a cubemap', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, cubemap: true, format: PIXELFORMAT_RGBA8 });
+            const rt = new RenderTarget({ colorBuffer, face: 2 });
+            expect(rt.face).to.equal(2);
+            expect(rt.layer).to.equal(2);
+            rt.destroy();
+            colorBuffer.destroy();
+        });
+
+        it('allows a 2D depth buffer shared by render targets rendering to different layers', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, arrayLength: 4, format: PIXELFORMAT_RGBA8 });
+            const depthBuffer = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_DEPTH });
+            const error = console.error;
+            const errors = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+            try {
+                const rt = new RenderTarget({ colorBuffer, depthBuffer, layer: 2 });
+                expect(errors).to.have.lengthOf(0);
+
+                // the layer applies to the color array, but not to the 2D depth buffer
+                expect(rt.getLayer(colorBuffer)).to.equal(2);
+                expect(rt.getLayer(depthBuffer)).to.equal(0);
+                expect(rt.getLayer(undefined)).to.equal(0);
+                rt.destroy();
+            } finally {
+                console.error = error;
+            }
+            colorBuffer.destroy();
+            depthBuffer.destroy();
+        });
+
+        it('renders to the specified depth slice of a volume texture', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, depth: 8, volume: true, format: PIXELFORMAT_RGBA8 });
+            const error = console.error;
+            const errors = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+            try {
+                const rt = new RenderTarget({ colorBuffer, layer: 5, depth: false });
+                expect(errors).to.have.lengthOf(0);
+                expect(rt.getLayer(colorBuffer)).to.equal(5);
+                rt.destroy();
+            } finally {
+                console.error = error;
+            }
+            colorBuffer.destroy();
+        });
+
+        it('renders to the specified depth slice of a volume texture using the slice option', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, depth: 8, volume: true, format: PIXELFORMAT_RGBA8 });
+            const rt = new RenderTarget({ colorBuffer, slice: 6, depth: false });
+            expect(rt.slice).to.equal(6);
+            expect(rt.getLayer(colorBuffer)).to.equal(6);
+            rt.destroy();
+            colorBuffer.destroy();
+        });
+
+        it('ignores multisampling when rendering to a volume texture', function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            const colorBuffer = new Texture(device, { width: 4, height: 4, depth: 8, volume: true, format: PIXELFORMAT_RGBA8 });
+            const warn = console.warn;
+            const messages = [];
+            console.warn = (...args) => {
+                messages.push(args.join(' '));
+            };
+            try {
+                const rt = new RenderTarget({ colorBuffer, slice: 1, depth: false, samples: 4 });
+                expect(rt.samples).to.equal(1);
+                expect(messages.some(m => m.includes('multisampling'))).to.be.true;
+                rt.destroy();
+            } finally {
+                console.warn = warn;
+            }
+            colorBuffer.destroy();
+        });
+
+        it('defaults to layer 0', function () {
+            const rt = createRenderTarget();
+            expect(rt.layer).to.equal(0);
+            expect(rt.face).to.equal(0);
+            destroyRenderTarget(rt);
+        });
+    });
 
     // origin resolution on a non-WebGPU device: 'top' flips, 'bottom' does not. isWebGPU is stubbed
     // so the tests behave the same on whichever device the suite runs on
@@ -438,6 +538,29 @@ describe('RenderTarget', function () {
             expect(resolve.width).to.equal(8);
             rt.destroyTextureBuffers();
             rt.destroy();
+        });
+    });
+
+    describe('#constructor: cubemap depth buffer', function () {
+
+        // each face is a separate render target, which WebGPU must attach as a single layer view
+        [PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL].forEach((format) => {
+            it(`clears each face of a ${pixelFormatInfo.get(format).name} cubemap`, function () {
+                const depthBuffer = new Texture(device, { width: 4, height: 4, format, cubemap: true, mipmaps: false });
+                device.frameStart();
+                for (let face = 0; face < 6; face++) {
+                    const rt = new RenderTarget({ name: `depth-face-${face}`, depthBuffer, face });
+                    expect(rt.face).to.equal(face);
+                    const pass = new RenderPass(device);
+                    pass.init(rt);
+                    pass.setClearDepth(face / 6);
+                    pass.render();
+                    pass.destroy();
+                    rt.destroy();
+                }
+                device.frameEnd();
+                depthBuffer.destroy();
+            });
         });
     });
 

@@ -16,8 +16,9 @@ class BakeLight {
         // original light properties
         this.store();
 
-        // don't use cascades
+        // don't use cascades or shadow bounds, the lightmapper fits the shadow to the baked nodes
         light.numCascades = 1;
+        light.shadowBounds = null;
 
         // if clustered shadows are disabled, disable them on the light
         if (this.scene.clusteredLightingEnabled && !lightingParams.shadowsEnabled) {
@@ -45,6 +46,7 @@ class BakeLight {
         this.intensity = this.light.intensity;
         this.rotation = this.light._node.getLocalRotation().clone();
         this.numCascades = this.light.numCascades;
+        this.shadowBounds = this.light.shadowBounds?.clone() ?? null;
         this.castShadows = this.light._castShadows;
     }
 
@@ -56,6 +58,7 @@ class BakeLight {
         light.intensity = this.intensity;
         light._node.setLocalRotation(this.rotation);
         light.numCascades = this.numCascades;
+        light.shadowBounds = this.shadowBounds;
         light._castShadows = this.castShadows;
     }
 

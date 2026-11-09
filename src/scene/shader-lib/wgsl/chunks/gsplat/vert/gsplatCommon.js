@@ -25,7 +25,12 @@ fn clipCorner(corner: ptr<function, SplatCorner>, alpha: half) {
     #else
         let alphaClipValue = half(uniform.alphaClipForward);
     #endif
-    let clip = min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5));
+    var clip = min(half(1.0), sqrt(max(half(0.0), log(min(alpha, half(1.0)) / alphaClipValue))) * half(0.5));
+    if (alpha > half(1.0)) {
+        // over-unity opacity: the plain trim at peak 1, stretched past the opaque core (see gsplatHelpersVS)
+        let core = gsplatPlateauCore(f32(alpha));
+        clip = half(core + (1.0 - core) * f32(clip));
+    }
     corner.offset = corner.offset * f32(clip);
     corner.uv = corner.uv * clip;
 }

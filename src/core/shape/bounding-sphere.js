@@ -35,13 +35,6 @@ class BoundingSphere {
     center;
 
     /**
-     * The radius of the bounding sphere.
-     *
-     * @type {number}
-     */
-    radius;
-
-    /**
      * Creates a new BoundingSphere instance.
      *
      * @param {Vec3} [center] - The world space coordinate marking the center of the sphere. The
@@ -55,6 +48,15 @@ class BoundingSphere {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');
 
         this.center = center;
+
+        // Assigned here instead of declared as a class field, so V8 can store it as an unboxed
+        // double (see Vec3).
+
+        /**
+         * The radius of the bounding sphere.
+         *
+         * @type {number}
+         */
         this.radius = radius;
     }
 
@@ -75,11 +77,12 @@ class BoundingSphere {
     }
 
     /**
-     * Test if a ray intersects with the sphere.
+     * Test if a ray intersects with the sphere. A ray that starts inside the sphere intersects it.
      *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
-     * into here.
+     * into here. For a ray that starts inside the sphere, this is the point where the ray leaves
+     * it.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
@@ -98,10 +101,12 @@ class BoundingSphere {
             return false;
         }
 
-        // ray intersects sphere, compute smallest t value of intersection
-        const t = Math.abs(-b - Math.sqrt(discr));
+        // ray intersects sphere; a negative entry distance means the ray starts inside the
+        // sphere, so use the exit distance instead
+        const sqrtDiscr = Math.sqrt(discr);
+        const tEnter = -b - sqrtDiscr;
+        const t = tEnter >= 0 ? tEnter : -b + sqrtDiscr;
 
-        // if t is negative, ray started inside sphere so clamp t to zero
         if (point) {
             point.copy(ray.direction).mulScalar(t).add(ray.origin);
         }

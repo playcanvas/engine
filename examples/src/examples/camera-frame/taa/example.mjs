@@ -1,0 +1,219 @@
+// @config
+//
+// @credit
+// title: House 03 PBR
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/house-03-pbr-c56521b89188460a99235dec8bcd0ed3
+// license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import { data, deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const assets = {
+    house: new Asset('house', 'container', { url: './assets/models/pbr-house.glb' }),
+    cube: new Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
+    envatlas: new Asset(
+        'env-atlas',
+        'texture',
+        { url: './assets/cubemaps/table-mountain-env-atlas.png' },
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
+    )
+};
+
+const gfxOptions = {
+    deviceTypes: [deviceType],
+
+    // Disable anti-aliasing as TAA is used to smooth edges
+    antialias: false
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
+
+app.start();
+
+// Setup skydome with low intensity
+app.scene.envAtlas = assets.envatlas.resource;
+app.scene.skyboxMip = 0;
+app.scene.exposure = 2.5;
+
+// Create an instance of the house and add it to the scene
+const houseEntity = assets.house.resource.instantiateRenderEntity();
+houseEntity.setLocalScale(100, 100, 100);
+app.root.addChild(houseEntity);
+
+// Create an Entity with a camera component
+const cameraEntity = new Entity();
+cameraEntity.addComponent('camera', {
+    nearClip: 10,
+    farClip: 600,
+    fov: 80
+});
+
+cameraEntity.setLocalPosition(0, 43.33, -237.13);
+
+// Add camera controls
+cameraEntity.addComponent('script');
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: new Vec3(0, -1.15, -8.05),
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 400)
+    }
+});
+app.root.addChild(cameraEntity);
+
+// Add a shadow casting directional light
+const lightColor = new Color(1, 1, 1);
+const light = new Entity();
+light.addComponent('light', {
+    type: 'directional',
+    color: lightColor,
+    intensity: 1,
+    range: 700,
+    shadowResolution: 4096,
+    shadowDistance: 600,
+    castShadows: true,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05
+});
+app.root.addChild(light);
+light.setLocalEulerAngles(40, 10, 0);
+
+const cubeEntity = assets.cube.resource.instantiateRenderEntity();
+cubeEntity.setLocalScale(30, 30, 30);
+app.root.addChild(cubeEntity);
+
+// ------ Custom render passes set up ------
+
+const cameraFrame = new CameraFrame(app, cameraEntity.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
+cameraFrame.bloom.intensity = 0.02;
+cameraFrame.update();
+
+// ------
+
+const applySettings = () => {
+    cameraFrame.bloom.intensity = data.get('data.scene.bloom') ? 0.02 : 0;
+    cameraFrame.taa.enabled = data.get('data.taa.enabled');
+    cameraFrame.taa.jitter = data.get('data.taa.jitter');
+
+    // The mode compares the full resolution with a lower one, set by the resolution slider, at
+    // which the image is upscaled with bilinear filtering, or by TAA accumulating the jittered frames
+    // at the full resolution, and sharpened or not
+    const mode = data.get('data.scene.mode');
+    const sharpen = mode === 'full' || mode === 'sharpen' || mode === 'temporalSharpen';
+    cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
+    cameraFrame.taa.upscale = mode === 'temporal' || mode === 'temporalSharpen';
+    cameraFrame.rendering.sharpness = sharpen ? data.get('data.scene.sharpness') : 0;
+    cameraFrame.update();
+};
+
+// Set initial values
+data.set('data', {
+    scene: {
+        mode: 'full',
+        scale: 1,
+        bloom: true,
+        sharpness: 1
+    },
+    taa: {
+        enabled: true,
+        jitter: 1
+    }
+});
+
+// The resolution of the scaled modes, which the resolution slider shows while one of them is
+// selected - and 1 while the full resolution is
+let scaledResolution = 0.5;
+
+// Apply UI changes. This is registered after the initial values are set, as setting them fires an
+// event for each value while the remaining values are still undefined.
+data.on('*:set', (/** @type {string} */ path, value) => {
+    if (path === 'data.scene.mode') {
+        data.set('data.scene.scale', value === 'full' ? 1 : scaledResolution);
+    } else if (path === 'data.scene.scale' && value < 1) {
+        // lowering the resolution while at the full one switches to the scaled mode
+        scaledResolution = value;
+        if (data.get('data.scene.mode') === 'full') {
+            data.set('data.scene.mode', 'scaled');
+        }
+    }
+
+    applySettings();
+
+    // TAA has been flipped, setup sharpening appropriately
+    const pathArray = path.split('.');
+    if (pathArray[2] === 'enabled') {
+        data.set('data.scene.sharpness', value ? 1 : 0);
+    }
+});
+applySettings();
+
+let time = 0;
+app.on('update', (/** @type {number} */ dt) => {
+    time += dt;
+    cubeEntity.setLocalPosition(130 * Math.sin(time), 0, 130 * Math.cos(time));
+    cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt);
+});

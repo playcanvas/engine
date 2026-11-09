@@ -16,6 +16,10 @@ import { AnimTransition } from './anim-transition.js';
  * @import { EventHandler } from '../../../core/event-handler.js'
  */
 
+// The START and END states play no animation, so they have no timeline to measure the exit time
+// of a transition out of them against.
+const hasTimeline = stateName => stateName !== ANIM_STATE_START && stateName !== ANIM_STATE_END;
+
 /**
  * The AnimController manages the animations for its entity, based on the provided state graph and
  * parameters. Its update method determines which state the controller should be in based on the
@@ -138,6 +142,13 @@ class AnimController {
                 ...transition
             });
         });
+        Debug.call(() => {
+            for (const transition of this._transitions) {
+                if (transition.hasExitTime && !hasTimeline(transition.from)) {
+                    Debug.warnOnce(`AnimController: The exit time of the transition from ${transition.from} to ${transition.to} is ignored, as the ${transition.from} state plays no animation.`);
+                }
+            }
+        });
         this._activate = activate;
     }
 
@@ -250,6 +261,21 @@ class AnimController {
         return this._states[stateName];
     }
 
+    /**
+     * The rate at which the time in the active state advances. This is the playback speed of the
+     * state's first clip rather than the state speed, as the two can differ, for example in blend
+     * trees. Exit times, the state progress and the end of non-looping states are then all measured
+     * against what the clip actually plays.
+     *
+     * @type {number}
+     * @private
+     */
+    get _activeStateTimeScale() {
+        const animations = this.activeStateAnimations;
+        const activeClip = animations.length > 0 ? this._animEvaluator.findClip(animations[0].name) : null;
+        return activeClip ? activeClip.speed : this.activeState.speed;
+    }
+
     _getActiveStateProgressForTime(time) {
         if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY) {
             return 1.0;
@@ -257,7 +283,9 @@ class AnimController {
 
         const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
         if (activeClip) {
-            return activeClip.progressForTime(time);
+            // the time in state advances at the clip speed, so it is already the clip's playback
+            // time. For a clip playing in reverse it runs from 0 towards negative values.
+            return (activeClip.speed < 0 ? -time : time) / activeClip.track.duration;
         }
 
         return null;
@@ -384,8 +412,9 @@ class AnimController {
             if (transition.to === this.activeStateName) {
                 return false;
             }
-            // when an exit time is present, we should only exit if it falls within the current frame delta time
-            if (transition.hasExitTime) {
+            // when an exit time is present, we should only exit if it falls within the current frame delta time.
+            // A transition out of a state without a timeline ignores its exit time, as it could never be met
+            if (transition.hasExitTime && hasTimeline(transition.from)) {
                 let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
                 let progress = this._getActiveStateProgressForTime(this._timeInState);
                 // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
@@ -615,13 +644,14 @@ class AnimController {
         let clip;
         // update time when looping or when the active state is not at the end of its duration
         if (this.activeState.loop || this._timeInState < this.activeStateDuration) {
+            const timeScale = this._activeStateTimeScale;
             this._timeInStateBefore = this._timeInState;
-            this._timeInState += dt * this.activeState.speed;
+            this._timeInState += dt * timeScale;
             // if the active state is not looping and the time in state is greater than the duration, set the time in state to the state duration
-            // and update the delta time accordingly
+            // and update the delta time accordingly. The time in state advances at the time scale, so divide by it to get back to real time
             if (!this.activeState.loop && this._timeInState > this.activeStateDuration) {
                 this._timeInState = this.activeStateDuration;
-                dt = this.activeStateDuration - this._timeInStateBefore;
+                dt = (this.activeStateDuration - this._timeInStateBefore) / timeScale;
             }
         }
 

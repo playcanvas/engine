@@ -11,7 +11,7 @@ import {
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_MAT4, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+import { RenderPassShaderQuad } from '../graphics/render-pass-shader-quad.js';
 import {
     BLUR_GAUSSIAN,
     EVENT_POSTCULL,
@@ -37,6 +37,8 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
  * @import { Light } from '../light.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { Renderer } from './renderer.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { ShaderPassInfo } from '../shader-pass.js'
  */
 
@@ -108,6 +110,14 @@ class ShadowRenderer {
      * @private
      */
     _casterLists = [];
+
+    /**
+     * The passes blurring VSM shadow maps, one for each blur shader, reused every frame.
+     *
+     * @type {Map<Shader, RenderPassShaderQuad>}
+     * @private
+     */
+    _vsmBlurPasses = new Map();
 
     /**
      * @param {Renderer} renderer - The renderer.
@@ -182,7 +192,7 @@ class ShadowRenderer {
             const meshInstance = meshInstances[i];
 
             // test visible here, as _isVisible, which also tests it, is skipped when culling is off
-            if (meshInstance.castShadow && meshInstance.visible) {
+            if (meshInstance.castShadows && meshInstance.visible) {
                 if (!meshInstance.cull || meshInstance._isVisible(camera)) {
                     meshInstance.visibleThisFrame = true;
                     visible.push(meshInstance);
@@ -215,8 +225,8 @@ class ShadowRenderer {
             this._cullShadowCastersInternal(casterLists[i], visible, camera);
         }
 
-        // this sorts the shadow casters by the shader and the material
-        visible.sort(this.sortCompareShader);
+        // group the shadow casters by material and mesh, as the forward renderer does
+        this.renderer.meshInstanceSorter.sortMaterialMesh(visible);
 
         // event after culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
@@ -347,7 +357,7 @@ class ShadowRenderer {
             for (let i = 0; i < numInstances; i++) {
 
                 const meshInstance = meshInstances[i];
-                if (!meshInstance.castShadow || !meshInstance.visible) {
+                if (!meshInstance.castShadows || !meshInstance.visible) {
                     continue;
                 }
 
@@ -452,9 +462,10 @@ class ShadowRenderer {
             }
         }
 
-        // this sorts the shadow casters by the shader and the material
+        // group the shadow casters by material and mesh, as the forward renderer does
+        const sorter = this.renderer.meshInstanceSorter;
         for (let face = 0; face < 6; face++) {
-            _faceLists[face].sort(this.sortCompareShader);
+            sorter.sortMaterialMesh(_faceLists[face]);
             _faceLists[face] = null;
             _faceCameras[face] = null;
         }
@@ -462,26 +473,6 @@ class ShadowRenderer {
         // event after culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
         this.renderer.scene?.fire(EVENT_POSTCULL, null);
-    }
-
-    /**
-     * Orders shadow casters by their shader, then their material, then their mesh, so that the
-     * casters sharing a shader, a material and the vertex buffers are submitted together. See
-     * {@link MeshInstance#_sortKeyShadow}.
-     *
-     * @param {MeshInstance} drawCallA - The first mesh instance.
-     * @param {MeshInstance} drawCallB - The second mesh instance.
-     * @returns {number} The sort order.
-     */
-    sortCompareShader(drawCallA, drawCallB) {
-        const keyA = drawCallA._sortKeyShadow;
-        const keyB = drawCallB._sortKeyShadow;
-
-        if (keyA === keyB) {
-            return drawCallB.mesh.id - drawCallA.mesh.id;
-        }
-
-        return keyB - keyA;
     }
 
     setupRenderState(device, light) {
@@ -645,10 +636,6 @@ class ShadowRenderer {
                 continue;
             }
 
-            // sort shadow casters by shader, and then by material - the material id takes the low
-            // 22 bits, as in the forward sort key, and the key stays an exact integer
-            meshInstance._sortKeyShadow = shadowShader.id * 0x400000 + (material.id & 0x3fffff);
-
             device.setShader(shadowShader);
             renderer.setupViewBindGroup(shadowShader);
 
@@ -715,23 +702,18 @@ class ShadowRenderer {
         const rt = shadowCamera.renderTarget;
         renderPass.init(rt);
 
-        renderPass.depthStencilOps.clearDepthValue = 1;
-        renderPass.depthStencilOps.clearDepth = clearRenderTarget;
+        renderPass.setClearDepth(clearRenderTarget ? 1 : undefined);
 
         // if rendering to depth buffer
         if (rt.depthBuffer) {
 
-            renderPass.depthStencilOps.storeDepth = true;
+            renderPass.setStoreDepth(true);
 
         } else { // rendering to color buffer
 
-            renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
-            renderPass.colorOps.clear = clearRenderTarget;
-            renderPass.depthStencilOps.storeDepth = false;
+            renderPass.setClearColor(clearRenderTarget ? shadowCamera.clearColor : undefined);
+            renderPass.setStoreDepth(false);
         }
-
-        // not sampling dynamically generated cubemaps
-        renderPass.requiresCubemaps = false;
     }
 
     // prepares render target / render target settings to allow render pass to be set up
@@ -827,6 +809,40 @@ class ShadowRenderer {
         return blurShader;
     }
 
+    /**
+     * Releases the resources of the shadow renderer.
+     */
+    destroy() {
+        this._vsmBlurPasses.forEach(pass => pass.destroy());
+        this._vsmBlurPasses.clear();
+    }
+
+    /**
+     * Renders the VSM blur of a shadow map into a render target, within the blur scissor rectangle.
+     *
+     * @param {Shader} blurShader - The blur shader.
+     * @param {RenderTarget} target - The render target to render into.
+     * @private
+     */
+    _renderVsmBlur(blurShader, target) {
+        let pass = this._vsmBlurPasses.get(blurShader);
+        if (!pass) {
+            pass = new RenderPassShaderQuad(this.device);
+            pass.name = 'VSMShadowBlur';
+            pass.shader = blurShader;
+
+            // the viewport is set to the whole render target, as the pass uses the scissor rectangle
+            // only together with it
+            pass.viewport = new Vec4();
+            pass.scissor = blurScissorRect;
+            this._vsmBlurPasses.set(blurShader, pass);
+        }
+
+        pass.init(target);
+        pass.viewport.set(0, 0, target.width, target.height);
+        pass.render();
+    }
+
     applyVsmBlur(light, camera, cascadeMask) {
 
         const device = this.device;
@@ -859,17 +875,17 @@ class ShadowRenderer {
         pixelOffset[1] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
         if (blurMode === BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
-        drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+        this._renderVsmBlur(blurShader, tempRt);
 
         // Blur vertical
         this.sourceId.setValue(tempRt.colorBuffer);
         pixelOffset[1] = pixelOffset[0];
         pixelOffset[0] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
-        if (light._type === LIGHTTYPE_DIRECTIONAL && cascadeMask !== (1 << light.numCascades) - 1) {
+        if (light._type === LIGHTTYPE_DIRECTIONAL && cascadeMask !== (1 << light.shadowCascadeCount) - 1) {
             // Cached cascades already contain filtered moments. Blurring them again would
             // progressively soften their shadows until their next scheduled update.
-            for (let cascade = 0; cascade < light.numCascades; cascade++) {
+            for (let cascade = 0; cascade < light.shadowCascadeCount; cascade++) {
                 if (!(cascadeMask & (1 << cascade))) continue;
 
                 const viewport = light.cascades[cascade];
@@ -878,10 +894,10 @@ class ShadowRenderer {
                 const right = Math.min(resolution - 1, (viewport.x + viewport.z) * resolution);
                 const top = Math.min(resolution - 1, (viewport.y + viewport.w) * resolution);
                 blurScissorRect.set(x, y, right - x, top - y);
-                drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+                this._renderVsmBlur(blurShader, origShadowMap);
             }
         } else {
-            drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+            this._renderVsmBlur(blurShader, origShadowMap);
         }
 
         // return the temporary shadow map back to the cache

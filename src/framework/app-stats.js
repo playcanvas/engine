@@ -96,6 +96,8 @@ class AppStats {
             gsplats: 0,
             gsplatSort: 0,
             gsplatBufferCopy: 0,
+            computeDispatches: 0,
+            computePasses: 0,
             shaders: 0,
             materials: 0,
             cameras: 0,
@@ -191,6 +193,28 @@ class AppStats {
      */
     get drawCallCount() {
         return this.drawCalls.total;
+    }
+
+    /**
+     * Total compute dispatches submitted during the previous frame, including indirect dispatches,
+     * published at the start of the next application tick. Zero on devices without compute shader
+     * support. Available in all builds.
+     *
+     * @type {number}
+     */
+    get computeDispatchCount() {
+        return this.frame.computeDispatches;
+    }
+
+    /**
+     * Total compute passes recording the compute dispatches of the previous frame, published at
+     * the start of the next application tick. A compute pass can record several dispatches. Zero
+     * on devices without compute shader support. Available in all builds.
+     *
+     * @type {number}
+     */
+    get computePassCount() {
+        return this.frame.computePasses;
     }
 
     /**
@@ -411,6 +435,12 @@ class AppStats {
         // total draw call
         this.drawCalls.total = device._drawCallsPerFrame;
         device._drawCallsPerFrame = 0;
+
+        // compute dispatches, and the compute passes recording them
+        stats.computeDispatches = device._computeDispatchesPerFrame;
+        stats.computePasses = device._computePassesPerFrame;
+        device._computeDispatchesPerFrame = 0;
+        device._computePassesPerFrame = 0;
 
         stats.gsplats = renderer._gsplatCount;
         stats.gsplatBufferCopy = renderer._gsplatBufferCopy ?? 0;

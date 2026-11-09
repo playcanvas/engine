@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.23.0",
+  "version": "2.24.0",
   "packageManager": "npm@11.19.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
@@ -85,7 +85,7 @@
     "@webgpu/types": "^0.1.70"
   },
   "devDependencies": {
-    "@playcanvas/eslint-config": "3.0.0-beta.8",
+    "@playcanvas/eslint-config": "3.0.0",
     "@rollup/plugin-strip": "3.0.4",
     "@types/node": "24.13.5",
     "acorn": "8.18.0",
@@ -132,8 +132,8 @@
     "watch": "turbo run watch:all",
     "watch:rel:umd": "node build.mjs --type=rel --format=umd --watch",
     "watch:rel:esm": "node build.mjs --type=rel --format=esm --watch",
-    "watch:dbg:umd": "node build.mjs --type=dbg --format=umd --watch",
-    "watch:dbg:esm": "node build.mjs --type=dbg --format=esm --watch",
+    "watch:dbg:umd": "node build.mjs --type=dbg --format=umd --watch --sourcemaps",
+    "watch:dbg:esm": "node build.mjs --type=dbg --format=esm --watch --sourcemaps",
     "watch:prf:umd": "node build.mjs --type=prf --format=umd --watch",
     "watch:prf:esm": "node build.mjs --type=prf --format=esm --watch",
     "watch:min:umd": "node build.mjs --type=min --format=umd --watch",
@@ -154,5 +154,11 @@
   },
   "engines": {
     "node": ">=18.3.0"
+  },
+  "allowScripts": {
+    "canvas": true,
+    "esbuild": true,
+    "unrs-resolver": true,
+    "webgpu": true
   }
 }

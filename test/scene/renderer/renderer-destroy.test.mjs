@@ -22,6 +22,14 @@ describe('Renderer destruction', function () {
         device.destroy();
     });
 
+    it('is the renderer of its scene until it is destroyed', function () {
+        expect(scene.renderer).to.equal(renderer);
+
+        renderer.destroy();
+        renderer = null;
+        expect(scene.renderer).to.be.null;
+    });
+
     it('releases the empty and shared layer cluster textures before device destruction', function () {
         const allocator = renderer.worldClustersAllocator;
         const empty = allocator.empty;
@@ -91,6 +99,19 @@ describe('Renderer destruction', function () {
             expect(destroys[i].calledOnceWithExactly(device)).to.be.true;
             expect(textures[i].device).to.be.null;
         }
+    });
+
+    it('destroys both passes of the clustered lighting update', function () {
+        const updatePass = renderer._renderPassUpdateClustered;
+        expect(updatePass).to.exist;
+        const { cookiesRenderPass, shadowRenderPass } = updatePass;
+        const destroys = [cookiesRenderPass, shadowRenderPass].map(pass => spy(pass, 'destroy'));
+
+        renderer.destroy();
+        renderer = null;
+
+        destroys.forEach(destroy => expect(destroy.calledOnce).to.be.true);
+        expect(updatePass.beforePasses).to.have.length(0);
     });
 
     it('can destroy a renderer before any clusters are allocated', function () {

@@ -1,5 +1,4 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
-import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -123,9 +122,6 @@ class GSplatShadowRenderer {
      * @type {GSplatIntervalCompaction|null}
      */
     _compaction = null;
-
-    /** @type {Vec2} */
-    _cullDispatchSize = new Vec2(1, 1);
 
     /**
      * Reused light frustum planes (6 × vec4(normal, distance)) for the cull uniform, refilled per
@@ -404,7 +400,7 @@ class GSplatShadowRenderer {
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
             if (!light.enabled || !light.castShadows) continue;
-            if (light.numCascades !== 1) {
+            if (light.shadowCascadeCount !== 1) {
                 Debug.warnOnce('GSplatShadowRenderer: cascaded directional shadows are not supported for gsplats; the light will not cast a gsplat shadow.');
                 continue;
             }
@@ -450,6 +446,7 @@ class GSplatShadowRenderer {
         const totalActiveSplats = worldState.totalActiveSplats;
         const textureSize = this.world.workBuffer.textureSize;
         let prepared = false;
+        let dispatchIndex = 0;
         const camera = this.cameraNode.camera?.camera;
 
         this.entries.forEach((entry) => {
@@ -460,7 +457,8 @@ class GSplatShadowRenderer {
 
             // The scheduled mask includes mandatory refreshes after shadow-map recreation,
             // even when the application's per-cascade override still requests a cached shadow.
-            const renderData = light.getRenderData(camera, 0);
+            // A light with shadow bounds renders one shadow for all cameras.
+            const renderData = light.getRenderData(light.shadowBounds ? null : camera, 0);
             if (!renderData.shadowCullRequested || !(renderData.shadowCascadeMask & 1)) {
                 return;
             }
@@ -481,7 +479,7 @@ class GSplatShadowRenderer {
                 this._ensureCullShader();
             }
 
-            this._cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams);
+            this._cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams, dispatchIndex++);
         });
     }
 
@@ -543,15 +541,18 @@ class GSplatShadowRenderer {
      * @param {number} totalActiveSplats - Max output index count.
      * @param {number} textureSize - Work buffer texture size.
      * @param {GSplatParams} gsplatParams - Scene gsplat params.
+     * @param {number} dispatchIndex - The index of the entry among the entries culled this frame,
+     * which the shared interval compaction is dispatched with.
      * @private
      */
-    _cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams) {
+    _cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams, dispatchIndex) {
         const device = this.device;
 
         // resolve the light's shadow camera (fitted during cullComposition) and the shared camera-
         // independent cull bounds (populated by the forward renderer's frustum culler).
         const sceneCamera = this.cameraNode.camera?.camera;
-        const shadowCamera = sceneCamera && entry.light.getRenderData(sceneCamera, 0).shadowCamera;
+        const light = entry.light;
+        const shadowCamera = sceneCamera && light.getRenderData(light.shadowBounds ? null : sceneCamera, 0).shadowCamera;
         const frustum = shadowCamera && shadowCamera.frustum;
         const frustumCuller = this.world.workBuffer.frustumCuller;
         if (!frustum || !frustumCuller?.boundsBuffer || !frustumCuller?.transformsBuffer) {
@@ -561,18 +562,19 @@ class GSplatShadowRenderer {
         this._fillFrustumPlanes(frustum);
 
         // World-space size threshold for the minPixelSize fine cull. The directional shadow camera
-        // is orthographic, so the projected pixel size is linear in world size: focal = resolution /
-        // orthoHeight (the forward projector's focal = viewportWidth * projMat00, and ortho projMat00
-        // = 1 / orthoHeight). The forward gate is max(radiusX, radiusY) < minPixelSize with the
-        // radius ~ sqrt(2) * focal * extent plus a 0.3 px² variance floor; inverting that to a single
-        // world extent gives sqrt(max(0, minPixelSize²/2 - 0.3)) / focal. The shader compares this to
-        // the max scale axis, an upper bound on the projected extent, so the cull stays conservative
-        // (never drops a splat the forward path keeps). A threshold of 0 disables the size test.
+        // is orthographic, so the projected size is linear in world size: focal = resolution /
+        // orthoHeight (the splat shaders' focal = viewport size * projMat00, and ortho projMat00
+        // = 1 / orthoHeight). The shadow draw culls with gsplatFootprintSmallerThan (gsplatHelpersVS):
+        // lambda1 + GSPLAT_CULL_LOWPASS (0.3) < minPixelSize² / 8, with lambda1 <= (focal * extent)²
+        // for the max world-space extent. Inverting that gives sqrt(max(0, minPixelSize² / 8 - 0.3)) /
+        // focal. The shader compares this to the max scale axis, an upper bound on the projected
+        // extent, so the cull stays conservative (never drops a splat the shadow draw keeps). A
+        // threshold of 0 disables the size test.
         const orthoHeight = shadowCamera.orthoHeight;
         const shadowRes = entry.light._shadowResolution;
         const minPixelSize = gsplatParams.minPixelSize;
         const focal = (orthoHeight > 0 && shadowRes > 0) ? shadowRes / orthoHeight : 0;
-        const t2 = minPixelSize * minPixelSize * 0.5 - 0.3;
+        const t2 = minPixelSize * minPixelSize * 0.125 - 0.3;
         const worldSizeThreshold = (focal > 0 && t2 > 0) ? Math.sqrt(t2) / focal : 0;
 
         // grow the visible-index buffer to hold all active splats (worst case: nothing culled)
@@ -589,13 +591,14 @@ class GSplatShadowRenderer {
         // lights — lights are culled sequentially, so this light's pass 2 consumes it before the next
         // light's pass 1 overwrites it (compute passes are ordered). bounds/transforms are the shared
         // camera-independent buffers; only the planes are per-light, passed via a lightweight culler
-        // view so the forward culler's own planes are never mutated.
+        // view so the forward culler's own planes are never mutated. Each light dispatches the
+        // compaction with its own index, as a compute instance is dispatched at most once in a frame.
         const compaction = this._compaction;
         compaction.dispatchCompact({
             boundsBuffer: frustumCuller.boundsBuffer,
             transformsBuffer: frustumCuller.transformsBuffer,
             frustumPlanes: this._frustumPlanes
-        }, numIntervals, totalActiveSplats, false);
+        }, numIntervals, totalActiveSplats, false, dispatchIndex);
 
         // PASS 2 (fine): flat one-thread-per-candidate cull over the candidate list — read + apply the
         // vertex modify + opacity/size/frustum tests — compacting survivors into this light's final
@@ -643,11 +646,9 @@ class GSplatShadowRenderer {
             }
         }
 
-        // flat dispatch over the work-buffer capacity (a CPU-known upper bound); threads beyond the
-        // candidate count early-out in the shader. Tiled across X/Y over the per-dimension limit.
-        const workgroupCount = Math.ceil(totalActiveSplats / WORKGROUP_SIZE);
-        Compute.calcDispatchSize(workgroupCount, this._cullDispatchSize, device.limits.maxComputeWorkgroupsPerDimension || 65535);
-        cull.setupDispatch(this._cullDispatchSize.x, this._cullDispatchSize.y, 1);
+        // a thread for each splat of the work-buffer capacity (a CPU-known upper bound); threads
+        // beyond the candidate count early-out in the shader
+        cull.setupDispatchThreads(totalActiveSplats);
         device.computeDispatch([cull], 'GSplatShadowCull');
 
         // turn the visible count into indirect draw args
@@ -703,7 +704,7 @@ class GSplatShadowRenderer {
         const meshInstance = this._createMeshInstance(light, material);
 
         // register as a shadow caster so cullComposition's shadow-caster culling includes it
-        meshInstance.castShadow = true;
+        meshInstance.castShadows = true;
         this.layer.addShadowCasters([meshInstance]);
 
         const countBuffer = new StorageBuffer(device, 4, BUFFERUSAGE_COPY_DST);
@@ -846,7 +847,7 @@ class GSplatShadowRenderer {
         meshInstance.isVisibleFunc = (camera) => {
             const sceneCamera = cameraNode.camera?.camera;
             if (!sceneCamera) return false;
-            return camera === light.getRenderData(sceneCamera, 0).shadowCamera;
+            return camera === light.getRenderData(light.shadowBounds ? null : sceneCamera, 0).shadowCamera;
         };
 
         return meshInstance;

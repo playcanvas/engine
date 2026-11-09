@@ -134,14 +134,14 @@ vec3 getLTCLightSpecFres(vec2 uv, vec3 specularity)
     return specularity * t2.x + ( vec3( 1.0 ) - specularity) * t2.y;
 }
 
-void calcLTCLightValues(float gloss, vec3 worldNormal, vec3 viewDir, vec3 specularity, float clearcoatGloss, vec3 clearcoatWorldNormal, float clearcoatSpecularity)
+void calcLTCLightValues(float gloss, vec3 worldNormal, vec3 viewDir, vec3 specularity, float clearcoatGloss, vec3 clearcoatWorldNormal, float clearcoatReflectance)
 {
     dLTCUV = getLTCLightUV(gloss, worldNormal, viewDir);
     dLTCSpecFres = getLTCLightSpecFres(dLTCUV, specularity); 
 
 #ifdef LIT_CLEARCOAT
     ccLTCUV = getLTCLightUV(clearcoatGloss, clearcoatWorldNormal, viewDir);
-    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(clearcoatSpecularity));
+    ccLTCSpecFres = getLTCLightSpecFres(ccLTCUV, vec3(clearcoatReflectance));
 #endif
 }
 
@@ -416,4 +416,19 @@ float getDiskLightSpecular(vec3 worldNormal, vec3 viewDir) {
 float getSphereLightSpecular(vec3 worldNormal, vec3 viewDir) {
     return calcDiskLightSpecular(worldNormal, viewDir, dLTCUV);
 }
+
+#ifdef LIT_CLEARCOAT
+    // the clear coat specular, with the LTC matrix of the clear coat gloss and normal
+    float getRectLightSpecularCC(vec3 worldNormal, vec3 viewDir) {
+        return calcRectLightSpecular(worldNormal, viewDir, ccLTCUV);
+    }
+
+    float getDiskLightSpecularCC(vec3 worldNormal, vec3 viewDir) {
+        return calcDiskLightSpecular(worldNormal, viewDir, ccLTCUV);
+    }
+
+    float getSphereLightSpecularCC(vec3 worldNormal, vec3 viewDir) {
+        return calcDiskLightSpecular(worldNormal, viewDir, ccLTCUV);
+    }
+#endif
 `;

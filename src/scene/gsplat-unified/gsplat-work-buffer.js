@@ -169,6 +169,14 @@ class GSplatWorkBuffer {
     colorRenderPass;
 
     /**
+     * Stream-set version the render targets were created for.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderTargetsVersion = -1;
+
+    /**
      * GPU frustum culler for octree node visibility.
      *
      * @type {GSplatFrustumCuller}
@@ -317,6 +325,7 @@ class GSplatWorkBuffer {
 
         // Collect all textures in order for MRT
         const colorBuffers = this.streams.getTexturesInOrder();
+        this._renderTargetsVersion = this.streams._formatVersion;
         // viewport rects used to fill the work buffer must address identical texel rows on all
         // graphics APIs, matching the WebGL layout
         this.renderTarget = new RenderTarget({
@@ -345,11 +354,13 @@ class GSplatWorkBuffer {
      * Call this before rendering to ensure all streams have textures.
      */
     syncWithFormat() {
-        const prevVersion = this.streams._formatVersion;
         this.streams.syncWithFormat(this.format);
 
-        // If format changed, recreate render targets to include new textures
-        if (prevVersion !== this.streams._formatVersion) {
+        // Recreate the render targets when they were built for an older stream set. Compared
+        // against the version the targets were built for, not the streams' version before this
+        // call: getTexture() syncs the streams on its own, so by the time this runs they can
+        // already be up to date while the targets still lack the new textures.
+        if (this._renderTargetsVersion !== this.streams._formatVersion) {
             this._createRenderTargets();
         }
     }
@@ -384,6 +395,16 @@ class GSplatWorkBuffer {
         const size = this.textureSize;
         if (this.device.isWebGPU) {
             Debug.assert(data.length <= size * size);
+
+            // grow here rather than on resize: only the CPU sort uploads an order, so with GPU
+            // sorting the buffer is never used and stays at its minimal size
+            const newByteSize = size * size * 4;
+            if (this.orderBuffer.byteSize < newByteSize) {
+                this.orderBuffer.destroy();
+                this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
+                DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
+            }
+
             this.uploadStream.upload(data, this.orderBuffer, 0, data.length);
         } else {
             Debug.assert(data.length === size * size);
@@ -400,14 +421,8 @@ class GSplatWorkBuffer {
         this.colorRenderTarget.resize(textureSize, textureSize);
         this.streams.resize(textureSize, textureSize);
 
-        if (this.device.isWebGPU) {
-            const newByteSize = textureSize * textureSize * 4;
-            if (this.orderBuffer.byteSize < newByteSize) {
-                this.orderBuffer.destroy();
-                this.orderBuffer = new StorageBuffer(this.device, newByteSize, BUFFERUSAGE_COPY_DST);
-                DebugHelper.setName(this.orderBuffer, 'GsplatWorkBuffer.order');
-            }
-        } else {
+        // the WebGPU order buffer grows on upload, in setOrderData
+        if (!this.device.isWebGPU) {
             this.orderTexture.resize(textureSize, textureSize);
         }
     }

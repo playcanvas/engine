@@ -1,31 +1,45 @@
 import { expect } from 'chai';
 
+import { Vec3 } from '../../../src/core/math/vec3.js';
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../../src/scene/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { GSplatOctreeInstance } from '../../../src/scene/gsplat-unified/gsplat-octree-instance.js';
 import { GSplatOctree } from '../../../src/scene/gsplat-unified/gsplat-octree.js';
 
-// An octree of leaves centered at the given positions, unit half-extent unless a fourth component
-// gives one, so distance differences can only come from the camera model and stated sizes.
+// A tree of top level nodes centered at the given positions, unit half-extent unless a fourth
+// component gives one, so distance differences can only come from the camera model and stated
+// sizes. Node `i` is the node of position `i`.
 const makeOctree = centers => new GSplatOctree('/scene/lod-meta.json', {
     lodLevels: 1,
     filenames: ['0/meta.json'],
+    hierarchical: true,
     tree: {
         children: centers.map(([x, y, z, he = 1]) => ({
             bound: { min: [x - he, y - he, z - he], max: [x + he, y + he, z + he] },
+            level: 0,
             lods: { 0: { file: 0, offset: 0, count: 10 } }
         }))
     }
 });
 
-// evaluateNodeDistances reads only the octree, the placement's node transform and the nodeInfos
+// The distance passes read only the octree, the placement's node transform and the nodeInfos
 // array, so a focused test can supply exactly those rather than a fully constructed instance.
 const makeInstance = (octree) => {
     const instance = Object.create(GSplatOctreeInstance.prototype);
     instance.octree = octree;
     instance.placement = { node: new GraphNode() };
     instance.nodeInfos = octree.nodes.map(() => ({ worldDistanceSq: 0 }));
+    instance._cameraPos = new Vec3();
+    instance._cameraFwd = new Vec3();
     return instance;
+};
+
+// Measures every node, parents first, as the cut does for the nodes it reaches.
+const measure = (instance, camera, params) => {
+    instance.prepareDistances(camera, params);
+    for (let n = 0; n < instance.octree.nodes.length; n++) {
+        instance.measureTreeNode(n);
+    }
 };
 
 // The distance a node info records, which it stores squared.
@@ -38,12 +52,12 @@ const makeCamera = (projection, fov = 45) => {
     return node;
 };
 
-describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
+describe('GSplatOctreeInstance#measureTreeNode', function () {
 
     it('measures the distance to the nearest point of each node', function () {
         const instance = makeInstance(makeOctree([[0, 0, -10], [0, 0, -1000], [0, 0, 0]]));
 
-        instance.evaluateNodeDistances(makeCamera(PROJECTION_PERSPECTIVE), { lodBehindPenalty: 1 });
+        measure(instance, makeCamera(PROJECTION_PERSPECTIVE), { lodBehindPenalty: 1 });
 
         const [near, far, inside] = instance.nodeInfos;
         expect(distanceOf(near)).to.be.closeTo(9, 1e-6);
@@ -56,7 +70,7 @@ describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
         // size must not reorder them, so the bands stay concentric
         const instance = makeInstance(makeOctree([[0, 0, -10, 1], [0, 0, -14, 5]]));
 
-        instance.evaluateNodeDistances(makeCamera(PROJECTION_PERSPECTIVE), { lodBehindPenalty: 1 });
+        measure(instance, makeCamera(PROJECTION_PERSPECTIVE), { lodBehindPenalty: 1 });
 
         const [small, big] = instance.nodeInfos;
         expect(distanceOf(big)).to.be.closeTo(distanceOf(small), 1e-6);
@@ -67,7 +81,7 @@ describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
         // anything under that projection
         const instance = makeInstance(makeOctree([[0, 0, -10], [0, 0, -1000]]));
 
-        instance.evaluateNodeDistances(makeCamera(PROJECTION_ORTHOGRAPHIC), { lodBehindPenalty: 1 });
+        measure(instance, makeCamera(PROJECTION_ORTHOGRAPHIC), { lodBehindPenalty: 1 });
 
         const [near, far] = instance.nodeInfos;
         expect(distanceOf(near)).to.be.closeTo(9, 1e-6);
@@ -81,11 +95,11 @@ describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
         const camera = makeCamera(PROJECTION_PERSPECTIVE);
 
         const direct = makeInstance(makeOctree([[0, 0, -100, 1]]));
-        direct.evaluateNodeDistances(camera, { lodBehindPenalty: 1 });
+        measure(direct, camera, { lodBehindPenalty: 1 });
 
         const scaled = makeInstance(makeOctree([[0, 0, -50, 0.5]]));
         scaled.placement.node.setLocalScale(2, 2, 2);
-        scaled.evaluateNodeDistances(camera, { lodBehindPenalty: 1 });
+        measure(scaled, camera, { lodBehindPenalty: 1 });
 
         expect(distanceOf(scaled.nodeInfos[0])).to.be.closeTo(distanceOf(direct.nodeInfos[0]), 1e-4);
     });
@@ -94,10 +108,10 @@ describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
         // a wider field of view shows a node smaller, so it must read as farther away
         const instance = makeInstance(makeOctree([[0, 0, -100]]));
 
-        instance.evaluateNodeDistances(makeCamera(PROJECTION_PERSPECTIVE, 45), { lodBehindPenalty: 1 });
+        measure(instance, makeCamera(PROJECTION_PERSPECTIVE, 45), { lodBehindPenalty: 1 });
         const reference = distanceOf(instance.nodeInfos[0]);
 
-        instance.evaluateNodeDistances(makeCamera(PROJECTION_PERSPECTIVE, 90), { lodBehindPenalty: 1 });
+        measure(instance, makeCamera(PROJECTION_PERSPECTIVE, 90), { lodBehindPenalty: 1 });
         expect(distanceOf(instance.nodeInfos[0])).to.be.above(reference * 2);
     });
 
@@ -111,7 +125,7 @@ describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
                 camera.camera.aspectRatio = aspectRatio;
                 camera.camera.horizontalFov = horizontalFov;
 
-                instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1.5 });
+                measure(instance, camera, { lodBehindPenalty: 1.5 });
 
                 const [near, far] = instance.nodeInfos;
                 expect(Number.isFinite(distanceOf(near)), `aspect ${aspectRatio}, horizontalFov ${horizontalFov}`).to.equal(true);
@@ -120,50 +134,41 @@ describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
         }
     });
 
-    it('shrinks only the part of a node larger than a typical node, by lodDistanceShrink', function () {
-        // three typical unit nodes off to the side, and a long node reaching towards the camera:
-        // its nearest face is 1 unit away and its center 50. The typical half extent is 1 on every
-        // axis, so the long node exceeds it by 48 along its length and nothing across it.
-        const instance = makeInstance(makeOctree([[100, 0, -10], [110, 0, -10], [120, 0, -10], [0, 0, -50, 49]]));
-        const camera = makeCamera(PROJECTION_PERSPECTIVE);
-        const typical = () => distanceOf(instance.nodeInfos[0]);
-        const long = () => distanceOf(instance.nodeInfos[3]);
-
-        instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 0 });
-        const typicalAtZero = typical();
-        expect(long()).to.be.closeTo(1, 1e-4);
-
-        instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 0.5 });
-        expect(long()).to.be.closeTo(1 + 24, 1e-4);
-        expect(typical()).to.be.closeTo(typicalAtZero, 1e-4);
-
-        // at 1 the long node is judged as a typical node around its center
-        instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 1 });
-        expect(long()).to.be.closeTo(49, 1e-4);
-        expect(typical()).to.be.closeTo(typicalAtZero, 1e-4);
-    });
-
-    it('leaves nodes of uniform size unaffected by lodDistanceShrink', function () {
-        // a grid of equal nodes has no outliers, so even a node the camera stands in stays near
-        const instance = makeInstance(makeOctree([[0, 0, 0, 64], [128, 0, 0, 64], [0, 0, 128, 64], [128, 0, 128, 64]]));
-        const camera = makeCamera(PROJECTION_PERSPECTIVE);
-        camera.setPosition(-60, 0, -60);
-
-        instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 0 });
-        const atZero = instance.nodeInfos.map(distanceOf);
-        instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 1 });
-        expect(instance.nodeInfos.map(distanceOf)).to.deep.equal(atZero);
-        expect(atZero[0]).to.equal(0);
-    });
-
     it('penalizes nodes behind the camera under both projections', function () {
         for (const projection of [PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC]) {
             const instance = makeInstance(makeOctree([[0, 0, -10], [0, 0, 10]]));
 
-            instance.evaluateNodeDistances(makeCamera(projection), { lodBehindPenalty: 3 });
+            measure(instance, makeCamera(projection), { lodBehindPenalty: 3 });
 
             const [front, behind] = instance.nodeInfos;
             expect(distanceOf(behind)).to.be.above(distanceOf(front) * 2);
         }
+    });
+
+    it('never measures a node nearer than its parent', function () {
+        // the behind-camera penalty depends on direction, so it can make a parent farther than its
+        // child - which would make the child ask for more detail than its parent
+        const octree = new GSplatOctree('/scene/lod-meta.json', {
+            lodLevels: 2,
+            filenames: ['0.json', '1.json'],
+            hierarchical: true,
+            tree: {
+                children: [{
+                    bound: { min: [-1, -1, -12], max: [1, 1, -8] },
+                    level: 1,
+                    lods: { 1: { file: 0, offset: 0, count: 10 } },
+                    children: [{ bound: { min: [-1, -1, -12], max: [1, 1, -8] }, level: 0, lods: { 0: { file: 1, offset: 0, count: 20 } } }]
+                }]
+            }
+        });
+        const instance = makeInstance(octree);
+        instance.prepareDistances(makeCamera(PROJECTION_PERSPECTIVE), { lodBehindPenalty: 1 });
+        instance.measureTreeNode(0);
+        expect(instance.measureTreeNode(1)).to.be.closeTo(64, 1e-6);
+
+        // whatever made the parent farther, the child is recorded no nearer
+        instance.nodeInfos[0].worldDistanceSq = 1e6;
+        expect(instance.measureTreeNode(1)).to.equal(1e6);
+        expect(instance.nodeInfos[1].worldDistanceSq).to.equal(1e6);
     });
 });

@@ -48,6 +48,9 @@ import { createInstancing } from './glb/extensions/ext-mesh-gpu-instancing.js';
 import { createDracoMesh } from './glb/extensions/khr-draco-mesh-compression.js';
 import { createLights } from './glb/extensions/khr-lights-punctual.js';
 import { createVariants, registerMeshVariants } from './glb/extensions/khr-materials-variants.js';
+import {
+    decodeMeshoptBufferView, getMeshoptCompression, skipMeshoptFallbackBuffer
+} from './glb/extensions/meshopt-compression.js';
 import { getTextureSource } from './glb/extensions/texture-source.js';
 import { glbMaterialExtensions } from './glb/extensions/index.js';
 import { extractTextureTransform } from './glb/extensions/khr-texture-transform.js';
@@ -1606,6 +1609,9 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
         promise = promise.then((arrayBuffer) => {
             if (arrayBuffer) {
                 return arrayBuffer;
+            } else if (skipMeshoptFallbackBuffer(gltfBuffer, i)) {
+                // the buffer views using it are decoded from compressed data instead
+                return null;
             } else if (gltfBuffer.hasOwnProperty('uri')) {
                 if (isDataURI(gltfBuffer.uri)) {
                     // convert base64 to raw binary data held in a string
@@ -1801,8 +1807,19 @@ const createBufferViews = (gltf, buffers, options) => {
                 return buffer;
             }
 
+            const decoded = decodeMeshoptBufferView(gltfBufferView, buffers);
+            if (decoded) {
+                return decoded;
+            }
+
             // convert buffer to typed array
             return buffers[gltfBufferView.buffer].then((buffer) => {
+                if (!buffer) {
+                    const reason = getMeshoptCompression(gltfBufferView) ?
+                        'is meshopt compressed, call meshoptInitialize to load it' :
+                        `references buffer ${gltfBufferView.buffer}, which has no data`;
+                    throw new Error(`glTF buffer view ${i} ${reason}`);
+                }
                 return new Uint8Array(buffer.buffer,
                     buffer.byteOffset + (gltfBufferView.byteOffset || 0),
                     gltfBufferView.byteLength);

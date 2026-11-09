@@ -1,0 +1,394 @@
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    Color,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    LightComponentSystem,
+    Mouse,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SHADOWUPDATE_REALTIME,
+    SHADOWUPDATE_THISFRAME,
+    SHADOW_PCF3_32F,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TextureHandler,
+    TextureRenderer,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import { data, deviceType } from 'examples/context';
+
+/**
+ * @import { Material, RenderComponent } from 'playcanvas'
+ */
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const observer = data;
+const assets = {
+    channels: new Asset('channels', 'texture', { url: './assets/textures/channels.png' }),
+    heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
+    normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
+    helipad: new Asset(
+        'helipad-env-atlas',
+        'texture',
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
+    )
+};
+
+const gfxOptions = {
+    deviceTypes: [deviceType]
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+
+const textures = new TextureRenderer(app);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
+
+app.start();
+
+data.set('settings', {
+    shadowAtlasResolution: 1024, // shadow map resolution storing all shadows
+    shadowType: SHADOW_PCF3_32F, // shadow filter type
+    shadowsEnabled: true,
+    cookiesEnabled: true,
+    shadowIntensity: 1,
+    cookieIntensity: 0.5,
+    numLights: 0,
+    use16BitIndex: false,
+    maxLightsInfo: 0,
+    debug: false,
+    debugAtlas: false,
+    splitOptions: 0,
+    static: false
+});
+
+// Setup skydome as ambient light
+app.scene.skyboxMip = 3;
+app.scene.skyboxIntensity = 0.1;
+app.scene.envAtlas = assets.helipad.resource;
+
+// enabled clustered lighting. This is a temporary API and will change in the future
+app.scene.clusteredLightingEnabled = true;
+
+// Adjust default clustered lighting parameters to handle many lights
+const lighting = app.scene.lighting;
+
+// 1) subdivide space with lights into this many cells
+lighting.cells = new Vec3(12, 4, 12);
+
+// 2) and allow this many lights per cell. All lights in this example overlap the middle of the
+// scene, so this is also used as the limit on the number of lights that can be added
+const maxLightsPerCell = 24;
+lighting.maxLightsPerCell = maxLightsPerCell;
+
+// 3) the light grid stores the light index using 8 bits, allowing up to 255 lights. The '16bit
+// Index' option switches it to 16 bits, raising the limit to as many lights as the device allows
+const maxLights16Bit = device.maxTextureSize;
+data.set('settings.maxLightsInfo', lighting.maxLights);
+
+// Enable clustered shadows (it's enabled by default as well)
+lighting.shadowsEnabled = observer.get('settings.shadowsEnabled');
+
+// Enable clustered cookies
+lighting.cookiesEnabled = observer.get('settings.cookiesEnabled');
+
+// Resolution of the shadow and cookie atlas
+lighting.shadowAtlasResolution = observer.get('settings.shadowAtlasResolution');
+lighting.cookieAtlasResolution = 1500;
+
+const splitOptions = [
+    null, // automatic - split atlas each frame to give all required lights an equal size
+    [2, 1, 1, 2, 1], // 7 shadows: split atlas to 2x2 (first number), and split created quarters to 1x1, 1x1, 2x2, 1x1
+    [3, 2], // 12 shadows: split atlas to 3x3 (first number), and split one of the created parts to 2x2
+    [4] // 16 shadows: split atlas to 4x4
+];
+
+// lights are static (not moving and so do not need to update shadows) or dynamic
+let lightsStatic = false;
+
+// debug rendering is enabled
+let debugAtlas = false;
+
+// Ground material
+const groundMaterial = new StandardMaterial();
+groundMaterial.gloss = 0.55;
+groundMaterial.metalness = 0.4;
+groundMaterial.useMetalness = true;
+groundMaterial.normalMap = assets.normal.resource;
+groundMaterial.normalMapTiling.set(10, 10);
+groundMaterial.bumpiness = 0.5;
+groundMaterial.update();
+
+// Cube material
+const cubeMaterial = new StandardMaterial();
+cubeMaterial.gloss = 0.55;
+cubeMaterial.metalness = 0.4;
+cubeMaterial.useMetalness = true;
+cubeMaterial.normalMap = assets.normal.resource;
+cubeMaterial.normalMapTiling.set(0.25, 0.25);
+cubeMaterial.bumpiness = 0.5;
+cubeMaterial.update();
+
+/**
+ * Helper function to create a 3d primitive including its material.
+ * @param {RenderComponent['type']} primitiveType - The primitive type.
+ * @param {Vec3} position - The position.
+ * @param {Vec3} scale - The scale.
+ * @param {Material} mat - The material.
+ * @returns {Entity} The returned entity.
+ */
+function createPrimitive(primitiveType, position, scale, mat) {
+    // Create the primitive using the material
+    const primitive = new Entity();
+    primitive.addComponent('render', {
+        type: primitiveType,
+        castShadows: true,
+        material: mat
+    });
+
+    // Set position and scale and add it to scene
+    primitive.setLocalPosition(position);
+    primitive.setLocalScale(scale);
+    app.root.addChild(primitive);
+
+    return primitive;
+}
+
+// Create some visible geometry
+createPrimitive('box', new Vec3(0, 0, 0), new Vec3(500, 1, 500), groundMaterial);
+
+const numTowers = 8;
+for (let i = 0; i < numTowers; i++) {
+    let scale = 12;
+    const fraction = (i / numTowers) * Math.PI * 2;
+    const radius = 200;
+    const numCubes = 12;
+    for (let y = 0; y <= 10; y++) {
+        const elevationRadius = radius * (1 - y / numCubes);
+        const pos = new Vec3(elevationRadius * Math.sin(fraction), y * 6, elevationRadius * Math.cos(fraction));
+        const prim = createPrimitive('box', pos, new Vec3(scale, scale, scale), cubeMaterial);
+        prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+    }
+    scale -= 1.5;
+}
+/** @type {Entity[]} */
+const spotLightList = [];
+const cookieChannels = ['r', 'g', 'b', 'a', 'rgb'];
+
+/**
+ * Helper function to create a light.
+ * @param {number} index - The light index.
+ */
+function createLight(index) {
+    const intensity = 1.5;
+    const color = new Color(intensity * Math.random(), intensity * Math.random(), intensity * Math.random(), 1);
+    const lightSpot = new Entity(`Spot-${index}`);
+    const heartTexture = Math.random() < 0.5;
+    const cookieTexture = heartTexture ? assets.heart : assets.channels;
+    const cookieChannel = heartTexture ? 'a' : cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
+
+    lightSpot.addComponent('light', {
+        type: 'spot',
+        color: color,
+        intensity: 3,
+        innerConeAngle: 30,
+        outerConeAngle: 35,
+        range: 150,
+        castShadows: true,
+        shadowBias: 0.4,
+        normalOffsetBias: 0.1,
+        shadowResolution: 512, // only used when clustering is off
+
+        // When lights are static, only render shadows one time (or as needed when they use different atlas slot)
+        shadowUpdateMode: lightsStatic ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_REALTIME,
+
+        // cookie texture
+        cookie: cookieTexture.resource,
+        cookieChannel: cookieChannel,
+        cookieIntensity: 0.5
+    });
+
+    // Attach a render component with a small cone to each light
+    const material = new StandardMaterial();
+    material.emissive = color;
+    material.update();
+
+    lightSpot.addComponent('render', {
+        type: 'cone',
+        material: material,
+        castShadows: false
+    });
+    lightSpot.setLocalScale(5, 5, 5);
+    app.root.addChild(lightSpot);
+    spotLightList.push(lightSpot);
+}
+
+// Create many spot lights
+const count = 10;
+for (let i = 0; i < count; i++) {
+    createLight(i);
+}
+updateLightCount();
+
+// Create an entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(0.2, 0.2, 0.2),
+    farClip: 2000,
+    nearClip: 1
+});
+app.root.addChild(camera);
+camera.setLocalPosition(300 * Math.sin(0), 150, 300 * Math.cos(0));
+
+// Add camera controls
+camera.addComponent('script');
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(0.01, 1200)
+    }
+});
+
+// Handle HUD changes - update properties on the scene
+data.on('*:set', (/** @type {string} */ path, value) => {
+    const pathArray = path.split('.');
+
+    // values only reported on the HUD
+    if (pathArray[1] === 'numLights' || pathArray[1] === 'maxLightsInfo') {
+        return;
+    }
+
+    if (pathArray[1] === 'static') {
+        lightsStatic = value;
+        updateLightCount();
+    } else if (pathArray[1] === 'atlasSplit') {
+        // Assign atlas split option
+        lighting.atlasSplit = splitOptions[value];
+    } else if (pathArray[1] === 'debug') {
+        // debug rendering of lighting clusters on world layer
+        lighting.debugLayer = value ? app.scene.layers.getLayerByName('World').id : undefined;
+    } else if (pathArray[1] === 'use16BitIndex') {
+        // switch the light grid between an 8bit and a 16bit light index
+        lighting.maxLights = value ? maxLights16Bit : 255;
+
+        // the requested value is limited by the device, so report the value actually used
+        data.set('settings.maxLightsInfo', lighting.maxLights);
+    } else if (pathArray[1] === 'debugAtlas') {
+        // Show debug atlas
+        debugAtlas = value;
+    } else if (pathArray[1] === 'shadowIntensity') {
+        for (let i = 0; i < spotLightList.length; i++) {
+            spotLightList[i].light.shadowIntensity = value;
+        }
+    } else if (pathArray[1] === 'cookieIntensity') {
+        for (let i = 0; i < spotLightList.length; i++) {
+            spotLightList[i].light.cookieIntensity = value;
+        }
+    } else {
+        lighting[pathArray[1]] = value;
+    }
+});
+
+function updateLightCount() {
+    // Update the number on HUD
+    data.set('settings.numLights', spotLightList.length);
+
+    // Shadow update mode (need to force render shadow when we add / remove light, as they all move)
+    spotLightList.forEach((spot) => {
+        spot.light.shadowUpdateMode = lightsStatic ? SHADOWUPDATE_THISFRAME : SHADOWUPDATE_REALTIME;
+    });
+}
+
+// Add light button handler
+data.on('add', () => {
+    if (spotLightList.length < maxLightsPerCell) {
+        createLight(spotLightList.length);
+        updateLightCount();
+    }
+});
+
+// Remove light button handler
+data.on('remove', () => {
+    if (spotLightList.length) {
+        const light = spotLightList.pop();
+        app.root.removeChild(light);
+        light.destroy();
+        updateLightCount();
+    }
+});
+
+// Set an update function on the app's update event
+let time = 0;
+app.on('update', (/** @type {number} */ dt) => {
+    // Don't move lights around when they're static
+    if (!lightsStatic) {
+        time += dt * 0.15;
+    }
+
+    // Rotate spot lights around
+    const lightPos = new Vec3();
+    spotLightList.forEach((spotlight, i) => {
+        const angle = (i / spotLightList.length) * Math.PI * 2;
+        const x = 130 * Math.sin(angle + time);
+        const z = 130 * Math.cos(angle + time);
+        lightPos.set(x, 100, z);
+        spotlight.setLocalPosition(lightPos);
+
+        lightPos.y = 0;
+        spotlight.lookAt(lightPos, Vec3.RIGHT);
+
+        spotlight.rotateLocal(90, 0, 0);
+    });
+
+    // Display cookie texture (debug feature)
+    if (debugAtlas) {
+        textures.draw(app.renderer.lightTextureAtlas.cookieAtlas, 0.05, 0.3, 0.2, 0.2);
+    }
+});

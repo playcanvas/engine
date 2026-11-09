@@ -13,7 +13,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
     SEMANTIC_POSITION, TYPE_FLOAT32,
-    PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RG11B10F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
@@ -66,6 +66,49 @@ class GraphicsDevice extends EventHandler {
      *     console.log(`The canvas was resized to ${width}x${height}`);
      * });
      */
+
+    /**
+     * Fired when the graphics context or device is lost, for example after a GPU driver reset or
+     * a GPU process crash. Rendering is paused while the device is lost, and the engine attempts
+     * to restore it. Stop application-owned GPU work, and do not assume that the `devicerestored`
+     * event follows, as recovery is not guaranteed.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('devicelost', () => {
+     *     console.log('The graphics device was lost');
+     * });
+     */
+    static EVENT_DEVICELOST = 'devicelost';
+
+    /**
+     * Fired when the graphics context or device has been restored after a loss, and rendering
+     * resumes. The engine recreates its GPU resources, but content generated on the GPU, such as
+     * the contents of render targets and storage buffers, or runtime baked lightmaps, is lost and
+     * needs to be generated again.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('devicerestored', () => {
+     *     // regenerate the content generated on the GPU
+     * });
+     */
+    static EVENT_DEVICERESTORED = 'devicerestored';
+
+    /**
+     * Fired when the graphics device could not be restored after a loss, for example when the
+     * browser blocks access to the GPU after repeated GPU process crashes. The device stays lost,
+     * and the `devicerestored` event does not follow. The handler is passed the error that caused
+     * the failure. Only fired by a WebGPU device, as the browser does not report a WebGL context
+     * that cannot be restored.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('devicerestorefailed', (error) => {
+     *     console.error(`The graphics device could not be restored: ${error.message}`);
+     * });
+     */
+    static EVENT_DEVICERESTOREFAILED = 'devicerestorefailed';
 
     /**
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
@@ -567,8 +610,9 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
-     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
-     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     * API. When supported, an HTML element with the `drawable` attribute, appended to a canvas with
+     * the `content="drawable"` attribute, can be passed to {@link Texture#setSource} and rendered as
+     * a live texture in the 3D scene.
      *
      * @type {boolean}
      * @readonly
@@ -592,7 +636,7 @@ class GraphicsDevice extends EventHandler {
     textureHalfFloatRenderable;
 
     /**
-     * True if small-float textures with format {@link PIXELFORMAT_111110F} can be used as a frame
+     * True if small-float textures with format {@link PIXELFORMAT_RG11B10F} can be used as a frame
      * buffer. This is always true on WebGL2, but optional on WebGPU device.
      *
      * @type {boolean}
@@ -792,6 +836,8 @@ class GraphicsDevice extends EventHandler {
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
+        this._computeDispatchesPerFrame = 0;
+        this._computePassesPerFrame = 0;
 
         this._primitiveCount = 0;
         this._renderTargetCreationTime = 0;
@@ -1317,15 +1363,26 @@ class GraphicsDevice extends EventHandler {
     // ---- deprecated block end ----
 
     /**
-     * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
-     * operation is disabled.
+     * Sets the specified stencil state. If both stencilFront and stencilBack are null or not
+     * specified, stencil operation is disabled.
      *
-     * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
-     * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
+     * @param {StencilParameters|null} [stencilFront] - The front stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilBack is.
+     * @param {StencilParameters|null} [stencilBack] - The back stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilFront is.
      */
     setStencilState(stencilFront, stencilBack) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
         Debug.assert(false);
     }
 
@@ -1397,8 +1454,10 @@ class GraphicsDevice extends EventHandler {
      * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
      * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
      * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
-     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
-     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     * @param {StencilParameters|null} [stencilFront] - Front stencil parameters. When neither the
+     * front nor the back stencil parameters are specified, stencil operation is disabled, see
+     * {@link GraphicsDevice#setStencilState}.
+     * @param {StencilParameters|null} [stencilBack] - Back stencil parameters.
      */
     setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
         cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
@@ -1575,7 +1634,7 @@ class GraphicsDevice extends EventHandler {
      * using the currently set index buffer and false otherwise.
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
-     * Defaults to 1.
+     * Zero renders nothing, unless draw commands are provided. Defaults to 1.
      * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
@@ -1628,7 +1687,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
-     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     * Used for the HTML-in-Canvas API.
      *
      * @param {*} texture - Texture source data.
      * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or
@@ -1645,7 +1704,8 @@ class GraphicsDevice extends EventHandler {
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
      * specified width and height values will be multiplied by the value of {@link maxPixelRatio}
-     * to give the final resultant width and height for the canvas.
+     * to give the final resultant width and height for the canvas. A resultant width or height of
+     * zero is ignored and the current resolution is kept.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -1655,6 +1715,15 @@ class GraphicsDevice extends EventHandler {
         const pixelRatio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
         const w = Math.floor(width * pixelRatio);
         const h = Math.floor(height * pixelRatio);
+
+        // a hidden or collapsed canvas reports a zero client size, which browsers can also do
+        // briefly during a layout change. Nothing can be rendered at that size: WebGPU cannot
+        // create a zero-size swapchain texture or render target, and WebGL framebuffers become
+        // incomplete. Keep the current resolution until a real size arrives.
+        if (w === 0 || h === 0) {
+            return;
+        }
+
         if (w !== this.canvas.width || h !== this.canvas.height) {
             this.setResolution(w, h);
         }
@@ -1880,7 +1949,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_R16F}
      * - {@link PIXELFORMAT_R32F}
      * - {@link PIXELFORMAT_RG16F}
@@ -1902,12 +1971,12 @@ class GraphicsDevice extends EventHandler {
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
 
-                case PIXELFORMAT_111110F: {
+                case PIXELFORMAT_RG11B10F: {
                     if (this.textureRG11B10Renderable) {
                         return format;
                     }

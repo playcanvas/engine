@@ -4,7 +4,7 @@ export default /* wgsl */`
 uniform means_mins: vec3f;
 uniform means_maxs: vec3f;
 
-#ifndef SOG_V2
+#if SOG_VERSION < 2
     // V1: linear min/max dequantization (no codebooks)
     uniform scales_mins: vec3f;
     uniform scales_maxs: vec3f;
@@ -16,12 +16,12 @@ uniform means_maxs: vec3f;
 const SH_C0: f32 = 0.28209479177387814;
 const norm: f32 = sqrt(2.0);
 
-#ifdef SOG_V2
-    // 256x1 RGBA32F LUT:
+#if SOG_VERSION >= 2
+    // 256x1 RGBA32F LUT (V2 and V3):
     //   .r = scales codebook, .g = sh0 codebook, .b = shN codebook, .a unused
-    fn lutScales(b: i32) -> f32 { return textureLoad(sogCodebook, vec2i(b, 0), 0).r; }
-    fn lutSh0(b: i32) -> f32    { return textureLoad(sogCodebook, vec2i(b, 0), 0).g; }
-    fn lutShN(b: i32) -> f32    { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }
+    fn lutScales(b: i32) -> f32  { return textureLoad(sogCodebook, vec2i(b, 0), 0).r; }
+    fn lutSh0(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).g; }
+    fn lutShN(b: i32) -> f32     { return textureLoad(sogCodebook, vec2i(b, 0), 0).b; }
 #endif
 
 // geometry getters are provided by gsplatWorkBufferGeometryPS when sourcing from the work buffer
@@ -36,6 +36,22 @@ fn getCenter() -> vec3f {
     return sign(v) * (exp(abs(v)) - 1.0);
 }
 
+#if SOG_VERSION >= 3
+// decode rotation quaternion from a 24-bit exponential map, one byte in each of the means_l,
+// means_u and scales alpha channels: p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
+fn getRotation() -> vec4f {
+    let b = floor(vec3f(
+        textureLoad(means_l, splat.uv, 0).w,
+        textureLoad(means_u, splat.uv, 0).w,
+        textureLoad(scales, splat.uv, 0).w
+    ) * 255.0 + 0.5);
+    let p = (b - 128.0) / 127.0;
+    let len = length(p);
+    let t = len * 1.5707963267948966;
+    let v = select(p * 1.5707963267948966, p * (sin(t) / len), len > 1e-6);
+    return vec4f(cos(t), v);
+}
+#else
 // decode rotation quaternion (3 components + 2-bit mode selecting the omitted axis)
 fn getRotation() -> vec4f {
     let q = textureLoad(quats, splat.uv, 0);
@@ -55,11 +71,12 @@ fn getRotation() -> vec4f {
     }
     return quat;
 }
+#endif
 
 fn getScale() -> vec3f {
     let s = textureLoad(scales, splat.uv, 0).xyz;
     var logS: vec3f;
-    #ifdef SOG_V2
+    #if SOG_VERSION >= 2
         let i = vec3i(s * 255.0 + 0.5);
         logS = vec3f(lutScales(i.x), lutScales(i.y), lutScales(i.z));
     #else
@@ -74,10 +91,17 @@ fn getColor() -> vec4f {
     let c = textureLoad(sh0, splat.uv, 0);
     var rgb: vec3f;
     var alpha: f32;
-    #ifdef SOG_V2
+    #if SOG_VERSION >= 2
         let i = vec3i(c.xyz * 255.0 + 0.5);
         rgb = vec3f(lutSh0(i.x), lutSh0(i.y), lutSh0(i.z));
-        alpha = c.w;
+        #if SOG_VERSION >= 3
+            // true opacity (1.25 * byte / 255)^2: 0..1.5625, above 1 for merged (decimated)
+            // gaussians (see gsplatHelpersVS)
+            let o = 1.25 * c.w;
+            alpha = o * o;
+        #else
+            alpha = c.w;
+        #endif
     #else
         rgb = mix(uniform.sh0_mins.xyz, uniform.sh0_maxs.xyz, c.xyz);
         let logitAlpha = mix(uniform.sh0_mins.w, uniform.sh0_maxs.w, c.w);

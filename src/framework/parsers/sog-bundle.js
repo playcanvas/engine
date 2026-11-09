@@ -272,8 +272,16 @@ class SogBundleParser {
                 return;
             }
 
-            // extract filenames from meta.json
-            const filenames = ['means', 'scales', 'quats', 'sh0', 'shN'].map(key => meta[key]?.files ?? []).flat();
+            if (meta.version !== undefined && meta.version !== 2 && meta.version !== 3) {
+                callback(`Error loading gsplat: unsupported SOG version ${meta.version} in ${url.original}`);
+                return;
+            }
+
+            // extract filenames from meta.json (v3 has no quats and may carry blind data)
+            const filenames = [
+                ...['means', 'scales', 'quats', 'sh0', 'shN'].map(key => meta[key]?.files ?? []).flat(),
+                ...(meta.blind ?? []).map(t => t.files[0])
+            ];
 
             const promises = [];
             for (const filename of filenames) {
@@ -315,7 +323,7 @@ class SogBundleParser {
 
             Object.values(textures).forEach(t => this.app.assets.load(t));
 
-            await Promise.allSettled(promises);
+            const results = await Promise.allSettled(promises);
 
             if (this._shouldAbort(asset, unloaded)) {
                 // Clean up texture assets that were created during the async load
@@ -324,6 +332,17 @@ class SogBundleParser {
                     t.unload();
                 });
                 callback(null, null);
+                return;
+            }
+
+            // a texture that failed to load has no resource, so fail the whole load
+            const failed = results.findIndex(r => r.status === 'rejected');
+            if (failed !== -1) {
+                Object.values(textures).forEach((t) => {
+                    assets.remove(t);
+                    t.unload();
+                });
+                callback(`Error loading gsplat: failed to load ${filenames[failed]} in ${url.original}: ${results[failed].reason}`);
                 return;
             }
 
@@ -347,11 +366,12 @@ class SogBundleParser {
             data.numSplats = meta.count;
             data.means_l = textures[meta.means.files[0]].resource;
             data.means_u = textures[meta.means.files[1]].resource;
-            data.quats = textures[meta.quats.files[0]].resource;
+            data.quats = meta.quats ? textures[meta.quats.files[0]].resource : null;
             data.scales = textures[meta.scales.files[0]].resource;
             data.sh0 = textures[meta.sh0.files[0]].resource;
             data.sh_centroids = textures[meta.shN?.files[0]]?.resource;
             data.sh_labels = textures[meta.shN?.files[1]]?.resource;
+            data.blind = (meta.blind ?? []).map(t => textures[t.files[0]].resource);
             data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
 
             if (!decompress) {
@@ -384,6 +404,7 @@ class SogBundleParser {
             const resource = decompress ?
                 new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
                 new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+            resource.antiAlias = data.meta.model === 'antialiased';
 
             // the sog resource now owns the textures in `data` (when decompressing, the
             // decompressed data was copied out instead and the textures stay with the assets)

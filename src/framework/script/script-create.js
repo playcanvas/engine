@@ -58,8 +58,9 @@ function createScript(name, app) {
     scriptType.prototype = Object.create(ScriptType.prototype);
     scriptType.prototype.constructor = scriptType;
 
-    scriptType.extend = ScriptType.extend;
-    scriptType.attributes = new ScriptAttributes(scriptType);
+    // inherit the static members as well, as a class extending ScriptType does, which includes
+    // `extend` and the `attributes` getter that creates the attributes owned by this script type
+    Object.setPrototypeOf(scriptType, ScriptType);
 
     registerScript(scriptType, name, app);
     return scriptType;
