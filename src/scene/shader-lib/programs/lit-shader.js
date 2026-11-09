@@ -15,7 +15,7 @@ import {
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
-    ditherNames,
+    ditherNames, DITHER_NONE,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -247,6 +247,14 @@ class LitShader {
         if (options.useRefraction && options.useDynamicRefraction && this.shaderPassInfo.isForward) {
             vDefines.set('LIT_DYNAMIC_REFRACTION', true);
             varyings.set('vModelScale', 'vec3');
+        }
+
+        // opacity dithering, which uses a per-mesh value derived from the model matrix to offset the
+        // dither pattern, so that overlapping meshes do not all discard the same pixels
+        const ditherMode = this.shaderPassInfo.isForward ? options.opacityDither : options.opacityShadowDither;
+        if (ditherMode !== DITHER_NONE) {
+            this.sharedDefineSet(true, 'LIT_DITHER_ID', true);
+            varyings.set('vDitherId', 'float');
         }
 
         if (this.needsNormal) vDefines.set('NORMALS', true);
