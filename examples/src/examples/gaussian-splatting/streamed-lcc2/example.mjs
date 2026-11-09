@@ -1,6 +1,6 @@
 // @config
 //
-// Demonstrates streaming an XGRIDS LCC2 level of detail scene of Gaussian Splats.
+// Demonstrates streaming an XGRIDS LCC2 level of detail scene of Gaussian Splats, whose splat files can be stored as either SOG or SPZ.
 //
 // @credit
 // title: Tunis
@@ -31,15 +31,24 @@ import {
     TextureHandler,
     TouchDevice,
     Vec3,
+    WasmModule,
     createGraphicsDevice,
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
 
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
+
+// SPZ only: set up the ZSTD decompression module, used by the spz parser for version 4 files.
+// Version 3 files are gzip compressed, and do not need it. Not needed for SOG scenes.
+WasmModule.setConfig('ZstdDecoderModule', {
+    glueUrl: './assets/wasm/zstd/zstd.wasm.js',
+    wasmUrl: './assets/wasm/zstd/zstd.wasm.wasm'
+});
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -61,11 +70,18 @@ createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [CameraComponentSystem, ScriptComponentSystem, GSplatComponentSystem];
-// the splat files are SOG bundles, whose data loads as textures
+// SOG only: the splat files are SOG bundles, whose data loads as textures. SPZ files do not need
+// the texture handler.
 createOptions.resourceHandlers = [TextureHandler, ScriptHandler, GSplatHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// SPZ only: register the spz parser, which is not part of the engine, with the gsplat resource
+// handler. The scene's `.lcc2` file states its chunk format, and the chunks are loaded by file
+// extension.
+const gsplatHandler = /** @type {GSplatHandler} */ (app.loader.getHandler('gsplat'));
+gsplatHandler.addParser(new SpzParser(app));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
