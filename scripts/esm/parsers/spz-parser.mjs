@@ -629,10 +629,22 @@ class SpzParser {
             unloaded = true;
         });
 
+        // completes a load which was aborted, without reporting an error
+        const abort = () => callback(null, null);
+
+        // reports an error, unless loading was aborted in the meantime
+        const fail = (err) => {
+            if (this._shouldAbort(asset, unloaded)) {
+                abort();
+            } else {
+                callback(err);
+            }
+        };
+
         // parses the data and creates the resource, unless loading was aborted in the meantime
         const finish = (parse) => {
             if (this._shouldAbort(asset, unloaded)) {
-                callback(null, null);
+                abort();
                 return;
             }
 
@@ -651,7 +663,7 @@ class SpzParser {
 
         this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, data) => {
             if (err) {
-                callback(err);
+                fail(err);
                 return;
             }
 
@@ -659,13 +671,13 @@ class SpzParser {
             if (isGzip(data)) {
                 gunzip(data).then(
                     decompressed => finish(() => parseSpzV3(decompressed)),
-                    e => callback(e)
+                    fail
                 );
                 return;
             }
 
             if (!WasmModule.getConfig('ZstdDecoderModule')) {
-                callback('SpzParser: ZSTD decoder module is not registered. Use WasmModule.setConfig(\'ZstdDecoderModule\', { glueUrl, wasmUrl }) before loading spz version 4 files.');
+                fail('SpzParser: ZSTD decoder module is not registered. Use WasmModule.setConfig(\'ZstdDecoderModule\', { glueUrl, wasmUrl }) before loading spz version 4 files.');
                 return;
             }
 
