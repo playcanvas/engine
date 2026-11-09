@@ -272,6 +272,13 @@ cameraFrame.bloom.intensity = 0.01;
 cameraFrame.vignette.intensity = 0.4;
 cameraFrame.update();
 
+// Downloads and parses can still be in flight when the example is switched. Disposing the
+// renderers aborts them, so they do not touch the destroyed asset registry and device.
+app.on('destroy', () => {
+    groundTiles.dispose();
+    skyTiles.dispose();
+});
+
 app.on('update', () => {
     groundTiles.errorTarget = data.get('data.tiles.errorTarget');
     skyTiles.errorTarget = data.get('data.tiles.errorTarget');
