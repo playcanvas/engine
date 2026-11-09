@@ -567,9 +567,9 @@ const defaultElementFilter = val => true;
 
 /**
  * Returns whether the header comments record that the splats were trained with anti-aliasing, in
- * the form Postshot writes (`antialiased 1`) or the one Brush and splat-transform write
- * (`SplatRenderMode: mip`). As in those tools, matching is case-insensitive and the last matching
- * comment wins.
+ * the form Postshot writes (`postshot.anti_aliasing=1`, omitted without anti-aliasing) or the one
+ * Brush and splat-transform write (`SplatRenderMode: mip`). As in those tools, matching is
+ * case-insensitive and the last matching comment wins.
  *
  * @param {string[]} comments - The header comments, without the leading `comment `.
  * @returns {boolean} True if the splats were trained with anti-aliasing.
@@ -584,8 +584,8 @@ const isAntiAliased = (comments) => {
             if (mode === 'mip' || mode === 'default' || mode === '2dgs') {
                 antiAliased = mode === 'mip';
             }
-        } else if (lower.startsWith('antialiased ')) {
-            const value = lower.substring(12).trim();
+        } else if (lower.startsWith('postshot.anti_aliasing=')) {
+            const value = lower.substring(23).trim();
             if (value === '1' || value === '0') {
                 antiAliased = value === '1';
             }

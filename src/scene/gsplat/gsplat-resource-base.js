@@ -330,8 +330,8 @@ class GSplatResourceBase {
     /**
      * Sets whether the splats were trained with anti-aliasing (a screen-space filter with opacity
      * compensation, as in Mip-Splatting), which they need to be rendered with to look right. Loaded
-     * resources set this from the file, when it records the training mode: the `antialiased 1` or
-     * `SplatRenderMode: mip` PLY header comment, the `model` field of a SOG file, or the
+     * resources set this from the file, when it records the training mode: the
+     * `postshot.anti_aliasing=1` or `SplatRenderMode: mip` PLY header comment, the `model` field of a SOG file, or the
      * anti-aliased flag of an SPZ file. Set it for files that do not record the training mode.
      * Used when {@link GSplatParams#antiAlias} is undefined, its default. Defaults to false.
      *

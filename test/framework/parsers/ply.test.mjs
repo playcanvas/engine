@@ -44,8 +44,15 @@ describe('isAntiAliased', function () {
     });
 
     it('reads the Postshot comment', function () {
-        expect(isAntiAliased(['antialiased 1'])).to.equal(true);
-        expect(isAntiAliased(['antialiased 0'])).to.equal(false);
+        // the header comments of a Postshot v1.1.69 export trained with anti-aliasing
+        expect(isAntiAliased(['Postshot v1.1.69', 'postshot.anti_aliasing=1', 'postshot.color.primaries=sRGB', 'postshot.color.eotf=sRGB'])).to.equal(true);
+        // without anti-aliasing Postshot omits the line
+        expect(isAntiAliased(['Postshot v1.1.69', 'postshot.color.eotf=sRGB'])).to.equal(false);
+        expect(isAntiAliased(['postshot.anti_aliasing=0'])).to.equal(false);
+    });
+
+    it('does not read `antialiased 1`, which no producer writes', function () {
+        expect(isAntiAliased(['antialiased 1'])).to.equal(false);
     });
 
     it('reads the Brush and splat-transform comment', function () {
@@ -55,17 +62,17 @@ describe('isAntiAliased', function () {
     });
 
     it('matches case-insensitively', function () {
-        expect(isAntiAliased(['ANTIALIASED 1'])).to.equal(true);
+        expect(isAntiAliased(['POSTSHOT.ANTI_ALIASING=1'])).to.equal(true);
         expect(isAntiAliased(['  splatrendermode:   MIP  '])).to.equal(true);
     });
 
     it('lets the last matching comment win', function () {
-        expect(isAntiAliased(['antialiased 1', 'SplatRenderMode: default'])).to.equal(false);
-        expect(isAntiAliased(['SplatRenderMode: default', 'antialiased 1'])).to.equal(true);
+        expect(isAntiAliased(['postshot.anti_aliasing=1', 'SplatRenderMode: default'])).to.equal(false);
+        expect(isAntiAliased(['SplatRenderMode: default', 'postshot.anti_aliasing=1'])).to.equal(true);
     });
 
     it('ignores unrecognized values', function () {
-        expect(isAntiAliased(['antialiased 1', 'antialiased maybe'])).to.equal(true);
+        expect(isAntiAliased(['postshot.anti_aliasing=1', 'postshot.anti_aliasing=maybe'])).to.equal(true);
         expect(isAntiAliased(['SplatRenderMode: mip', 'SplatRenderMode: unknown'])).to.equal(true);
     });
 });
