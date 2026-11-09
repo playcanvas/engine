@@ -127,17 +127,27 @@ class GSplatResource extends GSplatResourceBase {
 
         const SH_C0 = 0.28209479177387814;
 
-        for (let i = 0; i < this.numSplats; ++i) {
-            const r = (cr[i] * SH_C0 + 0.5);
-            const g = (cg[i] * SH_C0 + 0.5);
-            const b = (cb[i] * SH_C0 + 0.5);
-            // opacity_linear always wins, drawn up to 1.5625, the top of the SOG v3 opacity byte (see gsplatHelpersVS)
-            const a = linear ? Math.min(linear[i], 1.5625) : (activated ? ca[i] : 1 / (1 + Math.exp(-ca[i])));
+        const numSplats = this.numSplats;
+        for (let i = 0; i < numSplats; ++i) {
+            data[i * 4 + 0] = float2Half(cr[i] * SH_C0 + 0.5);
+            data[i * 4 + 1] = float2Half(cg[i] * SH_C0 + 0.5);
+            data[i * 4 + 2] = float2Half(cb[i] * SH_C0 + 0.5);
+        }
 
-            data[i * 4 + 0] = float2Half(r);
-            data[i * 4 + 1] = float2Half(g);
-            data[i * 4 + 2] = float2Half(b);
-            data[i * 4 + 3] = float2Half(a);
+        // alpha: the source is the same for every splat, so choose it once
+        if (linear) {
+            // opacity_linear always wins, drawn up to 1.5625, the top of the SOG v3 opacity byte (see gsplatHelpersVS)
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(Math.min(linear[i], 1.5625));
+            }
+        } else if (activated) {
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(ca[i]);
+            }
+        } else {
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(1 / (1 + Math.exp(-ca[i])));
+            }
         }
 
         texture.unlock();

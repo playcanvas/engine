@@ -57,6 +57,9 @@ class SplatIterator {
             return t / (1 + t);
         };
 
+        // the alpha source is the same for every splat, so choose it once
+        const alpha = linear ? i => linear[i] : (activated ? i => ca[i] : i => sigmoid(ca[i]));
+
         this.read = (i) => {
             if (p) {
                 p.x = x[i];
@@ -81,7 +84,7 @@ class SplatIterator {
                     0.5 + cr[i] * SH_C0,
                     0.5 + cg[i] * SH_C0,
                     0.5 + cb[i] * SH_C0,
-                    linear ? linear[i] : (activated ? ca[i] : sigmoid(ca[i]))
+                    alpha(i)
                 );
             }
         };
