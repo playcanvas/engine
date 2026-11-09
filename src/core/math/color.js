@@ -34,34 +34,6 @@ const linearToSrgb = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 
  */
 class Color {
     /**
-     * The red component of the color.
-     *
-     * @type {number}
-     */
-    r;
-
-    /**
-     * The green component of the color.
-     *
-     * @type {number}
-     */
-    g;
-
-    /**
-     * The blue component of the color.
-     *
-     * @type {number}
-     */
-    b;
-
-    /**
-     * The alpha component of the color.
-     *
-     * @type {number}
-     */
-    a;
-
-    /**
      * Creates a new Color instance.
      *
      * @overload
@@ -91,16 +63,43 @@ class Color {
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
         if (length === 3 || length === 4) {
-            this.r = r[0];
-            this.g = r[1];
-            this.b = r[2];
-            this.a = r[3] ?? 1;
-        } else {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
+            a = r[3] ?? 1;
+            b = r[2];
+            g = r[1];
+            r = r[0];
         }
+
+        // Fields are assigned once here instead of declared as class fields. A declaration without
+        // an initializer stores undefined first, so V8 never unboxes the field as a double and
+        // every fractional write allocates a heap number.
+
+        /**
+         * The red component of the color.
+         *
+         * @type {number}
+         */
+        this.r = r;
+
+        /**
+         * The green component of the color.
+         *
+         * @type {number}
+         */
+        this.g = g;
+
+        /**
+         * The blue component of the color.
+         *
+         * @type {number}
+         */
+        this.b = b;
+
+        /**
+         * The alpha component of the color.
+         *
+         * @type {number}
+         */
+        this.a = a;
     }
 
     /**
