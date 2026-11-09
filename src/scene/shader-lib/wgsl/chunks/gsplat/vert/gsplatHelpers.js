@@ -32,7 +32,7 @@ fn gsplatFootprintSmallerThan(a: f32, b: f32, c: f32, size: f32) -> bool {
 }
 
 // Over-unity opacity: a gaussian whose opacity A exceeds 1 - the mass of several gaussians merged by
-// decimation, stored by SOG v3 and the PLY opacity_excess column up to 1.5625, the top of the SOG v3
+// decimation, stored by SOG v3 and the PLY opacity_linear column up to 1.5625, the top of the SOG v3
 // opacity byte - is drawn with peak alpha 1 as an opaque core of radius u0, a fraction of the quad, with the
 // plain gaussian's falloff stretched over the rest of the quad: normExp(((r - u0) / (1 - u0))^2), r = |uv|.
 // The quad, culls and extent are therefore the plain gaussian's, and u0 = 0 is the plain gaussian.
