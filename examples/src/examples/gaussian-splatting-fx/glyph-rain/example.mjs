@@ -166,7 +166,17 @@ const PRESETS = [
 
     // Snowfall - pale glyphs in a blizzard over the room in its own colors
     createPreset({
-        glyph: { percent: 4, size: 0.03, snap: false, swaps: 0.2, brightness: 1.2, glow: 0.7, shading: 0.2, color: [0.85, 0.92, 1], head: [1, 1, 1] },
+        glyph: {
+            percent: 4,
+            size: 0.03,
+            snap: false,
+            swaps: 0.2,
+            brightness: 1.2,
+            glow: 0.7,
+            shading: 0.2,
+            color: [0.85, 0.92, 1],
+            head: [1, 1, 1]
+        },
         rain: { trail: 10, head: 0 },
         fall: { distance: 1.5, speed: 0.15 },
         others: { density: 1, maxSize: 0.05, opacity: 1, brightness: 0.6, tint: 0.15, rain: 0 },
@@ -176,7 +186,15 @@ const PRESETS = [
 
     // Deep Sea - teal glyphs rising like bubbles through a blue room swaying as if under water
     createPreset({
-        glyph: { percent: 4, size: 0.035, snap: false, swaps: 0.5, glow: 0.3, color: [0.05, 0.55, 0.75], head: [0.7, 1, 1] },
+        glyph: {
+            percent: 4,
+            size: 0.035,
+            snap: false,
+            swaps: 0.5,
+            glow: 0.3,
+            color: [0.05, 0.55, 0.75],
+            head: [0.7, 1, 1]
+        },
         rain: { speed: 5, trail: 25, spacing: 90 },
         fall: { distance: 1.2, speed: -0.15 },
         others: { density: 1, maxSize: 0.02, opacity: 0.8, brightness: 0.35, tint: 0.85, rain: 0.6 },
@@ -196,7 +214,18 @@ const PRESETS = [
 
     // Uplink - blue glyphs rising a short way through a blue tinted room
     createPreset({
-        glyph: { percent: 12, size: 0.03, snap: true, swaps: 2.6, brightness: 2.22, glow: 0.5, shading: 0.6, opacity: 1, color: [0.2, 0.6, 1], head: [0.9, 0.95, 1] },
+        glyph: {
+            percent: 12,
+            size: 0.03,
+            snap: true,
+            swaps: 2.6,
+            brightness: 2.22,
+            glow: 0.5,
+            shading: 0.6,
+            opacity: 1,
+            color: [0.2, 0.6, 1],
+            head: [0.9, 0.95, 1]
+        },
         rain: { speed: 18.3, trail: 16, spacing: 77, head: 0.62 },
         fall: { distance: 0.33, speed: -0.6 },
         others: { density: 0.5, maxSize: 0.037, opacity: 0.46, brightness: 0.35, tint: 0.69, rain: 0.5 },
@@ -245,7 +274,7 @@ data.set('animate', true);
 data.set('fadeDuration', 2);
 data.set('holdDuration', 3);
 data.set('autoPlay', true);
-data.set('preset', 0);    // None
+data.set('preset', 0); // None
 
 // start on the preset, without a fade, so auto play holds it for the hold duration
 applyPreset();

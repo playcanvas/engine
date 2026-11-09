@@ -16,7 +16,13 @@ import {
 
 // in the order of the presets in the example
 const PRESET_NAMES = [
-    'None', 'Neon Cyan', 'Ghost Room', 'Snowfall', 'Deep Sea', 'Hologram', 'Uplink'
+    'None',
+    'Neon Cyan',
+    'Ghost Room',
+    'Snowfall',
+    'Deep Sea',
+    'Hologram',
+    'Uplink'
 ];
 
 /**
@@ -67,10 +73,7 @@ export function Controls({ observer }) {
      */
     const color = (text, path) => (
         <LabelGroup text={text}>
-            <ColorPicker
-                binding={new BindingTwoWay()}
-                link={{ observer, path }}
-            />
+            <ColorPicker binding={new BindingTwoWay()} link={{ observer, path }} />
         </LabelGroup>
     );
 
