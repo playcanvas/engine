@@ -50,6 +50,10 @@ class ResourceLoader {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
+
+        // callbacks cancelled from a pending request, by request
+        this._cancelled = new WeakMap();
+
         this._app = app;
     }
 
@@ -184,11 +188,20 @@ class ResourceLoader {
 
                 handler.load(urlObj, (err, data, extra) => {
                     if (self._requests[key] !== requests) {
-                        // every callback cancelled the request, so nothing owns its result
-                        if (requests.length === 0 && !err && data !== null && data !== undefined) {
-                            self._discard(handler, urlObj.original, data, asset);
+                        // every callback cancelled the request, otherwise the loader was destroyed
+                        if (requests.length === 0 && !err) {
+                            if (data === null || data === undefined) {
+                                // the handler cancelled too, which completes the cancelled
+                                // callbacks without a resource
+                                const cancelled = self._cancelled.get(requests) ?? [];
+                                for (let i = 0; i < cancelled.length; i++) {
+                                    cancelled[i](null, null);
+                                }
+                            } else {
+                                // nothing owns the resource
+                                self._discard(handler, urlObj.original, data, asset);
+                            }
                         }
-                        // otherwise the loader was destroyed by now
                         return;
                     }
 
@@ -261,7 +274,8 @@ class ResourceLoader {
     /**
      * Stop delivering the result of a pending request to a callback. Once no callbacks are left
      * the request is abandoned: a later load of the same resource starts a new request, and the
-     * resource the abandoned request produces is destroyed.
+     * resource the abandoned request produces is destroyed. A handler that cancels as well and
+     * delivers no resource still completes the cancelled callbacks, without a resource.
      *
      * @param {string} url - The URL of the resource.
      * @param {string} type - The type of resource.
@@ -277,6 +291,14 @@ class ResourceLoader {
         }
 
         requests.splice(index, 1);
+
+        const cancelled = this._cancelled.get(requests);
+        if (cancelled) {
+            cancelled.push(callback);
+        } else {
+            this._cancelled.set(requests, [callback]);
+        }
+
         if (requests.length === 0) {
             delete this._requests[key];
         }
@@ -474,6 +496,7 @@ class ResourceLoader {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
+        this._cancelled = new WeakMap();
         this._app = null;
     }
 }

@@ -525,9 +525,12 @@ class AssetRegistry extends EventHandler {
             }
 
             // the asset was unloaded while this load was in flight, so neither its result nor its
-            // error belongs to the asset any more
+            // error belongs to the asset any more; a handler that cancelled on unload delivers no
+            // resource, which completes the asset as before unless it is loading again
             if (asset._unloadCount !== unloadCount) {
-                return;
+                if (err || (resource !== null && resource !== undefined) || asset.loading) {
+                    return;
+                }
             }
 
             asset.loaded = true;
