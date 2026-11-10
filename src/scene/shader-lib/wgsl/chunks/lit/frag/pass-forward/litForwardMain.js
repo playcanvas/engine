@@ -12,6 +12,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     // the lighting is evaluated at the rasterized position, unless the front end sets another
     litArgs_worldPosition = vPositionW;
+    dViewDepth = 1.0 / pcPosition.w;
 
     #include "litUserMainStartPS"
 

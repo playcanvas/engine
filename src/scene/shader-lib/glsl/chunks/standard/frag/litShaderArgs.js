@@ -12,9 +12,8 @@ vec3 litArgs_emission;
 // Normal direction in world space
 vec3 litArgs_worldNormal;
 
-// Position in world space the lighting is evaluated at, the rasterized position unless the front end
-// sets it. A front end setting it also sets dVertexNormalW and dViewDirW to match
-vec3 litArgs_worldPosition;
+// The world position the lighting is evaluated at, litArgs_worldPosition, is declared by
+// litForwardDeclarationPS, as the fog reads it before a front end declares these
 
 // Ambient occlusion amount, range [0..1]
 float litArgs_ao;

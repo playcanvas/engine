@@ -1,6 +1,14 @@
 // shader declarations for the lit material for forward rendering
 export default /* glsl */`
 
+// The world position the lighting is evaluated at, and its view depth, which selects the shadow
+// cascade and limits the shadow distance. Both are the rasterized fragment's unless the front end sets
+// them; a front end setting the position also sets dVertexNormalW, dViewDirW and dViewDepth to match.
+// The position is declared here rather than with the other litArgs, as the fog reads it before a
+// front end declares those
+vec3 litArgs_worldPosition;
+float dViewDepth;
+
 // globals
 vec3 sReflection;
 vec3 dVertexNormalW;

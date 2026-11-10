@@ -64,7 +64,7 @@ export default /* glsl */`
 
         #if LIGHT{i}TYPE == DIRECTIONAL
             // Beyond the shadow distance, skip cascade selection and shadow-map sampling.
-            if (1.0 / gl_FragCoord.w > light{i}_shadowCascadeDistances.w) {
+            if (dViewDepth > light{i}_shadowCascadeDistances.w) {
                 return 1.0;
             }
         #endif

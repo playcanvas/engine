@@ -4,7 +4,7 @@ export default /* glsl */`
 int getShadowCascadeIndex(vec4 shadowCascadeDistances, int shadowCascadeCount) {
 
     // depth in 0 .. far plane range
-    float depth = 1.0 / gl_FragCoord.w;
+    float depth = dViewDepth;
 
     // 1.0 if depth >= distance, 0.0 otherwise
     vec4 comparisons = step(shadowCascadeDistances, vec4(depth));
@@ -22,7 +22,7 @@ int ditherShadowCascadeIndex(int cascadeIndex, vec4 shadowCascadeDistances, int 
     if (cascadeIndex < shadowCascadeCount - 1) {
         float currentRangeEnd = shadowCascadeDistances[cascadeIndex];
         float transitionStart = blendFactor * currentRangeEnd; // Start overlap factor away from the end distance
-        float depth = 1.0 / gl_FragCoord.w;
+        float depth = dViewDepth;
 
         if (depth > transitionStart) {
             // Calculate a transition factor (0.0 to 1.0) within the overlap range
