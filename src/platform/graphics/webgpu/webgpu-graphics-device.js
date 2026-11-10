@@ -379,6 +379,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     externalBackbuffer = null;
 
     /**
+     * True between {@link WebgpuGraphicsDevice#frameStart} and {@link WebgpuGraphicsDevice#frameEnd},
+     * when the backbuffer has a color texture of the current frame assigned. Used to detect
+     * rendering to the backbuffer outside of this window, where the assigned texture is stale.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _backBufferValid = false;
+
+    /**
      * Current command buffer encoder.
      *
      * @type {GPUCommandEncoder|null}
@@ -1115,12 +1125,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // assign current frame's render texture
         wrt.assignColorTexture(outColorBuffer, attachmentViewFormat);
 
+        this._backBufferValid = true;
+
         WebgpuDebug.end(this, 'frameStart');
         WebgpuDebug.end(this, 'frameStart');
     }
 
     frameEnd() {
         super.frameEnd();
+        this._backBufferValid = false;
         this.gpuProfiler.frameEnd();
 
         // submit scheduled command buffers
@@ -1638,6 +1651,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const rt = renderPass.renderTarget || this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
+
+        // the backbuffer color texture is acquired in frameStart, before that (for example in the
+        // application 'update' event) it is the expired texture of the previous frame, or missing
+        Debug.call(() => {
+            if (rt === this.backBuffer && !this._backBufferValid && !this.xrColorTexture) {
+                Debug.errorOnce(`Render pass '${renderPass.name}' renders to the backbuffer outside of the frame (before frameStart or after frameEnd), where its color texture is not valid. Render to the backbuffer from the 'prerender' or 'postrender' application event, or from a render pass that is part of the frame, instead of for example the 'update' event.`);
+            }
+        });
 
         /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
