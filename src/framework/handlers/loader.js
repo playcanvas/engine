@@ -147,11 +147,16 @@ class ResourceLoader {
             this._requests[key].push(callback);
         } else {
             // new request
-            this._requests[key] = [callback];
+            const requests = [callback];
+            this._requests[key] = requests;
 
             const self = this;
 
             const handleLoad = function (err, urlObj) {
+                if (self._requests[key] !== requests) {
+                    return;
+                }
+
                 if (err) {
                     self._onFailure(key, err);
                     return;
@@ -159,10 +164,6 @@ class ResourceLoader {
 
                 if (urlObj.load instanceof DataView) {
                     if (handler.openBinary) {
-                        if (!self._requests[key]) {
-                            return;
-                        }
-
                         try {
                             const data = handler.openBinary(urlObj.load);
                             self._onSuccess(key, data);
@@ -182,9 +183,12 @@ class ResourceLoader {
                 }
 
                 handler.load(urlObj, (err, data, extra) => {
-                    // make sure key exists because loader
-                    // might have been destroyed by now
-                    if (!self._requests[key]) {
+                    if (self._requests[key] !== requests) {
+                        // every callback cancelled the request, so nothing owns its result
+                        if (requests.length === 0 && !err && data !== null && data !== undefined) {
+                            self._discard(handler, urlObj.original, data, asset);
+                        }
+                        // otherwise the loader was destroyed by now
                         return;
                     }
 
@@ -252,6 +256,43 @@ class ResourceLoader {
             }
         };
         handler.load(null, onLoad, asset);
+    }
+
+    /**
+     * Stop delivering the result of a pending request to a callback. Once no callbacks are left
+     * the request is abandoned: a later load of the same resource starts a new request, and the
+     * resource the abandoned request produces is destroyed.
+     *
+     * @param {string} url - The URL of the resource.
+     * @param {string} type - The type of resource.
+     * @param {ResourceLoaderCallback} callback - The callback passed to {@link ResourceLoader#load}.
+     * @ignore
+     */
+    cancel(url, type, callback) {
+        const key = ResourceLoader.makeKey(url, type);
+        const requests = this._requests[key];
+        const index = requests ? requests.indexOf(callback) : -1;
+        if (index === -1) {
+            return;
+        }
+
+        requests.splice(index, 1);
+        if (requests.length === 0) {
+            delete this._requests[key];
+        }
+    }
+
+    // destroy the resource of a request that every callback cancelled
+    _discard(handler, url, data, asset) {
+        try {
+            const resource = handler.open(url, data, asset);
+            const resources = Array.isArray(resource) ? resource : [resource];
+            for (let i = 0; i < resources.length; i++) {
+                resources[i]?.destroy?.();
+            }
+        } catch (e) {
+            // the resource could not be opened, so there is nothing to destroy
+        }
     }
 
     _onSuccess(key, result, extra) {

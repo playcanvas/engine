@@ -324,6 +324,14 @@ class Asset extends EventHandler {
     _unloadCount = 0;
 
     /**
+     * Functions that cancel the loads of this asset still in flight.
+     *
+     * @type {Function[]}
+     * @ignore
+     */
+    _cancelLoads = [];
+
+    /**
      * The error the asset's last load from a URL failed with, which
      * {@link AssetRegistry#loadFromUrl} reports again when the URL is requested again, or null.
      * A successful load, however it was asked for, and unloading clear it.
@@ -799,10 +807,16 @@ class Asset extends EventHandler {
         this.loaded = false;
         this.loadFromUrlError = null;
 
-        // a load still in flight is dropped when it completes
+        // a load still in flight no longer belongs to the asset
         if (this.loading) {
             this.loading = false;
             this._unloadCount++;
+
+            const cancelLoads = this._cancelLoads;
+            this._cancelLoads = [];
+            for (let i = 0; i < cancelLoads.length; i++) {
+                cancelLoads[i]();
+            }
         }
 
         // remove resource from loader cache
