@@ -820,5 +820,61 @@ describe('MaterialHandler', function () {
             first.unload();
             expectAssigned(material, second, cubemapKinds[1]);
         });
+
+        it('releases the env atlas of a cubemap asset once its cubemap was replaced', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[1]);
+            const material = await loadMaterialOf(cubemap);
+
+            const other = new Texture(app.graphicsDevice, { cubemap: true, width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+            material.cubeMap = other;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(other);
+            expect(material.envAtlas).to.equal(null);
+        });
+
+        it('releases the prefiltered cubemaps of a cubemap asset once its cubemap was replaced', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+
+            const other = new Texture(app.graphicsDevice, { cubemap: true, width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+            material.cubeMap = other;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(other);
+            expect(material.envAtlas).to.equal(null);
+            expect(material.prefilteredCubemaps.filter(t => t).length).to.equal(0);
+        });
+
+        it('keeps prefiltered cubemaps assigned since the cubemap asset loaded, and the env atlas generated from them', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+
+            const replacement = [128, 64, 32, 16, 8, 4].map(size => new Texture(app.graphicsDevice, {
+                cubemap: true, width: size, height: size, format: PIXELFORMAT_RGBA8, mipmaps: false
+            }));
+            material.prefilteredCubemaps = replacement;
+            const envAtlas = material.envAtlas;
+            expect(envAtlas).to.not.equal(null);
+
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(null);
+            expect(material.prefilteredCubemaps).to.deep.equal(replacement);
+            expect(material.envAtlas).to.equal(envAtlas);
+            expect(envAtlas.device).to.not.equal(null);
+        });
+
+        it('keeps an env atlas assigned since the cubemap asset loaded', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[1]);
+            const material = await loadMaterialOf(cubemap);
+
+            const envAtlas = new Texture(app.graphicsDevice, { width: 8, height: 8, format: PIXELFORMAT_RGBA8 });
+            material.envAtlas = envAtlas;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(null);
+            expect(material.envAtlas).to.equal(envAtlas);
+        });
     });
 });
