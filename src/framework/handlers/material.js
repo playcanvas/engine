@@ -45,6 +45,10 @@ class MaterialHandler extends ResourceHandler {
         // assigned; the material waits for its textures while any remain
         this._pendingMaps = new WeakMap();
 
+        // the env atlas each material generated from the prefiltered cubemaps of a cubemap asset,
+        // to tell it from an env atlas assigned to the material since
+        this._generatedAtlases = new WeakMap();
+
         // the json parser is the catch-all for material assets; the handler keeps a reference to
         // it as patch uses its migrate/initialize when binding standard material assets
         this._parser = new JsonStandardMaterialParser();
@@ -192,16 +196,23 @@ class MaterialHandler extends ResourceHandler {
     }
 
     _assignCubemap(parameterName, materialAsset, textures) {
+        const material = materialAsset.resource;
+
         // the primary cubemap texture
-        materialAsset.resource[parameterName] = textures[0];
+        material[parameterName] = textures[0];
 
         // set prefiltered textures
         if (parameterName === 'cubeMap') {
             const prefiltered = textures.slice(1);
             if (prefiltered.every(t => t)) {
-                materialAsset.resource.prefilteredCubemaps = prefiltered;
+                // assigning the same set again generates no env atlas
+                const current = material.prefilteredCubemaps;
+                if (!prefiltered.every((t, i) => current[i] === t)) {
+                    material.prefilteredCubemaps = prefiltered;
+                    this._generatedAtlases.set(material, material.envAtlas);
+                }
             } else if (prefiltered[0]) {
-                materialAsset.resource.envAtlas = prefiltered[0];
+                material.envAtlas = prefiltered[0];
             }
         }
     }
@@ -217,9 +228,47 @@ class MaterialHandler extends ResourceHandler {
 
     _onCubemapRemoveOrUnload(parameterName, materialAsset, cubemapAsset) {
         const material = materialAsset.resource;
+        if (!material) {
+            return;
+        }
 
-        if (materialAsset.data.prefilteredCubeMap128 === cubemapAsset.resources[1]) {
-            this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
+        // release each texture the material still holds from this asset, as any of them may
+        // have been replaced since the asset assigned them
+        const [cubemap, ...prefiltered] = cubemapAsset.resources;
+        let released = false;
+
+        if (cubemap && material[parameterName] === cubemap) {
+            material[parameterName] = null;
+            released = true;
+        }
+
+        if (parameterName === 'cubeMap') {
+            if (prefiltered.length && prefiltered.every(t => t)) {
+                const current = material.prefilteredCubemaps;
+                if (prefiltered.every((t, i) => current[i] === t)) {
+                    // clearing them destroys the current env atlas of the material, so when it is
+                    // not the one generated from them, but one assigned to the material since, it
+                    // is kept and the generated one is destroyed instead
+                    const atlas = material.envAtlas;
+                    const generated = this._generatedAtlases.get(material);
+                    if (atlas !== generated) {
+                        material.envAtlas = null;
+                        material.prefilteredCubemaps = null;
+                        material.envAtlas = atlas;
+                        generated?.destroy();
+                    } else {
+                        material.prefilteredCubemaps = null;
+                    }
+                    this._generatedAtlases.delete(material);
+                    released = true;
+                }
+            } else if (prefiltered[0] && material.envAtlas === prefiltered[0]) {
+                material.envAtlas = null;
+                released = true;
+            }
+        }
+
+        if (released) {
             material.update();
         }
     }
