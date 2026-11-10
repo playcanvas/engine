@@ -865,6 +865,22 @@ describe('MaterialHandler', function () {
             expect(envAtlas.device).to.not.equal(null);
         });
 
+        it('keeps an env atlas assigned since the cubemap asset of prefiltered cubemaps loaded', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+            const generated = material.envAtlas;
+
+            const envAtlas = new Texture(app.graphicsDevice, { width: 8, height: 8, format: PIXELFORMAT_RGBA8 });
+            material.envAtlas = envAtlas;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(null);
+            expect(material.prefilteredCubemaps.filter(t => t).length).to.equal(0);
+            expect(material.envAtlas).to.equal(envAtlas);
+            expect(envAtlas.device).to.not.equal(null);
+            expect(generated).to.not.equal(envAtlas);
+        });
+
         it('keeps an env atlas assigned since the cubemap asset loaded', async function () {
             const cubemap = await loadCubemap(cubemapKinds[1]);
             const material = await loadMaterialOf(cubemap);
