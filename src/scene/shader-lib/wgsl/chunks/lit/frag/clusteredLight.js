@@ -340,13 +340,13 @@ fn evaluateLight(
                 var lobeValue: f32 = 0.0;
                 #ifdef CLUSTER_AREALIGHT_RECT
                 if (areaIsRect) {
-                    lobeValue = LTC_EvaluateRect(lobeNormal, viewDir, vPositionW, lobeInvMat, dLTCCoords);
+                    lobeValue = LTC_EvaluateRect(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
                 } else
                 #endif
                 #if defined(CLUSTER_AREALIGHT_DISK) || defined(CLUSTER_AREALIGHT_SPHERE)
                 if (areaIsDisk || lobe >= 2) {
                     // the specular of a sphere light uses the disk facing the reflection
-                    lobeValue = LTC_EvaluateDisk(lobeNormal, viewDir, vPositionW, lobeInvMat, dLTCCoords);
+                    lobeValue = LTC_EvaluateDisk(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
                     if (lobe < 2) { lobeValue = FixNan(lobeValue); }
                 } else
                 #endif
@@ -424,7 +424,7 @@ fn evaluateLight(
                     let cookieChannelMask: vec4f = decodeClusterLightCookieData();
 
                     if (light.isSpot) {
-                        cookieAttenuation = getCookie2DClustered(cookieAtlasTexture, cookieAtlasTextureSampler, lightProjectionMatrix, vPositionW, light.cookieIntensity, cookieChannelMask);
+                        cookieAttenuation = getCookie2DClustered(cookieAtlasTexture, cookieAtlasTextureSampler, lightProjectionMatrix, litArgs_worldPosition, light.cookieIntensity, cookieChannelMask);
                     } else {
                         cookieAttenuation = getCookieCubeClustered(cookieAtlasTexture, cookieAtlasTextureSampler, lightDirW, light.cookieIntensity, cookieChannelMask, shadowTextureResolution, shadowEdgePixels, omniAtlasViewport);
                     }
@@ -694,7 +694,7 @@ fn addClusteredLights(
     }
 
     // world space position to 3d integer cell coordinates in the cluster structure
-    let cellCoords: vec3i = vec3i(floor((vPositionW - uniform.clusterBoundsMin) * uniform.clusterCellsCountByBoundsSize));
+    let cellCoords: vec3i = vec3i(floor((litArgs_worldPosition - uniform.clusterBoundsMin) * uniform.clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range
     if (!(any(cellCoords < vec3i(0)) || any(cellCoords >= uniform.clusterCellsMax))) {

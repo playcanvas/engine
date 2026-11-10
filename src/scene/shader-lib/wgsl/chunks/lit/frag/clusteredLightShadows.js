@@ -8,13 +8,13 @@ fn _getShadowCoordPerspZbuffer(shadowMatrix: mat4x4f, shadowParams: vec4f, wPos:
 }
 
 fn getShadowCoordPerspZbufferNormalOffset(shadowMatrix: mat4x4f, shadowParams: vec4f, normal: vec3f) -> vec3f {
-    let wPos: vec3f = vPositionW + normal * shadowParams.y;
+    let wPos: vec3f = litArgs_worldPosition + normal * shadowParams.y;
     return _getShadowCoordPerspZbuffer(shadowMatrix, shadowParams, wPos);
 }
 
 fn normalOffsetPointShadow(shadowParams: vec4f, lightPos: vec3f, lightDir: vec3f, lightDirNorm: vec3f, normal: vec3f) -> vec3f {
     let distScale: f32 = length(lightDir);
-    let wPos: vec3f = vPositionW + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale; //0.02
+    let wPos: vec3f = litArgs_worldPosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale; //0.02
     let dir: vec3f = wPos - lightPos;
     return dir;
 }

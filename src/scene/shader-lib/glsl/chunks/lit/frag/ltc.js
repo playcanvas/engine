@@ -371,11 +371,11 @@ float FixNan(float value) {
 }
 
 float getRectLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
-    return LTC_EvaluateRect( worldNormal, viewDir, vPositionW, mat3( 1.0 ), dLTCCoords );
+    return LTC_EvaluateRect( worldNormal, viewDir, litArgs_worldPosition, mat3( 1.0 ), dLTCCoords );
 }
 
 float getDiskLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
-    return FixNan(LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, mat3( 1.0 ), dLTCCoords ));
+    return FixNan(LTC_EvaluateDisk( worldNormal, viewDir, litArgs_worldPosition, mat3( 1.0 ), dLTCCoords ));
 }
 
 float getSphereLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 lightDirNorm) {
@@ -397,7 +397,7 @@ mat3 getLTCLightInvMat(vec2 uv)
 
 float calcRectLightSpecular(vec3 worldNormal, vec3 viewDir, vec2 uv) {
     mat3 mInv = getLTCLightInvMat(uv);
-    return LTC_EvaluateRect( worldNormal, viewDir, vPositionW, mInv, dLTCCoords );
+    return LTC_EvaluateRect( worldNormal, viewDir, litArgs_worldPosition, mInv, dLTCCoords );
 }
 
 float getRectLightSpecular(vec3 worldNormal, vec3 viewDir) {
@@ -406,7 +406,7 @@ float getRectLightSpecular(vec3 worldNormal, vec3 viewDir) {
 
 float calcDiskLightSpecular(vec3 worldNormal, vec3 viewDir, vec2 uv) {
     mat3 mInv = getLTCLightInvMat(uv);
-    return LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, mInv, dLTCCoords );
+    return LTC_EvaluateDisk( worldNormal, viewDir, litArgs_worldPosition, mInv, dLTCCoords );
 }
 
 float getDiskLightSpecular(vec3 worldNormal, vec3 viewDir) {

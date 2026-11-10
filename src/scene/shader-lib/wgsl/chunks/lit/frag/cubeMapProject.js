@@ -15,13 +15,13 @@ fn cubeMapProject(nrdir: vec3f) -> vec3f {
 
         let nrdir_rotated: vec3f = cubeMapRotate(nrdir);
 
-        let rbmax: vec3f = (uniform.envBoxMax - vPositionW) / nrdir_rotated;
-        let rbmin: vec3f = (uniform.envBoxMin - vPositionW) / nrdir_rotated;
+        let rbmax: vec3f = (uniform.envBoxMax - litArgs_worldPosition) / nrdir_rotated;
+        let rbmin: vec3f = (uniform.envBoxMin - litArgs_worldPosition) / nrdir_rotated;
 
         let rbminmax: vec3f = select(rbmin, rbmax, nrdir_rotated > vec3f(0.0));
         let fa: f32 = min(min(rbminmax.x, rbminmax.y), rbminmax.z);
 
-        let posonbox: vec3f = vPositionW + nrdir_rotated * fa;
+        let posonbox: vec3f = litArgs_worldPosition + nrdir_rotated * fa;
         let envBoxPos: vec3f = (uniform.envBoxMin + uniform.envBoxMax) * 0.5;
         return normalize(posonbox - envBoxPos);
 
