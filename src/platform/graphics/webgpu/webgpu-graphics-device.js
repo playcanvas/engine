@@ -1655,7 +1655,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // the backbuffer color texture is acquired in frameStart, before that (for example in the
         // application 'update' event) it is the expired texture of the previous frame, or missing
         Debug.call(() => {
-            if (rt === this.backBuffer && !this._backBufferValid && !this.xrColorTexture) {
+            if (rt === this.backBuffer && !this._backBufferValid) {
                 Debug.errorOnce(`Render pass '${renderPass.name}' renders to the backbuffer outside of the frame (before frameStart or after frameEnd), where its color texture is not valid. Render to the backbuffer from the 'prerender' or 'postrender' application event, or from a render pass that is part of the frame, instead of for example the 'update' event.`);
             }
         });
