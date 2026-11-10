@@ -342,12 +342,12 @@ fn FixNan(value: f32) -> f32 {
 
 fn getRectLightDiffuse(worldNormal: vec3f, viewDir: vec3f, lightDir: vec3f, lightDirNorm: vec3f) -> f32 {
     let identityMat = mat3x3f(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
-    return LTC_EvaluateRect( worldNormal, viewDir, vPositionW, identityMat, dLTCCoords );
+    return LTC_EvaluateRect( worldNormal, viewDir, litArgs_worldPosition, identityMat, dLTCCoords );
 }
 
 fn getDiskLightDiffuse(worldNormal: vec3f, viewDir: vec3f, lightDir: vec3f, lightDirNorm: vec3f) -> f32 {
     let identityMat = mat3x3f(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
-    return FixNan(LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, identityMat, dLTCCoords ));
+    return FixNan(LTC_EvaluateDisk( worldNormal, viewDir, litArgs_worldPosition, identityMat, dLTCCoords ));
 }
 
 fn getSphereLightDiffuse(worldNormal: vec3f, viewDir: vec3f, lightDir: vec3f, lightDirNorm: vec3f) -> f32 {
@@ -368,7 +368,7 @@ fn getLTCLightInvMat(uv: vec2f) -> mat3x3f {
 
 fn calcRectLightSpecular(worldNormal: vec3f, viewDir: vec3f, uv: vec2f) -> f32 {
     let mInv: mat3x3f = getLTCLightInvMat(uv);
-    return LTC_EvaluateRect( worldNormal, viewDir, vPositionW, mInv, dLTCCoords );
+    return LTC_EvaluateRect( worldNormal, viewDir, litArgs_worldPosition, mInv, dLTCCoords );
 }
 
 fn getRectLightSpecular(worldNormal: vec3f, viewDir: vec3f) -> f32 {
@@ -377,7 +377,7 @@ fn getRectLightSpecular(worldNormal: vec3f, viewDir: vec3f) -> f32 {
 
 fn calcDiskLightSpecular(worldNormal: vec3f, viewDir: vec3f, uv: vec2f) -> f32 {
     let mInv: mat3x3f = getLTCLightInvMat(uv);
-    return LTC_EvaluateDisk( worldNormal, viewDir, vPositionW, mInv, dLTCCoords );
+    return LTC_EvaluateDisk( worldNormal, viewDir, litArgs_worldPosition, mInv, dLTCCoords );
 }
 
 fn getDiskLightSpecular(worldNormal: vec3f, viewDir: vec3f) -> f32 {

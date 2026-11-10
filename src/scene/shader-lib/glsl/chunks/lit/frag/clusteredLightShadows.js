@@ -9,13 +9,13 @@ vec3 _getShadowCoordPerspZbuffer(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos
 }
 
 vec3 getShadowCoordPerspZbufferNormalOffset(mat4 shadowMatrix, vec4 shadowParams, vec3 normal) {
-    vec3 wPos = vPositionW + normal * shadowParams.y;
+    vec3 wPos = litArgs_worldPosition + normal * shadowParams.y;
     return _getShadowCoordPerspZbuffer(shadowMatrix, shadowParams, wPos);
 }
 
 vec3 normalOffsetPointShadow(vec4 shadowParams, vec3 lightPos, vec3 lightDir, vec3 lightDirNorm, vec3 normal) {
     float distScale = length(lightDir);
-    vec3 wPos = vPositionW + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale; //0.02
+    vec3 wPos = litArgs_worldPosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale; //0.02
     vec3 dir = wPos - lightPos;
     return dir;
 }

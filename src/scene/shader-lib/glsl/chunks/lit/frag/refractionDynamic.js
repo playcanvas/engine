@@ -5,7 +5,7 @@ uniform vec3 material_attenuation;
 vec3 evalRefractionColor(vec3 refractionVector, float gloss, float refractionIndex) {
 
     // The refraction point is the entry point + vector to exit point
-    vec4 pointOfRefraction = vec4(vPositionW + refractionVector, 1.0);
+    vec4 pointOfRefraction = vec4(litArgs_worldPosition + refractionVector, 1.0);
 
     // Project to texture space so we can sample it
     vec4 projectionPoint = matrix_viewProjection * pointOfRefraction;

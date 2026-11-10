@@ -9,6 +9,10 @@ void main(void) {
         applyClipPlanes(vPositionW);
     #endif
 
+    // the lighting is evaluated at the rasterized position, unless the front end sets another
+    litArgs_worldPosition = vPositionW;
+    dViewDepth = 1.0 / gl_FragCoord.w;
+
     #include "litUserMainStartPS"
 
     dReflection = vec4(0);
