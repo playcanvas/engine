@@ -878,7 +878,34 @@ describe('MaterialHandler', function () {
             expect(material.prefilteredCubemaps.filter(t => t).length).to.equal(0);
             expect(material.envAtlas).to.equal(envAtlas);
             expect(envAtlas.device).to.not.equal(null);
+
+            // the env atlas generated from the prefiltered cubemaps is destroyed instead
             expect(generated).to.not.equal(envAtlas);
+            expect(generated.device).to.equal(null);
+        });
+
+        it('destroys the env atlas generated from the prefiltered cubemaps of a cubemap asset, once the env atlas of the material was cleared', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+            const generated = material.envAtlas;
+            expect(generated.device).to.not.equal(null);
+
+            material.envAtlas = null;
+            cubemap.unload();
+
+            expect(material.envAtlas).to.equal(null);
+            expect(generated.device).to.equal(null);
+        });
+
+        it('destroys the env atlas generated from the prefiltered cubemaps of a cubemap asset when it unloads', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+            const generated = material.envAtlas;
+
+            cubemap.unload();
+
+            expect(material.envAtlas).to.equal(null);
+            expect(generated.device).to.equal(null);
         });
 
         it('keeps an env atlas assigned since the cubemap asset loaded', async function () {

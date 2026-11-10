@@ -246,16 +246,18 @@ class MaterialHandler extends ResourceHandler {
             if (prefiltered.length && prefiltered.every(t => t)) {
                 const current = material.prefilteredCubemaps;
                 if (prefiltered.every((t, i) => current[i] === t)) {
-                    // clearing them destroys the env atlas of the material, which is kept when it
-                    // is not the one generated from them, but one assigned to the material since
+                    // clearing them destroys the current env atlas of the material, so when it is
+                    // not the one generated from them, but one assigned to the material since, it
+                    // is kept and the generated one is destroyed instead
                     const atlas = material.envAtlas;
-                    const keepAtlas = atlas && atlas !== this._generatedAtlases.get(material);
-                    if (keepAtlas) {
+                    const generated = this._generatedAtlases.get(material);
+                    if (atlas !== generated) {
                         material.envAtlas = null;
-                    }
-                    material.prefilteredCubemaps = null;
-                    if (keepAtlas) {
+                        material.prefilteredCubemaps = null;
                         material.envAtlas = atlas;
+                        generated?.destroy();
+                    } else {
+                        material.prefilteredCubemaps = null;
                     }
                     this._generatedAtlases.delete(material);
                     released = true;
