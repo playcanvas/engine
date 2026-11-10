@@ -217,11 +217,25 @@ class MaterialHandler extends ResourceHandler {
 
     _onCubemapRemoveOrUnload(parameterName, materialAsset, cubemapAsset) {
         const material = materialAsset.resource;
+        const [cubemap, ...prefiltered] = cubemapAsset.resources;
 
-        if (materialAsset.data.prefilteredCubeMap128 === cubemapAsset.resources[1]) {
-            this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
-            material.update();
+        // only release what this asset assigned, the material might use another cubemap by now
+        if (!material || !cubemap || material[parameterName] !== cubemap) {
+            return;
         }
+
+        material[parameterName] = null;
+
+        if (parameterName === 'cubeMap') {
+            if (prefiltered.length && prefiltered.every(t => t)) {
+                // also releases the env atlas generated from them
+                material.prefilteredCubemaps = null;
+            } else if (prefiltered[0] && material.envAtlas === prefiltered[0]) {
+                material.envAtlas = null;
+            }
+        }
+
+        material.update();
     }
 
     _bindAndAssignAssets(materialAsset, assets) {

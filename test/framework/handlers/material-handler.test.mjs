@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { DdsParser } from '../../../src/framework/parsers/texture/dds.js';
 import { PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
@@ -634,6 +635,190 @@ describe('MaterialHandler', function () {
                 completeLoad(diffuse);
                 expect(material._pendingCopies.size).to.equal(0);
             });
+        });
+    });
+
+    describe('cubemaps', function () {
+
+        const faceUrls = ['posx.png', 'negx.png', 'posy.png', 'negy.png', 'posz.png', 'negz.png'];
+
+        beforeEach(function () {
+            const textureHandler = app.loader.getHandler('texture');
+
+            // images can't be decoded here, so the image parser skips the decode and creates the
+            // texture it would create for a PNG or JPG image
+            const imgParser = textureHandler.imgParser;
+            imgParser.load = (url, callback) => callback(null, {});
+            imgParser.open = (url, data, device, textureOptions) => new Texture(device, {
+                width: 4, height: 4, format: PIXELFORMAT_RGBA8, ...textureOptions
+            });
+
+            // a dds file of prefiltered data is a cubemap with a mip level for each prefiltered cubemap
+            const ddsParser = textureHandler._parsers.find(parser => parser instanceof DdsParser);
+            ddsParser.load = (url, callback) => callback(null, {});
+            ddsParser.open = (url, data, device, textureOptions) => new Texture(device, {
+                ...textureOptions, cubemap: true, width: 128, height: 128, format: PIXELFORMAT_RGBA8, mipmaps: false
+            });
+        });
+
+        // the ways a cubemap asset provides the reflection of a material
+        const cubemapKinds = [
+            { label: 'faces', file: null },
+            { label: 'faces and an env atlas', file: { url: 'sky.png', filename: 'sky.png' } },
+            { label: 'faces and prefiltered cubemaps', file: { url: 'sky.dds', filename: 'sky.dds' } }
+        ];
+
+        const loadCubemap = kind => new Promise((resolve, reject) => {
+            const asset = new Asset('sky', 'cubemap', kind.file, { textures: faceUrls });
+            asset.loadFaces = true;
+            asset.ready(resolve);
+            asset.once('error', err => reject(new Error(err)));
+            app.assets.add(asset);
+            app.assets.load(asset);
+        });
+
+        // resolves once the asset loads, when loading it again
+        const reload = asset => new Promise((resolve) => {
+            asset.once('load', resolve);
+            app.assets.load(asset);
+        });
+
+        const loadMaterial = asset => new Promise((resolve, reject) => {
+            asset.ready(() => resolve(asset.resource));
+            asset.on('error', err => reject(new Error(err)));
+            app.assets.add(asset);
+            app.assets.load(asset);
+        });
+
+        const loadMaterialOf = cubemap => loadMaterial(new Asset('material', 'material', null, { cubeMap: cubemap.id }));
+
+        // the environment the material reflects, as assigned by the cubemap asset
+        const environment = material => ({
+            cubeMap: material.cubeMap,
+            envAtlas: material.envAtlas,
+            prefiltered: material.prefilteredCubemaps.filter(t => t).length
+        });
+
+        // what each kind of cubemap asset assigns to the material
+        const expectAssigned = (material, cubemap, kind) => {
+            const [faces, ...prefiltered] = cubemap.resources;
+            expect(material.cubeMap).to.equal(faces);
+            if (kind.file === null) {
+                expect(material.envAtlas).to.equal(null);
+            } else if (prefiltered.every(t => t)) {
+                expect(material.prefilteredCubemaps).to.deep.equal(prefiltered);
+                expect(material.envAtlas).to.not.equal(null);
+            } else {
+                expect(material.envAtlas).to.equal(prefiltered[0]);
+            }
+        };
+
+        const expectReleased = (material) => {
+            expect(environment(material)).to.deep.equal({ cubeMap: null, envAtlas: null, prefiltered: 0 });
+        };
+
+        cubemapKinds.forEach((kind) => {
+
+            it(`releases a cubemap of ${kind.label} when it unloads, rather than drawing with its destroyed textures`, async function () {
+                const cubemap = await loadCubemap(kind);
+                const material = await loadMaterialOf(cubemap);
+                const resources = cubemap.resources.filter(t => t);
+                expectAssigned(material, cubemap, kind);
+
+                cubemap.unload();
+
+                // the asset destroyed its textures
+                for (const texture of resources) {
+                    expect(texture.device).to.equal(null);
+                }
+                expectReleased(material);
+            });
+
+            it(`assigns a cubemap of ${kind.label} again when it loads after an unload`, async function () {
+                const cubemap = await loadCubemap(kind);
+                const material = await loadMaterialOf(cubemap);
+
+                cubemap.unload();
+                await reload(cubemap);
+
+                expect(material.cubeMap).to.not.equal(null);
+                expectAssigned(material, cubemap, kind);
+            });
+
+            it(`releases a cubemap of ${kind.label} when it is removed from the registry`, async function () {
+                const cubemap = await loadCubemap(kind);
+                const material = await loadMaterialOf(cubemap);
+
+                app.assets.remove(cubemap);
+
+                expectReleased(material);
+            });
+        });
+
+        it('draws with the shader it was drawn with before the cubemap loaded, once the cubemap unloads', async function () {
+            // the faces load once the test lets them
+            const pendingFaces = [];
+            app.loader.getHandler('texture').imgParser.load = (url, callback) => pendingFaces.push(() => callback(null, {}));
+
+            const cubemap = new Asset('sky', 'cubemap', null, { textures: faceUrls });
+            cubemap.loadFaces = true;
+            app.assets.add(cubemap);
+
+            const material = await loadMaterialOf(cubemap);
+            expect(material.cubeMap).to.equal(null);
+            const instance = new MeshInstance(Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry()), material, new GraphNode());
+            const lightList = new LightList();
+            const cameraShaderParams = new CameraShaderParams();
+            const shader = () => {
+                material.prepareForRender(app.graphicsDevice, app.scene);
+                const viewUniformFormat = app.renderer.getViewUniformFormat(false, lightList);
+                return instance.getShaderInstance(SHADER_FORWARD, lightList, app.scene, cameraShaderParams, viewUniformFormat).shader;
+            };
+
+            const before = shader();
+            const loaded = new Promise((resolve) => {
+                cubemap.ready(resolve);
+            });
+            pendingFaces.forEach(load => load());
+            await loaded;
+            expect(material.cubeMap).to.equal(cubemap.resource);
+            expect(shader()).to.not.equal(before);
+
+            cubemap.unload();
+            expect(shader()).to.equal(before);
+        });
+
+        it('releases a cubemap from each material referencing it', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[1]);
+            const materials = [await loadMaterialOf(cubemap), await loadMaterialOf(cubemap)];
+
+            cubemap.unload();
+
+            materials.forEach(expectReleased);
+        });
+
+        it('keeps a cubemap assigned to the material since the cubemap asset loaded', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[0]);
+            const material = await loadMaterialOf(cubemap);
+
+            const other = new Texture(app.graphicsDevice, { cubemap: true, width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+            material.cubeMap = other;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(other);
+        });
+
+        it('keeps the cubemap of another asset, once the material asset references it instead', async function () {
+            const first = await loadCubemap(cubemapKinds[1]);
+            const second = await loadCubemap(cubemapKinds[1]);
+            const materialAsset = new Asset('material', 'material', null, { cubeMap: first.id });
+            const material = await loadMaterial(materialAsset);
+
+            materialAsset.data = { cubeMap: second.id };
+            expectAssigned(material, second, cubemapKinds[1]);
+
+            first.unload();
+            expectAssigned(material, second, cubemapKinds[1]);
         });
     });
 });
