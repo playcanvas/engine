@@ -1,4 +1,3 @@
-import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /**
@@ -14,12 +13,12 @@ const tmpVecB = new Vec3();
  * A sphere is a {@link center} and a {@link radius}. It is the cheapest bounding volume to test, so
  * it suits broad-phase checks made before a finer test. {@link containsPoint},
  * {@link intersectsBoundingSphere} and {@link intersectsRay} return a boolean and allocate nothing.
- * Unlike {@link BoundingBox}, the constructor keeps a reference to the center vector it is given
- * rather than copying it, so the sphere follows any later changes to that vector.
+ * Like {@link BoundingBox}, the constructor copies the center vector it is given, so later changes
+ * to that vector do not affect the sphere.
  *
  * @example
  * // A trigger volume 2 units around an entity
- * const sphere = new BoundingSphere(entity.getPosition().clone(), 2);
+ * const sphere = new BoundingSphere(entity.getPosition(), 2);
  * if (sphere.containsPoint(player.getPosition())) {
  *     // the player is within 2 units of the entity
  * }
@@ -38,16 +37,14 @@ class BoundingSphere {
      * Creates a new BoundingSphere instance.
      *
      * @param {Vec3} [center] - The world space coordinate marking the center of the sphere. The
-     * constructor takes a reference of this parameter.
+     * constructor copies this parameter. Defaults to (0, 0, 0).
      * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
      * @example
      * // Create a new bounding sphere centered on the origin with a radius of 0.5
      * const sphere = new BoundingSphere();
      */
-    constructor(center = new Vec3(), radius = 0.5) {
-        Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');
-
-        this.center = center;
+    constructor(center, radius = 0.5) {
+        this.center = center ? center.clone() : new Vec3();
 
         // Assigned here instead of declared as a class field, so V8 can store it as an unboxed
         // double (see Vec3).
