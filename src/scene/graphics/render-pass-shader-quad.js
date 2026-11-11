@@ -270,6 +270,16 @@ class RenderPassShaderQuad extends RenderPass {
             DebugGraphics.popGpuMarker(device);
         }
     }
+
+    precompile() {
+
+        // the pass renders as it does in a frame, into a precompile pass of the device. Its before
+        // and after set up the values the shaders read, such as textures, and later passes can
+        // read the values its after publishes, so they run too
+        this.before();
+        this.precompileExecute();
+        this.after();
+    }
 }
 
 export { RenderPassShaderQuad };

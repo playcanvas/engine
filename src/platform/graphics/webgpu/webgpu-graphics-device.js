@@ -1137,6 +1137,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this, 'frameStart');
     }
 
+    precompileFrameEnd() {
+        super.precompileFrameEnd();
+
+        // submit the work recorded during the frame, such as compute dispatches, which a rendered
+        // frame submits at its end
+        this.submit();
+        this._indirectDrawNextIndex = 0;
+        this._indirectDispatchNextIndex = 0;
+    }
+
     frameEnd() {
         super.frameEnd();
         this._backBufferValid = false;
@@ -1439,6 +1449,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     endPrecompilePass() {
+
+        // the draws wrote the transforms of their mesh instances, which no command buffer submits
+        // in a frame which only precompiles. They are uploaded now, so that the next frame writing
+        // them starts a new upload, as it does after a submit
+        this.meshInstanceStorage?.upload();
+
         this.passEncoder = null;
         this.insideRenderPass = false;
         this._precompilePass = false;

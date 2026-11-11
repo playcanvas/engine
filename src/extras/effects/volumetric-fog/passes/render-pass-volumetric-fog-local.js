@@ -88,6 +88,30 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
     /** @type {string|null} */
     _variantKey = null;
 
+    /**
+     * True while the pass precompiles, see {@link RenderPassVolumetricFogLocal#precompile}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _precompiling = false;
+
+    /**
+     * The projection matrix of the light set up last, see {@link RenderPassVolumetricFogLocal#_setupLight}.
+     *
+     * @type {Float32Array}
+     * @private
+     */
+    _lightProjMatrix = Mat4.IDENTITY.data;
+
+    /**
+     * The cookie channel mask of the light set up last.
+     *
+     * @type {number[]}
+     * @private
+     */
+    _lightCookieChannel = _cookieChannelMaskNone;
+
     constructor(device, cameraComponent) {
         super(device);
         this.cameraComponent = cameraComponent;
@@ -230,8 +254,9 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
     }
 
     /**
-     * Assigns the uniforms of a single light, and returns false when the light does not need to be
-     * rendered.
+     * Evaluates the values of the uniforms of a single light, assigned by
+     * {@link RenderPassVolumetricFogLocal#_bindLightUniforms}, and returns false when the light
+     * does not need to be rendered.
      *
      * @param {Light} light - The light.
      * @param {boolean} shadows - True if the shader samples the shadow atlas.
@@ -252,21 +277,18 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         this._lightRect[1] = _tempRect.y;
         this._lightRect[2] = _tempRect.z;
         this._lightRect[3] = _tempRect.w;
-        this.lightRectId.setValue(this._lightRect);
 
         // the bounding sphere the ray is marched over, evaluated by _evalLightRect
         this._lightSphere[0] = _tempSphere.center.x;
         this._lightSphere[1] = _tempSphere.center.y;
         this._lightSphere[2] = _tempSphere.center.z;
         this._lightSphere[3] = _tempSphere.radius;
-        this.lightSphereId.setValue(this._lightSphere);
 
         const pos = light._node.getPosition();
         this._lightPosRange[0] = pos.x;
         this._lightPosRange[1] = pos.y;
         this._lightPosRange[2] = pos.z;
         this._lightPosRange[3] = light.attenuationEnd;
-        this.lightPosRangeId.setValue(this._lightPosRange);
 
         // light color, scaled to match the lit scene
         const scale = this.intensity * this.exposure * light.volumetricScattering;
@@ -274,7 +296,6 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         this._lightColor[0] = color[0] * scale;
         this._lightColor[1] = color[1] * scale;
         this._lightColor[2] = color[2] * scale;
-        this.lightColorId.setValue(this._lightColor);
 
         // spot lights shine down the negative Y axis of their node
         if (isSpot) {
@@ -284,10 +305,8 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         this._lightDir[1] = isSpot ? _tempDir.y : 0;
         this._lightDir[2] = isSpot ? _tempDir.z : 0;
         this._lightDir[3] = isSpot ? 1 : 0;
-        this.lightDirId.setValue(this._lightDir);
 
         this._lightAtten[0] = light._falloffMode === LIGHTFALLOFF_LINEAR ? 1 : 0;
-        this.lightAttenId.setValue(this._lightAtten);
 
         // a light only samples the atlases when it was allocated a slot in them. The shadow map
         // condition matches the one the clustered lighting uses to select the projection matrix of
@@ -301,12 +320,9 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         this._lightSpot[1] = light._outerConeAngleCos;
         this._lightSpot[2] = useShadow ? light.shadowIntensity : 0;
         this._lightSpot[3] = useCookie ? light.cookieIntensity : 0;
-        this.lightSpotId.setValue(this._lightSpot);
 
-        // The atlas uniforms below are declared by the shader whenever the shadow or the cookie
-        // sampling is compiled in, and so they are assigned for every light, even one which samples
-        // neither - the shader ignores the values in that case, but leaving a declared uniform unset
-        // is reported as an error.
+        // the atlas values, which the shader declares whenever the shadow or the cookie sampling
+        // is compiled in, see _bindLightUniforms
         if (shadows || cookies) {
 
             const lightRenderData = hasShadowMap ? light.getRenderData(null, 0) : null;
@@ -316,9 +332,9 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
             if (isSpot) {
                 const matrix = lightRenderData?.shadowMatrix ??
                     (useCookie ? LightCamera.evalSpotCookieMatrix(light) : Mat4.IDENTITY);
-                this.lightProjMatrixId.setValue(matrix.data);
+                this._lightProjMatrix = matrix.data;
             } else {
-                this.lightProjMatrixId.setValue(Mat4.IDENTITY.data);
+                this._lightProjMatrix = Mat4.IDENTITY.data;
             }
 
             // an omni light uses a cube face stored in the atlas viewport of the light, subdivided
@@ -328,16 +344,54 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
             this._lightAtlas[1] = viewport.y;
             this._lightAtlas[2] = viewport.z / 3;
             this._lightAtlas[3] = lightRenderData ? light._getUniformBiasValues(lightRenderData).bias : 0;
-            this.lightAtlasId.setValue(this._lightAtlas);
         }
 
         if (cookies) {
-            this.lightCookieChannelId.setValue(useCookie ?
+            this._lightCookieChannel = useCookie ?
                 (_cookieChannelMasks[light._cookieChannel] ?? _cookieChannelMasks.rgb) :
-                _cookieChannelMaskNone);
+                _cookieChannelMaskNone;
         }
 
         return true;
+    }
+
+    /**
+     * Assigns the values of the light set up last, see
+     * {@link RenderPassVolumetricFogLocal#_setupLight}, to the uniforms of the shader.
+     *
+     * @param {boolean} shadows - True if the shader samples the shadow atlas.
+     * @param {boolean} cookies - True if the shader samples the cookie atlas.
+     * @private
+     */
+    _bindLightUniforms(shadows, cookies) {
+        this.lightRectId.setValue(this._lightRect);
+        this.lightSphereId.setValue(this._lightSphere);
+        this.lightPosRangeId.setValue(this._lightPosRange);
+        this.lightColorId.setValue(this._lightColor);
+        this.lightDirId.setValue(this._lightDir);
+        this.lightAttenId.setValue(this._lightAtten);
+        this.lightSpotId.setValue(this._lightSpot);
+
+        // the atlas uniforms are declared by the shader whenever the shadow or the cookie sampling
+        // is compiled in, and so they are assigned for every light, even one which samples neither -
+        // the shader ignores the values in that case, but leaving a declared uniform unset is
+        // reported as an error
+        if (shadows || cookies) {
+            this.lightProjMatrixId.setValue(this._lightProjMatrix);
+            this.lightAtlasId.setValue(this._lightAtlas);
+        }
+        if (cookies) {
+            this.lightCookieChannelId.setValue(this._lightCookieChannel);
+        }
+    }
+
+    precompile() {
+
+        // the pass draws only the lights in view, and those out of view can come into view later.
+        // While precompiling, the execution draws once even with no light in view, see execute
+        this._precompiling = true;
+        super.precompile();
+        this._precompiling = false;
     }
 
     execute() {
@@ -394,6 +448,7 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         const { shadowsEnabled, cookiesEnabled } = lighting;
         const { omniLights, spotLights } = this;
         const lights = clusters.usedLights;
+        let drawn = 0;
         for (let i = 1; i < lights.length; i++) {
             const light = lights[i].light;
 
@@ -402,8 +457,17 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
                 (light._type === LIGHTTYPE_SPOT ? spotLights : omniLights);
 
             if (enabled && this._setupLight(light, shadowsEnabled, cookiesEnabled)) {
+                this._bindLightUniforms(shadowsEnabled, cookiesEnabled);
                 super.execute();
+                drawn++;
             }
+        }
+
+        // precompiling with no light in view, a draw with the values of the last light, which are
+        // not used as nothing renders, compiles the shader and its render pipeline
+        if (this._precompiling && drawn === 0) {
+            this._bindLightUniforms(shadowsEnabled, cookiesEnabled);
+            super.execute();
         }
     }
 }

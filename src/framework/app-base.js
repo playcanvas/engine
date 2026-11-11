@@ -291,6 +291,7 @@ class AppBase extends EventHandler {
 
             if (this._precompile && this._precompileFrame()) {
                 // the frame prepared the shaders, or waits for them to compile, and renders nothing
+                this.graphicsDevice.precompileFrameEnd();
             } else if (this.autoRender || this.renderNextFrame) {
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);

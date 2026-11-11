@@ -31,9 +31,10 @@ class RenderPassShadowLocalNonClustered extends RenderPass {
 
         // the execution renders the shadows and consumes nothing besides what it renders, so it
         // runs as it is, into a precompile pass of the device which renders nothing
-        this.device.startPrecompilePass(this.renderTarget);
-        this.execute();
-        this.device.endPrecompilePass();
+        this.precompileExecute();
+        if (this.applyVsm) {
+            this.shadowRenderer.renderVsm(this.light, this.shadowCamera, undefined, true);
+        }
     }
 
     execute() {
