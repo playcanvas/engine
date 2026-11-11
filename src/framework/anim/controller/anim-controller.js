@@ -367,78 +367,108 @@ class AnimController {
         return true;
     }
 
+    /**
+     * Returns true if the transition can be taken this frame: it does not lead to the already
+     * active state, its exit time (if any) falls within the current frame and its conditions are
+     * met.
+     *
+     * @param {AnimTransition} transition - The transition to test.
+     * @returns {boolean} True if the transition can be taken.
+     * @private
+     */
+    _isTransitionValid(transition) {
+        // if the transition is moving to the already active state, ignore it
+        if (transition.to === this.activeStateName) {
+            return false;
+        }
+        // when an exit time is present, we should only exit if it falls within the current frame delta time.
+        // A transition out of a state without a timeline ignores its exit time, as it could never be met
+        if (transition.hasExitTime && hasTimeline(transition.from)) {
+            let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
+            let progress = this._getActiveStateProgressForTime(this._timeInState);
+            // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
+            if (transition.exitTime < 1.0 && this.activeState.loop) {
+                progressBefore -= Math.floor(progressBefore);
+                progress -= Math.floor(progress);
+            }
+            // if the delta time is 0 and the progress matches the exit time, the exitTime condition has been met
+            if (progress === progressBefore) {
+                if (progress !== transition.exitTime) {
+                    return false;
+                }
+            // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
+            } else if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
+                return false;
+            }
+        }
+        // if the exitTime condition has been met or is not present, check condition parameters
+        return this._transitionHasConditionsMet(transition);
+    }
+
+    /**
+     * Returns the first transition in the priority sorted list which can be taken this frame.
+     *
+     * @param {AnimTransition[]} transitions - Transitions sorted in priority order.
+     * @returns {AnimTransition|null} The transition, or null if none can be taken.
+     * @private
+     */
+    _firstValidTransition(transitions) {
+        for (let i = 0; i < transitions.length; i++) {
+            if (this._isTransitionValid(transitions[i])) {
+                return transitions[i];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the first valid transition from the given states, in the order they are listed. This
+     * runs every frame, so it does not allocate.
+     *
+     * @param {string|null} a - The first state to look for transitions from.
+     * @param {string|null} b - The second state to look for transitions from.
+     * @param {string|null} [c] - The third state to look for transitions from.
+     * @returns {AnimTransition|null} The transition, or null if none can be taken.
+     * @private
+     */
+    _findTransitionFromStates(a, b, c = null) {
+        return this._firstValidTransition(this._findTransitionsFromState(a)) ??
+            this._firstValidTransition(this._findTransitionsFromState(b)) ??
+            (c !== null ? this._firstValidTransition(this._findTransitionsFromState(c)) : null);
+    }
+
     _findTransition(from, to) {
-        let transitions = [];
+        let transition = null;
 
         // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
-            transitions = transitions.concat(this._findTransitionsBetweenStates(from, to));
-        } else {
+            transition = this._firstValidTransition(this._findTransitionsBetweenStates(from, to));
+        } else if (!this._isTransitioning) {
             // If no transition is active, look for transitions from the active & any states.
-            if (!this._isTransitioning) {
-                transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-            } else {
-                // Otherwise look for transitions from the previous and active states based on the current interruption source.
-                // Accept transitions from the any state unless the interruption source is set to none
-                switch (this._transitionInterruptionSource) {
-                    case ANIM_INTERRUPTION_PREV:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_NEXT:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_PREV_NEXT:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_NEXT_PREV:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_NONE:
-                    default:
-                }
+            transition = this._findTransitionFromStates(this._activeStateName, ANIM_STATE_ANY);
+        } else {
+            // Otherwise look for transitions from the previous and active states based on the current interruption source.
+            // Accept transitions from the any state unless the interruption source is set to none
+            switch (this._transitionInterruptionSource) {
+                case ANIM_INTERRUPTION_PREV:
+                    transition = this._findTransitionFromStates(this._previousStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_NEXT:
+                    transition = this._findTransitionFromStates(this._activeStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_PREV_NEXT:
+                    transition = this._findTransitionFromStates(this._previousStateName, this._activeStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_NEXT_PREV:
+                    transition = this._findTransitionFromStates(this._activeStateName, this._previousStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_NONE:
+                default:
             }
         }
 
-        // filter out transitions that don't have their conditions met
-        transitions = transitions.filter((transition) => {
-            // if the transition is moving to the already active state, ignore it
-            if (transition.to === this.activeStateName) {
-                return false;
-            }
-            // when an exit time is present, we should only exit if it falls within the current frame delta time.
-            // A transition out of a state without a timeline ignores its exit time, as it could never be met
-            if (transition.hasExitTime && hasTimeline(transition.from)) {
-                let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
-                let progress = this._getActiveStateProgressForTime(this._timeInState);
-                // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
-                if (transition.exitTime < 1.0 && this.activeState.loop) {
-                    progressBefore -= Math.floor(progressBefore);
-                    progress -= Math.floor(progress);
-                }
-                // if the delta time is 0 and the progress matches the exit time, the exitTime condition has been met
-                if (progress === progressBefore) {
-                    if (progress !== transition.exitTime) {
-                        return null;
-                    }
-                // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
-                } else if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
-                    return null;
-                }
-            }
-            // if the exitTime condition has been met or is not present, check condition parameters
-            return this._transitionHasConditionsMet(transition);
-        });
-
         // return the highest priority transition to use
-        if (transitions.length > 0) {
-            const transition = transitions[0];
+        if (transition) {
             if (transition.to === ANIM_STATE_END) {
                 const startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
                 transition.to = startTransition.to;
