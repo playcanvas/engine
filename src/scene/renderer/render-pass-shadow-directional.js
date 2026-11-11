@@ -58,6 +58,7 @@ class RenderPassShadowDirectional extends RenderPass {
         this.device.startPrecompilePass(this.renderTarget);
         this.renderCascades();
         this.device.endPrecompilePass();
+        this.shadowRenderer.renderVsm(this.light, this.camera, this.cascadeMask, true);
     }
 
     /**

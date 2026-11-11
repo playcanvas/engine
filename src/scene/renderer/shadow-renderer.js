@@ -771,7 +771,16 @@ class ShadowRenderer {
         // #endif
     }
 
-    renderVsm(light, camera, cascadeMask = (1 << light.numShadowFaces) - 1) {
+    /**
+     * Applies the VSM blur to the shadow map of a light, when it uses one.
+     *
+     * @param {Light} light - The light.
+     * @param {Camera|null} camera - The camera of a directional light, or the shadow camera.
+     * @param {number} [cascadeMask] - The cascades rendered this frame.
+     * @param {boolean} [precompile] - True to only precompile the blur, in a frame which renders
+     * nothing.
+     */
+    renderVsm(light, camera, cascadeMask = (1 << light.numShadowFaces) - 1, precompile = false) {
 
         // VSM blur if light supports vsm (directional and spot in general)
         if (light._isVsm && light._vsmBlurSize > 1) {
@@ -779,7 +788,7 @@ class ShadowRenderer {
             // in clustered mode, only directional light can be vms
             const isClustered = this.renderer.scene.clusteredLightingEnabled;
             if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                this.applyVsmBlur(light, camera, cascadeMask);
+                this.applyVsmBlur(light, camera, cascadeMask, precompile);
             }
         }
     }
@@ -822,9 +831,10 @@ class ShadowRenderer {
      *
      * @param {Shader} blurShader - The blur shader.
      * @param {RenderTarget} target - The render target to render into.
+     * @param {boolean} precompile - True to only precompile the blur.
      * @private
      */
-    _renderVsmBlur(blurShader, target) {
+    _renderVsmBlur(blurShader, target, precompile) {
         let pass = this._vsmBlurPasses.get(blurShader);
         if (!pass) {
             pass = new RenderPassShaderQuad(this.device);
@@ -840,10 +850,14 @@ class ShadowRenderer {
 
         pass.init(target);
         pass.viewport.set(0, 0, target.width, target.height);
-        pass.render();
+        if (precompile) {
+            pass.precompile();
+        } else {
+            pass.render();
+        }
     }
 
-    applyVsmBlur(light, camera, cascadeMask) {
+    applyVsmBlur(light, camera, cascadeMask, precompile = false) {
 
         const device = this.device;
 
@@ -875,7 +889,7 @@ class ShadowRenderer {
         pixelOffset[1] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
         if (blurMode === BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
-        this._renderVsmBlur(blurShader, tempRt);
+        this._renderVsmBlur(blurShader, tempRt, precompile);
 
         // Blur vertical
         this.sourceId.setValue(tempRt.colorBuffer);
@@ -894,10 +908,10 @@ class ShadowRenderer {
                 const right = Math.min(resolution - 1, (viewport.x + viewport.z) * resolution);
                 const top = Math.min(resolution - 1, (viewport.y + viewport.w) * resolution);
                 blurScissorRect.set(x, y, right - x, top - y);
-                this._renderVsmBlur(blurShader, origShadowMap);
+                this._renderVsmBlur(blurShader, origShadowMap, precompile);
             }
         } else {
-            this._renderVsmBlur(blurShader, origShadowMap);
+            this._renderVsmBlur(blurShader, origShadowMap, precompile);
         }
 
         // return the temporary shadow map back to the cache

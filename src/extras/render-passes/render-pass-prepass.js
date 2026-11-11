@@ -133,6 +133,14 @@ class RenderPassPrepass extends RenderPass {
         }
     }
 
+    precompile() {
+
+        // the layers render as when the pass executes, into a precompile pass of the device. The
+        // depth it would write is published as in a frame, for the passes which read it
+        this.precompileExecute();
+        this.after();
+    }
+
     frameUpdate() {
 
         super.frameUpdate();

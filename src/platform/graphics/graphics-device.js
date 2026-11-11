@@ -1569,6 +1569,19 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Ends a frame which only precompiled, without rendering, see {@link AppBase#precompile}. The
+     * frame does not start or end as a rendered frame does, as that would present an empty frame,
+     * but the work recorded during it, such as compute dispatches, is completed as at the end of
+     * a frame.
+     *
+     * @ignore
+     */
+    precompileFrameEnd() {
+        // expire frame-scoped draw commands, as frameEnd does
+        this.drawCommandsVersion++;
+    }
+
+    /**
      * Returns the number of shaders and render pipelines still compiling, see
      * {@link AppBase#precompile}. Zero on devices which cannot tell.
      *

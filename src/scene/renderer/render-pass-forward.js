@@ -489,16 +489,21 @@ class RenderPassForward extends RenderPass {
             }
         }
         device.endPrecompilePass();
+
+        // the passes which read the scene textures of the pass bind them as in a frame
+        this.publishSceneTextures();
     }
 
-    after() {
-
-        // Publish the scene textures this pass rendered, making them available to the passes which
-        // consume them. This happens before the events below, so that a handler reading them sees the
-        // ones from this frame. Note that the depth prepass publishes its own depth to the same
-        // uniform, from its own after - the two are producers of the same thing, and this pass runs
-        // later, so the scene texture depth, which additionally covers the blended geometry, is what
-        // the consumers sample.
+    /**
+     * Publishes the scene textures this pass rendered, making them available to the passes which
+     * consume them. Note that the depth prepass publishes its own depth to the same uniform, from
+     * its own after - the two are producers of the same thing, and this pass runs later, so the
+     * scene texture depth, which additionally covers the blended geometry, is what the consumers
+     * sample.
+     *
+     * @private
+     */
+    publishSceneTextures() {
         const sceneTextures = this.sceneTextures;
         if (this.sceneTexturesCamera && sceneTextures?.length) {
             const { renderTarget } = this;
@@ -520,6 +525,13 @@ class RenderPassForward extends RenderPass {
                 }
             }
         }
+    }
+
+    after() {
+
+        // Publish the scene textures before the events below, so that a handler reading them sees
+        // the ones from this frame
+        this.publishSceneTextures();
 
         // onPostRender event
         if (this.lastCameraUse) {

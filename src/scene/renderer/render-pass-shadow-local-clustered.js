@@ -48,9 +48,7 @@ class RenderPassShadowLocalClustered extends RenderPass {
         // the execution renders the shadows of the lights scheduled for the frame and clears that
         // list, which a frame that does not render needs as well, so it runs as it is, into a
         // precompile pass of the device which renders nothing
-        this.device.startPrecompilePass(this.renderTarget);
-        this.execute();
-        this.device.endPrecompilePass();
+        this.precompileExecute();
     }
 
     execute() {

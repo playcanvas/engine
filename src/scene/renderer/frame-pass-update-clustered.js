@@ -58,6 +58,14 @@ class FramePassUpdateClustered extends FramePass {
         super.destroy();
     }
 
+    precompile() {
+
+        // the clusters are uploaded as in a frame, as the passes reading them, such as the local
+        // volumetric fog, render only with them. The next frame uploads them again
+        const { renderer } = this;
+        renderer.worldClustersAllocator.upload(renderer.scene.lighting);
+    }
+
     execute() {
 
         // #if _PROFILER
