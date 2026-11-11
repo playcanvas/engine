@@ -1288,7 +1288,8 @@ class AppBase extends EventHandler {
      * to the cameras, which compiles fewer shaders up front. Defaults to false.
      * @returns {Promise<PrecompileStats>} A promise resolved once the shaders and the render
      * pipelines have compiled, before the frame which renders with them, with the statistics of
-     * the precompile.
+     * the precompile. If the application is destroyed first, it resolves on its destruction, with
+     * the statistics collected until then.
      * @example
      * app.on('precompile:progress', (progress) => {
      *     loadingBar.style.width = `${progress * 100}%`;
@@ -2059,6 +2060,16 @@ class AppBase extends EventHandler {
 
         this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
+
+        // a precompile still in progress ends, resolved with the statistics collected so far
+        const precompile = this._precompile;
+        if (precompile) {
+            this._precompile = null;
+            precompile.deviceLost.off();
+            const stats = precompile.stats ?? { shaders: 0, pipelines: 0, frameTime: 0, time: 0 };
+            stats.time = now() - precompile.startTime;
+            precompile.resolve(stats);
+        }
 
         // Clean up gsplat sort timing event listener
         this._gsplatSortedEvt?.off();
