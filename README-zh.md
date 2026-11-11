@@ -98,6 +98,10 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 - 📦 **资源** - 使用 [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/) 以及 [Basis](https://github.com/BinomialLLC/basis_universal) 的异步流媒体系统
 - 📜 **代码** - 支持 TypeScript 以及 JavaScript
 
+## 使用 AI 进行开发
+
+编码智能体请从[引擎指南索引](https://developer.playcanvas.com/user-manual/engine/llms.txt)和[引擎 API 索引](https://api.playcanvas.com/engine/llms.txt)开始，两者都链接到每个页面的 Markdown 版本。[Developing with AI](https://developer.playcanvas.com/user-manual/engine/developing-with-ai/) 介绍了如何在项目中配置智能体。
+
 ## 生态系统
 
 以你喜欢的方式使用 PlayCanvas 进行开发：

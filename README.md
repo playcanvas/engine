@@ -98,6 +98,10 @@ PlayCanvas is a fully-featured game engine.
 * 📦 **Assets** - Asynchronous streaming system built on [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/) and [Basis](https://github.com/BinomialLLC/basis_universal) compression
 * 📜 **Scripts** - Write game behaviors in TypeScript or JavaScript
 
+## Developing with AI
+
+Coding agents: start from the [Engine guides index](https://developer.playcanvas.com/user-manual/engine/llms.txt) and the [Engine API index](https://api.playcanvas.com/engine/llms.txt), which link a Markdown version of every page. [Developing with AI](https://developer.playcanvas.com/user-manual/engine/developing-with-ai/) explains how to set up an agent on a project.
+
 ## Ecosystem
 
 Build with PlayCanvas your way:
