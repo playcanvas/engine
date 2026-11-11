@@ -475,6 +475,22 @@ class RenderPassForward extends RenderPass {
         }
     }
 
+    precompile() {
+
+        // the layers render as when the pass executes, into a precompile pass of the device, which
+        // compiles the shaders and the render pipelines without rendering. The layer events are
+        // not fired, as nothing renders
+        const { device, layerComposition, layerRenderSteps } = this;
+        device.startPrecompilePass(this.renderTarget);
+        for (let i = 0; i < layerRenderSteps.length; i++) {
+            const step = layerRenderSteps[i];
+            if (layerComposition.isEnabled(step.layer, step.transparent)) {
+                this.renderLayerRenderStep(step, i === 0, true);
+            }
+        }
+        device.endPrecompilePass();
+    }
+
     after() {
 
         // Publish the scene textures this pass rendered, making them available to the passes which
@@ -514,9 +530,11 @@ class RenderPassForward extends RenderPass {
     /**
      * @param {LayerRenderStep} step - The layer render step.
      * @param {boolean} firstStep - True if this is the first render step in the render pass.
+     * @param {boolean} [precompile] - True when the step only precompiles, see
+     * {@link FramePass#precompile}, which does not fire the layer events.
      * @ignore
      */
-    renderLayerRenderStep(step, firstStep) {
+    renderLayerRenderStep(step, firstStep, precompile = false) {
 
         const { renderer, scene } = this;
         const device = renderer.device;
@@ -542,7 +560,9 @@ class RenderPassForward extends RenderPass {
             if (this.toneMapping !== undefined) cameraComponent.toneMapping = this.toneMapping;
 
             // layer pre render event
-            scene.fire(EVENT_PRERENDER_LAYER, cameraComponent, layer, transparent);
+            if (!precompile) {
+                scene.fire(EVENT_PRERENDER_LAYER, cameraComponent, layer, transparent);
+            }
 
             const options = {
                 lightClusters: step.lightClusters
@@ -585,7 +605,9 @@ class RenderPassForward extends RenderPass {
             device.setAlphaToCoverage(false);
 
             // layer post render event
-            scene.fire(EVENT_POSTRENDER_LAYER, cameraComponent, layer, transparent);
+            if (!precompile) {
+                scene.fire(EVENT_POSTRENDER_LAYER, cameraComponent, layer, transparent);
+            }
 
             // restore gamma correction, tone mapping and scene texture settings
             if (this.gammaCorrection !== undefined) cameraComponent.gammaCorrection = originalGammaCorrection;
