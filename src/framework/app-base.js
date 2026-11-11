@@ -88,7 +88,6 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  * @property {number} frameTime - The duration of the frame which started it, in milliseconds.
  * @property {number} time - The duration of the precompile, until everything compiled, in
  * milliseconds.
- * @ignore
  */
 
 /**
@@ -1297,7 +1296,6 @@ class AppBase extends EventHandler {
      *     console.log(`Compiled ${stats.shaders} shaders in ${stats.time.toFixed(0)} ms`);
      * });
      * app.start();
-     * @ignore
      */
     precompile(options = {}) {
         if (!this._precompile) {
