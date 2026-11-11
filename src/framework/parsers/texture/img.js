@@ -2,9 +2,10 @@ import {
     PIXELFORMAT_RGBA8, TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-import { http } from '../../../platform/net/http.js';
+import { Http, http } from '../../../platform/net/http.js';
 
 import { ABSOLUTE_URL } from '../../asset/constants.js';
+import { isWebpConfigured, webpDecode } from '../webp-decoder.js';
 // #if _DEBUG
 import { ImgAlphaTest } from './img-alpha-test.js';
 import { Tracing } from '../../../core/tracing.js';
@@ -39,6 +40,13 @@ class ImgParser extends TextureParser {
     }
 
     load(url, callback, asset) {
+        // WebKit premultiplies an ImageBitmap despite premultiplyAlpha: 'none' (see img-alpha-test.js
+        // and #3518), so WebP data textures are decoded in software when a decoder is configured
+        if (isWebpConfigured() && this.handler._makeContext(url, asset).ext === 'webp') {
+            this._loadWebp(url, callback, asset);
+            return;
+        }
+
         const hasContents = !!asset?.file?.contents;
 
         if (hasContents) {
@@ -75,6 +83,9 @@ class ImgParser extends TextureParser {
     }
 
     open(url, data, device, textureOptions = {}) {
+        // the pixels of a software decoded WebP file, or else an image
+        const pixels = data.rgba;
+
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -84,11 +95,33 @@ class ImgParser extends TextureParser {
             height: data.height,
             format: PIXELFORMAT_RGBA8,
 
-            ...textureOptions
+            ...textureOptions,
+
+            ...(pixels && { levels: [pixels] })
         });
 
-        texture.setSource(data);
+        if (!pixels) {
+            texture.setSource(data);
+        }
         return texture;
+    }
+
+    _loadWebp(url, callback, asset) {
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, data) => {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // asset.file.contents can be an ArrayBuffer or a view of one
+            const bytes = ArrayBuffer.isView(data) ?
+                new Uint8Array(data.buffer, data.byteOffset, data.byteLength) :
+                new Uint8Array(data);
+
+            webpDecode(bytes)
+            .then(result => callback(null, result))
+            .catch(e => callback(e));
+        }, asset);
     }
 
     _loadImage(url, originalUrl, crossOrigin, callback, asset) {
