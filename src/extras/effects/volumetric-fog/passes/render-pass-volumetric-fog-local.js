@@ -36,6 +36,9 @@ const _cookieChannelMasks = {
 // mask assigned for a light which does not use a cookie, as the uniform is still declared
 const _cookieChannelMaskNone = [0, 0, 0, 0];
 
+// the lights of the pass without light clusters
+const _noLights = [];
+
 /**
  * Render pass adding the light scattered by the clustered omni and spot lights into the volumetric
  * fog texture. Each light is rendered as a separate quad covering the screen space bounds of its
@@ -396,8 +399,10 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
 
     execute() {
 
+        // without lights in the clusters, there is nothing to draw, other than the draw compiling
+        // the shader while precompiling
         const clusters = this._getLightClusters();
-        if (!clusters || !this.quadRender) {
+        if (!this.quadRender || (!clusters && !this._precompiling)) {
             return;
         }
 
@@ -447,7 +452,7 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         // lights is reserved for 'no light'.
         const { shadowsEnabled, cookiesEnabled } = lighting;
         const { omniLights, spotLights } = this;
-        const lights = clusters.usedLights;
+        const lights = clusters?.usedLights ?? _noLights;
         let drawn = 0;
         for (let i = 1; i < lights.length; i++) {
             const light = lights[i].light;

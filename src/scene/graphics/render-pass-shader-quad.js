@@ -274,9 +274,11 @@ class RenderPassShaderQuad extends RenderPass {
     precompile() {
 
         // the pass renders as it does in a frame, into a precompile pass of the device. Its before
-        // and after set up the values the shaders read, such as textures, and later passes can
-        // read the values its after publishes, so they run too
+        // and onBefore set up the values the shaders read, such as textures and buffers, and later
+        // passes can read the values its after publishes, so they run too. The onAfter callback
+        // does not, as it can use the results of the rendering, for example to read them back
         this.before();
+        this.onBefore?.(this);
         this.precompileExecute();
         this.after();
     }
