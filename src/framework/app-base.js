@@ -54,6 +54,7 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
+ * @import { EventHandle } from '../core/event-handle.js'
  * @import { GamePads } from '../platform/input/game-pads.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
@@ -405,7 +406,7 @@ class AppBase extends EventHandler {
      *
      * @type {{ options: { frustumCulling?: boolean }, started: boolean, total: number, done: number,
      * startTime: number, stats: PrecompileStats|null, promise: Promise<PrecompileStats>|null,
-     * resolve: Function|null }|null}
+     * resolve: Function|null, deviceLost: EventHandle|null }|null}
      * @private
      */
     _precompile = null;
@@ -1307,10 +1308,17 @@ class AppBase extends EventHandler {
                 startTime: now(),
                 stats: null,
                 promise: null,
-                resolve: null
+                resolve: null,
+                deviceLost: null
             };
             state.promise = new Promise((resolve) => {
                 state.resolve = resolve;
+            });
+
+            // a lost device abandons what it was compiling, so the compilation starts again for the
+            // restored device, in its first frame
+            state.deviceLost = this.graphicsDevice.on('devicelost', () => {
+                state.started = false;
             });
             this._precompile = state;
         }
@@ -1330,7 +1338,9 @@ class AppBase extends EventHandler {
 
         if (!state.started) {
 
-            // the frame which builds the frame and starts the compilation of what it renders
+            // the frame which builds the frame and starts the compilation of what it renders, also
+            // after the device was lost and restored
+            const restart = state.stats !== null;
             state.started = true;
             const shaderCount = device.shaders.length;
             const pipelineCount = device.renderPipeline?.asyncCount ?? 0;
@@ -1345,7 +1355,10 @@ class AppBase extends EventHandler {
                 time: 0
             };
             state.total = device.getPrecompilePendingCount();
-            this.fire('precompile:start');
+            state.done = -1;
+            if (!restart) {
+                this.fire('precompile:start');
+            }
 
         } else {
 
@@ -1369,6 +1382,7 @@ class AppBase extends EventHandler {
                 }
 
                 this._precompile = null;
+                state.deviceLost.off();
                 state.stats.time = now() - state.startTime;
                 this.fire('precompile:end', state.stats);
                 state.resolve(state.stats);
@@ -1415,7 +1429,7 @@ class AppBase extends EventHandler {
             return frustumCulling;
         });
 
-        renderer.cull(layerComposition);
+        renderer.cull(layerComposition, true);
 
         cameras?.forEach((camera, i) => {
             camera.frustumCulling = culling[i];

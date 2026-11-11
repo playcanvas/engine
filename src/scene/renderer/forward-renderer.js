@@ -884,8 +884,10 @@ class ForwardRenderer extends Renderer {
      * and shadow-caster culling have both read the shadow update mode before it is consumed here.
      *
      * @param {LayerComposition} comp - The layer composition.
+     * @param {boolean} [precompile] - True when the frame is only precompiled. Its shadow maps are
+     * not rendered, so the one-shot shadow updates stay pending for the frame which renders them.
      */
-    cull(comp) {
+    cull(comp, precompile = false) {
 
         // visibility culling of meshInstances and shadow casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
@@ -901,7 +903,9 @@ class ForwardRenderer extends Renderer {
 
         // consume one-shot (THISFRAME) shadow updates - the frame graph has been built and shadow
         // casters culled, so both have read the shadow update mode before it is changed here
-        this.culler.consumeOneShotShadows();
+        if (!precompile) {
+            this.culler.consumeOneShotShadows();
+        }
     }
 }
 
