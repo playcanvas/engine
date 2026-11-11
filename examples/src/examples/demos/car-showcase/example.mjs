@@ -1149,3 +1149,7 @@ app.on('update', (/** @type {number} */ dt) => {
         material.update();
     });
 });
+
+// compile the shaders and render pipelines of the whole scene in parallel before its first frame,
+// instead of one by one as it renders - the first frame renders once they compiled
+app.precompile();

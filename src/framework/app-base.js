@@ -54,6 +54,7 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
+ * @import { EventHandle } from '../core/event-handle.js'
  * @import { GamePads } from '../platform/input/game-pads.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
@@ -77,6 +78,17 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  * @callback PreloadAppCallback
  * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
  * @returns {void}
+ */
+
+/**
+ * The statistics of a precompile, see {@link AppBase#precompile}.
+ *
+ * @typedef {object} PrecompileStats
+ * @property {number} shaders - The number of shaders it created.
+ * @property {number} pipelines - The number of render pipelines it requested, on WebGPU.
+ * @property {number} frameTime - The duration of the frame which started it, in milliseconds.
+ * @property {number} time - The duration of the precompile, until everything compiled, in
+ * milliseconds.
  */
 
 /**
@@ -277,7 +289,9 @@ class AppBase extends EventHandler {
 
             this.fire('framerender');
 
-            if (this.autoRender || this.renderNextFrame) {
+            if (this._precompile && this._precompileFrame()) {
+                // the frame prepared the shaders, or waits for them to compile, and renders nothing
+            } else if (this.autoRender || this.renderNextFrame) {
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
@@ -386,6 +400,16 @@ class AppBase extends EventHandler {
      * }
      */
     renderNextFrame = false;
+
+    /**
+     * The state of a requested precompile, see {@link AppBase#precompile}, or null.
+     *
+     * @type {{ options: { frustumCulling?: boolean }, started: boolean, total: number, done: number,
+     * startTime: number, stats: PrecompileStats|null, promise: Promise<PrecompileStats>|null,
+     * resolve: Function|null, deviceLost: EventHandle|null }|null}
+     * @private
+     */
+    _precompile = null;
 
     /**
      * The graphics device used by the application.
@@ -1235,6 +1259,186 @@ class AppBase extends EventHandler {
         this.graphicsDevice.frameEnd();
     }
 
+    /**
+     * Prepares the shaders and the render pipelines the next frame needs, without rendering it, so
+     * that they compile in parallel instead of one by one as the frame renders. Shaders compile on
+     * a background thread of the browser on both WebGL2 and WebGPU, and on WebGPU the render
+     * pipelines are created asynchronously. The application keeps updating, but renders nothing
+     * until they finish compiling, and the canvas keeps its previous content.
+     *
+     * Call it after adding content which needs new shaders, such as at the start of the
+     * application or after loading a level. The mesh instances in the layers of the cameras take
+     * part, including those outside of their view, so that they do not compile when they come into
+     * view - or only those visible to the cameras, with frustum culling enabled for this. Anything
+     * else the frame needs is compiled when it renders, as it is now.
+     *
+     * The application fires events for a progress display, such as a loading bar. Note that the
+     * application renders nothing until the compilation finishes, so the display needs to be
+     * outside of the canvas, for example an HTML element:
+     *
+     * - `precompile:start` once the compilation has started.
+     * - `precompile:progress` with the fraction of the shaders and render pipelines compiled so
+     * far, from 0 to 1, in the frames in which it changed. On WebGL2, this requires the
+     * `KHR_parallel_shader_compile` extension, without which it reports 1 right away.
+     * - `precompile:end` with the statistics of the precompile, right before the frame which
+     * renders with everything compiled.
+     *
+     * @param {object} [options] - The options.
+     * @param {boolean} [options.frustumCulling] - True to prepare only the mesh instances visible
+     * to the cameras, which compiles fewer shaders up front. Defaults to false.
+     * @returns {Promise<PrecompileStats>} A promise resolved once the shaders and the render
+     * pipelines have compiled, before the frame which renders with them, with the statistics of
+     * the precompile. If the application is destroyed first, it resolves on its destruction, with
+     * the statistics collected until then.
+     * @example
+     * app.on('precompile:progress', (progress) => {
+     *     loadingBar.style.width = `${progress * 100}%`;
+     * });
+     * app.precompile().then((stats) => {
+     *     console.log(`Compiled ${stats.shaders} shaders in ${stats.time.toFixed(0)} ms`);
+     * });
+     * app.start();
+     */
+    precompile(options = {}) {
+        if (!this._precompile) {
+            const state = {
+                options,
+                started: false,
+                total: 0,
+                done: -1,
+                startTime: now(),
+                stats: null,
+                promise: null,
+                resolve: null,
+                deviceLost: null
+            };
+            state.promise = new Promise((resolve) => {
+                state.resolve = resolve;
+            });
+
+            // a lost device abandons what it was compiling, so the compilation starts again for the
+            // restored device, in its first frame
+            state.deviceLost = this.graphicsDevice.on('devicelost', () => {
+                state.started = false;
+            });
+            this._precompile = state;
+        }
+        return this._precompile.promise;
+    }
+
+    /**
+     * Runs a frame of a requested precompile.
+     *
+     * @returns {boolean} True when the frame was used by the precompile and renders nothing, false
+     * when it has finished and the frame renders as usual.
+     * @private
+     */
+    _precompileFrame() {
+        const state = this._precompile;
+        const device = this.graphicsDevice;
+
+        if (!state.started) {
+
+            // the frame which builds the frame and starts the compilation of what it renders, also
+            // after the device was lost and restored
+            const restart = state.stats !== null;
+            state.started = true;
+            const shaderCount = device.shaders.length;
+            const pipelineCount = device.renderPipeline?.asyncCount ?? 0;
+
+            const frameStart = now();
+            this.precompileScene(state.options);
+
+            state.stats = {
+                shaders: device.shaders.length - shaderCount,
+                pipelines: (device.renderPipeline?.asyncCount ?? 0) - pipelineCount,
+                frameTime: now() - frameStart,
+                time: 0
+            };
+            state.total = device.getPrecompilePendingCount();
+            state.done = -1;
+            if (!restart) {
+                this.fire('precompile:start');
+            }
+
+        } else {
+
+            // the following frames report the progress, until nothing is compiling
+            const pending = device.getPrecompilePendingCount();
+            state.total = Math.max(state.total, pending);
+            const done = state.total - pending;
+            if (done !== state.done) {
+                state.done = done;
+                this.fire('precompile:progress', state.total > 0 ? done / state.total : 1);
+            }
+
+            if (pending === 0) {
+
+                // where shaders may complete their compilation only at their first draw, the frame
+                // is drawn once more, into render targets of the precompile, right before it renders
+                if (device.precompileNeedsWarmup) {
+                    device.precompileWarmup = true;
+                    this.precompileScene(state.options);
+                    device.precompileWarmup = false;
+                }
+
+                this._precompile = null;
+                state.deviceLost.off();
+                state.stats.time = now() - state.startTime;
+                this.fire('precompile:end', state.stats);
+                state.resolve(state.stats);
+
+                // this frame renders, with everything compiled
+                return false;
+            }
+        }
+
+        // render nothing while the shaders compile, so that no draw waits for them. The immediate
+        // lines of a frame are dropped after it renders, and so they are by a frame rendering nothing
+        this.scene.immediate.onPostRender();
+        return true;
+    }
+
+    /**
+     * Builds and culls the frame as {@link AppBase#render} does, and prepares the shaders and
+     * requests the render pipelines of its passes, without rendering it, see
+     * {@link AppBase#precompile}. The device frame is not started, which would present an empty
+     * frame.
+     *
+     * @param {object} options - The options of the precompile.
+     * @param {boolean} [options.frustumCulling] - True to prepare only the mesh instances visible
+     * to the cameras.
+     * @private
+     */
+    precompileScene(options) {
+        this.updateCanvasSize();
+        this.root.syncHierarchy();
+        this._batcher?.updateAll();
+
+        const layerComposition = this.scene.layers;
+        const renderer = this.renderer;
+
+        renderer.update(layerComposition);
+        renderer.buildFrameGraph(this.frameGraph, layerComposition);
+
+        // unless frustum culling is requested, disable it for the cameras while they are culled for
+        // the frame. The cameras of the composition are known after its update above
+        const cameras = options.frustumCulling ? null : layerComposition.cameras.map(camera => camera.camera);
+        const culling = cameras?.map((camera) => {
+            const frustumCulling = camera.frustumCulling;
+            camera.frustumCulling = false;
+            return frustumCulling;
+        });
+
+        renderer.cull(layerComposition, true);
+
+        cameras?.forEach((camera, i) => {
+            camera.frustumCulling = culling[i];
+        });
+
+        this.frameGraph.precompile();
+    }
+
     // render a layer composition
     renderComposition(layerComposition) {
         DebugGraphics.clearGpuMarkers();
@@ -1856,6 +2060,16 @@ class AppBase extends EventHandler {
 
         this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
+
+        // a precompile still in progress ends, resolved with the statistics collected so far
+        const precompile = this._precompile;
+        if (precompile) {
+            this._precompile = null;
+            precompile.deviceLost.off();
+            const stats = precompile.stats ?? { shaders: 0, pipelines: 0, frameTime: 0, time: 0 };
+            stats.time = now() - precompile.startTime;
+            precompile.resolve(stats);
+        }
 
         // Clean up gsplat sort timing event listener
         this._gsplatSortedEvt?.off();

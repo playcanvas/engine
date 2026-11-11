@@ -40,10 +40,15 @@ import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
+ * @import { IndexBuffer } from '../index-buffer.js'
  * @import { RenderPass } from '../render-pass.js'
  * @import { Shader } from '../shader.js'
  * @import { Texture } from '../texture.js'
+ * @import { VertexBuffer } from '../vertex-buffer.js'
  */
+
+// the methods of the pass encoder of a precompile pass, which records nothing
+const _noop = () => {};
 
 // #if _DEBUG
 const _uniqueLocations = new Map();
@@ -988,6 +993,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
         this.bindGroupFormats.length = 0;
         this.renderPipeline.cache.clear();
+        this.renderPipeline.clearAsync();
         this.computePipeline.cache.clear();
     }
 
@@ -1378,6 +1384,72 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
     // #endif
 
+    /**
+     * Looks up the render pipeline of a draw with the current device state, creating it when
+     * missing.
+     *
+     * @param {object} primitive - The primitive.
+     * @param {IndexBuffer|undefined} indexBuffer - The index buffer.
+     * @param {VertexBuffer|undefined} vb0 - The first vertex buffer.
+     * @param {VertexBuffer|undefined} vb1 - The second vertex buffer.
+     * @param {boolean} async - True to create a missing pipeline asynchronously.
+     * @returns {GPURenderPipeline|null} The pipeline, or null while it is created asynchronously.
+     * @private
+     */
+    getPipeline(primitive, indexBuffer, vb0, vb1, async) {
+        return this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+            this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+            this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage, async);
+    }
+
+    startPrecompilePass(renderTarget) {
+        Debug.assert(!this.insideRenderPass, 'A precompile pass cannot be started inside a render pass.');
+
+        const rt = renderTarget ?? this.backBuffer;
+
+        // the back buffer is set up at the start of a frame, which a precompile frame does not
+        // start, as that would present an empty frame. Its formats are what the pipelines use
+        if (rt === this.backBuffer) {
+            if (!rt.initialized) {
+                const { width, height } = this.canvas;
+                this.backBufferSize.set(width, height);
+                rt._width = width;
+                rt._height = height;
+                rt.impl.setColorAttachment(0, undefined, this.backBufferViewFormat);
+                this.initRenderTarget(rt);
+            }
+        } else {
+            this.initRenderTarget(rt);
+        }
+
+        this._uploadDirtyTextures();
+
+        // the render target is used for the formats of the render pipelines, while the commands go
+        // to a pass encoder which records nothing
+        this.renderTarget = rt;
+        this._nullPassEncoder ??= new Proxy({}, { get: () => _noop });
+        this.passEncoder = this._nullPassEncoder;
+        this.setupPassEncoderDefaults();
+        this.insideRenderPass = true;
+        this._precompilePass = true;
+
+        const { width, height } = rt;
+        this.setViewport(0, 0, width, height);
+        this.setScissor(0, 0, width, height);
+    }
+
+    endPrecompilePass() {
+        this.passEncoder = null;
+        this.insideRenderPass = false;
+        this._precompilePass = false;
+        this.shaderAsyncCompile = false;
+        this.bindGroupFormats.length = 0;
+    }
+
+    getPrecompilePendingCount() {
+        return this.renderPipeline.pendingCount;
+    }
+
     draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true, firstInstance = 0) {
 
         if (this.shader.ready && !this.shader.failed) {
@@ -1423,10 +1495,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     this._pipelineVertexHash1 = vertexHash1;
                     this._pipelineIndexFormat = indexFormat;
 
-                    pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
-                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
-                    Debug.assert(pipeline);
+                    pipeline = this.getPipeline(primitive, indexBuffer, vb0, vb1, this.shaderAsyncCompile);
+
+                    // with an async compile, a missing pipeline is created asynchronously and the
+                    // draw is skipped, see setShader. It is looked up again by the next draw
+                    if (!pipeline) {
+                        Debug.assert(this.shaderAsyncCompile);
+                        this._pipelineDirty = true;
+                        if (last) {
+                            this.clearVertexBuffer();
+                        }
+                        return;
+                    }
 
                     if (this.pipeline !== pipeline) {
                         this.pipeline = pipeline;
@@ -1436,9 +1516,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                 Debug.call(() => {
                     // the pipeline reused without a lookup is the one a lookup would return
-                    const expected = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
-                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
+                    const expected = this.getPipeline(primitive, indexBuffer, vb0, vb1, false);
                     Debug.assert(expected === pipeline, 'A render state change was not tracked, the draw reused a stale render pipeline.', this);
                 });
             }
@@ -1499,6 +1577,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setShader(shader, asyncCompile = false) {
+
+        // a precompile pass compiles asynchronously whatever it renders
+        this.shaderAsyncCompile = asyncCompile || this._precompilePass;
 
         if (shader !== this.shader) {
             this.shader = shader;

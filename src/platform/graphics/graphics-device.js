@@ -476,6 +476,39 @@ class GraphicsDevice extends EventHandler {
     shaders = [];
 
     /**
+     * True while a precompile pass renders, see {@link GraphicsDevice#startPrecompilePass}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _precompilePass = false;
+
+    /**
+     * True when a precompile, see {@link AppBase#precompile}, needs a warm-up step to fully compile
+     * the shaders. On some backends a shader is not fully compiled when its compilation reports
+     * completion - the browser finishes compiling it the first time it is used for a draw, which
+     * then causes a stall during rendering. For example, WebGL in Chrome on macOS translates it
+     * to Metal, and compiles it for the GPU only when it first draws with it.
+     *
+     * On such a device, once the shaders have compiled, the precompile renders the frame once more
+     * with the draws enabled - the warm-up - so that this last step happens during loading instead.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    precompileNeedsWarmup = false;
+
+    /**
+     * True while the warm-up of a precompile renders, see
+     * {@link GraphicsDevice#precompileNeedsWarmup}. The precompile passes then draw, while
+     * otherwise they skip the draws.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    precompileWarmup = false;
+
+    /**
      * A set of currently created textures.
      *
      * @type {Set<Texture>}
@@ -1512,6 +1545,38 @@ class GraphicsDevice extends EventHandler {
         while (vertexBuffers.length > 0) {
             vertexBuffers.pop();
         }
+    }
+
+    /**
+     * Starts a precompile pass: the rendering until {@link GraphicsDevice#endPrecompilePass}
+     * compiles the shaders and the render pipelines it needs, without rendering anything, see
+     * {@link AppBase#precompile}. Shaders and pipelines which are not ready yet are compiled in
+     * parallel, and their draws are skipped instead of waiting for them.
+     *
+     * @param {RenderTarget|null} renderTarget - The render target the rendering is for, or null
+     * for the back buffer. It is not rendered to.
+     * @ignore
+     */
+    startPrecompilePass(renderTarget) {
+    }
+
+    /**
+     * Ends a precompile pass started by {@link GraphicsDevice#startPrecompilePass}.
+     *
+     * @ignore
+     */
+    endPrecompilePass() {
+    }
+
+    /**
+     * Returns the number of shaders and render pipelines still compiling, see
+     * {@link AppBase#precompile}. Zero on devices which cannot tell.
+     *
+     * @returns {number} The number of shaders and render pipelines still compiling.
+     * @ignore
+     */
+    getPrecompilePendingCount() {
+        return 0;
     }
 
     /**
