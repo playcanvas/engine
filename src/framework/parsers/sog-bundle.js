@@ -265,7 +265,7 @@ class SogBundleParser {
 
             if (!meta.quats) {
                 // early v3 files (splat-transform 3.11) stored the rotation in alpha channels
-                callback(`Error loading gsplat: SOG file has no quats texture, re-convert it with the latest splat-transform: ${url.original}`);
+                callback(`Error loading gsplat: SOG file has no quats texture (an early SOG v3 layout), regenerate it from the source scene with the latest splat-transform: ${url.original}`);
                 return;
             }
 
