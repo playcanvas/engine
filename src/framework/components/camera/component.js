@@ -849,17 +849,12 @@ class CameraComponent extends Component {
      * @type {boolean}
      */
     set reverseZ(value) {
-        const supported = this.system.app.graphicsDevice.isWebGPU;
-        Debug.call(() => {
-            if (value && !supported) {
-                Debug.warnOnce('CameraComponent#reverseZ is only supported on WebGPU, ignoring.');
-            }
-        });
-        this._camera.reverseZ = value && supported;
+        this._camera.reverseZ = value;
     }
 
     /**
-     * Gets whether the camera renders with a reversed depth buffer.
+     * Gets whether the camera is set to render with a reversed depth buffer. It stays set while
+     * the camera renders the views of an XR session, which are rendered without it.
      *
      * @type {boolean}
      */
