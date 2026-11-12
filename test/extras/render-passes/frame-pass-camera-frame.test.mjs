@@ -17,7 +17,7 @@ import {
     FRAMERESOURCE_SCENETARGET, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
 } from '../../../src/extras/render-passes/constants.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
 import { SceneDepthMapHandle } from '../../../src/platform/graphics/scene-depth-map-handle.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -997,6 +997,39 @@ describe('FramePassCameraFrame', function () {
                     expect(depthMap()).to.equal(null);
                     scenePassTransparent.after();
                     expect(depthMap()).to.equal(sceneDepthTexture);
+                }
+                effect.destroy();
+                cameraFrame.update();
+            });
+
+            it('keeps a depth the application published for the camera in this frame while the scene renders', function () {
+                const effect = createEffect('depthReader', [FRAMERESOURCE_DEPTH]);
+                cameraFrame.addEffect(effect);
+                cameraFrame.update();
+
+                const { scenePass, sceneDepthTexture } = cameraFrame.renderPassCamera;
+                if (sceneDepthTexture) {
+                    expect(scenePass.clearSceneTextures).to.equal(true);
+                    const device = app.graphicsDevice;
+                    const cameraComponent = cameraFrame.cameraComponent;
+                    const external = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false });
+
+                    // published by a pass of the application earlier in this frame
+                    cameraComponent.publishSceneDepthMap(external);
+                    scenePass.before();
+                    expect(depthMap()).to.equal(external);
+
+                    // published in an earlier frame
+                    device.renderVersion++;
+                    scenePass.before();
+                    expect(depthMap()).to.equal(null);
+
+                    // an attachment of the render target the scene renders into
+                    cameraComponent.publishSceneDepthMap(sceneDepthTexture);
+                    scenePass.before();
+                    expect(depthMap()).to.equal(null);
+
+                    external.destroy();
                 }
                 effect.destroy();
                 cameraFrame.update();
