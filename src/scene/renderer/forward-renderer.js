@@ -213,7 +213,7 @@ class ForwardRenderer extends Renderer {
         const shaderParams = camera.shaderParams;
         shaderParams.fog = fogParams.type;
         shaderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;    // output gamma correction is determined by the render target
-        shaderParams.reverseZ = camera.reverseZ;
+        shaderParams.reverseZ = camera.reverseZActive;
 
         const addCall = (drawCall, shaderInstance, isNewMaterial) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -317,7 +317,7 @@ class ForwardRenderer extends Renderer {
 
         // the depth tests and biases of the materials are reversed for a camera rendering with
         // reverse-z
-        const reverseZ = camera.reverseZ;
+        const reverseZ = camera.reverseZActive;
 
         // Render the scene
         for (let i = 0; i < preparedCallsCount; i++) {

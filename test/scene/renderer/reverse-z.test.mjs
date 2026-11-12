@@ -85,13 +85,18 @@ describe('Reverse-z', function () {
 
         const createCamera = (name, reverseZ) => {
             const entity = new Entity(name);
-            entity.addComponent('camera');
+            entity.addComponent('camera', { reverseZ });
             entity.setPosition(0, 0, 5);
-
-            // the camera property, as the component sets it on WebGPU only
-            entity.camera.camera.reverseZ = reverseZ;
             app.root.addChild(entity);
             return entity.camera;
+        };
+
+        // reverse-z is set on WebGPU only, so the tests rendering with it run under
+        // `npm run test:webgpu`
+        const requireWebGPU = (test) => {
+            if (!app.graphicsDevice.isWebGPU) {
+                test.skip();
+            }
         };
 
         const addBox = (material = new StandardMaterial()) => {
@@ -138,20 +143,47 @@ describe('Reverse-z', function () {
                 clone.destroy();
                 entity.destroy();
             });
+
+            it('is cloned from a camera rendering an XR session', function () {
+                requireWebGPU(this);
+                const entity = new Entity('camera');
+                entity.addComponent('camera', { reverseZ: true });
+                entity.camera.camera.xrViews = [];
+                const clone = entity.clone();
+
+                expect(clone.camera.reverseZ).to.equal(true);
+                expect(clone.camera.camera.reverseZActive).to.equal(true);
+                clone.destroy();
+                entity.destroy();
+            });
         });
 
-        it('is not applied to the views of an XR session', function () {
+        it('is set on the Camera on WebGPU only', function () {
+            const warn = spy(Debug, 'warnOnce');
+            const camera = new Camera(app.graphicsDevice);
+            camera.reverseZ = true;
+
+            const webgpu = app.graphicsDevice.isWebGPU;
+            expect(camera.reverseZ).to.equal(webgpu);
+            expect(camera.reverseZActive).to.equal(webgpu);
+            expect(warn.calledWithMatch('only supported on WebGPU')).to.equal(!webgpu);
+        });
+
+        it('is not applied to the views of an XR session, and stays set', function () {
+            requireWebGPU(this);
             const camera = createCamera('camera', true).camera;
-            expect(camera.reverseZ).to.equal(true);
+            expect(camera.reverseZActive).to.equal(true);
 
             camera.xrViews = [];
-            expect(camera.reverseZ).to.equal(false);
+            expect(camera.reverseZ).to.equal(true);
+            expect(camera.reverseZActive).to.equal(false);
 
             camera.xrViews = null;
-            expect(camera.reverseZ).to.equal(true);
+            expect(camera.reverseZActive).to.equal(true);
         });
 
         it('supplies the REVERSE_Z define to the shaders the camera renders with', function () {
+            requireWebGPU(this);
             const camera = createCamera('camera', true);
             addBox();
             app.render();
@@ -161,6 +193,7 @@ describe('Reverse-z', function () {
         });
 
         it('reverses the depth tests and biases of the materials', function () {
+            requireWebGPU(this);
             createCamera('camera', true);
             const material = new StandardMaterial();
             material.depthBias = 2;
@@ -197,6 +230,7 @@ describe('Reverse-z', function () {
         });
 
         it('clears the depth to the reverse of the clear depth of the camera', function () {
+            requireWebGPU(this);
             const reversed = createCamera('reversed', true);
             const standard = createCamera('standard', false);
 
@@ -218,7 +252,29 @@ describe('Reverse-z', function () {
             passes.forEach(pass => pass.destroy());
         });
 
+        it('clears the depth for a reverse-z setting changed by a prerender handler', function () {
+            requireWebGPU(this);
+            const camera = createCamera('camera', false);
+            const pass = new RenderPassForward(app.graphicsDevice, app.scene, camera);
+            pass.init(null);
+            pass.addLayer(app.scene.layers.getLayerByName('World'), false);
+
+            app.renderer.frameUpdate();
+            pass.frameUpdate();
+            expect(pass.depthStencilOps.clearDepthValue).to.equal(1);
+
+            // the event fires in before(), after the clears were set up, and before the pass starts
+            app.scene.on('prerender', (cameraComponent) => {
+                cameraComponent.reverseZ = true;
+            });
+            pass.before();
+            expect(pass.depthStencilOps.clearDepthValue).to.equal(0);
+
+            pass.destroy();
+        });
+
         it('keeps the frustum of the camera without reverse-z', function () {
+            requireWebGPU(this);
             const reversed = createCamera('reversed', true);
             const standard = createCamera('standard', false);
             addBox();
@@ -228,9 +284,7 @@ describe('Reverse-z', function () {
         });
 
         it('renders with the reversed projection on WebGPU', function () {
-            if (!app.graphicsDevice.isWebGPU) {
-                this.skip();
-            }
+            requireWebGPU(this);
 
             const camera = createCamera('camera', true);
             camera.nearClip = 0.5;
@@ -306,8 +360,7 @@ describe('Reverse-z', function () {
             const envAtlas = new Texture(app.graphicsDevice, { name: 'EnvAtlas', width: 4, height: 4, mipmaps: false });
             app.scene.envAtlas = envAtlas;
             const entity = new Entity('camera');
-            entity.addComponent('camera');
-            entity.camera.camera.reverseZ = true;
+            entity.addComponent('camera', { reverseZ: true });
             app.root.addChild(entity);
             app.render();
 
@@ -384,6 +437,13 @@ describe('Reverse-z', function () {
             expect(app.renderer.getReverseZDepthState(new DepthState(FUNC_LESSEQUAL, true))).to.equal(reversed);
             expect(app.renderer.getReverseZDepthState(DepthState.DEFAULT)).to.equal(reversed);
             expect(app.renderer.getReverseZDepthState(new DepthState(FUNC_LESSEQUAL, false))).to.not.equal(reversed);
+
+            // the biases are part of the key of a depth state, so each one gets its own reversed state
+            const biased = new DepthState(FUNC_LESSEQUAL, true);
+            biased.depthBias = 1;
+            const reversedBiased = app.renderer.getReverseZDepthState(biased);
+            expect(reversedBiased).to.not.equal(reversed);
+            expect(reversedBiased.depthBias).to.equal(-1);
         });
     });
 });

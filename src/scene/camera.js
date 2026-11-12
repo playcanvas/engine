@@ -208,7 +208,7 @@ class Camera {
     jitter = 0;
 
     /**
-     * True when reverse-z was requested for the camera, see {@link Camera#reverseZ}.
+     * True when the camera is set to render with reverse-z, see {@link Camera#reverseZ}.
      *
      * @type {boolean}
      * @private
@@ -676,24 +676,40 @@ class Camera {
 
     /**
      * Sets whether the camera renders with a reversed depth buffer, see
-     * {@link CameraComponent#reverseZ}, which only sets it on a WebGPU device.
+     * {@link CameraComponent#reverseZ}. Reverse-z is supported on WebGPU only, and is not set on
+     * other devices.
      *
      * @type {boolean}
      */
     set reverseZ(value) {
-        this._reverseZ = value;
+        const supported = this.device.isWebGPU;
+        Debug.call(() => {
+            if (value && !supported) {
+                Debug.warnOnce('Camera#reverseZ is only supported on WebGPU, ignoring.');
+            }
+        });
+        this._reverseZ = value && supported;
     }
 
     /**
-     * Gets whether the camera renders with a reversed depth buffer: the depth is 1 at the near
-     * plane and 0 at the far plane, the depth buffer clears to the reverse of
-     * {@link Camera#clearDepth}, and the depth tests of the materials are reversed. This is the
-     * requested value, unless the camera renders the views of an XR session, whose projections are
-     * not reversed.
+     * Gets whether the camera is set to render with a reversed depth buffer. See
+     * {@link Camera#reverseZActive} for whether it renders with it at the moment.
      *
      * @type {boolean}
      */
     get reverseZ() {
+        return this._reverseZ;
+    }
+
+    /**
+     * True when the camera renders with a reversed depth buffer: the depth is 1 at the near plane
+     * and 0 at the far plane, the depth buffer clears to the reverse of {@link Camera#clearDepth},
+     * and the depth tests of the materials are reversed. This is {@link Camera#reverseZ}, unless the
+     * camera renders the views of an XR session, whose projections are not reversed.
+     *
+     * @type {boolean}
+     */
+    get reverseZActive() {
         return this._reverseZ && !this.xrActive;
     }
 
@@ -973,7 +989,7 @@ class Camera {
         this.cullFaces = other.cullFaces;
         this.flipFaces = other.flipFaces;
         this.frustumCulling = other.frustumCulling;
-        this.reverseZ = other._reverseZ;
+        this.reverseZ = other.reverseZ;
         this.layers = other.layers;
         this.orthoHeight = other.orthoHeight;
         this.projection = other.projection;

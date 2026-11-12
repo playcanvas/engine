@@ -559,7 +559,7 @@ class Renderer {
             let projMatSkybox = camera.getProjectionMatrixSkybox();
 
             const webgpu = this.device.isWebGPU;
-            const reverseZ = webgpu && camera.reverseZ;
+            const reverseZ = camera.reverseZActive;
             projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu, reverseZ);
             projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu, reverseZ);
 
@@ -708,7 +708,7 @@ class Renderer {
             _tempClearColor[1] = c.g;
             _tempClearColor[2] = c.b;
             _tempClearColor[3] = c.a;
-            _tempClearOptions.depth = camera.reverseZ ? 1 - camera._clearDepth : camera._clearDepth;
+            _tempClearOptions.depth = camera.reverseZActive ? 1 - camera._clearDepth : camera._clearDepth;
             _tempClearOptions.stencil = camera._clearStencil;
             _tempClearOptions.flags = flags;
             device.clear(_tempClearOptions);
@@ -719,7 +719,7 @@ class Renderer {
 
     /**
      * Returns the depth state a draw of a camera rendering with reverse-z (see
-     * {@link Camera#reverseZ}) uses in place of the given one. The depth test function is reversed,
+     * {@link Camera#reverseZActive}) uses in place of the given one. The depth test function is reversed,
      * so that it keeps passing the nearer or the farther fragments as it does without reverse-z, and
      * so are the depth biases, so that they keep moving the depth towards or away from the camera.
      * The depth states are created once, and shared by all the cameras rendering with reverse-z.
