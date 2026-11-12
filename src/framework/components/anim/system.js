@@ -1,6 +1,6 @@
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { ComponentSystem } from '../system.js';
-import { AnimComponent } from './component.js';
+import { AnimComponent, ANIMUPDATE_OFFSCREEN, ANIMUPDATE_EVALUATED } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -31,6 +31,15 @@ import { AnimComponent } from './component.js';
  * @category Animation
  */
 class AnimComponentSystem extends ComponentSystem {
+    /**
+     * The number of animation updates performed, used to schedule the anim components with an
+     * evaluation interval.
+     *
+     * @type {number}
+     * @ignore
+     */
+    updateIndex = 0;
+
     /**
      * Create an AnimComponentSystem instance.
      *
@@ -107,29 +116,36 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     onAnimationUpdate(dt) {
+        this.updateIndex++;
+
         const components = this.store;
-        let posed = 0;
+        let evaluated = 0;
         let offscreen = 0;
+        let skipped = 0;
 
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
                 const component = components[id].entity.anim;
 
                 if (component.enabled && component.entity.enabled && component.playing) {
-                    if (component.update(dt)) {
-                        posed++;
-                    } else {
+                    const result = component.update(dt);
+                    if (result === ANIMUPDATE_EVALUATED) {
+                        evaluated++;
+                    } else if (result === ANIMUPDATE_OFFSCREEN) {
                         offscreen++;
+                    } else {
+                        skipped++;
                     }
                 }
             }
         }
 
-        // the number of anim components which updated their pose, and which skipped it as they
-        // were not visible
+        // the number of anim components which evaluated their animation, which skipped it as they
+        // were not visible, and which skipped it due to their evaluation interval
         const stats = this.app.stats.frame;
-        stats.animPoses = posed;
+        stats.animEvaluated = evaluated;
         stats.animOffscreen = offscreen;
+        stats.animIntervalSkipped = skipped;
     }
 
     /**
@@ -184,6 +200,7 @@ class AnimComponentSystem extends ComponentSystem {
             activate: entity.anim.activate,
             playing: entity.anim.playing,
             offscreenUpdate: entity.anim.offscreenUpdate,
+            evaluationInterval: entity.anim.evaluationInterval,
             rootBone: entity.anim.rootBone,
             stateGraph: entity.anim.stateGraph,
             layers: entity.anim.layers,

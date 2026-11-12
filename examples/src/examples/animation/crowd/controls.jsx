@@ -46,8 +46,8 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
             </Panel>
-            <Panel headerText='Off-screen'>
-                <LabelGroup text='Update'>
+            <Panel headerText='Optimizations'>
+                <LabelGroup text='Off-screen'>
                     <SelectInput
                         options={[
                             { v: 'full', t: 'Full' },
@@ -65,6 +65,13 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.prediction' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Distance LOD'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.lod' }}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Stats'>
                 <LabelGroup text='Anim update'>
@@ -73,10 +80,10 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.stats.animTime' }}
                     />
                 </LabelGroup>
-                <LabelGroup text='Posed'>
+                <LabelGroup text='Evaluated'>
                     <Label
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'data.stats.posed' }}
+                        link={{ observer, path: 'data.stats.evaluated' }}
                     />
                 </LabelGroup>
                 <LabelGroup text='Off-screen'>
@@ -85,10 +92,10 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.stats.offscreen' }}
                     />
                 </LabelGroup>
-                <LabelGroup text='Predicted'>
+                <LabelGroup text='LOD skipped'>
                     <Label
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'data.stats.predicted' }}
+                        link={{ observer, path: 'data.stats.skipped' }}
                     />
                 </LabelGroup>
             </Panel>
