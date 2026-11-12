@@ -219,14 +219,14 @@ class AnimEvaluator {
      * seconds.
      * @param {boolean} [outputAnimation] - Whether the evaluator should output the results of the
      * update to the bound animation targets.
-     * @param {boolean} [evaluatePose] - Whether the pose should be evaluated. When false, the clips
+     * @param {boolean} [evaluate] - Whether the animation should be evaluated. When false, the clips
      * only advance their time and fire their events, and nothing is applied to the targets.
      */
-    update(deltaTime, outputAnimation = true, evaluatePose = true) {
+    update(deltaTime, outputAnimation = true, evaluate = true) {
         // copy clips
         const clips = this._clips;
 
-        if (!evaluatePose) {
+        if (!evaluate) {
             for (let i = 0; i < clips.length; ++i) {
                 const clip = clips[i];
                 if (clip.blendWeight > 0.0) {

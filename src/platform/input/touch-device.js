@@ -94,6 +94,14 @@ class TouchDevice extends EventHandler {
     _cancelHandler;
 
     /**
+     * The element's inline `touch-action` before this device set it, restored on detach.
+     *
+     * @type {string}
+     * @private
+     */
+    _prevTouchAction = '';
+
+    /**
      * Create a new touch device and attach it to an element.
      *
      * @param {Element} element - The element to attach listen for events on.
@@ -113,6 +121,10 @@ class TouchDevice extends EventHandler {
      * Attach a device to an element in the DOM. If the device is already attached to an element
      * this method will detach it first.
      *
+     * The device sets the element's `touch-action` style to `none`, so the browser does not scroll
+     * or zoom the page while a touch on the element is in progress. The previous value is restored
+     * by {@link TouchDevice#detach}.
+     *
      * @param {Element} element - The element to attach to.
      */
     attach(element) {
@@ -121,6 +133,15 @@ class TouchDevice extends EventHandler {
         }
 
         this._element = element;
+
+        // Without this, the browser can claim a drag as a page scroll before the first touchmove
+        // reaches the engine. That touchmove is then not cancelable, and the browser cancels the
+        // touch, so the application stops receiving it.
+        const style = /** @type {HTMLElement} */ (element).style;
+        if (style) {
+            this._prevTouchAction = style.touchAction;
+            style.touchAction = 'none';
+        }
 
         this._element.addEventListener('touchstart', this._startHandler, false);
         this._element.addEventListener('touchend', this._endHandler, false);
@@ -137,6 +158,11 @@ class TouchDevice extends EventHandler {
             this._element.removeEventListener('touchend', this._endHandler, false);
             this._element.removeEventListener('touchmove', this._moveHandler, false);
             this._element.removeEventListener('touchcancel', this._cancelHandler, false);
+
+            const style = /** @type {HTMLElement} */ (this._element).style;
+            if (style) {
+                style.touchAction = this._prevTouchAction;
+            }
         }
         this._element = null;
     }
@@ -150,9 +176,11 @@ class TouchDevice extends EventHandler {
     }
 
     _handleTouchMove(e) {
-        // call preventDefault to avoid issues in Chrome Android:
-        // http://wilsonpage.co.uk/touch-events-in-chrome-android/
-        e.preventDefault();
+        // Stop the browser from scrolling or zooming during the drag. Once the browser has started
+        // a scroll the event is not cancelable, and calling preventDefault only logs a warning.
+        if (e.cancelable) {
+            e.preventDefault();
+        }
         this.fire('touchmove', new TouchEvent(this, e));
     }
 
