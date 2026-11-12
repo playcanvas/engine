@@ -1,8 +1,14 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { pathToFileURL } from 'url';
+
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
 import { AppBase } from '../../../src/framework/app-base.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -141,6 +147,75 @@ describe('ScriptHandler', function () {
 
             expect(app.scripts.get('customName')).to.equal(scripts.NamedScript);
             expect(warn.called).to.equal(false);
+        });
+    });
+
+    describe('hot reloading module scripts', function () {
+
+        let dir;
+
+        beforeEach(function () {
+            dir = mkdtempSync(join(tmpdir(), 'pc-esm-'));
+        });
+
+        afterEach(function () {
+            rmSync(dir, { recursive: true, force: true });
+        });
+
+        // a module script exporting one script type, tagged with a version so a test can tell
+        // which evaluation of the file it got
+        const write = (name, version) => {
+            const file = join(dir, name);
+            writeFileSync(file, `
+                import { Script } from '${scriptUrl}';
+                export class Rotator extends Script {
+                    static scriptName = 'rotator';
+                    static version = ${version};
+                    swap(old) {}
+                }`);
+            return pathToFileURL(file).href;
+        };
+
+        const loaded = asset => new Promise((resolve, reject) => {
+            asset.once('load', resolve);
+            asset.once('error', reject);
+            app.assets.load(asset);
+        });
+
+        it('imports a module by its plain URL the first time it loads', async function () {
+            const url = write('rotator.mjs', 1);
+            const imports = [];
+            const handler = app.loader.getHandler('script');
+            const importModule = handler._loadModule;
+            handler._loadModule = function (u, callback) {
+                imports.push(u);
+                return importModule.call(this, u, callback);
+            };
+
+            const asset = new Asset('rotator.mjs', 'script', { url: `${url}?id=1`, filename: 'rotator.mjs', hash: 'h1' });
+            app.assets.add(asset);
+            await loaded(asset);
+
+            expect(imports).to.deep.equal([url]);
+            expect(app.scripts.get('rotator').version).to.equal(1);
+        });
+
+        it('re-evaluates an edited module and swaps in its new script type', async function () {
+            const url = write('rotator.mjs', 1);
+            const asset = new Asset('rotator.mjs', 'script', { url: `${url}?id=1`, filename: 'rotator.mjs', hash: 'h1' });
+            app.assets.add(asset);
+            await loaded(asset);
+            expect(app.scripts.get('rotator').version).to.equal(1);
+
+            write('rotator.mjs', 2);
+            const swapped = new Promise((resolve) => {
+                app.scripts.once('swap:rotator', resolve);
+            });
+            asset.file = { url: `${url}?id=1`, filename: 'rotator.mjs', hash: 'h2' };
+            const type = await swapped;
+
+            expect(type.version).to.equal(2);
+            expect(app.scripts.get('rotator')).to.equal(type);
         });
     });
 });

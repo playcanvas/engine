@@ -335,13 +335,13 @@ void evaluateLight(
                 float lobeValue = 0.0;
                 #ifdef CLUSTER_AREALIGHT_RECT
                 if (areaIsRect) {
-                    lobeValue = LTC_EvaluateRect(lobeNormal, viewDir, vPositionW, lobeInvMat, dLTCCoords);
+                    lobeValue = LTC_EvaluateRect(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
                 } else
                 #endif
                 #if defined(CLUSTER_AREALIGHT_DISK) || defined(CLUSTER_AREALIGHT_SPHERE)
                 if (areaIsDisk || lobe >= 2) {
                     // the specular of a sphere light uses the disk facing the reflection
-                    lobeValue = LTC_EvaluateDisk(lobeNormal, viewDir, vPositionW, lobeInvMat, dLTCCoords);
+                    lobeValue = LTC_EvaluateDisk(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
                     if (lobe < 2) lobeValue = FixNan(lobeValue);
                 } else
                 #endif
@@ -419,7 +419,7 @@ void evaluateLight(
                     vec4 cookieChannelMask = decodeClusterLightCookieData();
 
                     if (light.isSpot) {
-                        cookieAttenuation = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, vPositionW, light.cookieIntensity, cookieChannelMask);
+                        cookieAttenuation = getCookie2DClustered(TEXTURE_PASS(cookieAtlasTexture), lightProjectionMatrix, litArgs_worldPosition, light.cookieIntensity, cookieChannelMask);
                     } else {
                         cookieAttenuation = getCookieCubeClustered(TEXTURE_PASS(cookieAtlasTexture), lightDirW, light.cookieIntensity, cookieChannelMask, shadowTextureResolution, shadowEdgePixels, omniAtlasViewport);
                     }
@@ -685,7 +685,7 @@ void addClusteredLights(
         return;
 
     // world space position to 3d integer cell coordinates in the cluster structure
-    ivec3 cellCoords = ivec3(floor((vPositionW - clusterBoundsMin) * clusterCellsCountByBoundsSize));
+    ivec3 cellCoords = ivec3(floor((litArgs_worldPosition - clusterBoundsMin) * clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range
     if (!(any(lessThan(cellCoords, ivec3(0))) || any(greaterThanEqual(cellCoords, clusterCellsMax)))) {

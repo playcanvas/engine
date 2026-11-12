@@ -64,7 +64,7 @@ export default /* wgsl */`
 
         #if LIGHT{i}TYPE == DIRECTIONAL
             // Beyond the shadow distance, skip cascade selection and shadow-map sampling.
-            if (1.0 / pcPosition.w > uniform.light{i}_shadowCascadeDistances.w) {
+            if (dViewDepth > uniform.light{i}_shadowCascadeDistances.w) {
                 return 1.0;
             }
         #endif
@@ -82,7 +82,7 @@ export default /* wgsl */`
         #if LIGHT{i}TYPE == OMNI
 
             // omni shadows use cubemap and sample by direction
-            var shadowCoord: vec3f = getShadowSampleCoordOmni{i}(uniform.light{i}_shadowParams, vPositionW, uniform.light{i}_position, &lightDirArg, dLightDirNormW, shadowNormal);
+            var shadowCoord: vec3f = getShadowSampleCoordOmni{i}(uniform.light{i}_shadowParams, litArgs_worldPosition, uniform.light{i}_position, &lightDirArg, dLightDirNormW, shadowNormal);
 
         #else
 
@@ -98,9 +98,9 @@ export default /* wgsl */`
             #endif
 
             #if LIGHT{i}TYPE == DIRECTIONAL
-                var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, vec3f(0.0), &lightDirArg, dLightDirNormW, shadowNormal);
+                var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, litArgs_worldPosition, vec3f(0.0), &lightDirArg, dLightDirNormW, shadowNormal);
             #else
-                var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, uniform.light{i}_position, &lightDirArg, dLightDirNormW, shadowNormal);
+                var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, litArgs_worldPosition, uniform.light{i}_position, &lightDirArg, dLightDirNormW, shadowNormal);
             #endif
 
         #endif

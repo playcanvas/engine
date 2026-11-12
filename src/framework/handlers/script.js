@@ -30,6 +30,14 @@ class ScriptHandler extends ResourceHandler {
 
         this._scripts = { };
         this._cache = { };
+
+        /**
+         * The file hash each module script was first imported with, by its URL without the query.
+         *
+         * @type {Map<string, string>}
+         * @private
+         */
+        this._modules = new Map();
     }
 
     clearCache() {
@@ -43,7 +51,7 @@ class ScriptHandler extends ResourceHandler {
         this._cache = {};
     }
 
-    load(url, callback) {
+    load(url, callback, asset) {
         // Scripts don't support bundling since we concatenate them. Below is for consistency.
         if (typeof url === 'string') {
             url = {
@@ -54,6 +62,9 @@ class ScriptHandler extends ResourceHandler {
 
         const self = this;
         script.app = this._app;
+
+        // the key the loader cached this script under, cleared once loaded so an edit loads it again
+        const key = ResourceLoader.makeKey(url.load, 'script');
 
         const onScriptLoad = (url.load, (err, url, extra) => {
             if (!err) {
@@ -68,8 +79,7 @@ class ScriptHandler extends ResourceHandler {
                 callback(null, obj, extra);
 
                 // no cache for scripts
-                const urlWithoutEndHash = url.split('&hash=')[0];
-                delete self._loader._cache[ResourceLoader.makeKey(urlWithoutEndHash, 'script')];
+                delete self._loader._cache[key];
             } else {
                 callback(err);
             }
@@ -80,7 +90,16 @@ class ScriptHandler extends ResourceHandler {
         const isEsmScript = basePath.endsWith('.mjs');
 
         if (isEsmScript) {
-            this._loadModule(basePath, onScriptLoad);
+            // the first import uses the plain URL, so it is the same module that other scripts import.
+            // the browser keeps a module for as long as the page, so a file edited since then is
+            // imported under a new URL to evaluate its new code
+            const hash = asset?.file?.hash;
+            const first = this._modules.get(basePath);
+            if (first === undefined) {
+                this._modules.set(basePath, hash ?? '');
+            }
+            const edited = first !== undefined && !!hash && hash !== first;
+            this._loadModule(edited ? `${basePath}?t=${hash}` : basePath, onScriptLoad);
         } else {
             this._loadScript(url.load, onScriptLoad);
         }

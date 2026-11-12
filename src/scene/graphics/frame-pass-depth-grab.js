@@ -117,6 +117,12 @@ class FramePassDepthGrab extends FramePass {
         camera.publishSceneDepthMap(colorBuffer, device.renderVersion, false, false, false, destinationRt.flipY);
     }
 
+    precompile() {
+
+        // the copy needs no shaders, but the passes after it read the texture it publishes
+        this.before();
+    }
+
     execute() {
 
         const device = this.device;

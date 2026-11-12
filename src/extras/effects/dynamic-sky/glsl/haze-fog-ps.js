@@ -14,8 +14,8 @@ export default /* glsl */`
         #include "dynamicSkyHazePS"
 
         vec3 addFog(vec3 color) {
-            float amount = dynamicSkyHazeAmount(view_position, vPositionW);
-            return mix(color, dynamicSkyHazeColor(vPositionW - view_position) * dBlendModeFogFactor, amount);
+            float amount = dynamicSkyHazeAmount(view_position, litArgs_worldPosition);
+            return mix(color, dynamicSkyHazeColor(litArgs_worldPosition - view_position) * dBlendModeFogFactor, amount);
         }
 
     #elif defined(VERTEXSHADER)

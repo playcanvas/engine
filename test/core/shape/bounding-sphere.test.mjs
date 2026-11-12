@@ -6,6 +6,23 @@ import { Ray } from '../../../src/core/shape/ray.js';
 
 describe('BoundingSphere', function () {
 
+    describe('#constructor', function () {
+
+        it('copies the center instead of keeping a reference', function () {
+            const center = new Vec3(1, 2, 3);
+            const sphere = new BoundingSphere(center, 1);
+            center.set(4, 5, 6);
+            expect(sphere.center).to.not.equal(center);
+            expect(sphere.center.equals(new Vec3(1, 2, 3))).to.equal(true);
+        });
+
+        it('defaults to the origin', function () {
+            const sphere = new BoundingSphere();
+            expect(sphere.center.equals(Vec3.ZERO)).to.equal(true);
+            expect(sphere.radius).to.equal(0.5);
+        });
+    });
+
     describe('#intersectsRay', function () {
 
         it('returns the entry point for a ray starting outside the sphere', function () {

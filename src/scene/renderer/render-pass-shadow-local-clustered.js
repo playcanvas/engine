@@ -43,6 +43,14 @@ class RenderPassShadowLocalClustered extends RenderPass {
         }
     }
 
+    precompile() {
+
+        // the execution renders the shadows of the lights scheduled for the frame and clears that
+        // list, which a frame that does not render needs as well, so it runs as it is, into a
+        // precompile pass of the device which renders nothing
+        this.precompileExecute();
+    }
+
     execute() {
 
         const shadowLights = this.shadowRendererLocal.shadowLights;

@@ -98,12 +98,15 @@ class DefaultAnimBinder {
                 }
 
                 if (instances.length > 0) {
+                    // resolve the weight names to indices once, to avoid a name lookup every frame
+                    const indices = instances.map(instance => instance._getWeightIndex(weightName));
+
                     // Provide both get/set functions to support layer blending
                     const func = {
                         set: (value) => {
                             // Apply weight to all morph instances on this node
                             for (let i = 0; i < instances.length; ++i) {
-                                instances[i].setWeight(weightName, value[0]);
+                                instances[i].setWeight(indices[i], value[0]);
                             }
                         },
                         get: () => {

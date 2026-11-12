@@ -475,14 +475,35 @@ class RenderPassForward extends RenderPass {
         }
     }
 
-    after() {
+    precompile() {
 
-        // Publish the scene textures this pass rendered, making them available to the passes which
-        // consume them. This happens before the events below, so that a handler reading them sees the
-        // ones from this frame. Note that the depth prepass publishes its own depth to the same
-        // uniform, from its own after - the two are producers of the same thing, and this pass runs
-        // later, so the scene texture depth, which additionally covers the blended geometry, is what
-        // the consumers sample.
+        // the layers render as when the pass executes, into a precompile pass of the device, which
+        // compiles the shaders and the render pipelines without rendering. The layer events are
+        // not fired, as nothing renders
+        const { device, layerComposition, layerRenderSteps } = this;
+        device.startPrecompilePass(this.renderTarget);
+        for (let i = 0; i < layerRenderSteps.length; i++) {
+            const step = layerRenderSteps[i];
+            if (layerComposition.isEnabled(step.layer, step.transparent)) {
+                this.renderLayerRenderStep(step, i === 0, true);
+            }
+        }
+        device.endPrecompilePass();
+
+        // the passes which read the scene textures of the pass bind them as in a frame
+        this.publishSceneTextures();
+    }
+
+    /**
+     * Publishes the scene textures this pass rendered, making them available to the passes which
+     * consume them. Note that the depth prepass publishes its own depth to the same uniform, from
+     * its own after - the two are producers of the same thing, and this pass runs later, so the
+     * scene texture depth, which additionally covers the blended geometry, is what the consumers
+     * sample.
+     *
+     * @private
+     */
+    publishSceneTextures() {
         const sceneTextures = this.sceneTextures;
         if (this.sceneTexturesCamera && sceneTextures?.length) {
             const { renderTarget } = this;
@@ -504,6 +525,13 @@ class RenderPassForward extends RenderPass {
                 }
             }
         }
+    }
+
+    after() {
+
+        // Publish the scene textures before the events below, so that a handler reading them sees
+        // the ones from this frame
+        this.publishSceneTextures();
 
         // onPostRender event
         if (this.lastCameraUse) {
@@ -514,9 +542,11 @@ class RenderPassForward extends RenderPass {
     /**
      * @param {LayerRenderStep} step - The layer render step.
      * @param {boolean} firstStep - True if this is the first render step in the render pass.
+     * @param {boolean} [precompile] - True when the step only precompiles, see
+     * {@link FramePass#precompile}, which does not fire the layer events.
      * @ignore
      */
-    renderLayerRenderStep(step, firstStep) {
+    renderLayerRenderStep(step, firstStep, precompile = false) {
 
         const { renderer, scene } = this;
         const device = renderer.device;
@@ -542,7 +572,9 @@ class RenderPassForward extends RenderPass {
             if (this.toneMapping !== undefined) cameraComponent.toneMapping = this.toneMapping;
 
             // layer pre render event
-            scene.fire(EVENT_PRERENDER_LAYER, cameraComponent, layer, transparent);
+            if (!precompile) {
+                scene.fire(EVENT_PRERENDER_LAYER, cameraComponent, layer, transparent);
+            }
 
             const options = {
                 lightClusters: step.lightClusters
@@ -585,7 +617,9 @@ class RenderPassForward extends RenderPass {
             device.setAlphaToCoverage(false);
 
             // layer post render event
-            scene.fire(EVENT_POSTRENDER_LAYER, cameraComponent, layer, transparent);
+            if (!precompile) {
+                scene.fire(EVENT_POSTRENDER_LAYER, cameraComponent, layer, transparent);
+            }
 
             // restore gamma correction, tone mapping and scene texture settings
             if (this.gammaCorrection !== undefined) cameraComponent.gammaCorrection = originalGammaCorrection;

@@ -98,6 +98,10 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 * 📦 **에셋** - [glTF 2.0](https://www.khronos.org/gltf/), [Draco](https://google.github.io/draco/), [Basis](https://github.com/BinomialLLC/basis_universal) 압축 기술을 이용한 비동기형 스트리밍 시스템
 * 📜 **스크립트** - TypeScript와 JavaScript 지원
 
+## AI를 활용한 개발
+
+코딩 에이전트는 [엔진 가이드 인덱스](https://developer.playcanvas.com/user-manual/engine/llms.txt)와 [엔진 API 인덱스](https://api.playcanvas.com/engine/llms.txt)에서 시작하세요. 두 인덱스 모두 각 페이지의 Markdown 버전으로 연결됩니다. 프로젝트에서 에이전트를 설정하는 방법은 [Developing with AI](https://developer.playcanvas.com/user-manual/engine/developing-with-ai/)에서 설명합니다.
+
 ## 에코시스템
 
 원하는 방식으로 PlayCanvas를 사용하여 개발하세요:
