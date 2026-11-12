@@ -1,5 +1,5 @@
 import {
-    BoundingBox, Frustum, Mat4, Script,
+    BoundingBox, Frustum, Mat4, Script, Vec3,
     OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE, OFFSCREENUPDATE_STATE
 } from 'playcanvas';
 
@@ -45,7 +45,10 @@ const getFrustum = (cameraEntity, frame) => {
     }
     if (entry.frame !== frame) {
         entry.frame = frame;
-        view.copy(cameraEntity.getWorldTransform()).invert();
+
+        // the view is built from the world position and rotation of the camera, without its
+        // scale, the same way the renderer builds it
+        view.setTRS(cameraEntity.getPosition(), cameraEntity.getRotation(), Vec3.ONE).invert();
         viewProjection.mul2(cameraEntity.camera.projectionMatrix, view);
         entry.frustum.setFromMat4(viewProjection);
     }
@@ -76,7 +79,14 @@ const getFrustum = (cameraEntity, frame) => {
  * this script, for example by creating the camera before the characters. Otherwise the camera
  * transform of the previous frame is used, which the {@link margin} covers for small movements.
  *
- * The frustum of each camera is built once per frame and shared by all the characters using it.
+ * The frustum of each camera is built once per frame and shared by all the characters using it,
+ * from the world position and rotation of the camera and its projection matrix. The views of an
+ * XR session are not taken into account.
+ *
+ * The render components of the character are cached, and the cache is cleared when a render
+ * component is added to or removed from its hierarchy. Moving an entity with a render component
+ * into the hierarchy of the character is not detected, so disable and enable the script to search
+ * the hierarchy again.
  *
  * @example
  * character.addComponent('script');
@@ -155,8 +165,8 @@ class AnimUpdateOptimizer extends Script {
     visible = false;
 
     /**
-     * The render components of the character, found once to avoid searching the hierarchy every
-     * frame.
+     * The render components of the character, cached to avoid searching the hierarchy every frame.
+     * The cache is cleared when a render component is added to or removed from the hierarchy.
      *
      * @type {RenderComponent[]|null}
      * @private
@@ -164,6 +174,20 @@ class AnimUpdateOptimizer extends Script {
     _renders = null;
 
     initialize() {
+        // clear the cache of the render components when they change in the hierarchy
+        const renderSystem = this.app.systems.render;
+        const onRenderChanged = (/** @type {Entity} */ entity) => {
+            if (this._renders && this._isInHierarchy(entity)) {
+                this._renders = null;
+            }
+        };
+        renderSystem?.on('add', onRenderChanged);
+        renderSystem?.on('beforeremove', onRenderChanged);
+        this.once('destroy', () => {
+            renderSystem?.off('add', onRenderChanged);
+            renderSystem?.off('beforeremove', onRenderChanged);
+        });
+
         // restore the defaults of the anim component when the script stops controlling it
         const restore = () => {
             const anim = this.entity.anim;
@@ -172,6 +196,7 @@ class AnimUpdateOptimizer extends Script {
                 anim.evaluationInterval = 1;
             }
             this.visible = false;
+            this._renders = null;
         };
         this.on('disable', restore);
         this.on('destroy', restore);
@@ -202,6 +227,24 @@ class AnimUpdateOptimizer extends Script {
     }
 
     /**
+     * Returns true if the entity is the character entity or one of its descendants.
+     *
+     * @param {Entity} entity - The entity.
+     * @returns {boolean} True if the entity is in the hierarchy of the character.
+     * @private
+     */
+    _isInHierarchy(entity) {
+        let node = entity;
+        while (node) {
+            if (node === this.entity) {
+                return true;
+            }
+            node = node.parent;
+        }
+        return false;
+    }
+
+    /**
      * Returns true if the bounds of any mesh instance of the character, enlarged by the margin,
      * intersect the frustum.
      *
@@ -210,7 +253,8 @@ class AnimUpdateOptimizer extends Script {
      * @private
      */
     _isVisible(frustum) {
-        if (!this._renders) {
+        // search again while none were found, as the model can be added after the script
+        if (!this._renders?.length) {
             this._renders = this.entity.findComponents('render');
         }
 

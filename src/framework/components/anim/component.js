@@ -18,8 +18,9 @@ const ANIMUPDATE_EVALUATED = 0;
 const ANIMUPDATE_OFFSCREEN = 1;
 const ANIMUPDATE_INTERVAL = 2;
 
-// spreads the evaluation of anim components with an evaluation interval over the frames
-let evaluationFrameStagger = 0;
+// for each evaluation interval, the number of anim components assigned a phase of it, used to spread
+// the components with the same interval over the frames of the interval
+const evaluationPhaseCounters = new Map();
 
 /**
  * The AnimComponent enables an {@link Entity} to play back animations on models and entity
@@ -83,11 +84,12 @@ class AnimComponent extends Component {
     _evaluationInterval = 1;
 
     /**
-     * The number of updates since the animation was last evaluated, used with evaluationInterval.
+     * The frame of the evaluation interval in which the animation is evaluated, which spreads the
+     * anim components with the same interval over its frames.
      *
      * @private
      */
-    _evaluationFrame = 0;
+    _evaluationPhase = 0;
 
     /**
      * True when the animation was not evaluated in the last update as the anim component was not
@@ -307,8 +309,10 @@ class AnimComponent extends Component {
         if (interval !== this._evaluationInterval) {
             this._evaluationInterval = interval;
 
-            // spread the anim components over the frames of the interval
-            this._evaluationFrame = evaluationFrameStagger++ % interval;
+            // spread the anim components with the same interval over its frames
+            const count = evaluationPhaseCounters.get(interval) ?? 0;
+            evaluationPhaseCounters.set(interval, count + 1);
+            this._evaluationPhase = count % interval;
         }
     }
 
@@ -969,10 +973,12 @@ class AnimComponent extends Component {
         // with an evaluation interval, skip the evaluation until it is due, unless it is out of date
         // after the anim component was not visible
         if (result === ANIMUPDATE_EVALUATED) {
-            if (this._evaluationInterval > 1 && !this._evaluationOffscreen && ++this._evaluationFrame < this._evaluationInterval) {
+            // the phase is tested against an update index shared by all anim components, so an
+            // evaluation forced by becoming visible does not change when the next ones happen
+            const interval = this._evaluationInterval;
+            if (interval > 1 && !this._evaluationOffscreen && (this.system.updateIndex + this._evaluationPhase) % interval !== 0) {
                 result = ANIMUPDATE_INTERVAL;
             } else {
-                this._evaluationFrame = 0;
                 this._evaluationOffscreen = false;
             }
         }

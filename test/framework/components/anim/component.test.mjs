@@ -606,6 +606,52 @@ describe('AnimComponent', function () {
             expect(root.getLocalScale().x).to.be.closeTo(2.5, 1e-5);
         });
 
+        // the number of anim components evaluated in each of the given number of updates
+        const evaluatedPerUpdate = (updates) => {
+            const counts = [];
+            for (let i = 0; i < updates; i++) {
+                app.systems.anim.onAnimationUpdate(0.01);
+                counts.push(app.stats.frame.animEvaluated);
+            }
+            return counts;
+        };
+
+        it('spreads the anim components with the same interval over its frames', function () {
+            for (let i = 0; i < 16; i++) {
+                createAnimated({ evaluationInterval: 4 });
+            }
+
+            expect(evaluatedPerUpdate(4)).to.deep.equal([4, 4, 4, 4]);
+        });
+
+        it('spreads each interval over its frames when intervals are mixed', function () {
+            // alternating intervals 2 and 3, 16 anim components each
+            for (let i = 0; i < 16; i++) {
+                createAnimated({ evaluationInterval: 2 });
+                createAnimated({ evaluationInterval: 3 });
+            }
+
+            // 8 of interval 2 and 5 or 6 of interval 3 in each update
+            const counts = evaluatedPerUpdate(6);
+            counts.forEach((count) => {
+                expect(count).to.be.within(13, 14);
+            });
+        });
+
+        it('keeps the anim components spread after they become visible together', function () {
+            const roots = [];
+            for (let i = 0; i < 16; i++) {
+                roots.push(createAnimated({ offscreenUpdate: OFFSCREENUPDATE_STATE, evaluationInterval: 4 }).root);
+            }
+
+            // not visible for an update, then all visible again
+            app.systems.anim.onAnimationUpdate(0.01);
+            roots.forEach(root => root.markDeformedRendered(app.graphicsDevice.renderVersion));
+
+            // all are evaluated when they become visible, and then spread over the frames again
+            expect(evaluatedPerUpdate(5)).to.deep.equal([16, 4, 4, 4, 4]);
+        });
+
         it('is kept when the entity is cloned', function () {
             const { root } = createAnimated({ evaluationInterval: 3 });
 

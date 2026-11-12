@@ -32,6 +32,15 @@ import { AnimComponent, ANIMUPDATE_OFFSCREEN, ANIMUPDATE_EVALUATED } from './com
  */
 class AnimComponentSystem extends ComponentSystem {
     /**
+     * The number of animation updates performed, used to schedule the anim components with an
+     * evaluation interval.
+     *
+     * @type {number}
+     * @ignore
+     */
+    updateIndex = 0;
+
+    /**
      * Create an AnimComponentSystem instance.
      *
      * @param {AppBase} app - The application managing this system.
@@ -107,6 +116,8 @@ class AnimComponentSystem extends ComponentSystem {
     }
 
     onAnimationUpdate(dt) {
+        this.updateIndex++;
+
         const components = this.store;
         let evaluated = 0;
         let offscreen = 0;
