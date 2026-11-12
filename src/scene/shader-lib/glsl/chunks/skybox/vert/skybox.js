@@ -67,7 +67,12 @@ void main(void) {
     // Subtract a tiny fudge factor to ensure floating point errors don't
     // still push pixels beyond far Z. See:
     // https://community.khronos.org/t/skybox-problem/61857
+    // With reverse-z the far Z is zero, which needs no fudge factor.
 
-    gl_Position.z = gl_Position.w - 1.0e-7;
+    #ifdef REVERSE_Z
+        gl_Position.z = 0.0;
+    #else
+        gl_Position.z = gl_Position.w - 1.0e-7;
+    #endif
 }
 `;
