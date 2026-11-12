@@ -39,11 +39,17 @@ describe('Deformed mesh render version', function () {
 
     const renderVersion = () => app.graphicsDevice.renderVersion;
 
-    // a single triangle mesh, with bounds of half extents 1 around its node
-    const createMesh = () => {
+    // a single triangle mesh, with bounds of half extents 1 around its node. A skinned mesh has
+    // all its vertices fully weighted to the first bone, as skinned shaders require the attributes
+    const createMesh = (skinned = false) => {
         return Mesh.fromGeometry(app.graphicsDevice, {
             positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-            indices: [0, 1, 2]
+            normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+            indices: [0, 1, 2],
+            ...(skinned && {
+                blendIndices: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                blendWeights: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+            })
         });
     };
 
@@ -57,7 +63,7 @@ describe('Deformed mesh render version', function () {
         skinInstance.bones = [bone];
         skinInstance.rootBone = skinRoot;
 
-        const meshInstance = new MeshInstance(createMesh(), app.systems.render.defaultMaterial, entity);
+        const meshInstance = new MeshInstance(createMesh(true), app.systems.render.defaultMaterial, entity);
         meshInstance.skinInstance = skinInstance;
 
         entity.addComponent('render', { type: 'asset' });
