@@ -417,26 +417,26 @@ describe('AnimComponent', function () {
 
             expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
             expect(counter.events).to.equal(1);
-            expect(app.stats.frame.animPoses).to.equal(1);
+            expect(app.stats.frame.animEvaluated).to.equal(1);
             expect(app.stats.frame.animOffscreen).to.equal(0);
         });
 
-        it('advances time and fires events, but skips the pose, when not visible with OFFSCREENUPDATE_STATE', function () {
+        it('advances time and fires events, but skips the evaluation, when not visible with OFFSCREENUPDATE_STATE', function () {
             const { root, counter } = createAnimated(OFFSCREENUPDATE_STATE);
 
             app.systems.anim.onAnimationUpdate(0.5);
 
             expect(root.getLocalScale().x).to.equal(1);
             expect(counter.events).to.equal(1);
-            expect(app.stats.frame.animPoses).to.equal(0);
+            expect(app.stats.frame.animEvaluated).to.equal(0);
             expect(app.stats.frame.animOffscreen).to.equal(1);
 
-            // once visible, the pose is evaluated at the time which advanced while not visible
+            // once visible, the animation is evaluated at the time which advanced while not visible
             markRendered(root);
             app.systems.anim.onAnimationUpdate(0.25);
 
             expect(root.getLocalScale().x).to.be.closeTo(2.5, 1e-5);
-            expect(app.stats.frame.animPoses).to.equal(1);
+            expect(app.stats.frame.animEvaluated).to.equal(1);
         });
 
         it('does not update at all when not visible with OFFSCREENUPDATE_NONE', function () {
@@ -488,12 +488,12 @@ describe('AnimComponent', function () {
             markRendered(root);
             rig._deformedRenderVersion = -1;
             app.systems.anim.onAnimationUpdate(0.5);
-            expect(app.stats.frame.animPoses).to.equal(0);
+            expect(app.stats.frame.animEvaluated).to.equal(0);
 
             // a deformed mesh instance rendered under the root bone marks it, and its ancestors
             markRendered(rig);
             app.systems.anim.onAnimationUpdate(0.5);
-            expect(app.stats.frame.animPoses).to.equal(1);
+            expect(app.stats.frame.animEvaluated).to.equal(1);
         });
 
         it('is kept when the entity is cloned', function () {
@@ -502,6 +502,116 @@ describe('AnimComponent', function () {
             const clone = root.clone();
 
             expect(clone.anim.offscreenUpdate).to.equal(OFFSCREENUPDATE_STATE);
+        });
+    });
+
+    describe('#evaluationInterval', function () {
+
+        // a track scaling the anim component entity from 1 to 3 over one second, with an event at
+        // 0.4 seconds
+        const scaleTrack = () => {
+            const curve = new AnimCurve([{
+                entityPath: ['root'],
+                component: 'entity',
+                propertyPath: ['localScale']
+            }], 0, 0, INTERPOLATION_LINEAR);
+
+            return new AnimTrack('Scale', 1, [new AnimData(1, [0, 1])], [new AnimData(3, [1, 1, 1, 3, 3, 3])],
+                [curve], new AnimEvents([{ name: 'step', time: 0.4 }]));
+        };
+
+        const createAnimated = (data = {}) => {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+            root.addComponent('anim', { activate: true, ...data });
+            root.anim.assignAnimation('Scale', scaleTrack());
+
+            const counter = { events: 0 };
+            root.anim.on('step', () => counter.events++);
+            return { root, counter };
+        };
+
+        it('defaults to evaluating the animation every frame', function () {
+            const { root } = createAnimated();
+            expect(root.anim.evaluationInterval).to.equal(1);
+        });
+
+        it('clamps the interval to a whole number of at least 1', function () {
+            const { root } = createAnimated();
+
+            root.anim.evaluationInterval = 0;
+            expect(root.anim.evaluationInterval).to.equal(1);
+
+            root.anim.evaluationInterval = 2.7;
+            expect(root.anim.evaluationInterval).to.equal(2);
+
+            root.anim.evaluationInterval = undefined;
+            expect(root.anim.evaluationInterval).to.equal(1);
+        });
+
+        it('evaluates the animation once per interval, at the current animation time', function () {
+            const { root } = createAnimated({ evaluationInterval: 3 });
+
+            // over 6 updates of 0.1 seconds, the animation is evaluated twice
+            let evaluated = 0;
+            for (let i = 0; i < 6; i++) {
+                app.systems.anim.onAnimationUpdate(0.1);
+                evaluated += app.stats.frame.animEvaluated;
+            }
+            expect(evaluated).to.equal(2);
+
+            // the animation was last evaluated within the last 3 updates, at a time of 0.4 to 0.6
+            // seconds, which is a scale of 1.8 to 2.2
+            const scale = root.getLocalScale().x;
+            expect(scale).to.be.within(1.8 - 1e-5, 2.2 + 1e-5);
+        });
+
+        it('fires animation events on the frames the animation is not evaluated', function () {
+            const { counter } = createAnimated({ evaluationInterval: 4 });
+
+            for (let i = 0; i < 5; i++) {
+                app.systems.anim.onAnimationUpdate(0.1);
+            }
+
+            expect(counter.events).to.equal(1);
+        });
+
+        it('counts the skipped evaluations in the stats', function () {
+            createAnimated({ evaluationInterval: 2 });
+
+            let evaluated = 0;
+            let skipped = 0;
+            for (let i = 0; i < 4; i++) {
+                app.systems.anim.onAnimationUpdate(0.1);
+                evaluated += app.stats.frame.animEvaluated;
+                skipped += app.stats.frame.animIntervalSkipped;
+            }
+
+            expect(evaluated).to.equal(2);
+            expect(skipped).to.equal(2);
+        });
+
+        it('evaluates the animation immediately when the anim component becomes visible', function () {
+            const { root } = createAnimated({ offscreenUpdate: OFFSCREENUPDATE_STATE, evaluationInterval: 4 });
+
+            // not visible
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(app.stats.frame.animOffscreen).to.equal(1);
+
+            // visible again, the animation is evaluated in this frame, whatever the interval
+            root.markDeformedRendered(app.graphicsDevice.renderVersion);
+            app.systems.anim.onAnimationUpdate(0.25);
+
+            expect(app.stats.frame.animEvaluated).to.equal(1);
+            expect(root.getLocalScale().x).to.be.closeTo(2.5, 1e-5);
+        });
+
+        it('is kept when the entity is cloned', function () {
+            const { root } = createAnimated({ evaluationInterval: 3 });
+
+            const clone = root.clone();
+
+            expect(clone.anim.evaluationInterval).to.equal(3);
         });
     });
 });

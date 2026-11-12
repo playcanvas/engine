@@ -110,7 +110,7 @@ describe('Deformed mesh render version', function () {
         expect(top._deformedRenderVersion).to.equal(renderVersion());
     });
 
-    it('updates the pose of an anim component rooted below the skin root when its mesh is rendered', function () {
+    it('evaluates the animation of an anim component rooted below the skin root when its mesh is rendered', function () {
         const top = new Entity('top');
         const subtree = new Entity('subtree');
         const bone = new Entity('bone');
@@ -131,7 +131,7 @@ describe('Deformed mesh render version', function () {
         app.render();
         app.systems.anim.onAnimationUpdate(0.5);
 
-        expect(app.stats.frame.animPoses).to.equal(1);
+        expect(app.stats.frame.animEvaluated).to.equal(1);
         expect(bone.getLocalScale().x).to.be.closeTo(2, 1e-5);
     });
 
