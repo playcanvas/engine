@@ -1613,7 +1613,9 @@ class GraphicsDevice extends EventHandler {
      * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
      * controlled by the {@link maxIndirectDrawCount} property. This buffer can be passed to a
      * {@link Compute} shader along with a slot obtained by calling {@link getIndirectDrawSlot}, in
-     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}.
+     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}. The
+     * buffer can also be read back, see {@link StorageBuffer#read}, for example to inspect the
+     * parameters a compute shader wrote.
      *
      * Only available on WebGPU, returns null on other platforms.
      *
@@ -1641,7 +1643,8 @@ class GraphicsDevice extends EventHandler {
      * Returns the buffer used to store arguments for indirect compute dispatch calls. The size of
      * the buffer is controlled by the {@link maxIndirectDispatchCount} property. This buffer can
      * be passed to a {@link Compute} shader along with a slot obtained by calling
-     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters.
+     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters. The
+     * buffer can also be read back, see {@link StorageBuffer#read}.
      *
      * Only available on WebGPU, returns null on other platforms.
      *
