@@ -192,6 +192,15 @@ class GraphNode extends EventHandler {
     _dirtyWorld = false;
 
     /**
+     * The render version of the last frame in which a skinned or morphed mesh instance attached to
+     * this node or one of its descendants was rendered. Used to skip animating characters which are
+     * not visible.
+     *
+     * @ignore
+     */
+    _deformedRenderVersion = -1;
+
+    /**
      * Cached value representing the negatively scaled world transform. If the value is 0, this
      * marks this value as dirty and it needs to be recalculated. If the value is 1, the world
      * transform is not negatively scaled. If the value is -1, the world transform is negatively
@@ -1170,6 +1179,22 @@ class GraphNode extends EventHandler {
             if (!this._dirtyWorld) {
                 this._dirtifyWorld();
             }
+        }
+    }
+
+    /**
+     * Marks this node and its ancestors as having a skinned or morphed mesh instance rendered in
+     * the frame with the given render version. The walk stops at the first node already marked in
+     * this frame, so only the first mesh instance of a hierarchy walks up to the root.
+     *
+     * @param {number} renderVersion - The render version of the current frame.
+     * @ignore
+     */
+    markDeformedRendered(renderVersion) {
+        let node = this;
+        while (node && node._deformedRenderVersion !== renderVersion) {
+            node._deformedRenderVersion = renderVersion;
+            node = node._parent;
         }
     }
 

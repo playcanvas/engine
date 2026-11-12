@@ -321,7 +321,12 @@ class AnimComponentLayer {
         this._controller.rebind();
     }
 
-    update(dt) {
+    /**
+     * @param {number} dt - The time elapsed since the last update, in seconds.
+     * @param {boolean} [evaluatePose] - Whether the pose should be evaluated and applied.
+     * @ignore
+     */
+    update(dt, evaluatePose = true) {
         if (this._blendTime) {
             if (this._blendTimeElapsed < this._blendTime) {
                 this.weight = math.lerp(this._startingWeight, this._targetWeight, this._blendTimeElapsed / this._blendTime);
@@ -334,7 +339,7 @@ class AnimComponentLayer {
                 this._targetWeight = 0;
             }
         }
-        this._controller.update(dt);
+        this._controller.update(dt, evaluatePose);
     }
 
 

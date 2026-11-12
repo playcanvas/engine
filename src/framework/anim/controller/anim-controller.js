@@ -665,7 +665,12 @@ class AnimController {
         this._animEvaluator.rebind();
     }
 
-    update(dt) {
+    /**
+     * @param {number} dt - The time elapsed since the last update, in seconds.
+     * @param {boolean} [evaluatePose] - Whether the pose should be evaluated and applied. When
+     * false, the state graph, transitions and animation events still update.
+     */
+    update(dt, evaluatePose = true) {
         if (!this._playing) {
             return;
         }
@@ -747,7 +752,7 @@ class AnimController {
                 }
             }
         }
-        this._animEvaluator.update(dt, this.activeState.hasAnimations);
+        this._animEvaluator.update(dt, this.activeState.hasAnimations, evaluatePose);
     }
 
     findParameter = (name) => {

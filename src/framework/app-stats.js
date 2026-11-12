@@ -84,6 +84,8 @@ class AppStats {
             scriptPostUpdate: 0,
             animUpdateStart: 0,
             animUpdate: 0,
+            animPoses: 0,
+            animOffscreen: 0,
             cullTime: 0,
             sortTime: 0,
             skinTime: 0,
