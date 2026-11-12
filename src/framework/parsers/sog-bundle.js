@@ -263,7 +263,13 @@ class SogBundleParser {
                 return;
             }
 
-            // extract filenames from meta.json (v3 has no quats and may carry blind data)
+            if (!meta.quats) {
+                // early v3 files (splat-transform 3.11) stored the rotation in alpha channels
+                callback(`Error loading gsplat: SOG file has no quats texture, re-convert it with the latest splat-transform: ${url.original}`);
+                return;
+            }
+
+            // extract filenames from meta.json (v3 may carry blind data)
             const filenames = [
                 ...['means', 'scales', 'quats', 'sh0', 'shN'].map(key => meta[key]?.files ?? []).flat(),
                 ...(meta.blind ?? []).map(t => t.files[0])
@@ -352,7 +358,7 @@ class SogBundleParser {
             data.numSplats = meta.count;
             data.means_l = textures[meta.means.files[0]].resource;
             data.means_u = textures[meta.means.files[1]].resource;
-            data.quats = meta.quats ? textures[meta.quats.files[0]].resource : null;
+            data.quats = textures[meta.quats.files[0]].resource;
             data.scales = textures[meta.scales.files[0]].resource;
             data.sh0 = textures[meta.sh0.files[0]].resource;
             data.sh_centroids = textures[meta.shN?.files[0]]?.resource;

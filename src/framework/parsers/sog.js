@@ -134,12 +134,15 @@ class SogParser {
         } else if (meta.version !== 2 && meta.version !== 3) {
             callback(`Error loading gsplat: unsupported SOG version ${meta.version} in ${url.original}`);
             return;
+        } else if (!meta.quats) {
+            // early v3 files (splat-transform 3.11) stored the rotation in alpha channels
+            callback(`Error loading gsplat: SOG file has no quats texture, re-convert it with the latest splat-transform: ${url.original}`);
+            return;
         }
 
         const { assets } = this.app;
 
-        // v3 has no quats texture (the rotation lives in the alpha channels of means_l, means_u
-        // and scales) and may carry per-gaussian blind data
+        // v3 may carry per-gaussian blind data
         const subs = ['means', 'quats', 'scales', 'sh0', 'shN', 'blind'];
 
         const textures = {};
@@ -239,7 +242,7 @@ class SogParser {
         data.numSplats = meta.count;
         data.means_l = textures.means[0].resource;
         data.means_u = textures.means[1].resource;
-        data.quats = textures.quats[0]?.resource ?? null;
+        data.quats = textures.quats[0].resource;
         data.scales = textures.scales[0].resource;
         data.sh0 = textures.sh0[0].resource;
         data.sh_centroids = textures.shN?.[0]?.resource;
