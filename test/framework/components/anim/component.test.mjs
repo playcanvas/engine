@@ -1,9 +1,12 @@
 import { expect } from 'chai';
 
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
-import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../../../../src/framework/anim/controller/constants.js';
+import {
+    ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE, OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE, OFFSCREENUPDATE_STATE
+} from '../../../../src/framework/anim/controller/constants.js';
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
+import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { MeshInstance } from '../../../../src/scene/mesh-instance.js';
@@ -358,6 +361,147 @@ describe('AnimComponent', function () {
             root.anim.assignAnimation('Scale', scaleTrack(['root', 'missing']));
 
             expect(() => app.systems.anim.onAnimationUpdate(0.5)).to.not.throw();
+        });
+    });
+
+    describe('#offscreenUpdate', function () {
+
+        // a track scaling the anim component entity from 1 to 3 over one second, with an event at
+        // 0.4 seconds
+        const scaleTrack = () => {
+            const curve = new AnimCurve([{
+                entityPath: ['root'],
+                component: 'entity',
+                propertyPath: ['localScale']
+            }], 0, 0, INTERPOLATION_LINEAR);
+
+            return new AnimTrack('Scale', 1, [new AnimData(1, [0, 1])], [new AnimData(3, [1, 1, 1, 3, 3, 3])],
+                [curve], new AnimEvents([{ name: 'step', time: 0.4 }]));
+        };
+
+        // an entity with an anim component playing the scale track, counting its events
+        const createAnimated = (offscreenUpdate) => {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+            root.addComponent('anim', offscreenUpdate ? { activate: true, offscreenUpdate } : { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack());
+
+            const counter = { events: 0 };
+            root.anim.on('step', () => counter.events++);
+            return { root, counter };
+        };
+
+        // marks the entity as rendered in the last frame, as the renderer does for an entity with a
+        // visible skinned or morphed mesh instance
+        const markRendered = (entity) => {
+            entity.markDeformedRendered(app.graphicsDevice.renderVersion);
+        };
+
+        it('defaults to a full update', function () {
+            const { root } = createAnimated();
+            expect(root.anim.offscreenUpdate).to.equal(OFFSCREENUPDATE_FULL);
+        });
+
+        it('falls back to a full update when set to undefined', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+            root.addComponent('anim', { activate: true, offscreenUpdate: undefined });
+
+            expect(root.anim.offscreenUpdate).to.equal(OFFSCREENUPDATE_FULL);
+        });
+
+        it('updates fully when not visible with OFFSCREENUPDATE_FULL', function () {
+            const { root, counter } = createAnimated(OFFSCREENUPDATE_FULL);
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
+            expect(counter.events).to.equal(1);
+            expect(app.stats.frame.animPoses).to.equal(1);
+            expect(app.stats.frame.animOffscreen).to.equal(0);
+        });
+
+        it('advances time and fires events, but skips the pose, when not visible with OFFSCREENUPDATE_STATE', function () {
+            const { root, counter } = createAnimated(OFFSCREENUPDATE_STATE);
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(root.getLocalScale().x).to.equal(1);
+            expect(counter.events).to.equal(1);
+            expect(app.stats.frame.animPoses).to.equal(0);
+            expect(app.stats.frame.animOffscreen).to.equal(1);
+
+            // once visible, the pose is evaluated at the time which advanced while not visible
+            markRendered(root);
+            app.systems.anim.onAnimationUpdate(0.25);
+
+            expect(root.getLocalScale().x).to.be.closeTo(2.5, 1e-5);
+            expect(app.stats.frame.animPoses).to.equal(1);
+        });
+
+        it('does not update at all when not visible with OFFSCREENUPDATE_NONE', function () {
+            const { root, counter } = createAnimated(OFFSCREENUPDATE_NONE);
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(root.getLocalScale().x).to.equal(1);
+            expect(counter.events).to.equal(0);
+            expect(app.stats.frame.animOffscreen).to.equal(1);
+
+            // once visible, the animation resumes from where it stopped
+            markRendered(root);
+            app.systems.anim.onAnimationUpdate(0.25);
+
+            expect(root.getLocalScale().x).to.be.closeTo(1.5, 1e-5);
+            expect(counter.events).to.equal(0);
+        });
+
+        it('updates fully when visible, whatever the off-screen update mode', function () {
+            const { root, counter } = createAnimated(OFFSCREENUPDATE_NONE);
+
+            markRendered(root);
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
+            expect(counter.events).to.equal(1);
+        });
+
+        it('is not visible when rendered in an older frame', function () {
+            const { root } = createAnimated(OFFSCREENUPDATE_STATE);
+
+            root._deformedRenderVersion = app.graphicsDevice.renderVersion - 1;
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(root.getLocalScale().x).to.equal(1);
+        });
+
+        it('takes the visibility from the root bone when set', function () {
+            const root = new Entity('root', app);
+            const rig = new Entity('rig', app);
+            root.addChild(rig);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true, offscreenUpdate: OFFSCREENUPDATE_STATE, rootBone: rig });
+            root.anim.assignAnimation('Scale', scaleTrack());
+
+            // marking only the root entity does not make the anim component visible
+            markRendered(root);
+            rig._deformedRenderVersion = -1;
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(app.stats.frame.animPoses).to.equal(0);
+
+            // a deformed mesh instance rendered under the root bone marks it, and its ancestors
+            markRendered(rig);
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(app.stats.frame.animPoses).to.equal(1);
+        });
+
+        it('is kept when the entity is cloned', function () {
+            const { root } = createAnimated(OFFSCREENUPDATE_STATE);
+
+            const clone = root.clone();
+
+            expect(clone.anim.offscreenUpdate).to.equal(OFFSCREENUPDATE_STATE);
         });
     });
 });

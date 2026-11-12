@@ -8,7 +8,8 @@ import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
 import {
-    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES,
+    OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE
 } from '../../anim/controller/constants.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
@@ -66,6 +67,9 @@ class AnimComponent extends Component {
 
     /** @private */
     _playing = false;
+
+    /** @private */
+    _offscreenUpdate = OFFSCREENUPDATE_FULL;
 
     /** @private */
     _rootBone = null;
@@ -223,6 +227,41 @@ class AnimComponent extends Component {
      */
     get playing() {
         return this._playing;
+    }
+
+    /**
+     * Sets how the anim component updates when it is not visible. The anim component is visible
+     * when a skinned or morphed mesh instance attached to its root (see {@link rootBone}) or a
+     * descendant of it was rendered in the previous frame, by any camera, including shadow
+     * casting. Can be:
+     *
+     * - {@link OFFSCREENUPDATE_FULL}: Always update fully. This is the default.
+     * - {@link OFFSCREENUPDATE_STATE}: Update the state graph, transitions and animation events,
+     * but do not evaluate and apply the pose.
+     * - {@link OFFSCREENUPDATE_NONE}: Do not update at all. The animation resumes where it stopped.
+     *
+     * Visibility is determined in the previous frame, so a character which becomes visible renders
+     * its previous pose for one frame. To avoid this, the application can predict the visibility
+     * (for example by testing the bounds of the character against the camera frustum) and set
+     * {@link OFFSCREENUPDATE_FULL} on characters likely to become visible.
+     *
+     * Only skinned and morphed mesh instances are taken into account, so an anim component which
+     * animates a hierarchy without them is never visible, and should use the default
+     * {@link OFFSCREENUPDATE_FULL}.
+     *
+     * @type {string}
+     */
+    set offscreenUpdate(value) {
+        this._offscreenUpdate = value ?? OFFSCREENUPDATE_FULL;
+    }
+
+    /**
+     * Gets how the anim component updates when it is not visible.
+     *
+     * @type {string}
+     */
+    get offscreenUpdate() {
+        return this._offscreenUpdate;
     }
 
     /**
@@ -849,14 +888,32 @@ class AnimComponent extends Component {
         }
     }
 
+    /**
+     * @param {number} dt - The time elapsed since the last update, in seconds.
+     * @returns {boolean} False if the pose was not updated, as the anim component is not visible.
+     * @ignore
+     */
     update(dt) {
+        let evaluatePose = true;
+        if (this._offscreenUpdate !== OFFSCREENUPDATE_FULL) {
+            // visible if a deformed mesh instance in the animated hierarchy was rendered last frame
+            const root = this._rootBone || this.entity;
+            if (root._deformedRenderVersion !== this.system.app.graphicsDevice.renderVersion) {
+                if (this._offscreenUpdate === OFFSCREENUPDATE_NONE) {
+                    return false;
+                }
+                evaluatePose = false;
+            }
+        }
+
         for (let i = 0; i < this.layers.length; i++) {
-            this.layers[i].update(dt * this.speed);
+            this.layers[i].update(dt * this.speed, evaluatePose);
         }
         this._consumedTriggers.forEach((trigger) => {
             this.parameters[trigger].value = false;
         });
         this._consumedTriggers.clear();
+        return evaluatePose;
     }
 
     resolveDuplicatedEntityReferenceProperties(oldAnim, duplicatedIdsMap) {

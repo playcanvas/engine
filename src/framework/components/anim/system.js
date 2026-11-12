@@ -108,16 +108,28 @@ class AnimComponentSystem extends ComponentSystem {
 
     onAnimationUpdate(dt) {
         const components = this.store;
+        let posed = 0;
+        let offscreen = 0;
 
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
                 const component = components[id].entity.anim;
 
                 if (component.enabled && component.entity.enabled && component.playing) {
-                    component.update(dt);
+                    if (component.update(dt)) {
+                        posed++;
+                    } else {
+                        offscreen++;
+                    }
                 }
             }
         }
+
+        // the number of anim components which updated their pose, and which skipped it as they
+        // were not visible
+        const stats = this.app.stats.frame;
+        stats.animPoses = posed;
+        stats.animOffscreen = offscreen;
     }
 
     /**
@@ -171,6 +183,7 @@ class AnimComponentSystem extends ComponentSystem {
             speed: entity.anim.speed,
             activate: entity.anim.activate,
             playing: entity.anim.playing,
+            offscreenUpdate: entity.anim.offscreenUpdate,
             rootBone: entity.anim.rootBone,
             stateGraph: entity.anim.stateGraph,
             layers: entity.anim.layers,

@@ -1,8 +1,6 @@
 // @config
 //
-// A crowd of independently animated characters, for profiling the CPU cost of skinned animation.
-//
-// `WASDQE` Move · Hold `Shift` Move fast · Hold `Ctrl` Move slow · `LMB` / `RMB` Orbit / fly · Hold `Shift` / `MMB` Pan · `Wheel` Zoom
+// A crowd of animated characters, which skip updating their pose while off-screen.
 //
 // @credit
 // title: Sparse Grass
@@ -59,6 +57,8 @@ import {
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
+
+import { CrowdVisibility } from './crowd-visibility.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -150,9 +150,9 @@ app.scene.exposure = 1.1;
 
 // a soft haze which fades the far ground into the sky
 app.scene.fog.type = FOG_LINEAR;
-app.scene.fog.color.set(0.66, 0.8, 0.88);
-app.scene.fog.start = 50;
-app.scene.fog.end = 400;
+app.scene.fog.color.set(0.72, 0.83, 0.9);
+app.scene.fog.start = 30;
+app.scene.fog.end = 250;
 
 // the grassy ground, reaching far beyond the area the characters wander in
 const GROUND_SIZE = 2000;
@@ -166,9 +166,8 @@ for (const map of [assets.grass.resource, assets.grassNormal.resource]) {
 groundMaterial.diffuseMap = assets.grass.resource;
 groundMaterial.normalMap = assets.grassNormal.resource;
 groundMaterial.diffuse.set(0.62, 0.95, 0.42);
-groundMaterial.gloss = 0.15;
-groundMaterial.useMetalness = true;
-groundMaterial.metalness = 0;
+// no specular, as the reflection of the bright sky at grazing angles washes out the grass
+groundMaterial.specular.set(0, 0, 0);
 const tiling = GROUND_SIZE / GRASS_TILE_SIZE;
 groundMaterial.diffuseMapTiling.set(tiling, tiling);
 groundMaterial.normalMapTiling.set(tiling, tiling);
@@ -346,6 +345,10 @@ const speedForState = (state) => {
 /** @type {Character[]} */
 const characters = [];
 
+// the entities of the characters, for the visibility prediction
+/** @type {Entity[]} */
+const crowdEntities = [];
+
 const randomPoint = (/** @type {Vec3} */ out) => {
     // uniformly distributed over the round area
     const angle = random() * Math.PI * 2;
@@ -396,6 +399,7 @@ const createCharacter = () => {
 
     app.root.addChild(entity);
     characters.push(character);
+    crowdEntities.push(entity);
 };
 
 const setCount = (/** @type {number} */ count) => {
@@ -404,6 +408,7 @@ const setCount = (/** @type {number} */ count) => {
     }
     while (characters.length > count) {
         characters.pop().entity.destroy();
+        crowdEntities.pop();
     }
 };
 
@@ -476,6 +481,43 @@ const updateCharacter = (character, dt) => {
     character.entity.setLocalEulerAngles(0, character.heading, 0);
 };
 
+// predicts which characters are visible to the camera, to update their pose before they come
+// into view. It is added after the camera controls, so it uses the camera transform of this frame
+const crowdVisibility = /** @type {CrowdVisibility} */ (
+    camera.script.create(CrowdVisibility, {
+        properties: {
+            camera,
+            characters: crowdEntities,
+            margin: 1
+        }
+    })
+);
+data.on('data.prediction:set', (/** @type {boolean} */ value) => {
+    crowdVisibility.predict = value;
+});
+data.on('data.offscreenUpdate:set', (/** @type {string} */ value) => {
+    crowdVisibility.offscreenUpdate = value;
+});
+
+// the counters shown in the stats panel, averaged over a short period
+const stats = { frames: 0, posed: 0, offscreen: 0, predicted: 0, animTime: 0, time: 0 };
+app.on('frameend', () => {
+    const frame = app.stats.frame;
+    stats.frames++;
+    stats.posed += frame.animPoses;
+    stats.offscreen += frame.animOffscreen;
+    stats.animTime += frame.animUpdate;
+    stats.predicted += crowdVisibility.visibleCount;
+    stats.time += frame.dt;
+    if (stats.time > 0.25) {
+        data.set('data.stats.posed', String(Math.round(stats.posed / stats.frames)));
+        data.set('data.stats.offscreen', String(Math.round(stats.offscreen / stats.frames)));
+        data.set('data.stats.predicted', String(Math.round(stats.predicted / stats.frames)));
+        data.set('data.stats.animTime', `${(stats.animTime / stats.frames).toFixed(2)} ms`);
+        stats.frames = stats.posed = stats.offscreen = stats.predicted = stats.animTime = stats.time = 0;
+    }
+});
+
 app.on('update', (/** @type {number} */ dt) => {
     for (let i = 0; i < characters.length; i++) {
         updateCharacter(characters[i], dt);
@@ -497,6 +539,14 @@ data.on('data.shadows:set', (/** @type {boolean} */ value) => {
 data.set('data', {
     count: 20,
     shadows: true,
-    customAabb: true
+    customAabb: true,
+    offscreenUpdate: 'state',
+    prediction: true,
+    stats: {
+        posed: '0',
+        offscreen: '0',
+        predicted: '0',
+        animTime: '0 ms'
+    }
 });
 setCount(data.get('data.count'));

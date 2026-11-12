@@ -731,12 +731,16 @@ class Renderer {
         const skinTime = now();
         // #endif
 
+        const renderVersion = this.device.renderVersion;
         for (const drawCall of drawCalls) {
             const skin = drawCall.skinInstance;
+            if (skin) {
+                (skin.rootBone ?? drawCall.node).markDeformedRendered(renderVersion);
 
-            if (skin && skin._dirty) {
-                skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
-                skin._dirty = false;
+                if (skin._dirty) {
+                    skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
+                    skin._dirty = false;
+                }
             }
         }
 
@@ -756,10 +760,15 @@ class Renderer {
         const morphTime = now();
         // #endif
 
+        const renderVersion = this.device.renderVersion;
         for (const drawCall of drawCalls) {
             const morphInst = drawCall.morphInstance;
-            if (morphInst && morphInst._dirty) {
-                morphInst.update();
+            if (morphInst) {
+                drawCall.node.markDeformedRendered(renderVersion);
+
+                if (morphInst._dirty) {
+                    morphInst.update();
+                }
             }
         }
 
