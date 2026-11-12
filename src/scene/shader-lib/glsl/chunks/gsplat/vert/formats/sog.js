@@ -37,14 +37,10 @@ vec3 getCenter() {
 }
 
 #if SOG_VERSION >= 3
-// decode rotation quaternion from a 24-bit exponential map, one byte in each of the means_l,
-// means_u and scales alpha channels: p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
+// decode rotation quaternion from a 24-bit exponential map in the quats rgb channels:
+// p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
 vec4 getRotation() {
-    vec3 b = floor(vec3(
-        texelFetch(means_l, splat.uv, 0).w,
-        texelFetch(means_u, splat.uv, 0).w,
-        texelFetch(scales, splat.uv, 0).w
-    ) * 255.0 + 0.5);
+    vec3 b = floor(texelFetch(quats, splat.uv, 0).xyz * 255.0 + 0.5);
     vec3 p = (b - 128.0) / 127.0;
     float len = length(p);
     float t = len * 1.5707963267948966;
