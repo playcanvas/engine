@@ -167,8 +167,9 @@ export const ANIM_LAYER_OVERWRITE = 'OVERWRITE';
 export const ANIM_LAYER_ADDITIVE = 'ADDITIVE';
 
 /**
- * The anim component updates fully when it is not visible: its state graph, animation events and
- * the pose of the animated hierarchy. This is the default.
+ * The anim component updates fully when it is not visible: its state graph and animation events
+ * update, and the animation is evaluated and applied to the animated entities and properties.
+ * This is the default.
  *
  * @category Animation
  */
@@ -176,7 +177,8 @@ export const OFFSCREENUPDATE_FULL = 'full';
 
 /**
  * When the anim component is not visible, its state graph, transitions and animation events keep
- * updating, but the pose of the animated hierarchy is neither evaluated nor applied.
+ * updating, but the animation is neither evaluated nor applied to the animated entities and
+ * properties.
  *
  * @category Animation
  */
