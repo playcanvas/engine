@@ -100,6 +100,11 @@ class FramePassDepthGrab extends FramePass {
             if (numSamples > 1) {
                 format = PIXELFORMAT_R32F;
                 useDepthBuffer = false;
+            } else {
+                // the depth is copied, which needs the format it was allocated with: that of a
+                // provided depth buffer, else depth24plus-stencil8, which WebGPU allocates for a
+                // render target's depth whether or not stencil was requested
+                format = destinationRt.depthBuffer?.format ?? PIXELFORMAT_DEPTHSTENCIL;
             }
         }
 
