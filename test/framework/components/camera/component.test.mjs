@@ -4,6 +4,8 @@ import { Color } from '../../../../src/core/math/color.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { PIXELFORMAT_R32F } from '../../../../src/platform/graphics/constants.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
 import {
     ASPECT_MANUAL,
     FOG_LINEAR,
@@ -154,6 +156,47 @@ describe('CameraComponent', function () {
             const clone = e.clone();
 
             expect(clone.camera.enabled).to.equal(false);
+        });
+
+    });
+
+    describe('#publishSceneDepthMap', function () {
+
+        const createDepthTexture = () => new Texture(app.graphicsDevice, {
+            width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false
+        });
+
+        it('publishes the texture and its encoding on the scene depth map handle', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const texture = createDepthTexture();
+
+            e.camera.publishSceneDepthMap(texture, { linear: true, reciprocal: true, flipY: true });
+
+            const handle = e.camera.sceneDepthMapHandle;
+            expect(handle.texture).to.equal(texture);
+            expect(handle.renderVersion).to.equal(app.graphicsDevice.renderVersion);
+            expect(handle.linear).to.equal(true);
+            expect(handle.packed).to.equal(false);
+            expect(handle.reciprocal).to.equal(true);
+
+            texture.destroy();
+        });
+
+        it('defaults to the depth buffer values, ignoring the linear-only options', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const texture = createDepthTexture();
+
+            e.camera.publishSceneDepthMap(texture, { packed: true, reciprocal: true });
+
+            const handle = e.camera.sceneDepthMapHandle;
+            expect(handle.texture).to.equal(texture);
+            expect(handle.linear).to.equal(false);
+            expect(handle.packed).to.equal(false);
+            expect(handle.reciprocal).to.equal(false);
+
+            texture.destroy();
         });
 
     });
