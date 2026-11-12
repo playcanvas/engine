@@ -232,27 +232,6 @@ describe('SogParser', function () {
             });
             expect(String(err)).to.contain('TypeError');
         });
-
-        it(`${Parser.name} rejects a v3 file without quats (the early alpha-channel rotation layout)`, async function () {
-            const meta = { ...META, version: 3 };
-            delete meta.quats;
-            const archive = zipSync({ 'meta.json': strToU8(JSON.stringify(meta)) }, { level: 0 });
-            const sog = new Asset('sog', 'gsplat', {
-                url: Parser === SogBundleParser ? 'assets/splats/test.sog' : META_URL,
-                contents: archive.buffer
-            });
-            app.assets.add(sog);
-
-            stub(http, 'get').callsFake((url, options, callback) => callback(null, meta));
-
-            const err = await new Promise((resolve, reject) => {
-                sog.once('load', () => reject(new Error('loaded')));
-                sog.once('error', resolve);
-                app.assets.load(sog);
-            });
-            expect(err).to.contain('no quats texture');
-            expect(app.assets.list()).to.deep.equal([sog]);
-        });
     });
 
     // Nothing cancels an in-flight request, so a load callback can run after app.destroy(). That

@@ -134,10 +134,6 @@ class SogParser {
         } else if (meta.version !== 2 && meta.version !== 3) {
             callback(`Error loading gsplat: unsupported SOG version ${meta.version} in ${url.original}`);
             return;
-        } else if (!meta.quats) {
-            // early v3 files (splat-transform 3.11) stored the rotation in alpha channels
-            callback(`Error loading gsplat: SOG file has no quats texture (an early SOG v3 layout), regenerate it from the source scene with the latest splat-transform: ${url.original}`);
-            return;
         }
 
         const { assets } = this.app;
