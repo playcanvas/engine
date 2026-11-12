@@ -13,6 +13,7 @@ import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PREREN
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { FramePass } from '../../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { Camera } from '../camera.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Renderer } from './renderer.js'
@@ -432,6 +433,35 @@ class RenderPassForward extends RenderPass {
         }
     }
 
+    /**
+     * The scene depth published for the camera of this pass earlier in the current frame, by a pass
+     * of the application (see {@link CameraComponent#publishSceneDepthMap}), or null when there is
+     * none, or when it is an attachment of the render target this pass renders into.
+     *
+     * @returns {Texture|null} The texture.
+     * @private
+     */
+    _publishedSceneDepth() {
+        const handle = this.cameraComponent.camera.sceneDepthMapHandle;
+        const { texture } = handle;
+        if (!texture || handle.renderVersion !== this.device.renderVersion) {
+            return null;
+        }
+
+        const rt = this.renderTarget;
+        if (rt) {
+            if (rt.depthBuffer === texture) {
+                return null;
+            }
+            for (let i = 0; i < rt.colorBufferCount; i++) {
+                if (rt.getColorBuffer(i) === texture) {
+                    return null;
+                }
+            }
+        }
+        return texture;
+    }
+
     before() {
 
         // Clear the uniforms the scene textures are published to, so that a material sampling them
@@ -439,11 +469,12 @@ class RenderPassForward extends RenderPass {
         // frame yet - instead of silently reading a texture this pass renders into, or one that another
         // camera published earlier in the frame. Only the first pass rendering to the render target they
         // are attached to does this, and only when no depth prepass published to those uniforms before it.
+        // A depth the application published for this camera earlier in the frame stays readable.
         if (this.clearSceneTextures) {
             const { device } = this;
             this.sceneTextures.forEach((name) => {
                 if (name === SCENETEXTURE_DEPTH) {
-                    SceneDepthMapHandle.setUniform(device, null);
+                    SceneDepthMapHandle.setUniform(device, this._publishedSceneDepth());
                 } else {
                     device.scope.resolve(sceneTextureUniformNames[name]).setValue(null);
                 }

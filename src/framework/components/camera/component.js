@@ -1352,10 +1352,10 @@ class CameraComponent extends Component {
      * {@link CameraComponent#jitter}.
      *
      * The texture must store the depth the way the shaders of this camera read it: the depth buffer
-     * values, or the linear depth when the camera renders a linear depth map itself (a
-     * {@link CameraFrame} with a depth prepass). A camera that renders its own depth map, requested by
-     * {@link CameraComponent#requestSceneDepthMap} or by its {@link CameraFrame}, publishes it the
-     * same way later in the frame, and its consumers read that one.
+     * values, or the linear depth when the camera's {@link CameraFrame} renders the depth. A camera
+     * that renders its own depth map, requested by {@link CameraComponent#requestSceneDepthMap} or by
+     * its {@link CameraFrame}, publishes it the same way later in the frame, and its consumers read
+     * that one from then on.
      *
      * @param {Texture} texture - The texture the depth was rendered to: a depth texture, or a single
      * channel float texture holding the depth.
