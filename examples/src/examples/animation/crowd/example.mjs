@@ -1,6 +1,7 @@
 // @config
 //
-// A crowd of animated characters, which skip updating their pose while off-screen.
+// A crowd of animated characters, which skip evaluating their animation while off-screen, and
+// evaluate it less often when far away.
 //
 // @credit
 // title: Sparse Grass
@@ -54,11 +55,10 @@ import {
     createGraphicsDevice,
     math
 } from 'playcanvas';
+import { AnimUpdateOptimizer } from 'playcanvas/scripts/esm/anim/anim-update-optimizer.mjs';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
-
-import { CrowdVisibility } from './crowd-visibility.mjs';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -335,6 +335,7 @@ const speedForState = (state) => {
 /**
  * @typedef {object} Character
  * @property {Entity} entity - The character entity, which the anim component is on.
+ * @property {AnimUpdateOptimizer} optimizer - The script lowering the cost of its animation.
  * @property {Vec3} position - The position on the ground.
  * @property {Vec3} target - The position the character walks to.
  * @property {number} heading - The current facing angle in degrees.
@@ -344,10 +345,6 @@ const speedForState = (state) => {
 
 /** @type {Character[]} */
 const characters = [];
-
-// the entities of the characters, for the visibility prediction
-/** @type {Entity[]} */
-const crowdEntities = [];
 
 const randomPoint = (/** @type {Vec3} */ out) => {
     // uniformly distributed over the round area
@@ -367,6 +364,9 @@ const applyCustomAabb = (/** @type {Entity} */ entity, /** @type {boolean} */ en
     });
 };
 
+// the animation of characters further than this from the camera is evaluated less often, a step per distance
+const LOD_DISTANCE = 12;
+
 const createCharacter = () => {
     const entity = new Entity(`Character${characters.length}`);
 
@@ -385,8 +385,24 @@ const createCharacter = () => {
         layer.assignAnimation(state, clip);
     }
 
+    // lowers the cost of the animation when the character is off-screen or far away. The camera is
+    // created before the characters, so its controls move it before this script predicts visibility
+    entity.addComponent('script');
+    const optimizer = /** @type {AnimUpdateOptimizer} */ (
+        entity.script.create(AnimUpdateOptimizer, {
+            properties: {
+                camera,
+                margin: 1,
+                predict: data.get('data.prediction'),
+                offscreenUpdate: data.get('data.offscreenUpdate'),
+                lodDistance: data.get('data.lod') ? LOD_DISTANCE : 0
+            }
+        })
+    );
+
     const character = {
         entity,
+        optimizer,
         position: randomPoint(new Vec3()),
         target: new Vec3(),
         heading: random() * 360,
@@ -399,7 +415,6 @@ const createCharacter = () => {
 
     app.root.addChild(entity);
     characters.push(character);
-    crowdEntities.push(entity);
 };
 
 const setCount = (/** @type {number} */ count) => {
@@ -408,7 +423,6 @@ const setCount = (/** @type {number} */ count) => {
     }
     while (characters.length > count) {
         characters.pop().entity.destroy();
-        crowdEntities.pop();
     }
 };
 
@@ -481,40 +495,38 @@ const updateCharacter = (character, dt) => {
     character.entity.setLocalEulerAngles(0, character.heading, 0);
 };
 
-// predicts which characters are visible to the camera, to update their pose before they come
-// into view. It is added after the camera controls, so it uses the camera transform of this frame
-const crowdVisibility = /** @type {CrowdVisibility} */ (
-    camera.script.create(CrowdVisibility, {
-        properties: {
-            camera,
-            characters: crowdEntities,
-            margin: 1
-        }
-    })
-);
 data.on('data.prediction:set', (/** @type {boolean} */ value) => {
-    crowdVisibility.predict = value;
+    characters.forEach((character) => {
+        character.optimizer.predict = value;
+    });
+});
+data.on('data.lod:set', (/** @type {boolean} */ value) => {
+    characters.forEach((character) => {
+        character.optimizer.lodDistance = value ? LOD_DISTANCE : 0;
+    });
 });
 data.on('data.offscreenUpdate:set', (/** @type {string} */ value) => {
-    crowdVisibility.offscreenUpdate = value;
+    characters.forEach((character) => {
+        character.optimizer.offscreenUpdate = value;
+    });
 });
 
 // the counters shown in the stats panel, averaged over a short period
-const stats = { frames: 0, posed: 0, offscreen: 0, predicted: 0, animTime: 0, time: 0 };
+const stats = { frames: 0, evaluated: 0, offscreen: 0, skipped: 0, animTime: 0, time: 0 };
 app.on('frameend', () => {
     const frame = app.stats.frame;
     stats.frames++;
-    stats.posed += frame.animPoses;
+    stats.evaluated += frame.animEvaluated;
     stats.offscreen += frame.animOffscreen;
+    stats.skipped += frame.animIntervalSkipped;
     stats.animTime += frame.animUpdate;
-    stats.predicted += crowdVisibility.visibleCount;
     stats.time += frame.dt;
     if (stats.time > 0.25) {
-        data.set('data.stats.posed', String(Math.round(stats.posed / stats.frames)));
+        data.set('data.stats.evaluated', String(Math.round(stats.evaluated / stats.frames)));
         data.set('data.stats.offscreen', String(Math.round(stats.offscreen / stats.frames)));
-        data.set('data.stats.predicted', String(Math.round(stats.predicted / stats.frames)));
+        data.set('data.stats.skipped', String(Math.round(stats.skipped / stats.frames)));
         data.set('data.stats.animTime', `${(stats.animTime / stats.frames).toFixed(2)} ms`);
-        stats.frames = stats.posed = stats.offscreen = stats.predicted = stats.animTime = stats.time = 0;
+        stats.frames = stats.evaluated = stats.offscreen = stats.skipped = stats.animTime = stats.time = 0;
     }
 });
 
@@ -542,10 +554,11 @@ data.set('data', {
     customAabb: true,
     offscreenUpdate: 'state',
     prediction: true,
+    lod: true,
     stats: {
-        posed: '0',
+        evaluated: '0',
         offscreen: '0',
-        predicted: '0',
+        skipped: '0',
         animTime: '0 ms'
     }
 });
