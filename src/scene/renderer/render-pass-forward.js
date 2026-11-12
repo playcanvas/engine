@@ -453,12 +453,13 @@ class RenderPassForward extends RenderPass {
         // onPreRender event
         if (this.firstCameraUse) {
             this.scene.fire(EVENT_PRERENDER, this.cameraComponent);
+        }
 
-            // the handlers can still change the depth the camera renders with, which the depth is
-            // cleared for when the pass starts, after this
-            if (this.depthStencilOps.clearDepth) {
-                this.depthStencilOps.clearDepthValue = this.getClearDepthValue();
-            }
+        // the prerender handlers, called from the first pass of the camera, can still change the
+        // depth the camera renders with; every pass of the camera clearing the depth reads it again
+        // here, before it starts
+        if (this.depthStencilOps.clearDepth) {
+            this.depthStencilOps.clearDepthValue = this.getClearDepthValue();
         }
     }
 
