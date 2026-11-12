@@ -735,7 +735,10 @@ class Renderer {
         for (const drawCall of drawCalls) {
             const skin = drawCall.skinInstance;
             if (skin) {
-                (skin.rootBone ?? drawCall.node).markDeformedRendered(renderVersion);
+                // mark the hierarchy of the mesh, and of the skeleton, which can be located
+                // elsewhere, or above the mesh
+                drawCall.node.markDeformedRendered(renderVersion);
+                skin.rootBone?.markDeformedRendered(renderVersion);
 
                 if (skin._dirty) {
                     skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
