@@ -206,6 +206,25 @@ describe('math', function () {
             expect(math.lerpAngle(350, 10, 0.75)).to.equal(365);
         });
 
+        it('takes the shortest path when the angles are more than one turn apart', function () {
+            expect(math.lerpAngle(0, 720, 0.5)).to.equal(0);
+            expect(math.lerpAngle(0, 740, 0.5)).to.equal(10);
+            expect(math.lerpAngle(0, -740, 0.5)).to.equal(-10);
+            expect(math.lerpAngle(-350, 350, 0.5)).to.equal(-360);
+            expect(math.lerpAngle(350, -350, 0.5)).to.equal(360);
+            expect(math.lerpAngle(10, 1090, 1)).to.equal(10);
+        });
+
+        it('returns an angle equivalent to b when alpha is 1', function () {
+            for (const a of [-700, -350, -10, 0, 10, 350, 700]) {
+                for (const b of [-700, -350, -10, 0, 10, 350, 700]) {
+                    const result = math.lerpAngle(a, b, 1);
+                    expect(((result - b) % 360 + 360) % 360).to.be.closeTo(0, 1e-9);
+                    expect(Math.abs(result - a)).to.be.at.most(180);
+                }
+            }
+        });
+
     });
 
     describe('#nextPowerOfTwo', function () {

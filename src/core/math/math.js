@@ -162,7 +162,10 @@ const math = {
 
     /**
      * Calculates the linear interpolation of two angles ensuring that interpolation is correctly
-     * performed across the 360 to 0 degree boundary. Angles are supplied in degrees.
+     * performed across the 360 to 0 degree boundary. Angles are supplied in degrees, and the
+     * interpolation always takes the shortest path (at most 180 degrees) from a to b, however many
+     * full turns apart they are. The result is not wrapped, so it can be outside the 0 to 360
+     * range.
      *
      * @param {number} a - Angle (in degrees) to linearly interpolate from.
      * @param {number} b - Angle (in degrees) to linearly interpolate to.
@@ -171,17 +174,19 @@ const math = {
      * between a and b is returned. alpha is clamped between 0 and 1.
      * @returns {number} The linear interpolation of two angles.
      * @example
-     * math.lerpAngle(350, 10, 0.5); // returns 0 (shortest path crosses 360/0 boundary)
+     * math.lerpAngle(350, 10, 0.5); // returns 360 (shortest path crosses 360/0 boundary)
      * math.lerpAngle(0, 90, 0.5);   // returns 45
+     * math.lerpAngle(0, 720, 0.5);  // returns 0 (720 is the same angle as 0)
      */
     lerpAngle(a, b, alpha) {
-        if (b - a > 180) {
-            b -= 360;
+        // wrap the difference to [-180, 180] so the shortest path is used
+        let diff = (b - a) % 360;
+        if (diff > 180) {
+            diff -= 360;
+        } else if (diff < -180) {
+            diff += 360;
         }
-        if (b - a < -180) {
-            b += 360;
-        }
-        return math.lerp(a, b, math.clamp(alpha, 0, 1));
+        return math.lerp(a, a + diff, math.clamp(alpha, 0, 1));
     },
 
     /**
