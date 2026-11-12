@@ -374,7 +374,10 @@ class RenderPassForward extends RenderPass {
                     this.setClearColor(clearColor ? camera.getClearColor(i) : undefined, i);
                 }
             }
-            this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
+            // the depth clears to the reverse of the camera's clear depth when it renders with
+            // reverse-z, which reverses the depth
+            const clearDepth = camera.reverseZ ? 1 - camera.clearDepth : camera.clearDepth;
+            this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }
     }
