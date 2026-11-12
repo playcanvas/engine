@@ -1340,28 +1340,26 @@ class CameraComponent extends Component {
     /**
      * Publishes a scene depth map rendered by a frame pass of the application, as the depth map of
      * this camera. Its consumers then read it in the same frame: the materials sampling the scene
-     * depth, the compute shaders given {@link CameraComponent#sceneDepthMapHandle} (see
-     * {@link Compute#setSceneDepthMap}), and the effects of the camera's {@link CameraFrame}.
+     * depth, {@link SceneDepthReader}, and the compute shaders given
+     * {@link CameraComponent#sceneDepthMapHandle} (see {@link Compute#setSceneDepthMap}).
      *
      * Call it after the depth was rendered, in each frame it is rendered, typically from
      * {@link FramePass#onAfter} of the pass that rendered it. For example, a depth pre-pass of the
      * large occluders, added to {@link CameraComponent#beforePasses}, can publish its depth for a
      * {@link ComputePass} placed after it, which culls the geometry the camera is about to render
-     * against it, in the same frame.
+     * against it, in the same frame. A depth published before the camera renders in the frame
+     * comes with the camera's matrices of this frame, without the jitter of
+     * {@link CameraComponent#jitter}.
      *
-     * The depth map the camera renders itself, when requested by
-     * {@link CameraComponent#requestSceneDepthMap} or by its {@link CameraFrame}, is published the
-     * same way, so whichever is published later in the frame is the one its consumers read.
+     * The texture must store the depth the way the shaders of this camera read it: the depth buffer
+     * values, or the linear depth when the camera renders a linear depth map itself (a
+     * {@link CameraFrame} with a depth prepass). A camera that renders its own depth map, requested by
+     * {@link CameraComponent#requestSceneDepthMap} or by its {@link CameraFrame}, publishes it the
+     * same way later in the frame, and its consumers read that one.
      *
      * @param {Texture} texture - The texture the depth was rendered to: a depth texture, or a single
-     * channel float texture holding the depth buffer values or the linear depth.
-     * @param {object} [options] - How the texture stores the depth.
-     * @param {boolean} [options.linear] - True when the texture stores the linear camera depth, false
-     * when it stores the depth buffer values. Defaults to false.
-     * @param {boolean} [options.packed] - True when each linear depth is bit-packed into an RGBA8
-     * texel. Only used with `linear`. Defaults to false.
-     * @param {boolean} [options.reciprocal] - True when the texture stores the reciprocals of the
-     * linear depths. Only used with `linear`. Defaults to false.
+     * channel float texture holding the depth.
+     * @param {object} [options] - Options.
      * @param {boolean} [options.flipY] - The flipY of the render target the depth was rendered to,
      * which the texture matches the layout of. Defaults to false.
      * @example
@@ -1373,9 +1371,11 @@ class CameraComponent extends Component {
      * };
      */
     publishSceneDepthMap(texture, options = {}) {
-        const { linear = false, packed = false, reciprocal = false, flipY = false } = options;
+        const { flipY = false } = options;
         Debug.assert(texture, 'CameraComponent.publishSceneDepthMap requires a texture');
-        this._camera.publishSceneDepthMap(texture, this.system.app.graphicsDevice.renderVersion, linear, packed, reciprocal, flipY);
+        const { sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal } = this._camera.shaderParams;
+        this._camera.publishSceneDepthMap(texture, this.system.app.graphicsDevice.renderVersion,
+            sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal, flipY);
     }
 
     dirtyLayerCompositionCameras() {
