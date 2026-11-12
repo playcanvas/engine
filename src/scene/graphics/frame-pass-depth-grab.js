@@ -25,12 +25,19 @@ class FramePassDepthGrab extends FramePass {
         this.releaseRenderTarget(this.depthRenderTarget);
     }
 
-    shouldReallocate(targetRT, sourceTexture) {
+    shouldReallocate(targetRT, sourceTexture, format, isDepth) {
 
         // need to reallocate if dimensions don't match
         const width = sourceTexture?.width || this.device.width;
         const height = sourceTexture?.height || this.device.height;
-        return !targetRT || width !== targetRT.width || height !== targetRT.height;
+        if (!targetRT || width !== targetRT.width || height !== targetRT.height) {
+            return true;
+        }
+
+        // or if the texture grabbed into no longer has the format needed: the destination's depth
+        // can change format, or between copied and resolved (multi-sampled), at the same size
+        const texture = isDepth ? targetRT.depthBuffer : targetRT.colorBuffer;
+        return texture?.format !== format;
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
@@ -111,9 +118,14 @@ class FramePassDepthGrab extends FramePass {
         const sourceTexture = camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer;
 
         // allocate / resize existing RT as needed
-        if (this.shouldReallocate(this.depthRenderTarget, sourceTexture)) {
-            this.releaseRenderTarget(this.depthRenderTarget);
-            this.depthRenderTarget = this.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer);
+        const rt = this.depthRenderTarget;
+        if (this.shouldReallocate(rt, sourceTexture, format, useDepthBuffer)) {
+
+            // the RT is reused for a new size or format of the same kind of grab, but not for the other
+            // kind: only the resolving one is created with a depth buffer of its own
+            const reuse = rt && !!rt.depthBuffer === useDepthBuffer;
+            this.releaseRenderTarget(rt);
+            this.depthRenderTarget = this.allocateRenderTarget(reuse ? rt : null, camera.renderTarget, device, format, useDepthBuffer);
         }
 
         // publish the depth texture - the grab copies (or resolves) the depth buffer values as they
