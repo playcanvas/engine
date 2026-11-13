@@ -151,6 +151,25 @@ describe('AnimComponent', function () {
 
         const weight = entity => entity.render.meshInstances[0].morphInstance.getWeight(MORPH_TARGET);
 
+        it('blend from the weight before the animation when the layer weight is lowered', function () {
+            const entity = new Entity('model', app);
+            app.root.addChild(entity);
+            entity.addComponent('render', { type: 'asset' });
+            entity.render.meshInstances = createMeshInstances(entity);
+            entity.addComponent('anim', { activate: true });
+            entity.anim.assignAnimation('Morph', morphTrack(['model']));
+
+            // a single layer at full weight
+            app.systems.anim.onAnimationUpdate(0.25);
+            expect(weight(entity)).to.be.closeTo(0.25, 1e-5);
+
+            // at half weight, the animated weight of 0.45 is blended with the weight of 0 before
+            // the animation
+            entity.anim.baseLayer.weight = 0.5;
+            app.systems.anim.onAnimationUpdate(0.2);
+            expect(weight(entity)).to.be.closeTo(0.225, 1e-5);
+        });
+
         // Regression test for https://github.com/playcanvas/engine/issues/5225
         it('are animated when mesh instances are created after the animation is bound', function () {
             const entity = new Entity('model', app);
@@ -697,6 +716,19 @@ describe('AnimComponent', function () {
 
             // halfway between the base scale of 1 and the animated scale of 2
             expect(root.getLocalScale().x).to.be.closeTo(1.5, 1e-5);
+        });
+
+        it('restores the values before the animation when the state graph is removed', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack());
+
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
+
+            root.anim.removeStateGraph();
+            expect(root.getLocalScale().x).to.be.closeTo(1, 1e-5);
         });
 
         it('uses a setter which replaces the setter of the graph node', function () {

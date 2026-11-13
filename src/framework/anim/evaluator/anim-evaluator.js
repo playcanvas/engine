@@ -82,7 +82,8 @@ class AnimEvaluator {
                         target: resolved,           // resolved target instance
                         value: [],                  // storage for calculated value
                         curves: 0,                  // number of curves driving this target
-                        blendCounter: 0             // per-frame number of blends (used to identify first blend)
+                        blendCounter: 0,            // per-frame number of blends (used to identify first blend)
+                        layerTargetReady: false     // true once the target of the anim component was set up
                     };
 
                     for (let k = 0; k < target.target.components; ++k) {
@@ -306,21 +307,20 @@ class AnimEvaluator {
             const target = targetList[t];
             // if this evaluator is associated with an anim component then we should blend the result of this evaluator with all other anim layer's evaluators
             if (layerBlending && target.target.usesLayerBlending) {
-                const path = target.target.targetPath;
-                const animTarget = animComponent.targets[path];
+                const animTarget = this._setupLayerTarget(target, animComponent);
                 if (animTarget.counter === animTarget.layerCounter) {
                     animTarget.counter = 0;
-                }
-                if (!animTarget.path) {
-                    animTarget.path = path;
-                    animTarget.baseValue = target.target.get();
-                    animTarget.setter = target.target.set;
                 }
                 // Add this layer's value onto the target value
                 animTarget.updateValue(binder.layerIndex, target.value);
 
                 animTarget.counter++;
             } else {
+                // without the blending, the target of the anim component is still set up once, as
+                // it records the base value, which unbinding restores and later blending starts from
+                if (animComponent && !target.layerTargetReady && target.target.usesLayerBlending) {
+                    this._setupLayerTarget(target, animComponent);
+                }
                 target.target.set(target.value);
             }
             target.blendCounter = 0;
@@ -329,6 +329,27 @@ class AnimEvaluator {
         // TODO: is this even necessary? binder could know when to update
         // itself without our help.
         this._binder.update(deltaTime);
+    }
+
+    /**
+     * Returns the target of the anim component, which combines the values of all its layers, setting
+     * it up with the base value and setter of the animated property on first use.
+     *
+     * @param {object} target - The target of this evaluator.
+     * @param {AnimComponent} animComponent - The anim component.
+     * @returns {AnimTargetValue} The target of the anim component.
+     * @private
+     */
+    _setupLayerTarget(target, animComponent) {
+        const path = target.target.targetPath;
+        const animTarget = animComponent.targets[path];
+        if (!animTarget.path) {
+            animTarget.path = path;
+            animTarget.baseValue = target.target.get();
+            animTarget.setter = target.target.set;
+        }
+        target.layerTargetReady = true;
+        return animTarget;
     }
 
     /**
