@@ -429,7 +429,6 @@ class ElementInput {
      */
     attach(domElement) {
         if (this._attached) {
-            this._attached = false;
             this.detach();
         }
 

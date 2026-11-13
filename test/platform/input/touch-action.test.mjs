@@ -43,6 +43,16 @@ describe('touch-action', function () {
             expect(element.style.touchAction).to.equal('pan-x');
         });
 
+        it('restores an important priority', function () {
+            element.style.setProperty('touch-action', 'pan-y', 'important');
+            acquireTouchAction(element);
+            expect(element.style.touchAction).to.equal('none');
+
+            releaseTouchAction(element);
+            expect(element.style.touchAction).to.equal('pan-y');
+            expect(element.style.getPropertyPriority('touch-action')).to.equal('important');
+        });
+
         it('ignores a release without an acquire', function () {
             element.style.touchAction = 'pan-x';
             releaseTouchAction(element);

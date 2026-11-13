@@ -159,4 +159,49 @@ describe('ElementInput', function () {
             expect(onXrEnd.callCount).to.equal(3);
         });
     });
+
+    describe('touch-action', function () {
+
+        it('sets touch-action to none while attached and restores it on detach', function () {
+            const target = document.createElement('div');
+            target.style.touchAction = 'pan-y';
+            const input = new ElementInput(target);
+            expect(target.style.touchAction).to.equal('none');
+
+            input.detach();
+            expect(target.style.touchAction).to.equal('pan-y');
+        });
+
+        it('restores touch-action after attaching to the same element again', function () {
+            const target = document.createElement('div');
+            const input = new ElementInput(target);
+            input.attach(target);
+            expect(target.style.touchAction).to.equal('none');
+
+            input.detach();
+            expect(target.style.touchAction).to.equal('');
+        });
+
+        it('restores touch-action of the previous element when attached to another', function () {
+            const first = document.createElement('div');
+            const second = document.createElement('div');
+            const input = new ElementInput(first);
+            input.attach(second);
+            expect(first.style.touchAction).to.equal('');
+            expect(second.style.touchAction).to.equal('none');
+
+            input.detach();
+            expect(second.style.touchAction).to.equal('');
+        });
+
+        it('stops listening to the previous element when attached to another', function () {
+            const first = document.createElement('div');
+            const input = new ElementInput(first);
+            const removeEventListener = spy(first, 'removeEventListener');
+            input.attach(document.createElement('div'));
+
+            expect(removeEventListener.calledWith('touchmove')).to.be.true;
+            input.detach();
+        });
+    });
 });

@@ -1,10 +1,10 @@
 /**
  * For each element, the number of input handlers that need its `touch-action` style to be `none`,
- * and the element's inline value before the first of them set it. Several handlers often share
- * one canvas, such as a touch device, camera controls and a gizmo, and they can attach and detach
- * in any order.
+ * and the element's inline value and priority before the first of them set it. Several handlers
+ * often share one canvas, such as a touch device, camera controls and a gizmo, and they can attach
+ * and detach in any order.
  *
- * @type {WeakMap<Element, { count: number, prev: string }>}
+ * @type {WeakMap<Element, { count: number, value: string, priority: string }>}
  */
 const users = new WeakMap();
 
@@ -29,13 +29,17 @@ function acquireTouchAction(element) {
         return;
     }
 
-    users.set(element, { count: 1, prev: style.touchAction });
+    users.set(element, {
+        count: 1,
+        value: style.touchAction,
+        priority: style.getPropertyPriority('touch-action')
+    });
     style.touchAction = 'none';
 }
 
 /**
- * Releases a call to {@link acquireTouchAction}. The element's previous inline `touch-action` is
- * restored when the last handler releases it.
+ * Releases a call to {@link acquireTouchAction}. The element's previous inline `touch-action`,
+ * including an `!important` priority, is restored when the last handler releases it.
  *
  * @param {Element} element - The element.
  * @ignore
@@ -49,7 +53,7 @@ function releaseTouchAction(element) {
     entry.count--;
     if (entry.count === 0) {
         users.delete(element);
-        /** @type {HTMLElement} */ (element).style.touchAction = entry.prev;
+        /** @type {HTMLElement} */ (element).style.setProperty('touch-action', entry.value, entry.priority);
     }
 }
 
