@@ -157,9 +157,6 @@ class ViewUniformBuffer {
  * @ignore
  */
 class Renderer {
-    /** @type {boolean} */
-    clustersDebugRendered = false;
-
     /** @type {Scene} */
     scene;
 
@@ -1492,8 +1489,6 @@ class Renderer {
     }
 
     frameUpdate() {
-
-        this.clustersDebugRendered = false;
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();

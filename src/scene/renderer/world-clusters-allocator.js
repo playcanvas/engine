@@ -3,6 +3,7 @@ import { WorldClusters } from '../lighting/world-clusters.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Layer } from '../layer.js'
  * @import { LayerRenderStep } from './layer-render-step.js'
  * @import { LightingParams } from '../lighting/lighting-params.js'
  */
@@ -134,6 +135,18 @@ class WorldClustersAllocator {
      */
     request(step) {
         this._requestedSteps.push(step);
+    }
+
+    /**
+     * Returns the clusters used to render a layer in the most recent frame, or null if the layer
+     * was not rendered with clustered lights. The clusters stay valid until the next
+     * {@link WorldClustersAllocator#upload}.
+     *
+     * @param {Layer} layer - The layer.
+     * @returns {WorldClusters|null} The clusters, or null.
+     */
+    getClusters(layer) {
+        return this._clusters.get(layer.getLightIdHash())?.lightClusters ?? null;
     }
 
     /**
