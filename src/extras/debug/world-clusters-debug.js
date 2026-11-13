@@ -26,8 +26,8 @@ const cellColor = new Vec3();
  * Visualizes the clustered lighting of a layer, for debugging. It draws the grid of light clusters
  * as lines, and each cell that contains lights as a cube, colored by the number of lights in it
  * (white for few lights, red for the maximum number of lights per cell). The visualization is
- * rendered on the {@link Scene#defaultDrawLayer}. It reflects the clusters used in the previous
- * frame.
+ * rendered on the immediate layer ({@link LAYERID_IMMEDIATE}). It reflects the clusters used in
+ * the previous frame.
  *
  * Clustered lighting must be enabled, see {@link Scene#clusteredLightingEnabled}.
  *
