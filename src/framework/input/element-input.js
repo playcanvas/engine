@@ -428,8 +428,10 @@ class ElementInput {
      * @param {Element} domElement - The DOM element.
      */
     attach(domElement) {
+        // moving to another element only moves the DOM listeners. The XR subscriptions do not
+        // depend on the element, and removing them would disconnect an active XR session
         if (this._attached) {
-            this.detach();
+            this._detachDomEvents();
         }
 
         this._target = domElement;
@@ -477,6 +479,27 @@ class ElementInput {
      */
     detach() {
         if (!this._attached) return;
+        this._detachDomEvents();
+
+        if (this._selectEventsAttached) {
+            this._selectEventsAttached = false;
+            this.app.xr.off('start', this._onXrStart, this);
+            this.app.xr.off('end', this._onXrEnd, this);
+            this.app.xr.off('update', this._onXrUpdate, this);
+            this.app.xr.input.off('selectstart', this._onSelectStart, this);
+            this.app.xr.input.off('selectend', this._onSelectEnd, this);
+            this.app.xr.input.off('remove', this._onXrInputRemove, this);
+        }
+
+        this._target = null;
+    }
+
+    /**
+     * Removes the mouse and touch listeners from the DOM element, and releases its touch-action.
+     *
+     * @private
+     */
+    _detachDomEvents() {
         this._attached = false;
 
         /** @type {AddEventListenerOptions} */
@@ -499,18 +522,6 @@ class ElementInput {
             this._touchActionAcquired = false;
             releaseTouchAction(this._target);
         }
-
-        if (this._selectEventsAttached) {
-            this._selectEventsAttached = false;
-            this.app.xr.off('start', this._onXrStart, this);
-            this.app.xr.off('end', this._onXrEnd, this);
-            this.app.xr.off('update', this._onXrUpdate, this);
-            this.app.xr.input.off('selectstart', this._onSelectStart, this);
-            this.app.xr.input.off('selectend', this._onSelectEnd, this);
-            this.app.xr.input.off('remove', this._onXrInputRemove, this);
-        }
-
-        this._target = null;
     }
 
     /**

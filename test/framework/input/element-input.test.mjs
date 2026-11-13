@@ -148,6 +148,22 @@ describe('ElementInput', function () {
             await session.endEventFired;
         };
 
+        it('keeps receiving selections of an active session after attaching again', async function () {
+            const camera = app.root.findByName('camera');
+            await new Promise((resolve) => {
+                app.xr.start(camera.camera, XRTYPE_VR, XRSPACE_LOCALFLOOR, { callback: resolve });
+            });
+
+            const selectStarts = () => app.xr.input._callbacks.get('selectstart')?.length ?? 0;
+            expect(selectStarts()).to.equal(1);
+
+            app.elementInput.attach(canvas);
+            app.elementInput.attach(document.createElement('canvas'));
+
+            expect(app.xr.active).to.be.true;
+            expect(selectStarts()).to.equal(1);
+        });
+
         it('stops listening for the end of a session once it has ended', async function () {
             const onXrEnd = spy(app.elementInput, '_onXrEnd');
 
