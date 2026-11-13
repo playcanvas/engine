@@ -24,14 +24,15 @@ class BinaryHandler extends ResourceHandler {
     }
 
     /**
-     * Parses raw DataView and returns ArrayBuffer.
+     * Returns the bytes covered by a DataView as a new ArrayBuffer.
      *
-     * @param {DataView} data - The raw data as a DataView
+     * @param {DataView} data - The raw data as a DataView.
      * @returns {ArrayBuffer} The parsed resource data.
      * @ignore
      */
     openBinary(data) {
-        return data.buffer;
+        // the view can cover a part of a larger buffer, such as a file inside an asset bundle
+        return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
     }
 }
 
