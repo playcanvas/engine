@@ -40,10 +40,19 @@ describe('BinaryHandler', function () {
         expect(err).to.include('file.bin');
     });
 
-    it('openBinary returns the underlying ArrayBuffer of a DataView', function () {
+    it('openBinary returns the bytes of a DataView covering the whole buffer', function () {
         const handler = new BinaryHandler({});
-        const bytes = new Uint8Array([4, 5, 6]);
-        const view = new DataView(bytes.buffer);
-        expect(handler.openBinary(view)).to.equal(bytes.buffer);
+        const view = new DataView(new Uint8Array([4, 5, 6]).buffer);
+        expect(Array.from(new Uint8Array(handler.openBinary(view)))).to.deep.equal([4, 5, 6]);
+    });
+
+    it('openBinary returns only the bytes covered by a DataView into a larger buffer', function () {
+        // a file inside an asset bundle is a view into the whole archive
+        const handler = new BinaryHandler({});
+        const archive = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+        const view = new DataView(archive.buffer, 2, 3);
+        const result = handler.openBinary(view);
+        expect(result.byteLength).to.equal(3);
+        expect(Array.from(new Uint8Array(result))).to.deep.equal([3, 4, 5]);
     });
 });
