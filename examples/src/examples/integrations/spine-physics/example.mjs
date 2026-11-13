@@ -256,6 +256,9 @@ canvas.addEventListener('pointerdown', onPointerDown);
 canvas.addEventListener('pointermove', onPointerMove);
 canvas.addEventListener('pointerup', onPointerUp);
 
+// let a touch drag move the bodies, instead of scrolling or zooming the page
+canvas.style.touchAction = 'none';
+
 // move the skeletons around their positions, except the dragged one
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {

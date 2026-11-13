@@ -547,6 +547,9 @@ const onPointerMove = (event) => {
     targetPitch = (1 - (event.clientY / window.innerHeight) * 2) * 4;
 };
 window.addEventListener('pointermove', onPointerMove);
+
+// let a touch drag turn the camera, instead of scrolling or zooming the page
+canvas.style.touchAction = 'none';
 app.on('destroy', () => window.removeEventListener('pointermove', onPointerMove));
 
 const center = new Vec3(0, 0, FACE_Z);

@@ -161,6 +161,9 @@ const onPointerDown = (/** @type {PointerEvent} */ event) => {
 canvas.addEventListener('pointermove', onPointerMove);
 canvas.addEventListener('pointerdown', onPointerDown);
 
+// let a touch drag move the crosshair, instead of scrolling or zooming the page
+canvas.style.touchAction = 'none';
+
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
     canvas.removeEventListener('pointermove', onPointerMove);

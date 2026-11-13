@@ -18,6 +18,12 @@ import { VirtualJoystick } from './virtual-joystick.js';
  */
 class SingleGestureSource extends InputSource {
     /**
+     * @type {boolean}
+     * @protected
+     */
+    _readsTouch = true;
+
+    /**
      * @type {ReturnType<typeof movementState>}
      * @private
      */
