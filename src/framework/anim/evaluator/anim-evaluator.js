@@ -1,9 +1,11 @@
 import { AnimTargetValue } from './anim-target-value.js';
 import { AnimBlend } from './anim-blend.js';
+import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 
 /**
  * @import { AnimBinder } from '../binder/anim-binder.js'
  * @import { AnimClip } from './anim-clip.js'
+ * @import { AnimComponent } from '../../components/anim/component.js'
  */
 
 /**
@@ -80,7 +82,8 @@ class AnimEvaluator {
                         target: resolved,           // resolved target instance
                         value: [],                  // storage for calculated value
                         curves: 0,                  // number of curves driving this target
-                        blendCounter: 0             // per-frame number of blends (used to identify first blend)
+                        blendCounter: 0,            // per-frame number of blends (used to identify first blend)
+                        layerTargetReady: false     // true once the target of the anim component was set up
                     };
 
                     for (let k = 0; k < target.target.components; ++k) {
@@ -299,25 +302,25 @@ class AnimEvaluator {
         }
         const binder = this._binder;
         const animComponent = binder.animComponent;
+        const layerBlending = animComponent && !this._isSingleFullLayer(animComponent);
         for (let t = 0; t < targetList.length; t++) {
             const target = targetList[t];
             // if this evaluator is associated with an anim component then we should blend the result of this evaluator with all other anim layer's evaluators
-            if (animComponent && target.target.usesLayerBlending) {
-                const path = target.target.targetPath;
-                const animTarget = animComponent.targets[path];
+            if (layerBlending && target.target.usesLayerBlending) {
+                const animTarget = this._setupLayerTarget(target, animComponent);
                 if (animTarget.counter === animTarget.layerCounter) {
                     animTarget.counter = 0;
-                }
-                if (!animTarget.path) {
-                    animTarget.path = path;
-                    animTarget.baseValue = target.target.get();
-                    animTarget.setter = target.target.set;
                 }
                 // Add this layer's value onto the target value
                 animTarget.updateValue(binder.layerIndex, target.value);
 
                 animTarget.counter++;
             } else {
+                // without the blending, the target of the anim component is still set up once, as
+                // it records the base value, which unbinding restores and later blending starts from
+                if (animComponent && !target.layerTargetReady && target.target.usesLayerBlending) {
+                    this._setupLayerTarget(target, animComponent);
+                }
                 target.target.set(target.value);
             }
             target.blendCounter = 0;
@@ -326,6 +329,51 @@ class AnimEvaluator {
         // TODO: is this even necessary? binder could know when to update
         // itself without our help.
         this._binder.update(deltaTime);
+    }
+
+    /**
+     * Returns the target of the anim component, which combines the values of all its layers, setting
+     * it up with the base value and setter of the animated property on first use.
+     *
+     * @param {object} target - The target of this evaluator.
+     * @param {AnimComponent} animComponent - The anim component.
+     * @returns {AnimTargetValue} The target of the anim component.
+     * @private
+     */
+    _setupLayerTarget(target, animComponent) {
+        const path = target.target.targetPath;
+        const animTarget = animComponent.targets[path];
+        if (!animTarget.path) {
+            animTarget.path = path;
+            animTarget.baseValue = target.target.get();
+            animTarget.setter = target.target.set;
+        }
+        target.layerTargetReady = true;
+        return animTarget;
+    }
+
+    /**
+     * Returns true if the anim component has a single layer, which overwrites at its full weight.
+     * Blending such a layer with the base values results in the values of the layer, so they are
+     * applied to the targets directly, without the layer blending.
+     *
+     * @param {AnimComponent} animComponent - The anim component.
+     * @returns {boolean} True if the anim component has a single full weight overwrite layer.
+     * @private
+     */
+    _isSingleFullLayer(animComponent) {
+        const layers = animComponent.layers;
+        if (layers?.length !== 1) {
+            return false;
+        }
+        const layer = layers[0];
+        if (layer.blendType !== ANIM_LAYER_OVERWRITE) {
+            return false;
+        }
+
+        // the weight the layer is blended with, as AnimTargetValue#getWeight evaluates it
+        const weight = layer.weight;
+        return animComponent.normalizeWeights ? weight > 0 : weight >= 1;
     }
 }
 
