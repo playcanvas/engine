@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { warnInsecureContext } from '../../../core/secure-context-warning.js';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
-    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
     PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT, BINDGROUP_VIEW
 } from '../constants.js';
@@ -1231,7 +1231,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
-            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
             DebugHelper.setName(this._indirectDrawBuffer, 'WebgpuGraphicsDevice.indirectDraw');
             this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
@@ -1265,7 +1265,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDispatchBuffer === null) {
-            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
             DebugHelper.setName(this._indirectDispatchBuffer, 'WebgpuGraphicsDevice.indirectDispatch');
             this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
         }
