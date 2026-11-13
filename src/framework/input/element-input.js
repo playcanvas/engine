@@ -3,6 +3,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Mouse } from '../../platform/input/mouse.js';
+import { acquireTouchAction, releaseTouchAction } from '../../platform/input/touch-action.js';
 import { getTouchTargetCoords } from '../../platform/input/touch-event.js';
 import { getApplication } from '../globals.js';
 
@@ -367,6 +368,7 @@ class ElementInput {
         this._app = null;
         this._attached = false;
         this._target = null;
+        this._touchActionAcquired = false;
 
         // force disable all element input events
         this._enabled = true;
@@ -450,6 +452,11 @@ class ElementInput {
             this._target.addEventListener('touchend', this._touchendHandler, false);
             this._target.addEventListener('touchmove', this._touchmoveHandler, false);
             this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
+
+            // a touch drag on an element, such as a scroll view, would otherwise scroll or zoom
+            // the page, which cancels it
+            acquireTouchAction(this._target);
+            this._touchActionAcquired = true;
         }
 
         this.attachSelectEvents();
@@ -487,6 +494,11 @@ class ElementInput {
             this._target.removeEventListener('touchend', this._touchendHandler, false);
             this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
             this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
+        }
+
+        if (this._touchActionAcquired) {
+            this._touchActionAcquired = false;
+            releaseTouchAction(this._target);
         }
 
         if (this._selectEventsAttached) {
@@ -682,9 +694,11 @@ class ElementInput {
     }
 
     _handleTouchMove(event) {
-        // call preventDefault to avoid issues in Chrome Android:
-        // http://wilsonpage.co.uk/touch-events-in-chrome-android/
-        event.preventDefault();
+        // Stop the browser from scrolling or zooming during the drag. Once the browser has started
+        // a scroll the event is not cancelable, and calling preventDefault only logs a warning.
+        if (event.cancelable) {
+            event.preventDefault();
+        }
 
         if (!this._enabled) return;
 

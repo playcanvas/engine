@@ -35,6 +35,12 @@ const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length
  */
 class DualGestureSource extends InputSource {
     /**
+     * @type {boolean}
+     * @protected
+     */
+    _readsTouch = true;
+
+    /**
      * @type {ReturnType<typeof movementState>}
      * @private
      */

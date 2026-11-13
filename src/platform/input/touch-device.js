@@ -1,5 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 
+import { acquireTouchAction, releaseTouchAction } from './touch-action.js';
 import { TouchEvent } from './touch-event.js';
 
 /**
@@ -94,14 +95,6 @@ class TouchDevice extends EventHandler {
     _cancelHandler;
 
     /**
-     * The element's inline `touch-action` before this device set it, restored on detach.
-     *
-     * @type {string}
-     * @private
-     */
-    _prevTouchAction = '';
-
-    /**
      * Create a new touch device and attach it to an element.
      *
      * @param {Element} element - The element to attach listen for events on.
@@ -134,14 +127,7 @@ class TouchDevice extends EventHandler {
 
         this._element = element;
 
-        // Without this, the browser can claim a drag as a page scroll before the first touchmove
-        // reaches the engine. That touchmove is then not cancelable, and the browser cancels the
-        // touch, so the application stops receiving it.
-        const style = /** @type {HTMLElement} */ (element).style;
-        if (style) {
-            this._prevTouchAction = style.touchAction;
-            style.touchAction = 'none';
-        }
+        acquireTouchAction(element);
 
         this._element.addEventListener('touchstart', this._startHandler, false);
         this._element.addEventListener('touchend', this._endHandler, false);
@@ -159,10 +145,7 @@ class TouchDevice extends EventHandler {
             this._element.removeEventListener('touchmove', this._moveHandler, false);
             this._element.removeEventListener('touchcancel', this._cancelHandler, false);
 
-            const style = /** @type {HTMLElement} */ (this._element).style;
-            if (style) {
-                style.touchAction = this._prevTouchAction;
-            }
+            releaseTouchAction(this._element);
         }
         this._element = null;
     }
