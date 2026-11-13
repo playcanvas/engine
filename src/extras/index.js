@@ -24,6 +24,9 @@ export { WireRenderer } from './renderers/wire-renderer.js';
 // GRID
 export { Grid } from './grid/grid.js';
 
+// DEBUG
+export { WorldClustersDebug } from './debug/world-clusters-debug.js';
+
 // VOXELS
 export * from './voxel/voxel-occupancy.js';
 
