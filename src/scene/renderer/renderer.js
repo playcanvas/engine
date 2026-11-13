@@ -13,9 +13,11 @@ import {
     CULLFACE_NONE,
     BINDGROUP_MESH_UB, BINDGROUP_MATERIAL,
     FRONTFACE_CCW,
-    FRONTFACE_CW
+    FRONTFACE_CW,
+    FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL, FUNC_GREATEREQUAL, FUNC_ALWAYS
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
@@ -94,6 +96,31 @@ const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
 const _tempProjMat4 = new Mat4();
 const _tempProjMat5 = new Mat4();
+const _tempViewProjMat = new Mat4();
+
+// the depth test functions of reverse-z, indexed by the function they replace: reverse-z reverses
+// the order of the depths, so that a nearer fragment has the greater depth
+const _reverseZFunc = [];
+_reverseZFunc[FUNC_NEVER] = FUNC_NEVER;
+_reverseZFunc[FUNC_LESS] = FUNC_GREATER;
+_reverseZFunc[FUNC_EQUAL] = FUNC_EQUAL;
+_reverseZFunc[FUNC_LESSEQUAL] = FUNC_GREATEREQUAL;
+_reverseZFunc[FUNC_GREATER] = FUNC_LESS;
+_reverseZFunc[FUNC_NOTEQUAL] = FUNC_NOTEQUAL;
+_reverseZFunc[FUNC_GREATEREQUAL] = FUNC_LESSEQUAL;
+_reverseZFunc[FUNC_ALWAYS] = FUNC_ALWAYS;
+
+// Reverses back the clip depth of a view projection rendering with reverse-z (see
+// Camera#reverseZ), which maps the clip depth z to w - z, and so does again when applied twice.
+const reverseClipDepth = (matrix, out) => {
+    out.copy(matrix);
+    const d = out.data;
+    d[2] = d[3] - d[2];
+    d[6] = d[7] - d[6];
+    d[10] = d[11] - d[10];
+    d[14] = d[15] - d[14];
+    return out;
+};
 const _tempSet = new Set();
 
 const _tempMeshInstances = [];
@@ -159,6 +186,15 @@ class ViewUniformBuffer {
 class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
+
+    /**
+     * The depth states the draws of the cameras rendering with reverse-z use, keyed by the key of
+     * the depth state each one reverses. See {@link Renderer#getReverseZDepthState}.
+     *
+     * @type {Map<number, DepthState>}
+     * @private
+     */
+    _reverseZDepthStates = new Map();
 
     /** @type {Scene} */
     scene;
@@ -523,8 +559,9 @@ class Renderer {
             let projMatSkybox = camera.getProjectionMatrixSkybox();
 
             const webgpu = this.device.isWebGPU;
-            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu);
-            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu);
+            const reverseZ = camera.reverseZActive;
+            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu, reverseZ);
+            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu, reverseZ);
 
             // camera jitter
             const { jitter } = camera;
@@ -589,7 +626,9 @@ class Renderer {
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
 
-            camera.frustum.setFromMat4(viewProjMat);
+            // with reverse-z, from the view projection with the standard depth, so that the frustum
+            // planes are those of a camera rendering without it
+            camera.frustum.setFromMat4(reverseZ ? reverseClipDepth(viewProjMat, _tempViewProjMat) : viewProjMat);
         }
 
         // set for all passes including XR, to keep the uniform fresh per render pass - it is
@@ -669,13 +708,34 @@ class Renderer {
             _tempClearColor[1] = c.g;
             _tempClearColor[2] = c.b;
             _tempClearColor[3] = c.a;
-            _tempClearOptions.depth = camera._clearDepth;
+            _tempClearOptions.depth = camera.reverseZActive ? 1 - camera._clearDepth : camera._clearDepth;
             _tempClearOptions.stencil = camera._clearStencil;
             _tempClearOptions.flags = flags;
             device.clear(_tempClearOptions);
 
             DebugGraphics.popGpuMarker(device);
         }
+    }
+
+    /**
+     * Returns the depth state a draw of a camera rendering with reverse-z (see
+     * {@link Camera#reverseZActive}) uses in place of the given one. The depth test function is reversed,
+     * so that it keeps passing the nearer or the farther fragments as it does without reverse-z, and
+     * so are the depth biases, so that they keep moving the depth towards or away from the camera.
+     * The depth states are created once, and shared by all the cameras rendering with reverse-z.
+     *
+     * @param {DepthState} depthState - The depth state of the draw.
+     * @returns {DepthState} The depth state the draw uses with reverse-z.
+     */
+    getReverseZDepthState(depthState) {
+        let reversed = this._reverseZDepthStates.get(depthState.key);
+        if (!reversed) {
+            reversed = new DepthState(_reverseZFunc[depthState.func], depthState.write);
+            reversed.depthBias = -depthState.depthBias;
+            reversed.depthBiasSlope = -depthState.depthBiasSlope;
+            this._reverseZDepthStates.set(depthState.key, reversed);
+        }
+        return reversed;
     }
 
     setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall) {

@@ -61,6 +61,19 @@ class Camera {
         0, 0, 0.5, 1
     ]);
 
+    /**
+     * Maps the clip depth from -1..1 to the reversed 1..0 range of reverse-z, see
+     * {@link Camera#reverseZ}.
+     *
+     * @private
+     */
+    static _webGpuDepthRangeMatrixReverseZ = new Mat4().set([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, -0.5, 0,
+        0, 0, 0.5, 1
+    ]);
+
     /** @private */
     static _applyShaderProjectionScratch = new Mat4();
 
@@ -72,24 +85,27 @@ class Camera {
      * @param {Mat4} out - Receives the transformed matrix.
      * @param {boolean} flipY - When true, apply render-target Y flip first.
      * @param {boolean} applyWebGpuDepthRange - When true, map clip Z from -1..1 to 0..1.
+     * @param {boolean} [reverseZ] - When true together with applyWebGpuDepthRange, map clip Z from
+     * -1..1 to the reversed 1..0 instead, see {@link Camera#reverseZ}. Defaults to false.
      * @returns {Mat4} out
      */
-    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange) {
+    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange, reverseZ = false) {
         if (!flipY && !applyWebGpuDepthRange) {
             out.copy(projection);
             return out;
         }
+        const depthRange = reverseZ ? Camera._webGpuDepthRangeMatrixReverseZ : Camera._webGpuDepthRangeMatrix;
         if (flipY && applyWebGpuDepthRange) {
             const scratch = Camera._applyShaderProjectionScratch;
             scratch.mul2(Camera._flipYProjectionMatrix, projection);
-            out.mul2(Camera._webGpuDepthRangeMatrix, scratch);
+            out.mul2(depthRange, scratch);
             return out;
         }
         if (flipY) {
             out.mul2(Camera._flipYProjectionMatrix, projection);
             return out;
         }
-        out.mul2(Camera._webGpuDepthRangeMatrix, projection);
+        out.mul2(depthRange, projection);
         return out;
     }
 
@@ -190,6 +206,14 @@ class Camera {
 
     /** @type {number} */
     jitter = 0;
+
+    /**
+     * True when the camera is set to render with reverse-z, see {@link Camera#reverseZ}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _reverseZ = false;
 
     /**
      * The scale of the exposure the camera renders with, multiplying the exposure of the scene, or
@@ -650,6 +674,45 @@ class Camera {
         return this._frustumCulling;
     }
 
+    /**
+     * Sets whether the camera renders with a reversed depth buffer, see
+     * {@link CameraComponent#reverseZ}. Reverse-z is supported on WebGPU only, and is not set on
+     * other devices.
+     *
+     * @type {boolean}
+     */
+    set reverseZ(value) {
+        const supported = this.device.isWebGPU;
+        Debug.call(() => {
+            if (value && !supported) {
+                Debug.warnOnce('Camera#reverseZ is only supported on WebGPU, ignoring.');
+            }
+        });
+        this._reverseZ = value && supported;
+    }
+
+    /**
+     * Gets whether the camera is set to render with a reversed depth buffer. See
+     * {@link Camera#reverseZActive} for whether it renders with it at the moment.
+     *
+     * @type {boolean}
+     */
+    get reverseZ() {
+        return this._reverseZ;
+    }
+
+    /**
+     * True when the camera renders with a reversed depth buffer: the depth is 1 at the near plane
+     * and 0 at the far plane, the depth buffer clears to the reverse of {@link Camera#clearDepth},
+     * and the depth tests of the materials are reversed. This is {@link Camera#reverseZ}, unless the
+     * camera renders the views of an XR session, whose projections are not reversed.
+     *
+     * @type {boolean}
+     */
+    get reverseZActive() {
+        return this._reverseZ && !this.xrActive;
+    }
+
     set horizontalFov(newValue) {
         if (this._horizontalFov !== newValue) {
             this._horizontalFov = newValue;
@@ -926,6 +989,7 @@ class Camera {
         this.cullFaces = other.cullFaces;
         this.flipFaces = other.flipFaces;
         this.frustumCulling = other.frustumCulling;
+        this.reverseZ = other.reverseZ;
         this.layers = other.layers;
         this.orthoHeight = other.orthoHeight;
         this.projection = other.projection;

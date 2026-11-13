@@ -829,6 +829,40 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets whether the camera renders with a reversed depth buffer (reverse-z), which stores a
+     * depth of 1 at the near plane and 0 at the far plane. Together with a floating point depth
+     * buffer, such as a render target with a {@link PIXELFORMAT_DEPTH} depth buffer, this keeps the
+     * depth precise over large view distances, avoiding the z-fighting of distant surfaces.
+     *
+     * The rest of the engine keeps the standard depth convention: the depth buffer clears to the
+     * reverse of the clear depth of the camera (to 0 for the default of 1), and the depth test
+     * functions and biases of the materials keep their meaning - {@link FUNC_LESSEQUAL} still passes
+     * the nearer fragments. Shaders are compiled with the `REVERSE_Z` define, which custom shaders
+     * writing or reading the depth of the camera need to handle. Cameras rendering to the same
+     * depth buffer need the same setting.
+     *
+     * Reverse-z is supported on WebGPU only, and is ignored on other devices. It is not applied to
+     * the views of an XR session. The features reading the depth the camera renders do not support
+     * it yet: the scene depth map ({@link CameraComponent#requestSceneDepthMap}), the depth prepass
+     * of the camera frame, picking and gaussian splats. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set reverseZ(value) {
+        this._camera.reverseZ = value;
+    }
+
+    /**
+     * Gets whether the camera is set to render with a reversed depth buffer. It stays set while
+     * the camera renders the views of an XR session, which are rendered without it.
+     *
+     * @type {boolean}
+     */
+    get reverseZ() {
+        return this._camera.reverseZ;
+    }
+
+    /**
      * Sets whether the camera's field of view ({@link fov}) is horizontal or vertical. Defaults to
      * false (meaning it is vertical by default).
      *
@@ -1666,6 +1700,7 @@ class CameraComponent extends Component {
         this.fov = source.fov;
         this.frustumCulling = source.frustumCulling;
         this.horizontalFov = source.horizontalFov;
+        this.reverseZ = source.reverseZ;
         this.layers = source.layers;
         this.nearClip = source.nearClip;
         this.orthoHeight = source.orthoHeight;

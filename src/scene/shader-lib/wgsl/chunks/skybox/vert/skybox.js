@@ -72,8 +72,13 @@ export default /* wgsl */`
         // Subtract a tiny fudge factor to ensure floating point errors don't
         // still push pixels beyond far Z. See:
         // https://community.khronos.org/t/skybox-problem/61857
+        // With reverse-z the far Z is zero, which needs no fudge factor.
 
-        output.position.z = output.position.w - 1.0e-7;
+        #ifdef REVERSE_Z
+            output.position.z = 0.0;
+        #else
+            output.position.z = output.position.w - 1.0e-7;
+        #endif
 
         return output;
     }
