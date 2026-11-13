@@ -954,4 +954,58 @@ describe('GraphNode', function () {
             expect(root._deformedRenderVersion).to.equal(6);
         });
     });
+
+    describe('#setLocalPositionFromArray()', function () {
+
+        it('sets the local position and updates the world transform', function () {
+            const node = new GraphNode();
+            node.getWorldTransform();
+
+            node.setLocalPositionFromArray([1, 2, 3]);
+
+            expect(node.getLocalPosition().toString()).to.equal('[1, 2, 3]');
+            expect(node.getPosition().toString()).to.equal('[1, 2, 3]');
+        });
+
+        it('updates the world transform of the children', function () {
+            const parent = new GraphNode();
+            const child = new GraphNode();
+            parent.addChild(child);
+            child.getWorldTransform();
+
+            parent.setLocalPositionFromArray([1, 2, 3]);
+
+            expect(child.getPosition().toString()).to.equal('[1, 2, 3]');
+        });
+    });
+
+    describe('#setLocalRotationFromArray()', function () {
+
+        it('sets the local rotation and updates the world transform', function () {
+            const node = new GraphNode();
+            node.getWorldTransform();
+
+            const rotation = new Quat().setFromEulerAngles(0, 90, 0);
+            node.setLocalRotationFromArray([rotation.x, rotation.y, rotation.z, rotation.w]);
+
+            expect(node.getLocalRotation().equals(rotation)).to.equal(true);
+            expect(node.getEulerAngles().y).to.be.closeTo(90, 1e-4);
+        });
+    });
+
+    describe('#setLocalScaleFromArray()', function () {
+
+        it('sets the local scale and updates the world transform', function () {
+            const node = new GraphNode();
+            node.getWorldTransform();
+
+            node.setLocalScaleFromArray([2, 3, 4]);
+
+            expect(node.getLocalScale().toString()).to.equal('[2, 3, 4]');
+            const scale = node.getWorldTransform().getScale();
+            expect(scale.x).to.be.closeTo(2, 1e-5);
+            expect(scale.y).to.be.closeTo(3, 1e-5);
+            expect(scale.z).to.be.closeTo(4, 1e-5);
+        });
+    });
 });

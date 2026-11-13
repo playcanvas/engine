@@ -1172,6 +1172,61 @@ class GraphNode extends EventHandler {
         }
     }
 
+    /**
+     * Sets the local space position from the first three values of an array. Used by the
+     * animation system, which applies the animated values as arrays.
+     *
+     * @param {ArrayLike<number>} values - The x, y and z coordinates.
+     * @ignore
+     */
+    setLocalPositionFromArray(values) {
+        const position = this.localPosition;
+        position.x = values[0];
+        position.y = values[1];
+        position.z = values[2];
+
+        if (!this._dirtyLocal) {
+            this._dirtifyLocal();
+        }
+    }
+
+    /**
+     * Sets the local space rotation from the first four values of an array. Used by the
+     * animation system, which applies the animated values as arrays.
+     *
+     * @param {ArrayLike<number>} values - The x, y, z and w components of the quaternion.
+     * @ignore
+     */
+    setLocalRotationFromArray(values) {
+        const rotation = this.localRotation;
+        rotation.x = values[0];
+        rotation.y = values[1];
+        rotation.z = values[2];
+        rotation.w = values[3];
+
+        if (!this._dirtyLocal) {
+            this._dirtifyLocal();
+        }
+    }
+
+    /**
+     * Sets the local space scale from the first three values of an array. Used by the animation
+     * system, which applies the animated values as arrays.
+     *
+     * @param {ArrayLike<number>} values - The x, y and z scale factors.
+     * @ignore
+     */
+    setLocalScaleFromArray(values) {
+        const scale = this.localScale;
+        scale.x = values[0];
+        scale.y = values[1];
+        scale.z = values[2];
+
+        if (!this._dirtyLocal) {
+            this._dirtifyLocal();
+        }
+    }
+
     /** @private */
     _dirtifyLocal() {
         if (!this._dirtyLocal) {

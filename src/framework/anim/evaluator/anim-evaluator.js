@@ -1,9 +1,11 @@
 import { AnimTargetValue } from './anim-target-value.js';
 import { AnimBlend } from './anim-blend.js';
+import { ANIM_LAYER_OVERWRITE } from '../controller/constants.js';
 
 /**
  * @import { AnimBinder } from '../binder/anim-binder.js'
  * @import { AnimClip } from './anim-clip.js'
+ * @import { AnimComponent } from '../../components/anim/component.js'
  */
 
 /**
@@ -299,10 +301,11 @@ class AnimEvaluator {
         }
         const binder = this._binder;
         const animComponent = binder.animComponent;
+        const layerBlending = animComponent && !this._isSingleFullLayer(animComponent);
         for (let t = 0; t < targetList.length; t++) {
             const target = targetList[t];
             // if this evaluator is associated with an anim component then we should blend the result of this evaluator with all other anim layer's evaluators
-            if (animComponent && target.target.usesLayerBlending) {
+            if (layerBlending && target.target.usesLayerBlending) {
                 const path = target.target.targetPath;
                 const animTarget = animComponent.targets[path];
                 if (animTarget.counter === animTarget.layerCounter) {
@@ -326,6 +329,30 @@ class AnimEvaluator {
         // TODO: is this even necessary? binder could know when to update
         // itself without our help.
         this._binder.update(deltaTime);
+    }
+
+    /**
+     * Returns true if the anim component has a single layer, which overwrites at its full weight.
+     * Blending such a layer with the base values results in the values of the layer, so they are
+     * applied to the targets directly, without the layer blending.
+     *
+     * @param {AnimComponent} animComponent - The anim component.
+     * @returns {boolean} True if the anim component has a single full weight overwrite layer.
+     * @private
+     */
+    _isSingleFullLayer(animComponent) {
+        const layers = animComponent.layers;
+        if (layers?.length !== 1) {
+            return false;
+        }
+        const layer = layers[0];
+        if (layer.blendType !== ANIM_LAYER_OVERWRITE) {
+            return false;
+        }
+
+        // the weight the layer is blended with, as AnimTargetValue#getWeight evaluates it
+        const weight = layer.weight;
+        return animComponent.normalizeWeights ? weight > 0 : weight >= 1;
     }
 }
 

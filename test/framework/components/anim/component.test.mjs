@@ -9,6 +9,7 @@ import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js'
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { MeshInstance } from '../../../../src/scene/mesh-instance.js';
 import { Mesh } from '../../../../src/scene/mesh.js';
 import { MorphInstance } from '../../../../src/scene/morph-instance.js';
@@ -658,6 +659,63 @@ describe('AnimComponent', function () {
             const clone = root.clone();
 
             expect(clone.anim.evaluationInterval).to.equal(3);
+        });
+    });
+
+    describe('applying values', function () {
+
+        // a track scaling the anim component entity from 1 to 3 over one second
+        const scaleTrack = () => {
+            const curve = new AnimCurve([{
+                entityPath: ['root'],
+                component: 'entity',
+                propertyPath: ['localScale']
+            }], 0, 0, INTERPOLATION_LINEAR);
+
+            return new AnimTrack('Scale', 1, [new AnimData(1, [0, 1])], [new AnimData(3, [1, 1, 1, 3, 3, 3])], [curve]);
+        };
+
+        it('applies a single layer at full weight', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack());
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
+        });
+
+        it('blends a single layer below full weight with the base value', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack());
+            root.anim.baseLayer.weight = 0.5;
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            // halfway between the base scale of 1 and the animated scale of 2
+            expect(root.getLocalScale().x).to.be.closeTo(1.5, 1e-5);
+        });
+
+        it('uses a setter which replaces the setter of the graph node', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            // a setter replaced the way an element component replaces the setters of its entity
+            let calls = 0;
+            root.setLocalScale = function (...args) {
+                calls++;
+                return GraphNode.prototype.setLocalScale.apply(this, args);
+            };
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack());
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(calls).to.be.above(0);
+            expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
         });
     });
 });
