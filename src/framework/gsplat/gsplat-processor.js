@@ -267,8 +267,6 @@ class GSplatProcessor {
         this._renderPass = new RenderPassShaderQuad(device);
         this._renderPass.quadRender = this._quadRender;
         this._renderPass.init(this._renderTarget);
-        this._renderPass.colorOps.clear = false;
-        this._renderPass.depthStencilOps.clearDepth = false;
     }
 
     /**
@@ -393,7 +391,7 @@ class GSplatProcessor {
             return info.returnType;
         });
 
-        // Create defines - start from the source resource's format-specific defines (e.g. SOG_V2)
+        // Create defines - start from the source resource's format-specific defines (e.g. SOG_VERSION)
         // so the shared read chunk compiles for the correct variant, then override SH_BANDS.
         const defines = new Map();
         this._srcResource.configureMaterialDefines(defines);

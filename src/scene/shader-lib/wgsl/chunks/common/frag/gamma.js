@@ -16,8 +16,10 @@ export default /* wgsl */`
         return vec4f(decodeGamma3(color.xyz), color.w);
     }
 
+    // the exact sRGB transfer, the inverse of decodeGamma and of the GPU's sRGB texture decode
     fn gammaCorrectOutput(color: vec3f) -> vec3f {
-        return pow(color + 0.0000001, vec3f(1.0 / 2.2));
+        let c = max(color, vec3f(0.0));
+        return select(1.055 * pow(c, vec3f(1.0 / 2.4)) - vec3f(0.055), c * 12.92, c <= vec3f(0.0031308));
     }
 
 #else // NONE

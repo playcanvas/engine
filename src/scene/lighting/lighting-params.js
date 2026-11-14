@@ -1,6 +1,7 @@
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { SHADOW_PCF3_32F } from '../constants.js';
+import { LIGHTSHAPE_DISK, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE, SHADOW_PCF3_32F } from '../constants.js';
 
 /**
  * Lighting parameters, allow configuration of the global lighting parameters. For details see
@@ -11,6 +12,15 @@ import { SHADOW_PCF3_32F } from '../constants.js';
 class LightingParams {
     /** @private */
     _areaLightsEnabled = false;
+
+    /** @private */
+    _areaLightRectEnabled = true;
+
+    /** @private */
+    _areaLightDiskEnabled = true;
+
+    /** @private */
+    _areaLightSphereEnabled = true;
 
     /** @private */
     _cells = new Vec3(10, 3, 10);
@@ -35,15 +45,6 @@ class LightingParams {
 
     /** @private */
     _cookieAtlasResolution = 2048;
-
-    /**
-     * Layer ID of a layer to contain the debug rendering of clustered lighting. Defaults to
-     * undefined, which disables the debug rendering. Debug rendering is only included in the debug
-     * version of the engine.
-     *
-     * @type {number}
-     */
-    debugLayer;
 
     /**
      * Atlas textures split description, which applies to both the shadow and cookie texture atlas.
@@ -260,6 +261,97 @@ class LightingParams {
     }
 
     /**
+     * Sets whether clustered lighting supports area lights of rectangular shape
+     * ({@link LIGHTSHAPE_RECT}). The lit shaders only include the code of the enabled area light
+     * shapes, so disabling the shapes a scene does not use makes them faster to compile, most
+     * noticeably on Windows. Area lights of a disabled shape are rendered as punctual lights. Only
+     * used when {@link LightingParams#areaLightsEnabled} is true. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set areaLightRectEnabled(value) {
+        if (this._areaLightRectEnabled !== value) {
+            this._areaLightRectEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLightsFnc();
+        }
+    }
+
+    /**
+     * Gets whether clustered lighting supports area lights of rectangular shape.
+     *
+     * @type {boolean}
+     */
+    get areaLightRectEnabled() {
+        return this._areaLightRectEnabled;
+    }
+
+    /**
+     * Sets whether clustered lighting supports area lights of disk shape ({@link LIGHTSHAPE_DISK}).
+     * Area lights of a disabled shape are rendered as punctual lights, see
+     * {@link LightingParams#areaLightRectEnabled}. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set areaLightDiskEnabled(value) {
+        if (this._areaLightDiskEnabled !== value) {
+            this._areaLightDiskEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLightsFnc();
+        }
+    }
+
+    /**
+     * Gets whether clustered lighting supports area lights of disk shape.
+     *
+     * @type {boolean}
+     */
+    get areaLightDiskEnabled() {
+        return this._areaLightDiskEnabled;
+    }
+
+    /**
+     * Sets whether clustered lighting supports area lights of sphere shape
+     * ({@link LIGHTSHAPE_SPHERE}). Area lights of a disabled shape are rendered as punctual lights,
+     * see {@link LightingParams#areaLightRectEnabled}. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set areaLightSphereEnabled(value) {
+        if (this._areaLightSphereEnabled !== value) {
+            this._areaLightSphereEnabled = value;
+
+            // lit shaders need to be rebuilt
+            this._dirtyLightsFnc();
+        }
+    }
+
+    /**
+     * Gets whether clustered lighting supports area lights of sphere shape.
+     *
+     * @type {boolean}
+     */
+    get areaLightSphereEnabled() {
+        return this._areaLightSphereEnabled;
+    }
+
+    /**
+     * Bit mask (1 << shape) of the area light shapes the clustered lighting supports, 0 when area
+     * lights are disabled.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get areaLightShapes() {
+        if (!this._areaLightsEnabled) return 0;
+        return (this._areaLightRectEnabled ? 1 << LIGHTSHAPE_RECT : 0) |
+            (this._areaLightDiskEnabled ? 1 << LIGHTSHAPE_DISK : 0) |
+            (this._areaLightSphereEnabled ? 1 << LIGHTSHAPE_SPHERE : 0);
+    }
+
+    /**
      * Sets whether clustered lighting supports shadow casting. Defaults to true.
      *
      * @type {boolean}
@@ -280,6 +372,15 @@ class LightingParams {
      */
     get shadowsEnabled() {
         return this._shadowsEnabled;
+    }
+
+    set debugLayer(value) {
+        Debug.removed('LightingParams#debugLayer is removed. Use WorldClustersDebug#layer from the extras instead.');
+    }
+
+    get debugLayer() {
+        Debug.removed('LightingParams#debugLayer is removed. Use WorldClustersDebug#layer from the extras instead.');
+        return undefined;
     }
 }
 

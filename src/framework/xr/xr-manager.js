@@ -506,6 +506,8 @@ class XrManager extends EventHandler {
      * {@link XrPlaneDetection}.
      * @param {boolean} [options.meshDetection] - Set to true to attempt to enable
      * {@link XrMeshDetection}.
+     * @param {boolean} [options.cameraColor] - Set to true to attempt to enable camera color
+     * access, see {@link XrViews#availableColor}.
      * @param {XrErrorCallback} [options.callback] - Optional callback function called once session
      * is started. The callback has one argument Error - it is null if successfully started XR
      * session.

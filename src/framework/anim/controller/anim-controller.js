@@ -16,6 +16,10 @@ import { AnimTransition } from './anim-transition.js';
  * @import { EventHandler } from '../../../core/event-handler.js'
  */
 
+// The START and END states play no animation, so they have no timeline to measure the exit time
+// of a transition out of them against.
+const hasTimeline = stateName => stateName !== ANIM_STATE_START && stateName !== ANIM_STATE_END;
+
 /**
  * The AnimController manages the animations for its entity, based on the provided state graph and
  * parameters. Its update method determines which state the controller should be in based on the
@@ -138,6 +142,13 @@ class AnimController {
                 ...transition
             });
         });
+        Debug.call(() => {
+            for (const transition of this._transitions) {
+                if (transition.hasExitTime && !hasTimeline(transition.from)) {
+                    Debug.warnOnce(`AnimController: The exit time of the transition from ${transition.from} to ${transition.to} is ignored, as the ${transition.from} state plays no animation.`);
+                }
+            }
+        });
         this._activate = activate;
     }
 
@@ -250,6 +261,21 @@ class AnimController {
         return this._states[stateName];
     }
 
+    /**
+     * The rate at which the time in the active state advances. This is the playback speed of the
+     * state's first clip rather than the state speed, as the two can differ, for example in blend
+     * trees. Exit times, the state progress and the end of non-looping states are then all measured
+     * against what the clip actually plays.
+     *
+     * @type {number}
+     * @private
+     */
+    get _activeStateTimeScale() {
+        const animations = this.activeStateAnimations;
+        const activeClip = animations.length > 0 ? this._animEvaluator.findClip(animations[0].name) : null;
+        return activeClip ? activeClip.speed : this.activeState.speed;
+    }
+
     _getActiveStateProgressForTime(time) {
         if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY) {
             return 1.0;
@@ -257,7 +283,9 @@ class AnimController {
 
         const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
         if (activeClip) {
-            return activeClip.progressForTime(time);
+            // the time in state advances at the clip speed, so it is already the clip's playback
+            // time. For a clip playing in reverse it runs from 0 towards negative values.
+            return (activeClip.speed < 0 ? -time : time) / activeClip.track.duration;
         }
 
         return null;
@@ -339,77 +367,108 @@ class AnimController {
         return true;
     }
 
+    /**
+     * Returns true if the transition can be taken this frame: it does not lead to the already
+     * active state, its exit time (if any) falls within the current frame and its conditions are
+     * met.
+     *
+     * @param {AnimTransition} transition - The transition to test.
+     * @returns {boolean} True if the transition can be taken.
+     * @private
+     */
+    _isTransitionValid(transition) {
+        // if the transition is moving to the already active state, ignore it
+        if (transition.to === this.activeStateName) {
+            return false;
+        }
+        // when an exit time is present, we should only exit if it falls within the current frame delta time.
+        // A transition out of a state without a timeline ignores its exit time, as it could never be met
+        if (transition.hasExitTime && hasTimeline(transition.from)) {
+            let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
+            let progress = this._getActiveStateProgressForTime(this._timeInState);
+            // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
+            if (transition.exitTime < 1.0 && this.activeState.loop) {
+                progressBefore -= Math.floor(progressBefore);
+                progress -= Math.floor(progress);
+            }
+            // if the delta time is 0 and the progress matches the exit time, the exitTime condition has been met
+            if (progress === progressBefore) {
+                if (progress !== transition.exitTime) {
+                    return false;
+                }
+            // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
+            } else if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
+                return false;
+            }
+        }
+        // if the exitTime condition has been met or is not present, check condition parameters
+        return this._transitionHasConditionsMet(transition);
+    }
+
+    /**
+     * Returns the first transition in the priority sorted list which can be taken this frame.
+     *
+     * @param {AnimTransition[]} transitions - Transitions sorted in priority order.
+     * @returns {AnimTransition|null} The transition, or null if none can be taken.
+     * @private
+     */
+    _firstValidTransition(transitions) {
+        for (let i = 0; i < transitions.length; i++) {
+            if (this._isTransitionValid(transitions[i])) {
+                return transitions[i];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the first valid transition from the given states, in the order they are listed. This
+     * runs every frame, so it does not allocate.
+     *
+     * @param {string|null} a - The first state to look for transitions from.
+     * @param {string|null} b - The second state to look for transitions from.
+     * @param {string|null} [c] - The third state to look for transitions from.
+     * @returns {AnimTransition|null} The transition, or null if none can be taken.
+     * @private
+     */
+    _findTransitionFromStates(a, b, c = null) {
+        return this._firstValidTransition(this._findTransitionsFromState(a)) ??
+            this._firstValidTransition(this._findTransitionsFromState(b)) ??
+            (c !== null ? this._firstValidTransition(this._findTransitionsFromState(c)) : null);
+    }
+
     _findTransition(from, to) {
-        let transitions = [];
+        let transition = null;
 
         // If from and to are supplied, find transitions that include the required source and destination states
         if (from && to) {
-            transitions = transitions.concat(this._findTransitionsBetweenStates(from, to));
-        } else {
+            transition = this._firstValidTransition(this._findTransitionsBetweenStates(from, to));
+        } else if (!this._isTransitioning) {
             // If no transition is active, look for transitions from the active & any states.
-            if (!this._isTransitioning) {
-                transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-            } else {
-                // Otherwise look for transitions from the previous and active states based on the current interruption source.
-                // Accept transitions from the any state unless the interruption source is set to none
-                switch (this._transitionInterruptionSource) {
-                    case ANIM_INTERRUPTION_PREV:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_NEXT:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_PREV_NEXT:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_NEXT_PREV:
-                        transitions = transitions.concat(this._findTransitionsFromState(this._activeStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(this._previousStateName));
-                        transitions = transitions.concat(this._findTransitionsFromState(ANIM_STATE_ANY));
-                        break;
-                    case ANIM_INTERRUPTION_NONE:
-                    default:
-                }
+            transition = this._findTransitionFromStates(this._activeStateName, ANIM_STATE_ANY);
+        } else {
+            // Otherwise look for transitions from the previous and active states based on the current interruption source.
+            // Accept transitions from the any state unless the interruption source is set to none
+            switch (this._transitionInterruptionSource) {
+                case ANIM_INTERRUPTION_PREV:
+                    transition = this._findTransitionFromStates(this._previousStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_NEXT:
+                    transition = this._findTransitionFromStates(this._activeStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_PREV_NEXT:
+                    transition = this._findTransitionFromStates(this._previousStateName, this._activeStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_NEXT_PREV:
+                    transition = this._findTransitionFromStates(this._activeStateName, this._previousStateName, ANIM_STATE_ANY);
+                    break;
+                case ANIM_INTERRUPTION_NONE:
+                default:
             }
         }
 
-        // filter out transitions that don't have their conditions met
-        transitions = transitions.filter((transition) => {
-            // if the transition is moving to the already active state, ignore it
-            if (transition.to === this.activeStateName) {
-                return false;
-            }
-            // when an exit time is present, we should only exit if it falls within the current frame delta time
-            if (transition.hasExitTime) {
-                let progressBefore = this._getActiveStateProgressForTime(this._timeInStateBefore);
-                let progress = this._getActiveStateProgressForTime(this._timeInState);
-                // when the exit time is smaller than 1 and the state is looping, we should check for an exit each loop
-                if (transition.exitTime < 1.0 && this.activeState.loop) {
-                    progressBefore -= Math.floor(progressBefore);
-                    progress -= Math.floor(progress);
-                }
-                // if the delta time is 0 and the progress matches the exit time, the exitTime condition has been met
-                if (progress === progressBefore) {
-                    if (progress !== transition.exitTime) {
-                        return null;
-                    }
-                // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
-                } else if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
-                    return null;
-                }
-            }
-            // if the exitTime condition has been met or is not present, check condition parameters
-            return this._transitionHasConditionsMet(transition);
-        });
-
         // return the highest priority transition to use
-        if (transitions.length > 0) {
-            const transition = transitions[0];
+        if (transition) {
             if (transition.to === ANIM_STATE_END) {
                 const startTransition = this._findTransitionsFromState(ANIM_STATE_START)[0];
                 transition.to = startTransition.to;
@@ -606,7 +665,12 @@ class AnimController {
         this._animEvaluator.rebind();
     }
 
-    update(dt) {
+    /**
+     * @param {number} dt - The time elapsed since the last update, in seconds.
+     * @param {boolean} [evaluate] - Whether the animation should be evaluated and applied. When
+     * false, the state graph, transitions and animation events still update.
+     */
+    update(dt, evaluate = true) {
         if (!this._playing) {
             return;
         }
@@ -615,13 +679,14 @@ class AnimController {
         let clip;
         // update time when looping or when the active state is not at the end of its duration
         if (this.activeState.loop || this._timeInState < this.activeStateDuration) {
+            const timeScale = this._activeStateTimeScale;
             this._timeInStateBefore = this._timeInState;
-            this._timeInState += dt * this.activeState.speed;
+            this._timeInState += dt * timeScale;
             // if the active state is not looping and the time in state is greater than the duration, set the time in state to the state duration
-            // and update the delta time accordingly
+            // and update the delta time accordingly. The time in state advances at the time scale, so divide by it to get back to real time
             if (!this.activeState.loop && this._timeInState > this.activeStateDuration) {
                 this._timeInState = this.activeStateDuration;
-                dt = this.activeStateDuration - this._timeInStateBefore;
+                dt = (this.activeStateDuration - this._timeInStateBefore) / timeScale;
             }
         }
 
@@ -687,7 +752,7 @@ class AnimController {
                 }
             }
         }
-        this._animEvaluator.update(dt, this.activeState.hasAnimations);
+        this._animEvaluator.update(dt, this.activeState.hasAnimations, evaluate);
     }
 
     findParameter = (name) => {

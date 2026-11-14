@@ -5,7 +5,7 @@ import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
 import { ResourceHandler } from './handler.js';
-import { Script, getScriptRegistryName, toLowerCamelCase } from '../script/script.js';
+import { Script, getDeclaredScriptName, getScriptRegistryName, toLowerCamelCase } from '../script/script.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -30,6 +30,14 @@ class ScriptHandler extends ResourceHandler {
 
         this._scripts = { };
         this._cache = { };
+
+        /**
+         * The file hash each module script was first imported with, by its URL without the query.
+         *
+         * @type {Map<string, string>}
+         * @private
+         */
+        this._modules = new Map();
     }
 
     clearCache() {
@@ -43,7 +51,7 @@ class ScriptHandler extends ResourceHandler {
         this._cache = {};
     }
 
-    load(url, callback) {
+    load(url, callback, asset) {
         // Scripts don't support bundling since we concatenate them. Below is for consistency.
         if (typeof url === 'string') {
             url = {
@@ -54,6 +62,9 @@ class ScriptHandler extends ResourceHandler {
 
         const self = this;
         script.app = this._app;
+
+        // the key the loader cached this script under, cleared once loaded so an edit loads it again
+        const key = ResourceLoader.makeKey(url.load, 'script');
 
         const onScriptLoad = (url.load, (err, url, extra) => {
             if (!err) {
@@ -68,8 +79,7 @@ class ScriptHandler extends ResourceHandler {
                 callback(null, obj, extra);
 
                 // no cache for scripts
-                const urlWithoutEndHash = url.split('&hash=')[0];
-                delete self._loader._cache[ResourceLoader.makeKey(urlWithoutEndHash, 'script')];
+                delete self._loader._cache[key];
             } else {
                 callback(err);
             }
@@ -80,7 +90,16 @@ class ScriptHandler extends ResourceHandler {
         const isEsmScript = basePath.endsWith('.mjs');
 
         if (isEsmScript) {
-            this._loadModule(basePath, onScriptLoad);
+            // the first import uses the plain URL, so it is the same module that other scripts import.
+            // the browser keeps a module for as long as the page, so a file edited since then is
+            // imported under a new URL to evaluate its new code
+            const hash = asset?.file?.hash;
+            const first = this._modules.get(basePath);
+            if (first === undefined) {
+                this._modules.set(basePath, hash ?? '');
+            }
+            const edited = first !== undefined && !!hash && hash !== first;
+            this._loadModule(edited ? `${basePath}?t=${hash}` : basePath, onScriptLoad);
         } else {
             this._loadScript(url.load, onScriptLoad);
         }
@@ -143,10 +162,16 @@ class ScriptHandler extends ResourceHandler {
 
                 if (extendsScriptType) {
 
-                    // a `scriptName` declared on THIS class; an inherited one belongs to a base
-                    const ownScriptName = Object.prototype.hasOwnProperty.call(scriptClass, 'scriptName') && scriptClass.scriptName;
+                    // the name declared on THIS class, as a static field or through the setter; an
+                    // inherited one belongs to a base
+                    const declaredName = getDeclaredScriptName(scriptClass);
 
-                    if (!ownScriptName) {
+                    // a base class extended by scripts declares a null name, and is not a script itself
+                    if (declaredName === null) {
+                        continue;
+                    }
+
+                    if (!declaredName) {
                         Debug.warnOnce(`The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${toLowerCamelCase(scriptClass.name)}";\`. This will be an error in future versions of PlayCanvas.`);
                     }
 

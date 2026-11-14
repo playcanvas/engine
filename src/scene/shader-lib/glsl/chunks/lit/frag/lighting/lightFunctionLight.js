@@ -91,6 +91,23 @@ void evaluateLight{i}(
         #endif
     #endif
 
+    // diffuse transmission - the light arriving at the back of the surface, which is the diffuse
+    // lighting of the flipped normal. It is evaluated before the diffuse lighting of a punctual
+    // light multiplies into its attenuation
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        #if LIGHT{i}SHAPE == PUNCTUAL
+            float attenTransmission = dAtten * getLightDiffuse(-litArgs_worldNormal, vec3(0.0), dLightDirNormW);
+        #elif LIGHT{i}TYPE == DIRECTIONAL
+            float attenTransmission = dAtten * getLightDiffuse(-litArgs_worldNormal, dViewDirW, dLightDirNormW);
+        #elif LIGHT{i}SHAPE == RECT
+            float attenTransmission = dAtten * getRectLightDiffuse(-litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
+        #elif LIGHT{i}SHAPE == DISK
+            float attenTransmission = dAtten * getDiskLightDiffuse(-litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
+        #elif LIGHT{i}SHAPE == SPHERE
+            float attenTransmission = dAtten * getSphereLightDiffuse(-litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
+        #endif
+    #endif
+
     // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
     #if LIGHT{i}SHAPE != PUNCTUAL
 
@@ -126,7 +143,7 @@ void evaluateLight{i}(
         #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
             // Fade to fully lit at the shadow distance without sampling another cascade.
             float shadowDistance = light{i}_shadowCascadeDistances.w;
-            float shadowFade = smoothstep(light{i}_shadowCascadeBlend * shadowDistance, shadowDistance, 1.0 / gl_FragCoord.w);
+            float shadowFade = smoothstep(light{i}_shadowCascadeBlend * shadowDistance, shadowDistance, dViewDepth);
             shadow = mix(shadow, 1.0, shadowFade);
         #endif
 
@@ -134,6 +151,10 @@ void evaluateLight{i}(
         shadow = mix(1.0, shadow, light{i}_shadowIntensity);
 
         dAtten *= shadow;
+
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            attenTransmission *= shadow;
+        #endif
 
         #if defined(LIT_SHADOW_CATCHER) && LIGHT{i}TYPE == DIRECTIONAL
             // accumulate shadows for directional lights
@@ -153,15 +174,27 @@ void evaluateLight{i}(
         // area light - they do not mix diffuse lighting into specular attenuation
         #ifdef LIT_SPECULAR
             dDiffuseLight += ((attenDiffuse * dAtten) * lightColor) * (1.0 - dLTCSpecFres);
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += (attenTransmission * lightColor) * (1.0 - dLTCSpecFres);
+            #endif
         #else
             dDiffuseLight += (attenDiffuse * dAtten) * lightColor;
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += attenTransmission * lightColor;
+            #endif
         #endif                        
     #else
         // punctual light
         #if defined(AREA_LIGHTS) && defined(LIT_SPECULAR)
             dDiffuseLight += (dAtten * lightColor) * (1.0 - litArgs_specularity);
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += (attenTransmission * lightColor) * (1.0 - litArgs_specularity);
+            #endif
         #else
             dDiffuseLight += dAtten * lightColor;
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += attenTransmission * lightColor;
+            #endif
         #endif
     #endif
 
@@ -171,12 +204,13 @@ void evaluateLight{i}(
         #if LIGHT{i}SHAPE != PUNCTUAL // area light
 
             #ifdef LIT_CLEARCOAT
+                // with the LTC matrix of the clear coat gloss (ccLTCUV)
                 #if LIGHT{i}SHAPE == RECT
-                    ccSpecularLight += ccLTCSpecFres * getRectLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
+                    ccSpecularLight += ccLTCSpecFres * getRectLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
                 #elif LIGHT{i}SHAPE == DISK
-                    ccSpecularLight += ccLTCSpecFres * getDiskLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
+                    ccSpecularLight += ccLTCSpecFres * getDiskLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
                 #elif LIGHT{i}SHAPE == SPHERE
-                    ccSpecularLight += ccLTCSpecFres * getSphereLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
+                    ccSpecularLight += ccLTCSpecFres * getSphereLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
                 #endif
             #endif
 

@@ -1,0 +1,321 @@
+// @config
+//
+// @credit
+// title: Iridescent Dish with Olives
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/IridescentDishWithOlives
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Real-time Refraction Demo: Mosquito in Amber
+// author: Sketchfab
+// source: https://sketchfab.com/3d-models/real-time-refraction-demo-mosquito-in-amber-37233d6ed84844fea1ebe88069ea58d1
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Sheen Chair
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/SheenChair
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+//
+// @credit
+// title: Stained Glass Lamp
+// author: Wayfair LLC
+// source: https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/StainedGlassLamp
+// license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BoundingBox,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    ELEMENTTYPE_TEXT,
+    ElementComponentSystem,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    FontHandler,
+    JsonHandler,
+    Keyboard,
+    LAYERID_DEPTH,
+    LightComponentSystem,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice,
+    math
+} from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import { data, deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const assets = {
+    helipad: new Asset(
+        'helipad-env-atlas',
+        'texture',
+        { url: './assets/cubemaps/helipad-env-atlas.png' },
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
+    ),
+    dish: new Asset('dish', 'container', { url: './assets/models/IridescentDishWithOlives.glb' }),
+    mosquito: new Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
+    sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
+    lamp: new Asset('lamp', 'container', { url: './assets/models/StainedGlassLamp.glb' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
+    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true })
+};
+
+const gfxOptions = {
+    deviceTypes: [deviceType]
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    ElementComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
+
+app.start();
+
+// Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
+// Move the depth layer to take place after World and Skydome layers, to capture both of them.
+const depthLayer = app.scene.layers.getLayerById(LAYERID_DEPTH);
+app.scene.layers.remove(depthLayer);
+app.scene.layers.insertOpaque(depthLayer, 2);
+/**
+ * @param {Asset} fontAsset - The font asset.
+ * @param {string} message - The message.
+ * @param {number} x - The x coordinate.
+ * @param {number} z - The z coordinate.
+ */
+const createText = (fontAsset, message, x, z) => {
+    // Create a text element-based entity
+    const text = new Entity();
+    text.addComponent('element', {
+        anchor: [0.5, 0.5, 0.5, 0.5],
+        fontAsset: fontAsset,
+        fontSize: 0.2,
+        pivot: [0.5, 0.5],
+        text: message,
+        type: ELEMENTTYPE_TEXT
+    });
+    text.setLocalPosition(x, -0.9, z);
+    text.setLocalEulerAngles(-90, 0, 0);
+    app.root.addChild(text);
+};
+
+/**
+ * @param {any} resource - The asset resource.
+ * @param {Vec3} pos - The position.
+ * @param {number} scale - The scale.
+ * @returns {Entity} The returned entity.
+ */
+const createVisual = (resource, pos, scale) => {
+    const entity = resource.instantiateRenderEntity({
+        castShadows: true
+    });
+    entity.setLocalScale(scale, scale, scale);
+    entity.setLocalPosition(pos);
+    app.root.addChild(entity);
+
+    return entity;
+};
+
+// Focus on mosquito, which the camera controls start on
+let currentAssetIndex = 3;
+
+// Create the scene by instantiating glbs
+const mosquito = createVisual(assets.mosquito.resource, new Vec3(0, 0.5, 0), 25);
+createText(assets.font, 'KHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission', 0, 2);
+
+const dish = createVisual(assets.dish.resource, new Vec3(-4, -0.5, 0), 9);
+createText(
+    assets.font,
+    'KHR_materials_iridescence\nKHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission',
+    -4,
+    2
+);
+
+const sheen1 = createVisual(assets.sheen.resource, new Vec3(8, -1.0, 0), 4);
+createText(assets.font, 'Mango Velvet', 8, 1);
+
+const sheen2 = createVisual(assets.sheen.resource, new Vec3(4, -1.0, 0), 4);
+assets.sheen.resource.applyMaterialVariant(sheen2, 'Peacock Velvet');
+createText(assets.font, 'KHR_materials_sheen\nKHR_materials_variants', 5.5, 2);
+createText(assets.font, 'Peacock Velvet', 4, 1);
+
+const lamp = createVisual(assets.lamp.resource, new Vec3(-8, -1.0, 0), 5);
+createText(assets.font, 'Lamp on', -8, 1);
+
+const lamp2 = createVisual(assets.lamp.resource, new Vec3(-11, -1.0, 0), 5);
+assets.lamp.resource.applyMaterialVariant(lamp2, 'Lamp off');
+createText(assets.font, 'Lamp off', -11, 1);
+createText(
+    assets.font,
+    'KHR_materials_transmission\nKHR_materials_ior\nKHR_materials_volume\nKHR_materials_variants\nKHR_materials_clearcoat',
+    -9.5,
+    2
+);
+
+const assetList = [lamp2, lamp, dish, mosquito, sheen2, sheen1];
+
+const material = new StandardMaterial();
+material.diffuseMap = assets.checkerboard.resource;
+material.diffuseMapTiling = new Vec2(16, 6);
+material.update();
+const plane = new Entity();
+plane.addComponent('render', {
+    type: 'plane',
+    material: material
+});
+plane.setLocalScale(new Vec3(25, 0, 10));
+plane.setLocalPosition(0, -1.0, 0);
+app.root.addChild(plane);
+
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    toneMapping: TONEMAP_NEUTRAL
+});
+camera.setLocalPosition(-0.025, 3.096, 7.4);
+
+camera.camera.requestSceneColorMap(true);
+camera.addComponent('script');
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            enableFly: false,
+            focusPoint: new Vec3(-0.025, 0.532, -0.178),
+            pitchRange: new Vec2(-90, 90),
+            zoomRange: new Vec2(8, 50)
+        }
+    })
+);
+app.root.addChild(camera);
+
+const directionalLight = new Entity();
+directionalLight.addComponent('light', {
+    type: 'directional',
+    color: Color.WHITE,
+    castShadows: true,
+    intensity: 1,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05,
+    shadowResolution: 2048
+});
+directionalLight.setEulerAngles(45, 180, 0);
+app.root.addChild(directionalLight);
+
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
+app.scene.skyboxRotation = new Quat().setFromEulerAngles(0, 70, 0);
+app.scene.skyboxIntensity = 1.5;
+
+window.addEventListener(
+    'touchstart',
+    (event) => {
+        const touch = event.touches[0];
+        const entity = data.get('selection.focusEntity');
+        let newEntity = entity;
+        if (touch.clientX <= canvas.width * 0.2) {
+            newEntity = Math.max(0, entity - 1);
+        } else if (touch.clientX >= canvas.width * 0.8) {
+            newEntity = Math.min(entity + 1, assetList.length);
+        }
+        if (entity !== newEntity) {
+            data.set('selection.focusEntity', newEntity);
+        }
+    },
+    false
+);
+const bounds = new BoundingBox();
+
+/**
+ * @param {number} offset - The offset to jump to.
+ */
+function jumpToAsset(offset) {
+    // Wrap around
+    const count = assetList.length - 1;
+    currentAssetIndex += offset;
+    if (currentAssetIndex < 0) currentAssetIndex = count;
+    if (currentAssetIndex > count) currentAssetIndex = 0;
+
+    // frame the bounds of the asset, keeping the view direction
+    const meshInstances = assetList[currentAssetIndex]
+        .findComponents('render')
+        .flatMap((render) => render.meshInstances);
+    bounds.copy(meshInstances[0].aabb);
+    meshInstances.forEach((mi) => bounds.add(mi.aabb));
+    const { center, halfExtents } = bounds;
+    const radius = Math.max(halfExtents.x, halfExtents.y, halfExtents.z);
+    const { x: min, y: max } = cameraControls.zoomRange;
+    const distance = math.clamp((radius * 1.5) / Math.sin(0.5 * camera.camera.fov * math.DEG_TO_RAD), min, max);
+    cameraControls.reset(center, camera.forward.clone().mulScalar(-distance).add(center));
+}
+
+data.on('previous', () => {
+    jumpToAsset(-1);
+});
+
+// Handle next button
+data.on('next', () => {
+    jumpToAsset(1);
+});
+
+// Toggle flat shading on all materials in the scene. This shades each triangle using its geometric
+// normal instead of the normal interpolated from the vertex normals, giving a faceted look.
+data.on('flatShading:set', (value) => {
+    app.root.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((meshInstance) => {
+            meshInstance.material.flatShading = value;
+            meshInstance.material.update();
+        });
+    });
+});
+
+data.set('flatShading', false);

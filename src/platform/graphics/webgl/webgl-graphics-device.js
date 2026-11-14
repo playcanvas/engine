@@ -9,7 +9,9 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
+    MIPMAPFILTER_GAUSSIAN,
     PIXELFORMAT_R8, PIXELFORMAT_RG8, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -48,6 +50,7 @@ import { WebglRenderTarget } from './webgl-render-target.js';
 import { WebglUploadStream } from './webgl-upload-stream.js';
 import { WebglXrBridge } from './webgl-xr-bridge.js';
 import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
+import { WebglMipmapRenderer } from './webgl-mipmap-renderer.js';
 import { BlendState } from '../blend-state.js';
 import { validateClearValues } from '../render-pass.js';
 import { DepthState } from '../depth-state.js';
@@ -105,6 +108,9 @@ const getPixelFormatChannelsForRgbaReadback = (format) => {
 
 const invalidateAttachments = [];
 
+// formats which can only be filtered when the device supports OES_texture_float_linear
+const float32Formats = new Set([PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGBA32F]);
+
 // The extensions a bare device (DEVICETYPE_WEBGL2_BARE) keeps exposed - only those
 // available on 99%+ of devices, as reported by https://web3dsurvey.com/webgl2. Everything else the
 // device queries is hidden, so the engine takes the same code paths it would on a device without
@@ -154,6 +160,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
     gl;
 
     /**
+     * The render targets of the precompile passes, by the formats of their attachments and their
+     * number of samples.
+     *
+     * @type {Map<string, RenderTarget>}
+     * @private
+     */
+    _precompileRenderTargets = new Map();
+
+    /**
      * WebGLFramebuffer object that represents the backbuffer of the device for a rendering frame.
      * When null, this is a framebuffer created when the device was created, otherwise it is a
      * framebuffer supplied by the XR session.
@@ -177,6 +192,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _xrMsaaCopy = null;
+
+    /**
+     * Helper generating mipmaps with the Gaussian filter, which WebGL does not provide. Created
+     * lazily.
+     *
+     * @type {WebglMipmapRenderer|null}
+     * @private
+     */
+    _mipmapRenderer = null;
 
     /**
      * Copies out of a pixel buffer waiting to run at the start of the next frame, for the reads
@@ -285,6 +309,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gl = gl;
         this.isWebGL2 = true;
         this._deviceType = DEVICETYPE_WEBGL2;
+
+        // the browser can finish compiling a shader only at its first draw, see precompileNeedsWarmup
+        this.precompileNeedsWarmup = true;
 
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
@@ -724,6 +751,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._xrMsaaCopy?.destroy();
         this._xrMsaaCopy = null;
 
+        this._mipmapRenderer?.destroy();
+        this._mipmapRenderer = null;
+
+        this._precompileRenderTargets.forEach((rt) => {
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+        this._precompileRenderTargets.clear();
+
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
         this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
@@ -998,9 +1034,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
-        // HTML-in-Canvas support (texElementImage2D). Not an extension, so it needs hiding
-        // explicitly on a bare device - it is still experimental and behind an origin trial.
-        this.supportsHtmlTextures = !this.bare && typeof gl.texElementImage2D === 'function';
+        // HTML-in-Canvas support (texElementSubImage2D, or texElementImage2D before Chrome 155).
+        // Not an extension, so it needs hiding explicitly on a bare device.
+        this.supportsHtmlTextures = !this.bare && (typeof gl.texElementSubImage2D === 'function' ||
+            typeof gl.texElementImage2D === 'function');
     }
 
     /**
@@ -1174,9 +1211,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeContextCaches() {
         super.initializeContextCaches();
 
-        // cache of VAOs
-        this._vaoMap = new Map();
-
         this.boundVao = null;
         this.activeFramebuffer = null;
         this.feedback = null;
@@ -1218,6 +1252,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // release dynamic uniform buffers (their GL buffers are gone with the context)
         this.dynamicBuffers.loseContext();
 
+        this._mipmapRenderer?.loseContext();
+
         this.fire('devicelost');
     }
 
@@ -1254,6 +1290,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the viewport in pixels.
      */
     setViewport(x, y, w, h) {
+        // the warm-up of a precompile renders a single pixel, see startPrecompilePass
+        if (this.precompileWarmup) {
+            x = 0;
+            y = 0;
+            w = 1;
+            h = 1;
+        }
         if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vh !== h)) {
             this.gl.viewport(x, y, w, h);
             this.vx = x;
@@ -1272,6 +1315,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the scissor rectangle in pixels.
      */
     setScissor(x, y, w, h) {
+        // the warm-up of a precompile renders a single pixel, see startPrecompilePass
+        if (this.precompileWarmup) {
+            x = 0;
+            y = 0;
+            w = 1;
+            h = 1;
+        }
         if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sh !== h)) {
             this.gl.scissor(x, y, w, h);
             this.sx = x;
@@ -1477,6 +1527,98 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
+    }
+
+    startPrecompilePass(renderTarget) {
+        Debug.assert(!this.insideRenderPass, 'A precompile pass cannot be started inside a render pass.');
+
+        // the pass renders to a small render target of its own with the same formats, so that
+        // nothing renders visibly. The exception is the warm-up of the back buffer, whose actual
+        // format the browser does not expose: it renders to the back buffer itself, right before the
+        // frame renders over it, as the warm-up runs in the same frame, and the browser only
+        // presents the back buffer once the frame ends
+        const target = renderTarget ?? this.backBuffer;
+        const toBackBuffer = this.precompileWarmup && target === this.backBuffer;
+        this.renderTarget = toBackBuffer ? target : this.getPrecompileRenderTarget(target);
+        this.updateBegin();
+
+        // during the warm-up, setViewport and setScissor keep the rendering to a single pixel, which
+        // is all a draw needs to set up its state, and which limits the warm-up of the back buffer
+        // to a pixel
+        this.setViewport(0, 0, 1, 1);
+        this.setScissor(0, 0, 1, 1);
+
+        // a shader compiles when it is created, and the draws are skipped, see setShader, as they
+        // would only wait for it. Once compiled, the warm-up draws them, as the browser may complete
+        // the compilation only at the first draw - ANGLE on Metal creates the pipeline state, which
+        // runs the final compilation, at the first draw with each combination of the state
+        this.shader = null;
+        this.insideRenderPass = true;
+        this._precompilePass = !this.precompileWarmup;
+    }
+
+    /**
+     * Returns a small render target with the same formats of the attachments and the same number
+     * of samples as a render target, as they take part in the pipeline state of a draw, see
+     * {@link WebglGraphicsDevice#startPrecompilePass}. For the back buffer, which is only used for
+     * this while nothing draws, the format is the one reported for it.
+     *
+     * @param {RenderTarget} target - The render target.
+     * @returns {RenderTarget} The render target to precompile with.
+     * @private
+     */
+    getPrecompileRenderTarget(target) {
+        const colorFormats = target === this.backBuffer ? [this.backBufferFormat] :
+            (target._colorBuffers?.map(colorBuffer => colorBuffer.format) ?? []);
+        const depthFormat = target.depthBuffer?.format;
+        const { depth, stencil, samples } = target;
+        const key = `${colorFormats.join(',')}|${depthFormat ?? (depth ? (stencil ? 'depthstencil' : 'depth') : 'none')}|${samples}`;
+
+        let rt = this._precompileRenderTargets.get(key);
+        if (!rt) {
+            const createTexture = format => new Texture(this, {
+                name: 'PrecompileTarget',
+                width: 1,
+                height: 1,
+                format,
+                mipmaps: false
+            });
+            rt = new RenderTarget({
+                name: 'PrecompileTarget',
+                graphicsDevice: this,
+                colorBuffers: colorFormats.length > 0 ? colorFormats.map(createTexture) : undefined,
+                depthBuffer: depthFormat !== undefined ? createTexture(depthFormat) : undefined,
+                depth: depthFormat === undefined && depth,
+                stencil: depthFormat === undefined && stencil,
+                samples
+            });
+            this._precompileRenderTargets.set(key, rt);
+        }
+        return rt;
+    }
+
+    endPrecompilePass() {
+        this.unbindVertexArray();
+        this.renderTarget = null;
+        this.shader = null;
+        this.insideRenderPass = false;
+        this._precompilePass = false;
+    }
+
+    getPrecompilePendingCount() {
+
+        // the shaders start compiling and linking when they are created, and are pending until
+        // linked. Without the parallel shader compile extension a shader cannot be tested for
+        // completion and is not pending, and the first draw using it waits for it
+        let count = 0;
+        const shaders = this.shaders;
+        for (let i = 0; i < shaders.length; i++) {
+            const shader = shaders[i];
+            if (!shader.ready && !shader.failed && shader.impl?.glProgram && !shader.impl.isLinked(this)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     frameStart() {
@@ -1691,9 +1833,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         // TODO: this regenerates the mipmaps of all cubemap faces / array layers,
                         // not only the one rendered to (#9688)
-                        this.activeTexture(this.maxCombinedTextures - 1);
-                        this.bindTexture(colorBuffer);
-                        this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                        this.generateMipmaps(colorBuffer);
 
                         DebugGraphics.popGpuMarker(this);
                     }
@@ -1773,13 +1913,31 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
                 // TODO: this regenerates the mipmaps of all cubemap faces / array layers, not only
                 // the one rendered to (#9688)
-                this.activeTexture(this.maxCombinedTextures - 1);
-                this.bindTexture(colorBuffer);
-                this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                this.generateMipmaps(colorBuffer);
             }
         }
 
         DebugGraphics.popGpuMarker(this);
+    }
+
+    /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}. WebGL's own mipmap generation is used for the box filter,
+     * and for the textures the Gaussian filter does not apply to.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        if (texture.mipmapFilter === MIPMAPFILTER_GAUSSIAN && !texture.cubemap && !texture.array && !texture.volume &&
+            (this.textureFloatFilterable || !float32Formats.has(texture.format))) {
+            this._mipmapRenderer ??= new WebglMipmapRenderer(this);
+            this._mipmapRenderer.generate(texture);
+        } else {
+            this.activeTexture(this.maxCombinedTextures - 1);
+            this.bindTexture(texture);
+            this.gl.generateMipmap(texture.impl._glTarget);
+        }
     }
 
     /**
@@ -1971,30 +2129,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Generates the key of the vertex array object cache for the supplied vertex buffers. Each part
-     * identifies both the buffer and its format, and is delimited, so distinct buffer lists cannot
-     * generate the same key.
-     *
-     * @param {VertexBuffer[]} vertexBuffers - The vertex buffers of the draw.
-     * @returns {string} The cache key.
-     * @private
-     */
-    _vertexArrayKey(vertexBuffers) {
-        let key = '';
-        for (let i = 0; i < vertexBuffers.length; i++) {
-            key += vertexBuffers[i].vaoKeyPart;
-        }
-        return key;
-    }
-
-    /**
      * Removes the cached vertex array object for the supplied vertex buffers, if one exists.
      *
      * This is needed by code which exchanges the GPU buffers behind VertexBuffer objects while
      * leaving the objects themselves in place - see {@link TransformFeedback#process}. A vertex
-     * array object captures the GPU buffers it was built from, and this cache is keyed on the
-     * VertexBuffer objects, so such an exchange is invisible to it and a stale vertex array object
-     * would keep reading the buffers from before the exchange.
+     * array object captures the GPU buffers it was built from, and the cache is keyed on the buffer
+     * objects, so such an exchange is invisible to it and a stale vertex array object would keep
+     * reading the buffers from before the exchange.
      *
      * Only has an effect when more than one vertex buffer is supplied - a single vertex buffer stores
      * its vertex array object on itself, and so it travels with the buffer.
@@ -2005,11 +2146,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     removeVertexArrayFromCache(vertexBuffers) {
         if (vertexBuffers.length > 1) {
-            const key = this._vertexArrayKey(vertexBuffers);
-            const vao = this._vaoMap.get(key);
-            if (vao) {
-                this._vaoMap.delete(key);
-                this.gl.deleteVertexArray(vao);
+            const entry = vertexBuffers[0].impl.getVertexArrayEntry(vertexBuffers);
+            if (entry.vao) {
+                this.unbindVertexArray();
+                this.gl.deleteVertexArray(entry.vao);
+                entry.vao = null;
             }
         }
     }
@@ -2017,78 +2158,53 @@ class WebglGraphicsDevice extends GraphicsDevice {
     // function creates VertexArrayObject from list of vertex buffers
     createVertexArray(vertexBuffers) {
 
-        let key, vao;
+        // create VA object
+        const gl = this.gl;
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
 
-        // only use cache when more than 1 vertex buffer, otherwise it's unique
-        const useCache = vertexBuffers.length > 1;
-        if (useCache) {
+        // don't capture index buffer in VAO
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-            key = this._vertexArrayKey(vertexBuffers);
+        let locZero = false;
+        for (let i = 0; i < vertexBuffers.length; i++) {
 
-            // try to get VAO from cache
-            vao = this._vaoMap.get(key);
-        }
+            // bind buffer
+            const vertexBuffer = vertexBuffers[i];
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
 
-        // need to create new vao
-        if (!vao) {
+            // for each attribute
+            const elements = vertexBuffer.format.elements;
+            for (let j = 0; j < elements.length; j++) {
+                const e = elements[j];
+                const loc = semanticToLocation[e.name];
 
-            // create VA object
-            const gl = this.gl;
-            vao = gl.createVertexArray();
-            gl.bindVertexArray(vao);
+                if (loc === 0) {
+                    locZero = true;
+                }
 
-            // don't capture index buffer in VAO
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+                if (e.asInt) {
+                    gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
+                } else {
+                    gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                }
 
-            let locZero = false;
-            for (let i = 0; i < vertexBuffers.length; i++) {
+                gl.enableVertexAttribArray(loc);
 
-                // bind buffer
-                const vertexBuffer = vertexBuffers[i];
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
-
-                // for each attribute
-                const elements = vertexBuffer.format.elements;
-                for (let j = 0; j < elements.length; j++) {
-                    const e = elements[j];
-                    const loc = semanticToLocation[e.name];
-
-                    if (loc === 0) {
-                        locZero = true;
-                    }
-
-                    if (e.asInt) {
-                        gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
-                    } else {
-                        gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
-                    }
-
-                    gl.enableVertexAttribArray(loc);
-
-                    if (vertexBuffer.format.instancing) {
-                        gl.vertexAttribDivisor(loc, 1);
-                    }
+                if (vertexBuffer.format.instancing) {
+                    gl.vertexAttribDivisor(loc, 1);
                 }
             }
+        }
 
-            // end of VA object
-            gl.bindVertexArray(null);
+        // end of VA object
+        gl.bindVertexArray(null);
 
-            // unbind any array buffer
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        // unbind any array buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-            // add it to cache. Note that entries are not removed when one of the vertex buffers is
-            // destroyed - the cache only retains the vertex array object itself, not the buffers, and
-            // the number of buffers taking part in multi-buffer draws is small, so pruning per
-            // destroyed buffer is not considered worth the cost. The cache is released in full when
-            // the device is destroyed or the context is lost.
-            if (useCache) {
-                this._vaoMap.set(key, vao);
-            }
-
-            if (!locZero) {
-                Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
-            }
+        if (!locZero) {
+            Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
         }
 
         return vao;
@@ -2104,21 +2220,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     setBuffers(indexBuffer) {
         const gl = this.gl;
-        let vao;
+        const vertexBuffers = this.vertexBuffers;
 
-        // create VAO for specified vertex buffers
-        if (this.vertexBuffers.length === 1) {
-
-            // single VB keeps its VAO
-            const vertexBuffer = this.vertexBuffers[0];
+        // the VAO is cached on the first vertex buffer - directly when it is the only one, and in an
+        // entry keyed by the further buffers otherwise. A draw without vertex buffers uses the
+        // default VAO, which has no attributes enabled
+        let vao = null;
+        const vertexBuffer = vertexBuffers[0];
+        if (vertexBuffer) {
             Debug.assert(vertexBuffer.device === this, 'The VertexBuffer was not created using current GraphicsDevice');
-            if (!vertexBuffer.impl.vao) {
-                vertexBuffer.impl.vao = this.createVertexArray(this.vertexBuffers);
+            const entry = vertexBuffers.length === 1 ? vertexBuffer.impl : vertexBuffer.impl.getVertexArrayEntry(vertexBuffers);
+            if (!entry.vao) {
+                entry.vao = this.createVertexArray(vertexBuffers);
             }
-            vao = vertexBuffer.impl.vao;
-        } else {
-            // obtain temporary VAO for multiple vertex buffers
-            vao = this.createVertexArray(this.vertexBuffers);
+            vao = entry.vao;
         }
 
         // set active VAO
@@ -2325,7 +2440,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         // multi-draw extension is not supported, use fallback loop
                         this._multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands);
                     }
-                } else {
+                } else if (numInstances !== 0) { // single draw - zero instances draws nothing, as on WebGPU
                     if (primitive.indexed) {
                         Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
@@ -2364,7 +2479,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type, numInstances > 0);
                 } else {
                     // single draw
-                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances > 0 ? numInstances : 1);
+                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances ?? 1);
                 }
                 // #endif
             }
@@ -3197,7 +3312,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (shader !== this.shader) {
             this.shader = shader;
             this.shaderAsyncCompile = asyncCompile;
-            this.shaderValid = undefined;   // need to run activation / validation
+
+            // need to run activation / validation. A precompile pass skips the draws, see
+            // startPrecompilePass
+            this.shaderValid = this._precompilePass ? false : undefined;
 
             // #if _PROFILER
             this._shaderSwitchesPerFrame++;
@@ -3248,17 +3366,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Frees memory from all vertex array objects ever allocated with this device.
+     * Deletes the vertex array objects of all vertex buffers of this device.
      *
      * @ignore
      */
     clearVertexArrayObjectCache() {
         const gl = this.gl;
-        this._vaoMap.forEach((item, key, mapObj) => {
-            gl.deleteVertexArray(item);
-        });
-
-        this._vaoMap.clear();
+        this.unbindVertexArray();
+        for (const buffer of this.buffers) {
+            if (buffer.impl instanceof WebglVertexBuffer) {
+                buffer.impl.deleteVertexArrays(gl);
+            }
+        }
     }
 
     /**

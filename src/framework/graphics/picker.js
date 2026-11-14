@@ -362,7 +362,7 @@ class Picker {
         try {
             pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
         } catch (error) {
-            // Mapping can be cancelled before the device loss notification arrives. Other failures
+            // Mapping can be canceled before the device loss notification arrives. Other failures
             // on a valid device must still be reported.
             if (this.deviceValid && !this.device.isContextLost() && error.name !== 'AbortError') {
                 throw error;
@@ -524,7 +524,7 @@ class Picker {
 
         // set up clears - setClearColor handles MRT and clears all color buffers
         renderPass.setClearColor(Color.WHITE);
-        renderPass.depthStencilOps.clearDepth = true;
+        renderPass.setClearDepth(1);
 
         // render the pass to update the render target
         renderPass.update(camera, scene, layers, this.mapping, this.depth);

@@ -1,17 +1,18 @@
 import { Debug } from '../../core/debug.js';
-import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
-import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH } from './constants.js';
-import { BloomEffect } from './effects/bloom-effect.js';
-import { CasEffect } from './effects/cas-effect.js';
-import { ColorEnhanceEffect } from './effects/color-enhance-effect.js';
-import { ColorLutEffect } from './effects/color-lut-effect.js';
-import { FringingEffect } from './effects/fringing-effect.js';
-import { GradingEffect } from './effects/grading-effect.js';
-import { SsaoEffect } from './effects/ssao-effect.js';
-import { VignetteEffect } from './effects/vignette-effect.js';
+import { PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORGRAB } from './constants.js';
+import { BloomEffect } from '../effects/bloom/bloom-effect.js';
+import { CasEffect } from '../effects/cas/cas-effect.js';
+import { ColorEnhanceEffect } from '../effects/color-enhance/color-enhance-effect.js';
+import { ColorLutEffect } from '../effects/color-lut/color-lut-effect.js';
+import { DofEffect } from '../effects/dof/dof-effect.js';
+import { FringingEffect } from '../effects/fringing/fringing-effect.js';
+import { GradingEffect } from '../effects/grading/grading-effect.js';
+import { SsaoEffect } from '../effects/ssao/ssao-effect.js';
+import { TaaEffect } from '../effects/taa/taa-effect.js';
+import { VignetteEffect } from '../effects/vignette/vignette-effect.js';
+import { VolumetricFogEffect } from '../effects/volumetric-fog/volumetric-fog-effect.js';
 import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
 
 /**
@@ -19,7 +20,6 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { LightComponent } from '../../framework/components/light/component.js'
  */
 
 /**
@@ -28,7 +28,7 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  *
  * @type {string[]}
  */
-const builtinDebugViews = ['scene', 'dofcoc', 'dofblur', 'depth', 'depthmissing'];
+const builtinDebugViews = ['scene', 'depth', 'depthmissing'];
 
 /**
  * @typedef {Object} Rendering
@@ -38,10 +38,10 @@ const builtinDebugViews = ['scene', 'dofcoc', 'dofblur', 'depth', 'depthmissing'
  * preference. First format from this list that is supported by the hardware is used. When none of
  * the formats are supported, {@link PIXELFORMAT_RGBA8} is used, but this automatically disables
  * bloom effect, which requires HDR format. The list can contain the following formats:
- * {@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F} and {@link
+ * {@link PIXELFORMAT_RG11B10F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F} and {@link
  * PIXELFORMAT_RGBA8}. Typically the default option should be used, which prefers the faster formats,
  * but if higher dynamic range is needed, the list can be adjusted to prefer higher precision formats.
- * Defaults to [{@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F}].
+ * Defaults to [{@link PIXELFORMAT_RG11B10F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F}].
  * @property {boolean} stencil - Whether the render buffer has a stencil buffer. Defaults to false.
  * @property {number} renderTargetScale - The scale of the render target, 0.1-1 range. This allows the
  * scene to be rendered to a lower resolution render target as an optimization. The post-processing
@@ -62,95 +62,14 @@ const builtinDebugViews = ['scene', 'dofcoc', 'dofblur', 'depth', 'depthmissing'
  * - {@link TONEMAP_ACES}
  * - {@link TONEMAP_ACES2}
  * - {@link TONEMAP_NEUTRAL}
+ * - {@link TONEMAP_AGX}
+ * - {@link TONEMAP_AGX_PUNCHY}
  *
  * Defaults to {@link TONEMAP_LINEAR}.
  * @property {number} sharpness - The sharpening intensity, 0-1 range. This can be used to increase
  * the sharpness of the rendered image. Often used to counteract the blurriness of the TAA effect,
  * but also blurriness caused by rendering to a lower resolution render target by using
  * rendering.renderTargetScale property. Defaults to 0.
- */
-
-/**
- * @typedef {Object} Taa
- * Properties related to temporal anti-aliasing (TAA), which is a technique used to reduce aliasing
- * in the rendered image by blending multiple frames together over time.
- * @property {boolean} enabled - Whether TAA is enabled. Defaults to false.
- * @property {number} jitter - The intensity of the camera jitter, 0-1 range. The larger the value,
- * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
- * also makes the image more blurry, and rendering.sharpness parameter can be used to counteract.
- * Defaults to 1.
- */
-
-/**
- * @typedef {Object} Dof
- * Properties related to Depth of Field (DOF), a technique used to simulate the optical effect where
- * objects at certain distances appear sharp while others are blurred, enhancing the perception of
- * focus and depth in the rendered scene.
- * @property {boolean} enabled - Whether DoF is enabled. Defaults to false.
- * @property {boolean} nearBlur - Whether the near blur is enabled. Defaults to false.
- * @property {number} focusDistance - The distance at which the focus is set. Defaults to 100.
- * @property {number} focusRange - The range around the focus distance where the focus is sharp.
- * Defaults to 10.
- * @property {number} blurRadius - The radius of the blur effect, typically 2-10 range. Defaults to 3.
- * @property {number} blurRings - The number of rings in the blur effect, typically 3-8 range. Defaults
- * to 4.
- * @property {number} blurRingPoints - The number of points in each ring of the blur effect, typically
- * 3-8 range. Defaults to 5.
- * @property {boolean} highQuality - Whether the high quality implementation is used. This will have
- * a higher performance cost, but will produce better quality results. Defaults to true.
- */
-
-/**
- * @typedef {Object} VolumetricFog
- * Properties related to volumetric fog, a raymarched height fog lit by a directional light. The
- * fog samples the light's cascaded shadow map along each view ray, forming visible shafts of
- * light. The raymarch runs at a reduced resolution and is blended into the scene before TAA, so
- * when TAA is enabled, its noise is temporally resolved to a smooth result. Optionally the
- * clustered omni and spot lights scatter light in the fog as well, see `localOmniLights` and
- * `localSpotLights`.
- * @property {boolean} enabled - Whether the volumetric fog is enabled. Defaults to false.
- * @property {LightComponent|null} light - The directional light providing the scattered light, or
- * null when the fog is lit by the local lights and the ambient term only. When a light of a type
- * other than directional is assigned, the effect is disabled. Defaults to null.
- * @property {boolean} localOmniLights - Whether the clustered omni lights scatter light in the fog.
- * Each light adds a raymarch over the part of the view rays inside its volume, sampling the shadow
- * and the cookie atlas of the clustered lighting, and so the cost scales with the screen space size
- * of the light volumes. As an omni light fills its whole bounding sphere, its volume is typically
- * much larger on the screen than the volume of a spot light. Requires clustered lighting, which is
- * enabled by default. Individual lights can scatter more or less light using
- * {@link LightComponent#volumetricScattering}. Defaults to false.
- * @property {boolean} localSpotLights - Whether the clustered spot lights scatter light in the fog,
- * forming visible beams. See `localOmniLights` for details, both types are rendered the same way and
- * share the `localIntensity` and `localSteps` settings. Defaults to false.
- * @property {number} localIntensity - The intensity of the light scattering of the local lights.
- * Defaults to 1.
- * @property {number} localSteps - The number of raymarching steps taken inside the volume of each
- * local light, 2-64 range. Defaults to 12.
- * @property {Color} tint - The albedo of the fog. Defaults to white.
- * @property {number} density - The fog density at the base height. Defaults to 0.01.
- * @property {number} heightBase - The world space height at which the fog density starts to fall
- * off. Below it the density is constant. Defaults to 0.
- * @property {number} heightFalloff - The exponential falloff of the fog density with height above
- * the base height. Value of 0 makes the fog uniform. Defaults to 0.05.
- * @property {number} extinction - A scale of how quickly the fog absorbs the light passing through
- * it, without affecting how much light it scatters. A value of 1 is physically consistent, where the
- * fog absorbs as much as it scatters, and distant fog and light shafts fade out exponentially with
- * the density. Lower values keep them visible over a longer distance while the fog itself stays as
- * bright, which is not physically correct but is often preferable. Defaults to 1.
- * @property {number} anisotropy - The anisotropy of the scattering, 0-0.95 range. Larger values
- * scatter more light forward, making the fog brighter when looking towards the light. Defaults
- * to 0.6.
- * @property {number} intensity - The intensity of the light scattering. Defaults to 1.
- * @property {Color} ambientColor - The color of the ambient in-scattered light, which keeps the
- * fog in shadowed areas visible. Defaults to white.
- * @property {number} ambientIntensity - The intensity of the ambient in-scattered light. Defaults
- * to 0.02.
- * @property {number} maxDistance - The maximum world space distance the fog is raymarched to.
- * Defaults to 300.
- * @property {number} steps - The number of raymarching steps, 4-128 range. Higher values improve
- * the quality at a higher performance cost. Defaults to 24.
- * @property {number} scale - The resolution scale of the fog texture relative to the scene
- * render target, 0.25-1 range. Defaults to 0.5.
  */
 
 /**
@@ -187,7 +106,7 @@ class CameraFrame {
      * @type {Rendering}
      */
     rendering = {
-        renderFormats: [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F],
+        renderFormats: [PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F],
         stencil: false,
         renderTargetScale: 1.0,
         samples: 1,
@@ -273,6 +192,15 @@ class CameraFrame {
     _activeEffects = [];
 
     /**
+     * The time the application advanced by in its updates since the camera frame last rendered, in
+     * seconds, handed to the effects as the time of the frame. See {@link CameraFrameEffectContext}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    _frameTime = 0;
+
+    /**
      * The sharpening effect, whose sharpness is exposed as `rendering.sharpness`.
      *
      * @type {CasEffect}
@@ -281,14 +209,12 @@ class CameraFrame {
     _cas;
 
     /**
-     * Taa settings.
+     * The temporal anti-aliasing effect, registered with this camera frame. Its parameters are
+     * assigned directly.
      *
-     * @type {Taa}
+     * @type {TaaEffect}
      */
-    taa = {
-        enabled: false,
-        jitter: 1
-    };
+    taa;
 
     /**
      * The fringing effect, registered with this camera frame. Its parameters are assigned
@@ -307,46 +233,20 @@ class CameraFrame {
     colorEnhance;
 
     /**
-     * DoF settings.
+     * The depth of field effect, registered with this camera frame. Its parameters are assigned
+     * directly.
      *
-     * @type {Dof}
+     * @type {DofEffect}
      */
-    dof = {
-        enabled: false,
-        nearBlur: false,
-        focusDistance: 100,
-        focusRange: 10,
-        blurRadius: 3,
-        blurRings: 4,
-        blurRingPoints: 5,
-        highQuality: true
-    };
+    dof;
 
     /**
-     * Volumetric fog settings.
+     * The volumetric fog effect, registered with this camera frame. Its parameters are assigned
+     * directly.
      *
-     * @type {VolumetricFog}
+     * @type {VolumetricFogEffect}
      */
-    volumetricFog = {
-        enabled: false,
-        light: null,
-        localOmniLights: false,
-        localSpotLights: false,
-        localIntensity: 1,
-        localSteps: 12,
-        tint: new Color(1, 1, 1),
-        density: 0.01,
-        heightBase: 0,
-        heightFalloff: 0.05,
-        extinction: 1,
-        anisotropy: 0.6,
-        intensity: 1,
-        ambientColor: new Color(1, 1, 1),
-        ambientIntensity: 0.02,
-        maxDistance: 300,
-        steps: 24,
-        scale: 0.5
-    };
+    volumetricFog;
 
     /**
      * Debug rendering, which displays an intermediate value of the frame in place of the composed
@@ -364,8 +264,17 @@ class CameraFrame {
     options = new CameraFrameOptions();
 
     /**
+     * The camera component the camera frame renders, for example for the passes of an effect
+     * which depend on the camera.
+     *
+     * @type {CameraComponent}
+     * @readonly
+     */
+    cameraComponent;
+
+    /**
      * @type {FramePassCameraFrame|null}
-     * @private
+     * @ignore
      */
     renderPassCamera = null;
 
@@ -381,17 +290,22 @@ class CameraFrame {
         Debug.assert(cameraComponent, 'CameraFrame: cameraComponent must be defined');
 
         // the built-in effects, registered in the order they are applied within their slot. The
-        // camera frame constructs them and so destroys them, unlike the effects added to it.
+        // camera frame constructs them and so destroys them, unlike the effects added to it. The
+        // fringing applies before the sharpening, as it replaces the red and blue channels with new
+        // samples of the scene texture, which would discard the sharpening of those channels.
         const device = app.graphicsDevice;
-        this._cas = new CasEffect(device);
+        this.taa = new TaaEffect(device);
         this.fringing = new FringingEffect(device);
+        this._cas = new CasEffect(device);
+        this.dof = new DofEffect(device);
         this.ssao = new SsaoEffect(device);
+        this.volumetricFog = new VolumetricFogEffect(device);
         this.bloom = new BloomEffect(device);
         this.colorEnhance = new ColorEnhanceEffect(device);
         this.grading = new GradingEffect(device);
         this.colorLUT = new ColorLutEffect(device);
         this.vignette = new VignetteEffect(device);
-        this._builtInEffects = [this._cas, this.fringing, this.ssao, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
+        this._builtInEffects = [this.taa, this.fringing, this._cas, this.dof, this.ssao, this.volumetricFog, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
 
         // rendering.sharpness is the sharpening effect's parameter, forwarded to it so that the
@@ -405,12 +319,16 @@ class CameraFrame {
             enumerable: true
         });
 
-        this.updateOptions();
         this.enable();
 
         // handle layer changes on the camera - render passes need to be update to reflect the changes
         this.cameraLayersChanged = cameraComponent.on('set:layers', () => {
             if (this.renderPassCamera) this.renderPassCamera.layersDirty = true;
+        });
+
+        // the time of the frames is the time of the application, so it is scaled and paused with it
+        this._appUpdate = app.on('update', (dt) => {
+            this._frameTime += dt;
         });
     }
 
@@ -428,6 +346,7 @@ class CameraFrame {
         this.effects.length = 0;
 
         this.cameraLayersChanged.off();
+        this._appUpdate.off();
     }
 
     /**
@@ -471,7 +390,8 @@ class CameraFrame {
 
     /**
      * Registers an effect with this camera frame, applying it before another registered effect
-     * when both share a compose slot. The effect is applied from the next call to
+     * when both share a compose slot, and running its passes before those of the other effect at
+     * the stages of the frame they share. The effect is applied from the next call to
      * {@link CameraFrame#update}.
      *
      * @param {CameraFrameEffect} effect - The effect to add.
@@ -565,13 +485,23 @@ class CameraFrame {
         const active = this._activeEffects;
         active.length = 0;
         const { effects, renderPassCamera } = this;
+        let cameraJitter = 0;
+        let rendersSky = false;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
             if (effect.active && (!effect._ownsPasses || renderPassCamera?.hasEffectPasses(effect))) {
                 active.push(effect);
                 effect.update();
+                cameraJitter = Math.max(cameraJitter, effect.cameraJitter);
+                rendersSky ||= effect.rendersSky;
             }
         }
+
+        // the camera is jittered for the effects taking part which need it, such as TAA
+        this.cameraComponent.jitter = cameraJitter;
+
+        // the camera renders the sky of the scene unless an effect taking part renders it instead
+        this.cameraComponent.camera.skyVisible = !rendersSky;
 
         const composePass = this.renderPassCamera?.composePass;
         if (composePass) {
@@ -580,25 +510,36 @@ class CameraFrame {
     }
 
     enable() {
+
+        // the passes are built from the current settings, as CameraFrame#update builds them - the
+        // settings can have changed while the camera frame was disabled, which update ignores
+        this.updateOptions();
         this.renderPassCamera = this.createRenderPass();
-        this.cameraComponent.framePasses = [this.renderPassCamera];
+
+        // add the pass to the frame passes of the camera, keeping those added by others. The list is
+        // assigned, for the camera to update its rendering
+        const cameraComponent = this.cameraComponent;
+        cameraComponent.framePasses = [...cameraComponent.framePasses, this.renderPassCamera];
         this._applyEffects();
     }
 
     disable() {
         const cameraComponent = this.cameraComponent;
-        cameraComponent.framePasses?.forEach((renderPass) => {
-            renderPass.destroy();
-        });
-        cameraComponent.framePasses = [];
+
+        // remove and destroy only the pass the camera frame added, as other frame passes of the camera
+        // are owned by whoever added them. The list is assigned, for the camera to update its rendering
+        const renderPassCamera = this.renderPassCamera;
+        cameraComponent.framePasses = cameraComponent.framePasses.filter(pass => pass !== renderPassCamera);
+        renderPassCamera?.destroy();
+        this.renderPassCamera = null;
         cameraComponent.rendering = null;
 
         cameraComponent.jitter = 0;
+        cameraComponent.camera.exposureScale = 1;
+        cameraComponent.camera.skyVisible = true;
 
         // disable SSAO included in the lighting pass
         cameraComponent.shaderParams.ssaoEnabled = false;
-
-        this.renderPassCamera = null;
     }
 
     /**
@@ -606,6 +547,7 @@ class CameraFrame {
      * pass, typically one that extends `FramePassCameraFrame`.
      *
      * @returns {FramePassCameraFrame} - The frame pass.
+     * @ignore
      */
     createRenderPass() {
         return new FramePassCameraFrame(this.app, this, this.cameraComponent, this.options);
@@ -638,17 +580,11 @@ class CameraFrame {
 
     updateOptions() {
 
-        const { options, rendering, taa } = this;
+        const { options, rendering } = this;
         options.stencil = rendering.stencil;
         options.samples = rendering.samples;
-        options.sceneColorMap = rendering.sceneColorMap;
         options.prepassEnabled = rendering.sceneDepthMap;
-        options.taaEnabled = taa.enabled;
         options.formats = rendering.renderFormats.slice();
-        options.dofEnabled = this.dof.enabled;
-        options.dofNearBlur = this.dof.nearBlur;
-        options.dofHighQuality = this.dof.highQuality;
-        options.volumetricFogEnabled = this._volumetricFogSupported();
 
         // the scene format, chosen before the effects are asked whether they are active, as an
         // effect can depend on an HDR scene
@@ -657,11 +593,12 @@ class CameraFrame {
         // the active registered effects owning passes, the resources they require and what else
         // their passes depend on - the frame passes are rebuilt when this changes. The effects are
         // identified by instance, so that replacing one with a new instance of the same id builds
-        // the passes of the new one. The scene depth is rendered for any active effect requiring
-        // it, those without passes included.
+        // the passes of the new one. The scene depth and the copy of the scene color are rendered
+        // for any active effect requiring them, those without passes included.
         let effectPasses = '';
         let depthRequired = false;
         let prepassDepthRequired = false;
+        let colorGrabRequired = false;
         const { effects } = this;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
@@ -669,6 +606,7 @@ class CameraFrame {
                 const { requires } = effect;
                 depthRequired ||= requires.includes(FRAMERESOURCE_DEPTH);
                 prepassDepthRequired ||= requires.includes(FRAMERESOURCE_PREPASSDEPTH);
+                colorGrabRequired ||= requires.includes(FRAMERESOURCE_SCENECOLORGRAB);
                 if (effect._ownsPasses) {
                     effectPasses += `${effect._uid}:${requires}:${effect.buildKey()};`;
                 }
@@ -677,37 +615,7 @@ class CameraFrame {
         options.effectPasses = effectPasses;
         options.depthRequired = depthRequired;
         options.prepassDepthRequired = prepassDepthRequired;
-    }
-
-    /**
-     * Returns true if the volumetric fog is enabled and its requirements are met - a perspective
-     * camera, and a light source, which is either a directional light or the local lights.
-     *
-     * @returns {boolean} - True if the volumetric fog should render.
-     * @private
-     */
-    _volumetricFogSupported() {
-        const { volumetricFog, cameraComponent } = this;
-        if (!volumetricFog.enabled) {
-            return false;
-        }
-        if (volumetricFog.light && volumetricFog.light.type !== 'directional') {
-            Debug.warnOnce('CameraFrame.volumetricFog.light needs to be a directional light, the effect is disabled.');
-            return false;
-        }
-        let localLights = volumetricFog.localOmniLights || volumetricFog.localSpotLights;
-        if (localLights && !cameraComponent.system.app.scene.clusteredLightingEnabled) {
-            Debug.warnOnce('CameraFrame.volumetricFog local lights require clustered lighting to be enabled, the local lights are ignored.');
-            localLights = false;
-        }
-        if (!volumetricFog.light && !localLights) {
-            return false;
-        }
-        if (cameraComponent.projection !== PROJECTION_PERSPECTIVE) {
-            Debug.warnOnce('CameraFrame.volumetricFog is only supported on perspective cameras, the effect is disabled.');
-            return false;
-        }
-        return true;
+        options.sceneColorMap = rendering.sceneColorMap || colorGrabRequired;
     }
 
     /**
@@ -737,50 +645,17 @@ class CameraFrame {
 
         if (!this._enabled) return;
 
-        const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, taa } = this;
+        const { options, renderPassCamera, rendering } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
         renderPassCamera.update(options);
 
         // update parameters of individual render passes
-        const { composePass, dofPass, volumetricFogPass } = renderPassCamera;
+        const { composePass } = renderPassCamera;
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
-
-        if (options.dofEnabled) {
-            dofPass.focusDistance = this.dof.focusDistance;
-            dofPass.focusRange = this.dof.focusRange;
-            dofPass.blurRadius = this.dof.blurRadius;
-            dofPass.blurRings = this.dof.blurRings;
-            dofPass.blurRingPoints = this.dof.blurRingPoints;
-        }
-
-        if (options.volumetricFogEnabled) {
-            const { volumetricFog } = this;
-            volumetricFogPass.light = volumetricFog.light?.light ?? null;
-            volumetricFogPass.localOmniLights = volumetricFog.localOmniLights;
-            volumetricFogPass.localSpotLights = volumetricFog.localSpotLights;
-            volumetricFogPass.localIntensity = volumetricFog.localIntensity;
-            volumetricFogPass.localSteps = math.clamp(volumetricFog.localSteps, 2, 64);
-            volumetricFogPass.tint.copy(volumetricFog.tint);
-            volumetricFogPass.density = volumetricFog.density;
-            volumetricFogPass.heightBase = volumetricFog.heightBase;
-            volumetricFogPass.heightFalloff = volumetricFog.heightFalloff;
-            volumetricFogPass.extinction = Math.max(volumetricFog.extinction, 0);
-            volumetricFogPass.anisotropy = math.clamp(volumetricFog.anisotropy, 0, 0.95);
-            volumetricFogPass.intensity = volumetricFog.intensity;
-            volumetricFogPass.ambientColor.copy(volumetricFog.ambientColor);
-            volumetricFogPass.ambientIntensity = volumetricFog.ambientIntensity;
-            volumetricFogPass.maxDistance = volumetricFog.maxDistance;
-            volumetricFogPass.steps = math.clamp(volumetricFog.steps, 4, 128);
-            volumetricFogPass.scale = math.clamp(volumetricFog.scale, 0.25, 1);
-        }
-
-        // enable camera jitter if taa is enabled
-        cameraComponent.jitter = taa.enabled ? taa.jitter : 0;
 
         // the effects apply their parameters, and the frames rendered from now use them
         this._applyEffects();

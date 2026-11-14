@@ -32,17 +32,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
      */
     sceneTexture = null;
 
-    _cocTexture = null;
-
-    blurTexture = null;
-
-    blurTextureUpscale = false;
-
     _toneMapping = TONEMAP_LINEAR;
 
     _shaderDirty = true;
-
-    _taaEnabled = false;
 
     _gammaCorrection = GAMMA_SRGB;
 
@@ -99,8 +91,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
-        this.cocTextureId = scope.resolve('cocTexture');
-        this.blurTextureId = scope.resolve('blurTexture');
         this.sceneTextureSizeId = scope.resolve('sceneTextureSize');
         this.sceneTextureSizeValue = new Float32Array(4);
         this.composeTargetFlipYId = scope.resolve('composeTargetFlipY');
@@ -302,28 +292,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._debug;
     }
 
-    set cocTexture(value) {
-        if (this._cocTexture !== value) {
-            this._cocTexture = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get cocTexture() {
-        return this._cocTexture;
-    }
-
-    set taaEnabled(value) {
-        if (this._taaEnabled !== value) {
-            this._taaEnabled = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get taaEnabled() {
-        return this._taaEnabled;
-    }
-
     set toneMapping(value) {
         if (this._toneMapping !== value) {
             this._toneMapping = value;
@@ -421,18 +389,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const key =
             `${this.toneMapping}` +
             `-${gammaCorrectionName}` +
-            `-${this.cocTexture ? 'dof' : 'nodof'}` +
-            `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
-            `-${this.taaEnabled ? 'taa' : 'notaa'}` +
             `-${debugMode ?? ''}${depthKey}` +
             `-decl${declHash}-start${startHash}-end${endHash}`;
 
         const defines = new Map();
         defines.set('TONEMAP', tonemapNames[this.toneMapping]);
         defines.set('GAMMA', gammaCorrectionName);
-        if (this.cocTexture) defines.set('DOF', true);
-        if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
-        if (this.taaEnabled) defines.set('TAA', true);
         if (debugMode) defines.set('DEBUG_COMPOSE', debugMode);
         if (sceneDepth) defines.set('COMPOSE_SCENE_DEPTH', true);
         depthDefines.forEach((value, name) => defines.set(name, value));
@@ -480,11 +442,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         // target stores a flipped image, flip the sampling vertically so the composed result
         // lands in the requested row order
         this.composeTargetFlipYId.setValue(this.renderTarget?.flipY ? 1 : 0);
-
-        if (this._cocTexture) {
-            this.cocTextureId.setValue(this._cocTexture);
-            this.blurTextureId.setValue(this.blurTexture);
-        }
 
         // the uniform values of the effects are bound right before the draw, not when they are set:
         // every camera is prepared before any of them renders, and the uniforms are shared, so a

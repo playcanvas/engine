@@ -27,7 +27,7 @@ export default /* glsl */`
 #endif
 
 // two sided lighting
-#if defined(LIT_NEEDS_NORMAL) && defined(LIT_TWO_SIDED_LIGHTING)
+#ifdef LIT_NEEDS_NORMAL
     #include "twoSidedLightingPS"
 #endif
 

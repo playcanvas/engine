@@ -43,19 +43,6 @@ export default /* wgsl */`
             #endif
         #endif
 
-        #ifdef LIT_SCENE_COLOR
-            var uSceneColorMap : texture_2d<f32>;
-            var uSceneColorMapSampler : sampler;
-        #endif
-
-        #ifdef LIT_SCREEN_SIZE
-            uniform screen_size: vec4f;
-        #endif
-
-        #ifdef LIT_TRANSFORMS
-            var<private> matrix_viewProjection: mat4x4f;
-        #endif
-
         // parallax
         #ifdef STD_HEIGHT_MAP
             var<private> dUvOffset: vec2f;
@@ -84,6 +71,21 @@ export default /* wgsl */`
             var texture_diffuseDetailMapSampler : sampler;
         #endif
 
+        // diffuse transmission
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            var<private> dDiffuseTransmission: f32;
+            var<private> dDiffuseTransmissionColor: vec3f;
+
+            #ifdef STD_DIFFUSETRANSMISSION_TEXTURE_ALLOCATE
+                var texture_diffuseTransmissionMap : texture_2d<f32>;
+                var texture_diffuseTransmissionMapSampler : sampler;
+            #endif
+            #ifdef STD_DIFFUSETRANSMISSIONCOLOR_TEXTURE_ALLOCATE
+                var texture_diffuseTransmissionColorMap : texture_2d<f32>;
+                var texture_diffuseTransmissionColorMapSampler : sampler;
+            #endif
+        #endif
+
         // normal
         #ifdef STD_NORMAL_TEXTURE_ALLOCATE
             var texture_normalMap : texture_2d<f32>;
@@ -110,7 +112,7 @@ export default /* wgsl */`
             var<private> dIridescence: f32;
             var<private> dIridescenceThickness: f32;
 
-            #ifdef STD_IRIDESCENCE_THICKNESS_TEXTURE_ALLOCATE
+            #ifdef STD_IRIDESCENCETHICKNESS_TEXTURE_ALLOCATE
                 var texture_iridescenceThicknessMap : texture_2d<f32>;
                 var texture_iridescenceThicknessMapSampler : sampler;
             #endif

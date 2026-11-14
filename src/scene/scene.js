@@ -20,6 +20,7 @@ import { getDefaultMaterial } from './materials/default-material.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { LayerComposition } from './composition/layer-composition.js'
  * @import { Layer } from './layer.js'
+ * @import { Renderer } from './renderer/renderer.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { GSplatParams } from './gsplat-unified/gsplat-params.js'
  */
@@ -285,6 +286,14 @@ class Scene extends EventHandler {
      * @private
      */
     _fogParams = new FogParams();
+
+    /**
+     * The renderer rendering this scene, set when the renderer is created.
+     *
+     * @type {Renderer|null}
+     * @ignore
+     */
+    renderer = null;
 
     /**
      * Create a new Scene instance.

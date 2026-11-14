@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
+import { SPRITETYPE_SIMPLE } from '../../../../src/framework/components/sprite/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
@@ -80,6 +81,11 @@ describe('SpriteComponent', function () {
         expect(e.sprite).to.exist;
     });
 
+    it('Defaults type to SPRITETYPE_SIMPLE', function () {
+        expect(new Entity().addComponent('sprite').type).to.equal(SPRITETYPE_SIMPLE);
+        expect(new Entity().addComponent('sprite', { type: undefined }).type).to.equal(SPRITETYPE_SIMPLE);
+    });
+
     [true, false].forEach((tintBeforeSprite) => {
         it(`Converts sRGB tint set ${tintBeforeSprite ? 'before' : 'after'} the sprite is assigned`, function () {
             const e = new Entity();
@@ -101,9 +107,9 @@ describe('SpriteComponent', function () {
 
             const meshColor = e.sprite._meshInstance.getParameter('mesh_color').data;
             expect(meshColor).to.have.lengthOf(4);
-            expect(meshColor[0]).to.be.closeTo(0.217638, 0.000001);
-            expect(meshColor[1]).to.be.closeTo(0.047366, 0.000001);
-            expect(meshColor[2]).to.be.closeTo(0.531049, 0.000001);
+            expect(meshColor[0]).to.be.closeTo(0.214041, 0.000001);
+            expect(meshColor[1]).to.be.closeTo(0.050876, 0.000001);
+            expect(meshColor[2]).to.be.closeTo(0.522522, 0.000001);
             expect(meshColor[3]).to.be.closeTo(0.4, 0.000001);
             expect(e.sprite.color.r).to.equal(0.5);
             expect(e.sprite.color.g).to.equal(0.25);

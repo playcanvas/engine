@@ -502,6 +502,23 @@ export const FILTER_LINEAR_MIPMAP_NEAREST = 4;
 export const FILTER_LINEAR_MIPMAP_LINEAR = 5;
 
 /**
+ * Generate each mip level of a texture by averaging blocks of 2x2 texels of the previous level.
+ *
+ * @category Graphics
+ */
+export const MIPMAPFILTER_BOX = 'box';
+
+/**
+ * Generate each mip level of a texture from the previous level with a wider, smooth filter,
+ * approximating a Gaussian blur. Sampling the small mip levels of such a texture to blur it, for
+ * example in the reflection of a rough surface, avoids the blocks and the flickering of the box
+ * filter. Generating the mip levels is more expensive than with {@link MIPMAPFILTER_BOX}.
+ *
+ * @category Graphics
+ */
+export const MIPMAPFILTER_GAUSSIAN = 'gaussian';
+
+/**
  * Never pass.
  *
  * @category Graphics
@@ -706,7 +723,7 @@ export const PIXELFORMAT_DEPTHSTENCIL = 17;
  *
  * @category Graphics
  */
-export const PIXELFORMAT_111110F = 18;
+export const PIXELFORMAT_RG11B10F = 18;
 
 /**
  * Color-only sRGB format.
@@ -1122,7 +1139,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4, msaa: true }],
     [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2, msaa: true }],
     [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4, msaa: true }],
-    [PIXELFORMAT_111110F,       { name: '111110F', size: 4, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_RG11B10F,       { name: 'RG11B10F', size: 4, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true, msaa: true, msaaResolve: true }],
@@ -1198,7 +1215,7 @@ export const isIntegerPixelFormat = (format) => {
  * resolve is a separate, narrower capability: integer formats and {@link PIXELFORMAT_R32F} are
  * multisample-capable but cannot be resolved, and depth formats have no hardware resolve at all.
  *
- * {@link PIXELFORMAT_111110F} is reported as capable even though it is gated on the
+ * {@link PIXELFORMAT_RG11B10F} is reported as capable even though it is gated on the
  * 'rg11b10ufloat-renderable' device feature - the feature is near-universally available, and on a
  * device without it the WebGPU validation reports the failure. Snorm formats (RG8S, RGBA8S) become
  * capable when the device reports supportsTextureFormatsTier1, which this static table does not yet

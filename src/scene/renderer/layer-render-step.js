@@ -39,14 +39,9 @@ class LayerRenderStep {
 
     clearStencil = false;
 
-    // true if this is the first render step using its camera
-    firstCameraUse = false;
-
-    // true if this is the last render step using its camera
-    lastCameraUse = false;
-
     /**
-     * @param {CameraComponent} cameraComponent - The camera component used to render the layer.
+     * @param {CameraComponent} cameraComponent - The camera component used to render the layer,
+     * which is the camera of the {@link RenderPassForward} the step is added to.
      * @param {Layer} layer - The layer to render.
      * @param {boolean} transparent - True to render the transparent sublayer, opaque otherwise.
      * @param {RenderTarget|null} renderTarget - The render target to render to.

@@ -284,6 +284,10 @@ class MiniStats {
         ],
         gsplatsCopy: [
             { name: 'GsplatsCopy', stats: ['frame.gsplatBufferCopy'], decimalPlaces: 1, multiplier: 1, unitsName: '%', watermark: 100 }
+        ],
+        compute: [
+            { name: 'Dispatches', stats: ['frame.computeDispatches'], watermark: 100 },
+            { name: 'Compute passes', stats: ['frame.computePasses'], watermark: 100 }
         ]
     };
 
@@ -293,7 +297,9 @@ class MiniStats {
      * calls and frame time, followed by User, CPU, GPU and VRAM. In the detailed views, Engine
      * and User have collapsible headings, omitted when empty.
      *
-     * @param {string[]} [extraStats] - Presets to include: 'gsplats' or 'gsplatsCopy'.
+     * @param {string[]} [extraStats] - Presets to include: 'gsplats', 'gsplatsCopy' or 'compute'.
+     * The 'compute' preset shows the compute dispatches and compute passes of each frame, on
+     * devices supporting compute shaders.
      * @returns {MiniStatsOptions} The default options for MiniStats.
      * @example
      * const options = MiniStats.getDefaultOptions(['gsplats']);
@@ -580,6 +586,10 @@ class MiniStats {
         }
         const counterGroups = new Map();
         for (const entry of options.stats ?? []) {
+            // compute counters only exist on devices supporting compute shaders
+            if (!device.supportsCompute && entry.stats.some(path => path.startsWith('frame.compute'))) {
+                continue;
+            }
             const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
             const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
             if (entry.name === 'VRAM') {

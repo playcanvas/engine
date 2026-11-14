@@ -49,9 +49,11 @@ fn sceneColorSample(uv: vec2f, lod: f32) -> vec4f {
     #endif
 }
 
+// both directions use the exact sRGB transfer, as the scene's own shaders write the color map
 fn sceneColorToLinear(color: vec3f) -> vec3f {
     #ifdef SCENE_COLORMAP_GAMMA
-        return pow(max(color, vec3f(0.0)), vec3f(2.2));
+        let c = max(color, vec3f(0.0));
+        return select(pow(c * 0.9478672986 + vec3f(0.0521327014), vec3f(2.4)), c * 0.0773993808, c <= vec3f(0.04045));
     #else
         return color;
     #endif
@@ -61,7 +63,8 @@ fn sceneColorToDisplay(color: vec3f) -> vec3f {
     #ifdef SCENE_COLORMAP_GAMMA
         return color;
     #else
-        return pow(max(color, vec3f(0.0)), vec3f(1.0 / 2.2));
+        let c = max(color, vec3f(0.0));
+        return select(1.055 * pow(c, vec3f(1.0 / 2.4)) - vec3f(0.055), c * 12.92, c <= vec3f(0.0031308));
     #endif
 }
 `;

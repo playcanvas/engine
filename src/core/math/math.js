@@ -1,3 +1,5 @@
+import { Debug } from '../debug.js';
+
 /**
  * Math API.
  *
@@ -188,11 +190,22 @@ const math = {
      * @param {number} x - Number to check for power-of-two property.
      * @returns {boolean} true if power-of-two and false otherwise.
      * @example
-     * math.powerOfTwo(32); // returns true
-     * math.powerOfTwo(17); // returns false
+     * math.isPowerOfTwo(32); // returns true
+     * math.isPowerOfTwo(17); // returns false
+     */
+    isPowerOfTwo(x) {
+        return ((x !== 0) && !(x & (x - 1)));
+    },
+
+    /**
+     * @param {number} x - Number to check for power-of-two property.
+     * @returns {boolean} true if power-of-two and false otherwise.
+     * @deprecated Use {@link math.isPowerOfTwo} instead.
+     * @ignore
      */
     powerOfTwo(x) {
-        return ((x !== 0) && !(x & (x - 1)));
+        Debug.deprecated('math.powerOfTwo is deprecated. Use math.isPowerOfTwo instead.');
+        return math.isPowerOfTwo(x);
     },
 
     /**
@@ -253,18 +266,18 @@ const math = {
      *
      * See https://en.wikipedia.org/wiki/Smoothstep for more details.
      *
-     * @param {number} min - The lower bound of the interpolation range.
-     * @param {number} max - The upper bound of the interpolation range.
+     * @param {number} min - The value of x at which the result is 0. Can be greater than max for a
+     * falling ramp.
+     * @param {number} max - The value of x at which the result is 1.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
      * @example
      * math.smoothstep(0, 10, 5); // returns 0.5
      */
     smoothstep(min, max, x) {
-        if (x <= min) return 0;
-        if (x >= max) return 1;
+        if (min === max) return x <= min ? 0 : 1;
 
-        x = (x - min) / (max - min);
+        x = math.clamp((x - min) / (max - min), 0, 1);
 
         return x * x * (3 - 2 * x);
     },
@@ -275,18 +288,18 @@ const math = {
      *
      * See https://en.wikipedia.org/wiki/Smoothstep#Variations for more details.
      *
-     * @param {number} min - The lower bound of the interpolation range.
-     * @param {number} max - The upper bound of the interpolation range.
+     * @param {number} min - The value of x at which the result is 0. Can be greater than max for a
+     * falling ramp.
+     * @param {number} max - The value of x at which the result is 1.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
      * @example
      * math.smootherstep(0, 10, 5); // returns 0.5
      */
     smootherstep(min, max, x) {
-        if (x <= min) return 0;
-        if (x >= max) return 1;
+        if (min === max) return x <= min ? 0 : 1;
 
-        x = (x - min) / (max - min);
+        x = math.clamp((x - min) / (max - min), 0, 1);
 
         return x * x * x * (x * (x * 6 - 15) + 10);
     },

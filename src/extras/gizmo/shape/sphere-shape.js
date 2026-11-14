@@ -1,20 +1,24 @@
 import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { Mesh } from '../../../scene/mesh.js';
-import { TriData } from '../tri-data.js';
+import { TriData } from './tri-data.js';
 import { Shape } from './shape.js';
 
-/** @import { ShapeArgs } from './shape.js' */
-/** @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js' */
+/**
+ * @import { ShapeArgs } from './shape.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * @typedef {object} SphereShapeArgs
  * @property {number} [radius] - The radius of the sphere.
  */
 
-/** @ignore */
+/**
+ * @ignore
+ */
 class SphereShape extends Shape {
     /**
-     * The internal size of the sphere.
+     * The size.
      *
      * @private
      */
@@ -31,12 +35,10 @@ class SphereShape extends Shape {
 
         this._radius = args.radius ?? this._radius;
 
-        // intersect
         this.triData = [
             new TriData(new SphereGeometry(), 2)
         ];
 
-        // render
         this._createRenderComponent(this.entity, [
             Mesh.fromGeometry(this.device, new SphereGeometry({
                 latitudeBands: 32,
@@ -44,12 +46,11 @@ class SphereShape extends Shape {
             }))
         ]);
 
-        // update transform
         this._update();
     }
 
     /**
-     * Set the rendered radius of the sphere.
+     * Set the rendered radius.
      *
      * @param {number} value - The new radius of the sphere.
      */
@@ -59,7 +60,7 @@ class SphereShape extends Shape {
     }
 
     /**
-     * Get the rendered radius of the sphere.
+     * Get the rendered radius.
      *
      * @returns {number} The radius of the sphere.
      */
@@ -68,13 +69,12 @@ class SphereShape extends Shape {
     }
 
     /**
-     * Update the shape's transform.
+     * Updates the transform.
      *
      * @protected
      * @override
      */
     _update() {
-        // intersect/render
         const scale = this._radius * 2;
         this.entity.setLocalScale(scale, scale, scale);
     }

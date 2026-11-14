@@ -7,19 +7,20 @@ import { expect } from 'chai';
 
 import { MapUtils } from '../../../src/core/map-utils.js';
 import { Preprocessor } from '../../../src/core/preprocessor.js';
+import { BloomEffect } from '../../../src/extras/effects/bloom/bloom-effect.js';
+import { CasEffect } from '../../../src/extras/effects/cas/cas-effect.js';
+import { ColorEnhanceEffect } from '../../../src/extras/effects/color-enhance/color-enhance-effect.js';
+import { ColorLutEffect } from '../../../src/extras/effects/color-lut/color-lut-effect.js';
+import { DofEffect } from '../../../src/extras/effects/dof/dof-effect.js';
+import { FringingEffect } from '../../../src/extras/effects/fringing/fringing-effect.js';
+import { GradingEffect } from '../../../src/extras/effects/grading/grading-effect.js';
+import { SsaoEffect } from '../../../src/extras/effects/ssao/ssao-effect.js';
+import { VignetteEffect } from '../../../src/extras/effects/vignette/vignette-effect.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import {
     COMPOSESLOT_HDR, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE,
     SSAOTYPE_LIGHTING
 } from '../../../src/extras/render-passes/constants.js';
-import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
-import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
-import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
-import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
-import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
-import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
-import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
-import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8,
@@ -30,7 +31,8 @@ import { ShaderDefinitionUtils } from '../../../src/platform/graphics/shader-def
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
-    GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL
+    GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_AGX, TONEMAP_AGX_PUNCHY, TONEMAP_FILMIC,
+    TONEMAP_HEJL, TONEMAP_NEUTRAL
 } from '../../../src/scene/constants.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
@@ -42,7 +44,7 @@ import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections
  * Snapshot of the compose shader source across the combinations of effects it can be built for, in
  * both shader languages. The composition is being restructured around registered effects, and the
  * restructuring must not change the program any combination compiles to. This test pins the
- * preprocessed fragment source of each combination, normalised for whitespace - the restructured
+ * preprocessed fragment source of each combination, normalized for whitespace - the restructured
  * chunk leaves blank lines where nothing is included - so any change to what a combination compiles
  * to fails here rather than in a renderer.
  *
@@ -88,8 +90,6 @@ describe('RenderPassCompose shader snapshot', function () {
 
         textures = {
             bloom: createTexture('bloom', 64, 64, PIXELFORMAT_RGBA16F),
-            coc: createTexture('coc', 128, 128, PIXELFORMAT_RGBA8),
-            blur: createTexture('blur', 64, 64, PIXELFORMAT_RGBA16F),
             ssao: createTexture('ssao', 128, 128, PIXELFORMAT_R32F),
             lut: createTexture('lut', 256, 16, PIXELFORMAT_RGBA8, true),
             lut2: createTexture('lut2', 256, 16, PIXELFORMAT_RGBA8, true)
@@ -112,15 +112,16 @@ describe('RenderPassCompose shader snapshot', function () {
         // combinations drive their state; only getShaderVariant is exercised, so the camera frame
         // behind the effects is a stub supplying the scene format the sharpening reads, and the
         // camera the occlusion is generated for
-        pass.cas = new CasEffect(device);
         pass.fringing = new FringingEffect(device);
+        pass.cas = new CasEffect(device);
+        pass.dof = new DofEffect(device);
         pass.ssao = new SsaoEffect(device);
         pass.bloom = new BloomEffect(device);
         pass.colorEnhance = new ColorEnhanceEffect(device);
         pass.grading = new GradingEffect(device);
         pass.colorLut = new ColorLutEffect(device);
         pass.vignette = new VignetteEffect(device);
-        const effects = [pass.cas, pass.fringing, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const effects = [pass.fringing, pass.cas, pass.dof, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
         const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F, cameraComponent };
         effects.forEach((effect) => {
             effect.cameraFrame = cameraFrame;
@@ -136,7 +137,7 @@ describe('RenderPassCompose shader snapshot', function () {
     // resolution scene texture
     const enableBloom = (pass) => {
         pass.bloom.intensity = 0.05;
-        pass.bloom.createPasses({ [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom }, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.bloom.createPasses({ [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom }, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
         pass.passEffects.push(pass.bloom);
     };
 
@@ -145,7 +146,7 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.ssao.type = type;
         const depth = { texture: textures.ssao, defines: new Map(), key: '' };
         const resources = { [FRAMERESOURCE_DEPTH]: depth, [FRAMERESOURCE_PREPASSDEPTH]: depth };
-        pass.ssao.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.ssao.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
         pass.passEffects.push(pass.ssao);
     };
 
@@ -169,19 +170,28 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.sceneDepthAvailable = true;
     };
 
+    // the depth of field likewise, its low quality setup upscaling its quarter resolution blur
+    const enableDof = (pass, highQuality) => {
+        pass.dof.enabled = true;
+        pass.dof.highQuality = highQuality;
+        const resources = {
+            [FRAMERESOURCE_DEPTH]: { texture: textures.ssao, defines: new Map(), key: '' },
+            [FRAMERESOURCE_SCENECOLORHALF]: textures.bloom
+        };
+        pass.dof.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], resolve: [], postResolve: [] });
+        pass.passEffects.push(pass.dof);
+    };
+
     const enableAll = (pass) => {
         enableBloom(pass);
         enableSsao(pass, SSAOTYPE_COMBINE);
-        pass.cocTexture = textures.coc;
-        pass.blurTexture = textures.blur;
-        pass.blurTextureUpscale = true;
+        enableDof(pass, false);
         pass.grading.enabled = true;
         pass.colorEnhance.enabled = true;
         pass.colorLut.texture = textures.lut;
         pass.colorLut.texture2 = textures.lut2;
         pass.vignette.intensity = 0.3;
         pass.fringing.intensity = 10;
-        pass.taaEnabled = true;
         pass.cas.sharpness = 0.5;
     };
 
@@ -208,8 +218,8 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'off' },
         { name: 'off-gamma-none', set: () => ({ _gammaCorrection: GAMMA_NONE }) },
         { name: 'bloom', set: pass => enableBloom(pass) },
-        { name: 'dof', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur }) },
-        { name: 'dof-upscale', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur, blurTextureUpscale: true }) },
+        { name: 'dof', set: pass => enableDof(pass, true) },
+        { name: 'dof-upscale', set: pass => enableDof(pass, false) },
         { name: 'ssao', set: pass => enableSsao(pass, SSAOTYPE_COMBINE) },
         { name: 'ssao-lighting', set: pass => enableSsao(pass, SSAOTYPE_LIGHTING) },
         {
@@ -231,7 +241,6 @@ describe('RenderPassCompose shader snapshot', function () {
         },
         { name: 'vignette', set: pass => (pass.vignette.intensity = 0.3) },
         { name: 'fringing', set: pass => (pass.fringing.intensity = 10) },
-        { name: 'taa', set: () => ({ taaEnabled: true }) },
         { name: 'cas-hdr', set: pass => (pass.cas.sharpness = 0.5) },
         {
             name: 'cas-ldr',
@@ -245,7 +254,7 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'depth-effect-double-include', set: pass => addDepthEffect(pass, { includeChunk: true }) },
         { name: 'all', all: true },
         { name: 'all-gamma-none', all: true, set: () => ({ _gammaCorrection: GAMMA_NONE }) },
-        ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL].map(toneMapping => ({
+        ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY].map(toneMapping => ({
             name: `all-tonemap-${toneMapping}`, all: true, set: () => ({ toneMapping })
         })),
         ...['scene', 'bloom', 'dofcoc', 'dofblur', 'ssao', 'vignette'].map(debug => ({
@@ -271,7 +280,7 @@ describe('RenderPassCompose shader snapshot', function () {
         active.forEach(effect => effect.update());
         pass.effects = active;
         if (combination.customChunks) {
-            // the documented customisation path: user chunks at the three legacy injection points
+            // the documented customization path: user chunks at the three legacy injection points
             pass._customComposeChunks.set('composeDeclarationsPS', 'uniform float custom;');
             pass._customComposeChunks.set('composeMainStartPS', 'float customStart = 1.0;');
             pass._customComposeChunks.set('composeMainEndPS', 'result *= customStart;');
@@ -301,8 +310,8 @@ describe('RenderPassCompose shader snapshot', function () {
         });
     };
 
-    const normalise = source => source.replace(/\s+/g, ' ').trim();
-    const digest = source => createHash('sha1').update(normalise(source)).digest('hex');
+    const normalize = source => source.replace(/\s+/g, ' ').trim();
+    const digest = source => createHash('sha1').update(normalize(source)).digest('hex');
 
     // the depth an effect reads is decoded the way the producer stored it, whichever that is, and the
     // depth chunk is declared once however many times it is included

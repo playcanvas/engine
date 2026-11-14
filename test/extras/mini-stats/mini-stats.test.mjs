@@ -223,6 +223,22 @@ describe('MiniStats', function () {
         expect(stats._resourceGraphs.has('renderPipelines')).to.be.false;
     });
 
+    it('shows the counters of the compute preset only on devices supporting compute', function () {
+        const engineLabels = () => {
+            const engine = stats.graphs.find(graph => graph.headerOnly && graph.name === 'Engine');
+            return stats.graphs.filter(graph => graph.parent === engine).map(graph => graph.label);
+        };
+
+        device.supportsCompute = true;
+        stats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
+        expect(engineLabels()).to.deep.equal(['Draw calls', 'Frame', 'Dispatches', 'Compute passes']);
+        stats.destroy();
+
+        device.supportsCompute = false;
+        stats = new MiniStats(app, MiniStats.getDefaultOptions(['compute']));
+        expect(engineLabels()).to.deep.equal(['Draw calls', 'Frame']);
+    });
+
     it('groups custom counters under User above the CPU, GPU and VRAM groups', function () {
         const options = MiniStats.getDefaultOptions();
         options.stats.unshift({ name: 'Custom first', stats: ['user.first'] });

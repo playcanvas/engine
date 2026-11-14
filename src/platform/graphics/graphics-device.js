@@ -13,7 +13,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
     SEMANTIC_POSITION, TYPE_FLOAT32,
-    PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RG11B10F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
@@ -476,6 +476,39 @@ class GraphicsDevice extends EventHandler {
     shaders = [];
 
     /**
+     * True while a precompile pass renders, see {@link GraphicsDevice#startPrecompilePass}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _precompilePass = false;
+
+    /**
+     * True when a precompile, see {@link AppBase#precompile}, needs a warm-up step to fully compile
+     * the shaders. On some backends a shader is not fully compiled when its compilation reports
+     * completion - the browser finishes compiling it the first time it is used for a draw, which
+     * then causes a stall during rendering. For example, WebGL in Chrome on macOS translates it
+     * to Metal, and compiles it for the GPU only when it first draws with it.
+     *
+     * On such a device, once the shaders have compiled, the precompile renders the frame once more
+     * with the draws enabled - the warm-up - so that this last step happens during loading instead.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    precompileNeedsWarmup = false;
+
+    /**
+     * True while the warm-up of a precompile renders, see
+     * {@link GraphicsDevice#precompileNeedsWarmup}. The precompile passes then draw, while
+     * otherwise they skip the draws.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    precompileWarmup = false;
+
+    /**
      * A set of currently created textures.
      *
      * @type {Set<Texture>}
@@ -610,8 +643,9 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if HTML elements (e.g. `<div>`) can be used as texture sources via the HTML-in-Canvas
-     * API. When supported, an HTML element appended to a canvas with the `layoutsubtree` attribute
-     * can be passed to {@link Texture#setSource} and rendered as a live texture in the 3D scene.
+     * API. When supported, an HTML element with the `drawable` attribute, appended to a canvas with
+     * the `content="drawable"` attribute, can be passed to {@link Texture#setSource} and rendered as
+     * a live texture in the 3D scene.
      *
      * @type {boolean}
      * @readonly
@@ -635,7 +669,7 @@ class GraphicsDevice extends EventHandler {
     textureHalfFloatRenderable;
 
     /**
-     * True if small-float textures with format {@link PIXELFORMAT_111110F} can be used as a frame
+     * True if small-float textures with format {@link PIXELFORMAT_RG11B10F} can be used as a frame
      * buffer. This is always true on WebGL2, but optional on WebGPU device.
      *
      * @type {boolean}
@@ -835,6 +869,8 @@ class GraphicsDevice extends EventHandler {
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
+        this._computeDispatchesPerFrame = 0;
+        this._computePassesPerFrame = 0;
 
         this._primitiveCount = 0;
         this._renderTargetCreationTime = 0;
@@ -1360,15 +1396,26 @@ class GraphicsDevice extends EventHandler {
     // ---- deprecated block end ----
 
     /**
-     * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
-     * operation is disabled.
+     * Sets the specified stencil state. If both stencilFront and stencilBack are null or not
+     * specified, stencil operation is disabled.
      *
-     * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
-     * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
-     * {@link StencilParameters.DEFAULT} if not specified.
+     * @param {StencilParameters|null} [stencilFront] - The front stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilBack is.
+     * @param {StencilParameters|null} [stencilBack] - The back stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified, while stencilFront is.
      */
     setStencilState(stencilFront, stencilBack) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
         Debug.assert(false);
     }
 
@@ -1440,8 +1487,10 @@ class GraphicsDevice extends EventHandler {
      * @param {DepthState} [depthState] - Depth state. Defaults to {@link DepthState.NODEPTH}.
      * @param {number} [cullMode] - Cull mode. Defaults to {@link CULLFACE_NONE}.
      * @param {number} [frontFace] - Front face winding. Defaults to {@link FRONTFACE_CCW}.
-     * @param {StencilParameters} [stencilFront] - Front stencil parameters.
-     * @param {StencilParameters} [stencilBack] - Back stencil parameters.
+     * @param {StencilParameters|null} [stencilFront] - Front stencil parameters. When neither the
+     * front nor the back stencil parameters are specified, stencil operation is disabled, see
+     * {@link GraphicsDevice#setStencilState}.
+     * @param {StencilParameters|null} [stencilBack] - Back stencil parameters.
      */
     setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
         cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
@@ -1496,6 +1545,51 @@ class GraphicsDevice extends EventHandler {
         while (vertexBuffers.length > 0) {
             vertexBuffers.pop();
         }
+    }
+
+    /**
+     * Starts a precompile pass: the rendering until {@link GraphicsDevice#endPrecompilePass}
+     * compiles the shaders and the render pipelines it needs, without rendering anything, see
+     * {@link AppBase#precompile}. Shaders and pipelines which are not ready yet are compiled in
+     * parallel, and their draws are skipped instead of waiting for them.
+     *
+     * @param {RenderTarget|null} renderTarget - The render target the rendering is for, or null
+     * for the back buffer. It is not rendered to.
+     * @ignore
+     */
+    startPrecompilePass(renderTarget) {
+    }
+
+    /**
+     * Ends a precompile pass started by {@link GraphicsDevice#startPrecompilePass}.
+     *
+     * @ignore
+     */
+    endPrecompilePass() {
+    }
+
+    /**
+     * Ends a frame which only precompiled, without rendering, see {@link AppBase#precompile}. The
+     * frame does not start or end as a rendered frame does, as that would present an empty frame,
+     * but the work recorded during it, such as compute dispatches, is completed as at the end of
+     * a frame.
+     *
+     * @ignore
+     */
+    precompileFrameEnd() {
+        // expire frame-scoped draw commands, as frameEnd does
+        this.drawCommandsVersion++;
+    }
+
+    /**
+     * Returns the number of shaders and render pipelines still compiling, see
+     * {@link AppBase#precompile}. Zero on devices which cannot tell.
+     *
+     * @returns {number} The number of shaders and render pipelines still compiling.
+     * @ignore
+     */
+    getPrecompilePendingCount() {
+        return 0;
     }
 
     /**
@@ -1618,7 +1712,7 @@ class GraphicsDevice extends EventHandler {
      * using the currently set index buffer and false otherwise.
      * @param {IndexBuffer} [indexBuffer] - The index buffer to use for the draw call.
      * @param {number} [numInstances] - The number of instances to render when using instancing.
-     * Defaults to 1.
+     * Zero renders nothing, unless draw commands are provided. Defaults to 1.
      * @param {DrawCommands} [drawCommands] - The draw commands to use for the draw call.
      * @param {boolean} [first] - True if this is the first draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
@@ -1671,7 +1765,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Reports whether a texture source is a generic HTML element (not image, canvas, or video).
-     * Used for the HTML-in-Canvas proposal (texElementImage2D).
+     * Used for the HTML-in-Canvas API.
      *
      * @param {*} texture - Texture source data.
      * @returns {boolean} True if the texture is an HTMLElement that is not an image, canvas, or
@@ -1933,7 +2027,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_R16F}
      * - {@link PIXELFORMAT_R32F}
      * - {@link PIXELFORMAT_RG16F}
@@ -1955,12 +2049,12 @@ class GraphicsDevice extends EventHandler {
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
 
-                case PIXELFORMAT_111110F: {
+                case PIXELFORMAT_RG11B10F: {
                     if (this.textureRG11B10Renderable) {
                         return format;
                     }

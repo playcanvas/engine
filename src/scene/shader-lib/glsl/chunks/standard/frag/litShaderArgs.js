@@ -12,6 +12,9 @@ vec3 litArgs_emission;
 // Normal direction in world space
 vec3 litArgs_worldNormal;
 
+// The world position the lighting is evaluated at, litArgs_worldPosition, is declared by
+// litForwardDeclarationPS, as the fog reads it before a front end declares these
+
 // Ambient occlusion amount, range [0..1]
 float litArgs_ao;
 
@@ -53,6 +56,12 @@ float litArgs_ior;
 
 // Dispersion, range [0..1] typically, but can be higher
 float litArgs_dispersion;
+
+// Fraction of the light entering the surface that is diffusely transmitted through it, range [0..1]
+float litArgs_diffuseTransmission_intensity;
+
+// The color tinting the diffusely transmitted light
+vec3 litArgs_diffuseTransmission_color;
 
 // Iridescence effect intensity, range [0..1]
 float litArgs_iridescence_intensity;

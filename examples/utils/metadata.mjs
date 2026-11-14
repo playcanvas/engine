@@ -53,17 +53,29 @@ export const buildMetadata = () => {
 
     categories.forEach((category) => {
         const categoryPath = path.resolve(`${ROOT_PATH}/${category}`);
-        const examplesFiles = getDirFiles(categoryPath);
+        const exampleNames = getDirFiles(categoryPath);
         const categoryKebab = toKebabCase(category);
 
-        examplesFiles.forEach((exampleFile) => {
-            if (!/example.mjs$/.test(exampleFile)) {
+        exampleNames.forEach((exampleName) => {
+            if (exampleName.startsWith('.')) {
                 return;
             }
-            const examplePath = path.resolve(`${categoryPath}/${exampleFile}`);
-            const exampleName = exampleFile.split('.').shift() ?? '';
+            const examplePath = path.resolve(`${categoryPath}/${exampleName}`);
+
+            // each example is a folder of its files, so a file here is one written for the old flat
+            // layout, typically by a branch from before the move. Skipping it would silently drop
+            // the example from the browser.
+            if (!fs.statSync(examplePath).isDirectory()) {
+                const [name, ...suffix] = exampleName.split('.');
+                throw new Error(`${ROOT_PATH}/${category}/${exampleName} is not in an example folder, move it to ${ROOT_PATH}/${category}/${name}/${suffix.join('.')}`);
+            }
+
+            const sourcePath = `${examplePath}/example.mjs`;
+            if (!fs.existsSync(sourcePath)) {
+                return;
+            }
             const exampleNameKebab = toKebabCase(exampleName);
-            const config = parseConfig(fs.readFileSync(examplePath, 'utf-8'));
+            const config = parseConfig(fs.readFileSync(sourcePath, 'utf-8'));
             const hidden = !!config.HIDDEN;
 
             if (hidden) {
@@ -71,7 +83,7 @@ export const buildMetadata = () => {
             }
 
             exampleMetaData.push({
-                path: categoryPath,
+                path: examplePath,
                 categoryKebab,
                 exampleNameKebab,
                 hidden

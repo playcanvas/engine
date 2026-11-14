@@ -1,0 +1,272 @@
+// @config
+//
+// This example shows how to use the Picker to pick GSplat objects in the scene.
+
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    CameraComponentSystem,
+    CameraFrame,
+    Color,
+    ContainerHandler,
+    EVENT_MOUSEDOWN,
+    EVENT_TOUCHSTART,
+    Entity,
+    FILLMODE_FILL_WINDOW,
+    GSPLAT_RENDERER_AUTO,
+    GSplatComponentSystem,
+    GSplatHandler,
+    LightComponentSystem,
+    Mouse,
+    PROJECTION_ORTHOGRAPHIC,
+    PROJECTION_PERSPECTIVE,
+    Picker,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    ScriptComponentSystem,
+    ScriptHandler,
+    StandardMaterial,
+    TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
+    TONEMAP_NEUTRAL,
+    TextureHandler,
+    TextureRenderer,
+    TouchDevice,
+    Vec2,
+    Vec3,
+    createGraphicsDevice
+} from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+
+import { data, deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const gfxOptions = {
+    deviceTypes: [deviceType],
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    antialias: false
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+
+const textures = new TextureRenderer(app);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+const assets = {
+    logo: new Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
+    helipad: new Asset(
+        'helipad-env-atlas',
+        'texture',
+        { url: './assets/cubemaps/morning-env-atlas.png' },
+        { type: TEXTURETYPE_RGBP, mipmaps: false }
+    )
+};
+
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
+
+app.start();
+
+// Setup skydome
+app.scene.skyboxMip = 3;
+app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxIntensity = 0.1;
+
+// Create multiple instances of the gsplat
+const entities = [];
+for (let i = 0; i < 7; i++) {
+    // Create a splat entity and place it in the world
+    const splat = new Entity(`splat-${i}`);
+    splat.addComponent('gsplat', {
+        asset: assets.logo,
+        castShadows: false
+    });
+
+    app.root.addChild(splat);
+
+    entities.push({
+        entity: splat,
+        fade: 0
+    });
+}
+
+data.on('renderer:set', () => {
+    app.scene.gsplat.renderer = data.get('renderer');
+    const current = app.scene.gsplat.currentRenderer;
+    if (current !== data.get('renderer')) {
+        setTimeout(() => data.set('renderer', current), 0);
+    }
+});
+data.set('renderer', GSPLAT_RENDERER_AUTO);
+
+// Enable gsplat ID for picking
+app.scene.gsplat.enableIds = true;
+app.scene.gsplat.alphaClip = 0.2;
+app.scene.gsplat.minPixelSize = 1;
+
+// Create an Entity with a camera component
+const camera = new Entity();
+camera.addComponent('camera', {
+    clearColor: new Color(0.2, 0.2, 0.2),
+    toneMapping: TONEMAP_ACES
+});
+camera.setLocalPosition(10, 4, 10);
+
+data.on('orthoCamera:set', (/** @type {boolean} */ value) => {
+    camera.camera.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
+    camera.camera.orthoHeight = 6;
+});
+
+// Add camera controls
+camera.addComponent('script');
+camera.script.create(CameraControls, {
+    properties: {
+        enableFly: false,
+        focusPoint: Vec3.ZERO,
+        pitchRange: new Vec2(-90, 90),
+        zoomRange: new Vec2(14, 50)
+    }
+});
+app.root.addChild(camera);
+
+// Custom render passes set up with bloom
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
+cameraFrame.rendering.samples = 1;
+cameraFrame.bloom.intensity = 0.01;
+cameraFrame.update();
+
+// Create an instance of the picker class with depth enabled
+const picker = new Picker(app, 1, 1, true);
+
+// Update things each frame
+let time = 0;
+app.on('update', (dt) => {
+    time += dt * 0.3;
+
+    // Rotate splats around their center and also orbit them around
+    for (let e = 0; e < entities.length; e++) {
+        const entity = entities[e];
+        const fraction = e / entities.length;
+        const offset2pi = time + fraction * 2 * Math.PI;
+        entity.entity.setLocalPosition(6 * Math.sin(offset2pi), 0, 6 * Math.cos(offset2pi));
+        entity.entity.rotate(0, 150 * fraction * dt, 0);
+
+        // Update fade value
+        entity.fade = Math.max(entity.fade - 0.5 * dt, 0);
+
+        // Calculate scale animation based on fade
+        const angle = entity.fade * Math.PI;
+        const shrinkFactor = Math.sin(angle) * 0.5;
+        const scale = 1.0 - shrinkFactor;
+
+        // Apply scale to the entity transform so both the splat and marker spheres scale together
+        entity.entity.setLocalScale(scale, scale, scale);
+    }
+
+    // Display the picker's buffers side by side in the bottom right corner
+    // color buffer (left) and depth buffer (right), with equal margins from edges
+    // @ts-expect-error the picker's buffers are internal, read here only to display them
+    const { colorBuffer, depthBuffer } = picker;
+    if (colorBuffer) {
+        textures.draw(colorBuffer, 0.725, 0.835, 0.1, 0.1);
+    }
+
+    if (depthBuffer) {
+        textures.draw(depthBuffer, 0.835, 0.835, 0.1, 0.1);
+    }
+});
+
+// Function handling mouse click / touch
+const handlePointer = (x, y) => {
+    // Let's use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
+    const pickerScale = 0.25;
+    picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
+
+    // Render the ID texture
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    picker.prepare(camera.camera, app.scene, [worldLayer]);
+
+    // Get the world position at the clicked point
+    picker.getWorldPointAsync(x * pickerScale, y * pickerScale).then((worldPoint) => {
+        if (worldPoint) {
+            // Get the meshInstance of the picked object
+            picker.getSelectionAsync(x * pickerScale, y * pickerScale, 1, 1).then((meshInstances) => {
+                if (meshInstances.length > 0) {
+                    // Unified mode: picker returns the GSplatComponent directly
+                    const picked = meshInstances[0];
+                    const entity = entities.find((e) => e.entity.gsplat === picked);
+
+                    if (entity) {
+                        // Trigger the visual effect only if not already animating
+                        if (entity.fade === 0) {
+                            entity.fade = 1;
+                        }
+
+                        // Create a new marker sphere at the picked point with random color
+                        const markerMaterial = new StandardMaterial();
+                        markerMaterial.emissive = new Color(Math.random(), Math.random(), Math.random());
+                        markerMaterial.emissiveIntensity = 300;
+                        markerMaterial.useLighting = false;
+                        markerMaterial.update();
+
+                        const markerSphere = new Entity('marker');
+                        markerSphere.addComponent('render', {
+                            type: 'sphere',
+                            material: markerMaterial
+                        });
+                        markerSphere.setLocalScale(0.3, 0.3, 0.3);
+                        markerSphere.render.meshInstances[0].pick = false;
+
+                        // Parent it to the picked entity and convert world position to its local space
+                        entity.entity.addChild(markerSphere);
+                        const localPos = entity.entity.getWorldTransform().clone().invert().transformPoint(worldPoint);
+                        markerSphere.setLocalPosition(localPos);
+                    }
+                }
+            });
+        }
+    });
+};
+
+app.mouse.on(EVENT_MOUSEDOWN, (event) => {
+    handlePointer(event.x, event.y);
+});
+
+app.touch.on(EVENT_TOUCHSTART, (event) => {
+    const touch = event.touches[0];
+    handlePointer(touch.x, touch.y);
+});

@@ -26,6 +26,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         if (options.useMorphPosition)           key += '_morphp';
         if (options.useMorphNormal)             key += '_morphn';
         if (options.useMorphTextureBasedInt)    key += '_morphi';
+        if (options.useClipPlanes)              key += '_clip';
         if (options.useDualSourceBlending)       key += '_dualSource';
 
         return key;
@@ -66,6 +67,10 @@ class ShaderGeneratorShader extends ShaderGenerator {
             if (options.useMorphTextureBasedInt) defines.set('MORPHING_INT', true);
             if (options.useMorphPosition) defines.set('MORPHING_POSITION', true);
             if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
+        }
+        if (options.useClipPlanes) {
+            defines.set('CLIP_PLANES', true);
+            defines.set('CLIP_PLANES_MESH', true);
         }
     }
 

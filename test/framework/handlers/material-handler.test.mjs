@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { Entity } from '../../../src/framework/entity.js';
+import { DdsParser } from '../../../src/framework/parsers/texture/dds.js';
 import { PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
@@ -374,6 +376,548 @@ describe('MaterialHandler', function () {
             expect(material.metalnessMap).to.equal(material.glossMap);
             expect(drawnShader(instance)).to.equal(shader);
             expect(neededShader(instance)).to.equal(shader);
+        });
+
+        describe('copies', function () {
+
+            referenceKinds.forEach((kind) => {
+                it(`gives a copy made while the material waits the textures it references by ${kind.label}, without changing the shader of the copy`, async function () {
+                    const [diffuse, gloss] = colorAndGloss(kind);
+                    const material = await kind.load(diffuse, gloss);
+                    const copy = material.clone();
+
+                    expectSameShaderAfterLoad(copy, [gloss, diffuse]);
+                    expect(material.diffuseMap).to.equal(diffuse.resource);
+                    expect(material.glossMap).to.equal(gloss.resource);
+                });
+            });
+
+            it('gives copies of copies the textures, and a texture asset referenced by several maps to each of them', async function () {
+                const packed = pendingTexture('packed');
+                const normal = pendingTexture('normalMap');
+                const material = await loadMaterial(new Asset('material', 'material', null, {
+                    useMetalness: true, aoMap: packed.id, glossMap: packed.id, normalMap: normal.id
+                }));
+                const copy = material.clone();
+                const copyOfCopy = copy.clone();
+
+                completeLoad(packed);
+                completeLoad(normal);
+                for (const target of [copy, copyOfCopy]) {
+                    expect(target.aoMap).to.equal(packed.resource);
+                    expect(target.glossMap).to.equal(packed.resource);
+                    expect(target.normalMap).to.equal(normal.resource);
+                }
+            });
+
+            it('keeps a texture assigned to a copy', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const copy = material.clone();
+                const texture = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+                copy.diffuseMap = texture;
+
+                completeLoad(diffuse);
+                completeLoad(gloss);
+                expect(copy.diffuseMap).to.equal(texture);
+                expect(copy.glossMap).to.equal(gloss.resource);
+            });
+
+            it('gives a copy the textures of the material it was copied from last', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const other = pendingTexture('other');
+                const otherMaterial = await loadMaterial(new Asset('other', 'material', null, { diffuseMap: other.id }));
+                const copy = material.clone().copy(otherMaterial);
+
+                completeLoad(diffuse);
+                completeLoad(other);
+                expect(copy.diffuseMap).to.equal(other.resource);
+            });
+
+            // the ways to make a copy of the material of a material asset
+            const copyKinds = [
+                { label: 'a clone', make: ({ material }) => material.clone() },
+                { label: 'a copy', make: ({ material }) => new StandardMaterial().copy(material) },
+                {
+                    label: 'a dynamic batch',
+                    make: ({ materialAsset }) => {
+                        const group = app.batcher.addGroup('dynamic', true, 100);
+                        for (let i = 0; i < 2; i++) {
+                            const entity = new Entity();
+                            entity.addComponent('render', { type: 'box', materialAssets: [materialAsset.id], batchGroupId: group.id });
+                            app.root.addChild(entity);
+                        }
+                        app.batcher.updateAll();
+                        return app.batcher._batchList[0].meshInstance.material;
+                    }
+                }
+            ];
+
+            // whether no material tracks its copies or is tracked as a copy
+            const expectReleased = (...materials) => {
+                for (const material of materials) {
+                    expect(material._pendingCopies).to.equal(null);
+                    expect(material._pendingSource).to.equal(null);
+                }
+            };
+
+            copyKinds.forEach((copyKind) => {
+                it(`gives ${copyKind.label} the textures, when a texture loads from within the load event of another`, async function () {
+                    const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                    completeLoad(gloss);
+                    const materialAsset = new Asset('material', 'material', null, {
+                        useMetalness: true, diffuseMap: diffuse.id, glossMap: gloss.id
+                    });
+                    const material = await loadMaterial(materialAsset);
+                    const copy = copyKind.make({ material, materialAsset });
+
+                    // the asset registry fires its load event before the load event of the asset,
+                    // which the material handles, so the gloss loads before that of the diffuse
+                    app.assets.on('load', (asset) => {
+                        if (asset === diffuse) {
+                            completeLoad(gloss);
+                        }
+                    });
+                    completeLoad(diffuse);
+                    expect(material.diffuseMap).to.equal(diffuse.resource);
+                    expect(copy.diffuseMap).to.equal(diffuse.resource);
+                    expectReleased(material, copy);
+                });
+            });
+
+            it('gives a copy the textures after a texture was assigned to the map of the material', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const copy = material.clone();
+                material.diffuseMap = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+
+                completeLoad(gloss);
+                completeLoad(diffuse);
+                expect(copy.diffuseMap).to.equal(diffuse.resource);
+                expect(copy.glossMap).to.equal(gloss.resource);
+                expectReleased(material, copy);
+            });
+
+            it('stops tracking the copies once the material has all its textures', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const copy = material.clone();
+
+                completeLoad(diffuse);
+                expect(material._pendingCopies.size).to.equal(1);
+                expect(copy._pendingSource).to.equal(material);
+
+                completeLoad(gloss);
+                expectReleased(material, copy, material.clone());
+            });
+
+            it('skips a destroyed copy', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                material.clone().destroy();
+
+                completeLoad(diffuse);
+                expect(material.diffuseMap).to.equal(diffuse.resource);
+                expect(material._pendingCopies.size).to.equal(0);
+            });
+
+            it('gives a copy made while a texture is unloaded the texture when it loads again', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                completeLoad(diffuse);
+                const material = await loadMaterial(new Asset('material', 'material', null, { diffuseMap: diffuse.id }));
+                expect(material._pendingCopies).to.equal(null);
+
+                diffuse.unload();
+                const copy = material.clone();
+                completeLoad(diffuse);
+                expect(copy.diffuseMap).to.equal(diffuse.resource);
+            });
+
+            it('gives a copy made while a texture asset is removed the texture when it is added again, after another texture loads', async function () {
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                completeLoad(diffuse);
+                const material = await loadById(diffuse, gloss);
+
+                app.assets.remove(diffuse);
+                const copy = material.clone();
+                completeLoad(gloss);
+                app.assets.add(diffuse);
+                completeLoad(diffuse);
+                expect(material.diffuseMap).to.equal(diffuse.resource);
+                expect(copy.diffuseMap).to.equal(diffuse.resource);
+            });
+
+            it('stops tracking the copies once the data of the material asset no longer references the textures it waited for', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                const materialAsset = new Asset('material', 'material', null, { diffuseMap: diffuse.id });
+                const material = await loadMaterial(materialAsset);
+                const copy = material.clone();
+
+                materialAsset.data = { diffuseMap: null };
+                expectReleased(material, copy);
+
+                // no copy made since is tracked
+                for (let i = 0; i < 100; i++) {
+                    material.clone().destroy();
+                }
+                expect(material._pendingCopies).to.equal(null);
+            });
+
+            it('stops tracking the copies once the data of the material asset references loaded textures instead', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                const loaded = pendingTexture('loaded', { srgb: true });
+                completeLoad(loaded);
+                const materialAsset = new Asset('material', 'material', null, { diffuseMap: diffuse.id });
+                const material = await loadMaterial(materialAsset);
+                const copy = material.clone();
+
+                materialAsset.data = { diffuseMap: loaded.id };
+                expect(material.diffuseMap).to.equal(loaded.resource);
+                expectReleased(material, copy);
+            });
+
+            it('stops tracking the copies of a material referencing a texture asset which does not exist', async function () {
+                const gloss = pendingTexture('glossMap');
+                const material = await loadMaterial(new Asset('material', 'material', null, { glossMap: gloss.id, diffuseMap: 987654 }));
+                material.clone();
+
+                completeLoad(gloss);
+                expect(material._pendingCopies).to.equal(null);
+            });
+
+            it('gives a dynamic batch built while the material waits the textures', async function () {
+                const diffuse = pendingTexture('diffuseMap', { srgb: true });
+                const materialAsset = new Asset('material', 'material', null, { diffuseMap: diffuse.id });
+                const material = await loadMaterial(materialAsset);
+
+                const group = app.batcher.addGroup('dynamic', true, 100);
+                for (let i = 0; i < 2; i++) {
+                    const entity = new Entity();
+                    entity.addComponent('render', { type: 'box', materialAssets: [materialAsset.id], batchGroupId: group.id });
+                    app.root.addChild(entity);
+                }
+                app.batcher.updateAll();
+                const batchMaterial = app.batcher._batchList[0].meshInstance.material;
+                expect(batchMaterial).to.not.equal(material);
+
+                completeLoad(diffuse);
+                expect(batchMaterial.diffuseMap).to.equal(diffuse.resource);
+            });
+
+            // runs the garbage collector until the referent is gone or the attempts run out; a
+            // deref keeps its target alive for the rest of the current job, so gc and deref run
+            // in different jobs
+            const tick = () => new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+            const collected = async (ref, attempts = 10) => {
+                if (attempts === 0) {
+                    return false;
+                }
+                global.gc();
+                await tick();
+                const alive = ref.deref() !== undefined;
+                await tick();
+                return alive ? collected(ref, attempts - 1) : true;
+            };
+
+            it('lets a copy dropped while the material waits be garbage collected', async function () {
+                if (typeof global.gc !== 'function') {
+                    this.skip();
+                }
+
+                const [diffuse, gloss] = colorAndGloss(referenceKinds[0]);
+                const material = await loadById(diffuse, gloss);
+                const ref = new WeakRef(material.clone());
+
+                expect(await collected(ref)).to.equal(true);
+                completeLoad(diffuse);
+                expect(material._pendingCopies.size).to.equal(0);
+            });
+        });
+    });
+
+    describe('cubemaps', function () {
+
+        const faceUrls = ['posx.png', 'negx.png', 'posy.png', 'negy.png', 'posz.png', 'negz.png'];
+
+        beforeEach(function () {
+            const textureHandler = app.loader.getHandler('texture');
+
+            // images can't be decoded here, so the image parser skips the decode and creates the
+            // texture it would create for a PNG or JPG image
+            const imgParser = textureHandler.imgParser;
+            imgParser.load = (url, callback) => callback(null, {});
+            imgParser.open = (url, data, device, textureOptions) => new Texture(device, {
+                width: 4, height: 4, format: PIXELFORMAT_RGBA8, ...textureOptions
+            });
+
+            // a dds file of prefiltered data is a cubemap with a mip level for each prefiltered cubemap
+            const ddsParser = textureHandler._parsers.find(parser => parser instanceof DdsParser);
+            ddsParser.load = (url, callback) => callback(null, {});
+            ddsParser.open = (url, data, device, textureOptions) => new Texture(device, {
+                ...textureOptions, cubemap: true, width: 128, height: 128, format: PIXELFORMAT_RGBA8, mipmaps: false
+            });
+        });
+
+        // the ways a cubemap asset provides the reflection of a material
+        const cubemapKinds = [
+            { label: 'faces', file: null },
+            { label: 'faces and an env atlas', file: { url: 'sky.png', filename: 'sky.png' } },
+            { label: 'faces and prefiltered cubemaps', file: { url: 'sky.dds', filename: 'sky.dds' } }
+        ];
+
+        const loadCubemap = kind => new Promise((resolve, reject) => {
+            const asset = new Asset('sky', 'cubemap', kind.file, { textures: faceUrls });
+            asset.loadFaces = true;
+            asset.ready(resolve);
+            asset.once('error', err => reject(new Error(err)));
+            app.assets.add(asset);
+            app.assets.load(asset);
+        });
+
+        // resolves once the asset loads, when loading it again
+        const reload = asset => new Promise((resolve) => {
+            asset.once('load', resolve);
+            app.assets.load(asset);
+        });
+
+        const loadMaterial = asset => new Promise((resolve, reject) => {
+            asset.ready(() => resolve(asset.resource));
+            asset.on('error', err => reject(new Error(err)));
+            app.assets.add(asset);
+            app.assets.load(asset);
+        });
+
+        const loadMaterialOf = cubemap => loadMaterial(new Asset('material', 'material', null, { cubeMap: cubemap.id }));
+
+        // the environment the material reflects, as assigned by the cubemap asset
+        const environment = material => ({
+            cubeMap: material.cubeMap,
+            envAtlas: material.envAtlas,
+            prefiltered: material.prefilteredCubemaps.filter(t => t).length
+        });
+
+        // what each kind of cubemap asset assigns to the material
+        const expectAssigned = (material, cubemap, kind) => {
+            const [faces, ...prefiltered] = cubemap.resources;
+            expect(material.cubeMap).to.equal(faces);
+            if (kind.file === null) {
+                expect(material.envAtlas).to.equal(null);
+            } else if (prefiltered.every(t => t)) {
+                expect(material.prefilteredCubemaps).to.deep.equal(prefiltered);
+                expect(material.envAtlas).to.not.equal(null);
+            } else {
+                expect(material.envAtlas).to.equal(prefiltered[0]);
+            }
+        };
+
+        const expectReleased = (material) => {
+            expect(environment(material)).to.deep.equal({ cubeMap: null, envAtlas: null, prefiltered: 0 });
+        };
+
+        cubemapKinds.forEach((kind) => {
+
+            it(`releases a cubemap of ${kind.label} when it unloads, rather than drawing with its destroyed textures`, async function () {
+                const cubemap = await loadCubemap(kind);
+                const material = await loadMaterialOf(cubemap);
+                const resources = cubemap.resources.filter(t => t);
+                expectAssigned(material, cubemap, kind);
+
+                cubemap.unload();
+
+                // the asset destroyed its textures
+                for (const texture of resources) {
+                    expect(texture.device).to.equal(null);
+                }
+                expectReleased(material);
+            });
+
+            it(`assigns a cubemap of ${kind.label} again when it loads after an unload`, async function () {
+                const cubemap = await loadCubemap(kind);
+                const material = await loadMaterialOf(cubemap);
+
+                cubemap.unload();
+                await reload(cubemap);
+
+                expect(material.cubeMap).to.not.equal(null);
+                expectAssigned(material, cubemap, kind);
+            });
+
+            it(`releases a cubemap of ${kind.label} when it is removed from the registry`, async function () {
+                const cubemap = await loadCubemap(kind);
+                const material = await loadMaterialOf(cubemap);
+
+                app.assets.remove(cubemap);
+
+                expectReleased(material);
+            });
+        });
+
+        it('draws with the shader it was drawn with before the cubemap loaded, once the cubemap unloads', async function () {
+            // the faces load once the test lets them
+            const pendingFaces = [];
+            app.loader.getHandler('texture').imgParser.load = (url, callback) => pendingFaces.push(() => callback(null, {}));
+
+            const cubemap = new Asset('sky', 'cubemap', null, { textures: faceUrls });
+            cubemap.loadFaces = true;
+            app.assets.add(cubemap);
+
+            const material = await loadMaterialOf(cubemap);
+            expect(material.cubeMap).to.equal(null);
+            const instance = new MeshInstance(Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry()), material, new GraphNode());
+            const lightList = new LightList();
+            const cameraShaderParams = new CameraShaderParams();
+            const shader = () => {
+                material.prepareForRender(app.graphicsDevice, app.scene);
+                const viewUniformFormat = app.renderer.getViewUniformFormat(false, lightList);
+                return instance.getShaderInstance(SHADER_FORWARD, lightList, app.scene, cameraShaderParams, viewUniformFormat).shader;
+            };
+
+            const before = shader();
+            const loaded = new Promise((resolve) => {
+                cubemap.ready(resolve);
+            });
+            pendingFaces.forEach(load => load());
+            await loaded;
+            expect(material.cubeMap).to.equal(cubemap.resource);
+            expect(shader()).to.not.equal(before);
+
+            cubemap.unload();
+            expect(shader()).to.equal(before);
+        });
+
+        it('releases a cubemap from each material referencing it', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[1]);
+            const materials = [await loadMaterialOf(cubemap), await loadMaterialOf(cubemap)];
+
+            cubemap.unload();
+
+            materials.forEach(expectReleased);
+        });
+
+        it('keeps a cubemap assigned to the material since the cubemap asset loaded', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[0]);
+            const material = await loadMaterialOf(cubemap);
+
+            const other = new Texture(app.graphicsDevice, { cubemap: true, width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+            material.cubeMap = other;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(other);
+        });
+
+        it('keeps the cubemap of another asset, once the material asset references it instead', async function () {
+            const first = await loadCubemap(cubemapKinds[1]);
+            const second = await loadCubemap(cubemapKinds[1]);
+            const materialAsset = new Asset('material', 'material', null, { cubeMap: first.id });
+            const material = await loadMaterial(materialAsset);
+
+            materialAsset.data = { cubeMap: second.id };
+            expectAssigned(material, second, cubemapKinds[1]);
+
+            first.unload();
+            expectAssigned(material, second, cubemapKinds[1]);
+        });
+
+        it('releases the env atlas of a cubemap asset once its cubemap was replaced', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[1]);
+            const material = await loadMaterialOf(cubemap);
+
+            const other = new Texture(app.graphicsDevice, { cubemap: true, width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+            material.cubeMap = other;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(other);
+            expect(material.envAtlas).to.equal(null);
+        });
+
+        it('releases the prefiltered cubemaps of a cubemap asset once its cubemap was replaced', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+
+            const other = new Texture(app.graphicsDevice, { cubemap: true, width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+            material.cubeMap = other;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(other);
+            expect(material.envAtlas).to.equal(null);
+            expect(material.prefilteredCubemaps.filter(t => t).length).to.equal(0);
+        });
+
+        it('keeps prefiltered cubemaps assigned since the cubemap asset loaded, and the env atlas generated from them', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+
+            const replacement = [128, 64, 32, 16, 8, 4].map(size => new Texture(app.graphicsDevice, {
+                cubemap: true, width: size, height: size, format: PIXELFORMAT_RGBA8, mipmaps: false
+            }));
+            material.prefilteredCubemaps = replacement;
+            const envAtlas = material.envAtlas;
+            expect(envAtlas).to.not.equal(null);
+
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(null);
+            expect(material.prefilteredCubemaps).to.deep.equal(replacement);
+            expect(material.envAtlas).to.equal(envAtlas);
+            expect(envAtlas.device).to.not.equal(null);
+        });
+
+        it('keeps an env atlas assigned since the cubemap asset of prefiltered cubemaps loaded', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+            const generated = material.envAtlas;
+
+            const envAtlas = new Texture(app.graphicsDevice, { width: 8, height: 8, format: PIXELFORMAT_RGBA8 });
+            material.envAtlas = envAtlas;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(null);
+            expect(material.prefilteredCubemaps.filter(t => t).length).to.equal(0);
+            expect(material.envAtlas).to.equal(envAtlas);
+            expect(envAtlas.device).to.not.equal(null);
+
+            // the env atlas generated from the prefiltered cubemaps is destroyed instead
+            expect(generated).to.not.equal(envAtlas);
+            expect(generated.device).to.equal(null);
+        });
+
+        it('destroys the env atlas generated from the prefiltered cubemaps of a cubemap asset, once the env atlas of the material was cleared', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+            const generated = material.envAtlas;
+            expect(generated.device).to.not.equal(null);
+
+            material.envAtlas = null;
+            cubemap.unload();
+
+            expect(material.envAtlas).to.equal(null);
+            expect(generated.device).to.equal(null);
+        });
+
+        it('destroys the env atlas generated from the prefiltered cubemaps of a cubemap asset when it unloads', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[2]);
+            const material = await loadMaterialOf(cubemap);
+            const generated = material.envAtlas;
+
+            cubemap.unload();
+
+            expect(material.envAtlas).to.equal(null);
+            expect(generated.device).to.equal(null);
+        });
+
+        it('keeps an env atlas assigned since the cubemap asset loaded', async function () {
+            const cubemap = await loadCubemap(cubemapKinds[1]);
+            const material = await loadMaterialOf(cubemap);
+
+            const envAtlas = new Texture(app.graphicsDevice, { width: 8, height: 8, format: PIXELFORMAT_RGBA8 });
+            material.envAtlas = envAtlas;
+            cubemap.unload();
+
+            expect(material.cubeMap).to.equal(null);
+            expect(material.envAtlas).to.equal(envAtlas);
         });
     });
 });

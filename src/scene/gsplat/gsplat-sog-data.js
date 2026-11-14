@@ -35,6 +35,23 @@ const readImageDataAsync = (texture) => {
     });
 };
 
+// SH coefficients per color channel for a band count (4 bands: SOG v3)
+const shCoeffs = shBands => ({ 1: 3, 2: 8, 3: 15, 4: 24 })[shBands] ?? 0;
+
+/**
+ * Decodes the SOG v3 opacity byte to true opacity, (b / 204)^2 = (1.25 * b / 255)^2: the square root
+ * gives fine steps at the low opacities translucent layers are built from, byte 204 is exactly 1,
+ * and bytes above it hold the over-unity range up to 1.5625.
+ *
+ * @param {number} b - The byte, 0..255.
+ * @returns {number} True opacity, 0..1.5625.
+ * @ignore
+ */
+const decodeSogOpacity = (b) => {
+    const s = b / 204;
+    return s * s;
+};
+
 const resolve = (scope, values) => {
     for (const key in values) {
         scope.resolve(key).setValue(values[key]);
@@ -49,6 +66,9 @@ class GSplatSogIterator {
         // extract means for centers
         const { meta, shBands } = data;
         const { means, scales, sh0, shN } = meta;
+        const v3 = meta.version === 3;
+        // v2 and v3 dequantize through codebooks, v1 through min/max ranges
+        const codebooks = meta.version >= 2;
         const means_l_data = p && data.means_l._levels[0];
         const means_u_data = p && data.means_u._levels[0];
         const quats_data = r && data.quats._levels[0];
@@ -59,7 +79,9 @@ class GSplatSogIterator {
 
         const norm = Math.SQRT2;
 
-        const coeffs = { 1: 3, 2: 8, 3: 15 }[shBands] ?? 0;
+        const coeffs = shCoeffs(shBands);
+        // per-channel stride of the caller's sh array: 15, or 24 for a 4th band
+        const shStride = shBands > 3 ? 24 : 15;
 
         this.read = (i) => {
             if (p) {
@@ -72,7 +94,17 @@ class GSplatSogIterator {
                 p.z = Math.sign(nz) * (Math.exp(Math.abs(nz)) - 1);
             }
 
-            if (r) {
+            if (r && v3) {
+                // v3: 24-bit exponential map in the quats rgb channels:
+                // p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
+                const px = (quats_data[i * 4 + 0] - 128) / 127;
+                const py = (quats_data[i * 4 + 1] - 128) / 127;
+                const pz = (quats_data[i * 4 + 2] - 128) / 127;
+                const len = Math.sqrt(px * px + py * py + pz * pz);
+                const t = len * Math.PI * 0.5;
+                const k = len > 1e-12 ? Math.sin(t) / len : Math.PI * 0.5;
+                r.set(px * k, py * k, pz * k, Math.cos(t));
+            } else if (r) {
                 const a = (quats_data[i * 4 + 0] / 255 - 0.5) * norm;
                 const b = (quats_data[i * 4 + 1] / 255 - 0.5) * norm;
                 const c = (quats_data[i * 4 + 2] / 255 - 0.5) * norm;
@@ -88,7 +120,7 @@ class GSplatSogIterator {
             }
 
             if (s) {
-                if (meta.version === 2) {
+                if (codebooks) {
                     const sx = scales.codebook[scales_data[i * 4 + 0]];
                     const sy = scales.codebook[scales_data[i * 4 + 1]];
                     const sz = scales.codebook[scales_data[i * 4 + 2]];
@@ -102,11 +134,12 @@ class GSplatSogIterator {
             }
 
             if (c) {
-                if (meta.version === 2) {
+                if (codebooks) {
                     const r = sh0.codebook[sh0_data[i * 4 + 0]];
                     const g = sh0.codebook[sh0_data[i * 4 + 1]];
                     const b = sh0.codebook[sh0_data[i * 4 + 2]];
-                    const a = sh0_data[i * 4 + 3] / 255;
+                    // v3 stores the true opacity, which may exceed 1
+                    const a = v3 ? decodeSogOpacity(sh0_data[i * 4 + 3]) : sh0_data[i * 4 + 3] / 255;
                     c.set(
                         0.5 + r * SH_C0,
                         0.5 + g * SH_C0,
@@ -129,20 +162,22 @@ class GSplatSogIterator {
             }
 
             if (sh) {
-                const n = sh_labels_data[i * 4 + 0] + (sh_labels_data[i * 4 + 1] << 8);
+                // palette index: 16-bit, 24-bit in v3
+                const n = sh_labels_data[i * 4 + 0] + (sh_labels_data[i * 4 + 1] << 8) +
+                    (v3 ? sh_labels_data[i * 4 + 2] << 16 : 0);
                 const u = (n % 64) * coeffs;
                 const v = Math.floor(n / 64);
 
-                if (meta.version === 2) {
+                if (codebooks) {
                     for (let j = 0; j < 3; ++j) {
                         for (let k = 0; k < coeffs; ++k) {
-                            sh[j * 15 + k] = shN.codebook[sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)]];
+                            sh[j * shStride + k] = shN.codebook[sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)]];
                         }
                     }
                 } else {
                     for (let j = 0; j < 3; ++j) {
                         for (let k = 0; k < coeffs; ++k) {
-                            sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
+                            sh[j * shStride + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
                         }
                     }
                 }
@@ -171,7 +206,14 @@ class GSplatSogData {
     sh_labels;
 
     /**
-     * V2-only codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
+     * V3 per-gaussian blind data textures (RGBA8), one per `meta.blind` entry.
+     *
+     * @type {Texture[]}
+     */
+    blind = [];
+
+    /**
+     * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
      * Built from meta codebooks in prepareCodebook(). Null for V1 assets.
      *
      * @type {Texture|null}
@@ -215,14 +257,16 @@ class GSplatSogData {
         this.sh0?.destroy();
         this.sh_centroids?.destroy();
         this.sh_labels?.destroy();
+        this.blind.forEach(t => t.destroy());
         this.codebookTexture?.destroy();
         this.codebookTexture = null;
     }
 
     // calculate the number of bands given the centroids texture width
     static calcBands(centroidsWidth) {
-        // sh palette has 64 sh entries per row: 192 = 1 band (64*3), 512 = 2 bands (64*8), 960 = 3 bands (64*15)
-        const shBandsWidths = { 192: 1, 512: 2, 960: 3 };
+        // sh palette has 64 sh entries per row: 192 = 1 band (64*3), 512 = 2 bands (64*8),
+        // 960 = 3 bands (64*15), 1536 = 4 bands (64*24, SOG v3)
+        const shBandsWidths = { 192: 1, 512: 2, 960: 3, 1536: 4 };
         return shBandsWidths[centroidsWidth] ?? 0;
     }
 
@@ -291,9 +335,12 @@ class GSplatSogData {
         // does this via prepareCodebook(), but decompress runs without that path.
         this._patchCodebooks();
 
-        const { shBands } = this;
+        const { shBands, meta } = this;
+        // f_rest columns: 45 (3 bands, lower bands zero-padded) or 72 with a 4th band
+        const restCount = shBands > 3 ? 72 : 45;
 
-        // copy back gpu texture data so cpu iterator has access to it
+        // copy back gpu texture data so cpu iterator has access to it (v3 blind data is only read
+        // on the GPU, through the generated getBlind_<name>() accessors)
         const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = this;
         means_l._levels[0] = await readImageDataAsync(means_l);
         means_u._levels[0] = await readImageDataAsync(means_u);
@@ -307,10 +354,16 @@ class GSplatSogData {
             sh_centroids._levels[0] = await readImageDataAsync(sh_centroids);
 
             const shMembers = [];
-            for (let i = 0; i < 45; ++i) {
+            for (let i = 0; i < restCount; ++i) {
                 shMembers.push(`f_rest_${i}`);
             }
             members.splice(members.indexOf('f_dc_0') + 1, 0, ...shMembers);
+        }
+
+        // v3 opacity above 1 (merged gaussians) round-trips as the PLY opacity_linear column
+        const hasLinear = meta.version === 3 && (meta.opacity?.max ?? 1) > 1;
+        if (hasLinear) {
+            members.push('opacity_linear');
         }
 
         // allocate uncompressed data
@@ -323,7 +376,7 @@ class GSplatSogData {
         const r = new Quat();
         const s = new Vec3();
         const c = new Vec4();
-        const sh = shBands > 0 ? new Float32Array(45) : null;
+        const sh = shBands > 0 ? new Float32Array(restCount) : null;
 
         const iter = this.createIter(p, r, s, c, sh);
 
@@ -348,26 +401,33 @@ class GSplatSogData {
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
             // convert opacity to log sigmoid taking into account infinities at 0 and 1
             data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
+            if (hasLinear) {
+                data.opacity_linear[i] = c.w;
+            }
 
             if (sh) {
-                for (let c = 0; c < 45; ++c) {
+                for (let c = 0; c < restCount; ++c) {
                     data[`f_rest_${c}`][i] = sh[c];
                 }
             }
         }
 
-        return new GSplatData([{
+        const properties = members.map((name) => {
+            return {
+                name: name,
+                type: 'float',
+                byteSize: 4,
+                storage: data[name]
+            };
+        });
+
+        const result = new GSplatData([{
             name: 'vertex',
             count: this.numSplats,
-            properties: members.map((name) => {
-                return {
-                    name: name,
-                    type: 'float',
-                    byteSize: 4,
-                    storage: data[name]
-                };
-            })
+            properties
         }]);
+        result.extras = meta.extras;
+        return result;
     }
 
     async generateCenters() {
@@ -411,8 +471,6 @@ class GSplatSogData {
         renderPass.quadRender = quad;
         renderPass.name = 'SogGenerateCenters';
         renderPass.init(renderTarget);
-        renderPass.colorOps.clear = false;
-        renderPass.depthStencilOps.clearDepth = false;
         renderPass.render();
         quad.destroy();
 
@@ -439,8 +497,8 @@ class GSplatSogData {
     }
 
     /**
-     * Creates the V2 codebook LUT texture. Packs the three 256-entry scalar codebooks
-     * (scales, sh0, shN) into a single 256x1 RGBA32F texture:
+     * Creates the V2/V3 codebook LUT texture. Packs the 256-entry scalar codebooks into a
+     * single 256x1 RGBA32F texture:
      * - .r = scales codebook
      * - .g = sh0 codebook
      * - .b = shN codebook
@@ -454,7 +512,7 @@ class GSplatSogData {
         const device = this.means_l.device;
         const { scales, sh0, shN } = this.meta;
 
-        // scales and sh0 codebooks are mandatory for V2, shN only present when SH > 0
+        // scales and sh0 codebooks are mandatory for V2/V3; shN only present when SH > 0
         const scalesCb = scales.codebook;
         const sh0Cb = sh0.codebook;
         const shNCb = shN?.codebook;
@@ -509,8 +567,8 @@ class GSplatSogData {
 
         this._patchCodebooks();
 
-        // V2 only: build the codebook LUT texture
-        if (this.meta.version === 2) {
+        // V2/V3: build the codebook LUT texture
+        if (this.meta.version >= 2) {
             this._createCodebookTexture();
         }
     }

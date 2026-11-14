@@ -206,6 +206,7 @@ export { DomeGeometry } from './scene/geometry/dome-geometry.js';
 export { Geometry } from './scene/geometry/geometry.js';
 export { BoxGeometry } from './scene/geometry/box-geometry.js';
 export { PlaneGeometry } from './scene/geometry/plane-geometry.js';
+export { RoundedBoxGeometry } from './scene/geometry/rounded-box-geometry.js';
 export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
@@ -224,10 +225,12 @@ export { ShaderChunks } from './scene/shader-lib/shader-chunks.js';
 export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
+export { GSplatCompressedResource } from './scene/gsplat/gsplat-compressed-resource.js';
 export { GSplatContainer } from './scene/gsplat/gsplat-container.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatOctreeResource } from './scene/gsplat-unified/gsplat-octree.resource.js';
 export { GSplatProcessor } from './framework/gsplat/gsplat-processor.js';
 export { GSplatResource } from './scene/gsplat/gsplat-resource.js';
 export { GSplatVaryings } from './scene/gsplat-unified/gsplat-varyings.js';
@@ -361,6 +364,7 @@ export { SceneDepthReader } from './framework/graphics/scene-depth-reader.js';
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';
 export { dracoInitialize, dracoDecode } from './framework/parsers/draco-decoder.js';
+export { meshoptInitialize } from './framework/parsers/meshopt-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';

@@ -32,6 +32,14 @@ class GSplatUnifiedSorter extends EventHandler {
      */
     pendingSorted = null;
 
+    /**
+     * The most recently applied sorted result. Its order data is kept out of the reuse pool, so it
+     * can be applied again after a device restore, which loses the GPU copy of the order.
+     *
+     * @type {{ count: number, version: number, orderData: Uint32Array }|null}
+     */
+    lastSorted = null;
+
     /** @type {Set<number>} */
     centersSet = new Set();
 
@@ -86,8 +94,9 @@ class GSplatUnifiedSorter extends EventHandler {
         // decrement jobs in flight counter
         this.jobsInFlight--;
 
-        // if there's already a pending result, return its orderData to the pool
-        if (this.pendingSorted) {
+        // if there's already a pending result, return its orderData to the pool, unless it is the
+        // re-queued last result, which still owns it
+        if (this.pendingSorted && this.pendingSorted !== this.lastSorted) {
             this.releaseOrderData(this.pendingSorted.orderData);
         }
 
@@ -100,13 +109,28 @@ class GSplatUnifiedSorter extends EventHandler {
     }
 
     applyPendingSorted() {
-        if (this.pendingSorted) {
-            const { count, version, orderData } = this.pendingSorted;
+        const pending = this.pendingSorted;
+        if (pending) {
             this.pendingSorted = null;
-            this.fire('sorted', count, version, orderData);
+            this.fire('sorted', pending.count, pending.version, pending.orderData);
 
-            // reuse order data
-            this.releaseOrderData(orderData);
+            // keep the applied result for a device restore, and reuse the previous one's order data
+            if (this.lastSorted && this.lastSorted !== pending) {
+                this.releaseOrderData(this.lastSorted.orderData);
+            }
+            this.lastSorted = pending;
+        }
+    }
+
+    /**
+     * Queues the most recently applied sorted result to be applied again on the next
+     * {@link applyPendingSorted}. Used after a device restore, which loses the GPU copy of the
+     * order, so the splats render without waiting for the worker to sort again. No-op when a newer
+     * result is already pending.
+     */
+    reapplyLastSorted() {
+        if (!this.pendingSorted && this.lastSorted) {
+            this.pendingSorted = this.lastSorted;
         }
     }
 
@@ -119,6 +143,7 @@ class GSplatUnifiedSorter extends EventHandler {
     destroy() {
         this._destroyed = true;
         this.pendingSorted = null;
+        this.lastSorted = null;
         this.worker.terminate();
         this.worker = null;
     }
@@ -216,8 +241,14 @@ class GSplatUnifiedSorter extends EventHandler {
      *
      * @param {object} params - The sorting parameters - per-splat directions, offsets, scales, AABBs.
      * @param {boolean} radialSorting - Whether to use radial distance sorting.
+     * @param {number} nearClip - The camera's near clip distance, which log spaced sort keys start
+     * inside of.
+     * @param {boolean} logDepthKeys - Whether a directional sort's keys are log spaced, which needs
+     * a perspective, non-fisheye camera (radial sort keys always are).
+     * @returns {boolean} True if a sort job was sent; false if one is in flight for this version,
+     * in which case the caller asks again later.
      */
-    setSortParams(params, radialSorting) {
+    setSortParams(params, radialSorting, nearClip, logDepthKeys) {
 
         // only process job requests if we have a new version or no jobs are in flight
         if (this.hasNewVersion || this.jobsInFlight === 0) {
@@ -237,11 +268,15 @@ class GSplatUnifiedSorter extends EventHandler {
                 command: 'sort',
                 sortParams: params,
                 radialSorting: radialSorting,
+                nearClip: nearClip,
+                logDepthKeys: logDepthKeys,
                 order: orderData.buffer
             }, [
                 orderData.buffer
             ]);
+            return true;
         }
+        return false;
     }
 }
 

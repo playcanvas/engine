@@ -39,7 +39,6 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('specular'),
     occludeSpecular: 'enum:occludeSpecular',
     specularityFactor: 'number',
-    specularityFactorTint: 'boolean',
     ..._textureParameter('specularityFactor'),
 
     useMetalness: 'boolean',
@@ -72,6 +71,11 @@ const standardMaterialParameterTypes = {
     sheenGloss: 'number',
     sheenGlossInvert: 'boolean',
     ..._textureParameter('sheenGloss'),
+
+    diffuseTransmission: 'number',
+    ..._textureParameter('diffuseTransmission'),
+    diffuseTransmissionColor: 'rgb',
+    ..._textureParameter('diffuseTransmissionColor'),
 
     fresnelModel: 'number',
 
@@ -204,6 +208,7 @@ const standardMaterialRemovedParameters = {
     useGamma: 'boolean',
     useGammaTonemap: 'boolean',
     sheenGlossTint: 'boolean',
+    specularityFactorTint: 'boolean',
     anisotropy: 'boolean'
 };
 

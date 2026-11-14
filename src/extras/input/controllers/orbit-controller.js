@@ -17,6 +17,8 @@ const rotation = new Quat();
  * view around the focus within {@link yawRange} and {@link pitchRange}, the first two `move`
  * components pan the focus point, and the third scales the distance within {@link zoomRange}.
  * Motion is smoothed with {@link rotateDamping}, {@link moveDamping} and {@link zoomDamping}.
+ * With {@link horizontalPan}, the pan moves the focus point across the ground instead of the
+ * plane of the view.
  *
  * @category Input
  * @alpha
@@ -62,6 +64,14 @@ class OrbitController extends InputController {
      * The zoom damping. A higher value means more damping. A value of 0 means no damping.
      */
     zoomDamping = 0.98;
+
+    /**
+     * Whether the pan moves the focus point across the horizontal plane, as when dragging a map,
+     * instead of across the plane of the view. The first two `move` components are then the
+     * distances to move the focus point to the right and forward, level with the ground, so the
+     * height of the focus point does not change. Default is false.
+     */
+    horizontalPan = false;
 
     set pitchRange(range) {
         this._targetRootPose.pitchRange.copy(range);
@@ -118,8 +128,14 @@ class OrbitController extends InputController {
         const { move, rotate } = frame.read();
 
         // move
-        offset.set(move[0], move[1], 0);
-        rotation.setFromEulerAngles(this._rootPose.angles).transformVector(offset, offset);
+        if (this.horizontalPan) {
+            // turned only by the yaw of the view, so forward stays level with the ground
+            offset.set(move[0], 0, -move[1]);
+            rotation.setFromEulerAngles(0, this._rootPose.angles.y, 0).transformVector(offset, offset);
+        } else {
+            offset.set(move[0], move[1], 0);
+            rotation.setFromEulerAngles(this._rootPose.angles).transformVector(offset, offset);
+        }
         this._targetRootPose.move(offset);
         const { z: dist } = this._targetChildPose.position;
         this._targetChildPose.move(offset.set(0, 0, dist * (1 + move[2]) - dist));

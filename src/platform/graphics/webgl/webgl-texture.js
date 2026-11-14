@@ -3,7 +3,7 @@ import {
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8, PIXELFORMAT_ETC1,
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_RG11B10F, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, PIXELFORMAT_R8I, PIXELFORMAT_R8U, PIXELFORMAT_R16I, PIXELFORMAT_R16U,
@@ -71,6 +71,11 @@ class WebglTexture {
     _glPixelType;
 
     _glCreated;
+
+    // size of the storage allocated for an HTML element source, which texElementSubImage2D draws into
+    _elementWidth = 0;
+
+    _elementHeight = 0;
 
     dirtyParameterFlags = 0;
 
@@ -353,7 +358,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.DEPTH24_STENCIL8;
                 this._glPixelType = gl.UNSIGNED_INT_24_8;
                 break;
-            case PIXELFORMAT_111110F:
+            case PIXELFORMAT_RG11B10F:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.R11F_G11F_B10F;
                 this._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
@@ -700,7 +705,7 @@ class WebglTexture {
                 // ----- 2D -----
                 if (device._isBrowserInterface(mipObject)) {
 
-                    // Handle HTML elements via texElementImage2D if supported
+                    // Handle HTML elements via the HTML-in-Canvas API if supported
                     if (device._isHTMLElementInterface(mipObject) && device.supportsHtmlTextures) {
                         device.setUnpackFlipY(texture._flipY);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
@@ -709,11 +714,45 @@ class WebglTexture {
                         const w = Math.floor(rect.width) || texture._width;
                         const h = Math.floor(rect.height) || texture._height;
 
-                        gl.texElementImage2D(
-                            gl.TEXTURE_2D,
-                            this._glInternalFormat,
-                            mipObject
-                        );
+                        if (gl.texElementSubImage2D) {
+                            // the element is drawn into existing storage, so allocate it for a new
+                            // source or size. Compare against the allocated size, as setSource has
+                            // already set the texture size to the element's new size.
+                            if (!this._glCreated || texture._levelsUpdated[0] || this._elementWidth !== w || this._elementHeight !== h) {
+                                Debug.assert(this._glFormat === gl.RGBA && this._glPixelType === gl.UNSIGNED_BYTE,
+                                    `Texture '${texture.name}' has a format texElementSubImage2D cannot write. Use an 8-bit RGBA format for an HTML element source.`, texture);
+
+                                gl.texImage2D(
+                                    gl.TEXTURE_2D,
+                                    mipLevel,
+                                    this._glInternalFormat,
+                                    w, h,
+                                    0,
+                                    this._glFormat,
+                                    this._glPixelType,
+                                    null
+                                );
+                                this._elementWidth = w;
+                                this._elementHeight = h;
+                            }
+
+                            // draw the element at the texture size, not its default canvas grid
+                            // size, which differs with the device pixel ratio
+                            gl.texElementSubImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                0, 0,
+                                mipObject,
+                                { width: w, height: h }
+                            );
+                        } else {
+                            // Chrome 154 and earlier
+                            gl.texElementImage2D(
+                                gl.TEXTURE_2D,
+                                this._glInternalFormat,
+                                mipObject
+                            );
+                        }
 
                         if (mipLevel === 0) {
                             texture._width = w;
@@ -858,7 +897,7 @@ class WebglTexture {
         texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
 
         if (texture.releaseSourceAfterUpload) {
-            texture.releaseImageSources();
+            texture.releaseSources();
         }
 
         this._glCreated = true;

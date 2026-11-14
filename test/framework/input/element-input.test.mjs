@@ -148,6 +148,22 @@ describe('ElementInput', function () {
             await session.endEventFired;
         };
 
+        it('keeps receiving selections of an active session after attaching again', async function () {
+            const camera = app.root.findByName('camera');
+            await new Promise((resolve) => {
+                app.xr.start(camera.camera, XRTYPE_VR, XRSPACE_LOCALFLOOR, { callback: resolve });
+            });
+
+            const selectStarts = () => app.xr.input._callbacks.get('selectstart')?.length ?? 0;
+            expect(selectStarts()).to.equal(1);
+
+            app.elementInput.attach(canvas);
+            app.elementInput.attach(document.createElement('canvas'));
+
+            expect(app.xr.active).to.be.true;
+            expect(selectStarts()).to.equal(1);
+        });
+
         it('stops listening for the end of a session once it has ended', async function () {
             const onXrEnd = spy(app.elementInput, '_onXrEnd');
 
@@ -157,6 +173,51 @@ describe('ElementInput', function () {
 
             // once per session, rather than once more for every session before it
             expect(onXrEnd.callCount).to.equal(3);
+        });
+    });
+
+    describe('touch-action', function () {
+
+        it('sets touch-action to none while attached and restores it on detach', function () {
+            const target = document.createElement('div');
+            target.style.touchAction = 'pan-y';
+            const input = new ElementInput(target);
+            expect(target.style.touchAction).to.equal('none');
+
+            input.detach();
+            expect(target.style.touchAction).to.equal('pan-y');
+        });
+
+        it('restores touch-action after attaching to the same element again', function () {
+            const target = document.createElement('div');
+            const input = new ElementInput(target);
+            input.attach(target);
+            expect(target.style.touchAction).to.equal('none');
+
+            input.detach();
+            expect(target.style.touchAction).to.equal('');
+        });
+
+        it('restores touch-action of the previous element when attached to another', function () {
+            const first = document.createElement('div');
+            const second = document.createElement('div');
+            const input = new ElementInput(first);
+            input.attach(second);
+            expect(first.style.touchAction).to.equal('');
+            expect(second.style.touchAction).to.equal('none');
+
+            input.detach();
+            expect(second.style.touchAction).to.equal('');
+        });
+
+        it('stops listening to the previous element when attached to another', function () {
+            const first = document.createElement('div');
+            const input = new ElementInput(first);
+            const removeEventListener = spy(first, 'removeEventListener');
+            input.attach(document.createElement('div'));
+
+            expect(removeEventListener.calledWith('touchmove')).to.be.true;
+            input.detach();
         });
     });
 });

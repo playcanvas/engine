@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
+import { FramePassDof } from '../../../src/extras/effects/dof/passes/frame-pass-dof.js';
 import { PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';

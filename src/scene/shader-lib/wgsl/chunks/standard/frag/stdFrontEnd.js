@@ -25,6 +25,12 @@ export default /* wgsl */`
         // diffuse
         #include  "diffusePS"
 
+        // diffuse transmission
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            #include "diffuseTransmissionPS"
+            #include "diffuseTransmissionColorPS"
+        #endif
+
         // normal
         #ifdef LIT_NEEDS_NORMAL
             #include "normalMapPS"
@@ -122,7 +128,11 @@ export default /* wgsl */`
             #endif
 
             #if STD_OPACITY_DITHER != NONE
-                opacityDither(dAlpha * uniform.material_alphaDitherScale, 0.0);
+                #ifdef LIT_DITHER_ID
+                    opacityDither(dAlpha * uniform.material_alphaDitherScale, vDitherId);
+                #else
+                    opacityDither(dAlpha * uniform.material_alphaDitherScale, 0.0);
+                #endif
             #endif
 
             litArgs_opacity = dAlpha;
@@ -136,6 +146,14 @@ export default /* wgsl */`
 
             // ambient
             litArgs_ambient = uniform.material_ambient;
+
+            // diffuse transmission
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                getDiffuseTransmission();
+                getDiffuseTransmissionColor();
+                litArgs_diffuseTransmission_intensity = dDiffuseTransmission;
+                litArgs_diffuseTransmission_color = dDiffuseTransmissionColor;
+            #endif
 
             // normal
             #ifdef LIT_NEEDS_NORMAL

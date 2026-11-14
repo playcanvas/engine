@@ -904,8 +904,8 @@ class SpriteComponent extends Component {
         // create mesh instance if it doesn't exist yet
         if (!this._meshInstance) {
             this._meshInstance = new MeshInstance(mesh, this._material, this._node);
-            this._meshInstance.castShadow = false;
-            this._meshInstance.receiveShadow = false;
+            this._meshInstance.castShadows = false;
+            this._meshInstance.receiveShadows = false;
             this._meshInstance.drawOrder = this._drawOrder;
 
             this._updateColor();

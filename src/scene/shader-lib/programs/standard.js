@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import {
-    BLEND_NONE, DITHER_NONE, ditherNames, FRESNEL_SCHLICK,
+    BLEND_NONE, DITHER_NONE, ditherNames,
     PARALLAX_OFFSET,
     SHADER_FORWARD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED,
@@ -364,8 +364,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         // handle fragment shader
         const textureMapping = {};
 
-        options.litOptions.fresnelModel = (options.litOptions.fresnelModel === 0) ? FRESNEL_SCHLICK : options.litOptions.fresnelModel;
-
         // fragment defines
         const fDefines = litShader.fDefines;
         this.prepareFragmentDefines(options, fDefines, shaderPassInfo);
@@ -404,6 +402,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMapDefines(fDefines, 'diffuseDetail', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseDetailEncoding);
             }
             this._addMapDefines(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding);
+
+            // diffuse transmission
+            if (options.litOptions.useDiffuseTransmission) {
+                this._addMapDefines(fDefines, 'diffuseTransmission', 'diffuseTransmissionPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'diffuseTransmissionColor', 'diffuseTransmissionColorPS', options, litShader.chunks, textureMapping, options.diffuseTransmissionColorEncoding);
+            }
 
             // refraction
             if (options.litOptions.useRefraction) {

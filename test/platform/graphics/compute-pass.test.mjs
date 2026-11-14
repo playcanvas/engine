@@ -116,6 +116,177 @@ describe('ComputePass', function () {
         });
     });
 
+    describe('device stats', function () {
+
+        it('counts the dispatches of its computes, and its compute pass', function () {
+            if (!device.supportsCompute) {
+                this.skip();
+            }
+
+            const shader = new Shader(device, {
+                name: 'ComputePassStatsTest',
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                cshader: /* wgsl */`
+                    var<storage, read_write> result: array<f32>;
+
+                    @compute @workgroup_size(1)
+                    fn main() {
+                        result[0] = 1.0;
+                    }
+                `
+            });
+            const results = new StorageBuffer(device, 16, BUFFERUSAGE_COPY_SRC);
+            const computes = ['First', 'Second'].map((name) => {
+                const compute = new Compute(device, shader, name);
+                compute.setParameter('result', results);
+                compute.setupDispatch(1, 1, 1);
+                return compute;
+            });
+
+            device._computeDispatchesPerFrame = 0;
+            device._computePassesPerFrame = 0;
+            new ComputePass(device, computes).render();
+            expect(device._computeDispatchesPerFrame).to.equal(2);
+            expect(device._computePassesPerFrame).to.equal(1);
+
+            computes.forEach(compute => compute.destroy());
+            shader.destroy();
+            results.destroy();
+        });
+    });
+
+    describe('#onBefore', function () {
+
+        it('is called with the pass, before the dispatch', function () {
+            const calls = [];
+            const pass = new ComputePass(device, [createCompute('Compute')]);
+            pass.onBefore = p => calls.push(['before', p]);
+            sinon.stub(device, 'computeDispatch').callsFake(() => calls.push(['dispatch']));
+
+            pass.render();
+
+            expect(calls).to.deep.equal([['before', pass], ['dispatch']]);
+        });
+    });
+
+    describe('#onAfter', function () {
+
+        it('is called with the pass, after the dispatch', function () {
+            const calls = [];
+            const pass = new ComputePass(device, [createCompute('Compute')]);
+            pass.onAfter = p => calls.push(['after', p]);
+            sinon.stub(device, 'computeDispatch').callsFake(() => calls.push(['dispatch']));
+
+            pass.render();
+
+            expect(calls).to.deep.equal([['dispatch'], ['after', pass]]);
+        });
+
+        it('is not called when the pass is disabled', function () {
+            const pass = new ComputePass(device, [createCompute('Compute')]);
+            pass.onAfter = sinon.spy();
+            pass.enabled = false;
+            sinon.stub(device, 'computeDispatch');
+
+            pass.render();
+
+            expect(pass.onAfter.called).to.equal(false);
+        });
+    });
+
+    describe('#xrViewIndex', function () {
+
+        // stands in for a device rendering two XR views, recording the computes dispatched and the
+        // index of the view they are dispatched in
+        const createXrDevice = () => {
+            const view = { colorTexture: null, viewDescriptor: null, viewFormat: null };
+            const xrDevice = {
+                xrSubImages: [view, view],
+                xrCurrentViewIndex: -1,
+                backBuffer: null,
+                renderPassIndex: 0,
+                dispatched: [],
+                computeDispatch(computes) {
+                    this.dispatched.push([computes[0].name, this.xrCurrentViewIndex]);
+                }
+            };
+            return xrDevice;
+        };
+
+        // renders the passes in a scope capturing the passes of the XR views, after a pass rendering
+        // the views, as the camera's depth prepass does
+        const renderViews = (xrDevice, passes) => {
+            const frameGraph = new FrameGraph();
+            frameGraph.beginMultiView(xrDevice);
+            frameGraph.addPass(new FramePass(xrDevice));
+            passes.forEach(pass => frameGraph.addPass(pass));
+            frameGraph.endMultiView();
+            frameGraph.render(xrDevice);
+            return frameGraph;
+        };
+
+        it('defaults to the first view', function () {
+            const pass = new ComputePass(device);
+            expect(pass.xrViewIndex).to.equal(0);
+            expect(pass.perView).to.equal(true);
+        });
+
+        it('executes once, in the view with the index', function () {
+            const xrDevice = createXrDevice();
+            const first = new ComputePass(xrDevice, [createCompute('First')]);
+            const second = new ComputePass(xrDevice, [createCompute('Second')]);
+            second.xrViewIndex = 1;
+
+            renderViews(xrDevice, [first, second]);
+
+            expect(xrDevice.dispatched).to.deep.equal([['First', 0], ['Second', 1]]);
+        });
+
+        it('calls the callbacks only in the view it executes in', function () {
+            const xrDevice = createXrDevice();
+            const pass = new ComputePass(xrDevice, [createCompute('Compute')]);
+            pass.xrViewIndex = 1;
+            pass.onBefore = sinon.spy();
+            pass.onAfter = sinon.spy();
+
+            renderViews(xrDevice, [pass]);
+
+            expect(pass.onBefore.calledOnce).to.equal(true);
+            expect(pass.onAfter.calledOnce).to.equal(true);
+        });
+
+        it('executes once before the views when -1', function () {
+            const xrDevice = createXrDevice();
+            const first = new ComputePass(xrDevice, [createCompute('First')]);
+            const second = new ComputePass(xrDevice, [createCompute('Second')]);
+            first.xrViewIndex = -1;
+            second.xrViewIndex = -1;
+            expect(first.perView).to.equal(false);
+
+            const frameGraph = renderViews(xrDevice, [first, second]);
+
+            // both are moved ahead of the passes rendering the views, in order
+            const [movedFirst, movedSecond, wrapper] = frameGraph.passes;
+            expect(movedFirst).to.equal(first);
+            expect(movedSecond).to.equal(second);
+            expect(wrapper.children).to.have.lengthOf(1);
+            expect(xrDevice.dispatched).to.deep.equal([['First', -1], ['Second', -1]]);
+        });
+
+        it('executes for -1 and 0 outside of the views', function () {
+            const xrDevice = createXrDevice();
+            const passes = [-1, 0, 1].map((index) => {
+                const pass = new ComputePass(xrDevice, [createCompute(`View${index}`)]);
+                pass.xrViewIndex = index;
+                return pass;
+            });
+
+            passes.forEach(pass => pass.render());
+
+            expect(xrDevice.dispatched).to.deep.equal([['View-1', -1], ['View0', -1]]);
+        });
+    });
+
     describe('in the frame graph', function () {
 
         it('keeps the render passes around it apart', function () {
@@ -124,9 +295,9 @@ describe('ComputePass', function () {
                 const frameGraph = new FrameGraph();
                 const before = new TargetPass(device, renderTarget);
                 const after = new TargetPass(device, renderTarget);
-                frameGraph.addRenderPass(before);
-                if (between) frameGraph.addRenderPass(between);
-                frameGraph.addRenderPass(after);
+                frameGraph.addPass(before);
+                if (between) frameGraph.addPass(between);
+                frameGraph.addPass(after);
                 frameGraph.compile();
                 return { before, after };
             };
@@ -154,7 +325,7 @@ describe('ComputePass', function () {
             app.render();
             expect(dispatch.calledWith([compute])).to.equal(true);
 
-            const passes = app.frameGraph.renderPasses;
+            const passes = app.frameGraph.passes;
             const lastForward = passes.findLastIndex(p => p instanceof RenderPassForward);
             expect(lastForward).to.be.at.least(0);
             expect(passes.indexOf(pass)).to.be.greaterThan(lastForward);
@@ -167,6 +338,16 @@ describe('ComputePass', function () {
             const pass = new ComputePass(device, [createCompute('Released')]);
             pass.destroy();
             expect(pass.computes).to.have.lengthOf(0);
+        });
+
+        it('is reported when added to a frame after it is destroyed', function () {
+            const pass = new ComputePass(device, [createCompute('A')]);
+            pass.name = 'DestroyedComputePass';
+            pass.destroy();
+
+            const error = sinon.stub(console, 'error');
+            new FrameGraph().addPass(pass);
+            expect(error.callCount).to.equal(1);
         });
     });
 });

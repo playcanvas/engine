@@ -69,8 +69,9 @@ var<private> dModelMatrix: mat4x4f;
 #include  "litUserCodeVS"
 
 #ifdef VERTEX_COLOR
+    // the exact sRGB transfer, as decodePS decodes colors in the fragment shader
     fn decodeGamma3(raw: vec3f) -> vec3f {
-        return pow(raw, vec3f(2.2));
+        return select(pow(raw * 0.9478672986 + vec3f(0.0521327014), vec3f(2.4)), raw * 0.0773993808, raw <= vec3f(0.04045));
     }
     fn gammaCorrectInputVec4(color: vec4f) -> vec4f {
         return vec4f(decodeGamma3(color.xyz), color.w);
@@ -134,6 +135,11 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
     #ifdef LIT_DYNAMIC_REFRACTION
         // the scale of the model matrix, which scales the thickness of the refraction
         output.vModelScale = vec3f(length(dModelMatrix[0].xyz), length(dModelMatrix[1].xyz), length(dModelMatrix[2].xyz));
+    #endif
+
+    #ifdef LIT_DITHER_ID
+        // per-mesh offset of the dither pattern, hashed from the position of the model matrix
+        output.vDitherId = 64.0 * fract(sin(dot(dModelMatrix[3].xyz, vec3f(12.9898, 78.233, 37.719))) * 43758.5453);
     #endif
 
     #ifdef MSDF

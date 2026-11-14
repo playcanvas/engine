@@ -41,6 +41,14 @@ class MaterialHandler extends ResourceHandler {
         // the textures assigned to the texture parameters of materials while their textures load
         this._placeholders = new PlaceholderTextures(app.graphicsDevice);
 
+        // the texture parameters of each material which hold a placeholder until their texture is
+        // assigned; the material waits for its textures while any remain
+        this._pendingMaps = new WeakMap();
+
+        // the env atlas each material generated from the prefiltered cubemaps of a cubemap asset,
+        // to tell it from an env atlas assigned to the material since
+        this._generatedAtlases = new WeakMap();
+
         // the json parser is the catch-all for material assets; the handler keeps a reference to
         // it as patch uses its migrate/initialize when binding standard material assets
         this._parser = new JsonStandardMaterialParser();
@@ -81,6 +89,7 @@ class MaterialHandler extends ResourceHandler {
     _assignTexture(parameterName, materialAsset, texture) {
         // NB removed swapping out asset id for resource here
         materialAsset.resource[parameterName] = texture;
+        this._pendingMaps.get(materialAsset.resource)?.delete(parameterName);
     }
 
     /**
@@ -115,12 +124,61 @@ class MaterialHandler extends ResourceHandler {
 
     // assign a placeholder texture while waiting for one to load
     _assignPlaceholderTexture(parameterName, materialAsset, textureAsset) {
-        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset, textureAsset);
+        const material = materialAsset.resource;
+        material[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset, textureAsset);
+
+        let pendingMaps = this._pendingMaps.get(material);
+        if (!pendingMaps) {
+            pendingMaps = new Set();
+            this._pendingMaps.set(material, pendingMaps);
+        }
+        pendingMaps.add(parameterName);
+
+        // track the copies made of the material while it waits, see StandardMaterial#copy
+        material._pendingCopies ??= new Set();
+    }
+
+    // stop tracking the copies of a material once it waits for no more textures
+    _releasePendingCopies(material) {
+        const copies = material._pendingCopies;
+        if (copies && !this._pendingMaps.get(material)?.size) {
+            for (const ref of copies) {
+                const copy = ref.deref();
+                if (copy?._pendingSource === material) {
+                    copy._pendingSource = null;
+                }
+            }
+            material._pendingCopies = null;
+        }
     }
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
-        this._assignTexture(parameterName, materialAsset, textureAsset.resource);
-        materialAsset.resource.update();
+        const material = materialAsset.resource;
+        const texture = textureAsset.resource;
+        this._assignTexture(parameterName, materialAsset, texture);
+        material.update();
+
+        // the copies made of the material while it waited receive the texture in the map, unless a
+        // texture was assigned to the map of the copy since
+        const copies = material._pendingCopies;
+        if (copies) {
+            for (const ref of copies) {
+                const copy = ref.deref();
+
+                // the copy is collected, destroyed, or copied from another material since
+                if (copy?._pendingSource !== material) {
+                    copies.delete(ref);
+                    continue;
+                }
+
+                if (this._placeholders.has(copy[parameterName])) {
+                    copy[parameterName] = texture;
+                    copy.update();
+                }
+            }
+
+            this._releasePendingCopies(material);
+        }
     }
 
     _onTextureAdd(parameterName, materialAsset, textureAsset) {
@@ -138,16 +196,23 @@ class MaterialHandler extends ResourceHandler {
     }
 
     _assignCubemap(parameterName, materialAsset, textures) {
+        const material = materialAsset.resource;
+
         // the primary cubemap texture
-        materialAsset.resource[parameterName] = textures[0];
+        material[parameterName] = textures[0];
 
         // set prefiltered textures
         if (parameterName === 'cubeMap') {
             const prefiltered = textures.slice(1);
             if (prefiltered.every(t => t)) {
-                materialAsset.resource.prefilteredCubemaps = prefiltered;
+                // assigning the same set again generates no env atlas
+                const current = material.prefilteredCubemaps;
+                if (!prefiltered.every((t, i) => current[i] === t)) {
+                    material.prefilteredCubemaps = prefiltered;
+                    this._generatedAtlases.set(material, material.envAtlas);
+                }
             } else if (prefiltered[0]) {
-                materialAsset.resource.envAtlas = prefiltered[0];
+                material.envAtlas = prefiltered[0];
             }
         }
     }
@@ -163,9 +228,47 @@ class MaterialHandler extends ResourceHandler {
 
     _onCubemapRemoveOrUnload(parameterName, materialAsset, cubemapAsset) {
         const material = materialAsset.resource;
+        if (!material) {
+            return;
+        }
 
-        if (materialAsset.data.prefilteredCubeMap128 === cubemapAsset.resources[1]) {
-            this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
+        // release each texture the material still holds from this asset, as any of them may
+        // have been replaced since the asset assigned them
+        const [cubemap, ...prefiltered] = cubemapAsset.resources;
+        let released = false;
+
+        if (cubemap && material[parameterName] === cubemap) {
+            material[parameterName] = null;
+            released = true;
+        }
+
+        if (parameterName === 'cubeMap') {
+            if (prefiltered.length && prefiltered.every(t => t)) {
+                const current = material.prefilteredCubemaps;
+                if (prefiltered.every((t, i) => current[i] === t)) {
+                    // clearing them destroys the current env atlas of the material, so when it is
+                    // not the one generated from them, but one assigned to the material since, it
+                    // is kept and the generated one is destroyed instead
+                    const atlas = material.envAtlas;
+                    const generated = this._generatedAtlases.get(material);
+                    if (atlas !== generated) {
+                        material.envAtlas = null;
+                        material.prefilteredCubemaps = null;
+                        material.envAtlas = atlas;
+                        generated?.destroy();
+                    } else {
+                        material.prefilteredCubemaps = null;
+                    }
+                    this._generatedAtlases.delete(material);
+                    released = true;
+                }
+            } else if (prefiltered[0] && material.envAtlas === prefiltered[0]) {
+                material.envAtlas = null;
+                released = true;
+            }
+        }
+
+        if (released) {
             material.update();
         }
     }
@@ -228,6 +331,9 @@ class MaterialHandler extends ResourceHandler {
                     } else {
                         assetReference.id = null;
                     }
+
+                    // so its load is no longer waited for
+                    this._pendingMaps.get(material)?.delete(name);
                 } else {
                     // no asset reference and no data field
                     // do nothing
@@ -293,6 +399,10 @@ class MaterialHandler extends ResourceHandler {
 
         // call to re-initialize material after all textures assigned
         this._parser.initialize(material, data);
+
+        // binding again can leave the material waiting for no more textures, by no longer
+        // referencing those it waited for, or referencing loaded ones instead, without a load
+        this._releasePendingCopies(material);
     }
 }
 

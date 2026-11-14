@@ -23,6 +23,10 @@ const _ltcWidthAxis = new Vec3(-0.5, 0, 0);
 const _ltcHeightAxis = new Vec3(0, 0, 0.5);
 const _ltcVec = new Vec3();
 
+// the cascade distances of a directional shadow with shadow bounds, which covers the bounds at any
+// distance from the camera
+const _boundsCascadeDistances = new Float32Array([1e30, 1e30, 1e30, 1e30]);
+
 /**
  * The uniforms of one light slot - `light<N>_color`, `light<N>_direction` and so on, where N is
  * the slot. A slot is a position in the {@link LightList} of a pass, so an instance is not tied to
@@ -211,20 +215,23 @@ class LightSlotUniforms {
 
             // ortho projection does not support cascades
             Debug.call(() => {
-                if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.numCascades !== 1) {
+                if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.shadowCascadeCount !== 1) {
                     Debug.errorOnce(`Camera [${camera.node.name}] with orthographic projection cannot use cascaded shadows, expect incorrect rendering.`);
                 }
             });
 
-            const lightRenderData = directional.getRenderData(camera, 0);
+            // a shadow with shadow bounds is rendered once for all cameras, without a camera
+            const bounds = directional._shadowBounds;
+            const renderDataCamera = bounds ? null : camera;
+            const lightRenderData = directional.getRenderData(renderDataCamera, 0);
             const biases = directional._getUniformBiasValues(lightRenderData);
 
             this.shadowMap.setValue(lightRenderData.shadowBuffer);
             this.shadowMatrix.setValue(lightRenderData.shadowMatrix.data);
 
             this.shadowMatrixPalette.setValue(directional._shadowMatrixPalette);
-            this.shadowCascadeDistances.setValue(directional._shadowCascadeDistances);
-            this.shadowCascadeCount.setValue(directional.numCascades);
+            this.shadowCascadeDistances.setValue(bounds ? _boundsCascadeDistances : directional._shadowCascadeDistances);
+            this.shadowCascadeCount.setValue(directional.shadowCascadeCount);
             this.shadowCascadeBlend.setValue(1 - directional.cascadeBlend);
             this.shadowIntensity.setValue(directional.shadowIntensity);
 
@@ -253,7 +260,7 @@ class LightSlotUniforms {
                 // Each matrix column stores one cascade's camera parameters.
                 const cascadeParams = directional._shadowCascadeParams ??= new Float32Array(16);
                 for (let c = 0; c < 4; c++) {
-                    const own = c < directional.numCascades ? directional.getRenderData(camera, c) : null;
+                    const own = c < directional.shadowCascadeCount ? directional.getRenderData(renderDataCamera, c) : null;
                     const renderData = own?.projectionCompensation > 0 ? own : lightRenderData;
                     const shadowCamera = renderData.shadowCamera;
                     const offset = c * 4;

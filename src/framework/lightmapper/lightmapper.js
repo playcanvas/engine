@@ -185,6 +185,9 @@ class Lightmapper {
             lightingParams.cookieAtlasResolution = srcParams.cookieAtlasResolution;
 
             lightingParams.areaLightsEnabled = srcParams.areaLightsEnabled;
+            lightingParams.areaLightRectEnabled = srcParams.areaLightRectEnabled;
+            lightingParams.areaLightDiskEnabled = srcParams.areaLightDiskEnabled;
+            lightingParams.areaLightSphereEnabled = srcParams.areaLightSphereEnabled;
 
             // some custom lightmapping params - we bake single light a time
             lightingParams.cells = new Vec3(3, 3, 3);
@@ -798,7 +801,7 @@ class Lightmapper {
         } else {
 
             // for other light types, test if light affects the node
-            if (!bakeLight.lightBounds.intersects(bakeNode.bounds)) {
+            if (!bakeLight.lightBounds.intersectsBoundingBox(bakeNode.bounds)) {
                 lightAffectsNode = false;
             }
         }
@@ -1111,8 +1114,7 @@ class Lightmapper {
                             clusteredLightingEnabled ? this.worldClusters : null,
                             rcv, lightList);
                         renderPass.init(tempRT);
-                        renderPass.colorOps.clear = true;
-                        renderPass.colorOps.clearValue.copy(this.camera.clearColor);
+                        renderPass.setClearColor(this.camera.clearColor);
                         renderPass.render();
                         renderPass.destroy();
 

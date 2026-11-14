@@ -39,6 +39,8 @@ class SplatIterator {
         const cg = gsplatData.getProp('f_dc_1');
         const cb = gsplatData.getProp('f_dc_2');
         const ca = gsplatData.getProp('opacity');
+        // the true (linear) opacity, which always wins over `opacity` when present
+        const linear = gsplatData.getProp('opacity_linear');
 
         /**
          * Calculates the sigmoid of a given value.
@@ -54,6 +56,9 @@ class SplatIterator {
             const t = Math.exp(v);
             return t / (1 + t);
         };
+
+        // the alpha source is the same for every splat, so choose it once
+        const alpha = linear ? i => linear[i] : (activated ? i => ca[i] : i => sigmoid(ca[i]));
 
         this.read = (i) => {
             if (p) {
@@ -79,7 +84,7 @@ class SplatIterator {
                     0.5 + cr[i] * SH_C0,
                     0.5 + cg[i] * SH_C0,
                     0.5 + cb[i] * SH_C0,
-                    activated ? ca[i] : sigmoid(ca[i])
+                    alpha(i)
                 );
             }
         };
@@ -118,6 +123,14 @@ class GSplatData {
      * @type {boolean}
      */
     activated = false;
+
+    /**
+     * Application-defined data stored with the splat file, as in glTF's `extras`: the `extras`
+     * value of a decompressed SOG's meta.json. Undefined when the source has none.
+     *
+     * @type {*}
+     */
+    extras;
 
     /**
      * @param {PlyElement[]} elements - The elements.
@@ -362,20 +375,21 @@ class GSplatData {
         return false;
     }
 
-    // return the number of spherical harmonic bands present. value will be between 0 and 3 inclusive.
+    // return the number of spherical harmonic bands present. value will be between 0 and 4 inclusive.
     get shBands() {
         const numProps = () => {
-            for (let i = 0; i < 45; ++i) {
+            for (let i = 0; i < 72; ++i) {
                 if (!this.getProp(`f_rest_${i}`)) {
                     return i;
                 }
             }
-            return 45;
+            return 72;
         };
         const sizes = {
             9: 1,
             24: 2,
-            45: 3
+            45: 3,
+            72: 4
         };
         return sizes[numProps()] ?? 0;
     }

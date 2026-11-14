@@ -5,7 +5,7 @@ import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, MIPMAPFILTER_BOX,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
@@ -30,6 +30,21 @@ import { TextureView } from './texture-view.js';
 let id = 0;
 
 /**
+ * Releases a source of a texture level which the texture owns: closes an ImageBitmap, and drops a
+ * typed array. Other sources, such as images and canvases, are not released.
+ *
+ * @param {any} source - The source.
+ * @returns {boolean} True if the source was released, and the level should no longer hold it.
+ */
+const releaseSource = (source) => {
+    if (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap) {
+        source.close();
+        return true;
+    }
+    return ArrayBuffer.isView(source);
+};
+
+/**
  * Represents a texture, which is typically an image composed of pixels (texels). Textures are
  * fundamental resources for rendering graphical objects. They are commonly used by
  * {@link Material}s and sampled in {@link Shader}s (usually fragment shaders) to define the visual
@@ -41,7 +56,7 @@ let id = 0;
  * Note on **HDR texture format** support:
  * 1. **As textures**:
  *     - float (i.e. {@link PIXELFORMAT_RGBA32F}), half-float (i.e. {@link PIXELFORMAT_RGBA16F}) and
- * small-float ({@link PIXELFORMAT_111110F}) formats are always supported on both WebGL2 and WebGPU
+ * small-float ({@link PIXELFORMAT_RG11B10F}) formats are always supported on both WebGL2 and WebGPU
  * with point sampling.
  *     - half-float and small-float formats are always supported on WebGL2 and WebGPU with linear
  * sampling.
@@ -156,6 +171,9 @@ class Texture {
     /** @protected */
     _numLevelsRequested;
 
+    /** @protected */
+    _mipmapFilter = MIPMAPFILTER_BOX;
+
     /**
      * Create a new Texture instance.
      *
@@ -186,7 +204,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
@@ -222,6 +240,13 @@ class Texture {
      * @param {number} [options.numLevels] - Specifies the number of mip levels to generate. If not
      * specified, the number is calculated based on the texture size. When this property is set,
      * the mipmaps property is ignored.
+     * @param {string} [options.mipmapFilter] - The filter used to generate the mipmaps of the
+     * texture from its rendered content. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}
+     * - {@link MIPMAPFILTER_GAUSSIAN}
+     *
+     * Defaults to {@link MIPMAPFILTER_BOX}. See {@link Texture#mipmapFilter}.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
      * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
@@ -259,9 +284,10 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|ImageBitmap[]|HTMLVideoElement[]|Uint8Array[][]|Uint8ClampedArray[][]|Uint16Array[][]|Uint32Array[][]|Float32Array[][]} [options.levels]
+     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|ImageBitmap[]|HTMLVideoElement[]|Uint8Array[][]|Uint8ClampedArray[][]|Uint16Array[][]|Uint32Array[][]|Float32Array[][]|HTMLCanvasElement[][]|HTMLImageElement[][]|ImageBitmap[][]|HTMLVideoElement[][]} [options.levels]
      * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
-     * of Uint8Array or other typed array if options.arrayLength is defined and greater than zero.
+     * of Uint8Array, other typed array or browser interface if options.arrayLength is defined and
+     * greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
      * @param {number} [options.samples] - The number of MSAA samples. A value greater than 1
@@ -346,6 +372,7 @@ class Texture {
         }
 
         this._mipmaps = (options.mipmaps ?? true) && this._samples === 1;
+        this._mipmapFilter = options.mipmapFilter ?? MIPMAPFILTER_BOX;
         this._numLevelsRequested = options.numLevels;
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
@@ -419,7 +446,7 @@ class Texture {
             // Free CPU-side decoded pixel data if the owner has opted in via
             // setReleaseSourceAfterUpload; only safe when the source is engine-owned.
             if (this.releaseSourceAfterUpload) {
-                this.releaseImageSources();
+                this.releaseSources();
             }
 
             this._levels = null;
@@ -428,41 +455,40 @@ class Texture {
     }
 
     /**
-     * Closes any ImageBitmaps held on `_levels` and nulls those entries. The GPU has its own
-     * copy after upload, so the decoded pixels in CPU memory can be released. Safe to call only
-     * when no subsequent re-upload from CPU source will be needed and the source is owned by
-     * the engine (not shared with caller code or other textures). Clears the
-     * `releaseSourceAfterUpload` flag so future uploads keep their sources by default.
+     * Releases the ImageBitmaps and the typed arrays held on `_levels`, closing the ImageBitmaps,
+     * and nulls those entries. The GPU has its own copy after upload, so the pixels in CPU memory
+     * can be released. Safe to call only when no subsequent re-upload from CPU source will be
+     * needed and the source is owned by the engine (not shared with caller code or other
+     * textures). Clears the `releaseSourceAfterUpload` flag so future uploads keep their sources
+     * by default.
      *
      * @ignore
      */
-    releaseImageSources() {
+    releaseSources() {
         this.releaseSourceAfterUpload = false;
-        if (typeof ImageBitmap === 'undefined' || !this._levels) {
+        if (!this._levels) {
             return;
         }
         for (let i = 0; i < this._levels.length; i++) {
             const level = this._levels[i];
-            if (level instanceof ImageBitmap) {
-                level.close();
-                this._levels[i] = null;
-            } else if (Array.isArray(level)) {
+            if (Array.isArray(level)) {
                 for (let j = 0; j < level.length; j++) {
-                    if (level[j] instanceof ImageBitmap) {
-                        level[j].close();
+                    if (releaseSource(level[j])) {
                         level[j] = null;
                     }
                 }
+            } else if (releaseSource(level)) {
+                this._levels[i] = null;
             }
         }
     }
 
     /**
-     * One-shot opt-in: marks this texture so its CPU-side ImageBitmap source is released after
-     * the next upload completes. The flag is cleared once the release runs, so callers must
-     * re-arm after assigning a new source. The caller must own the ImageBitmap and guarantee
-     * that no re-upload from CPU source will be needed (e.g. the owner re-creates the texture
-     * on device loss). Used by the gsplat octree for streamed SOG textures.
+     * One-shot opt-in: marks this texture so its CPU-side source, an ImageBitmap or a typed array,
+     * is released after the next upload completes. The flag is cleared once the release runs, so
+     * callers must re-arm after assigning a new source. The caller must own the source and
+     * guarantee that no re-upload from CPU source will be needed (e.g. the owner re-creates the
+     * texture or its source on device loss). Used by the gsplat octree for streamed SOG textures.
      *
      * @ignore
      */
@@ -471,7 +497,7 @@ class Texture {
 
         // If upload has already happened, release eagerly.
         if (!this._needsUpload && !this._needsMipmapsUpload) {
-            this.releaseImageSources();
+            this.releaseSources();
         }
     }
 
@@ -861,6 +887,33 @@ class Texture {
     }
 
     /**
+     * Sets the filter used to generate the mipmaps of the texture on the GPU, from the content
+     * rendered to it, such as the color buffer of a render target with mipmaps. Can be:
+     *
+     * - {@link MIPMAPFILTER_BOX}: averages each block of 2x2 texels of the previous mip level.
+     * - {@link MIPMAPFILTER_GAUSSIAN}: a wider, smooth filter, for textures whose small mip levels
+     * are sampled to blur them, such as a planar reflection of rough surfaces.
+     *
+     * The Gaussian filter applies to 2D textures of filterable formats. Cubemaps, texture arrays,
+     * volume textures, and the mipmaps generated for texture data uploaded from the CPU use the box
+     * filter. Defaults to {@link MIPMAPFILTER_BOX}.
+     *
+     * @type {string}
+     */
+    set mipmapFilter(value) {
+        this._mipmapFilter = value;
+    }
+
+    /**
+     * Gets the filter used to generate the mipmaps of the texture on the GPU.
+     *
+     * @type {string}
+     */
+    get mipmapFilter() {
+        return this._mipmapFilter;
+    }
+
+    /**
      * Gets the number of mip levels.
      *
      * @type {number}
@@ -938,7 +991,7 @@ class Texture {
      * - {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGB_1}
      * - {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1}
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_ASTC_4x4}
      * - {@link PIXELFORMAT_ATC_RGB}
      * - {@link PIXELFORMAT_ATC_RGBA}
@@ -1156,7 +1209,7 @@ class Texture {
      * @type {boolean}
      */
     get pot() {
-        return math.powerOfTwo(this._width) && math.powerOfTwo(this._height);
+        return math.isPowerOfTwo(this._width) && math.isPowerOfTwo(this._height);
     }
 
     // get the texture's encoding type
@@ -1273,6 +1326,8 @@ class Texture {
 
         let invalid = false;
         let width, height;
+        const prevWidth = this._width;
+        const prevHeight = this._height;
 
         if (this._cubemap) {
             if (source[0]) {
@@ -1355,6 +1410,11 @@ class Texture {
             }
 
             this._levels[mipLevel] = source;
+        }
+
+        // the mip chain follows the size of the base level, which the source may have changed
+        if (this._width !== prevWidth || this._height !== prevHeight) {
+            this._updateNumLevels();
         }
 
         // valid or changed state of validity

@@ -1,7 +1,8 @@
 import { Shader } from '../shader.js';
-import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { MIPMAPFILTER_BOX, MIPMAPFILTER_GAUSSIAN, SHADERLANGUAGE_WGSL } from '../constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 import webgpuMipmap from '../shader-chunks/frag/webgpu-mipmap.js';
 import webgpuMipmap3d from '../shader-chunks/frag/webgpu-mipmap-3d.js';
 
@@ -14,12 +15,14 @@ import webgpuMipmap3d from '../shader-chunks/frag/webgpu-mipmap-3d.js';
 // the shader of each variant of the mipmap generation - for 2D textures (including cubemaps and
 // texture arrays) and volume textures, each in a version sampling the previous mip level with
 // filtering, and a version reading its texels without a sampler and filtering them in the shader,
-// for formats which cannot be filtered, selected by the UNFILTERABLE define
+// for formats which cannot be filtered, selected by the UNFILTERABLE define. The GAUSSIAN define
+// selects the wider filter of MIPMAPFILTER_GAUSSIAN, for 2D textures.
 const shaderVariants = {
-    '2d': { source: webgpuMipmap, unfilterable: false },
-    '2d-unfilterable': { source: webgpuMipmap, unfilterable: true },
-    '3d': { source: webgpuMipmap3d, unfilterable: false },
-    '3d-unfilterable': { source: webgpuMipmap3d, unfilterable: true }
+    '2d': { source: webgpuMipmap, defines: '' },
+    '2d-unfilterable': { source: webgpuMipmap, defines: '#define UNFILTERABLE\n' },
+    '2d-gaussian': { source: webgpuMipmap, defines: '#define GAUSSIAN\n' },
+    '3d': { source: webgpuMipmap3d, defines: '' },
+    '3d-unfilterable': { source: webgpuMipmap3d, defines: '#define UNFILTERABLE\n' }
 };
 
 // formats which can only be filtered when the device supports float32-filterable
@@ -52,7 +55,8 @@ class WebgpuMipmapRenderer {
     shaders = new Map();
 
     /**
-     * The sampler used for volume textures, created on first use.
+     * The sampler filtering both the minified and the magnified texels, used for volume textures
+     * and by the Gaussian filter, created on first use.
      *
      * @type {GPUSampler|null}
      * @private
@@ -85,8 +89,8 @@ class WebgpuMipmapRenderer {
     getShader(variant) {
         let shader = this.shaders.get(variant);
         if (!shader) {
-            const { source, unfilterable } = shaderVariants[variant];
-            const code = unfilterable ? `#define UNFILTERABLE\n${source}` : source;
+            const { source, defines } = shaderVariants[variant];
+            const code = `${defines}${source}`;
             shader = new Shader(this.device, {
                 name: `WebGPUMipmapRendererShader-${variant}`,
                 shaderLanguage: SHADERLANGUAGE_WGSL,
@@ -182,8 +186,11 @@ class WebgpuMipmapRenderer {
      * @param {number} [layer] - The cubemap face or the array layer to generate the mipmaps for.
      * When not specified, the mipmaps are generated for all faces / layers. Ignored for volume
      * textures, as each of their mip levels is filtered from several depth slices.
+     * @param {string} [filter] - The filter, {@link MIPMAPFILTER_BOX} or
+     * {@link MIPMAPFILTER_GAUSSIAN}. The Gaussian filter applies to 2D textures of filterable
+     * formats, others use the box filter. Defaults to {@link MIPMAPFILTER_BOX}.
      */
-    generate(webgpuTexture, layer) {
+    generate(webgpuTexture, layer, filter = MIPMAPFILTER_BOX) {
 
         // ignore texture with no mipmaps
         const textureDescr = webgpuTexture.desc;
@@ -197,11 +204,20 @@ class WebgpuMipmapRenderer {
         }
 
         const device = this.device;
-        const unfilterable = this.isUnfilterable(textureDescr.format);
-        const pipeline = this.getPipeline(unfilterable ? '2d-unfilterable' : '2d', textureDescr.format);
-        const sampler = unfilterable ? null : this.minSampler;
+        WebgpuDebug.validate(device);
 
         const texture = webgpuTexture.texture;
+        const unfilterable = this.isUnfilterable(textureDescr.format);
+        const gaussian = filter === MIPMAPFILTER_GAUSSIAN && !unfilterable && !texture.cubemap && !texture.array;
+        const pipeline = this.getPipeline(unfilterable ? '2d-unfilterable' : (gaussian ? '2d-gaussian' : '2d'), textureDescr.format);
+
+        // the taps of the Gaussian filter fall between the texels of the previous level, which the
+        // sampler interpolates
+        if (gaussian) {
+            this.linearSampler ??= device.wgpu.createSampler({ minFilter: 'linear', magFilter: 'linear' });
+        }
+        const sampler = unfilterable ? null : (gaussian ? this.linearSampler : this.minSampler);
+
         const numFaces = texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1);
         const firstFace = layer ?? 0;
         const lastFace = layer === undefined ? numFaces : layer + 1;
@@ -256,6 +272,8 @@ class WebgpuMipmapRenderer {
 
         // clear invalidated state
         device.pipeline = null;
+
+        WebgpuDebug.end(device, 'Mipmap generation', { texture, layer });
     }
 
     /**
@@ -270,6 +288,8 @@ class WebgpuMipmapRenderer {
     generateVolume(webgpuTexture) {
 
         const device = this.device;
+        WebgpuDebug.validate(device);
+
         const texture = webgpuTexture.texture;
         const textureDescr = webgpuTexture.desc;
         const unfilterable = this.isUnfilterable(textureDescr.format);
@@ -327,6 +347,8 @@ class WebgpuMipmapRenderer {
 
         // clear invalidated state
         device.pipeline = null;
+
+        WebgpuDebug.end(device, 'Mipmap generation', { texture });
     }
 }
 

@@ -46,8 +46,6 @@ class RenderPassCookieRenderer extends RenderPass {
         super(device);
         this._cubeSlotsOffsets = cubeSlotsOffsets;
 
-        this.requiresCubemaps = false;
-
         this.blitTextureId = device.scope.resolve('blitTexture');
         this.invViewProjId = device.scope.resolve('invViewProj');
 
@@ -63,6 +61,8 @@ class RenderPassCookieRenderer extends RenderPass {
 
         this._evtDeviceRestored?.off();
         this._evtDeviceRestored = null;
+
+        super.destroy();
     }
 
     static create(renderTarget, cubeSlotsOffsets) {
@@ -72,8 +72,6 @@ class RenderPassCookieRenderer extends RenderPass {
         // prepare a single render pass to render all quads to the render target
         const renderPass = new RenderPassCookieRenderer(renderTarget.device, cubeSlotsOffsets);
         renderPass.init(renderTarget);
-        renderPass.colorOps.clear = false;
-        renderPass.depthStencilOps.clearDepth = false;
 
         return renderPass;
     }

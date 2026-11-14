@@ -89,11 +89,27 @@ class LitMaterial extends Material {
 
     hasIridescence = false;
 
+    hasDiffuseTransmission = false;
+
     hasMetalness = false;
 
     hasClearCoat = false;
 
     hasClearCoatNormals = false;
+
+    /** @ignore */
+    updateUniforms(device, scene) {
+        super.updateUniforms(device, scene);
+
+        // a uniform, the shader always contains both ways of applying the ambient occlusion
+        this.setParameter('material_occludeDirect', this.occludeDirect ? 1 : 0);
+
+        // a uniform, the shader always contains the flip of the normals of the back faces
+        this.setParameter('material_twoSidedLighting', this.twoSidedLighting ? 1 : 0);
+
+        // a uniform, the shader always applies the intensity of the specular occlusion
+        this.setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
+    }
 
     /** @ignore */
     getShaderVariant(params) {

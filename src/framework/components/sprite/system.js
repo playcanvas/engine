@@ -154,7 +154,9 @@ class SpriteComponentSystem extends ComponentSystem {
             component.enabled = data.enabled;
         }
 
-        component.type = data.type;
+        if (data.type !== undefined) {
+            component.type = data.type;
+        }
 
         if (data.layers && Array.isArray(data.layers)) {
             component.layers = data.layers.slice(0);

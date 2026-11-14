@@ -14,7 +14,6 @@ import { lodDebugColorIndex } from './gsplat-lod-colors.js';
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
  * @import { GraphNode } from '../graph-node.js'
- * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { GSplatWorkBuffer } from './gsplat-work-buffer.js'
  */
 
@@ -103,17 +102,6 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         this.splats.length = 0;
         this._subDrawTexture.destroy();
         super.destroy();
-    }
-
-    /**
-     * Initialize the render pass with the specified render target.
-     *
-     * @param {RenderTarget} renderTarget - The target to render to.
-     */
-    init(renderTarget) {
-        super.init(renderTarget);
-        this.colorOps.clear = false;
-        this.depthStencilOps.clearDepth = false;
     }
 
     /**
@@ -327,6 +315,9 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
         // Set placement ID for picking (unconditionally - cheap even if shader doesn't use it)
         scope.resolve('uId').setValue(splatInfo.placementId);
+
+        // anti-aliasing flag, stored per splat by writeSplat
+        scope.resolve('uAntiAlias').setValue(resource.antiAlias ? 1 : 0);
 
         // Apply per-instance shader parameters
         if (splatInfo.parameters) {

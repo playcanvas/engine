@@ -100,5 +100,43 @@ describe('ComputeRadixSort', function () {
                 expect(sorter.sortedIndices.byteSize).to.equal(partition * 4);
             });
         });
+
+        describe(`#sort (${name}) destructiveKeys`, function () {
+
+            /** @type {NullGraphicsDevice} */
+            let device;
+
+            /** @type {ComputeRadixSort} */
+            let sorter;
+
+            const count = 1000;
+
+            beforeEach(function () {
+                device = createDevice();
+                sorter = new ComputeRadixSort(device, { kind });
+            });
+
+            afterEach(function () {
+                sorter.destroy();
+                device.destroy();
+            });
+
+            it('keeps the borrowed keys buffer when switching off destructiveKeys', function () {
+                const keys = new StorageBuffer(device, count * 4);
+                sorter.sort(keys, count, 16, undefined, false, true);
+                sorter.sort(new StorageBuffer(device, count * 4), count, 16);
+                expect(device.buffers.has(keys)).to.equal(true);
+            });
+
+            it('releases the owned keys buffer when switching to destructiveKeys', function () {
+                const keys = new StorageBuffer(device, count * 4);
+                sorter.sort(keys, count, 16);
+                // an even pass count leaves the sorted keys in the second, sorter-owned key buffer
+                const ownedKeys = sorter.sortedKeys;
+                sorter.sort(keys, count, 16, undefined, false, true);
+                expect(device.buffers.has(ownedKeys)).to.equal(false);
+                expect(sorter.sortedKeys).to.equal(keys);
+            });
+        });
     });
 });

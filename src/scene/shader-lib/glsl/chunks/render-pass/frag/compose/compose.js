@@ -8,7 +8,6 @@ export default /* glsl */`
     uniform vec4 sceneTextureSize;
     uniform float composeTargetFlipY;
 
-    #include "composeDofPS"
 
     // The scene depth, for the depth debug mode and the effects requiring the depth. The debug mode
     // displays a depth some other pass in this frame has already produced - the debug modes never
@@ -34,23 +33,18 @@ export default /* glsl */`
 
         vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
 
-        // COMPOSESLOT_SCENE effects - operate on the sampled scene colour including its alpha
+        // COMPOSESLOT_SCENE effects - operate on the sampled scene color including its alpha
         #include "composeSlotSceneCallPS, COMPOSE_SCENE_COUNT"
 
         vec3 result = scene.rgb;
 
-        // Apply DOF
-        #ifdef DOF
-            result = applyDof(result, uv);
-        #endif
-
-        // COMPOSESLOT_HDR effects - linear, scene-referred colour
+        // COMPOSESLOT_HDR effects - linear, scene-referred color
         #include "composeSlotHdrCallPS, COMPOSE_HDR_COUNT"
 
         // Apply Tone Mapping
         result = toneMap(max(vec3(0.0), result));
 
-        // COMPOSESLOT_LDR effects - display-referred colour, before gamma correction
+        // COMPOSESLOT_LDR effects - display-referred color, before gamma correction
         #include "composeSlotLdrCallPS, COMPOSE_LDR_COUNT"
 
         #include "composeMainEndPS"
@@ -60,10 +54,6 @@ export default /* glsl */`
             #if DEBUG_COMPOSE == scene
                 // the scene texture itself, before any effect, those at COMPOSESLOT_SCENE included
                 result = texture2DLod(sceneTexture, uv, 0.0).rgb;
-            #elif defined(DOF) && DEBUG_COMPOSE == dofcoc
-                result = vec3(dCoc, 0.0);
-            #elif defined(DOF) && DEBUG_COMPOSE == dofblur
-                result = dBlur;
             #elif DEBUG_COMPOSE == depth
                 // a linear ramp over the camera clip range
                 float dDepth = getLinearScreenDepth(uv);

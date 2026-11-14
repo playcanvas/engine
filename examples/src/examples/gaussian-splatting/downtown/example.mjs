@@ -1,0 +1,408 @@
+// @config
+//
+// Streams a large real-world city downtown (Lublin, Poland) reconstructed as Gaussian splats.
+// 259M splats at full detail (517M across 10 LOD levels), 20767 files, 6.1 GB for streaming.
+//
+// @flag PREFERRED_DEVICE=webgpu
+//
+// @credit
+// title: Lublin downtown
+// author: Andrii Shramko, Teleportour
+// source: https://www.linkedin.com/in/andrii-shramko/
+// license: teleportour.com https://teleportour.com
+//
+// @credit
+// title: Kloofendal 48d Partly Cloudy (Pure Sky) HDRI
+// author: Poly Haven
+// source: https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+// license: CC0
+
+import {
+    AppBase,
+    AppOptions,
+    Asset,
+    AssetListLoader,
+    BoundingBox,
+    CameraComponentSystem,
+    Color,
+    ContainerHandler,
+    Entity,
+    EnvLighting,
+    FILLMODE_FILL_WINDOW,
+    GSPLATDATA_COMPACT,
+    GSPLAT_DEBUG_LOD,
+    GSPLAT_DEBUG_NONE,
+    GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSplatComponentSystem,
+    GSplatHandler,
+    Keyboard,
+    LightComponentSystem,
+    MiniStats,
+    Mouse,
+    Quat,
+    RESOLUTION_AUTO,
+    RenderComponentSystem,
+    SKYTYPE_INFINITE,
+    ScriptComponentSystem,
+    ScriptHandler,
+    TONEMAP_LINEAR,
+    TextureHandler,
+    TouchDevice,
+    Vec3,
+    createGraphicsDevice,
+    platform
+} from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
+import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+
+import { data, deviceType } from 'examples/context';
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const gfxOptions = {
+    deviceTypes: [deviceType],
+
+    // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
+    antialias: false
+};
+
+const device = await createGraphicsDevice(canvas, gfxOptions);
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.mouse = new Mouse(document.body);
+createOptions.touch = new TouchDevice(document.body);
+createOptions.keyboard = new Keyboard(document.body);
+
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    ScriptComponentSystem,
+    GSplatComponentSystem
+];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+
+// Auto resolution: treat DPR >= 2 as high-DPI (drops to half)
+const applyResolution = () => {
+    const dpr = window.devicePixelRatio || 1;
+    device.maxPixelRatio = dpr >= 2 ? dpr * 0.5 : dpr;
+};
+applyResolution();
+
+const resize = () => {
+    applyResolution();
+    app.resizeCanvas();
+    // With on-demand rendering (autoRender is set to false once the reveal completes), a resize is
+    // a viewport change the app makes itself — it does not raise 'frame:request' — so request a
+    // render to draw the scene at the new canvas size.
+    app.renderNextFrame = true;
+};
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
+});
+
+const config = {
+    name: 'Lublin-downtown',
+    // The whole capture as ONE multi-LOD streamed SOG bundle, built from a full-scene adaptive
+    // (error-metric) LOD chain — no splitting. Supersedes downtown_01, which was the same capture
+    // cut into 4 pieces because the decimator could not hold the 17.6 GB source in one pass.
+    url: 'https://code.playcanvas.com/examples_data/downtown_02/lod-meta.json',
+    // Whole-scene orientation (euler degrees). The capture stores height on Z; this rotates it to
+    // be Y-up for the fly camera.
+    sceneRotation: [-90, 0, 0],
+    lodUpdateDistance: 4,
+    lodUnderfillLimit: 5,
+    // Distance-based LOD ramp base distance (LOD = 1 + log(d / base) / log(mult)); the multiplier
+    // is derived from the splat budget — see the budget section below
+    // Fly speeds
+    moveSpeed: 13,
+    moveFastSpeed: 100,
+    // Default start view
+    cameraPosition: [-87.42, -14.23, 179.97],
+    cameraRotation: [-14.85, -64.12, 0],
+    // Partly-cloudy HDRI backdrop, downloaded at runtime from Poly Haven (CC0)
+    skyUrl: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr'
+};
+
+const assets = {
+    scene: new Asset('scene', 'gsplat', { url: config.url }),
+    sky: new Asset('hdri', 'texture', { url: config.skyUrl }, { mipmaps: false })
+};
+
+await new Promise((resolve) => {
+    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
+});
+
+app.start();
+
+// Custom mini stats showing gsplat counts
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy', 'compute']));
+
+// --- scene-wide gsplat defaults ---
+app.scene.gsplat.lodUpdateAngle = 90;
+app.scene.gsplat.lodBehindPenalty = 3;
+app.scene.gsplat.radialSorting = true;
+app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
+app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
+app.scene.gsplat.minPixelSize = 2;
+app.scene.gsplat.alphaClipForward = 1 / 255;
+app.scene.gsplat.minContribution = 3;
+app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
+
+// Colorize LODs debug toggle (off by default)
+data.set('colorizeLods', false);
+const applyColorizeLods = () => {
+    app.scene.gsplat.debug = data.get('colorizeLods') ? GSPLAT_DEBUG_LOD : GSPLAT_DEBUG_NONE;
+};
+applyColorizeLods();
+data.on('colorizeLods:set', applyColorizeLods);
+
+// Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
+app.scene.gsplat.renderer = device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
+
+// --- the streamed scene, rotated into a Y-up frame ---
+const entity = new Entity(config.name);
+entity.setLocalEulerAngles(config.sceneRotation[0], config.sceneRotation[1], config.sceneRotation[2]);
+entity.addComponent('gsplat', { asset: assets.scene });
+app.root.addChild(entity);
+
+const gs = /** @type {any} */ (entity.gsplat);
+const resource = /** @type {any} */ (assets.scene.resource);
+const lodLevels = resource.octree?.lodLevels ?? 1;
+const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
+data.set('data.stats.splatsTotal', toM(resource.numSplats ?? 0));
+
+// World-space bounds, for framing the camera and sizing the reveal
+const worldAabb = new BoundingBox();
+worldAabb.setFromTransformedAabb(resource.aabb, entity.getWorldTransform());
+const center = worldAabb.center.clone();
+const radius = worldAabb.halfExtents.length();
+
+// --- circular reveal: keep all splats hidden until the first frame is ready, then sweep them
+// in from the INITIAL CAMERA POSITION. While loading, the effect time is pinned negative
+// (everything hidden, see the update loop); it is released on frame:ready below. ---
+const camStart = new Vec3(config.cameraPosition[0], config.cameraPosition[1], config.cameraPosition[2]);
+const revealReach = camStart.distance(center) + radius; // furthest splat from the camera start
+entity.addComponent('script');
+const reveal = /** @type {any} */ (/** @type {any} */ (entity.script).create(GSplatRevealRadial));
+reveal.center.copy(camStart);
+reveal.endRadius = revealReach * 1.1; // reaches the whole scene from the camera start
+reveal.speed = (revealReach * 1.1) / 3; // sweep across in ~3s
+reveal.acceleration = 0;
+reveal.delay = 0;
+reveal.bandWidth = 10; // ~10-unit-wide highlight edge
+reveal.oscillationIntensity = 0.2;
+reveal.dotTint.set(0, 0, 0); // no leading dot tint
+reveal.waveTint.set(5, 0, 0); // red highlight edge
+let revealStarted = false;
+
+// --- infinite HDRI backdrop (partly-cloudy sky), backdrop only ---
+// Reproject the equirect HDRI into a skybox cubemap. We do NOT build an env-atlas / set
+// scene.envAtlas — the splats are pre-lit, so the sky contributes no lighting, just a backdrop.
+// Generated up front but revealed together with the scene (on frame:ready), so it doesn't pop
+// in before the splats.
+let skyboxCubemap;
+const applyHdri = () => {
+    const oldSkybox = skyboxCubemap;
+    skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+    // Keep the backdrop hidden until the first splat frame is ready.
+    if (oldSkybox && app.scene.skybox === oldSkybox) {
+        app.scene.skybox = skyboxCubemap;
+    }
+    oldSkybox?.destroy();
+    app.renderNextFrame = true;
+};
+
+// The skybox is generated on the GPU and needs rebuilding after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
+app.scene.sky.type = SKYTYPE_INFINITE;
+
+// Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
+// nearby detail, then open up to the full range once the first frame's data is ready.
+const worstLod = lodLevels - 1;
+gs.lodRangeMin = Math.max(0, worstLod - 3);
+gs.lodRangeMax = worstLod;
+const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
+const onFrameReady = (
+    /** @type {any} */ cam,
+    /** @type {any} */ layer,
+    /** @type {boolean} */ ready,
+    /** @type {number} */ loadingCount
+) => {
+    if (ready && loadingCount === 0) {
+        gsplatSystem.off('frame:ready', onFrameReady);
+        gs.lodRangeMin = 0;
+        gs.lodRangeMax = worstLod;
+        // Reveal the backdrop and sweep the splats in, together, now that the scene is ready
+        app.scene.skybox = skyboxCubemap;
+        revealStarted = true;
+        reveal.effectTime = 0;
+    }
+};
+gsplatSystem.on('frame:ready', onFrameReady);
+
+// --- fly camera, framed on the combined scene bounds ---
+const camera = new Entity('camera');
+camera.addComponent('camera', {
+    clearColor: new Color(0.1, 0.11, 0.13),
+    fov: 75,
+    toneMapping: TONEMAP_LINEAR,
+    farClip: Math.max(10000, radius * 20)
+});
+camera.setLocalPosition(config.cameraPosition[0], config.cameraPosition[1], config.cameraPosition[2]);
+camera.setLocalEulerAngles(config.cameraRotation[0], config.cameraRotation[1], config.cameraRotation[2]);
+app.root.addChild(camera);
+
+// Focus point straight ahead of the camera's initial orientation — CameraControls derives the
+// starting yaw/pitch from (position -> focus), reproducing the configured rotation.
+const focusPoint = camera.forward
+    .clone()
+    .mulScalar(radius * 0.5)
+    .add(camera.getPosition());
+
+camera.addComponent('script');
+const cc = /** @type {CameraControls} */ (/** @type {any} */ (camera.script).create(CameraControls));
+Object.assign(cc, {
+    sceneSize: radius,
+    moveSpeed: config.moveSpeed,
+    moveFastSpeed: config.moveFastSpeed,
+    // High damping: the camera accelerates / decelerates much more gradually (floaty glide),
+    // most noticeable at fast (shift) speed
+    moveDamping: 0.997,
+    enableOrbit: false,
+    enablePan: false,
+    focusPoint: focusPoint
+});
+
+// --- Splat budget (millions). LOD levels are chosen to fit it, spending splats where they remove
+// the most approximation error. Default to the Medium quality preset (desktop 8M / mobile 4M), so
+// a quality button is lit at launch. ---
+data.set('splatBudget', platform.mobile ? 4 : 8);
+const applySplatBudget = () => {
+    app.scene.gsplat.splatBudget = Math.round(data.get('splatBudget') * 1000000);
+};
+applySplatBudget();
+data.on('splatBudget:set', applySplatBudget);
+
+// --- on-screen quality buttons: each sets the splat budget. The Splat Budget slider in the
+// controls stays two-way bound to the same value, so it tracks the buttons and can still be
+// dragged; clicking a button just resets the value. ---
+const QUALITY = platform.mobile
+    ? [
+          ['Low', 2],
+          ['Medium', 4],
+          ['High', 6],
+          ['Extreme', 8]
+      ]
+    : [
+          ['Low', 4],
+          ['Medium', 8],
+          ['High', 16],
+          ['Extreme', 25]
+      ];
+
+const qualityBar = document.createElement('div');
+Object.assign(qualityBar.style, {
+    position: 'fixed',
+    bottom: '16px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    display: 'flex',
+    gap: '6px',
+    zIndex: '12',
+    font: '500 13px/1 sans-serif'
+});
+const qualityButtons = QUALITY.map(([label, budget]) => {
+    const b = document.createElement('button');
+    b.textContent = /** @type {string} */ (label);
+    Object.assign(b.style, {
+        padding: '8px 14px',
+        border: 'none',
+        borderRadius: '4px',
+        color: '#fff',
+        cursor: 'pointer'
+    });
+    b.onclick = () => data.set('splatBudget', budget);
+    qualityBar.appendChild(b);
+    return b;
+});
+document.body.appendChild(qualityBar);
+app.on('destroy', () => qualityBar.remove());
+
+// Highlight the button matching the current budget (none, if the slider is on another value)
+const updateQualityButtons = () => {
+    const v = data.get('splatBudget');
+    qualityButtons.forEach((b, i) => {
+        b.style.background = QUALITY[i][1] === v ? 'rgba(255,140,0,0.9)' : 'rgba(0,0,0,0.5)';
+    });
+};
+updateQualityButtons();
+data.on('splatBudget:set', updateQualityButtons);
+
+// --- On-demand rendering ----------------------------------------------------------------
+// Gaussian-splat streaming (LOD evaluation + file loading) runs every frame regardless of
+// rendering. We render continuously while the scene loads and the reveal animation plays, then
+// switch to rendering only on demand: when streaming has new data to show (the 'frame:request'
+// event), when the camera moves, or on a resize / UI change (handled where those occur). This
+// keeps the GPU idle while the huge city sits still, yet still streams in the background.
+
+// Render whenever streaming produced new data (or a CPU sort result became ready to apply)
+app.systems.gsplat.on('frame:request', () => {
+    app.renderNextFrame = true;
+});
+
+let onDemand = false;
+const lastCamPos = new Vec3();
+const lastCamRot = new Quat();
+
+// --- Stats + on-demand driver ---
+app.on('update', () => {
+    // Keep the reveal frozen (all splats hidden) until it is released on frame:ready
+    if (!revealStarted) reveal.effectTime = -1e6;
+
+    // Update HUD stats
+    data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
+    const bb = app.graphicsDevice.backBufferSize;
+    data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
+
+    if (!onDemand) {
+        // The reveal starts once the first frame is ready and disables itself when its animation
+        // completes. Until then autoRender stays true so the scene streams in and the reveal
+        // animates every frame; once it finishes, switch to on-demand rendering.
+        if (revealStarted && reveal && !reveal.enabled) {
+            onDemand = true;
+            app.autoRender = false;
+
+            // The reveal finishing is a draw-state change (it stops masking the splats), not a
+            // streaming change, so it does not raise 'frame:request'. Render one final frame so
+            // the fully-revealed scene is shown before we go idle.
+            app.renderNextFrame = true;
+
+            lastCamPos.copy(camera.getPosition());
+            lastCamRot.copy(camera.getRotation());
+        }
+    } else {
+        // Keep the fly camera interactive: render when it has moved or rotated this frame
+        const pos = camera.getPosition();
+        const rot = camera.getRotation();
+        if (!pos.equals(lastCamPos) || !rot.equals(lastCamRot)) {
+            app.renderNextFrame = true;
+            lastCamPos.copy(pos);
+            lastCamRot.copy(rot);
+        }
+    }
+});
+
+export { miniStats };

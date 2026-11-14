@@ -65,7 +65,7 @@ const createGl = (params) => {
             return { name };
         },
         // HTML-in-Canvas, which is not an extension
-        texElementImage2D: () => {}
+        texElementSubImage2D: () => {}
     };
 
     for (const name in params) {

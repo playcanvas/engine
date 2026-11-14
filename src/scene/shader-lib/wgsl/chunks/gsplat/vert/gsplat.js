@@ -109,6 +109,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
     clipCorner(&corner, clr.w);
 
+    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
+    // 1 + the core radius instead, drawn with peak alpha 1
+    if (clr.w > half(1.0)) {
+        clr.w = half(1.0 + gsplatPlateauCore(f32(clr.w)));
+    }
+
     // write output
     #if GSPLAT_2DGS
         // 2DGS: Project world corner directly
@@ -129,7 +135,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // Overdraw visualization mode: color by elevation
         let t: f32 = clamp(center.modelCenterOriginal.y / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
-        clr.a = clr.a * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
+        clr.a = min(clr.a, half(1.0)) * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), clr.a);
     #else
         output.gaussianColor = half4(half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)), -center.view.z)), clr.w);

@@ -6,6 +6,14 @@ export default /* wgsl */`
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
+    #ifdef CLIP_PLANES
+        applyClipPlanes(vPositionW);
+    #endif
+
+    // the lighting is evaluated at the rasterized position, unless the front end sets another
+    litArgs_worldPosition = vPositionW;
+    dViewDepth = 1.0 / pcPosition.w;
+
     #include "litUserMainStartPS"
 
     dReflection = vec4f(0.0);
@@ -41,10 +49,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             getTBN(dTangentW, dBinormalW, dVertexNormalW);
         #endif
 
-        // after the TBN matrix, which is built from the unflipped normal
-        #ifdef LIT_TWO_SIDED_LIGHTING
+        // after the TBN matrix, which is built from the unflipped normal. twoSidedLighting is 0 or 1,
+        // the same for every pixel the material renders.
+        if (uniform.material_twoSidedLighting != 0.0) {
             handleTwoSidedLighting();
-        #endif
+        }
     #endif
 
     // invoke frontend functions

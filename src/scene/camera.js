@@ -6,6 +6,7 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
+import { MIPMAPFILTER_BOX } from '../platform/graphics/constants.js';
 import { SceneColorMapHandle } from '../platform/graphics/scene-color-map-handle.js';
 import { SceneDepthMapHandle } from '../platform/graphics/scene-depth-map-handle.js';
 import {
@@ -15,10 +16,12 @@ import {
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
 import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
 import { CameraShaderParams } from './camera-shader-params.js';
+import { ClipPlanes, MAX_CLIP_PLANES } from './clip-planes.js';
 
 /**
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Plane } from '../core/shape/plane.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { FogParams } from './fog-params.js'
@@ -129,8 +132,12 @@ class Camera {
 
     /**
      * Frame passes that execute before this camera's main scene rendering, after the camera's
-     * directional shadow passes. Entries are picked up by the RenderPassForward that renders
-     * this camera's layers.
+     * directional shadow passes. Entries are picked up by the first RenderPassForward rendering
+     * this camera's layers in the frame, including one in the camera's frame passes, so they do
+     * not execute when no RenderPassForward renders the camera. They cannot include a
+     * RenderPassForward, as that would be nested under the one picking them up. When rendering
+     * multiple XR views, they execute for each view, apart from a compute pass, which executes
+     * once, as selected by its xrViewIndex.
      *
      * @type {FramePass[]}
      */
@@ -164,8 +171,51 @@ class Camera {
      */
     sceneColorMapHandle = new SceneColorMapHandle();
 
+    /**
+     * Whether the scene color map has mipmaps. See {@link CameraComponent#sceneColorMapMipmaps}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    sceneColorMapMipmaps = true;
+
+    /**
+     * The filter used to generate the mipmaps of the scene color map. See
+     * {@link CameraComponent#sceneColorMapMipmapFilter}.
+     *
+     * @type {string}
+     * @ignore
+     */
+    sceneColorMapMipmapFilter = MIPMAPFILTER_BOX;
+
     /** @type {number} */
     jitter = 0;
+
+    /**
+     * The scale of the exposure the camera renders with, multiplying the exposure of the scene, or
+     * of the physical camera with physical units. Set every frame by the effects adapting the
+     * exposure, such as the auto exposure of the camera frame.
+     *
+     * @type {number}
+     */
+    exposureScale = 1;
+
+    /**
+     * Whether the camera renders the sky of the scene. Cleared by the camera frame while one of its
+     * effects renders the sky for the camera in its place.
+     *
+     * @type {boolean}
+     */
+    skyVisible = true;
+
+    /**
+     * The clipping of the camera, see {@link Camera#clippingPlanes}. The renderer sets its uniforms
+     * for each pass of the camera.
+     *
+     * @type {ClipPlanes}
+     * @ignore
+     */
+    _clipPlanes = new ClipPlanes();
 
     /**
      * A unique id of the camera, used where the camera needs to be referenced without retaining
@@ -507,6 +557,53 @@ class Camera {
         return this._clearStencilBuffer;
     }
 
+    /**
+     * Sets the planes that clip what the camera renders, in world space. The planes are copied.
+     * See {@link CameraComponent#clippingPlanes}.
+     *
+     * @type {Plane[]}
+     */
+    set clippingPlanes(value) {
+        Debug.assert(!value || value.length <= MAX_CLIP_PLANES,
+            `CameraComponent#clippingPlanes supports up to ${MAX_CLIP_PLANES} planes, the rest ` +
+            'are ignored.');
+        this._clipPlanes.set(value);
+        this._updateClipPlanes();
+    }
+
+    get clippingPlanes() {
+        return this._clipPlanes.returned;
+    }
+
+    /**
+     * Sets whether only the parts behind all of the {@link Camera#clippingPlanes} are clipped,
+     * instead of the parts behind any of them.
+     *
+     * @type {boolean}
+     */
+    set clipIntersection(value) {
+        if (this._clipPlanes.intersection !== value) {
+            this._clipPlanes.intersection = value;
+            this._updateClipPlanes();
+        }
+    }
+
+    get clipIntersection() {
+        return this._clipPlanes.intersection;
+    }
+
+    /**
+     * Writes the clipping into the uniforms the shader reads, from the planes as they were
+     * assigned, and enables the clipping shader code when there is any plane.
+     *
+     * @private
+     */
+    _updateClipPlanes() {
+        const clipPlanes = this._clipPlanes;
+        clipPlanes.updateUniforms();
+        this.shaderParams.clipPlanes = clipPlanes.assigned.length > 0;
+    }
+
     set cullFaces(newValue) {
         this._cullFaces = newValue;
     }
@@ -839,9 +936,15 @@ class Camera {
         this.aperture = other.aperture;
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
+        this.sceneColorMapMipmaps = other.sceneColorMapMipmaps;
+        this.sceneColorMapMipmapFilter = other.sceneColorMapMipmapFilter;
+
+        this._clipPlanes.copy(other._clipPlanes);
+        this._updateClipPlanes();
 
         this.shaderPassInfo = other.shaderPassInfo;
         this.jitter = other.jitter;
+        this.exposureScale = other.exposureScale;
 
         this._projMatDirty = true;
 

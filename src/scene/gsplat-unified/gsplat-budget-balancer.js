@@ -3,33 +3,14 @@
  * @import { GSplatPlacement } from './gsplat-placement.js'
  */
 
-import { NUM_SCALE_BINS, NUM_SUB_BINS } from './constants.js';
-
-// The histogram axis is the natural log of the scene-wide distance scale. The window covers any
-// switch point a scene can produce - world distances from 1e-6 to far beyond any scene, over the
-// base distances and multipliers the component allows - and anything outside it still resolves, it
-// only shares the first or last bin. It is symmetric so that a scale of 1 falls exactly on a bin
-// edge, which is what makes limit mode reproduce the configured distances exactly rather than to
-// within a bin.
-const LOG_SCALE_MIN = -48;
-const LOG_SCALE_MAX = 48;
-const BIN_SCALE = NUM_SCALE_BINS / (LOG_SCALE_MAX - LOG_SCALE_MIN);
-const LAST_BIN = NUM_SCALE_BINS - 1;
-const LAST_SUB_BIN = NUM_SUB_BINS - 1;
-
-// The first bin past a scale of exactly 1: every switch point below it is taken at that scale.
-const UNIT_SCALE_BIN = NUM_SCALE_BINS / 2;
-
 // Floor on squared node distance before taking its log, so a camera inside a node stays finite.
 const MIN_DISTANCE_SQ = 1e-12;
 
-// Nodes carry squared distances, so the log of the distance is half the log taken.
-const HALF_BIN_SCALE = BIN_SCALE * 0.5;
-
 /**
- * Chooses a LOD level per node from its distance, fitted to the splat budget.
+ * Chooses the cut through the LOD trees of the octree instances within the splat budget: which
+ * nodes are replaced by their children for more detail.
  *
- * A node at world distance `d` renders the LOD band `1 + log_m(d / (s * b))`, floored and clamped
+ * A node at world distance `d` asks for the LOD band `1 + log_m(d / (s * b))`, floored and clamped
  * to its LOD range, where `b` and `m` are its placement's base distance and multiplier. `s` is one
  * scene-wide scale on every base distance: raising it pushes every band outward, so the splat total
  * grows with it. The allocator's whole job is to pick `s`:
@@ -37,245 +18,238 @@ const HALF_BIN_SCALE = BIN_SCALE * 0.5;
  * - in limit mode, the same but never above 1, so the configured distances are an upper bound on
  * detail and the budget only ever lowers it.
  *
- * Every node switches band at a scale known in closed form - it is finer than band `L` exactly when
- * `ln s > ln(d / b) - (L - 1) ln m`. Those switch points all lie on the one `ln s` axis, whatever
- * the per-placement base distances and multipliers, so the allocator drops each one into a
- * histogram over that axis with the splat change it causes, then runs a prefix sum from the
- * coarsest end until a bin would exceed the budget. That bin alone is then resolved the same way on
- * a finer histogram of its own, so the budget is filled to within a fraction of a percent of
- * distance rather than to within a bin - captures often hold many nodes at nearly the same distance, and a
- * single bin can carry a large share of the scene. A last pass assigns each node the band the
- * resulting cut gives it. There is no queue and no sort.
+ * A node is refined once its band is finer than its level, which happens at a switch point known
+ * in closed form - once `ln s > ln(d / b) - (level - 1) ln m`. The switch points of all nodes lie on
+ * the one `ln s` axis, whatever the per-placement base distances and multipliers. Refining a node
+ * changes the splat count by its children's less its own.
  *
- * Stopping at the first sub-bin that does not fit, rather than skipping it and continuing, keeps a
- * node's level from depending on unrelated nodes further along the axis, so small camera movements
- * do not flip levels on and off. Nodes sharing a sub-bin switch together.
+ * The top level nodes start the cut, and their refinements are queued by switch point. The
+ * refinement the scale reaches first is taken while it fits the budget, and queues its children's.
+ * As a child is never nearer the camera than its parent, its switch point always follows its
+ * parent's, so taking them in this order sweeps the axis as if every node's switch points were
+ * sorted, while only the nodes the cut refines and their children are ever visited - the cost
+ * follows the size of the cut, not of the octrees. The first refinement that does not fit ends the
+ * sweep, rather than being skipped, so a node's refinement does not depend on unrelated nodes
+ * further along the axis, and small camera movements do not flip nodes on and off.
+ *
+ * Each instance is given the refined nodes and the scale the cut stopped at, see
+ * GSplatOctreeInstance#beginTreeCut, for {@link GSplatOctreeInstance#applyLodChanges}.
  *
  * @ignore
  */
 class GSplatBudgetBalancer {
     /**
-     * Splat change per bin of the scale axis, and then per sub-bin of the bin being resolved.
+     * The instances of the current {@link GSplatBudgetBalancer#balance}, indexed by the instance
+     * index of the queue entries.
      *
-     * @type {Float64Array}
+     * @type {GSplatOctreeInstance[]}
      * @private
      */
-    _histogram = new Float64Array(Math.max(NUM_SCALE_BINS, NUM_SUB_BINS));
+    _instances = [];
 
     /**
-     * Per global node index, the node's position on the scale axis in bin units, offset so that
-     * its switch point leaving band `rangeMin + b` sits at `position - b * step`. Computed once,
-     * read by every later pass.
+     * Min-heap of pending refinements: each one's switch point on the scale axis, its instance
+     * index and its node.
      *
-     * @type {Float64Array}
      * @private
      */
-    _position = new Float64Array(0);
+    _heapKey = new Float64Array(256);
+
+    /** @private */
+    _heapInst = new Int32Array(256);
+
+    /** @private */
+    _heapNode = new Int32Array(256);
+
+    /** @private */
+    _heapSize = 0;
 
     /**
-     * Assigns a LOD level to every node of every instance, keeping the total splat count within
-     * budget. Reads NodeInfo#worldDistanceSq, writes NodeInfo#optimalLod.
+     * Chooses the cut through every instance's tree, see {@link GSplatBudgetBalancer}. A node coarser
+     * than the instance's LOD range is always refined, and one at or finer than its finest level
+     * never is.
      *
-     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - Map of
-     * GSplatOctreeInstance objects.
+     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances,
+     * each with its distances prepared, see GSplatOctreeInstance#prepareDistances.
      * @param {number} budget - Splat budget for octrees. Infinity for no budget.
      * @param {boolean} limit - True when the budget only limits the configured LOD distances,
      * false when detail is raised to fill it.
      */
     balance(octreeInstances, budget, limit) {
-        let nodeTotal = 0;
+        const instances = this._instances;
+        instances.length = 0;
+        this._heapSize = 0;
+
         let total = 0;
-        let finestTotal = 0;
         for (const [, inst] of octreeInstances) {
-            nodeTotal += inst.octree.nodes.length;
-            total += inst.lodTable.totalCoarsestCount;
-            finestTotal += inst.lodTable.totalFinestCount;
-        }
-        if (nodeTotal === 0) return;
+            const index = instances.length;
+            instances.push(inst);
 
-        // Nothing to fit when not even the coarsest scene fits, or in target mode when the finest
-        // does.
-        if (total >= budget) {
-            this._assignChainEnd(octreeInstances, false);
-            return;
-        }
-        if (!limit && finestTotal <= budget) {
-            this._assignChainEnd(octreeInstances, true);
-            return;
-        }
+            // a node's position on the axis is `ln(d / b) + (1 - rangeMin) ln m`, so its switch
+            // point leaving the band `rangeMin + k` lies `k` steps of `ln m` below it
+            const step = Math.log(inst.placement.lodMultiplier);
+            const offset = -Math.log(inst.placement.lodBaseDistance) - (inst.rangeMin - 1) * step;
+            inst.beginTreeCut(step, offset);
 
-        if (this._position.length < nodeTotal) {
-            this._position = new Float64Array(Math.max(nodeTotal, this._position.length * 2, 1024));
-        }
-        const position = this._position;
-
-        // Position pass: each node's place on the scale axis. In limit mode it also totals the
-        // splats at the configured distances, which is all there is to do when those fit.
-        let unitTotal = 0;
-        let base = 0;
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, bandCount, span } = inst.lodTable;
-            const nodeInfos = inst.nodeInfos;
-            const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
-            const offset = (-Math.log(inst.placement.lodBaseDistance) - LOG_SCALE_MIN) * BIN_SCALE - (inst.rangeMin - 1) * step;
-
-            for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                const row = n * span;
-                if (bandLod[row] < 0) continue;
-
-                const dSq = nodeInfos[n].worldDistanceSq;
-                const p = Math.log(dSq > MIN_DISTANCE_SQ ? dSq : MIN_DISTANCE_SQ) * HALF_BIN_SCALE + offset;
-                position[base + n] = p;
-
-                if (limit) {
-                    let b = span - 1;
-                    while (b > 0) {
-                        const t = p - b * step;
-                        if ((t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0)) >= UNIT_SCALE_BIN) break;
-                        b--;
-                    }
-                    unitTotal += bandCount[row + b];
-                }
-            }
-            base += nodeInfos.length;
-        }
-
-        // The cut along the scale axis: every switch point in a bin below `cutBin` is taken, and
-        // in `cutBin` itself those in a sub-bin below `cutSub`.
-        let cutBin = UNIT_SCALE_BIN;
-        let cutSub = 0;
-        if (!limit || unitTotal > budget) {
-            const stopBin = limit ? UNIT_SCALE_BIN : NUM_SCALE_BINS;
-            const histogram = this._histogram;
-
-            // Histogram pass: each node's switch points with the splat change each one makes.
-            histogram.fill(0, 0, NUM_SCALE_BINS);
-            this._accumulate(octreeInstances, -1);
-
-            // Sweep: take whole bins from the coarsest end while the total fits. Limit mode never
-            // goes past a scale of 1, the configured distances.
-            cutBin = 0;
-            while (cutBin < stopBin) {
-                const next = total + histogram[cutBin];
-                if (next > budget) break;
-                total = next;
-                cutBin++;
-            }
-
-            // The bin that did not fit as a whole is split into sub-bins and swept the same way.
-            if (cutBin < stopBin) {
-                histogram.fill(0, 0, NUM_SUB_BINS);
-                this._accumulate(octreeInstances, cutBin);
-                while (cutSub < NUM_SUB_BINS) {
-                    const next = total + histogram[cutSub];
-                    if (next > budget) break;
-                    total = next;
-                    cutSub++;
-                }
+            // the top level nodes are stored first
+            const { parentIndex, nodeSplats } = inst.octree;
+            for (let n = 0; n < parentIndex.length && parentIndex[n] < 0; n++) {
+                this._visitNode(inst, n);
+                total += nodeSplats[n] + this._scheduleNode(index, inst, n);
             }
         }
 
-        // Assignment pass: step each node finer while its next switch point is taken. Switch
-        // points rise as bands get finer, so the first one not taken ends the walk.
-        base = 0;
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, span } = inst.lodTable;
-            const nodeInfos = inst.nodeInfos;
-            const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
+        // take refinements in the order the scale reaches their switch points, while they fit -
+        // in limit mode, never past a scale of 1, where ln s is 0
+        let stop = Infinity;
+        while (this._heapSize > 0) {
+            const key = this._heapKey[0];
+            if (limit && key >= 0) break;
 
-            for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                const row = n * span;
-                if (bandLod[row] < 0) {
-                    nodeInfos[n].optimalLod = -1;
-                    continue;
-                }
-
-                const p = position[base + n];
-                let b = span - 1;
-                while (b > 0) {
-                    const t = p - b * step;
-                    const bin = t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0);
-                    if (bin > cutBin) break;
-                    if (bin === cutBin) {
-                        const sub = (t - cutBin) * NUM_SUB_BINS;
-                        if ((sub < 0 ? 0 : (sub >= NUM_SUB_BINS ? LAST_SUB_BIN : sub | 0)) >= cutSub) break;
-                    }
-                    b--;
-                }
-                nodeInfos[n].optimalLod = bandLod[row + b];
+            const index = this._heapInst[0];
+            const n = this._heapNode[0];
+            const inst = instances[index];
+            const delta = inst.octree.childrenSplats[n] - inst.octree.nodeSplats[n];
+            if (total + delta > budget) {
+                stop = key;
+                break;
             }
-            base += nodeInfos.length;
+
+            this._heapPop();
+            total += delta + this._refineNode(index, inst, n);
         }
+        if (limit && stop > 0) {
+            stop = 0;
+        }
+
+        for (let i = 0; i < instances.length; i++) {
+            instances[i].treeCutStop = stop;
+        }
+        instances.length = 0;
     }
 
     /**
-     * Adds every switch point's splat change to the histogram: by bin when `bin` is negative, or
-     * by sub-bin for the switch points inside `bin` only.
+     * Measures a node the cut reached, and records its position on the scale axis.
      *
-     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
-     * @param {number} bin - The bin to split into sub-bins, or -1 for the whole axis.
+     * @param {GSplatOctreeInstance} inst - The instance.
+     * @param {number} n - The node.
      * @private
      */
-    _accumulate(octreeInstances, bin) {
-        const position = this._position;
-        const histogram = this._histogram;
-
-        // Bands lie more than a bin apart - the multiplier is at least 1.2, about two bins - so a
-        // node has at most one switch point in a given bin and it is found directly. The end
-        // bins also hold everything clamped from outside the window, so those are scanned.
-        const scan = bin < 0 || bin === 0 || bin === LAST_BIN;
-
-        let base = 0;
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, bandCount, span } = inst.lodTable;
-            const len = inst.nodeInfos.length;
-            const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
-            const invStep = 1 / step;
-
-            for (let n = 0; n < len; n++) {
-                const row = n * span;
-                if (bandLod[row] < 0) continue;
-                const p = position[base + n];
-
-                // the candidate and its neighbor, in case rounding lands the floor one short
-                let b = scan ? 1 : Math.floor((p - bin) * invStep);
-                const end = scan ? span : Math.min(b + 2, span);
-                if (b < 1) b = 1;
-
-                for (; b < end; b++) {
-                    const delta = bandCount[row + b - 1] - bandCount[row + b];
-                    if (delta === 0) continue;
-                    const t = p - b * step;
-                    const tb = t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0);
-                    if (bin < 0) {
-                        histogram[tb] += delta;
-                    } else if (tb === bin) {
-                        const sub = (t - bin) * NUM_SUB_BINS;
-                        histogram[sub < 0 ? 0 : (sub >= NUM_SUB_BINS ? LAST_SUB_BIN : sub | 0)] += delta;
-                    }
-                }
-            }
-            base += len;
-        }
+    _visitNode(inst, n) {
+        // the log of the distance is half the log of the squared distance
+        const dSq = inst.measureTreeNode(n);
+        inst.treePosition[n] = 0.5 * Math.log(dSq > MIN_DISTANCE_SQ ? dSq : MIN_DISTANCE_SQ) + inst.treeOffset;
     }
 
     /**
-     * Puts every node at one end of its LOD chain, for the cases where the budget decides
-     * everything - either the whole scene fits at its finest, or not even the coarsest scene does.
+     * Queues the refinement of a node, or refines it now when it is coarser than the LOD range
+     * allows.
      *
-     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
-     * @param {boolean} finest - True for the finest band, false for the coarsest.
+     * @param {number} index - The instance index.
+     * @param {GSplatOctreeInstance} inst - The instance.
+     * @param {number} n - The node.
+     * @returns {number} The splat change of the refinements made now.
      * @private
      */
-    _assignChainEnd(octreeInstances, finest) {
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, span } = inst.lodTable;
-            const nodeInfos = inst.nodeInfos;
-            const offset = finest ? 0 : span - 1;
-            for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                nodeInfos[n].optimalLod = bandLod[n * span + offset];
-            }
+    _scheduleNode(index, inst, n) {
+        const octree = inst.octree;
+        if (octree.childCount[n] === 0) return 0;
+
+        // the node's level relative to the range, the band it is refined when leaving
+        const band = octree.nodeLevel[n] - inst.rangeMin;
+        if (band <= 0) return 0;
+        if (band > inst.rangeMax - inst.rangeMin) {
+            return octree.childrenSplats[n] - octree.nodeSplats[n] + this._refineNode(index, inst, n);
         }
+
+        this._heapPush(inst.treePosition[n] - band * inst.treeStep, index, n);
+        return 0;
+    }
+
+    /**
+     * Refines a node: reaches its children and queues their refinements.
+     *
+     * @param {number} index - The instance index.
+     * @param {GSplatOctreeInstance} inst - The instance.
+     * @param {number} n - The node.
+     * @returns {number} The splat change of the children's refinements made now.
+     * @private
+     */
+    _refineNode(index, inst, n) {
+        inst.treeRefined[n] = inst.treeStamp;
+        const { childStart, childCount } = inst.octree;
+        let delta = 0;
+        for (let c = childStart[n], end = c + childCount[n]; c < end; c++) {
+            this._visitNode(inst, c);
+            delta += this._scheduleNode(index, inst, c);
+        }
+        return delta;
+    }
+
+    /**
+     * @param {number} key - The switch point.
+     * @param {number} index - The instance index.
+     * @param {number} node - The node.
+     * @private
+     */
+    _heapPush(key, index, node) {
+        if (this._heapSize === this._heapKey.length) {
+            const grow = (array) => {
+                const larger = new /** @type {any} */ (array.constructor)(array.length * 2);
+                larger.set(array);
+                return larger;
+            };
+            this._heapKey = grow(this._heapKey);
+            this._heapInst = grow(this._heapInst);
+            this._heapNode = grow(this._heapNode);
+        }
+
+        const keys = this._heapKey;
+        const instIndices = this._heapInst;
+        const nodes = this._heapNode;
+        let i = this._heapSize++;
+        while (i > 0) {
+            const parent = (i - 1) >> 1;
+            if (keys[parent] <= key) break;
+            keys[i] = keys[parent];
+            instIndices[i] = instIndices[parent];
+            nodes[i] = nodes[parent];
+            i = parent;
+        }
+        keys[i] = key;
+        instIndices[i] = index;
+        nodes[i] = node;
+    }
+
+    /**
+     * Removes the entry with the smallest switch point.
+     *
+     * @private
+     */
+    _heapPop() {
+        const size = --this._heapSize;
+        if (size === 0) return;
+
+        const keys = this._heapKey;
+        const instIndices = this._heapInst;
+        const nodes = this._heapNode;
+        const key = keys[size];
+        const index = instIndices[size];
+        const node = nodes[size];
+        let i = 0;
+        for (;;) {
+            let child = 2 * i + 1;
+            if (child >= size) break;
+            if (child + 1 < size && keys[child + 1] < keys[child]) child++;
+            if (keys[child] >= key) break;
+            keys[i] = keys[child];
+            instIndices[i] = instIndices[child];
+            nodes[i] = nodes[child];
+            i = child;
+        }
+        keys[i] = key;
+        instIndices[i] = index;
+        nodes[i] = node;
     }
 }
 

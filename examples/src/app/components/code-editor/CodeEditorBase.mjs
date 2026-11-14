@@ -70,6 +70,10 @@ function getShowMinimap() {
  * @property {string} selectedFile - The selected file.
  * @property {boolean} showMinimap - The state of showing the Minimap
  * @property {boolean} [downloading] - True while a standalone Vite project is being built.
+ * @property {string[]} [scripts] - Specifiers of the scripts the example imports, shown as
+ * read-only tabs (e.g. `playcanvas/scripts/esm/grid.mjs`).
+ * @property {string | null} [selectedScript] - The script tab being shown in place of
+ * `selectedFile`, or null.
  */
 
 /** @type {typeof Component<Props, State>} */

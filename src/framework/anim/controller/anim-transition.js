@@ -32,7 +32,8 @@ class AnimTransition {
      * @param {number} [options.exitTime] - If provided, this transition will only be active for
      * the exact frame during which the source states progress passes the time specified. Given as
      * a normalized value of the source states duration. Values less than 1 will be checked every
-     * animation loop. Defaults to null.
+     * animation loop. Ignored when the source state is START or END, as those play no animation.
+     * Defaults to null.
      * @param {number} [options.transitionOffset] - If provided, the destination state will begin
      * playing its animation at this time. Given in normalized time, based on the state's duration
      * and must be between 0 and 1. Defaults to null.

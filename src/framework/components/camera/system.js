@@ -43,8 +43,12 @@ const _properties = [
     'clearDepth',
     'clearDepthBuffer',
     'clearStencilBuffer',
+    'clipIntersection',
+    'clippingPlanes',
     'renderSceneColorMap',
     'renderSceneDepthMap',
+    'sceneColorMapMipmaps',
+    'sceneColorMapMipmapFilter',
     'cullFaces',
     'farClip',
     'flipFaces',
@@ -148,6 +152,10 @@ class CameraComponentSystem extends ComponentSystem {
             const property = _properties[i];
             data[property] = c[property];
         }
+
+        // the clipping planes as assigned, without changes to the returned planes that are not
+        // assigned
+        data.clippingPlanes = c._camera._clipPlanes.assigned;
 
         const component = this.addComponent(clone, data);
 

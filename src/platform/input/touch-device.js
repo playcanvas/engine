@@ -1,5 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 
+import { acquireTouchAction, releaseTouchAction } from './touch-action.js';
 import { TouchEvent } from './touch-event.js';
 
 /**
@@ -113,6 +114,10 @@ class TouchDevice extends EventHandler {
      * Attach a device to an element in the DOM. If the device is already attached to an element
      * this method will detach it first.
      *
+     * The device sets the element's `touch-action` style to `none`, so the browser does not scroll
+     * or zoom the page while a touch on the element is in progress. The previous value is restored
+     * by {@link TouchDevice#detach}.
+     *
      * @param {Element} element - The element to attach to.
      */
     attach(element) {
@@ -121,6 +126,8 @@ class TouchDevice extends EventHandler {
         }
 
         this._element = element;
+
+        acquireTouchAction(element);
 
         this._element.addEventListener('touchstart', this._startHandler, false);
         this._element.addEventListener('touchend', this._endHandler, false);
@@ -137,6 +144,8 @@ class TouchDevice extends EventHandler {
             this._element.removeEventListener('touchend', this._endHandler, false);
             this._element.removeEventListener('touchmove', this._moveHandler, false);
             this._element.removeEventListener('touchcancel', this._cancelHandler, false);
+
+            releaseTouchAction(this._element);
         }
         this._element = null;
     }
@@ -150,9 +159,11 @@ class TouchDevice extends EventHandler {
     }
 
     _handleTouchMove(e) {
-        // call preventDefault to avoid issues in Chrome Android:
-        // http://wilsonpage.co.uk/touch-events-in-chrome-android/
-        e.preventDefault();
+        // Stop the browser from scrolling or zooming during the drag. Once the browser has started
+        // a scroll the event is not cancelable, and calling preventDefault only logs a warning.
+        if (e.cancelable) {
+            e.preventDefault();
+        }
         this.fire('touchmove', new TouchEvent(this, e));
     }
 

@@ -32,13 +32,6 @@ class Plane {
     normal = new Vec3();
 
     /**
-     * The distance from the plane to the origin, along its normal.
-     *
-     * @type {number}
-     */
-    distance;
-
-    /**
      * Create a new Plane instance.
      *
      * @param {Vec3} [normal] - Normal of the plane. The constructor copies this parameter. Defaults
@@ -48,6 +41,15 @@ class Plane {
      */
     constructor(normal = Vec3.UP, distance = 0) {
         this.normal.copy(normal);
+
+        // Assigned here instead of declared as a class field, so V8 can store it as an unboxed
+        // double (see Vec3).
+
+        /**
+         * The distance from the plane to the origin, along its normal.
+         *
+         * @type {number}
+         */
         this.distance = distance;
     }
 

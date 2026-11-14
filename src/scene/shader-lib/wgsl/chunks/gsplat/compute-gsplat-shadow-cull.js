@@ -45,6 +45,7 @@ struct CullUniforms {
 
 // Work-buffer format texture bindings (binding 5+) and the splat read/modify helpers. setSplat
 // (gsplatComputeSplatCS) reads uniforms.splatTextureSize, so the uniform struct is declared above.
+#include "dispatchThreadsCS"
 #include "gsplatComputeSplatCS"
 #include "gsplatFormatDeclCS"
 #include "gsplatFormatReadCS"
@@ -102,7 +103,6 @@ var<workgroup> wgBase: u32;
 @compute @workgroup_size({WORKGROUP_SIZE})
 fn main(
     @builtin(global_invocation_id) gid: vec3u,
-    @builtin(num_workgroups) numWorkgroups: vec3u,
     @builtin(local_invocation_index) localIdx: u32
 ) {
     if (localIdx == 0u) {
@@ -110,8 +110,8 @@ fn main(
     }
     workgroupBarrier();
 
-    // flat thread index from the (possibly Y-tiled) 2D dispatch grid
-    let threadIdx = gid.y * (numWorkgroups.x * {WORKGROUP_SIZE}u) + gid.x;
+    // the flat thread index, also when the dispatch is spread over rows of workgroups
+    let threadIdx = dispatchThreadIndex(gid);
     let candidateCount = candidateCountBuffer[uniforms.numIntervals];
 
     var valid = false;

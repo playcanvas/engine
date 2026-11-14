@@ -179,10 +179,6 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
 
     _additionalTint = new Vec3();
 
-    _aheadTint = new Vec3();
-
-    _behindTint = new Vec3();
-
     _edgeTintVec = new Vec3();
 
     _tintVec = new Vec3();
@@ -206,7 +202,8 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
     direction = new Vec3(0, 1, 0);
 
     /**
-     * Duration for plane to sweep through the box
+     * Duration for plane to sweep through the box. The whole effect takes `duration + 2 * interval`,
+     * as the transition around the plane enters the box before the plane does and leaves it after.
      * @attribute
      */
     duration = 1.0;
@@ -296,101 +293,54 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
         this._normDir.copy(this.direction).normalize();
         this._absDir.set(Math.abs(this._normDir.x), Math.abs(this._normDir.y), Math.abs(this._normDir.z));
 
-        const planeProgress = Math.max(0.0, Math.min(1.0, this.effectTime / Math.max(this.duration, 0.001)));
-
         // Calculate box size and box length along direction
         this._boxSize.sub2(this.aabbMax, this.aabbMin);
         const boxLength = this._boxSize.dot(this._absDir);
 
-        const edgeDistance = (this.interval / Math.max(this.duration, 0.001)) * boxLength;
+        const duration = Math.max(this.duration, 0.001);
+        const edgeDistance = Math.max((this.interval / duration) * boxLength, 0.000001);
+
+        // Plane position along the sweep, measured from the face of the box it enters through. It
+        // starts edgeDistance before the box and stops edgeDistance past it, so the transition band
+        // around the plane fully enters the box at the start and fully leaves it at the end
+        const travel = Math.min((this.effectTime / duration) * boxLength, boxLength + 2 * edgeDistance);
+        const planePos = travel - edgeDistance;
 
         const directionSign = this._normDir.x + this._normDir.y + this._normDir.z;
         const isNegativeDir = directionSign < 0.0;
 
-        const planePos = isNegativeDir ? ((1.0 - planeProgress) * boxLength) : (planeProgress * boxLength);
-
-        const isTintOnlyMode = Math.abs((this.visibleStart ? 1.0 : 0.0) - (this.visibleEnd ? 1.0 : 0.0)) < 0.01;
+        const visStart = this.visibleStart ? 1.0 : 0.0;
+        const visEnd = this.visibleEnd ? 1.0 : 0.0;
+        const isTintOnlyMode = this.visibleStart === this.visibleEnd;
         const invert = this.invertTint;
+
+        this._tintVec.set(this.tint.r, this.tint.g, this.tint.b);
+        this._edgeTintVec.set(this.edgeTint.r, this.edgeTint.g, this.edgeTint.b);
 
         // For each position along sweep direction (0 = aabbMin, 1 = aabbMax along direction)
         for (let i = 0; i < 256; i++) {
             const t = i / 255.0;
-            const splatPos = t * boxLength;
-            const distToPlane = splatPos - planePos;
+            const splatPos = (isNegativeDir ? 1.0 - t : t) * boxLength;
 
-            // Pre-compute interpolation factors
-            const tBack = Math.max(0.0, Math.min(1.0, (distToPlane + edgeDistance) / edgeDistance));
-            const tFront = Math.max(0.0, Math.min(1.0, distToPlane / edgeDistance));
+            // Positive where the plane has not arrived yet
+            const distAhead = splatPos - planePos;
 
-            // Compute scale (for reveal/hide modes)
+            // Compute scale (for reveal/hide modes), ramping from the start to the end state across
+            // the band ahead of the plane
             let scale = 1.0;
             if (!isTintOnlyMode) {
-                if (isNegativeDir) {
-                    if (tBack < 1.0 && distToPlane < 0.0) {
-                        const visStart = this.visibleStart ? 1.0 : 0.0;
-                        const visEnd = this.visibleEnd ? 1.0 : 0.0;
-                        scale = visStart + (visEnd - visStart) * tBack;
-                    } else {
-                        scale = (distToPlane < -edgeDistance) ? (this.visibleStart ? 1.0 : 0.0) : (this.visibleEnd ? 1.0 : 0.0);
-                    }
-                } else {
-                    if (tFront < 1.0 && distToPlane >= 0.0) {
-                        const visStart = this.visibleStart ? 1.0 : 0.0;
-                        const visEnd = this.visibleEnd ? 1.0 : 0.0;
-                        scale = visEnd + (visStart - visEnd) * tFront;
-                    } else {
-                        scale = (distToPlane < 0.0) ? (this.visibleEnd ? 1.0 : 0.0) : (this.visibleStart ? 1.0 : 0.0);
-                    }
-                }
+                const tFront = Math.max(0.0, Math.min(1.0, distAhead / edgeDistance));
+                scale = visEnd + (visStart - visEnd) * tFront;
             }
 
-            // Compute tint color (RGB) - start with baseTint, then multiply by additional tint
-            this._additionalTint.set(1, 1, 1);
+            // Tint-only mode tints the side the plane has passed (or the side ahead of it when
+            // inverted), reveal/hide mode tints both sides
+            const isAhead = distAhead > 0.0;
+            const sideTint = (!isTintOnlyMode || isAhead === invert) ? this._tintVec : Vec3.ONE;
 
-            if (isTintOnlyMode) {
-                // Tint-only mode: determine which tint to use based on position
-                // Determine if we're ahead or behind plane (accounting for direction)
-                const isAhead = isNegativeDir ? (distToPlane < 0.0) : (distToPlane > 0.0);
-                const distAbs = Math.abs(distToPlane);
-
-                // Determine which tints to use based on invert flag
-                if (invert) {
-                    this._aheadTint.set(this.tint.r, this.tint.g, this.tint.b);
-                    this._behindTint.set(1, 1, 1);
-                } else {
-                    this._aheadTint.set(1, 1, 1);
-                    this._behindTint.set(this.tint.r, this.tint.g, this.tint.b);
-                }
-
-                if (distAbs > edgeDistance) {
-                    // Outside edge interval
-                    if (isAhead) {
-                        this._additionalTint.copy(this._aheadTint);
-                    } else {
-                        this._additionalTint.copy(this._behindTint);
-                    }
-                } else {
-                    // Within edge interval - interpolate through edgeTint
-                    const t = distAbs / edgeDistance; // 0 at plane, 1 at edge
-                    this._edgeTintVec.set(this.edgeTint.r, this.edgeTint.g, this.edgeTint.b);
-                    if (isAhead) {
-                        // Interpolate from edge tint to ahead tint
-                        this._additionalTint.lerp(this._edgeTintVec, this._aheadTint, t);
-                    } else {
-                        // Interpolate from behind tint to edge tint
-                        this._additionalTint.lerp(this._behindTint, this._edgeTintVec, t);
-                    }
-                }
-            } else {
-                // Reveal/hide mode: interpolate between tint and edgeTint
-                const edgeFactor = (tBack < 1.0 && distToPlane < 0.0) ?
-                    tBack :
-                    (distToPlane < -edgeDistance ? 0.0 : 1.0);
-
-                this._tintVec.set(this.tint.r, this.tint.g, this.tint.b);
-                this._edgeTintVec.set(this.edgeTint.r, this.edgeTint.g, this.edgeTint.b);
-                this._additionalTint.lerp(this._tintVec, this._edgeTintVec, edgeFactor);
-            }
+            // Edge tint peaks at the plane and fades out over edgeDistance on both sides
+            const edgeFactor = Math.max(0.0, 1.0 - Math.abs(distAhead) / edgeDistance);
+            this._additionalTint.lerp(sideTint, this._edgeTintVec, edgeFactor);
 
             // Apply base tint and additional tint (component-wise multiply)
             const tintR = this.baseTint.r * this._additionalTint.x;

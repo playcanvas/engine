@@ -598,7 +598,8 @@ class GSplatWorld {
      */
     _updateWorldState(requireCenters) {
 
-        // Check for state changes (format version, modifier hash, numSplats)
+        // Check for state changes (format version, modifier hash, numSplats, anti-aliasing flag)
+        this._stateTracker.antiAliasChanged = false;
         let stateChanged = this._stateTracker.hasChanges(this._layerPlacements);
         for (const [, inst] of this._octreeInstances) {
             if (this._stateTracker.hasChanges(inst.activePlacements)) {
@@ -693,8 +694,9 @@ class GSplatWorld {
         }
 
         // When placements are added/removed, boundsBaseIndex values shift.
-        // Force a full rebuild so no stale indices remain.
-        if (this._placementSetChanged) {
+        // Force a full rebuild so no stale indices remain. A changed anti-aliasing flag is stored
+        // per splat in the work buffer, so it needs every splat copied again too.
+        if (this._placementSetChanged || this._stateTracker.antiAliasChanged) {
             newState.fullRebuild = true;
         }
 
@@ -776,7 +778,7 @@ class GSplatWorld {
      * @param {boolean} updateBounds - Whether to upload frustum-culling bounds (false for CPU sort).
      * @param {{ rebuilt: boolean, count: number, textureSize: number, sortNeeded: boolean }} result
      * Caller-owned result. When `rebuilt` is true the manager must call `renderer.update(count,
-     * textureSize)`, `renderer.setOrderData()` and `intervalCompaction.invalidateUpload()`. When
+     * textureSize)` and `intervalCompaction.invalidateUpload()`. When
      * `sortNeeded` is true (a splat moved during the incremental update) the manager must re-sort.
      * @returns {{ rebuilt: boolean, count: number, textureSize: number, sortNeeded: boolean }} The populated result.
      */
@@ -1191,11 +1193,11 @@ class GSplatWorld {
         // Remaining budget for octrees after accounting for fixed splats.
         const octreeBudget = Math.max(1, budget - fixedSplats);
 
-        // Phase 1: resolve each instance's LOD range and evaluate per-node distances, and collect
-        // padding for active placements
+        // Phase 1: resolve each instance's LOD range and prepare its camera terms - the cut measures
+        // only the nodes it reaches - and collect padding for active placements
         for (const [, inst] of this._octreeInstances) {
             inst.resolveLodRange();
-            inst.evaluateNodeDistances(camera, this._gsplat);
+            inst.prepareDistances(camera, this._gsplat);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1206,7 +1208,7 @@ class GSplatWorld {
         // Adjust budget for estimated padding overhead
         const adjustedBudget = Math.max(1, octreeBudget - paddingEstimate);
 
-        // Phase 2: choose a LOD level per node within that budget
+        // Phase 2: choose the cut through the trees within that budget
         this._budgetBalancer.balance(this._octreeInstances, adjustedBudget, this._gsplat.splatBudgetMode === GSPLAT_BUDGET_LIMIT);
 
         // Phase 3: apply LOD changes

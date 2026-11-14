@@ -71,9 +71,9 @@ fn main(
         // Pre-fetch value before barrier so GPU can overlap fetch with ranking
         let v = select(0u, select(inputValues[GID], GID, IS_FIRST_PASS == 1u), is_valid);
 
-        if (is_valid) {
-            atomicOr(&digit_masks[digit * 8u + word_idx], 1u << bit_idx);
-        }
+        // Unconditional for the same reason as the histogram: Adreno drops atomics issued by a
+        // partially active wave. An out-of-range invocation ORs nothing into digit 0's mask.
+        atomicOr(&digit_masks[select(0u, digit, is_valid) * 8u + word_idx], select(0u, 1u << bit_idx, is_valid));
         workgroupBarrier();
 
         if (is_valid) {

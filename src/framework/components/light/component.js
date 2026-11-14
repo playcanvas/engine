@@ -6,6 +6,7 @@ import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
 /**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { Color } from '../../../core/math/color.js'
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LightComponentSystem } from './system.js'
@@ -23,6 +24,7 @@ const _properties = [
     'affectSpecularity',
     'castShadows',
     'shadowDistance',
+    'shadowBounds',
     'shadowIntensity',
     'shadowResolution',
     'shadowBias',
@@ -437,7 +439,7 @@ class LightComponent extends Component {
 
     /**
      * Sets the distance from the viewpoint beyond which shadows are no longer rendered. Affects
-     * directional lights only. Defaults to 40.
+     * directional lights only, unless they use {@link shadowBounds}. Defaults to 40.
      *
      * @type {number}
      */
@@ -452,6 +454,51 @@ class LightComponent extends Component {
      */
     get shadowDistance() {
         return this._light.shadowDistance;
+    }
+
+    /**
+     * Sets the world space bounds enclosing the shadow casters of a directional light. By default
+     * (null), the shadow is rendered in cascades fitted to each camera, which spread the shadow
+     * map over the shadow distance in front of the camera. When the bounds are set, the light
+     * renders a single shadow map fitted to the bounds as seen from the light instead, used by all
+     * cameras. This concentrates the resolution of the shadow map where the shadows are needed,
+     * for example on a small part of a large scene, or on a moving object, by updating the bounds
+     * every frame.
+     *
+     * The shadows are rendered regardless of the distance from the camera, and the shadow map is
+     * rendered once for all cameras, instead of once per camera. A shadow falls along the light
+     * from its caster, so the bounds only need to enclose the casters, not the receivers: the
+     * receivers further along the light than the bounds, such as the ground below an object, are
+     * shadowed by the casters within the bounds. Casters outside of the bounds, between the light
+     * and the bounds, cast shadows too, while the casters beside the bounds, as seen from the
+     * light, or beyond them do not.
+     *
+     * The shadow is updated as {@link shadowUpdateMode} specifies, and is rendered again when
+     * the bounds change. {@link numCascades}, {@link shadowDistance}, {@link cascadeBlend} and
+     * {@link cascadeDistribution} are not used while the bounds are set. Affects directional
+     * lights only. The bounds are copied, so modify and set them again to update them. Defaults
+     * to null.
+     *
+     * @type {BoundingBox|null}
+     * @example
+     * // the shadow covers a 10 x 4 x 10 area around the origin
+     * entity.light.shadowBounds = new BoundingBox(new Vec3(0, 2, 0), new Vec3(5, 2, 5));
+     * @example
+     * // the shadow follows an object, updated each frame
+     * bounds.center.copy(object.getPosition());
+     * entity.light.shadowBounds = bounds;
+     */
+    set shadowBounds(value) {
+        this._light.shadowBounds = value;
+    }
+
+    /**
+     * Gets the world space bounds enclosing the shadow casters of a directional light.
+     *
+     * @type {BoundingBox|null}
+     */
+    get shadowBounds() {
+        return this._light.shadowBounds;
     }
 
     /**
@@ -534,8 +581,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the number of shadow cascades. Can be 1, 2, 3 or 4. Defaults to 1, representing no
-     * cascades.
+     * Sets the number of shadow cascades. Can be 1, 2, 3 or 4. Not used while
+     * {@link shadowBounds} are set. Defaults to 1, representing no cascades.
      *
      * @type {number}
      */

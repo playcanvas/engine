@@ -6,6 +6,7 @@ import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { ShaderDefinitionUtils } from './shader-definition-utils.js';
 import halfTypes from './shader-chunks/frag/half-types.js';
+import dispatchThreadsCS from './shader-chunks/compute/dispatch-threads.js';
 import sceneColorCS from './shader-chunks/compute/scene-color.js';
 import sceneDepthCS from './shader-chunks/compute/scene-depth.js';
 
@@ -233,6 +234,9 @@ class Shader {
             }
             if (!cincludes.has('sceneColorCS')) {
                 cincludes.set('sceneColorCS', sceneColorCS);
+            }
+            if (!cincludes.has('dispatchThreadsCS')) {
+                cincludes.set('dispatchThreadsCS', dispatchThreadsCS);
             }
 
             // pre-process compute shader source

@@ -12,7 +12,8 @@ import { GAMMA_SRGB } from '../constants.js';
  */
 
 /**
- * A render pass implementing grab of a color buffer.
+ * A frame pass grabbing the color buffer a camera renders into: it copies the color buffer to a
+ * texture with mipmaps, and publishes the texture as the scene color map of the camera.
  *
  * @ignore
  */
@@ -57,9 +58,9 @@ class FramePassColorGrab extends FramePass {
 
     shouldReallocate(targetRT, sourceTexture, sourceFormat) {
 
-        // need to reallocate if format does not match
+        // need to reallocate if format or mipmaps do not match
         const targetFormat = targetRT?.colorBuffer.format;
-        if (targetFormat !== sourceFormat) {
+        if (targetFormat !== sourceFormat || targetRT?.colorBuffer.mipmaps !== this.camera.sceneColorMapMipmaps) {
             return true;
         }
 
@@ -72,13 +73,14 @@ class FramePassColorGrab extends FramePass {
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format) {
 
         // allocate texture buffer
+        const mipmaps = this.camera.sceneColorMapMipmaps;
         const texture = new Texture(device, {
             name: SceneColorMapHandle.uniformName,
             format,
             width: sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
             height: sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
-            mipmaps: true,
-            minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
+            mipmaps,
+            minFilter: mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
@@ -146,6 +148,12 @@ class FramePassColorGrab extends FramePass {
         camera.publishSceneColorMap(colorBuffer, gamma);
     }
 
+    precompile() {
+
+        // the copy needs no shaders, but the passes after it read the texture it publishes
+        this.before();
+    }
+
     execute() {
 
         // copy color from the current render target
@@ -155,13 +163,10 @@ class FramePassColorGrab extends FramePass {
         const colorBuffer = this.colorRenderTarget.colorBuffer;
         device.copyRenderTarget(this.source, this.colorRenderTarget, true, false);
 
-        // generate mipmaps, which the null device has no data for
-        if (device.isWebGPU) {
-            device.mipmapRenderer.generate(colorBuffer.impl);
-        } else if (device.isWebGL2) {
-            device.activeTexture(device.maxCombinedTextures - 1);
-            device.bindTexture(colorBuffer);
-            device.gl.generateMipmap(colorBuffer.impl._glTarget);
+        // rough refraction samples the small mip levels, with the filter the camera specifies
+        if (colorBuffer.mipmaps) {
+            colorBuffer.mipmapFilter = this.camera.sceneColorMapMipmapFilter;
+            device.generateMipmaps(colorBuffer);
         }
 
         DebugGraphics.popGpuMarker(device);
