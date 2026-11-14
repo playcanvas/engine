@@ -1,9 +1,16 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { SPRITETYPE_SIMPLE } from '../../../../src/framework/components/sprite/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { FILTER_LINEAR, FILTER_NEAREST } from '../../../../src/platform/graphics/constants.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
+import { SPRITE_RENDERMODE_TILED } from '../../../../src/scene/constants.js';
+import { Sprite } from '../../../../src/scene/sprite.js';
+import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -154,6 +161,71 @@ describe('SpriteComponent', function () {
         for (const material of [system.defaultMaterial, system.default9SlicedMaterialSlicedMode, system.default9SlicedMaterialTiledMode]) {
             expect(material.defines.get('MESH_COLOR')).to.equal(true);
         }
+    });
+
+    // A tiled sprite of a 40 x 20 frame whose 6 pixel ends and 2 pixel top border leave a 28 x 18
+    // middle to repeat
+    const createTiledSprite = function (textureOptions) {
+        const atlas = new TextureAtlas();
+        atlas.texture = new Texture(app.graphicsDevice, { width: 64, height: 32, ...textureOptions });
+        atlas.frames = {
+            tile: { rect: new Vec4(4, 8, 40, 20), pivot: new Vec2(0.5, 0.5), border: new Vec4(6, 0, 6, 2) }
+        };
+        const sprite = new Sprite(app.graphicsDevice, {
+            atlas,
+            frameKeys: ['tile'],
+            pixelsPerUnit: 1,
+            renderMode: SPRITE_RENDERMODE_TILED
+        });
+
+        const e = new Entity();
+        app.root.addChild(e);
+        e.addComponent('sprite', { sprite, width: 100, height: 20 });
+        return e;
+    };
+
+    it('Keeps nearest tiled sampling half a texel inside the repeating middle of the frame', function () {
+        const e = createTiledSprite({ minFilter: FILTER_NEAREST, magFilter: FILTER_NEAREST });
+
+        const halfTexel = e.sprite._meshInstance.getParameter('tileHalfTexel').data;
+        expect(halfTexel[0]).to.be.closeTo(0.5 / 28, 1e-7);
+        expect(halfTexel[1]).to.be.closeTo(0.5 / 18, 1e-7);
+    });
+
+    it('Lets linear tiled sampling blend across the seams of the repeating middle', function () {
+        const e = createTiledSprite();
+
+        const halfTexel = e.sprite._meshInstance.getParameter('tileHalfTexel').data;
+        expect(halfTexel[0]).to.equal(0);
+        expect(halfTexel[1]).to.equal(0);
+    });
+
+    it('Lets tiled sampling of mixed filters blend across the seams of the repeating middle', function () {
+        for (const [minFilter, magFilter] of [[FILTER_NEAREST, FILTER_LINEAR], [FILTER_LINEAR, FILTER_NEAREST]]) {
+            const e = createTiledSprite({ minFilter, magFilter });
+
+            const halfTexel = e.sprite._meshInstance.getParameter('tileHalfTexel').data;
+            expect(halfTexel[0]).to.equal(0);
+            expect(halfTexel[1]).to.equal(0);
+        }
+    });
+
+    it('Follows changes to the texture filtering of a tiled frame', function () {
+        const e = createTiledSprite({ minFilter: FILTER_NEAREST, magFilter: FILTER_NEAREST });
+        const texture = e.sprite.sprite.atlas.texture;
+        const halfTexel = e.sprite._meshInstance.getParameter('tileHalfTexel').data;
+
+        texture.minFilter = FILTER_LINEAR;
+        texture.magFilter = FILTER_LINEAR;
+        app.update(0.1);
+        expect(halfTexel[0]).to.equal(0);
+        expect(halfTexel[1]).to.equal(0);
+
+        texture.minFilter = FILTER_NEAREST;
+        texture.magFilter = FILTER_NEAREST;
+        app.update(0.1);
+        expect(halfTexel[0]).to.be.closeTo(0.5 / 28, 1e-7);
+        expect(halfTexel[1]).to.be.closeTo(0.5 / 18, 1e-7);
     });
 
     it('Add / Remove Component', function () {

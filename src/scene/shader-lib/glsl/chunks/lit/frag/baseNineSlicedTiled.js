@@ -8,6 +8,7 @@ varying vec2 vTiledUv;
 uniform mediump vec4 innerOffset;
 uniform mediump vec2 outerScale;
 uniform mediump vec4 atlasRect;
+uniform vec2 tileHalfTexel;
 
 vec2 nineSlicedUv;
 `;
