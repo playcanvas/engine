@@ -4,6 +4,9 @@ import { Color } from '../../../../src/core/math/color.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { PIXELFORMAT_R32F } from '../../../../src/platform/graphics/constants.js';
+import { FramePass } from '../../../../src/platform/graphics/frame-pass.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
 import {
     ASPECT_MANUAL,
     FOG_LINEAR,
@@ -154,6 +157,89 @@ describe('CameraComponent', function () {
             const clone = e.clone();
 
             expect(clone.camera.enabled).to.equal(false);
+        });
+
+    });
+
+    describe('#publishSceneDepthMap', function () {
+
+        const createDepthTexture = () => new Texture(app.graphicsDevice, {
+            width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false
+        });
+
+        it('publishes the texture with the encoding the camera\'s shaders read', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const texture = createDepthTexture();
+            const handle = e.camera.sceneDepthMapHandle;
+
+            // a camera without a depth map of its own reads the depth buffer values
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.texture).to.equal(texture);
+            expect(handle.renderVersion).to.equal(app.graphicsDevice.renderVersion);
+            expect(handle.linear).to.equal(false);
+            expect(handle.packed).to.equal(false);
+            expect(handle.reciprocal).to.equal(false);
+            expect(app.graphicsDevice.scope.resolve('uSceneDepthMap').value).to.equal(texture);
+
+            // a camera whose shaders read the linear depth, the way a CameraFrame sets it up
+            e.camera.shaderParams.sceneDepthMapLinear = true;
+            e.camera.shaderParams.sceneDepthMapReciprocal = true;
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.linear).to.equal(true);
+            expect(handle.packed).to.equal(false);
+            expect(handle.reciprocal).to.equal(true);
+
+            texture.destroy();
+        });
+
+        it('places the viewport by the flipY of the target the depth was rendered to', function () {
+            const e = new Entity();
+            e.addComponent('camera', { rect: new Vec4(0, 0, 1, 0.5) });
+            const texture = createDepthTexture();
+            const viewport = e.camera.sceneDepthMapHandle.viewport;
+
+            // the bottom half of a 4x4 texture: rows 0-1 counted from the bottom, 2-3 from the top
+            e.camera.publishSceneDepthMap(texture, { flipY: true });
+            expect(Array.from(viewport)).to.deep.equal([0, 0, 4, 2]);
+            e.camera.publishSceneDepthMap(texture);
+            expect(Array.from(viewport)).to.deep.equal([0, 2, 4, 2]);
+
+            texture.destroy();
+        });
+
+        it('captures this frame\'s matrices when published before the camera renders', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            app.root.addChild(e);
+            const texture = createDepthTexture();
+
+            // a pass of the application before the camera's own render, which publishes a depth
+            const pass = new FramePass(app.graphicsDevice);
+            let published = null;
+            pass.onAfter = () => {
+                e.camera.publishSceneDepthMap(texture);
+                published = e.camera.sceneDepthMapHandle.viewProjectionInverse.clone();
+            };
+            e.camera.beforePasses.push(pass);
+
+            const expectMatricesOfThisFrame = () => {
+                const rendered = e.camera.camera._viewProjInverse.data;
+                published.data.forEach((value, i) => {
+                    expect(value).to.be.closeTo(rendered[i], 1e-6 * Math.max(1, Math.abs(rendered[i])));
+                });
+            };
+
+            app.render();
+            expectMatricesOfThisFrame();
+            const first = published.clone();
+
+            e.setPosition(10, 0, 0);
+            app.render();
+            expectMatricesOfThisFrame();
+            expect(published.equals(first)).to.equal(false);
+
+            texture.destroy();
         });
 
     });

@@ -20,6 +20,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
  * @import { SceneColorMapHandle } from '../../../platform/graphics/scene-color-map-handle.js'
  * @import { SceneDepthMapHandle } from '../../../platform/graphics/scene-depth-map-handle.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { FogParams } from '../../../scene/fog-params.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
@@ -1334,6 +1335,47 @@ class CameraComponent extends Component {
 
         this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
         this.system.app.scene.layers.markDirty();
+    }
+
+    /**
+     * Publishes a scene depth map rendered by a frame pass of the application, as the depth map of
+     * this camera. Its consumers then read it in the same frame: the materials sampling the scene
+     * depth, {@link SceneDepthReader}, and the compute shaders given
+     * {@link CameraComponent#sceneDepthMapHandle} (see {@link Compute#setSceneDepthMap}).
+     *
+     * Call it after the depth was rendered, in each frame it is rendered, typically from
+     * {@link FramePass#onAfter} of the pass that rendered it. For example, a depth pre-pass of the
+     * large occluders, added to {@link CameraComponent#beforePasses}, can publish its depth for a
+     * {@link ComputePass} placed after it, which culls the geometry the camera is about to render
+     * against it, in the same frame. A depth published before the camera renders in the frame
+     * comes with the camera's matrices of this frame, without the jitter of
+     * {@link CameraComponent#jitter}.
+     *
+     * The texture must store the depth the way the shaders of this camera read it: the depth buffer
+     * values, or the linear depth when the camera's {@link CameraFrame} renders the depth. A camera
+     * that renders its own depth map, requested by {@link CameraComponent#requestSceneDepthMap} or by
+     * its {@link CameraFrame}, publishes it the same way later in the frame, and its consumers read
+     * that one from then on.
+     *
+     * @param {Texture} texture - The texture the depth was rendered to: a depth texture, or a single
+     * channel float texture holding the depth.
+     * @param {object} [options] - Options.
+     * @param {boolean} [options.flipY] - The flipY of the render target the depth was rendered to,
+     * which the texture matches the layout of. Defaults to false.
+     * @example
+     * // a depth pre-pass of the application, rendering the hardware depth of a few occluders
+     * depthPass.onAfter = () => {
+     *     cameraEntity.camera.publishSceneDepthMap(depthTexture, {
+     *         flipY: depthPass.renderTarget.flipY
+     *     });
+     * };
+     */
+    publishSceneDepthMap(texture, options = {}) {
+        const { flipY = false } = options;
+        Debug.assert(texture, 'CameraComponent.publishSceneDepthMap requires a texture');
+        const { sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal } = this._camera.shaderParams;
+        this._camera.publishSceneDepthMap(texture, this.system.app.graphicsDevice.renderVersion,
+            sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal, flipY);
     }
 
     dirtyLayerCompositionCameras() {
