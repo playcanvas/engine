@@ -1,6 +1,6 @@
 # PlayCanvas Engine
 
-[English](https://github.com/playcanvas/engine/blob/main/README.md) · [中文](https://github.com/playcanvas/engine/blob/main/README-zh.md) · [日本語](https://github.com/playcanvas/engine/blob/main/README-ja.md) · [한글](https://github.com/playcanvas/engine/blob/main/README-kr.md)
+<p align="right"><sub><a href="https://github.com/playcanvas/engine/blob/main/README.md">English</a> · <a href="https://github.com/playcanvas/engine/blob/main/README-zh.md">中文</a> · <a href="https://github.com/playcanvas/engine/blob/main/README-ja.md">日本語</a> · <a href="https://github.com/playcanvas/engine/blob/main/README-kr.md">한글</a></sub></p>
 
 [![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
 [![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)
