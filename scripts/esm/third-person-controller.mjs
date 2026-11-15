@@ -787,8 +787,19 @@ class ThirdPersonController extends Script {
             this._lastSpeedBucket = bucket;
             this.fire('speed', bucket);
         }
+    }
 
-        // ---- camera positioning ----
+    /**
+     * Places the camera. This runs in postUpdate, once physics has moved the
+     * character for the frame. Placed in update, the camera would trail the
+     * character by a frame: by a distance that grows with the character's
+     * speed and changes with the frame time, which shows as judder, most of
+     * all when a jump starts and when it lands.
+     *
+     * @param {number} dt - The delta time.
+     * @private
+     */
+    _updateCamera(dt) {
         const charPos = this.entity.getPosition();
 
         // pivot = character + cameraHeight on Y; camera orbits this point
@@ -868,7 +879,7 @@ class ThirdPersonController extends Script {
         // mouse scroll wheel zoom (wheel[0] is deltaY: positive when scrolling
         // down -> zoom out; negative when scrolling up -> zoom in). The wheel
         // mutates a TARGET distance which the actual cameraDistance smoothly
-        // lerps toward each frame in _updateController, giving a glide-zoom.
+        // lerps toward each frame in _updateCamera, giving a glide-zoom.
         if (wheel[0] !== 0) {
             this._targetCameraDistance = math.clamp(
                 this._targetCameraDistance + wheel[0] * this.zoomSpeed,
@@ -956,6 +967,17 @@ class ThirdPersonController extends Script {
         deltas.jump.append([this._state.a]);
 
         this._updateController(frame, dt);
+    }
+
+    /**
+     * @param {number} dt - The delta time.
+     */
+    postUpdate(dt) {
+        if (!this._ready) {
+            return;
+        }
+
+        this._updateCamera(dt);
     }
 
     destroy() {
