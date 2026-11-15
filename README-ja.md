@@ -1,4 +1,5 @@
-# PlayCanvas Engine
+# PlayCanvas Engine<a href="https://github.com/playcanvas/engine/blob/main/README-kr.md"><img align="right" src=".github/readme/lang-kr.svg" alt="한글"></a><a href="https://github.com/playcanvas/engine/blob/main/README-zh.md"><img align="right" src=".github/readme/lang-zh.svg" alt="中文"></a><a href="https://github.com/playcanvas/engine/blob/main/README.md"><img align="right" src=".github/readme/lang-en.svg" alt="English"></a>
+<!-- The language labels are images so that they can float beside the title. They float right, so they are listed in reverse display order. -->
 
 [![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
 [![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)
@@ -7,14 +8,9 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [ユーザーマニュアル](https://developer.playcanvas.com/user-manual/engine/) | [APIリファレンス](https://api.playcanvas.com/engine/) | [例](https://playcanvas.com/examples/) | [ブログ](https://blog.playcanvas.com) | [フォーラム](https://forum.playcanvas.com) |
+[ユーザーマニュアル](https://developer.playcanvas.com/user-manual/engine/) · [APIリファレンス](https://api.playcanvas.com/engine/) · [例](https://playcanvas.com/examples/) · [ブログ](https://blog.playcanvas.com) · [フォーラム](https://forum.playcanvas.com)
 
 PlayCanvasは、WebGL2とWebGPU上に構築されたオープンソースのゲームエンジンです。あらゆるブラウザ、あらゆるデバイスで動作するインタラクティブな3Dアプリ、ゲーム、ビジュアライゼーションを作成できます。
-
-[English](https://github.com/playcanvas/engine/blob/main/README.md)
-[中文](https://github.com/playcanvas/engine/blob/main/README-zh.md)
-[日本語](https://github.com/playcanvas/engine/blob/main/README-ja.md)
-[한글](https://github.com/playcanvas/engine/blob/main/README-kr.md)
 
 ## インストール
 
@@ -82,14 +78,12 @@ app.start();
 
 このコードを自分で試すには[CodePen](https://codepen.io/playcanvas/pen/NPbxMj)をクリックします。
 
-PlayCanvas Engine をベースにしたローカル開発環境の設定に関する完全ガイドは[こちら](https://developer.playcanvas.com/user-manual/engine/standalone/)で見つけることができます。
+PlayCanvas Engine をベースにしたローカル開発環境の設定に関する完全ガイドは、[Engineをスタンドアロンで使用する](https://developer.playcanvas.com/user-manual/engine/standalone/)をご覧ください。
 
 ## 機能
 
-PlayCanvasはフル機能のゲームエンジンです。
-
 * 🧊 **グラフィックス** - WebGL2とWebGPUで構築された高度な2D + 3Dグラフィックスエンジン
-* 💠 **ガウシアンスプラッティング** - [3Dガウシアンスプラット](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/)のロードとレンダリングをネイティブサポート
+* 💠 **ガウシアンスプラッティング** - [3Dガウシアンスプラット](https://developer.playcanvas.com/user-manual/gaussian-splatting/)のロードとレンダリングをネイティブサポート
 * 🥽 **XR** - [WebXR](https://developer.playcanvas.com/user-manual/xr/)による没入型ARおよびVR体験のビルトインサポート
 * ⚛️ **物理** - 3Dリジッドボディ物理エンジン [ammo.js](https://github.com/kripken/ammo.js)
 * 🏃 **アニメーション** - キャラクターやシーンに対する強力なステートベースのアニメーション
@@ -120,7 +114,7 @@ PlayCanvasエンジンを使って[多くのゲームやアプリ](https://githu
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
 [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Gaussian Splat Statues](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/1224723/266D9C-image-25.jpg)](https://playcanv.as/p/cLkf99ZV/)  
-[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/)
+[![BMW i8](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Interior Visualization](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/)
 
 他のゲームは[PlayCanvasのウェブサイト](https://playcanvas.com/explore)で見ることができます。
 
