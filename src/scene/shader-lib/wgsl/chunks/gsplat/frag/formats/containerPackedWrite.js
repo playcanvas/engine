@@ -13,8 +13,12 @@ fn gsplatPackCenterX(x: f32) -> u32 {
 fn writeSplat(center: vec3f, rotation: vec4f, scale: vec3f, color: vec4f) {
     writeDataColor(color);
     #ifndef GSPLAT_COLOR_ONLY
-        writeDataTransformA(vec4u(gsplatPackCenterX(center.x), bitcast<u32>(center.y), bitcast<u32>(center.z), pack2x16float(rotation.xy)));
-        writeDataTransformB(vec4u(pack2x16float(vec2f(rotation.z, scale.x)), pack2x16float(scale.yz), 0u, 0u));
+        // only x, y, z are stored and the reader rebuilds w >= 0, so store the w >= 0 form of
+        // the rotation (q and -q are the same rotation). A modifySplatRotationScale that rotates
+        // the splat can leave w < 0, which would otherwise read back as the inverse rotation.
+        let q = select(rotation, -rotation, rotation.w < 0.0);
+        writeDataTransformA(vec4u(gsplatPackCenterX(center.x), bitcast<u32>(center.y), bitcast<u32>(center.z), pack2x16float(q.xy)));
+        writeDataTransformB(vec4u(pack2x16float(vec2f(q.z, scale.x)), pack2x16float(scale.yz), 0u, 0u));
     #endif
 }
 `;

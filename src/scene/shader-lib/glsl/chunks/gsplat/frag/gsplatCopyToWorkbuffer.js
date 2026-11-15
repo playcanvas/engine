@@ -85,8 +85,8 @@ void main(void) {
 
         // Combine: world = model * source (both in x,y,z,w format)
         worldRotation = quatMul(model_rotation, srcRotation);
-        // Ensure w is positive so sqrt() reconstruction works correctly
-        // (quaternions q and -q represent the same rotation)
+        // Hand modifySplatRotationScale a rotation with w >= 0 (q and -q are the same rotation).
+        // writeSplat re-establishes w >= 0 after any modification, as the formats drop its sign.
         if (worldRotation.w < 0.0) {
             worldRotation = -worldRotation;
         }
