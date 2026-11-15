@@ -4,7 +4,7 @@
   "packageManager": "npm@11.19.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
-  "description": "Open-source WebGL/WebGPU 3D engine for the web",
+  "description": "Open-source web graphics engine built on WebGPU and WebGL2",
   "keywords": [
     "3d",
     "3d-engine",
