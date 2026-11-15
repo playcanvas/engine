@@ -25,6 +25,9 @@ class WebglIndexBuffer extends WebglBuffer {
 
         const device = indexBuffer.device;
         super.unlock(device, indexBuffer.usage, device.gl.ELEMENT_ARRAY_BUFFER, indexBuffer.storage, byteOffset, byteLength);
+
+        // the upload bound this buffer to the vertex array object bound in the context
+        device.indexBufferBound?.(this.bufferId);
     }
 }
 
