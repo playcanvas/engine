@@ -1,4 +1,5 @@
-# PlayCanvas Engine
+# PlayCanvas Engine<a href="https://github.com/playcanvas/engine/blob/main/README-kr.md"><img align="right" src=".github/readme/lang-kr.svg" alt="한글"></a><a href="https://github.com/playcanvas/engine/blob/main/README-ja.md"><img align="right" src=".github/readme/lang-ja.svg" alt="日本語"></a><a href="https://github.com/playcanvas/engine/blob/main/README.md"><img align="right" src=".github/readme/lang-en.svg" alt="English"></a>
+<!-- The language labels are images so that they can float beside the title. They float right, so they are listed in reverse display order. -->
 
 [![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
 [![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)
@@ -7,14 +8,9 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [用户手册](https://developer.playcanvas.com/user-manual/engine/) | [API 参考](https://api.playcanvas.com/engine/) | [例子](https://playcanvas.com/examples/) | [博客](https://blog.playcanvas.com) | [论坛](https://forum.playcanvas.com) |
+[用户手册](https://developer.playcanvas.com/user-manual/engine/) · [API 参考](https://api.playcanvas.com/engine/) · [例子](https://playcanvas.com/examples/) · [博客](https://blog.playcanvas.com) · [论坛](https://forum.playcanvas.com)
 
 PlayCanvas 是一款基于 WebGL2 和 WebGPU 构建的开源游戏引擎。使用它可以创建在任何浏览器和任何设备上运行的交互式 3D 应用、游戏和可视化内容。
-
-[English](https://github.com/playcanvas/engine/blob/main/README.md)
-[中文](https://github.com/playcanvas/engine/blob/main/README-zh.md)
-[日本語](https://github.com/playcanvas/engine/blob/main/README-ja.md)
-[한글](https://github.com/playcanvas/engine/blob/main/README-kr.md)
 
 ## 安装
 
@@ -82,14 +78,12 @@ app.start();
 
 想要自己动手试试？点击 [CodePen](https://codepen.io/playcanvas/pen/NPbxMj).
 
-基于 PlayCanvas 引擎设置本地开发环境的完整指南可以在[这里](https://developer.playcanvas.com/user-manual/engine/standalone/)找到。
+有关基于 PlayCanvas 引擎设置本地开发环境的完整指南，请参阅[独立使用引擎](https://developer.playcanvas.com/user-manual/engine/standalone/)。
 
 ## 特点
 
-PlayCanvas 是一款优秀的全功能游戏引擎。
-
 - 🧊 **图形** - 基于 WebGL2 和 WebGPU 的超前 2D + 3D 图形引擎
-- 💠 **高斯泼溅** - 原生支持加载和渲染 [3D 高斯泼溅](https://developer.playcanvas.com/user-manual/graphics/gaussian-splatting/)
+- 💠 **高斯泼溅** - 原生支持加载和渲染 [3D 高斯泼溅](https://developer.playcanvas.com/user-manual/gaussian-splatting/)
 - 🥽 **XR** - 通过 [WebXR](https://developer.playcanvas.com/user-manual/xr/) 内置支持沉浸式 AR 和 VR 体验
 - ⚛️ **物理** - 一体化的 3D 刚体物理引擎 [ammo.js](https://github.com/kripken/ammo.js)
 - 🏃 **动画** - 基于状态的强大动画功能，有效展现动画角色和随机场景属性
@@ -116,11 +110,11 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
 ## 项目展示
 
-许多团队已经成功地使用了 PlayCanvas 引擎开发并发布了游戏和应用。以下是一些项目案例：
+许多团队已经成功地使用了 PlayCanvas 引擎开发并发布了[游戏和应用](https://github.com/playcanvas/awesome-playcanvas)。以下是一些项目案例：
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
 [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Gaussian Splat Statues](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/1224723/266D9C-image-25.jpg)](https://playcanv.as/p/cLkf99ZV/)  
-[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Global Illumination](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/)
+[![BMW i8](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Interior Visualization](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/625081/6AB32D-image-25.jpg)](https://playcanv.as/p/ZV4PW6wr/)
 
 点击此链接查看更多案例： [PlayCanvas website](https://playcanvas.com/explore).
 
