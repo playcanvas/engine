@@ -36,11 +36,11 @@ const makeData = (rot, alphaIndex = 0, extraMeta = {}) => {
     const data = new GSplatSogData();
     data.meta = meta(extraMeta);
     data.numSplats = 1;
-    data.means_l = tex([0, 0, 0, rot[0]]);
-    data.means_u = tex([0, 0, 0, rot[1]]);
-    data.scales = tex([0, 0, 0, rot[2]]);
+    data.means_l = tex([0, 0, 0, 255]);
+    data.means_u = tex([0, 0, 0, 255]);
+    data.scales = tex([0, 0, 0, 255]);
+    data.quats = tex([...rot, 255]);
     data.sh0 = tex([128, 128, 128, alphaIndex]);
-    data.quats = null;
     return data;
 };
 
@@ -92,11 +92,11 @@ describe('GSplatSogData v3', function () {
         const data = new GSplatSogData();
         data.meta = { ...meta(), count: 2 };
         data.numSplats = 2;
-        data.means_l = readable([0, 0, 0, 128, 0, 0, 0, 128]);
-        data.means_u = readable([0, 0, 0, 128, 0, 0, 0, 128]);
-        data.scales = readable([0, 0, 0, 128, 0, 0, 0, 128]);
+        data.means_l = readable([0, 0, 0, 255, 0, 0, 0, 255]);
+        data.means_u = readable([0, 0, 0, 255, 0, 0, 0, 255]);
+        data.scales = readable([0, 0, 0, 255, 0, 0, 0, 255]);
+        data.quats = readable([128, 128, 128, 255, 128, 128, 128, 255]);
         data.sh0 = readable([128, 128, 128, 230, 128, 128, 128, 102]);
-        data.quats = null;
         const result = await data.decompress();
         const linear = result.getProp('opacity_linear');
         expect(linear[0]).to.be.closeTo((230 / 204) ** 2, 1e-6);
@@ -111,11 +111,11 @@ describe('GSplatSogData v3', function () {
         const data = new GSplatSogData();
         data.meta = meta({ opacity: undefined });
         data.numSplats = 1;
-        data.means_l = readable([0, 0, 0, 128]);
-        data.means_u = readable([0, 0, 0, 128]);
-        data.scales = readable([0, 0, 0, 128]);
+        data.means_l = readable([0, 0, 0, 255]);
+        data.means_u = readable([0, 0, 0, 255]);
+        data.scales = readable([0, 0, 0, 255]);
+        data.quats = readable([128, 128, 128, 255]);
         data.sh0 = readable([128, 128, 128, 102]);
-        data.quats = null;
         const result = await data.decompress();
         expect(result.getProp('opacity_linear')).to.equal(undefined);
     });

@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { LIGHTSHAPE_DISK, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE, SHADOW_PCF3_32F } from '../constants.js';
@@ -44,15 +45,6 @@ class LightingParams {
 
     /** @private */
     _cookieAtlasResolution = 2048;
-
-    /**
-     * Layer ID of a layer to contain the debug rendering of clustered lighting. Defaults to
-     * undefined, which disables the debug rendering. Debug rendering is only included in the debug
-     * version of the engine.
-     *
-     * @type {number}
-     */
-    debugLayer;
 
     /**
      * Atlas textures split description, which applies to both the shadow and cookie texture atlas.
@@ -380,6 +372,15 @@ class LightingParams {
      */
     get shadowsEnabled() {
         return this._shadowsEnabled;
+    }
+
+    set debugLayer(value) {
+        Debug.removed('LightingParams#debugLayer is removed. Use WorldClustersDebug#layer from the extras instead.');
+    }
+
+    get debugLayer() {
+        Debug.removed('LightingParams#debugLayer is removed. Use WorldClustersDebug#layer from the extras instead.');
+        return undefined;
     }
 }
 

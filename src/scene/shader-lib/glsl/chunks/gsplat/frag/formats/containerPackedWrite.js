@@ -24,8 +24,12 @@ void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
         writeDataColor(color);
     #endif
     #ifndef GSPLAT_COLOR_ONLY
-        writeDataTransformA(uvec4(gsplatPackCenterX(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packHalf2x16(rotation.xy)));
-        writeDataTransformB(uvec4(packHalf2x16(vec2(rotation.z, scale.x)), packHalf2x16(scale.yz), 0u, 0u));
+        // only x, y, z are stored and the reader rebuilds w >= 0, so store the w >= 0 form of
+        // the rotation (q and -q are the same rotation). A modifySplatRotationScale that rotates
+        // the splat can leave w < 0, which would otherwise read back as the inverse rotation.
+        vec4 q = rotation.w < 0.0 ? -rotation : rotation;
+        writeDataTransformA(uvec4(gsplatPackCenterX(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packHalf2x16(q.xy)));
+        writeDataTransformB(uvec4(packHalf2x16(vec2(q.z, scale.x)), packHalf2x16(scale.yz), 0u, 0u));
     #endif
 }
 `;

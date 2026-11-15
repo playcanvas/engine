@@ -51,29 +51,24 @@ class DefaultAnimBinder {
             return meshInstances;
         };
 
-        this.nodeCounts = {};               // map of node path -> count
-        this.activeNodes = [];              // list of active nodes
         this.handlers = {
             'localPosition': function (node) {
-                const object = node.localPosition;
                 const func = function (value) {
-                    object.set(...value);
+                    node.setLocalPositionFromArray(value);
                 };
                 return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localPosition');
             },
 
             'localRotation': function (node) {
-                const object = node.localRotation;
                 const func = function (value) {
-                    object.set(...value);
+                    node.setLocalRotationFromArray(value);
                 };
                 return DefaultAnimBinder.createAnimTarget(func, 'quaternion', 4, node, 'localRotation');
             },
 
             'localScale': function (node) {
-                const object = node.localScale;
                 const func = function (value) {
-                    object.set(...value);
+                    node.setLocalScaleFromArray(value);
                 };
                 return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localScale');
             },
@@ -224,42 +219,14 @@ class DefaultAnimBinder {
         }
 
         this.targetCache[encodedPath] = target;
-
-        if (!this.nodeCounts[node.path]) {
-            this.activeNodes.push(node);
-            this.nodeCounts[node.path] = 1;
-        } else {
-            this.nodeCounts[node.path]++;
-        }
-
         return target;
     }
 
     unresolve(path) {
-        if (path.component !== 'graph') {
-            return;
-        }
-
-        const node = this.nodes[path.entityPath[path.entityPath.length - 1] || ''];
-
-        this.nodeCounts[node.path]--;
-        if (this.nodeCounts[node.path] === 0) {
-            const activeNodes = this.activeNodes;
-            const i = activeNodes.indexOf(node.node);  // :(
-            const len = activeNodes.length;
-            if (i < len - 1) {
-                activeNodes[i] = activeNodes[len - 1];
-            }
-            activeNodes.pop();
-        }
     }
 
-    // flag animating nodes as dirty
     update(deltaTime) {
-        const activeNodes = this.activeNodes;
-        for (let i = 0; i < activeNodes.length; ++i) {
-            activeNodes[i]._dirtifyLocal();
-        }
+        // the setters of the animated transforms mark their nodes dirty, so there is nothing to do
     }
 
     assignMask(mask) {

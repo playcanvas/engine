@@ -187,6 +187,10 @@ class ShadowRenderer {
 
     _cullShadowCastersInternal(meshInstances, visible, camera) {
 
+        // skinned and morphed casters need their skinning and morphing updated before rendering,
+        // also when they are visible only in the shadow map
+        const processing = this.renderer.culler.processingMeshInstances;
+
         const numInstances = meshInstances.length;
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
@@ -196,6 +200,10 @@ class ShadowRenderer {
                 if (!meshInstance.cull || meshInstance._isVisible(camera)) {
                     meshInstance.visibleThisFrame = true;
                     visible.push(meshInstance);
+
+                    if (meshInstance.skinInstance || meshInstance.morphInstance) {
+                        processing.add(meshInstance);
+                    }
                 }
             }
         }

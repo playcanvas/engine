@@ -69,10 +69,10 @@ class GSplatSogIterator {
         const v3 = meta.version === 3;
         // v2 and v3 dequantize through codebooks, v1 through min/max ranges
         const codebooks = meta.version >= 2;
-        const means_l_data = (p || (r && v3)) && data.means_l._levels[0];
-        const means_u_data = (p || (r && v3)) && data.means_u._levels[0];
-        const quats_data = r && !v3 && data.quats._levels[0];
-        const scales_data = (s || (r && v3)) && data.scales._levels[0];
+        const means_l_data = p && data.means_l._levels[0];
+        const means_u_data = p && data.means_u._levels[0];
+        const quats_data = r && data.quats._levels[0];
+        const scales_data = s && data.scales._levels[0];
         const sh0_data = c && data.sh0._levels[0];
         const sh_labels_data = sh && data.sh_labels._levels[0];
         const sh_centroids_data = sh && data.sh_centroids._levels[0];
@@ -95,11 +95,11 @@ class GSplatSogIterator {
             }
 
             if (r && v3) {
-                // v3: 24-bit exponential map, one byte in each of the means_l, means_u and scales
-                // alpha channels: p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
-                const px = (means_l_data[i * 4 + 3] - 128) / 127;
-                const py = (means_u_data[i * 4 + 3] - 128) / 127;
-                const pz = (scales_data[i * 4 + 3] - 128) / 127;
+                // v3: 24-bit exponential map in the quats rgb channels:
+                // p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
+                const px = (quats_data[i * 4 + 0] - 128) / 127;
+                const py = (quats_data[i * 4 + 1] - 128) / 127;
+                const pz = (quats_data[i * 4 + 2] - 128) / 127;
                 const len = Math.sqrt(px * px + py * py + pz * pz);
                 const t = len * Math.PI * 0.5;
                 const k = len > 1e-12 ? Math.sin(t) / len : Math.PI * 0.5;
@@ -344,7 +344,7 @@ class GSplatSogData {
         const { means_l, means_u, quats, scales, sh0, sh_labels, sh_centroids } = this;
         means_l._levels[0] = await readImageDataAsync(means_l);
         means_u._levels[0] = await readImageDataAsync(means_u);
-        if (quats) quats._levels[0] = await readImageDataAsync(quats);
+        quats._levels[0] = await readImageDataAsync(quats);
         scales._levels[0] = await readImageDataAsync(scales);
         sh0._levels[0] = await readImageDataAsync(sh0);
 

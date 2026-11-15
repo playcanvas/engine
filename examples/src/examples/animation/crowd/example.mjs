@@ -1,8 +1,7 @@
 // @config
 //
-// A crowd of independently animated characters, for profiling the CPU cost of skinned animation.
-//
-// `WASDQE` Move · Hold `Shift` Move fast · Hold `Ctrl` Move slow · `LMB` / `RMB` Orbit / fly · Hold `Shift` / `MMB` Pan · `Wheel` Zoom
+// A crowd of animated characters, which skip evaluating their animation while off-screen, and
+// evaluate it less often when far away.
 //
 // @credit
 // title: Sparse Grass
@@ -56,6 +55,7 @@ import {
     createGraphicsDevice,
     math
 } from 'playcanvas';
+import { AnimUpdateOptimizer } from 'playcanvas/scripts/esm/anim/anim-update-optimizer.mjs';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -150,9 +150,9 @@ app.scene.exposure = 1.1;
 
 // a soft haze which fades the far ground into the sky
 app.scene.fog.type = FOG_LINEAR;
-app.scene.fog.color.set(0.66, 0.8, 0.88);
-app.scene.fog.start = 50;
-app.scene.fog.end = 400;
+app.scene.fog.color.set(0.72, 0.83, 0.9);
+app.scene.fog.start = 30;
+app.scene.fog.end = 250;
 
 // the grassy ground, reaching far beyond the area the characters wander in
 const GROUND_SIZE = 2000;
@@ -166,9 +166,8 @@ for (const map of [assets.grass.resource, assets.grassNormal.resource]) {
 groundMaterial.diffuseMap = assets.grass.resource;
 groundMaterial.normalMap = assets.grassNormal.resource;
 groundMaterial.diffuse.set(0.62, 0.95, 0.42);
-groundMaterial.gloss = 0.15;
-groundMaterial.useMetalness = true;
-groundMaterial.metalness = 0;
+// no specular, as the reflection of the bright sky at grazing angles washes out the grass
+groundMaterial.specular.set(0, 0, 0);
 const tiling = GROUND_SIZE / GRASS_TILE_SIZE;
 groundMaterial.diffuseMapTiling.set(tiling, tiling);
 groundMaterial.normalMapTiling.set(tiling, tiling);
@@ -336,6 +335,7 @@ const speedForState = (state) => {
 /**
  * @typedef {object} Character
  * @property {Entity} entity - The character entity, which the anim component is on.
+ * @property {AnimUpdateOptimizer} optimizer - The script lowering the cost of its animation.
  * @property {Vec3} position - The position on the ground.
  * @property {Vec3} target - The position the character walks to.
  * @property {number} heading - The current facing angle in degrees.
@@ -364,6 +364,9 @@ const applyCustomAabb = (/** @type {Entity} */ entity, /** @type {boolean} */ en
     });
 };
 
+// the animation of characters further than this from the camera is evaluated less often, a step per distance
+const LOD_DISTANCE = 12;
+
 const createCharacter = () => {
     const entity = new Entity(`Character${characters.length}`);
 
@@ -382,8 +385,24 @@ const createCharacter = () => {
         layer.assignAnimation(state, clip);
     }
 
+    // lowers the cost of the animation when the character is off-screen or far away. The camera is
+    // created before the characters, so its controls move it before this script predicts visibility
+    entity.addComponent('script');
+    const optimizer = /** @type {AnimUpdateOptimizer} */ (
+        entity.script.create(AnimUpdateOptimizer, {
+            properties: {
+                camera,
+                margin: 1,
+                predict: data.get('data.prediction'),
+                offscreenUpdate: data.get('data.offscreenUpdate'),
+                lodDistance: data.get('data.lod') ? LOD_DISTANCE : 0
+            }
+        })
+    );
+
     const character = {
         entity,
+        optimizer,
         position: randomPoint(new Vec3()),
         target: new Vec3(),
         heading: random() * 360,
@@ -476,6 +495,41 @@ const updateCharacter = (character, dt) => {
     character.entity.setLocalEulerAngles(0, character.heading, 0);
 };
 
+data.on('data.prediction:set', (/** @type {boolean} */ value) => {
+    characters.forEach((character) => {
+        character.optimizer.predict = value;
+    });
+});
+data.on('data.lod:set', (/** @type {boolean} */ value) => {
+    characters.forEach((character) => {
+        character.optimizer.lodDistance = value ? LOD_DISTANCE : 0;
+    });
+});
+data.on('data.offscreenUpdate:set', (/** @type {string} */ value) => {
+    characters.forEach((character) => {
+        character.optimizer.offscreenUpdate = value;
+    });
+});
+
+// the counters shown in the stats panel, averaged over a short period
+const stats = { frames: 0, evaluated: 0, offscreen: 0, skipped: 0, animTime: 0, time: 0 };
+app.on('frameend', () => {
+    const frame = app.stats.frame;
+    stats.frames++;
+    stats.evaluated += frame.animEvaluated;
+    stats.offscreen += frame.animOffscreen;
+    stats.skipped += frame.animIntervalSkipped;
+    stats.animTime += frame.animUpdate;
+    stats.time += frame.dt;
+    if (stats.time > 0.25) {
+        data.set('data.stats.evaluated', String(Math.round(stats.evaluated / stats.frames)));
+        data.set('data.stats.offscreen', String(Math.round(stats.offscreen / stats.frames)));
+        data.set('data.stats.skipped', String(Math.round(stats.skipped / stats.frames)));
+        data.set('data.stats.animTime', `${(stats.animTime / stats.frames).toFixed(2)} ms`);
+        stats.frames = stats.evaluated = stats.offscreen = stats.skipped = stats.animTime = stats.time = 0;
+    }
+});
+
 app.on('update', (/** @type {number} */ dt) => {
     for (let i = 0; i < characters.length; i++) {
         updateCharacter(characters[i], dt);
@@ -497,6 +551,15 @@ data.on('data.shadows:set', (/** @type {boolean} */ value) => {
 data.set('data', {
     count: 20,
     shadows: true,
-    customAabb: true
+    customAabb: true,
+    offscreenUpdate: 'state',
+    prediction: true,
+    lod: true,
+    stats: {
+        evaluated: '0',
+        offscreen: '0',
+        skipped: '0',
+        animTime: '0 ms'
+    }
 });
 setCount(data.get('data.count'));

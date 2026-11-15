@@ -36,10 +36,8 @@ class GSplatSogResource extends GSplatResourceBase {
         super(device, gsplatData, options);
 
         const { meta, means_l } = gsplatData;
-        // V2 and V3 both dequantize through the codebook LUT; V3 drops the quats texture (the
-        // rotation is packed into the alpha channels of means_l, means_u and scales)
+        // V2 and V3 both dequantize through the codebook LUT
         const isV2 = meta.version >= 2;
-        const isV3 = meta.version === 3;
         const hasSH = gsplatData.shBands > 0;
 
         // splat texture dimensions come from the source means_l texture - used for the
@@ -52,9 +50,7 @@ class GSplatSogResource extends GSplatResourceBase {
         // not destroyed here)
         this.streams.textures.set('means_l', gsplatData.means_l);
         this.streams.textures.set('means_u', gsplatData.means_u);
-        if (!isV3) {
-            this.streams.textures.set('quats', gsplatData.quats);
-        }
+        this.streams.textures.set('quats', gsplatData.quats);
         this.streams.textures.set('scales', gsplatData.scales);
         this.streams.textures.set('sh0', gsplatData.sh0);
         if (hasSH) {
@@ -77,7 +73,7 @@ class GSplatSogResource extends GSplatResourceBase {
         const streams = [
             { name: 'means_l', format: PIXELFORMAT_RGBA8 },
             { name: 'means_u', format: PIXELFORMAT_RGBA8 },
-            ...(isV3 ? [] : [{ name: 'quats', format: PIXELFORMAT_RGBA8 }]),
+            { name: 'quats', format: PIXELFORMAT_RGBA8 },
             { name: 'scales', format: PIXELFORMAT_RGBA8 },
             { name: 'sh0', format: PIXELFORMAT_RGBA8 }
         ];

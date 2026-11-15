@@ -37,14 +37,10 @@ fn getCenter() -> vec3f {
 }
 
 #if SOG_VERSION >= 3
-// decode rotation quaternion from a 24-bit exponential map, one byte in each of the means_l,
-// means_u and scales alpha channels: p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
+// decode rotation quaternion from a 24-bit exponential map in the quats rgb channels:
+// p = (b - 128) / 127, q = (cos t, sin t * p / |p|), t = |p| * pi / 2
 fn getRotation() -> vec4f {
-    let b = floor(vec3f(
-        textureLoad(means_l, splat.uv, 0).w,
-        textureLoad(means_u, splat.uv, 0).w,
-        textureLoad(scales, splat.uv, 0).w
-    ) * 255.0 + 0.5);
+    let b = floor(textureLoad(quats, splat.uv, 0).xyz * 255.0 + 0.5);
     let p = (b - 128.0) / 127.0;
     let len = length(p);
     let t = len * 1.5707963267948966;
