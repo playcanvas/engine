@@ -203,12 +203,17 @@ class AnimComponent extends Component {
 
     /**
      * Sets the speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses
-     * the animation.
+     * the animation. Negative values play the animations backwards.
      *
      * @type {number}
      */
     set speed(value) {
         this._speed = value;
+        if (value !== 0) {
+            for (let i = 0; i < this._layers.length; i++) {
+                this._layers[i]._setPlaybackDirection(value < 0 ? -1 : 1);
+            }
+        }
     }
 
     /**
@@ -986,7 +991,7 @@ class AnimComponent extends Component {
         const evaluate = result === ANIMUPDATE_EVALUATED;
 
         for (let i = 0; i < this.layers.length; i++) {
-            this.layers[i].update(dt * this.speed, evaluate);
+            this.layers[i].update(dt * Math.abs(this.speed), evaluate);
         }
         this._consumedTriggers.forEach((trigger) => {
             this.parameters[trigger].value = false;

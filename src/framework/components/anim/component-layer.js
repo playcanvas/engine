@@ -93,6 +93,15 @@ class AnimComponentLayer {
         this._component = component;
         this._weight = weight;
         this._blendType = blendType;
+        this._setPlaybackDirection(component.speed < 0 ? -1 : 1);
+    }
+
+    /**
+     * @param {number} direction - The component's playback direction, either 1 or -1.
+     * @ignore
+     */
+    _setPlaybackDirection(direction) {
+        this._controller.setPlaybackDirection(direction);
     }
 
     /**
