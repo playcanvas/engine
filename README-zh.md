@@ -1,5 +1,5 @@
-# PlayCanvas Engine<a href="https://github.com/playcanvas/engine/blob/main/README-kr.md"><img align="right" src="https://img.shields.io/badge/%ED%95%9C%EA%B8%80-black" alt="한글"></a><a href="https://github.com/playcanvas/engine/blob/main/README-ja.md"><img align="right" src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-black" alt="日本語"></a><a href="https://github.com/playcanvas/engine/blob/main/README.md"><img align="right" src="https://img.shields.io/badge/English-black" alt="English"></a>
-<!-- The language badges float right, so they are listed in reverse display order. -->
+# PlayCanvas Engine<a href="https://github.com/playcanvas/engine/blob/main/README-kr.md"><img align="right" src=".github/readme/lang-kr.svg" alt="한글"></a><a href="https://github.com/playcanvas/engine/blob/main/README-ja.md"><img align="right" src=".github/readme/lang-ja.svg" alt="日本語"></a><a href="https://github.com/playcanvas/engine/blob/main/README.md"><img align="right" src=".github/readme/lang-en.svg" alt="English"></a>
+<!-- The language labels are images so that they can float beside the title. They float right, so they are listed in reverse display order. -->
 
 [![NPM Version](https://img.shields.io/npm/v/playcanvas)](https://www.npmjs.com/package/playcanvas)
 [![NPM Downloads](https://img.shields.io/npm/dw/playcanvas)](https://npmtrends.com/playcanvas)

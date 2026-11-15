@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="40" role="img" aria-label="English">
+  <!--
+    A README language link, drawn as an image because GitHub and npm strip CSS from READMEs and
+    only images can float beside the title. The height is the title's line box on GitHub (40px)
+    and y places the text on the title's baseline, so the label lines up with the heading.
+  -->
+  <style>
+    text { font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; fill: #0969da; }
+    @media (prefers-color-scheme: dark) { text { fill: #4493f8; } }
+  </style>
+  <text x="50" y="32" text-anchor="end">English</text>
+</svg>
