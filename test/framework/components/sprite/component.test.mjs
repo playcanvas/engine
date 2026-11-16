@@ -1,9 +1,15 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
-import { SPRITETYPE_SIMPLE } from '../../../../src/framework/components/sprite/constants.js';
+import { SPRITETYPE_ANIMATED, SPRITETYPE_SIMPLE } from '../../../../src/framework/components/sprite/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { PIXELFORMAT_SRGBA8 } from '../../../../src/platform/graphics/constants.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
+import { Sprite } from '../../../../src/scene/sprite.js';
+import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -211,6 +217,130 @@ describe('SpriteComponent', function () {
         expect(!spriteAsset.hasEvent('add')).to.exist;
         expect(!spriteAsset.hasEvent('load')).to.exist;
         expect(!spriteAsset.hasEvent('remove')).to.exist;
+    });
+
+    describe('clips that play a sprite', function () {
+        // a sprite of four frames of an atlas built in code, with no sprite asset
+        const createSprite = () => {
+            const device = app.graphicsDevice;
+            const atlas = new TextureAtlas();
+            atlas.frames = {};
+            for (let i = 0; i < 4; i++) {
+                atlas.setFrame(`walk-${i}`, {
+                    rect: new Vec4(i * 16, 0, 16, 16),
+                    pivot: new Vec2(0.5, 0.5),
+                    border: new Vec4()
+                });
+            }
+            atlas.texture = new Texture(device, { width: 64, height: 16, format: PIXELFORMAT_SRGBA8 });
+            return new Sprite(device, {
+                atlas,
+                frameKeys: ['walk-0', 'walk-1', 'walk-2', 'walk-3'],
+                pixelsPerUnit: 16
+            });
+        };
+
+        it('plays a clip added with a sprite', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const clip = e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            expect(clip.sprite).to.equal(sprite);
+
+            e.sprite.play('walk');
+            expect(e.sprite.currentClip).to.equal(clip);
+            expect(e.sprite._meshInstance.mesh).to.equal(sprite.meshes[0]);
+
+            app.systems.fire('update', 0.15);
+            expect(e.sprite.frame).to.equal(1);
+            expect(e.sprite._meshInstance.mesh).to.equal(sprite.meshes[1]);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('takes the sprite of a clip with a sprite asset from the asset', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+
+            const clip = e.sprite.addClip({ name: 'walk', fps: 10, loop: true, spriteAsset, sprite });
+            expect(clip.spriteAsset).to.equal(spriteAsset.id);
+            expect(clip.sprite).to.equal(spriteAsset.resource);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('names a clip of the component data by its key', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', {
+                type: SPRITETYPE_ANIMATED,
+                clips: {
+                    walk: { fps: 10, loop: true, sprite },
+                    other: { name: 'run', fps: 20, loop: false, sprite }
+                },
+                autoPlayClip: 'walk'
+            });
+            app.root.addChild(e);
+
+            expect(Object.keys(e.sprite.clips)).to.have.members(['walk', 'run']);
+            expect(e.sprite.clip('walk').name).to.equal('walk');
+            expect(e.sprite.clip('walk').sprite).to.equal(sprite);
+            expect(e.sprite.clip('run').fps).to.equal(20);
+            expect(e.sprite.currentClip.name).to.equal('walk');
+            expect(e.sprite.currentClip.isPlaying).to.equal(true);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('names a clip set through the clips property by its key', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+
+            e.sprite.clips = { walk: { fps: 10, loop: true, sprite } };
+            const clip = e.sprite.clip('walk');
+            expect(clip.name).to.equal('walk');
+            expect(clip.sprite).to.equal(sprite);
+
+            // setting the same entry again updates the clip rather than adding another
+            e.sprite.clips = { walk: { fps: 5, loop: false, sprite } };
+            expect(e.sprite.clip('walk')).to.equal(clip);
+            expect(clip.fps).to.equal(5);
+            expect(Object.keys(e.sprite.clips)).to.deep.equal(['walk']);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('clones the clips with their sprites', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', {
+                type: SPRITETYPE_ANIMATED,
+                clips: { walk: { fps: 10, loop: true, sprite } },
+                autoPlayClip: 'walk'
+            });
+            app.root.addChild(e);
+
+            const clone = e.clone();
+            app.root.addChild(clone);
+
+            expect(clone.sprite.clip('walk')).to.not.equal(e.sprite.clip('walk'));
+            expect(clone.sprite.clip('walk').sprite).to.equal(sprite);
+            expect(clone.sprite.clip('walk').fps).to.equal(10);
+            expect(clone.sprite.currentClip.name).to.equal('walk');
+            expect(clone.sprite.currentClip.isPlaying).to.equal(true);
+            expect(clone.sprite._meshInstance.mesh).to.equal(sprite.meshes[0]);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
     });
 
 });
