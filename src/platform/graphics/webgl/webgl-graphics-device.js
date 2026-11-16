@@ -2475,7 +2475,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 this._drawCallsPerFrame++;
 
-                // #if _PROFILER
+                // #if _DEBUG
                 if (drawCommands) {
                     // use pre-calculated primitive count from drawCommands
                     this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type, numInstances > 0);

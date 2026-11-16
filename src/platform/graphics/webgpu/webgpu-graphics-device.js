@@ -1580,7 +1580,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // track draw calls - always count as 1 (one material setup, one API call)
             this._drawCallsPerFrame++;
 
-            // #if _PROFILER
+            // #if _DEBUG
             // track primitive count
             if (drawCommands) {
                 // use pre-calculated primitive count from drawCommands

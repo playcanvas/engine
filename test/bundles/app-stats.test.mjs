@@ -25,9 +25,9 @@ describe('build / AppStats', function () {
 
                 app.graphicsDevice._primitiveCount = 42;
                 app.stats.updateDetailed(app.renderer, app.graphicsDevice);
-                const profiled = target.name.startsWith('dbg') || target.name.startsWith('prf');
-                expect(app.stats.primitiveCount).to.equal(profiled ? 42 : undefined);
-                expect(app.graphicsDevice._primitiveCount).to.equal(profiled ? 0 : 42);
+                const debug = target.name.startsWith('dbg');
+                expect(app.stats.primitiveCount).to.equal(debug ? 42 : 0);
+                expect(app.graphicsDevice._primitiveCount).to.equal(debug ? 0 : 42);
 
                 app.graphicsDevice.update = () => {
                     timestamp += 100;
