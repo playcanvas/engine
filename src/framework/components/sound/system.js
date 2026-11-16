@@ -16,9 +16,9 @@ import { SoundComponent } from './component.js';
  * {@link ComponentOptionsOverrides}.
  *
  * @typedef {object} SoundComponentOptionsOverrides
- * @property {{ [name: string]: SoundSlot | { volume?: number, pitch?: number, loop?: boolean, startTime?: number, duration?: number, overlap?: boolean, autoPlay?: boolean, asset?: number } }} [slots] -
+ * @property {{ [name: string]: SoundSlot | { name?: string, volume?: number, pitch?: number, loop?: boolean, startTime?: number, duration?: number, overlap?: boolean, autoPlay?: boolean, asset?: number } }} [slots] -
  * Same as {@link SoundComponent#slots}, also accepting the plain {@link SoundSlot} settings of each
- * slot.
+ * slot. The key of an entry names a slot that has no `name`.
  * @ignore
  */
 
@@ -123,7 +123,9 @@ class SoundComponentSystem extends ComponentSystem {
                         volume: srcSlot.volume,
                         pitch: srcSlot.pitch,
                         loop: srcSlot.loop,
-                        duration: srcSlot.duration,
+                        // the duration the slot was given: its getter reports it clamped to
+                        // the loaded sound, which is 0 until the asset has loaded
+                        duration: srcSlot._duration,
                         startTime: srcSlot.startTime,
                         overlap: srcSlot.overlap,
                         autoPlay: srcSlot.autoPlay,

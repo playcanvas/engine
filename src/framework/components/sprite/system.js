@@ -12,6 +12,7 @@ import { SpriteComponent } from './component.js';
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Entity } from '../../entity.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
  * @import { SpriteAnimationClip } from './sprite-animation-clip.js'
  */
 
@@ -24,9 +25,9 @@ import { SpriteComponent } from './component.js';
  * @typedef {object} SpriteComponentOptionsOverrides
  * @property {number | null} [batchGroupId] - Same as {@link SpriteComponent#batchGroupId}. `null`
  * selects no batch group.
- * @property {{ [name: string]: SpriteAnimationClip | { name?: string, fps?: number, loop?: boolean, spriteAsset?: number } }} [clips] -
+ * @property {{ [name: string]: SpriteAnimationClip | { name?: string, fps?: number, loop?: boolean, spriteAsset?: number, sprite?: Sprite } }} [clips] -
  * Same as {@link SpriteComponent#clips}, also accepting the plain clip data of
- * {@link SpriteComponent#addClip}.
+ * {@link SpriteComponent#addClip}. The key of an entry names a clip that has no `name`.
  * @property {Color | number[]} [color] - Same as {@link SpriteComponent#color}, also accepting an
  * `[r, g, b]` array.
  * @ignore
@@ -213,7 +214,7 @@ class SpriteComponentSystem extends ComponentSystem {
 
         if (data.clips) {
             for (const name in data.clips) {
-                component.addClip(data.clips[name]);
+                component._addNamedClip(name, data.clips[name]);
             }
         }
 
