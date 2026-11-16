@@ -260,6 +260,11 @@ describe('Color', function () {
             expect(c.toString(true)).to.equal('#1a334d66');
         });
 
+        it('returns a two digit alpha when alpha rounds up to 16', function () {
+            const c = new Color(0.1, 0.2, 0.3, 0.062);
+            expect(c.toString(true)).to.equal('#1a334d10');
+        });
+
     });
 
     describe('#toArray', function () {
