@@ -1324,7 +1324,8 @@ const createResources = async (device, gltf, bufferViews, textures, options, app
     return result;
 };
 
-const applySampler = (texture, gltfSampler) => {
+// resolve a glTF sampler to texture sampling state, using the glTF defaults for omitted values
+const getSamplerState = (gltfSampler) => {
     const getFilter = (filter, defaultValue) => {
         switch (filter) {
             case 9728: return FILTER_NEAREST;
@@ -1346,12 +1347,20 @@ const applySampler = (texture, gltfSampler) => {
         }
     };
 
+    return {
+        minFilter: getFilter(gltfSampler?.minFilter, FILTER_LINEAR_MIPMAP_LINEAR),
+        magFilter: getFilter(gltfSampler?.magFilter, FILTER_LINEAR),
+        addressU: getWrap(gltfSampler?.wrapS, ADDRESS_REPEAT),
+        addressV: getWrap(gltfSampler?.wrapT, ADDRESS_REPEAT)
+    };
+};
+
+const applySampler = (texture, samplerState) => {
     if (texture) {
-        gltfSampler = gltfSampler ?? { };
-        texture.minFilter = getFilter(gltfSampler.minFilter, FILTER_LINEAR_MIPMAP_LINEAR);
-        texture.magFilter = getFilter(gltfSampler.magFilter, FILTER_LINEAR);
-        texture.addressU = getWrap(gltfSampler.wrapS, ADDRESS_REPEAT);
-        texture.addressV = getWrap(gltfSampler.wrapT, ADDRESS_REPEAT);
+        texture.minFilter = samplerState.minFilter;
+        texture.magFilter = samplerState.magFilter;
+        texture.addressU = samplerState.addressU;
+        texture.addressV = samplerState.addressV;
     }
 };
 
@@ -1522,7 +1531,11 @@ const createTextures = (gltf, images, options) => {
     const processAsync = options?.texture?.processAsync;
     const postprocess = options?.texture?.postprocess;
 
-    const seenImages = new Set();
+    // sampling state is stored on the texture, so an image used with several sampling states
+    // needs a texture (and GPU memory) for each of them. glTF textures which use the same image
+    // with the same sampling state share one texture asset instead. maps an image index to a
+    // Map of sampling state key to the promise of its texture asset.
+    const imageTextures = new Map();
 
     return gltf.textures.map((gltfTexture) => {
         if (preprocess) {
@@ -1552,14 +1565,30 @@ const createTextures = (gltf, images, options) => {
             gltfImageIndex = gltfImageIndex ??
                 getTextureSource(gltfTexture);
 
-            const cloneAsset = seenImages.has(gltfImageIndex);
-            seenImages.add(gltfImageIndex);
+            // key on the resolved state rather than the sampler index, as different samplers
+            // (or none) can resolve to the same state
+            const samplerState = getSamplerState(gltf.samplers?.[gltfTexture.sampler]);
+            const samplerKey = `${samplerState.minFilter}-${samplerState.magFilter}-${samplerState.addressU}-${samplerState.addressV}`;
 
-            return images[gltfImageIndex].then((imageAsset) => {
-                const asset = cloneAsset ? cloneTextureAsset(imageAsset) : imageAsset;
-                applySampler(asset.resource, (gltf.samplers ?? [])[gltfTexture.sampler]);
-                return asset;
-            });
+            let textures = imageTextures.get(gltfImageIndex);
+            if (!textures) {
+                textures = new Map();
+                imageTextures.set(gltfImageIndex, textures);
+            }
+
+            let texturePromise = textures.get(samplerKey);
+            if (!texturePromise) {
+                // the first sampling state of an image uses the image asset itself
+                const cloneAsset = textures.size > 0;
+                texturePromise = images[gltfImageIndex].then((imageAsset) => {
+                    const asset = cloneAsset ? cloneTextureAsset(imageAsset) : imageAsset;
+                    applySampler(asset.resource, samplerState);
+                    return asset;
+                });
+                textures.set(samplerKey, texturePromise);
+            }
+
+            return texturePromise;
         });
 
         if (postprocess) {
