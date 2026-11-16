@@ -61,6 +61,37 @@ describe('Reverse-z', function () {
         });
     });
 
+    describe('Camera.setReverseZDepth', function () {
+
+        for (const [near, far] of [[0.1, 1000], [0.1, 100000], [0.01, 1000000]]) {
+            for (const perspective of [true, false]) {
+                it(`preserves ${perspective ? 'perspective' : 'orthographic'} depth at near=${near}, far=${far}`, function () {
+                    const source = perspective ?
+                        new Mat4().setPerspective(60, 1, near, far) :
+                        new Mat4().setOrtho(-1, 1, -1, 1, near, far);
+
+                    for (const flipY of [false, true]) {
+                        const projection = Camera.applyShaderProjectionTransform(source, new Mat4(), flipY, true, true);
+                        const before = Array.from(projection.data);
+                        Camera.setReverseZDepth(projection, perspective, near, far);
+
+                        expect(clipDepth(projection, -near)).to.be.closeTo(1, 1e-6);
+                        // A tolerance scaled to the depth coefficient detects float32 cancellation.
+                        const tolerance = perspective ? near / far * 1e-6 : 1e-6;
+                        expect(clipDepth(projection, -far)).to.be.closeTo(0, tolerance);
+                        expect(clipDepth(projection, -far * 0.9)).to.be.above(0);
+                        expect(clipDepth(projection, -far * 1.1)).to.be.below(0);
+                        for (let i = 0; i < 16; i++) {
+                            if (i !== 10 && i !== 14) {
+                                expect(projection.data[i]).to.equal(before[i]);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+
     describe('CameraShaderParams#reverseZ', function () {
 
         it('supplies the REVERSE_Z define and takes part in the hash', function () {
@@ -160,6 +191,19 @@ describe('Reverse-z', function () {
 
         it('is supported on WebGPU', function () {
             expect(app.graphicsDevice.supportsReverseZ).to.equal(app.graphicsDevice.isWebGPU);
+        });
+
+        it('follows the capability of the device, not its type', function () {
+            const device = app.graphicsDevice;
+            const supported = device.supportsReverseZ;
+            device.supportsReverseZ = !supported;
+            try {
+                const camera = new Camera(device);
+                camera.reverseZ = true;
+                expect(camera.reverseZ).to.equal(!supported);
+            } finally {
+                device.supportsReverseZ = supported;
+            }
         });
 
         it('is set on the Camera only on a device supporting it', function () {

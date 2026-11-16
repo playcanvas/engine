@@ -451,10 +451,16 @@ class GSplatDirector {
             if (cameraData) {
 
                 // the splats build their projection without reverse-z, while their draws use the
-                // reversed depth test of the camera
+                // reversed depth test of the camera. Their shadows are rendered by the cameras of
+                // the lights, without reverse-z.
                 Debug.call(() => {
-                    if (camera.reverseZActive && cameraData.layersMap.size) {
-                        Debug.warnOnce(`Camera#reverseZ is not supported by gaussian splats yet, which render incorrectly with the camera '${camera.node?.name}'.`);
+                    if (camera.reverseZActive) {
+                        for (const layerData of cameraData.layersMap.values()) {
+                            if (layerData.gsplatManager) {
+                                Debug.warnOnce(`Camera#reverseZ is not supported by gaussian splats yet, which render incorrectly with the camera '${camera.node?.name}'.`);
+                                break;
+                            }
+                        }
                     }
                 });
 

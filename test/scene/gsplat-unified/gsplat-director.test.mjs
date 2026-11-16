@@ -81,6 +81,34 @@ describe('GSplatDirector#update', function () {
             expect(warnings).to.have.lengthOf(1);
             expect(warnings[0]).to.include('reversed');
         });
+
+        it('does not warn without splat managers', function () {
+            const { director, comp } = makeScene(1);
+            const camera = comp.cameras[0].camera;
+            camera.reverseZActive = true;
+            director.camerasMap.get(camera).layersMap.clear();
+            const warn = spy(Debug, 'warnOnce');
+
+            director.update(comp);
+            expect(warn.called).to.equal(false);
+        });
+
+        it('does not warn for the shadows of gaussian splats, which render without it', function () {
+            const { director, comp } = makeScene(1);
+            const camera = comp.cameras[0].camera;
+            camera.reverseZActive = true;
+            camera.node = { name: 'reversed' };
+
+            // the layer of the camera has only splats casting shadows
+            const layerData = director.camerasMap.get(camera).layersMap.values().next().value;
+            layerData.gsplatManagerShadow = layerData.gsplatManager;
+            layerData.gsplatManager = null;
+            const warn = spy(Debug, 'warnOnce');
+
+            director.update(comp);
+
+            expect(warn.args.some(args => args[0].includes('gaussian splats'))).to.equal(false);
+        });
     });
 
     it('reconciles a placement added while the managers update', function () {
