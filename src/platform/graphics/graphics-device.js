@@ -39,6 +39,7 @@ import { UniformBuffer } from './uniform-buffer.js';
  * @import { MeshInstanceStorage } from './mesh-instance-storage.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
+ * @import { ShaderChunkCollection } from './shader-chunk-collection.js'
  * @import { Texture } from './texture.js'
  * @import { DrawCommands } from './draw-commands.js';
  */
@@ -315,6 +316,35 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsCompute = false;
+
+    /**
+     * The platform chunks added to every GLSL vertex and fragment shader: `vertexHeader`,
+     * `fragmentHeader` and `shared`. Null when the device cannot run GLSL shaders. Each device
+     * implementation imports only its own chunks, so the chunks of other devices can be dropped by
+     * tree-shaking.
+     *
+     * @type {ShaderChunkCollection|null}
+     * @ignore
+     */
+    platformChunksGLSL = null;
+
+    /**
+     * The platform chunks added to every WGSL vertex and fragment shader: `vertexHeader`,
+     * `fragmentHeader`, `shared` and `halfTypes`. Null when the device cannot run WGSL shaders.
+     *
+     * @type {ShaderChunkCollection|null}
+     * @ignore
+     */
+    platformChunksWGSL = null;
+
+    /**
+     * The built-in includes available to every compute shader, keyed by include name. Null when the
+     * device does not support compute shaders.
+     *
+     * @type {ShaderChunkCollection|null}
+     * @ignore
+     */
+    computeChunks = null;
 
     /**
      * True if the device can read from StorageTexture in the compute shader. By default, the
