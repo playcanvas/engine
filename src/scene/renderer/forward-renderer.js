@@ -463,6 +463,8 @@ class ForwardRenderer extends Renderer {
      * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
      * @param {boolean} [options.clearStencil] - True if the stencil buffer should be cleared.
+     * @param {boolean} [options.fullViewport] - True to render to the whole render target, ignoring
+     * the camera's viewport rectangle.
      * @param {WorldClusters} [options.lightClusters] - The world clusters object to be used for
      * clustered lighting.
      * @param {MeshInstance[]} [options.meshInstances] - The mesh instances to be rendered. Use
@@ -481,7 +483,8 @@ class ForwardRenderer extends Renderer {
         const { scene } = this;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
-        this.setupViewport(camera, renderTarget);
+        const fullViewport = !!options.fullViewport;
+        this.setupViewport(camera, renderTarget, fullViewport);
 
         let visible, lightList;
         if (layer) {
@@ -546,7 +549,7 @@ class ForwardRenderer extends Renderer {
         const fogParams = camera.fogParams ?? this.scene.fog;
         this.setFogConstants(fogParams);
 
-        const viewList = this.setCameraUniforms(camera, renderTarget);
+        const viewList = this.setCameraUniforms(camera, renderTarget, fullViewport);
 
         // Nothing to draw and nothing to clear: leave before the per-pass work below. An empty
         // layer step is common - a layer's opaque and transparent sublayers are both enabled and
