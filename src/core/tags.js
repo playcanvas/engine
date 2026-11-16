@@ -263,7 +263,7 @@ class Tags extends EventHandler {
         }
 
         for (let i = 0; i < args.length; i++) {
-            if (args[i] instanceof Array) {
+            if (Array.isArray(args[i])) {
                 if (!flat) {
                     tmp = [];
                 }

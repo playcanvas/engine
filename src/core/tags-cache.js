@@ -95,7 +95,7 @@ class TagsCache {
         for (let i = 0; i < args.length; i++) {
             tag = args[i];
 
-            if (tag instanceof Array) {
+            if (Array.isArray(tag)) {
                 if (tag.length === 0) {
                     continue;
                 }

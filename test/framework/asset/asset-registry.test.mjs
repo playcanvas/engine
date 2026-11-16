@@ -1,3 +1,5 @@
+import vm from 'node:vm';
+
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
@@ -155,6 +157,37 @@ describe('AssetRegistry', function () {
             app.assets.remove(asset4);
 
             expect(app.assets.findAll('Asset 1', 'text').length).to.equal(1);
+        });
+
+    });
+
+    describe('#findByTag', function () {
+
+        it('finds assets that have all of the tags of an array from another realm', function () {
+            const monster = new Asset('Monster', 'text', {
+                url: 'fake/one/file.txt'
+            });
+            const boss = new Asset('Boss', 'text', {
+                url: 'fake/two/file.txt'
+            });
+            const prop = new Asset('Prop', 'text', {
+                url: 'fake/three/file.txt'
+            });
+            monster.tags.add('level-1', 'monster');
+            boss.tags.add('level-1', 'monster', 'boss');
+            prop.tags.add('level-1');
+
+            app.assets.add(monster);
+            app.assets.add(boss);
+            app.assets.add(prop);
+
+            // as an array from another window or iframe is, this is no instance of Array
+            const two = vm.runInNewContext('["level-1", "monster"]');
+            const three = vm.runInNewContext('["level-1", "monster", "boss"]');
+            expect(two).to.not.be.an.instanceof(Array);
+
+            expect(app.assets.findByTag(two)).to.have.members([monster, boss]);
+            expect(app.assets.findByTag(three)).to.have.members([boss]);
         });
 
     });

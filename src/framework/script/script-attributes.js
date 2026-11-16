@@ -87,7 +87,7 @@ function rawToValue(app, args, value, old) {
                     return old;
                 }
                 return value.clone();
-            } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
+            } else if (Array.isArray(value) && value.length >= 3 && value.length <= 4) {
                 for (let i = 0; i < value.length; i++) {
                     if (typeof value[i] !== 'number') {
                         return null;
@@ -122,7 +122,7 @@ function rawToValue(app, args, value, old) {
                     return old;
                 }
                 return value.clone();
-            } else if (value instanceof Array && value.length === len) {
+            } else if (Array.isArray(value) && value.length === len) {
                 for (let i = 0; i < value.length; i++) {
                     if (typeof value[i] !== 'number') {
                         return null;
@@ -144,7 +144,7 @@ function rawToValue(app, args, value, old) {
                 if (value instanceof Curve || value instanceof CurveSet) {
                     curve = value.clone();
                 } else {
-                    const CurveType = value.keys[0] instanceof Array ? CurveSet : Curve;
+                    const CurveType = Array.isArray(value.keys[0]) ? CurveSet : Curve;
                     curve = new CurveType(value.keys);
                     curve.type = value.type;
                 }

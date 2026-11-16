@@ -88,7 +88,7 @@ class ZoneComponent extends Component {
     set size(data) {
         if (data instanceof Vec3) {
             this._size.copy(data);
-        } else if (data instanceof Array && data.length >= 3) {
+        } else if (Array.isArray(data) && data.length >= 3) {
             this.size.set(data[0], data[1], data[2]);
         }
     }
