@@ -232,6 +232,10 @@ class AnimComponentLayer {
      * @type {number}
      */
     set weight(value) {
+        // an unchanged weight leaves the blended values as they are
+        if (this._weight === value) {
+            return;
+        }
         this._weight = value;
         this._component.dirtifyTargets();
     }
