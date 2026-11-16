@@ -68,6 +68,13 @@ class WebglShaderInput {
 
         // Array to hold texture unit ids
         this.array = [];
+
+        /**
+         * The matrix last sent to a matrix uniform, created on its first commit.
+         *
+         * @type {Float32Array|null}
+         */
+        this.matrixValue = null;
     }
 }
 
