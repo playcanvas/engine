@@ -14,6 +14,9 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
+import { webgpuChunksGLSL } from '../shader-chunks/webgpu-chunks-glsl.js';
+import { webgpuChunksWGSL } from '../shader-chunks/webgpu-chunks-wgsl.js';
+import { webgpuComputeChunksWGSL } from '../shader-chunks/webgpu-compute-chunks-wgsl.js';
 import { getCanvasNavigatorGpu } from './navigator-gpu.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
@@ -429,6 +432,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
+        this.platformChunksGLSL = webgpuChunksGLSL;
+        this.platformChunksWGSL = webgpuChunksWGSL;
+        this.computeChunks = webgpuComputeChunksWGSL;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }

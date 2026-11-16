@@ -35,6 +35,7 @@ import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { TextureView } from '../texture-view.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { webglChunksGLSL } from '../shader-chunks/webgl-chunks-glsl.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
@@ -309,6 +310,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gl = gl;
         this.isWebGL2 = true;
         this._deviceType = DEVICETYPE_WEBGL2;
+        this.platformChunksGLSL = webglChunksGLSL;
 
         // the browser can finish compiling a shader only at its first draw, see precompileNeedsWarmup
         this.precompileNeedsWarmup = true;
