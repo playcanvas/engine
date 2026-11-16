@@ -206,9 +206,7 @@ class TextureHandler extends ResourceHandler {
     _getTextureOptions(asset) {
 
         const options = {
-            // #if _PROFILER
             profilerHint: TEXHINT_ASSET
-            // #endif
         };
 
         if (asset) {
