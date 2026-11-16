@@ -354,6 +354,108 @@ describe('AssetRegistry', function () {
             expect(again.asset.resource).to.equal('reloaded');
         });
 
+        describe('unloaded while loading', function () {
+
+            let pending;
+            let destroyed;
+
+            beforeEach(function () {
+                pending = [];
+                destroyed = [];
+                // a handler that completes only when the test says so
+                app.loader.addHandler('text', {
+                    load(url, callback) {
+                        pending.push(callback);
+                    },
+                    open(url, data) {
+                        return data === null ? null : { name: data, destroy: () => destroyed.push(data) };
+                    }
+                });
+            });
+
+            it('destroys the resource the load delivers after the unload', () => {
+                const asset = new Asset('flaky', 'text', { url: `${assetPath}flaky.txt` });
+                app.assets.add(asset);
+                const onLoad = spy();
+                asset.on('load', onLoad);
+
+                app.assets.load(asset);
+                asset.unload();
+                expect(asset.loading).to.be.false;
+
+                pending[0](null, 'late');
+                expect(asset.loaded).to.be.false;
+                expect(asset.resource).to.not.exist;
+                expect(onLoad.called).to.be.false;
+                expect(destroyed).to.deep.equal(['late']);
+                expect(app.loader.getFromCache(asset.getFileUrl(), 'text')).to.not.exist;
+            });
+
+            it('starts a new request when the asset is loaded again', () => {
+                const asset = new Asset('flaky', 'text', { url: `${assetPath}flaky.txt` });
+                app.assets.add(asset);
+                const onLoad = spy();
+                asset.on('load', onLoad);
+
+                app.assets.load(asset);
+                asset.unload();
+                app.assets.load(asset);
+                expect(pending.length).to.equal(2);
+
+                // the first request was cancelled by the unload and completes without a resource
+                pending[0](null, null);
+                expect(asset.loaded).to.be.false;
+                expect(asset.loading).to.be.true;
+                expect(onLoad.called).to.be.false;
+
+                pending[1](null, 'fresh');
+                expect(asset.loaded).to.be.true;
+                expect(asset.loading).to.be.false;
+                expect(asset.resource.name).to.equal('fresh');
+                expect(onLoad.calledOnce).to.be.true;
+                expect(destroyed).to.deep.equal([]);
+            });
+
+            it('ignores a failure of the load it was unloaded from', () => {
+                const asset = new Asset('flaky', 'text', { url: `${assetPath}flaky.txt` });
+                app.assets.add(asset);
+                const onError = spy();
+                asset.on('error', onError);
+
+                app.assets.load(asset);
+                asset.unload();
+                app.assets.load(asset);
+
+                pending[0]('old error');
+                expect(asset.loaded).to.be.false;
+                expect(asset.loading).to.be.true;
+                expect(onError.called).to.be.false;
+
+                pending[1](null, 'fresh');
+                expect(asset.loaded).to.be.true;
+                expect(asset.resource.name).to.equal('fresh');
+            });
+
+            it('keeps a resource another caller still waits for', () => {
+                const asset = new Asset('flaky', 'text', { url: `${assetPath}flaky.txt` });
+                app.assets.add(asset);
+
+                app.assets.load(asset);
+                const other = spy();
+                app.loader.load(asset.getFileUrl(), 'text', other);
+                asset.unload();
+                expect(pending.length).to.equal(1);
+
+                pending[0](null, 'shared');
+                expect(other.calledOnce).to.be.true;
+                expect(other.firstCall.args[1].name).to.equal('shared');
+                expect(destroyed).to.deep.equal([]);
+                expect(asset.loaded).to.be.false;
+                expect(asset.resource).to.not.exist;
+            });
+
+        });
+
         it('loads css assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.css`, 'css', (err, asset) => {
                 expect(err).to.be.null;

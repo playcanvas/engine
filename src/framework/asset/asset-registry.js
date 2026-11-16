@@ -468,6 +468,8 @@ class AssetRegistry extends EventHandler {
         }
 
         const file = asset.file;
+        const unloadCount = asset._unloadCount;
+        let cancel = null;
 
         const _fireLoad = () => {
             this.fire('load', asset);
@@ -517,6 +519,20 @@ class AssetRegistry extends EventHandler {
 
         // load has completed on the resource
         const _loaded = (err, resource, extra) => {
+            const cancelIndex = asset._cancelLoads.indexOf(cancel);
+            if (cancelIndex !== -1) {
+                asset._cancelLoads.splice(cancelIndex, 1);
+            }
+
+            // the asset was unloaded while this load was in flight, so neither its result nor its
+            // error belongs to the asset any more; a handler that cancelled on unload delivers no
+            // resource, which completes the asset as before unless it is loading again
+            if (asset._unloadCount !== unloadCount) {
+                if (err || (resource !== null && resource !== undefined) || asset.loading) {
+                    return;
+                }
+            }
+
             asset.loaded = true;
             asset.loading = false;
 
@@ -552,6 +568,12 @@ class AssetRegistry extends EventHandler {
             asset.loading = true;
 
             const fileUrl = asset.getFileUrl();
+
+            // unloading the asset stops the loader delivering this load to it
+            if (file) {
+                cancel = () => this._loader.cancel(fileUrl, asset.type, _loaded);
+                asset._cancelLoads.push(cancel);
+            }
 
             // mark bundle assets as loading
             if (asset.type === 'bundle') {
