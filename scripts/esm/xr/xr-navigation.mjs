@@ -38,6 +38,17 @@ const tmpToHead = new Vec3();
 // focus returned, with the palm in any direction
 const FOCUS_SELECT_MS = 1000;
 
+/**
+ * Whether an input source is a bare tracked hand. Some runtimes (SteamVR) also give a controller a
+ * hand, posed from its finger sensors; it keeps its buttons and thumbsticks, so it stays a
+ * controller. A bare hand has a generic-hand profile, or a gamepad with no axes.
+ *
+ * @param {XrInputSource} inputSource - The input source.
+ * @returns {boolean} True for a bare hand.
+ */
+const isHand = inputSource => !!inputSource.hand &&
+    (!inputSource.gamepad?.axes.length || inputSource.profiles.some(profile => profile.startsWith('generic-hand')));
+
 const arcVertexGLSL = /* glsl */ `
     attribute vec3 vertex_position;
     attribute vec2 aUv0;
@@ -795,8 +806,9 @@ class XrNavigation extends Script {
             return true;
         }
 
-        // the -Y axis of the wrist joint points out of the palm
-        const hand = inputSource.hand;
+        // the -Y axis of the wrist joint points out of the palm. Only a bare hand opens the system
+        // menu this way; a controller held naturally often faces its palm to the head
+        const hand = isHand(inputSource) ? inputSource.hand : null;
         const wrist = hand?.tracking ? hand.wrist : null;
         if (wrist && this._cameraEntity) {
             wrist.getRotation().transformVector(tmpPalm.set(0, -1, 0), tmpPalm);

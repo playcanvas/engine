@@ -18,6 +18,17 @@ const FINGER_JOINTS = [
 ];
 
 /**
+ * Whether an input source is a bare tracked hand. Some runtimes (SteamVR) also give a controller a
+ * hand, posed from its finger sensors; it keeps its buttons and thumbsticks, so it stays a
+ * controller. A bare hand has a generic-hand profile, or a gamepad with no axes.
+ *
+ * @param {XrInputSource} inputSource - The input source.
+ * @returns {boolean} True for a bare hand.
+ */
+const isHand = inputSource => !!inputSource.hand &&
+    (!inputSource.gamepad?.axes.length || inputSource.profiles.some(profile => profile.startsWith('generic-hand')));
+
+/**
  * Provides a hybrid WebXR menu system that supports Hand Tracking ("Palm Up" gesture),
  * Controller button toggle, and an always-visible camera-anchored mode for debug HUDs. The
  * menu automatically picks the right input mode and switches between hand-anchored,
@@ -1282,7 +1293,7 @@ class XrMenu extends Script {
      * @private
      */
     _getAnchor(inputSource) {
-        return inputSource.hand ?
+        return isHand(inputSource) ?
             this._getPalmAnchor(inputSource) :
             this._getControllerAnchor(inputSource);
     }
@@ -1338,7 +1349,7 @@ class XrMenu extends Script {
         // Find the other hand to use for touching
         let touchHand = null;
         for (const source of this._inputSources) {
-            if (source !== inputSource && source.hand && source.hand.tracking) {
+            if (source !== inputSource && isHand(source) && source.hand.tracking) {
                 touchHand = source.hand;
                 break;
             }
@@ -1465,7 +1476,7 @@ class XrMenu extends Script {
             if (!this._menuVisible) this._setMenuVisible(true);
             this._followCamera(dt);
             for (const source of this._inputSources) {
-                if (source.hand && source.hand.tracking) {
+                if (isHand(source) && source.hand.tracking) {
                     this._checkFingerTouch(source);
                     break;
                 }
@@ -1485,7 +1496,7 @@ class XrMenu extends Script {
         this._activeInputSource = inputSource;
 
         // Determine input mode and update accordingly
-        if (inputSource.hand) {
+        if (isHand(inputSource)) {
             this._updateHandMode(inputSource, dt);
         } else if (inputSource.grip) {
             this._updateControllerMode(inputSource, dt);
