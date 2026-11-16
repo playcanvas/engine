@@ -319,8 +319,7 @@ class ForwardRenderer extends Renderer {
 
             if (newMaterial) {
 
-                const asyncCompile = false;
-                device.setShader(shaderInstance.shader, asyncCompile);
+                device.setShader(shaderInstance.shader, device.asyncShaderCompile);
                 this.setupViewBindGroup(shaderInstance.shader);
 
                 // Uniforms II: material - on the scope, and through the material bind group

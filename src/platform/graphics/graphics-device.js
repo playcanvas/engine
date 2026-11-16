@@ -506,6 +506,19 @@ class GraphicsDevice extends EventHandler {
     shaders = [];
 
     /**
+     * When true, the forward render passes skip a draw whose shader has not finished compiling,
+     * instead of waiting for the compilation to finish. A shader compiled for the first time
+     * during gameplay - a new material variant, for example - then does not stall the frame: the
+     * mesh instances using it are drawn from the frame its compilation completes, a few frames
+     * later. It has an effect where shaders compile in parallel, which is WebGL2 with the
+     * KHR_parallel_shader_compile extension. Shaders needed from the start can be compiled during
+     * loading with {@link AppBase#precompile}. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    asyncShaderCompile = false;
+
+    /**
      * True while a precompile pass renders, see {@link GraphicsDevice#startPrecompilePass}.
      *
      * @type {boolean}
