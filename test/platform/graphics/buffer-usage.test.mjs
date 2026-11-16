@@ -107,6 +107,14 @@ describe('Buffer usage checks', function () {
             buffer.destroy();
         });
 
+        it('does not report reading the built-in indirect draw and dispatch buffers', function () {
+            for (const buffer of [device.indirectDrawBuffer, device.indirectDispatchBuffer]) {
+                sinon.stub(buffer.impl, 'read').resolves(new Uint8Array(buffer.byteSize));
+                buffer.read();
+            }
+            expect(usageErrors()).to.have.lengthOf(0);
+        });
+
         it('does not report operations the buffer was created for', function () {
             const source = createStorageBuffer(BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
             const destination = createStorageBuffer(BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
