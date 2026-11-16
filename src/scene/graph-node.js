@@ -31,13 +31,14 @@ const up = new Vec3();
  * @returns {FindNodeCallback} Test function that receives a GraphNode and returns a boolean.
  */
 function createTest(attr, value) {
-    if (attr instanceof Function) {
+    // a function from another window or iframe is not an instance of this window's Function
+    if (typeof attr === 'function') {
         return attr;
     }
     return (node) => {
         let x = node[attr];
-        if (x instanceof Function) {
-            x = x();
+        if (typeof x === 'function') {
+            x = x.call(node);
         }
         return x === value;
     };
