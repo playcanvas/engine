@@ -25,7 +25,9 @@ const _viewport = new Vec4();
  *
  * @param {GraphicsDevice} device - The graphics device used to draw the quad.
  * @param {RenderTarget|null} target - The render target to draw into, or null to draw into the
- * back buffer.
+ * back buffer. On WebGPU the back buffer is only available during the frame rendering, so use null
+ * from the 'prerender' or 'postrender' application event or from a render pass, and not for
+ * example from the 'update' event.
  * @param {Shader} shader - The shader used for rendering the quad. Its vertex shader receives the
  * corners of the quad in an attribute using {@link SEMANTIC_POSITION}, which the `quadVS` shader
  * chunk implements, see {@link RenderPassShaderQuad}.

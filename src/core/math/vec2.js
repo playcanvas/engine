@@ -28,20 +28,6 @@ import { math } from './math.js';
  */
 class Vec2 {
     /**
-     * The first component of the vector.
-     *
-     * @type {number}
-     */
-    x;
-
-    /**
-     * The second component of the vector.
-     *
-     * @type {number}
-     */
-    y;
-
-    /**
      * Creates a new Vec2 instance.
      *
      * @overload
@@ -66,12 +52,27 @@ class Vec2 {
      */
     constructor(x = 0, y = 0) {
         if (x.length === 2) {
-            this.x = x[0];
-            this.y = x[1];
-        } else {
-            this.x = x;
-            this.y = y;
+            y = x[1];
+            x = x[0];
         }
+
+        // Fields are assigned once here instead of declared as class fields. A declaration without
+        // an initializer stores undefined first, so V8 never unboxes the field as a double and
+        // every fractional write allocates a heap number.
+
+        /**
+         * The first component of the vector.
+         *
+         * @type {number}
+         */
+        this.x = x;
+
+        /**
+         * The second component of the vector.
+         *
+         * @type {number}
+         */
+        this.y = y;
     }
 
     /**

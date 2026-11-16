@@ -667,7 +667,7 @@ class GSplatProjector {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
             totalCapacity, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
-            foveationStrength = 0, foveationCenter = 0.3, antiAliasFilterSize = 0.3,
+            foveationStrength = 0, foveationCenter = 0.3, antiAliasFilterSize = 0.1,
             viewportWidth, viewportHeight,
             pickMode = false,
             stochastic = false,

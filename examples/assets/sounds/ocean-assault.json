@@ -1,0 +1,17 @@
+{
+    "sounds": {
+        "shot": { "start": 0.09, "duration": 0.14 },
+        "hit": { "start": 0.41, "duration": 0.12 },
+        "launch": { "start": 0.71, "duration": 0.47 },
+        "boom": { "start": 1.36, "duration": 0.37 },
+        "blast": { "start": 1.91, "duration": 0.97 },
+        "pickup": { "start": 3.06, "duration": 0.28 },
+        "crash": { "start": 3.52, "duration": 0.87 },
+        "start": { "start": 4.57, "duration": 0.48 },
+        "alarm": { "start": 5.23, "duration": 1.83 }
+    },
+    "meta": {
+        "app": "examples/utils/generate-ocean-assault-sounds.mjs",
+        "audio": "ocean-assault.mp3"
+    }
+}

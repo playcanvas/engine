@@ -82,7 +82,8 @@ export const STATIC_TARGETS = [
     },
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
     { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
-    { src: './node_modules/@playcanvas/inspector/src', dest: 'dist/modules/inspector' }
+    { src: './node_modules/@playcanvas/inspector/src', dest: 'dist/modules/inspector' },
+    { src: './node_modules/3d-tiles-renderer/build', dest: 'dist/modules/3d-tiles-renderer' }
 ];
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.

@@ -17,8 +17,10 @@ bool getAntiAlias() {
     return (cachedTransformA.r & 1u) != 0u;
 }
 
+// opacity as the SOG v3 byte (see containerCompactWrite): 0..1.5625
 float getOpacity() {
-    return float(cachedTransformA.a >> 24u) / 255.0;
+    float o = float(cachedTransformA.a >> 24u) / 204.0;
+    return o * o;
 }
 
 vec3 getColor() {

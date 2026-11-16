@@ -1,0 +1,8 @@
+These textures are procedurally generated for the PlayCanvas examples by utils/generate-vfx-textures.mjs,
+and contain no third party content:
+
+* smoke-flipbook.webp - 8x8 frames of a billowing smoke puff with baked lighting, straight alpha.
+* explosion-flipbook.webp - 8x8 frames of a fireball cooling into smoke, straight alpha.
+* scorch-decal.webp - a scorch mark.
+* bullet-hole-decal.webp - a bullet hole with cracks.
+* rune-decal.webp - a magic rune circle.

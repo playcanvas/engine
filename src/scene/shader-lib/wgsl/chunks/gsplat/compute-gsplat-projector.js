@@ -266,7 +266,8 @@ fn main(
             alpha = clr.a;
         #endif
 
-        valid = true;
+        // cull splats the color modifier faded out, so they get no slot, cache entry or sort key
+        valid = alpha > uniforms.alphaClip;
     }
 
     // Reserve a per-workgroup slot for this thread.
@@ -298,7 +299,8 @@ fn main(
             projCache[base + 4u] = bitcast<u32>(clipPos.w);
             projCache[base + 5u] = pack2x16float(v1);
             projCache[base + 6u] = pack2x16float(v2);
-            projCache[base + 7u] = pack4x8unorm(vec4f(rgb, alpha));
+            // alpha as the SOG v3 opacity byte, sqrt(alpha) / 1.25, so it can exceed 1 (see gsplatHybridVS)
+            projCache[base + 7u] = pack4x8unorm(vec4f(rgb, sqrt(clamp(alpha, 0.0, 1.5625)) / 1.25));
         #else
             projCache[base + 0u] = bitcast<u32>(clipPos.x);
             projCache[base + 1u] = bitcast<u32>(clipPos.y);

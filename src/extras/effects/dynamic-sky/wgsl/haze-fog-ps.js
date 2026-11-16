@@ -14,8 +14,8 @@ export default /* wgsl */`
         #include "dynamicSkyHazePS"
 
         fn addFog(color: vec3f) -> vec3f {
-            let amount = dynamicSkyHazeAmount(uniform.view_position, vPositionW);
-            return mix(color, dynamicSkyHazeColor(vPositionW - uniform.view_position) * dBlendModeFogFactor, vec3f(amount));
+            let amount = dynamicSkyHazeAmount(uniform.view_position, litArgs_worldPosition);
+            return mix(color, dynamicSkyHazeColor(litArgs_worldPosition - uniform.view_position) * dBlendModeFogFactor, vec3f(amount));
         }
 
     #elif defined(VERTEXSHADER)

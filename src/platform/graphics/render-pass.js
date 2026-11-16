@@ -729,6 +729,21 @@ class RenderPass extends FramePass {
     }
 
     /**
+     * Runs {@link FramePass#execute} into a precompile pass of the device for the render target of
+     * the pass, which compiles the shaders and the render pipelines the execution needs without
+     * rendering anything. A pass whose execution is safe to run in a frame which only precompiles
+     * implements {@link FramePass#precompile} with it.
+     *
+     * @ignore
+     */
+    precompileExecute() {
+        const device = this.device;
+        device.startPrecompilePass(this.renderTarget);
+        this.execute();
+        device.endPrecompilePass();
+    }
+
+    /**
      * Renders the pass, as {@link FramePass#render} describes, starting its GPU render pass right
      * before {@link FramePass#execute} and ending it right after. A pass the frame graph merged
      * with a neighboring pass on the same render target shares a single GPU render pass with it.

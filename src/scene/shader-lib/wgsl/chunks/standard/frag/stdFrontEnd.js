@@ -128,7 +128,11 @@ export default /* wgsl */`
             #endif
 
             #if STD_OPACITY_DITHER != NONE
-                opacityDither(dAlpha * uniform.material_alphaDitherScale, 0.0);
+                #ifdef LIT_DITHER_ID
+                    opacityDither(dAlpha * uniform.material_alphaDitherScale, vDitherId);
+                #else
+                    opacityDither(dAlpha * uniform.material_alphaDitherScale, 0.0);
+                #endif
             #endif
 
             litArgs_opacity = dAlpha;

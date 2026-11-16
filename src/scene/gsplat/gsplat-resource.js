@@ -96,10 +96,16 @@ class GSplatResource extends GSplatResourceBase {
         defines.set('SH_BANDS', this.shBands);
     }
 
+    get extras() {
+        return this.gsplatData.extras;
+    }
+
     /**
      * Updates pixel data of splatColor texture based on the supplied color components and opacity.
      * Assumes that the texture is using an RGBA format where RGB are color components influenced
-     * by SH spherical harmonics and A is opacity after a sigmoid transformation.
+     * by SH spherical harmonics and A is opacity after a sigmoid transformation, or the optional
+     * `opacity_linear` property when present: the true (linear) opacity, above 1 for merged
+     * (decimated) gaussians, which always wins over `opacity`.
      *
      * @param {GSplatData} gsplatData - The source data
      * @ignore
@@ -116,20 +122,32 @@ class GSplatResource extends GSplatResourceBase {
         const cg = gsplatData.getProp('f_dc_1');
         const cb = gsplatData.getProp('f_dc_2');
         const ca = gsplatData.getProp('opacity');
+        const linear = gsplatData.getProp('opacity_linear');
         const activated = gsplatData.activated;
 
         const SH_C0 = 0.28209479177387814;
 
-        for (let i = 0; i < this.numSplats; ++i) {
-            const r = (cr[i] * SH_C0 + 0.5);
-            const g = (cg[i] * SH_C0 + 0.5);
-            const b = (cb[i] * SH_C0 + 0.5);
-            const a = activated ? ca[i] : 1 / (1 + Math.exp(-ca[i]));
+        const numSplats = this.numSplats;
+        for (let i = 0; i < numSplats; ++i) {
+            data[i * 4 + 0] = float2Half(cr[i] * SH_C0 + 0.5);
+            data[i * 4 + 1] = float2Half(cg[i] * SH_C0 + 0.5);
+            data[i * 4 + 2] = float2Half(cb[i] * SH_C0 + 0.5);
+        }
 
-            data[i * 4 + 0] = float2Half(r);
-            data[i * 4 + 1] = float2Half(g);
-            data[i * 4 + 2] = float2Half(b);
-            data[i * 4 + 3] = float2Half(a);
+        // alpha: the source is the same for every splat, so choose it once
+        if (linear) {
+            // opacity_linear always wins, drawn up to 1.5625, the top of the SOG v3 opacity byte (see gsplatHelpersVS)
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(Math.min(linear[i], 1.5625));
+            }
+        } else if (activated) {
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(ca[i]);
+            }
+        } else {
+            for (let i = 0; i < numSplats; ++i) {
+                data[i * 4 + 3] = float2Half(1 / (1 + Math.exp(-ca[i])));
+            }
         }
 
         texture.unlock();

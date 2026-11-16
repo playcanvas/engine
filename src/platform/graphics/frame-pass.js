@@ -249,6 +249,20 @@ class FramePass {
     }
 
     /**
+     * Called instead of rendering the pass in a frame which only compiles the shaders and the
+     * render pipelines the frame needs, without rendering it, see {@link AppBase#precompile}. Only
+     * called while {@link FramePass#executeEnabled} is true. A pass implementing it renders as its
+     * {@link FramePass#execute} does, between {@link GraphicsDevice#startPrecompilePass} and
+     * {@link GraphicsDevice#endPrecompilePass}, which compile what the rendering needs without
+     * rendering anything. It must not consume any state the next frame relies on, such as one-shot
+     * updates. Passes not implementing it compile what they need when they first render.
+     *
+     * @ignore
+     */
+    precompile() {
+    }
+
+    /**
      * Releases the resources the pass created. A pass owns only what it creates: it does not
      * destroy its {@link FramePass#beforePasses} and {@link FramePass#afterPasses}, which are
      * destroyed by whoever added them. The code which creates a pass destroys it, once, and the

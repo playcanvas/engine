@@ -68,12 +68,12 @@ class FramebufferPair {
      */
     destroy(gl) {
         if (this.msaaFB) {
-            gl.deleteRenderbuffer(this.msaaFB);
+            gl.deleteFramebuffer(this.msaaFB);
             this.msaaFB = null;
         }
 
         if (this.resolveFB) {
-            gl.deleteRenderbuffer(this.resolveFB);
+            gl.deleteFramebuffer(this.resolveFB);
             this.resolveFB = null;
         }
     }

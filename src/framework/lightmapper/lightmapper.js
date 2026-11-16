@@ -185,6 +185,9 @@ class Lightmapper {
             lightingParams.cookieAtlasResolution = srcParams.cookieAtlasResolution;
 
             lightingParams.areaLightsEnabled = srcParams.areaLightsEnabled;
+            lightingParams.areaLightRectEnabled = srcParams.areaLightRectEnabled;
+            lightingParams.areaLightDiskEnabled = srcParams.areaLightDiskEnabled;
+            lightingParams.areaLightSphereEnabled = srcParams.areaLightSphereEnabled;
 
             // some custom lightmapping params - we bake single light a time
             lightingParams.cells = new Vec3(3, 3, 3);

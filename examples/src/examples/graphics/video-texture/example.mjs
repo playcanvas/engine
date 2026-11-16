@@ -170,6 +170,11 @@ app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 // The lights are clustered, which supports area lights once enabled
 app.scene.lighting.areaLightsEnabled = true;
 
+// The only area light is a rectangle, so the shaders of the materials compile no disk and sphere
+// light code, which makes them faster to compile
+app.scene.lighting.areaLightDiskEnabled = false;
+app.scene.lighting.areaLightSphereEnabled = false;
+
 // A dark space, with the floor fading into the distance
 app.scene.ambientLight = new Color(0.01, 0.01, 0.012);
 app.scene.fog.type = FOG_LINEAR;

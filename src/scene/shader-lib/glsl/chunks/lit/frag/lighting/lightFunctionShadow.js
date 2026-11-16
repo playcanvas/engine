@@ -64,7 +64,7 @@ export default /* glsl */`
 
         #if LIGHT{i}TYPE == DIRECTIONAL
             // Beyond the shadow distance, skip cascade selection and shadow-map sampling.
-            if (1.0 / gl_FragCoord.w > light{i}_shadowCascadeDistances.w) {
+            if (dViewDepth > light{i}_shadowCascadeDistances.w) {
                 return 1.0;
             }
         #endif
@@ -81,7 +81,7 @@ export default /* glsl */`
         #if LIGHT{i}TYPE == OMNI
 
             // omni shadows use cubemap and sample by direction
-            vec3 shadowCoord = getShadowSampleCoordOmni{i}(light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, shadowNormal);
+            vec3 shadowCoord = getShadowSampleCoordOmni{i}(light{i}_shadowParams, litArgs_worldPosition, light{i}_position, lightDirW, dLightDirNormW, shadowNormal);
 
         #else
 
@@ -97,9 +97,9 @@ export default /* glsl */`
             #endif
 
             #if LIGHT{i}TYPE == DIRECTIONAL
-                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, vec3(0.0), lightDirW, dLightDirNormW, shadowNormal);
+                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, litArgs_worldPosition, vec3(0.0), lightDirW, dLightDirNormW, shadowNormal);
             #else
-                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, shadowNormal);
+                vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, litArgs_worldPosition, light{i}_position, lightDirW, dLightDirNormW, shadowNormal);
             #endif
 
         #endif

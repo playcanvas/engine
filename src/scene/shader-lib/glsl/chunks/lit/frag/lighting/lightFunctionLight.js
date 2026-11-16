@@ -143,7 +143,7 @@ void evaluateLight{i}(
         #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
             // Fade to fully lit at the shadow distance without sampling another cascade.
             float shadowDistance = light{i}_shadowCascadeDistances.w;
-            float shadowFade = smoothstep(light{i}_shadowCascadeBlend * shadowDistance, shadowDistance, 1.0 / gl_FragCoord.w);
+            float shadowFade = smoothstep(light{i}_shadowCascadeBlend * shadowDistance, shadowDistance, dViewDepth);
             shadow = mix(shadow, 1.0, shadowFade);
         #endif
 
@@ -204,12 +204,13 @@ void evaluateLight{i}(
         #if LIGHT{i}SHAPE != PUNCTUAL // area light
 
             #ifdef LIT_CLEARCOAT
+                // with the LTC matrix of the clear coat gloss (ccLTCUV)
                 #if LIGHT{i}SHAPE == RECT
-                    ccSpecularLight += ccLTCSpecFres * getRectLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
+                    ccSpecularLight += ccLTCSpecFres * getRectLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
                 #elif LIGHT{i}SHAPE == DISK
-                    ccSpecularLight += ccLTCSpecFres * getDiskLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
+                    ccSpecularLight += ccLTCSpecFres * getDiskLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
                 #elif LIGHT{i}SHAPE == SPHERE
-                    ccSpecularLight += ccLTCSpecFres * getSphereLightSpecular(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
+                    ccSpecularLight += ccLTCSpecFres * getSphereLightSpecularCC(litArgs_clearcoat_worldNormal, dViewDirW) * dAtten * lightColor;
                 #endif
             #endif
 

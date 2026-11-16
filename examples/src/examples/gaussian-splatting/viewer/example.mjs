@@ -53,14 +53,16 @@ import { data, deviceType, win } from 'examples/context';
 
 // A scene can also be loaded from a url, entered under the drop instructions or given as a hash
 // query param. This includes the streamed level of detail scenes, `lod-meta.json` and XGRIDS
-// `.lcc2`, e.g. #/gaussian-splatting/viewer?url=https://example.com/scene/lod-meta.json
+// `.lcc2` (with SOG or SPZ splat files), e.g.
+// #/gaussian-splatting/viewer?url=https://example.com/scene/lod-meta.json
 const hashQuery = (win.location.hash || window.location.hash || '').split('?')[1] || '';
 const paramUrl = new URLSearchParams(hashQuery).get('url');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// Set up the ZSTD decompression module, used by the spz parser
+// Set up the ZSTD decompression module, used by the spz parser for version 4 files. Version 3
+// files, including the splat files of SPZ based LCC2 scenes, are gzip compressed and do not need it.
 WasmModule.setConfig('ZstdDecoderModule', {
     glueUrl: './assets/wasm/zstd/zstd.wasm.js',
     wasmUrl: './assets/wasm/zstd/zstd.wasm.wasm'
@@ -162,7 +164,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// Register the spz parser with the gsplat resource handler
+// Register the spz parser with the gsplat resource handler. It also loads the `.spz` splat files of
+// an LCC2 scene, which are requested by file extension.
 const gsplatHandler = /** @type {GSplatHandler} */ (app.loader.getHandler('gsplat'));
 gsplatHandler.addParser(new SpzParser(app));
 
@@ -216,8 +219,8 @@ const calcEntityAABB = (bbox, entity) => {
 };
 
 /**
- * The orientation that shows a splat file upright: SPZ stores +Y up, LCC2 +Z up, and the other
- * formats -Y up.
+ * The orientation that shows a splat file upright: SPZ stores +Y up, LCC2 +Z up (whether its splat
+ * files are SOG or SPZ, as the LCC2 splat data is stored the same way), and the other formats -Y up.
  *
  * @param {string} filename - The file name.
  * @returns {number} The rotation around the x axis, in degrees.
@@ -308,7 +311,7 @@ data.set('data', {
     antialias: 'auto',
     // the screen-space filter the anti-aliased splats were trained with, in pixels squared: 0.3 for
     // gsplat's anti-aliased mode, 0.1 for Mip-Splatting and Brush's mip mode
-    antiAliasFilterSize: 0.3,
+    antiAliasFilterSize: 0.1,
     // re-evaluate spherical harmonics every frame the camera moves, as with higher SH bands
     // even a degree of stale view direction is visible
     colorUpdateAngle: 0,

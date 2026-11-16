@@ -5,7 +5,7 @@ uniform material_attenuation: vec3f;
 fn evalRefractionColor(refractionVector: vec3f, gloss: f32, refractionIndex: f32) -> vec3f {
 
     // The refraction point is the entry point + vector to exit point
-    let pointOfRefraction: vec4f = vec4f(vPositionW + refractionVector, 1.0);
+    let pointOfRefraction: vec4f = vec4f(litArgs_worldPosition + refractionVector, 1.0);
 
     // Project to texture space so we can sample it
     let projectionPoint: vec4f = uniform.matrix_viewProjection * pointOfRefraction;

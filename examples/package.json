@@ -28,13 +28,14 @@
     "@babel/standalone": "8.0.5",
     "@monaco-editor/react": "4.7.0",
     "@playcanvas/eslint-config": "3.0.0",
-    "@playcanvas/inspector": "0.4.0",
+    "@playcanvas/inspector": "0.5.0",
     "@playcanvas/observer": "1.7.1",
     "@playcanvas/pcui": "6.1.4",
     "@tweenjs/tween.js": "25.0.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/react-router-dom": "5.3.3",
+    "3d-tiles-renderer": "0.5.4",
     "cross-env": "10.1.0",
     "esbuild": "0.28.2",
     "eslint": "9.39.5",
@@ -57,7 +58,15 @@
   "overrides": {
     "@playcanvas/inspector": {
       "playcanvas": "$playcanvas"
+    },
+    "3d-tiles-renderer": {
+      "playcanvas": "$playcanvas"
     }
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "puppeteer": true,
+    "unrs-resolver": true
   },
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT"

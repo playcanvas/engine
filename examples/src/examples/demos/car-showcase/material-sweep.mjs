@@ -172,6 +172,7 @@ class MaterialSweep {
                 const material = find(`${slot} ${look}`);
                 material.getShaderChunks(SHADERLANGUAGE_GLSL).set('emissivePS', glslChunk);
                 material.getShaderChunks(SHADERLANGUAGE_WGSL).set('emissivePS', wgslChunk);
+                material.shaderChunksVersion = '2.24';
                 originals[slot][look] = material;
                 clones[slot][look] = material.clone();
             });

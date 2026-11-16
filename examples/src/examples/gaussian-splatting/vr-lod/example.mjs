@@ -517,7 +517,7 @@ const loadGSplat = (scene) => {
 };
 
 // Selectable scenes via the in-XR SCENE number row: 0 = the cave from the
-// gaussian-splatting/depth-of-field example, 1 = original. The cave splat is unrotated (its proxy
+// gaussian-splatting-fx/depth-of-field example, 1 = original. The cave splat is unrotated (its proxy
 // is what's flipped in that example), whereas the original needs a 180° flip.
 const caveAsset = new Asset('gsplat-cave', 'gsplat', {
     url: 'https://code.playcanvas.com/examples_data/example_cave_01/lod-meta.json'

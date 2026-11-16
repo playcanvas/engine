@@ -36,7 +36,8 @@ void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
         uint sxBits = scale.x < 1e-10 ? 0u : uint(clamp((log(scale.x) - logMin) * invLogRange + 0.5, 1.0, 255.0));
         uint syBits = scale.y < 1e-10 ? 0u : uint(clamp((log(scale.y) - logMin) * invLogRange + 0.5, 1.0, 255.0));
         uint szBits = scale.z < 1e-10 ? 0u : uint(clamp((log(scale.z) - logMin) * invLogRange + 0.5, 1.0, 255.0));
-        uint alphaBits = uint(clamp(color.a, 0.0, 1.0) * 255.0 + 0.5);
+        // opacity as the SOG v3 byte, (b / 204)^2: 0..1.5625, exact at 0 and 1 (byte 204)
+        uint alphaBits = uint(min(sqrt(clamp(color.a, 0.0, 1.5625)) * 204.0 + 0.5, 255.0));
         uint packedScaleAlpha = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
 
         writeDataTransformA(uvec4(gsplatPackCenterX(center.x), floatBitsToUint(center.y), floatBitsToUint(center.z), packedScaleAlpha));

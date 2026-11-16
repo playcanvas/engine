@@ -25,6 +25,7 @@ Script attributes (documented on each class) can be passed via `properties` as a
 - **Gaussian splatting** — streamed splat loading with LOD presets, reveal animations, shader effects, weather, text and image splats.
 - **XR** — session lifecycle, controllers, teleport navigation, object manipulation and 3D menus.
 - **Annotations** — 3D hotspots with DOM labels.
+- **Animation** — lowering the CPU cost of animated characters which are off-screen or far away.
 
 ## Resources
 

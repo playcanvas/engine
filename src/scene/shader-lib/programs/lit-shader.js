@@ -9,13 +9,13 @@ import {
     semanticToLocation
 } from '../../../platform/graphics/constants.js';
 import {
-    LIGHTSHAPE_PUNCTUAL,
+    LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_PICK,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
     lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
-    ditherNames,
+    ditherNames, DITHER_NONE,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -249,6 +249,14 @@ class LitShader {
             varyings.set('vModelScale', 'vec3');
         }
 
+        // opacity dithering, which uses a per-mesh value derived from the model matrix to offset the
+        // dither pattern, so that overlapping meshes do not all discard the same pixels
+        const ditherMode = this.shaderPassInfo.isForward ? options.opacityDither : options.opacityShadowDither;
+        if (ditherMode !== DITHER_NONE) {
+            this.sharedDefineSet(true, 'LIT_DITHER_ID', true);
+            varyings.set('vDitherId', 'float');
+        }
+
         if (this.needsNormal) vDefines.set('NORMALS', true);
 
         if (this.options.useInstancing) {
@@ -429,7 +437,15 @@ class LitShader {
         if (clusteredLightingEnabled && this.lighting) {
             fDefines.set('LIT_CLUSTERED_LIGHTS', true);
             if (options.clusteredLightingCookiesEnabled) fDefines.set('CLUSTER_COOKIES', true);
-            if (options.clusteredLightingAreaLightsEnabled) fDefines.set('CLUSTER_AREALIGHTS', true);
+            if (options.clusteredLightingAreaLightsEnabled) {
+                fDefines.set('CLUSTER_AREALIGHTS', true);
+
+                // only the code of the area light shapes enabled in the LightingParams
+                const shapes = options.clusteredLightingAreaLightShapes;
+                if (shapes & (1 << LIGHTSHAPE_RECT)) fDefines.set('CLUSTER_AREALIGHT_RECT', true);
+                if (shapes & (1 << LIGHTSHAPE_DISK)) fDefines.set('CLUSTER_AREALIGHT_DISK', true);
+                if (shapes & (1 << LIGHTSHAPE_SPHERE)) fDefines.set('CLUSTER_AREALIGHT_SPHERE', true);
+            }
             if (options.lightMaskDynamic) fDefines.set('CLUSTER_MESH_DYNAMIC_LIGHTS', true);
 
             // shadows
@@ -539,7 +555,6 @@ class LitShader {
         this.fDefineSet(options.useCubeMapRotation, 'CUBEMAP_ROTATION');
         this.fDefineSet(options.occludeSpecularFloat, 'LIT_OCCLUDE_SPECULAR_FLOAT');
         this.fDefineSet(options.separateAmbient, 'LIT_SEPARATE_AMBIENT');
-        this.fDefineSet(options.twoSidedLighting, 'LIT_TWO_SIDED_LIGHTING');
         this.fDefineSet(options.lightMapEnabled, 'LIT_LIGHTMAP');
         this.fDefineSet(options.dirLightMapEnabled, 'LIT_DIR_LIGHTMAP');
         this.fDefineSet(options.skyboxIntensity > 0, 'LIT_SKYBOX_INTENSITY');
@@ -561,7 +576,6 @@ class LitShader {
         this.fDefineSet(options.useMsdf, 'LIT_MSDF');
         this.fDefineSet(options.ssao, 'LIT_SSAO');
         this.fDefineSet(options.useAo, 'LIT_AO');
-        this.fDefineSet(options.occludeDirect, 'LIT_OCCLUDE_DIRECT');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(options.shadowCatcher, 'LIT_SHADOW_CATCHER');
         this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);

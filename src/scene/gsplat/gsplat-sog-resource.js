@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
+import { blindAccessors, parseBlindFields } from './gsplat-sog-blind.js';
 
 /**
  * @import { GSplatSogData } from './gsplat-sog-data.js'
@@ -17,6 +18,15 @@ import { GSplatFormat } from './gsplat-format.js';
  */
 class GSplatSogResource extends GSplatResourceBase {
     /**
+     * The `SOG_BLIND_<name>` define of each blind field, built once so setting the material
+     * defines on every work buffer update allocates nothing.
+     *
+     * @type {string[]}
+     * @private
+     */
+    _blindDefines;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatSogData} gsplatData - The splat data.
      * @param {object} [options] - Passed to {@link GSplatResourceBase} constructor.
@@ -26,7 +36,8 @@ class GSplatSogResource extends GSplatResourceBase {
         super(device, gsplatData, options);
 
         const { meta, means_l } = gsplatData;
-        const isV2 = meta.version === 2;
+        // V2 and V3 both dequantize through the codebook LUT
+        const isV2 = meta.version >= 2;
         const hasSH = gsplatData.shBands > 0;
 
         // splat texture dimensions come from the source means_l texture - used for the
@@ -46,6 +57,9 @@ class GSplatSogResource extends GSplatResourceBase {
             this.streams.textures.set('sh_labels', gsplatData.sh_labels);
             this.streams.textures.set('sh_centroids', gsplatData.sh_centroids);
         }
+        gsplatData.blind.forEach((texture, i) => {
+            this.streams.textures.set(`blind${i}`, texture);
+        });
         if (isV2) {
             // V2 always declares the sogCodebook stream below, so the texture must exist or the
             // streams system would auto-create a default (wrong-sized) RGBA32F texture at bind.
@@ -67,15 +81,25 @@ class GSplatSogResource extends GSplatResourceBase {
             streams.push({ name: 'sh_labels', format: PIXELFORMAT_RGBA8 });
             streams.push({ name: 'sh_centroids', format: PIXELFORMAT_RGBA8 });
         }
+        // per-gaussian user data, one stream per blind texture, read in shaders through the
+        // generated getBlind_<name>() accessors (see gsplat-sog-blind.js)
+        for (let i = 0; i < gsplatData.blind.length; i++) {
+            streams.push({ name: `blind${i}`, format: PIXELFORMAT_RGBA8 });
+        }
         if (isV2) {
             streams.push({ name: 'sogCodebook', format: PIXELFORMAT_RGBA32F });
         }
 
-        // Create format with streams and shader chunk include
+        const fields = parseBlindFields(meta);
+        this._blindDefines = fields.map(f => `SOG_BLIND_${f.id}`);
+
+        // Create format with streams and shader chunk include. The format only uses the read code
+        // of the device's shader language, so only that one is generated.
         // Note: We don't call streams.init() as textures are externally managed by gsplatData
+        const read = `#include "gsplatSogVS"${blindAccessors(fields, device.isWebGPU)}`;
         this._format = new GSplatFormat(device, streams, {
-            readGLSL: '#include "gsplatSogVS"',
-            readWGSL: '#include "gsplatSogVS"'
+            readGLSL: read,
+            readWGSL: read
         });
 
         // Populate parameters map with dequantization uniforms
@@ -98,6 +122,7 @@ class GSplatSogResource extends GSplatResourceBase {
         d.sh0?.setReleaseSourceAfterUpload();
         d.sh_centroids?.setReleaseSourceAfterUpload();
         d.sh_labels?.setReleaseSourceAfterUpload();
+        d.blind.forEach(t => t.setReleaseSourceAfterUpload());
     }
 
     /** @protected */
@@ -110,6 +135,7 @@ class GSplatSogResource extends GSplatResourceBase {
         this.streams.textures.delete('sh0');
         this.streams.textures.delete('sh_labels');
         this.streams.textures.delete('sh_centroids');
+        /** @type {GSplatSogData} */ (this.gsplatData).blind.forEach((t, i) => this.streams.textures.delete(`blind${i}`));
         this.streams.textures.delete('sogCodebook');
         /** @type {GSplatSogData} */ (this.gsplatData).destroy();
         super._actualDestroy();
@@ -131,7 +157,7 @@ class GSplatSogResource extends GSplatResourceBase {
             this.parameters.set('means_maxs', meta.means.maxs);
         }
 
-        if (meta.version !== 2) {
+        if (!(meta.version >= 2)) {
             // V1: upload full min/max arrays for linear dequantization
             if (meta.scales) {
                 this.parameters.set('scales_mins', meta.scales.mins);
@@ -151,8 +177,12 @@ class GSplatSogResource extends GSplatResourceBase {
     configureMaterialDefines(defines) {
         const gsplatData = /** @type {GSplatSogData} */ (this.gsplatData);
         defines.set('SH_BANDS', gsplatData.shBands);
-        if (gsplatData.meta.version === 2) {
-            defines.set('SOG_V2', '');
+        const { meta } = gsplatData;
+        // the format version (v1 files have none): 2 and up dequantize through codebooks, 3 adds the
+        // exp-map rotations, squared opacity and 24-bit SH labels
+        defines.set('SOG_VERSION', meta.version ?? 1);
+        for (const define of this._blindDefines) {
+            defines.set(define, '');
         }
     }
 
@@ -160,6 +190,10 @@ class GSplatSogResource extends GSplatResourceBase {
     // letting color-only (SH) updates skip the means/quats/scales source reads
     get supportsWorkBufferGeometry() {
         return true;
+    }
+
+    get extras() {
+        return /** @type {GSplatSogData} */ (this.gsplatData).meta.extras;
     }
 }
 

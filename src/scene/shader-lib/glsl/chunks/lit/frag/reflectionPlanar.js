@@ -45,7 +45,7 @@ vec3 calcReflection(vec3 reflDir, float gloss) {
     // Project a point a short distance along the reflected ray into the texture. For a surface
     // lying on the plane, this is the pixel the surface itself projects to. A normal tilted away
     // from the plane, by a normal map or a bevel, moves the point, distorting the reflection.
-    vec4 clipPos = planarReflectionMatrix * vec4(vPositionW + reflDir * 0.2, 1.0);
+    vec4 clipPos = planarReflectionMatrix * vec4(litArgs_worldPosition + reflDir * 0.2, 1.0);
     vec2 uv = getGrabScreenPos(clipPos);
 
     // rougher surfaces sample the smaller mipmaps of the texture, blurring the reflection, up to

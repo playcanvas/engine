@@ -1,4 +1,7 @@
-import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } from '../../constants.js';
+import {
+    BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, LIGHTSHAPE_DISK, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE,
+    REFLECTIONSRC_NONE
+} from '../../constants.js';
 
 /**
  * @import { ShaderChunks } from '../shader-chunks.js';
@@ -80,6 +83,15 @@ class LitShaderOptions {
 
     clusteredLightingAreaLightsEnabled = false;
 
+    /**
+     * Bit mask (1 << shape) of the area light shapes the clustered lighting compiles code for.
+     * Defaults to all shapes.
+     *
+     * @type {number}
+     * @ignore
+     */
+    clusteredLightingAreaLightShapes = (1 << LIGHTSHAPE_RECT) | (1 << LIGHTSHAPE_DISK) | (1 << LIGHTSHAPE_SPHERE);
+
     vertexColors = false;
 
     useVertexColorGamma = false;
@@ -108,16 +120,6 @@ class LitShaderOptions {
      * Apply SSAO during the lighting.
      */
     ssao = false;
-
-    /**
-     * The value of {@link StandardMaterial#twoSidedLighting}.
-     */
-    twoSidedLighting = false;
-
-    /**
-     * The value of {@link StandardMaterial#occludeDirect}.
-     */
-    occludeDirect = false;
 
     /**
      * The value of {@link StandardMaterial#occludeSpecular}.

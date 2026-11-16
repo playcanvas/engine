@@ -1,4 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
+import { acquireTouchAction, releaseTouchAction } from '../../platform/input/touch-action.js';
 import { Pose } from './pose.js';
 
 /** @import { HandleEventCallback } from '../../core/event-handler.js' */
@@ -164,6 +165,16 @@ class InputSource extends InputFrame {
     _events = new EventHandler();
 
     /**
+     * Whether the source reads touch input. Such a source sets the `touch-action` style of its
+     * element to `none` while attached, so the browser does not take a touch on the element as a
+     * page scroll or zoom.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _readsTouch = false;
+
+    /**
      * Adds an event listener for the specified event.
      *
      * @param {string} event - The event name to listen for.
@@ -202,11 +213,18 @@ class InputSource extends InputFrame {
             this.detach();
         }
         this._element = element;
+
+        if (this._readsTouch) {
+            acquireTouchAction(element);
+        }
     }
 
     detach() {
         if (!this._element) {
             return;
+        }
+        if (this._readsTouch) {
+            releaseTouchAction(this._element);
         }
         this._element = null;
         this.read();

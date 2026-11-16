@@ -8,9 +8,19 @@ import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
 import {
-    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES,
+    OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE
 } from '../../anim/controller/constants.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+
+// the result of AnimComponent#update
+const ANIMUPDATE_EVALUATED = 0;
+const ANIMUPDATE_OFFSCREEN = 1;
+const ANIMUPDATE_INTERVAL = 2;
+
+// for each evaluation interval, the number of anim components assigned a phase of it, used to spread
+// the components with the same interval over the frames of the interval
+const evaluationPhaseCounters = new Map();
 
 /**
  * The AnimComponent enables an {@link Entity} to play back animations on models and entity
@@ -66,6 +76,28 @@ class AnimComponent extends Component {
 
     /** @private */
     _playing = false;
+
+    /** @private */
+    _offscreenUpdate = OFFSCREENUPDATE_FULL;
+
+    /** @private */
+    _evaluationInterval = 1;
+
+    /**
+     * The frame of the evaluation interval in which the animation is evaluated, which spreads the
+     * anim components with the same interval over its frames.
+     *
+     * @private
+     */
+    _evaluationPhase = 0;
+
+    /**
+     * True when the animation was not evaluated in the last update as the anim component was not
+     * visible, so it is evaluated as soon as it is visible again.
+     *
+     * @private
+     */
+    _evaluationOffscreen = false;
 
     /** @private */
     _rootBone = null;
@@ -223,6 +255,74 @@ class AnimComponent extends Component {
      */
     get playing() {
         return this._playing;
+    }
+
+    /**
+     * Sets how the anim component updates when it is not visible. The anim component is visible
+     * when a skinned or morphed mesh instance attached to its root (see {@link rootBone}) or a
+     * descendant of it was rendered in the previous frame, by any camera, including shadow
+     * casting. Can be:
+     *
+     * - {@link OFFSCREENUPDATE_FULL}: Always update fully. This is the default.
+     * - {@link OFFSCREENUPDATE_STATE}: Update the state graph, transitions and animation events,
+     * but do not evaluate and apply the animation.
+     * - {@link OFFSCREENUPDATE_NONE}: Do not update at all. The animation resumes where it stopped.
+     *
+     * Visibility is determined in the previous frame, so a character which becomes visible renders
+     * as it was last animated for one frame. To avoid this, the application can predict the visibility
+     * (for example by testing the bounds of the character against the camera frustum) and set
+     * {@link OFFSCREENUPDATE_FULL} on characters likely to become visible.
+     *
+     * Only skinned and morphed mesh instances are taken into account, so an anim component which
+     * animates a hierarchy without them is never visible, and should use the default
+     * {@link OFFSCREENUPDATE_FULL}.
+     *
+     * @type {string}
+     */
+    set offscreenUpdate(value) {
+        this._offscreenUpdate = value ?? OFFSCREENUPDATE_FULL;
+    }
+
+    /**
+     * Gets how the anim component updates when it is not visible.
+     *
+     * @type {string}
+     */
+    get offscreenUpdate() {
+        return this._offscreenUpdate;
+    }
+
+    /**
+     * Sets how often the animation is evaluated and applied to the animated entities and
+     * properties, in frames. With the default value of 1, this happens every frame. With a value of
+     * 2, it happens every other frame, and so on, while the state graph, transitions and animation
+     * events still update every frame. This lowers the cost of characters which are far away or
+     * small on the screen, where the lower animation rate is hard to notice. The anim components
+     * using the same interval are spread over the frames, so they are not all evaluated in the
+     * same frame. A character which becomes visible (see {@link offscreenUpdate}) is evaluated
+     * immediately.
+     *
+     * @type {number}
+     */
+    set evaluationInterval(value) {
+        const interval = Math.max(1, Math.floor(value || 1));
+        if (interval !== this._evaluationInterval) {
+            this._evaluationInterval = interval;
+
+            // spread the anim components with the same interval over its frames
+            const count = evaluationPhaseCounters.get(interval) ?? 0;
+            evaluationPhaseCounters.set(interval, count + 1);
+            this._evaluationPhase = count % interval;
+        }
+    }
+
+    /**
+     * Gets how often the animation is evaluated and applied, in frames.
+     *
+     * @type {number}
+     */
+    get evaluationInterval() {
+        return this._evaluationInterval;
     }
 
     /**
@@ -849,14 +949,50 @@ class AnimComponent extends Component {
         }
     }
 
+    /**
+     * @param {number} dt - The time elapsed since the last update, in seconds.
+     * @returns {number} ANIMUPDATE_EVALUATED if the animation was evaluated, ANIMUPDATE_OFFSCREEN if
+     * it was not as the anim component is not visible, or ANIMUPDATE_INTERVAL if it was not due to
+     * the evaluation interval.
+     * @ignore
+     */
     update(dt) {
+        let result = ANIMUPDATE_EVALUATED;
+        if (this._offscreenUpdate !== OFFSCREENUPDATE_FULL) {
+            // visible if a deformed mesh instance in the animated hierarchy was rendered last frame
+            const root = this._rootBone || this.entity;
+            if (root._deformedRenderVersion !== this.system.app.graphicsDevice.renderVersion) {
+                this._evaluationOffscreen = true;
+                if (this._offscreenUpdate === OFFSCREENUPDATE_NONE) {
+                    return ANIMUPDATE_OFFSCREEN;
+                }
+                result = ANIMUPDATE_OFFSCREEN;
+            }
+        }
+
+        // with an evaluation interval, skip the evaluation until it is due, unless it is out of date
+        // after the anim component was not visible
+        if (result === ANIMUPDATE_EVALUATED) {
+            // the phase is tested against an update index shared by all anim components, so an
+            // evaluation forced by becoming visible does not change when the next ones happen
+            const interval = this._evaluationInterval;
+            if (interval > 1 && !this._evaluationOffscreen && (this.system.updateIndex + this._evaluationPhase) % interval !== 0) {
+                result = ANIMUPDATE_INTERVAL;
+            } else {
+                this._evaluationOffscreen = false;
+            }
+        }
+
+        const evaluate = result === ANIMUPDATE_EVALUATED;
+
         for (let i = 0; i < this.layers.length; i++) {
-            this.layers[i].update(dt * this.speed);
+            this.layers[i].update(dt * this.speed, evaluate);
         }
         this._consumedTriggers.forEach((trigger) => {
             this.parameters[trigger].value = false;
         });
         this._consumedTriggers.clear();
+        return result;
     }
 
     resolveDuplicatedEntityReferenceProperties(oldAnim, duplicatedIdsMap) {
@@ -884,4 +1020,4 @@ class AnimComponent extends Component {
     // ---- deprecated block end ----
 }
 
-export { AnimComponent };
+export { AnimComponent, ANIMUPDATE_EVALUATED, ANIMUPDATE_OFFSCREEN, ANIMUPDATE_INTERVAL };

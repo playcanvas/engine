@@ -186,7 +186,6 @@ const STANDARD_MAT_PROPS = [
     ['specularityFactorMapRotation', 'number'],
     ['specularityFactorMapTiling', 'Vec2'],
     ['specularityFactorMapUv', 'number'],
-    ['specularityFactorTint', 'boolean'],
     ['specularityFactorVertexColor', 'boolean'],
     ['specularityFactorVertexColorChannel', 'string'],
     ['useSheen', 'boolean'],

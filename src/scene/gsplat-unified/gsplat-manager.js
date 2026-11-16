@@ -315,6 +315,11 @@ class GSplatManager {
         if (this.world.hasOctreeInstances) return;
         this.world.invalidate({ workBuffer: true });
         this.sortNeeded = true;
+
+        // The CPU-sorted order is lost with the GPU resources. Re-upload the last one on the next
+        // frame instead of waiting for the worker, so the splats are complete on the first frame
+        // after the restore, which re-renders cached shadow maps (see Light#onDeviceRestored).
+        this.cpuSorter?.reapplyLastSorted();
     }
 
     /**
@@ -789,8 +794,10 @@ class GSplatManager {
         if (this._bakeResult.rebuilt) {
             this.renderer.update(this._bakeResult.count, this._bakeResult.textureSize);
 
-            // boundsBaseIndex may have changed — force interval metadata re-upload
+            // boundsBaseIndex may have changed — force interval metadata re-upload. The rebuild can
+            // also follow a device restore, which recreates the intervals buffers empty.
             this.renderer.invalidateCullUpload();
+            this.shadowRenderer?.invalidateCullUpload();
         }
         // an incremental update may have detected moved splats requiring a re-sort
         if (this._bakeResult.sortNeeded) this.sortNeeded = true;

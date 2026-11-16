@@ -157,9 +157,6 @@ class ViewUniformBuffer {
  * @ignore
  */
 class Renderer {
-    /** @type {boolean} */
-    clustersDebugRendered = false;
-
     /** @type {Scene} */
     scene;
 
@@ -731,12 +728,19 @@ class Renderer {
         const skinTime = now();
         // #endif
 
+        const renderVersion = this.device.renderVersion;
         for (const drawCall of drawCalls) {
             const skin = drawCall.skinInstance;
+            if (skin) {
+                // mark the hierarchy of the mesh, and of the skeleton, which can be located
+                // elsewhere, or above the mesh
+                drawCall.node.markDeformedRendered(renderVersion);
+                skin.rootBone?.markDeformedRendered(renderVersion);
 
-            if (skin && skin._dirty) {
-                skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
-                skin._dirty = false;
+                if (skin._dirty) {
+                    skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
+                    skin._dirty = false;
+                }
             }
         }
 
@@ -756,10 +760,15 @@ class Renderer {
         const morphTime = now();
         // #endif
 
+        const renderVersion = this.device.renderVersion;
         for (const drawCall of drawCalls) {
             const morphInst = drawCall.morphInstance;
-            if (morphInst && morphInst._dirty) {
-                morphInst.update();
+            if (morphInst) {
+                drawCall.node.markDeformedRendered(renderVersion);
+
+                if (morphInst._dirty) {
+                    morphInst.update();
+                }
             }
         }
 
@@ -1480,8 +1489,6 @@ class Renderer {
     }
 
     frameUpdate() {
-
-        this.clustersDebugRendered = false;
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();

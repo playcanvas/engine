@@ -148,6 +148,12 @@ class FramePassColorGrab extends FramePass {
         camera.publishSceneColorMap(colorBuffer, gamma);
     }
 
+    precompile() {
+
+        // the copy needs no shaders, but the passes after it read the texture it publishes
+        this.before();
+    }
+
     execute() {
 
         // copy color from the current render target

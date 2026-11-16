@@ -12,6 +12,9 @@ var<private> litArgs_emission: vec3f;
 // Normal direction in world space
 var<private> litArgs_worldNormal: vec3f;
 
+// The world position the lighting is evaluated at, litArgs_worldPosition, is declared by
+// litForwardDeclarationPS, as the fog reads it before a front end declares these
+
 // Ambient occlusion amount, range [0..1]
 var<private> litArgs_ao: f32;
 

@@ -84,7 +84,8 @@ const STATIC_ROUTES = [
     { url: '/icons/', root: 'src/static/icons' },
     { url: '/modules/monaco-editor/min/vs/', root: 'node_modules/monaco-editor/min/vs' },
     { url: '/modules/fflate/esm/', root: '../node_modules/fflate/esm' },
-    { url: '/modules/inspector/', root: 'node_modules/@playcanvas/inspector/src' }
+    { url: '/modules/inspector/', root: 'node_modules/@playcanvas/inspector/src' },
+    { url: '/modules/3d-tiles-renderer/', root: 'node_modules/3d-tiles-renderer/build' }
 ];
 const ROOT_FILES = {
     '/styles.css': 'src/static/styles.css',

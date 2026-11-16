@@ -2,10 +2,14 @@ import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
 import { Color } from '../../../src/core/math/color.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
 import {
     KHR_materials_diffuse_transmission
 } from '../../../src/framework/parsers/glb/extensions/khr-materials-diffuse-transmission.js';
 import { GlbParser } from '../../../src/framework/parsers/glb-parser.js';
+import {
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_NEAREST
+} from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
@@ -201,6 +205,119 @@ describe('GlbParser', function () {
 
             // the factor multiplies the texture, so the texture alone gives no sheen
             expect(material.sheen).to.deep.equal(new Color(0, 0, 0));
+        });
+    });
+
+    describe('textures sharing an image', function () {
+
+        // glTF sampler values
+        const NEAREST = 9728;
+        const CLAMP_TO_EDGE = 33071;
+
+        /**
+         * Parses a glTF with a single image and the given samplers and textures. The image is
+         * supplied by the image processAsync option as a ready texture asset, so no image decoding
+         * is needed.
+         *
+         * @param {object[]} samplers - The glTF samplers.
+         * @param {object[]} textures - The glTF textures, all using image 0.
+         * @param {object} [textureOptions] - The texture options passed to the parser.
+         * @returns {Promise<{ result: object, imageAsset: Asset }>} The parse result and the asset
+         * of the image.
+         */
+        const parseTextures = (samplers, textures, textureOptions) => {
+            const gltf = {
+                asset: { version: '2.0' },
+                scenes: [],
+                nodes: [],
+                images: [{ uri: 'shared.png' }],
+                samplers,
+                textures
+            };
+            const data = new TextEncoder().encode(JSON.stringify(gltf));
+
+            const imageAsset = new Asset('shared', 'texture', { url: 'shared.png' });
+            imageAsset.resource = new Texture(app.graphicsDevice, { width: 4, height: 4 });
+            imageAsset.loaded = true;
+            app.assets.add(imageAsset);
+
+            const options = {
+                image: {
+                    processAsync: (gltfImage, callback) => callback(null, imageAsset)
+                },
+                texture: textureOptions
+            };
+
+            return new Promise((resolve, reject) => {
+                GlbParser.parse('textures.gltf', '', data, app.graphicsDevice, app.assets, options, [], (err, result) => {
+                    if (err) reject(err);
+                    else resolve({ result, imageAsset });
+                });
+            });
+        };
+
+        it('shares one texture between textures with the same sampling state', async function () {
+            const { result, imageAsset } = await parseTextures([{}, {}], [
+                { source: 0 },
+                { source: 0, sampler: 0 },
+                { source: 0, sampler: 1 }
+            ]);
+
+            // a missing sampler and empty samplers all resolve to the glTF defaults
+            expect(result.textures).to.have.lengthOf(3);
+            expect(result.textures[0]).to.equal(imageAsset);
+            expect(result.textures[1]).to.equal(imageAsset);
+            expect(result.textures[2]).to.equal(imageAsset);
+            expect(imageAsset.resource.addressU).to.equal(ADDRESS_REPEAT);
+            expect(imageAsset.resource.minFilter).to.equal(FILTER_LINEAR_MIPMAP_LINEAR);
+        });
+
+        it('clones the texture once for each further sampling state of an image', async function () {
+            const { result, imageAsset } = await parseTextures([
+                { wrapS: CLAMP_TO_EDGE },
+                { magFilter: NEAREST, minFilter: NEAREST },
+                { wrapS: CLAMP_TO_EDGE }
+            ], [
+                { source: 0 },
+                { source: 0, sampler: 0 },
+                { source: 0, sampler: 1 },
+                { source: 0, sampler: 2 }
+            ]);
+
+            const [defaultAsset, clampAsset, nearestAsset, clampAsset2] = result.textures;
+
+            // the first sampling state uses the image asset itself
+            expect(defaultAsset).to.equal(imageAsset);
+            expect(defaultAsset.resource.addressU).to.equal(ADDRESS_REPEAT);
+
+            // a different sampler with the same values shares the clone
+            expect(clampAsset).to.not.equal(imageAsset);
+            expect(clampAsset2).to.equal(clampAsset);
+            expect(clampAsset.resource).to.not.equal(imageAsset.resource);
+            expect(clampAsset.resource.addressU).to.equal(ADDRESS_CLAMP_TO_EDGE);
+            expect(clampAsset.resource.addressV).to.equal(ADDRESS_REPEAT);
+
+            expect(nearestAsset).to.not.equal(imageAsset);
+            expect(nearestAsset).to.not.equal(clampAsset);
+            expect(nearestAsset.resource.minFilter).to.equal(FILTER_NEAREST);
+            expect(nearestAsset.resource.magFilter).to.equal(FILTER_NEAREST);
+            expect(nearestAsset.resource.addressU).to.equal(ADDRESS_REPEAT);
+        });
+
+        it('calls the texture postprocess callback for every glTF texture', async function () {
+            const calls = [];
+            const { result } = await parseTextures([], [
+                { source: 0 },
+                { source: 0 }
+            ], {
+                postprocess: (gltfTexture, textureAsset) => calls.push([gltfTexture, textureAsset])
+            });
+
+            expect(calls).to.have.lengthOf(2);
+            expect(calls[0][0]).to.equal(result.gltf.textures[0]);
+            expect(calls[1][0]).to.equal(result.gltf.textures[1]);
+            expect(calls[0][1]).to.equal(result.textures[0]);
+            expect(calls[1][1]).to.equal(result.textures[0]);
         });
     });
 

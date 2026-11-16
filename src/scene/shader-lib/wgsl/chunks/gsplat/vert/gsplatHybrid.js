@@ -137,7 +137,9 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         let v2 = unpack2x16float(projCache[base + 6u]);
 
         let rgba = unpack4x8unorm(projCache[base + 7u]);
-        let alpha = half(rgba.a);
+        // alpha is cached as the SOG v3 opacity byte, (1.25 * v)^2 (see the projector)
+        let alphaRoot = 1.25 * rgba.a;
+        let alpha = half(alphaRoot * alphaRoot);
         var clr: half4 = half4(half(rgba.r), half(rgba.g), half(rgba.b), alpha);
     #else
         let proj = vec4f(
@@ -174,8 +176,17 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #else
         let alphaClipValue = half(uniform.alphaClipForward);
     #endif
-    let clip = min(half(1.0), sqrt(max(half(0.0), log(alpha / alphaClipValue))) * half(0.5));
-    let cornerClipped = cornerUV * f32(clip);
+    var clip = f32(min(half(1.0), sqrt(max(half(0.0), log(min(alpha, half(1.0)) / alphaClipValue))) * half(0.5)));
+
+    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
+    // 1 + the core radius instead, drawn with peak alpha 1, and the plain trim is stretched past the core
+    var shapeAlpha = alpha;
+    if (alpha > half(1.0)) {
+        let core = gsplatPlateauCore(f32(alpha));
+        clip = core + (1.0 - core) * clip;
+        shapeAlpha = half(1.0 + core);
+    }
+    let cornerClipped = cornerUV * clip;
 
     // Convert pixel-space offset into clip-space. proj.w is the real clipPos.w,
     // so c == clip.w / viewport matches gsplatCorner.js line 97 for both
@@ -210,12 +221,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         // Overdraw mode renders a flat color ramp; depth-shade input not needed.
         let t: f32 = clamp(viewDepth / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
-        let outAlpha = alpha * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
+        let outAlpha = min(alpha, half(1.0)) * half(1.0 / 32.0) * half(uniform.colorRampIntensity);
         output.gaussianColor = half4(half3(rampColor), outAlpha);
     #else
         output.gaussianColor = half4(
             half3(prepareOutputFromGamma(max(vec3f(clr.xyz), vec3f(0.0)), viewDepth)),
-            alpha
+            shapeAlpha
         );
     #endif
 

@@ -1,9 +1,15 @@
+// @config
+//
+// The vertex positions of the statue's meshes are modified on the CPU every frame.
+
 import {
     AppBase,
     AppOptions,
     Asset,
     AssetListLoader,
+    BoundingBox,
     CameraComponentSystem,
+    CameraFrame,
     Color,
     ContainerHandler,
     Entity,
@@ -11,7 +17,9 @@ import {
     LightComponentSystem,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    SHADOW_VSM_16F,
     TEXTURETYPE_RGBP,
+    TONEMAP_ACES,
     TextureHandler,
     Vec3,
     createGraphicsDevice
@@ -69,28 +77,83 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Setup skydome
+// Dark studio look: the environment only provides soft ambient light, the skybox itself is hidden
+const backgroundColor = new Color(0.035, 0.04, 0.06);
 app.scene.skyboxMip = 2;
 app.scene.exposure = 1;
+app.scene.skyboxIntensity = 0.35;
 app.scene.envAtlas = assets.helipad.resource;
+app.scene.layers.getLayerByName('Skybox').enabled = false;
 
 // Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
-    clearColor: new Color(0.4, 0.45, 0.5)
+    clearColor: backgroundColor,
+    fov: 40
 });
-camera.translate(0, 7, 24);
 app.root.addChild(camera);
 
+// Tone mapping, bloom and vignette
+const cameraFrame = new CameraFrame(app, camera.camera);
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
+cameraFrame.bloom.intensity = 0.02;
+cameraFrame.vignette.intensity = 0.6;
+cameraFrame.update();
+
 // Create a hierarchy of entities with render components, representing the statue model
-const entity = assets.statue.resource.instantiateRenderEntity();
+const entity = assets.statue.resource.instantiateRenderEntity({
+    castShadows: true,
+    receiveShadows: true
+});
 app.root.addChild(entity);
+
+// World space bounds of the statue, used to frame the camera
+const bounds = new BoundingBox();
+/** @type {Array<RenderComponent>} */
+const renders = entity.findComponents('render');
+let first = true;
+renders.forEach((render) => {
+    render.meshInstances.forEach((mi) => {
+        if (first) {
+            bounds.copy(mi.aabb);
+            first = false;
+        } else {
+            bounds.add(mi.aabb);
+        }
+    });
+});
+const height = bounds.halfExtents.y * 2;
+
+// Key light with soft self-shadowing
+const key = new Entity('key');
+key.addComponent('light', {
+    type: 'directional',
+    color: new Color(1, 0.93, 0.82),
+    intensity: 2.2,
+    castShadows: true,
+    shadowResolution: 2048,
+    shadowType: SHADOW_VSM_16F,
+    vsmBlurSize: 15,
+    shadowDistance: height * 4,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.1
+});
+key.setLocalEulerAngles(50, 35, 0);
+app.root.addChild(key);
+
+// Cool rim light from behind
+const rim = new Entity('rim');
+rim.addComponent('light', {
+    type: 'directional',
+    color: new Color(0.35, 0.55, 1),
+    intensity: 1.6
+});
+rim.setLocalEulerAngles(20, 215, 0);
+app.root.addChild(rim);
 
 // Collect positions from all mesh instances to work on
 /** @type {object[]} */
 const allMeshes = [];
-/** @type {Array<RenderComponent>} */
-const renders = entity.findComponents('render');
 renders.forEach((render) => {
     // Collect positions from all mesh instances on this render component
     const meshInstances = render.meshInstances;
@@ -115,34 +178,47 @@ renders.forEach((render) => {
 /** @type {number[]} */
 const tempPositions = [];
 
+// The statue is anchored at its base: the deformation grows towards the top
+let minY = Infinity;
+let maxY = -Infinity;
+allMeshes.forEach(({ srcPositions }) => {
+    for (let k = 1; k < srcPositions.length; k += 3) {
+        minY = Math.min(minY, srcPositions[k]);
+        maxY = Math.max(maxY, srcPositions[k]);
+    }
+});
+const range = maxY - minY;
+const strength = range * 0.09;
+
 let time = 0;
 app.on('update', (dt) => {
     time += dt;
 
-    if (entity) {
-        // Orbit the camera
-        camera.setLocalPosition(25 * Math.sin(time * 0.2), 15, 25 * Math.cos(time * 0.2));
-        camera.lookAt(new Vec3(0, 7, 0));
+    // Orbit the camera
+    const r = height * 1.9;
+    camera.setLocalPosition(r * Math.sin(time * 0.15), height * 0.7, r * Math.cos(time * 0.15));
+    camera.lookAt(new Vec3(bounds.center.x, bounds.center.y - height * 0.05, bounds.center.z));
 
-        const strength = 50;
+    // Modify mesh positions on each frame
+    for (let i = 0; i < allMeshes.length; i++) {
+        tempPositions.length = 0;
+        const srcPositions = allMeshes[i].srcPositions;
 
-        // Modify mesh positions on each frame
-        for (let i = 0; i < allMeshes.length; i++) {
-            tempPositions.length = 0;
-            const srcPositions = allMeshes[i].srcPositions;
-
-            // Loop over all positions, and fill up tempPositions array with waved version of positions from srcPositions array
-            // modify .x and .z components based on sin function, which uses .y component
-            for (let k = 0; k < srcPositions.length; k += 3) {
-                tempPositions[k] = srcPositions[k] + strength * Math.sin(time + srcPositions[k + 1] * 0.01);
-                tempPositions[k + 1] = srcPositions[k + 1];
-                tempPositions[k + 2] = srcPositions[k + 2] + strength * Math.sin(time + srcPositions[k + 1] * 0.01);
-            }
-
-            // Set new positions on the mesh
-            const mesh = allMeshes[i].mesh;
-            mesh.setPositions(tempPositions);
-            mesh.update();
+        // A wave travels up the statue, displacing .x and .z components (a circular sway), with
+        // the amount growing towards the top
+        for (let k = 0; k < srcPositions.length; k += 3) {
+            const y = srcPositions[k + 1];
+            const t = (y - minY) / range;
+            const phase = time * 1.5 + t * 4;
+            const amount = strength * t * t;
+            tempPositions[k] = srcPositions[k] + amount * Math.sin(phase);
+            tempPositions[k + 1] = y;
+            tempPositions[k + 2] = srcPositions[k + 2] + amount * Math.cos(phase);
         }
+
+        // Set new positions on the mesh
+        const mesh = allMeshes[i].mesh;
+        mesh.setPositions(tempPositions);
+        mesh.update();
     }
 });

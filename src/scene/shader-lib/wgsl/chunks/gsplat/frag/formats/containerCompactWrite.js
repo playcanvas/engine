@@ -36,7 +36,8 @@ fn writeSplat(center: vec3f, rotation: vec4f, scale: vec3f, color: vec4f) {
         let sxBits = select(u32(clamp((log(scale.x) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.x < 1e-10);
         let syBits = select(u32(clamp((log(scale.y) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.y < 1e-10);
         let szBits = select(u32(clamp((log(scale.z) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.z < 1e-10);
-        let alphaBits = u32(clamp(color.a, 0.0, 1.0) * 255.0 + 0.5);
+        // opacity as the SOG v3 byte, (b / 204)^2: 0..1.5625, exact at 0 and 1 (byte 204)
+        let alphaBits = u32(min(sqrt(clamp(color.a, 0.0, 1.5625)) * 204.0 + 0.5, 255.0));
         let packedScaleAlpha = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
 
         writeDataTransformA(vec4u(gsplatPackCenterX(center.x), bitcast<u32>(center.y), bitcast<u32>(center.z), packedScaleAlpha));
