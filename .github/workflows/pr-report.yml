@@ -5,7 +5,11 @@ name: PR Report
 #   follows the docs' public-API rules (excludeNotDocumented, @ignore, @private, the typedoc plugin)
 #   and never reports internal/ignored symbols. The comment is removed when the API is unchanged.
 # - Build size: raw / gzip / brotli sizes of the minified bundles (UMD + ESM). Only the min bundles
-#   are built (not rel/dbg/prf/types) to keep the run fast.
+#   are built (not rel/dbg/prf/types) to keep the run fast. The deltas come from a second min build
+#   with identifier mangling off (ENGINE_BUILD_NO_MANGLE): esbuild names identifiers by use count
+#   across the whole bundle, so in the shipped build a small change renames most of the file and
+#   swings gzip by hundreds of bytes. Brotli deltas are not reported at all - quality 11 moves by
+#   hundreds of bytes on a one-line change even without renaming.
 # There is no stored baseline: the base commit is rebuilt fresh in the same run, so the comparison is
 # always "this PR vs the main it targets". Informative only; never fails the build.
 #
@@ -71,6 +75,12 @@ jobs:
           npm run build:min:umd
           npm run build:min:esm
           node utils/build-size.mjs > sizes.json
+          # a base that predates ENGINE_BUILD_NO_MANGLE would build mangled again; skip it instead
+          if grep -q ENGINE_BUILD_NO_MANGLE utils/esbuild-build-target.mjs; then
+            ENGINE_BUILD_NO_MANGLE=1 npm run build:min:umd
+            ENGINE_BUILD_NO_MANGLE=1 npm run build:min:esm
+            node utils/build-size.mjs > sizes-code.json
+          fi
 
       - name: Build PR
         run: |
@@ -81,6 +91,9 @@ jobs:
           npm run build:min:umd
           npm run build:min:esm
           node utils/build-size.mjs > sizes.json
+          ENGINE_BUILD_NO_MANGLE=1 npm run build:min:umd
+          ENGINE_BUILD_NO_MANGLE=1 npm run build:min:esm
+          node utils/build-size.mjs > sizes-code.json
 
       - name: Diff API surfaces
         run: git --no-pager diff --no-index -U0 -- base/surface.txt pr/surface.txt > api-diff.txt || true
@@ -138,41 +151,57 @@ jobs:
             const prNumber = context.payload.pull_request.number;
 
             const read = p => fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
-            const base = read('base/sizes.json');
             const pr = read('pr/sizes.json');
+            // unmangled builds: their deltas track the code change (see the note at the top)
+            const baseCode = read('base/sizes-code.json');
+            const prCode = read('pr/sizes-code.json');
 
             const kb = n => `${(n / 1024).toFixed(1)} KB`;
-            const delta = n => {
+            const amount = n => {
               if (n < 1024) return `${n} B`;
               if (n < 1024 * 1024) return kb(n);
               return `${(n / (1024 * 1024)).toFixed(1)} MB`;
             };
-            const cell = (b, p) => {
+            const deltaCell = (b, p) => {
+              if (b === undefined || p === undefined) return 'n/a';
               const d = p - b;
-              if (!b) return `${kb(p)} (new)`;
-              if (!d) return `${kb(p)} —`;
+              if (!d) return '—';
               const sign = d > 0 ? '+' : '−';
               const pct = (Math.abs(d) / b * 100).toFixed(2);
-              return `${kb(p)} (${sign}${delta(Math.abs(d))}, ${sign}${pct}%)`;
+              return `${sign}${amount(Math.abs(d))} (${sign}${pct}%)`;
             };
 
-            const bundles = [...new Set([...Object.keys(base), ...Object.keys(pr)])].sort();
-            const changed = bundles.some(name =>
-              ['raw', 'gzip', 'brotli'].some(m => (base[name]?.[m] ?? 0) !== (pr[name]?.[m] ?? 0)));
+            const bundles = Object.keys(pr).sort();
+            const hasCode = bundles.every(name => baseCode[name] && prCode[name]);
+            const changed = hasCode && bundles.some(name =>
+              ['raw', 'gzip'].some(m => baseCode[name][m] !== prCode[name][m]));
 
-            const rows = bundles.map((name) => {
-              const b = base[name] || {}, p = pr[name] || {};
-              return `| \`${name}\` | ${cell(b.raw, p.raw)} | ${cell(b.gzip, p.gzip)} | ${cell(b.brotli, p.brotli)} |`;
+            const codeRows = bundles.map((name) => {
+              const b = baseCode[name] || {}, p = prCode[name] || {};
+              return `| \`${name}\` | ${deltaCell(b.raw, p.raw)} | ${deltaCell(b.gzip, p.gzip)} |`;
+            });
+            const shippedRows = bundles.map((name) => {
+              const p = pr[name];
+              return `| \`${name}\` | ${kb(p.raw)} | ${kb(p.gzip)} | ${kb(p.brotli)} |`;
             });
 
-            const headline = changed
-              ? 'This PR changes the size of the minified bundles.'
-              : 'This PR does not change the size of the minified bundles.';
+            const headline = !hasCode
+              ? 'The base commit predates the unmangled size build, so this run has no size comparison.'
+              : changed
+                ? 'This PR changes the size of the minified bundles.'
+                : 'This PR does not change the size of the minified bundles.';
+            const codeTable = !hasCode ? '' :
+              `| Bundle | Minified | Gzip |\n| --- | --- | --- |\n${codeRows.join('\n')}\n\n`
+              + '_Measured on a min build with identifier mangling off. In the shipped build esbuild '
+              + 'renames identifiers by use count across the whole bundle, so any change reshuffles names '
+              + 'file-wide and moves gzip/brotli by hundreds of bytes regardless of the actual change._\n\n';
             const body = `${MARKER}\n### Build size report\n\n`
               + `${headline}\n\n`
+              + codeTable
+              + `<details><summary>Shipped bundle sizes with this PR</summary>\n\n`
               + `| Bundle | Minified | Gzip | Brotli |\n`
               + `| --- | --- | --- | --- |\n`
-              + `${rows.join('\n')}\n`;
+              + `${shippedRows.join('\n')}\n\n</details>\n`;
 
             const { owner, repo } = context.repo;
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: prNumber });

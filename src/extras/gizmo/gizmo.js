@@ -4,6 +4,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { EventHandler } from '../../core/event-handler.js';
+import { acquireTouchAction, releaseTouchAction } from '../../platform/input/touch-action.js';
 import { PROJECTION_PERSPECTIVE, SORTMODE_MANUAL, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
@@ -336,6 +337,9 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
         this._device.canvas.addEventListener('pointercancel', this._onPointerUp);
+
+        // a touch drag on a gizmo would otherwise scroll or zoom the page, which cancels it
+        acquireTouchAction(this._device.canvas);
 
         this._handles.push(this._app.on('prerender', () => this.prerender()));
         this._handles.push(this._app.on('update', () => this.update()));
@@ -865,6 +869,7 @@ class Gizmo extends EventHandler {
         this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
         this._device.canvas.removeEventListener('pointercancel', this._onPointerUp);
+        releaseTouchAction(this._device.canvas);
 
         this._handles.forEach(handle => handle.off());
 

@@ -184,6 +184,7 @@ class ViewUniformBuffer {
  * @ignore
  */
 class Renderer {
+<<<<<<< HEAD
     /** @type {boolean} */
     clustersDebugRendered = false;
 
@@ -196,6 +197,8 @@ class Renderer {
      */
     _reverseZDepthStates = new Map();
 
+=======
+>>>>>>> origin/main
     /** @type {Scene} */
     scene;
 
@@ -1552,8 +1555,6 @@ class Renderer {
     }
 
     frameUpdate() {
-
-        this.clustersDebugRendered = false;
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();

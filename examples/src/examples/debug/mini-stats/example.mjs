@@ -92,7 +92,7 @@ options.stats = [
         watermark: 2000
     },
 
-    // Total number of primitives, in 1000s (debug / profiler builds)
+    // Total number of primitives, in 1000s (debug builds only)
     {
         name: 'Primitives',
         stats: ['primitiveCount'],

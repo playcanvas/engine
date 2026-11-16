@@ -21,6 +21,12 @@ const tmpVa = new Vec2();
  */
 class MultiTouchSource extends InputSource {
     /**
+     * @type {boolean}
+     * @protected
+     */
+    _readsTouch = true;
+
+    /**
      * @type {ReturnType<typeof movementState>}
      * @private
      */

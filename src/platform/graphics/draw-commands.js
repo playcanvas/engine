@@ -93,7 +93,7 @@ class DrawCommands {
      */
     multiDraw = false;
 
-    // #if _PROFILER
+    // #if _DEBUG
     /** @private */
     _primitiveCount = 0;
 
@@ -130,7 +130,7 @@ class DrawCommands {
     allocate(maxCount) {
         this._maxCount = maxCount;
         this.impl.allocate?.(maxCount);
-        // #if _PROFILER
+        // #if _DEBUG
         this._primitiveType = -1;
         // #endif
     }
@@ -158,12 +158,12 @@ class DrawCommands {
     update(count) {
         this._count = count;
         this.impl.update?.(count);
-        // #if _PROFILER
+        // #if _DEBUG
         this._primitiveType = -1;
         // #endif
     }
 
-    // #if _PROFILER
+    // #if _DEBUG
     /**
      * Count primitives using the topology at submission time, which is not known when commands
      * are populated. Cache the result across passes and frames until update is called again.
