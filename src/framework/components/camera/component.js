@@ -841,10 +841,18 @@ class CameraComponent extends Component {
      * writing or reading the depth of the camera need to handle. Cameras rendering to the same
      * depth buffer need the same setting.
      *
-     * Reverse-z is supported on WebGPU only, and is ignored on other devices. It is not applied to
-     * the views of an XR session. The features reading the depth the camera renders do not support
-     * it yet: the scene depth map ({@link CameraComponent#requestSceneDepthMap}), the depth prepass
-     * of the camera frame, picking and gaussian splats. Defaults to false.
+     * The precision gain needs a floating point depth buffer. The depth the engine allocates for a
+     * render target without a provided depth buffer, and for the back buffer, is
+     * depth24plus-stencil8 on WebGPU, whose precision is left to the implementation and may be a
+     * 24 bit fixed point. A camera rendering to the screen may therefore gain little, and needs a
+     * render target with a {@link PIXELFORMAT_DEPTH} depth buffer for the full gain.
+     *
+     * Reverse-z is ignored on a device not supporting it, see
+     * {@link GraphicsDevice#supportsReverseZ}, which is true on WebGPU. It is not applied to the
+     * views of an XR session. The features reading the depth the camera renders do not support it
+     * yet: the scene depth map ({@link CameraComponent#requestSceneDepthMap}), the depth prepass of
+     * the camera frame, picking and gaussian splats, which render incorrectly with it. Defaults to
+     * false.
      *
      * @type {boolean}
      */

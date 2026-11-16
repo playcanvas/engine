@@ -707,16 +707,16 @@ class Camera {
 
     /**
      * Sets whether the camera renders with a reversed depth buffer, see
-     * {@link CameraComponent#reverseZ}. Reverse-z is supported on WebGPU only, and is not set on
-     * other devices.
+     * {@link CameraComponent#reverseZ}. It is set only on a device supporting it, see
+     * {@link GraphicsDevice#supportsReverseZ}.
      *
      * @type {boolean}
      */
     set reverseZ(value) {
-        const supported = this.device.isWebGPU;
+        const supported = this.device.supportsReverseZ;
         Debug.call(() => {
             if (value && !supported) {
-                Debug.warnOnce('Camera#reverseZ is only supported on WebGPU, ignoring.');
+                Debug.warnOnce('Camera#reverseZ is not supported by the device (GraphicsDevice#supportsReverseZ), ignoring.');
             }
         });
         this._reverseZ = value && supported;

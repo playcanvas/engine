@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import { restore, spy } from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { GSplatDirector } from '../../../src/scene/gsplat-unified/gsplat-director.js';
 import { Layer } from '../../../src/scene/layer.js';
 
@@ -58,6 +60,28 @@ describe('GSplatDirector#update', function () {
         };
         return { director, layer, comp, managers: cameras.map(c => c.manager) };
     };
+
+    describe('with a camera rendering with reverse-z', function () {
+
+        afterEach(function () {
+            restore();
+        });
+
+        it('warns that gaussian splats are not supported with it', function () {
+            const { director, comp } = makeScene(2);
+            const [standard, reversed] = comp.cameras.map(c => c.camera);
+            reversed.reverseZActive = true;
+            reversed.node = { name: 'reversed' };
+            standard.node = { name: 'standard' };
+            const warn = spy(Debug, 'warnOnce');
+
+            director.update(comp);
+
+            const warnings = warn.args.map(args => args[0]).filter(message => message.includes('gaussian splats'));
+            expect(warnings).to.have.lengthOf(1);
+            expect(warnings[0]).to.include('reversed');
+        });
+    });
 
     it('reconciles a placement added while the managers update', function () {
         const { director, layer, comp, managers: [manager] } = makeScene(1);

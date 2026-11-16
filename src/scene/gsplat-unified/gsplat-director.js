@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { GSplatManager } from './gsplat-manager.js';
 import { SetUtils } from '../../core/set-utils.js';
 import { GSPLAT_FORWARD, GSPLAT_SHADOW } from '../constants.js';
@@ -448,6 +449,15 @@ class GSplatDirector {
 
             // update gsplat managers
             if (cameraData) {
+
+                // the splats build their projection without reverse-z, while their draws use the
+                // reversed depth test of the camera
+                Debug.call(() => {
+                    if (camera.reverseZActive && cameraData.layersMap.size) {
+                        Debug.warnOnce(`Camera#reverseZ is not supported by gaussian splats yet, which render incorrectly with the camera '${camera.node?.name}'.`);
+                    }
+                });
+
                 for (const layerData of cameraData.layersMap.values()) {
                     if (layerData.gsplatManager) {
                         gsplatCount += layerData.gsplatManager.update();

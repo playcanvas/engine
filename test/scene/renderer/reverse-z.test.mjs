@@ -91,10 +91,10 @@ describe('Reverse-z', function () {
             return entity.camera;
         };
 
-        // reverse-z is set on WebGPU only, so the tests rendering with it run under
-        // `npm run test:webgpu`
-        const requireWebGPU = (test) => {
-            if (!app.graphicsDevice.isWebGPU) {
+        // reverse-z is set only on a device supporting it (WebGPU), so the tests rendering with it
+        // run under `npm run test:webgpu`
+        const requireReverseZ = (test) => {
+            if (!app.graphicsDevice.supportsReverseZ) {
                 test.skip();
             }
         };
@@ -119,15 +119,15 @@ describe('Reverse-z', function () {
 
         describe('CameraComponent#reverseZ', function () {
 
-            it('is set on WebGPU only', function () {
+            it('is set only on a device supporting it', function () {
                 const warn = spy(Debug, 'warnOnce');
                 const entity = new Entity('camera');
                 entity.addComponent('camera', { reverseZ: true });
 
-                const webgpu = app.graphicsDevice.isWebGPU;
-                expect(entity.camera.reverseZ).to.equal(webgpu);
+                const supported = app.graphicsDevice.supportsReverseZ;
+                expect(entity.camera.reverseZ).to.equal(supported);
                 expect(entity.camera.camera.shaderParams.reverseZ).to.equal(false);
-                expect(warn.calledWithMatch('only supported on WebGPU')).to.equal(!webgpu);
+                expect(warn.calledWithMatch('not supported by the device')).to.equal(!supported);
 
                 entity.camera.reverseZ = false;
                 expect(entity.camera.reverseZ).to.equal(false);
@@ -145,7 +145,7 @@ describe('Reverse-z', function () {
             });
 
             it('is cloned from a camera rendering an XR session', function () {
-                requireWebGPU(this);
+                requireReverseZ(this);
                 const entity = new Entity('camera');
                 entity.addComponent('camera', { reverseZ: true });
                 entity.camera.camera.xrViews = [];
@@ -158,19 +158,23 @@ describe('Reverse-z', function () {
             });
         });
 
-        it('is set on the Camera on WebGPU only', function () {
+        it('is supported on WebGPU', function () {
+            expect(app.graphicsDevice.supportsReverseZ).to.equal(app.graphicsDevice.isWebGPU);
+        });
+
+        it('is set on the Camera only on a device supporting it', function () {
             const warn = spy(Debug, 'warnOnce');
             const camera = new Camera(app.graphicsDevice);
             camera.reverseZ = true;
 
-            const webgpu = app.graphicsDevice.isWebGPU;
-            expect(camera.reverseZ).to.equal(webgpu);
-            expect(camera.reverseZActive).to.equal(webgpu);
-            expect(warn.calledWithMatch('only supported on WebGPU')).to.equal(!webgpu);
+            const supported = app.graphicsDevice.supportsReverseZ;
+            expect(camera.reverseZ).to.equal(supported);
+            expect(camera.reverseZActive).to.equal(supported);
+            expect(warn.calledWithMatch('not supported by the device')).to.equal(!supported);
         });
 
         it('is not applied to the views of an XR session, and stays set', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
             const camera = createCamera('camera', true).camera;
             expect(camera.reverseZActive).to.equal(true);
 
@@ -183,7 +187,7 @@ describe('Reverse-z', function () {
         });
 
         it('supplies the REVERSE_Z define to the shaders the camera renders with', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
             const camera = createCamera('camera', true);
             addBox();
             app.render();
@@ -193,7 +197,7 @@ describe('Reverse-z', function () {
         });
 
         it('reverses the depth tests and biases of the materials', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
             createCamera('camera', true);
             const material = new StandardMaterial();
             material.depthBias = 2;
@@ -230,7 +234,7 @@ describe('Reverse-z', function () {
         });
 
         it('clears the depth to the reverse of the clear depth of the camera', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
             const reversed = createCamera('reversed', true);
             const standard = createCamera('standard', false);
 
@@ -253,7 +257,7 @@ describe('Reverse-z', function () {
         });
 
         it('clears the depth for a reverse-z setting changed by a prerender handler', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
             const camera = createCamera('camera', false);
             const pass = new RenderPassForward(app.graphicsDevice, app.scene, camera);
             pass.init(null);
@@ -274,7 +278,7 @@ describe('Reverse-z', function () {
         });
 
         it('clears the depth in every pass of the camera for a reverse-z setting changed by a prerender handler', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
             const camera = createCamera('camera', false);
             const passes = [0, 1].map(() => {
                 const pass = new RenderPassForward(app.graphicsDevice, app.scene, camera);
@@ -300,7 +304,7 @@ describe('Reverse-z', function () {
         });
 
         it('keeps the frustum of the camera without reverse-z', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
             const reversed = createCamera('reversed', true);
             const standard = createCamera('standard', false);
             addBox();
@@ -310,7 +314,7 @@ describe('Reverse-z', function () {
         });
 
         it('renders with the reversed projection on WebGPU', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
 
             const camera = createCamera('camera', true);
             camera.nearClip = 0.5;
@@ -324,7 +328,7 @@ describe('Reverse-z', function () {
         });
 
         it('keeps the far plane in place with a small near clip and a large far clip', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
 
             const camera = createCamera('camera', true);
             camera.nearClip = 0.01;
@@ -342,7 +346,7 @@ describe('Reverse-z', function () {
         });
 
         it('keeps the far plane in place for an orthographic camera', function () {
-            requireWebGPU(this);
+            requireReverseZ(this);
 
             const camera = createCamera('camera', true);
             camera.projection = PROJECTION_ORTHOGRAPHIC;
