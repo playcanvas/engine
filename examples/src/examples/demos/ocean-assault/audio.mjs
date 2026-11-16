@@ -27,7 +27,9 @@ export class Sounds {
         this.entity.addComponent('sound', { positional: false, volume: 0.7 });
         app.root.addChild(this.entity);
 
-        // every slot plays through one compressor, so a screen of explosions does not clip
+        // Sounds that play at once add up, and a screen of explosions adds up to more than the
+        // output can carry, which distorts. The slots do the overlapping; this compressor, a Web
+        // Audio node, only turns the loudest moments down. Every slot plays through it.
         const context = app.soundManager.context;
         const compressor = context?.createDynamicsCompressor();
         if (compressor) {
@@ -35,8 +37,8 @@ export class Sounds {
             compressor.ratio.value = 6;
         }
 
-        // A slot for each sound, which plays its part of the file. A sound that is still playing
-        // goes on when it is played again, so that shots and explosions overlap.
+        // A slot for each sound, which plays its part of the file. With overlap on, a sound that is
+        // still playing goes on when it is played again, so shots and explosions overlap.
         for (const [name, { start, duration }] of Object.entries(map.sounds)) {
             const slot = this.entity.sound.addSlot(name, {
                 asset: audio.id,
