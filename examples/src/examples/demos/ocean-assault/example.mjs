@@ -1,21 +1,27 @@
 // @config
 //
-// **Storm Petrel**, a vertical shooter drawn from one sprite sheet. The game is 192 by 256 pixels,
-// shown at the largest whole multiple that fits the window, so every pixel of the art is a square
-// of the screen. Raiders come in waves over the sea, and an airship follows them: shoot them down,
-// and collect the power ups the bombers drop for more guns.
+// **Ocean Assault**, a vertical shooter drawn from one sprite sheet, with its sounds played from
+// one audio file. The game is 192 by 256 pixels, shown at the largest whole multiple that fits the
+// window, so every pixel of the art is a square of the screen. Raiders come in waves over the sea,
+// and an airship follows them: shoot them down, and collect the power ups the bombers drop for
+// more guns.
 //
 // `←` `→` `↑` `↓` Fly · `Space` Fire · or drag to fly and fire
 
 import {
+    ADDRESS_CLAMP_TO_EDGE,
     AppBase,
     AppOptions,
     Asset,
     AssetListLoader,
+    AudioHandler,
     CameraComponentSystem,
     Color,
     Entity,
-    FILLMODE_NONE,
+    FILLMODE_FILL_WINDOW,
+    FILTER_NEAREST,
+    GAMMA_NONE,
+    JsonHandler,
     KEY_A,
     KEY_D,
     KEY_DOWN,
@@ -28,14 +34,26 @@ import {
     KEY_W,
     KEY_Z,
     Keyboard,
+    LAYERID_UI,
+    LAYERID_WORLD,
+    Layer,
+    PIXELFORMAT_RGBA8,
     PROJECTION_ORTHOGRAPHIC,
-    RESOLUTION_FIXED,
+    RENDERTARGET_ORIGIN_TOP,
+    RESOLUTION_AUTO,
+    RenderTarget,
     SPRITETYPE_ANIMATED,
     SPRITE_RENDERMODE_TILED,
+    SoundComponentSystem,
     SoundManager,
+    Sprite,
     SpriteComponentSystem,
+    Texture,
+    TextureAtlas,
     TextureAtlasHandler,
     TextureHandler,
+    Vec2,
+    Vec4,
     createGraphicsDevice
 } from 'playcanvas';
 
@@ -46,18 +64,19 @@ import { Label, Pool, Sheet } from './sheet.mjs';
 import { ARRIVALS, BOSS, BOSS_AT, HEIGHT, PATHS, WIDTH, updateBoss } from './stage.mjs';
 
 /**
+ * @import { SoundMap } from './audio.mjs'
  * @import { Enemy, World } from './stage.mjs'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// The sprite sheet: a JSON file that names its image, storm-petrel.png, beside it. Pixel art is
+// The sprite sheet: a JSON file that names its image, ocean-assault.png, beside it. Pixel art is
 // read pixel for pixel, with no filtering or mipmaps.
 const sheetAsset = new Asset(
-    'storm-petrel',
+    'ocean-assault',
     'textureatlas',
-    { url: './assets/sprites/storm-petrel.json' },
+    { url: './assets/sprites/ocean-assault.json' },
     {
         srgb: true,
         mipmaps: false,
@@ -66,48 +85,44 @@ const sheetAsset = new Asset(
     }
 );
 
+// The sounds: one audio file, and a JSON file that says where each sound is in it
+const soundsAsset = new Asset('ocean-assault-sounds', 'audio', { url: './assets/sounds/ocean-assault.mp3' });
+const soundMapAsset = new Asset('ocean-assault-sound-map', 'json', { url: './assets/sounds/ocean-assault.json' });
+
 // No antialiasing: the edge of a sprite is the edge of a pixel
 const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType], antialias: false });
-device.maxPixelRatio = 1;
+// the canvas has every pixel of the screen, so that a pixel of the game is a whole number of them
+device.maxPixelRatio = window.devicePixelRatio;
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.keyboard = new Keyboard(window);
 createOptions.soundManager = new SoundManager();
-createOptions.componentSystems = [CameraComponentSystem, SpriteComponentSystem];
-createOptions.resourceHandlers = [TextureHandler, TextureAtlasHandler];
+createOptions.componentSystems = [CameraComponentSystem, SpriteComponentSystem, SoundComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, TextureAtlasHandler, AudioHandler, JsonHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// The canvas always holds 192 by 256 pixels. The page stretches it by a whole number of screen
-// pixels, without smoothing, and centers it.
-app.setCanvasFillMode(FILLMODE_NONE);
-app.setCanvasResolution(RESOLUTION_FIXED, WIDTH, HEIGHT);
-const canvasStyle = canvas.style.cssText;
-canvas.style.imageRendering = 'pixelated';
-canvas.style.position = 'absolute';
-// a drag flies the seaplane, so it must not scroll or zoom the page
-canvas.style.touchAction = 'none';
-const fit = () => {
-    const ratio = window.devicePixelRatio;
-    const scale = Math.max(1, Math.floor(Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT) * ratio));
-    const width = (WIDTH * scale) / ratio;
-    const height = (HEIGHT * scale) / ratio;
-    app.resizeCanvas(width, height);
-    canvas.style.left = `${Math.round(((window.innerWidth - width) / 2) * ratio) / ratio}px`;
-    canvas.style.top = `${Math.round(((window.innerHeight - height) / 2) * ratio) / ratio}px`;
+app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(RESOLUTION_AUTO);
+const resize = () => {
+    device.maxPixelRatio = window.devicePixelRatio;
+    app.resizeCanvas();
 };
-fit();
-window.addEventListener('resize', fit);
+window.addEventListener('resize', resize);
+
+// a drag flies the seaplane, so it must not scroll or zoom the page
+const touchAction = canvas.style.touchAction;
+canvas.style.touchAction = 'none';
 
 await new Promise((resolve) => {
-    new AssetListLoader([sheetAsset], app.assets).load(resolve);
+    new AssetListLoader([sheetAsset, soundsAsset, soundMapAsset], app.assets).load(resolve);
 });
 app.start();
 
 const sheet = new Sheet(device, sheetAsset.resource);
-const sounds = new Sounds(app.soundManager);
+const sounds = new Sounds(app, soundsAsset, /** @type {SoundMap} */ (soundMapAsset.resource));
 
 // How far each kind of thing is from the camera, back to front
 const Z = {
@@ -165,17 +180,85 @@ const place = (entity, x, y) => {
     entity.setLocalPosition(Math.round(x), Math.round(y), entity.getLocalPosition().z);
 };
 
-// The camera sees the whole screen: a world unit is a pixel
+// ------------------------------------------------------------------------------------- screen
+
+// The game is not drawn on the canvas, but on a screen of its own: a texture of 192 by 256 pixels
+const screen = new Texture(device, {
+    name: 'screen',
+    width: WIDTH,
+    height: HEIGHT,
+    format: PIXELFORMAT_RGBA8,
+    mipmaps: false,
+    minFilter: FILTER_NEAREST,
+    magFilter: FILTER_NEAREST,
+    addressU: ADDRESS_CLAMP_TO_EDGE,
+    addressV: ADDRESS_CLAMP_TO_EDGE
+});
+// its rows run from the top down on every graphics API, as those of an image do, so it can be
+// drawn as a sprite
+const screenTarget = new RenderTarget({ name: 'screen', colorBuffer: screen, origin: RENDERTARGET_ORIGIN_TOP });
+
+// The camera sees the whole of that screen: a world unit is a pixel
 const camera = new Entity('camera');
 camera.addComponent('camera', {
     projection: PROJECTION_ORTHOGRAPHIC,
     orthoHeight: HEIGHT / 2,
     nearClip: 1,
     farClip: 100,
-    clearColor: new Color().fromString('#2659a8')
+    clearColor: new Color().fromString('#2659a8'),
+    layers: [LAYERID_WORLD],
+    renderTarget: screenTarget
 });
 camera.setPosition(WIDTH / 2, HEIGHT / 2, 50);
 app.root.addChild(camera);
+
+// The screen is a sprite in a layer of its own, which a second camera draws on the canvas. That
+// camera also draws the UI layer, where the examples browser puts its statistics, so they are as
+// sharp as the canvas, and not as coarse as the game.
+const screenLayer = new Layer({ name: 'Screen' });
+app.scene.layers.insert(screenLayer, 0);
+
+const screenAtlas = new TextureAtlas();
+screenAtlas.texture = screen;
+screenAtlas.frames = {
+    screen: { rect: new Vec4(0, 0, WIDTH, HEIGHT), pivot: new Vec2(0.5, 0.5), border: new Vec4() }
+};
+const screenSprite = new Sprite(device, { atlas: screenAtlas, frameKeys: ['screen'], pixelsPerUnit: 1 });
+
+const display = new Entity('display');
+display.addComponent('sprite', { sprite: screenSprite, layers: [screenLayer.id] });
+app.root.addChild(display);
+
+const displayCamera = new Entity('display-camera');
+displayCamera.addComponent('camera', {
+    projection: PROJECTION_ORTHOGRAPHIC,
+    nearClip: 1,
+    farClip: 100,
+    clearColor: Color.BLACK,
+    layers: [screenLayer.id, LAYERID_UI],
+    priority: 1,
+    // the screen holds colors as they are to be shown, which must not be corrected again
+    gammaCorrection: GAMMA_NONE
+});
+app.root.addChild(displayCamera);
+
+// How many pixels of the canvas there are to a pixel of the game
+let zoom = 1;
+
+// Shows the screen at the largest whole multiple of its size that fits the canvas, in the middle,
+// so every pixel of the game is a square of pixels of the canvas
+const fit = () => {
+    const { width, height } = device;
+    zoom = Math.max(1, Math.floor(Math.min(width / WIDTH, height / HEIGHT)));
+    display.setLocalScale(zoom, zoom, 1);
+
+    // a world unit is a pixel of the canvas. Where the canvas is an odd number of pixels across,
+    // the camera is half a pixel off center, so the edges of the screen fall between pixels.
+    displayCamera.camera.orthoHeight = height / 2;
+    displayCamera.setPosition((width % 2) / 2, (height % 2) / 2, 50);
+};
+fit();
+device.on('resizecanvas', fit);
 
 // ------------------------------------------------------------------------------------ scenery
 
@@ -376,6 +459,49 @@ const fire = (pool, x, y, vx, vy) => {
     place(shot.entity, x, y);
 };
 
+// A gunboat's missile leaves the deck slowly and gathers speed. It turns toward the seaplane while
+// its motor is new, then flies straight, so it is outrun by turning late. It can be shot down.
+const MISSILE_HEADINGS = 16;
+const MISSILE_TURN = 2.2;
+const MISSILE_SEEKS = 1.6;
+const MISSILE_RADIUS = 4;
+
+/**
+ * @typedef {object} Missile
+ * @property {Entity} entity - Its sprite: two frames for each way it can point.
+ * @property {boolean} active - Whether it is in play.
+ * @property {number} x - Its position.
+ * @property {number} y - Its position.
+ * @property {number} heading - The way it points, in radians, anticlockwise from the right.
+ * @property {number} speed - Its speed, once it is up to speed.
+ * @property {number} age - The seconds since it was launched.
+ * @property {number} smoke - The seconds until its next puff of smoke.
+ */
+
+/** @type {Pool<Missile>} */
+const missiles = new Pool(8, () => ({
+    entity: spawn('missile', Z.orb, { sprite: sheet.animation('missile') }),
+    active: false,
+    x: 0,
+    y: 0,
+    heading: 0,
+    speed: 0,
+    age: 0,
+    smoke: 0
+}));
+
+/**
+ * Puts a missile's sprite where the missile is, pointing the way it flies, its flame flickering.
+ *
+ * @param {Missile} missile - The missile.
+ */
+const showMissile = (missile) => {
+    const turn = Math.round((missile.heading / (Math.PI * 2)) * MISSILE_HEADINGS);
+    const heading = ((turn % MISSILE_HEADINGS) + MISSILE_HEADINGS) % MISSILE_HEADINGS;
+    missile.entity.sprite.frame = heading * 2 + (Math.floor(missile.age * 20) % 2);
+    place(missile.entity, missile.x, missile.y);
+};
+
 // The raiders. Each type has a sprite of its frames, then the white frame it shows when hit.
 /** @type {Pool<Enemy>} */
 const enemies = new Pool(40, () => {
@@ -395,14 +521,16 @@ const freeEnemy = (enemy) => {
     enemy.shadow.enabled = false;
 };
 
-// Explosions: an entity with a clip for each kind, which plays once and goes back to the pool
-const effects = new Pool(40, () => {
+// Explosions and smoke: an entity with a clip for each kind, which plays once and goes back to the
+// pool
+const effects = new Pool(72, () => {
     const entity = spawn('effect', Z.effect, {
         type: SPRITETYPE_ANIMATED,
         clips: {
             boom: { fps: 18, loop: false, sprite: sheet.animation('boom') },
             blast: { fps: 15, loop: false, sprite: sheet.animation('blast') },
-            spark: { fps: 24, loop: false, sprite: sheet.animation('spark') }
+            spark: { fps: 24, loop: false, sprite: sheet.animation('spark') },
+            smoke: { fps: 12, loop: false, sprite: sheet.animation('smoke') }
         }
     });
     const item = { entity, active: false };
@@ -411,7 +539,7 @@ const effects = new Pool(40, () => {
 });
 
 /**
- * @param {'boom'|'blast'|'spark'} kind - The clip to play.
+ * @param {'boom'|'blast'|'spark'|'smoke'} kind - The clip to play.
  * @param {number} x - Where it plays.
  * @param {number} y - Where it plays.
  */
@@ -499,13 +627,9 @@ const bestLabel = new Label(sheet, app.root, {
     align: 'right',
     color: YELLOW
 });
-const titleLabel = new Label(sheet, app.root, {
-    length: 12,
-    position: [WIDTH / 2, 168, Z.hud],
-    align: 'center',
-    scale: 2,
-    color: YELLOW
-});
+// the title: a logo, drawn in the sheet like everything else
+const logo = spawn('logo', Z.hud, { sprite: sheet.sprite(['logo']) }, false);
+place(logo, WIDTH / 2, 172);
 const messageLabel = new Label(sheet, app.root, { length: 24, position: [WIDTH / 2, 136, Z.hud], align: 'center' });
 const hintLabel = new Label(sheet, app.root, { length: 28, position: [WIDTH / 2, 96, Z.hud], align: 'center' });
 const lifeIcons = Array.from({ length: 5 }, (_, i) => {
@@ -524,7 +648,7 @@ let time = 0;
 let score = 0;
 let best = 0;
 try {
-    best = Number(localStorage.getItem('storm-petrel-best')) || 0;
+    best = Number(localStorage.getItem('ocean-assault-best')) || 0;
 } catch {
     // no storage, so the best score lasts as long as the page
 }
@@ -551,7 +675,18 @@ const world = {
     loop: 0,
     scrolled: 0,
     orb: (x, y, vx, vy) => fire(orbs, x, y, vx, vy),
-    needle: (x, y, vx, vy) => fire(needles, x, y, vx, vy)
+    needle: (x, y, vx, vy) => fire(needles, x, y, vx, vy),
+    missile: (x, y, speed) => {
+        const missile = missiles.spawn();
+        if (!missile) return;
+        missile.x = x;
+        missile.y = y;
+        missile.heading = Math.atan2(player.y - y, player.x - x);
+        missile.speed = speed;
+        missile.age = missile.smoke = 0;
+        showMissile(missile);
+        sounds.launch();
+    }
 };
 
 const within = (/** @type {number} */ dx, /** @type {number} */ dy, /** @type {number} */ radius) =>
@@ -565,7 +700,7 @@ const award = (points) => {
     if (score > best) {
         best = score;
         try {
-            localStorage.setItem('storm-petrel-best', String(best));
+            localStorage.setItem('ocean-assault-best', String(best));
         } catch {
             // no storage
         }
@@ -574,7 +709,7 @@ const award = (points) => {
 
 const clearField = () => {
     enemies.items.forEach((enemy) => enemy.active && freeEnemy(enemy));
-    for (const pool of [shots, needles, orbs, effects, pickups]) {
+    for (const pool of [shots, needles, orbs, missiles, effects, pickups]) {
         pool.freeAll();
     }
     boss.state = 'away';
@@ -640,7 +775,8 @@ const onPointerDown = (/** @type {PointerEvent} */ event) => {
 };
 const onPointerMove = (/** @type {PointerEvent} */ event) => {
     if (!pointer.down) return;
-    const scale = WIDTH / canvas.clientWidth;
+    // from pixels of the page to pixels of the game
+    const scale = device.width / canvas.clientWidth / zoom;
     pointer.dx += (event.clientX - pointer.x) * scale;
     pointer.dy -= (event.clientY - pointer.y) * scale;
     pointer.x = event.clientX;
@@ -655,13 +791,17 @@ canvas.addEventListener('pointerup', onPointerUp);
 canvas.addEventListener('pointercancel', onPointerUp);
 
 app.on('destroy', () => {
-    window.removeEventListener('resize', fit);
+    window.removeEventListener('resize', resize);
+    device.off('resizecanvas', fit);
     canvas.removeEventListener('pointerdown', onPointerDown);
     canvas.removeEventListener('pointermove', onPointerMove);
     canvas.removeEventListener('pointerup', onPointerUp);
     canvas.removeEventListener('pointercancel', onPointerUp);
-    canvas.style.cssText = canvasStyle;
+    canvas.style.touchAction = touchAction;
     sheet.destroy();
+    screenSprite.destroy();
+    screenTarget.destroy();
+    screen.destroy();
 });
 
 // ------------------------------------------------------------------------------------ updates
@@ -749,6 +889,20 @@ const updateShots = (dt) => {
             continue;
         }
 
+        // a missile is shot down
+        let stopped = false;
+        for (const missile of missiles.items) {
+            if (!missile.active || !within(shot.x - missile.x, shot.y - missile.y, MISSILE_RADIUS + 3)) continue;
+            missiles.free(missile);
+            shots.free(shot);
+            effect('boom', missile.x, missile.y);
+            sounds.boom();
+            award(50);
+            stopped = true;
+            break;
+        }
+        if (stopped) continue;
+
         for (const enemy of enemies.items) {
             if (!enemy.active || !within(shot.x - enemy.x, shot.y - enemy.y, enemy.type.radius + 3)) continue;
             shots.free(shot);
@@ -778,6 +932,46 @@ const updateShots = (dt) => {
                 pool.free(shot);
                 losePlayer();
             }
+        }
+    }
+
+    // the gunboats' missiles
+    for (const missile of missiles.items) {
+        if (!missile.active) continue;
+        missile.age += dt;
+
+        // toward the seaplane, the shorter way round, and no faster than it can turn
+        if (player.alive && missile.age < MISSILE_SEEKS) {
+            const bearing = Math.atan2(player.y - missile.y, player.x - missile.x) - missile.heading;
+            const turn = Math.atan2(Math.sin(bearing), Math.cos(bearing));
+            missile.heading += Math.max(-MISSILE_TURN * dt, Math.min(MISSILE_TURN * dt, turn));
+        }
+        const speed = missile.speed * Math.min(1, 0.25 + missile.age);
+        const cos = Math.cos(missile.heading);
+        const sin = Math.sin(missile.heading);
+        missile.x += cos * speed * dt;
+        missile.y += sin * speed * dt;
+        if (missile.x < -10 || missile.x > WIDTH + 10 || missile.y < -10 || missile.y > HEIGHT + 10) {
+            missiles.free(missile);
+            continue;
+        }
+        showMissile(missile);
+
+        // a trail of smoke behind it
+        missile.smoke -= dt;
+        if (missile.smoke < 0) {
+            missile.smoke = 0.07;
+            effect('smoke', missile.x - cos * 7, missile.y - sin * 7);
+        }
+
+        if (
+            player.alive &&
+            player.shield < 0 &&
+            within(missile.x - player.x, missile.y - player.y, PLAYER_RADIUS + MISSILE_RADIUS)
+        ) {
+            missiles.free(missile);
+            effect('boom', missile.x, missile.y);
+            losePlayer();
         }
     }
 };
@@ -865,16 +1059,16 @@ const updateBossFight = (dt) => {
 
     boss.timer -= dt;
     if (boss.state === 'warning') {
-        if (boss.timer < 0) {
-            boss.state = 'fight';
-            boss.hpMax = boss.hp = Math.ceil(BOSS.hp * (1 + world.loop * 0.4));
-            boss.x = WIDTH / 2;
-            boss.y = HEIGHT + 40;
-            boss.age = boss.attack = boss.burst = 0;
-            boss.cooldown = 1.5;
-            boss.entity.enabled = boss.shadow.enabled = barBack.enabled = barFill.enabled = true;
-        }
-        return;
+        if (boss.timer >= 0) return;
+
+        // it comes in from above the screen, and is put there below, on the frame it first shows
+        boss.state = 'fight';
+        boss.hpMax = boss.hp = Math.ceil(BOSS.hp * (1 + world.loop * 0.4));
+        boss.x = WIDTH / 2;
+        boss.y = HEIGHT + 40;
+        boss.age = boss.attack = boss.burst = 0;
+        boss.cooldown = 1.5;
+        boss.entity.enabled = boss.shadow.enabled = barBack.enabled = barFill.enabled = true;
     }
 
     if (boss.state === 'fight') {
@@ -892,6 +1086,7 @@ const updateBossFight = (dt) => {
             boss.timer = 2.2;
             orbs.freeAll();
             needles.freeAll();
+            missiles.freeAll();
             barBack.enabled = barFill.enabled = false;
         }
     } else {
@@ -967,8 +1162,7 @@ const updateHud = (dt) => {
     });
 
     const title = state === 'title';
-    titleLabel.visible = title;
-    titleLabel.text = 'STORM PETREL';
+    logo.enabled = title;
     hintLabel.visible = state !== 'play' && Math.floor(time * 2.5) % 2 === 0;
     hintLabel.text = 'PRESS SPACE OR TAP';
 

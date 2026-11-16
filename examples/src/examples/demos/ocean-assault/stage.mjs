@@ -1,4 +1,4 @@
-// The raiders of the Storm Petrel demo: what each one is, how it flies and shoots, and the order
+// The raiders of the Ocean Assault demo: what each one is, how it flies and shoots, and the order
 // they arrive in.
 
 /**
@@ -19,6 +19,8 @@ export const HEIGHT = 256;
  * @property {number} scrolled - The whole pixels the sea has gone by this frame.
  * @property {(x: number, y: number, vx: number, vy: number) => void} orb - Fires a slow shot.
  * @property {(x: number, y: number, vx: number, vy: number) => void} needle - Fires a fast shot.
+ * @property {(x: number, y: number, speed: number) => void} missile - Launches a missile, which
+ * turns toward the player as it flies.
  */
 
 /**
@@ -129,7 +131,7 @@ export const ENEMIES = {
         }
     },
 
-    // a gunboat on the sea below
+    // a gunboat on the sea below, which launches missiles
     boat: {
         frames: 'boat',
         hp: 12,
@@ -140,9 +142,8 @@ export const ENEMIES = {
         drop: 0.25,
         shoot(enemy, dt, world) {
             if (enemy.cooldown < 0 && enemy.y > 40 && enemy.y < HEIGHT - 16) {
-                enemy.cooldown = 2.2 / pace(world);
-                const [vx, vy] = aim(enemy.x, enemy.y, world, 56 * pace(world));
-                world.orb(enemy.x, enemy.y + 5, vx, vy);
+                enemy.cooldown = 2.8 / pace(world);
+                world.missile(enemy.x, enemy.y + 2, 112 * pace(world));
             }
         }
     }

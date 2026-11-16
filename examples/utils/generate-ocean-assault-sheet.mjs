@@ -1,9 +1,9 @@
 /**
- * Generates the sprite sheet of the Storm Petrel demo:
+ * Generates the sprite sheet of the Ocean Assault demo:
  *
- * - `assets/sprites/storm-petrel.png`, the sheet: the seaplane, the raiders and their airship,
- * shots, explosions, power ups, the sea, islands, clouds and a font.
- * - `assets/sprites/storm-petrel.json`, the frames of the sheet by name, in the JSON hash format
+ * - `assets/sprites/ocean-assault.png`, the sheet: the seaplane, the raiders and their airship,
+ * shots and missiles, explosions, power ups, the sea, islands, clouds, a font and the logo.
+ * - `assets/sprites/ocean-assault.json`, the frames of the sheet by name, in the JSON hash format
  * that sprite sheet packers export, which a `textureatlas` asset loads.
  *
  * Every sprite is drawn here, so the art is original: small ones from grids of palette
@@ -11,14 +11,14 @@
  * has even dimensions, so that a sprite centered on a whole pixel has its own pixels on the
  * pixels of the screen, and a transparent pixel of padding around it.
  *
- * Run from the examples folder: `node utils/generate-storm-petrel-sheet.mjs`.
+ * Run from the examples folder: `node utils/generate-ocean-assault-sheet.mjs`.
  */
 import fs from 'node:fs';
 
 import sharp from 'sharp';
 
 const OUT = 'assets/sprites';
-const NAME = 'storm-petrel';
+const NAME = 'ocean-assault';
 const SHEET_WIDTH = 512;
 
 // ---------------------------------------------------------------- colors
@@ -706,6 +706,85 @@ add('needle-0', grid([
     '.nn.'
 ]));
 
+// ---------------------------------------------------------------- a gunboat's missile
+// It points each of 16 ways, anticlockwise from the right, and its flame is long then short each
+// way: 32 frames, missile-0 to missile-31. Every pixel is the part of the missile its center
+// falls in, measured along the missile toward its nose and across it. The light is from the top
+// left, so the side that faces the bottom right is in shade.
+const MISSILE_SIZE = 16;
+const MISSILE_HEADINGS = 16;
+const MISSILE_TAIL = -3.5;
+
+/**
+ * @param {number} heading - The way it points, in sixteenths of a turn.
+ * @param {number} flicker - 0 for a long flame, 1 for a short one.
+ * @returns {Img} The missile.
+ */
+const missile = (heading, flicker) => {
+    const angle = (heading / MISSILE_HEADINGS) * Math.PI * 2;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const c = MISSILE_SIZE / 2;
+
+    /**
+     * @param {(u: number, v: number, shade: boolean) => string|null} part - Gives the color of
+     * a pixel that is `u` along the missile and `v` across it, or null to leave it as it is.
+     * @param {Img} img - The image to draw on.
+     * @param {(x: number, y: number) => boolean} [where] - The pixels that may be drawn on.
+     */
+    const draw = (part, img, where) => {
+        for (let y = 0; y < MISSILE_SIZE; y++) {
+            for (let x = 0; x < MISSILE_SIZE; x++) {
+                if (where && !where(x, y)) continue;
+                const dx = x + 0.5 - c;
+                const dy = y + 0.5 - c;
+                const across = dx * sin + dy * cos;
+                const color = part(dx * cos - dy * sin, Math.abs(across), across * (sin + cos) > 0.6);
+                if (color) img.set(x, y, color);
+            }
+        }
+    };
+
+    // the nose, the body, and fins that widen toward the tail
+    const hull = new Img(MISSILE_SIZE, MISSILE_SIZE);
+    draw((u, v, shade) => {
+        if (u > 2 && u <= 5 && v <= (1.4 * (5 - u)) / 3 + 0.25) return shade ? 'n' : 'm';
+        if (u >= MISSILE_TAIL && u <= 2 && v <= 1.4) return shade ? 'l' : 'w';
+        if (u >= MISSILE_TAIL && u <= -1.5 && v <= 1.4 + (-1.5 - u) * 0.75) return shade ? 'n' : 'm';
+        return null;
+    }, hull);
+    const out = hull.outline();
+
+    // the flame, over the outline of the tail
+    const length = flicker ? 2 : 3.2;
+    draw((u, v) => {
+        const t = (MISSILE_TAIL - u) / length;
+        if (t <= 0 || t > 1 || v > 1.5 - t) return null;
+        return t < 0.45 ? 'Y' : flicker ? 'y' : 'o';
+    }, out, (x, y) => !hull.alpha(x, y));
+    return out;
+};
+for (let heading = 0; heading < MISSILE_HEADINGS; heading++) {
+    for (let flicker = 0; flicker < 2; flicker++) add(`missile-${heading * 2 + flicker}`, missile(heading, flicker));
+}
+
+// the smoke a missile leaves: a puff that thins and goes
+const SMOKE = [
+    [2.6, 235, PAL.w],
+    [2.9, 170, PAL.l],
+    [2.6, 110, PAL.l],
+    [1.9, 60, PAL.G]
+];
+SMOKE.forEach(([radius, alpha, color], i) => {
+    const img = new Img(6, 6);
+    for (let y = 0; y < 6; y++) {
+        for (let x = 0; x < 6; x++) {
+            if (Math.hypot(x - 2.5, y - 2.5) <= radius) img.set(x, y, [color[0], color[1], color[2], alpha]);
+        }
+    }
+    add(`smoke-${i}`, img);
+});
+
 // ---------------------------------------------------------------- explosions
 const HEAT = [
     [0.86, PAL.w], [0.66, PAL.Y], [0.46, PAL.y], [0.28, PAL.o], [0.12, PAL.r], [-0.02, PAL.d], [-0.2, PAL.K]
@@ -817,6 +896,125 @@ for (const [name, rows] of Object.entries(GLYPHS)) {
     img.blit(glyph(rows), 0, 0);
     add(`font-${name}`, img);
 }
+
+// ---------------------------------------------------------------- the logo
+// OCEAN ASSAULT, for the title screen, in block capitals built from bars: OCEAN in the colors of
+// sky and sea, ASSAULT in those of fire. Each line shines like chrome, light at the top, dark at a
+// horizon half way down and lighter again below, and stands out from a dark copy of itself.
+const LOGO_WIDTH = 19;
+const LOGO_HEIGHT = 25;
+const LOGO_BAR = 5;
+const LOGO_SPACE = 4;
+const LOGO_DEPTH = 2;
+
+// The T tucks in over the foot of the L before it
+const LOGO_KERNING = { LT: -5 };
+
+/**
+ * @param {string} letter - One of the letters of the logo.
+ * @returns {Img} The letter, in white.
+ */
+const logoLetter = (letter) => {
+    const w = LOGO_WIDTH;
+    const h = LOGO_HEIGHT;
+    const t = LOGO_BAR;
+    const middle = (h - t) / 2;
+    const img = new Img(w, h);
+    const bar = (x, y, width, height) => {
+        for (let j = 0; j < height; j++) for (let i = 0; i < width; i++) img.set(x + i, y + j, PAL.w);
+    };
+    const left = () => bar(0, 0, t, h);
+    const right = () => bar(w - t, 0, t, h);
+    const top = () => bar(0, 0, w, t);
+    const bottom = () => bar(0, h - t, w, t);
+    switch (letter) {
+        case 'O': left(); right(); top(); bottom(); break;
+        case 'C': left(); top(); bottom(); bar(w - t, 0, t, t + 1); bar(w - t, h - t - 1, t, t + 1); break;
+        case 'E': left(); top(); bottom(); bar(0, middle, w - 4, t); break;
+        case 'A': left(); right(); top(); bar(0, middle + 1, w, t); break;
+        case 'N':
+            left();
+            right();
+            for (let y = 0; y < h; y++) bar(Math.round((y / (h - 1)) * (w - t)), y, t, 1);
+            break;
+        case 'S': top(); bottom(); bar(0, middle, w, t); bar(0, 0, t, middle + t); bar(w - t, middle, t, h - middle); break;
+        case 'U': left(); right(); bottom(); break;
+        case 'L': left(); bottom(); break;
+        case 'T': top(); bar((w - t) / 2, 0, t, h); break;
+        default: throw new Error(`the logo has no letter "${letter}"`);
+    }
+
+    // a pixel off every corner that sticks out
+    const out = img.clone();
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const side = !img.alpha(x - 1, y) || !img.alpha(x + 1, y);
+            const end = !img.alpha(x, y - 1) || !img.alpha(x, y + 1);
+            if (side && end) out.set(x, y, PAL['.']);
+        }
+    }
+    return out;
+};
+
+/**
+ * @param {string} word - The word.
+ * @param {[number, string][]} bands - The colors of the letters down their height: each from a
+ * fraction of the height on.
+ * @param {string} edge - The color along the top of every bar.
+ * @param {string} depth - The color of the copy the word stands out from.
+ * @returns {Img} The word.
+ */
+const logoWord = (word, bands, edge, depth) => {
+    // where each letter starts
+    const starts = [0];
+    for (let i = 1; i < word.length; i++) {
+        starts.push(starts[i - 1] + LOGO_WIDTH + LOGO_SPACE + (LOGO_KERNING[word.slice(i - 1, i + 1)] ?? 0));
+    }
+    const width = starts[word.length - 1] + LOGO_WIDTH;
+    const shape = new Img(width, LOGO_HEIGHT);
+    [...word].forEach((letter, i) => shape.blit(logoLetter(letter), starts[i], 0));
+
+    const face = shape.clone();
+    for (let y = 0; y < LOGO_HEIGHT; y++) {
+        const band = bands.findLast(([from]) => y / LOGO_HEIGHT >= from);
+        for (let x = 0; x < width; x++) {
+            if (shape.alpha(x, y)) face.set(x, y, hex(band[1]));
+        }
+
+        // a bright line along the top of each bar, but not down the steps of a diagonal
+        const top = (/** @type {number} */ x) => shape.alpha(x, y) && !shape.alpha(x, y - 1);
+        for (let x = 0; x < width; x++) {
+            if (!top(x)) continue;
+            let end = x;
+            while (top(end + 1)) end++;
+            if (end - x >= 3) {
+                for (let i = x; i <= end; i++) face.set(i, y, hex(edge));
+            }
+            x = end;
+        }
+    }
+
+    // the dark copy, down and to the right, then the face, then an outline around both
+    const out = new Img(width + LOGO_DEPTH + 2, LOGO_HEIGHT + LOGO_DEPTH + 2);
+    const dark = shape.map(c => (c[3] ? hex(depth) : c));
+    for (let d = LOGO_DEPTH; d > 0; d--) out.blit(dark, 1 + d, 1 + d);
+    out.blit(face, 1, 1);
+    return out.outline();
+};
+
+const logoOcean = logoWord('OCEAN', [
+    [0, '#e8fbff'], [0.14, '#baf0f8'], [0.3, '#74e0f0'], [0.42, '#3fb4de'],
+    [0.5, '#17458c'], [0.62, '#2565b4'], [0.76, '#3a8ad2'], [0.9, '#6cb8ea']
+], '#ffffff', '#1d4585');
+const logoAssault = logoWord('ASSAULT', [
+    [0, '#fff3b0'], [0.14, '#ffe066'], [0.3, '#ffd23f'], [0.42, '#ff9a2e'],
+    [0.5, '#7a1a30'], [0.62, '#b02a3a'], [0.76, '#d1383f'], [0.9, '#ff6b4a']
+], '#fffbe6', '#5c1528');
+const LOGO_LEADING = 3;
+const logo = new Img(Math.max(logoOcean.w, logoAssault.w), logoOcean.h + LOGO_LEADING + logoAssault.h);
+logo.blit(logoOcean, Math.floor((logo.w - logoOcean.w) / 2), 0);
+logo.blit(logoAssault, Math.floor((logo.w - logoAssault.w) / 2), logoOcean.h + LOGO_LEADING);
+add('logo', logo);
 
 // ---------------------------------------------------------------- pickups
 const capsule = (name, body, light, dark, emblem) => {
@@ -1002,7 +1200,7 @@ const lines = frames.map(({ name }) => {
     return `        ${JSON.stringify(name)}: { "frame": { "x": ${x}, "y": ${y}, "w": ${w}, "h": ${h} } }`;
 });
 const meta = {
-    app: 'examples/utils/generate-storm-petrel-sheet.mjs',
+    app: 'examples/utils/generate-ocean-assault-sheet.mjs',
     image: `${NAME}.png`,
     format: 'RGBA8888',
     size: { w: sheet.w, h: sheet.h },

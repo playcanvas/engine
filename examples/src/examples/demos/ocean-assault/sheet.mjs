@@ -1,4 +1,4 @@
-// The sprite sheet of the Storm Petrel demo: sprites by frame name, text drawn with the font of the
+// The sprite sheet of the Ocean Assault demo: sprites by frame name, text drawn with the font of the
 // sheet, and pools of entities.
 
 import { Color, Entity, SPRITE_RENDERMODE_SIMPLE, Sprite } from 'playcanvas';
@@ -95,17 +95,15 @@ export class Label {
      * @param {number[]} options.position - The x, y and z position: of the left of the text, its
      * middle or its right, depending on how it is aligned.
      * @param {'left'|'center'|'right'} [options.align] - How the text is aligned.
-     * @param {number} [options.scale] - A whole number of screen pixels to each pixel of the font.
      * @param {Color} [options.color] - The color of the text.
      */
-    constructor(sheet, parent, { length, position, align = 'left', scale = 1, color = Color.WHITE }) {
+    constructor(sheet, parent, { length, position, align = 'left', color = Color.WHITE }) {
         const font = sheet.sprite(CHARACTERS.split('').map((ch) => `font-${GLYPH_NAMES[ch] ?? ch}`));
 
         this.align = align;
         this._color = color;
         this.entity = new Entity('label');
         this.entity.setLocalPosition(position[0], position[1], position[2]);
-        this.entity.setLocalScale(scale, scale, 1);
         parent.addChild(this.entity);
 
         /** @type {Entity[]} */
