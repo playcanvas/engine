@@ -40,7 +40,7 @@ class FramePassDepthGrab extends FramePass {
         return texture?.format !== format;
     }
 
-    allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
+    allocateRenderTarget(sourceRenderTarget, device, format, isDepth) {
 
         // allocate texture buffer
         const texture = Texture.createDataTexture2D(
@@ -51,36 +51,16 @@ class FramePassDepthGrab extends FramePass {
             format
         );
 
-        if (renderTarget) {
-
-            // if reallocating RT size, release previous framebuffer
-            renderTarget.destroyFrameBuffers();
-
-            // assign new texture
-            if (isDepth) {
-                renderTarget._depthBuffer = texture;
-            } else {
-                renderTarget._colorBuffer = texture;
-                renderTarget._colorBuffers = [texture];
-            }
-
-            // update cached dimensions
-            renderTarget.evaluateDimensions();
-
-        } else {
-
-            // create new render target with the texture
-            renderTarget = new RenderTarget({
-                name: 'DepthGrabRT',
-                colorBuffer: isDepth ? null : texture,
-                depthBuffer: isDepth ? texture : null,
-                depth: !isDepth,
-                stencil: device.supportsStencil,
-                autoResolve: false
-            });
-        }
-
-        return renderTarget;
+        // a new render target each time: its depth and stencil flags follow from the buffers it is
+        // created with, and would be stale for a texture of another format swapped into an old one
+        return new RenderTarget({
+            name: 'DepthGrabRT',
+            colorBuffer: isDepth ? null : texture,
+            depthBuffer: isDepth ? texture : null,
+            depth: !isDepth,
+            stencil: device.supportsStencil,
+            autoResolve: false
+        });
     }
 
     releaseRenderTarget(rt) {
@@ -97,35 +77,32 @@ class FramePassDepthGrab extends FramePass {
         const device = this.device;
         const destinationRt = camera?.renderTarget ?? device.backBuffer;
 
+        // the depth is copied, which needs the format it was allocated with: that of a provided depth
+        // buffer, else the one a render target allocates for its depth. WebGPU allocates
+        // depth24plus-stencil8 whether or not stencil was requested, WebGL2 allocates it when stencil
+        // was requested, else depth32float. A multi-sampled depth is allocated that way on WebGL2
+        // even with a provided depth buffer.
         let useDepthBuffer = true;
-        let format = destinationRt.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
-        if (device.isWebGPU) {
-            const numSamples = destinationRt.samples;
+        let format = destinationRt.stencil || device.isWebGPU ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
+        if (destinationRt.samples > 1) {
 
-            // when depth buffer is multi-sampled, instead of copying it out, we use custom shader to resolve it
-            // to a R32F texture, used as a color attachment of the render target
-            if (numSamples > 1) {
+            // when depth buffer is multi-sampled on WebGPU, instead of copying it out, we use custom
+            // shader to resolve it to a R32F texture, used as a color attachment of the render target.
+            // WebGL2 resolves the multi-sampled depth, allocated in the format above, by a blit.
+            if (device.isWebGPU) {
                 format = PIXELFORMAT_R32F;
                 useDepthBuffer = false;
-            } else {
-                // the depth is copied, which needs the format it was allocated with: that of a
-                // provided depth buffer, else depth24plus-stencil8, which WebGPU allocates for a
-                // render target's depth whether or not stencil was requested
-                format = destinationRt.depthBuffer?.format ?? PIXELFORMAT_DEPTHSTENCIL;
             }
+        } else if (destinationRt.depthBuffer) {
+            format = destinationRt.depthBuffer.format;
         }
 
         const sourceTexture = camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer;
 
         // allocate / resize existing RT as needed
-        const rt = this.depthRenderTarget;
-        if (this.shouldReallocate(rt, sourceTexture, format, useDepthBuffer)) {
-
-            // the RT is reused for a new size or format of the same kind of grab, but not for the other
-            // kind: only the resolving one is created with a depth buffer of its own
-            const reuse = rt && !!rt.depthBuffer === useDepthBuffer;
-            this.releaseRenderTarget(rt);
-            this.depthRenderTarget = this.allocateRenderTarget(reuse ? rt : null, camera.renderTarget, device, format, useDepthBuffer);
+        if (this.shouldReallocate(this.depthRenderTarget, sourceTexture, format, useDepthBuffer)) {
+            this.releaseRenderTarget(this.depthRenderTarget);
+            this.depthRenderTarget = this.allocateRenderTarget(camera.renderTarget, device, format, useDepthBuffer);
         }
 
         // publish the depth texture - the grab copies (or resolves) the depth buffer values as they
