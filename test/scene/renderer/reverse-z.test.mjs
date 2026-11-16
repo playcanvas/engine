@@ -14,7 +14,7 @@ import { Texture } from '../../../src/platform/graphics/texture.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import { Camera } from '../../../src/scene/camera.js';
-import { FOG_LINEAR, SHADER_FORWARD, SHADERDEF_SCREENSPACE } from '../../../src/scene/constants.js';
+import { FOG_LINEAR, PROJECTION_ORTHOGRAPHIC, SHADER_FORWARD, SHADERDEF_SCREENSPACE } from '../../../src/scene/constants.js';
 import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
@@ -321,6 +321,40 @@ describe('Reverse-z', function () {
             const projection = new Mat4().set(app.graphicsDevice.scope.resolve('matrix_projection').value);
             expect(clipDepth(projection, -0.5)).to.be.closeTo(1, 1e-6);
             expect(clipDepth(projection, -1000)).to.be.closeTo(0, 1e-6);
+        });
+
+        it('keeps the far plane in place with a small near clip and a large far clip', function () {
+            requireWebGPU(this);
+
+            const camera = createCamera('camera', true);
+            camera.nearClip = 0.01;
+            camera.farClip = 100000;
+            addBox();
+            app.render();
+
+            // built from the float32 terms of the projection, the far plane was at about 83900
+            const resolve = name => new Mat4().set(app.graphicsDevice.scope.resolve(name).value);
+            for (const projection of [resolve('matrix_projection'), resolve('matrix_projectionSkybox')]) {
+                expect(clipDepth(projection, -0.01)).to.be.closeTo(1, 1e-6);
+                expect(clipDepth(projection, -100000)).to.be.closeTo(0, 1e-6);
+                expect(clipDepth(projection, -90000)).to.be.above(1e-8);
+            }
+        });
+
+        it('keeps the far plane in place for an orthographic camera', function () {
+            requireWebGPU(this);
+
+            const camera = createCamera('camera', true);
+            camera.projection = PROJECTION_ORTHOGRAPHIC;
+            camera.nearClip = 0.01;
+            camera.farClip = 100000;
+            addBox();
+            app.render();
+
+            const projection = new Mat4().set(app.graphicsDevice.scope.resolve('matrix_projection').value);
+            expect(clipDepth(projection, -0.01)).to.be.closeTo(1, 1e-6);
+            expect(clipDepth(projection, -100000)).to.be.closeTo(0, 1e-6);
+            expect(clipDepth(projection, -50000.005)).to.be.closeTo(0.5, 1e-6);
         });
     });
 

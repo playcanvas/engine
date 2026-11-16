@@ -110,6 +110,37 @@ class Camera {
     }
 
     /**
+     * Writes the depth of reverse-z, computed from the clip planes, to a projection built by
+     * {@link Camera.applyShaderProjectionTransform} with reverse-z. That builds the reversed depth
+     * from the float32 terms of the projection, whose difference loses the precision of a small near
+     * clip with a large far clip and moves the far plane towards the camera: with a near clip of
+     * 0.01 and a far clip of 100000, it is at about 83900. Computed here in double precision, the
+     * depth is 1 at the near plane and 0 at the far plane.
+     *
+     * @param {Mat4} out - The projection to write the depth of. Its other terms are kept.
+     * @param {boolean} perspective - True for a perspective projection, false for an orthographic
+     * one.
+     * @param {number} near - The near clip distance.
+     * @param {number} far - The far clip distance.
+     * @returns {Mat4} out
+     * @ignore
+     */
+    static setReverseZDepth(out, perspective, near, far) {
+        const d = out.data;
+        const range = far - near;
+        if (perspective) {
+            // depth = (near * z + far * near) / (far - near) / -z, for the view space z
+            d[10] = near / range;
+            d[14] = far * near / range;
+        } else {
+            // depth = (z + far) / (far - near)
+            d[10] = 1 / range;
+            d[14] = far / range;
+        }
+        return out;
+    }
+
+    /**
      * @type {ShaderPassInfo|null}
      */
     shaderPassInfo = null;

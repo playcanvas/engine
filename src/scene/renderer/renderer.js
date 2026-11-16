@@ -22,7 +22,8 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
-    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    PROJECTION_PERSPECTIVE
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -559,6 +560,16 @@ class Renderer {
             const reverseZ = camera.reverseZActive;
             projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu, reverseZ);
             projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu, reverseZ);
+
+            // the reversed depth computed from the clip planes, which keeps the far plane in place
+            // with a small near clip and a large far clip. A projection the application calculates
+            // keeps the reversed depth of its own terms. The skybox projection is perspective for
+            // both projections of the camera.
+            if (reverseZ && !camera.calculateProjection) {
+                const { nearClip, farClip } = camera;
+                Camera.setReverseZDepth(projMat, camera.projection === PROJECTION_PERSPECTIVE, nearClip, farClip);
+                Camera.setReverseZDepth(projMatSkybox, true, nearClip, farClip);
+            }
 
             // camera jitter
             const { jitter } = camera;
