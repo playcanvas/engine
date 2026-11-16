@@ -184,10 +184,6 @@ class ViewUniformBuffer {
  * @ignore
  */
 class Renderer {
-<<<<<<< HEAD
-    /** @type {boolean} */
-    clustersDebugRendered = false;
-
     /**
      * The depth states the draws of the cameras rendering with reverse-z use, keyed by the key of
      * the depth state each one reverses. See {@link Renderer#getReverseZDepthState}.
@@ -197,8 +193,6 @@ class Renderer {
      */
     _reverseZDepthStates = new Map();
 
-=======
->>>>>>> origin/main
     /** @type {Scene} */
     scene;
 
