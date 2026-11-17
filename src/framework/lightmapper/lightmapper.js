@@ -290,9 +290,7 @@ class Lightmapper {
 
     createTexture(size, name) {
         return new Texture(this.device, {
-            // #if _PROFILER
             profilerHint: TEXHINT_LIGHTMAP,
-            // #endif
             width: size,
             height: size,
             format: this.scene.lightmapPixelFormat,
@@ -523,12 +521,10 @@ class Lightmapper {
         // update skybox
         this.scene._updateSkyMesh();
 
-        // #if _PROFILER
         device.fire('lightmapper:start', {
             timestamp: startTime,
             target: this
         });
-        // #endif
 
         this.stats.renderPasses = 0;
         this.stats.shadowMapTime = 0;
@@ -601,12 +597,10 @@ class Lightmapper {
         this.stats.fboTime = device._renderTargetCreationTime - startFboTime;
         this.stats.lightmapCount = bakeNodes.length;
 
-        // #if _PROFILER
         device.fire('lightmapper:end', {
             timestamp: nowTime,
             target: this
         });
-        // #endif
     }
 
     // this allocates lightmap textures and render targets.
@@ -1118,11 +1112,9 @@ class Lightmapper {
                         renderPass.render();
                         renderPass.destroy();
 
-                        // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;
                         this.stats.forwardTime += this.renderer._forwardTime;
                         this.stats.renderPasses++;
-                        // #endif
 
                         // temp render target now has lightmap, store it for the node
                         bakeNode.renderTargets[pass] = tempRT;

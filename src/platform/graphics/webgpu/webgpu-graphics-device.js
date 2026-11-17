@@ -1607,10 +1607,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this.shader = shader;
             this._pipelineDirty = true;
 
-            // #if _PROFILER
             // TODO: we should probably track other stats instead, like pipeline switches
             this._shaderSwitchesPerFrame++;
-            // #endif
         }
     }
 

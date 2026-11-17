@@ -400,9 +400,7 @@ class Texture {
             this.projection = options.projection;
         }
 
-        // #if _PROFILER
         this.profilerHint = options.profilerHint ?? 0;
-        // #endif
 
         this._levels = options.levels;
         const upload = !!options.levels;
@@ -583,7 +581,6 @@ class Texture {
 
         vram.tex += size;
 
-        // #if _PROFILER
         if (this.profilerHint === TEXHINT_SHADOWMAP) {
             vram.texShadow += size;
         } else if (this.profilerHint === TEXHINT_ASSET) {
@@ -591,7 +588,6 @@ class Texture {
         } else if (this.profilerHint === TEXHINT_LIGHTMAP) {
             vram.texLightmap += size;
         }
-        // #endif
     }
 
     propertyChanged(flag) {

@@ -357,14 +357,12 @@ class Layer {
 
     // --- Profiler ---
 
-    // #if _PROFILER
     _renderTime = 0;
 
     _forwardDrawCalls = 0;
 
     // deprecated, not useful on a layer anymore, could be moved to camera
     _shadowDrawCalls = 0;
-    // #endif
 
     /**
      * Create a new Layer instance.

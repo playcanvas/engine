@@ -557,9 +557,7 @@ class RenderPassForward extends RenderPass {
 
         DebugGraphics.pushGpuMarker(this.device, `Camera: ${cameraComponent ? cameraComponent.entity.name : 'Unnamed'}, Layer: ${layer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`);
 
-        // #if _PROFILER
         const drawTime = now();
-        // #endif
 
         if (cameraComponent) {
 
@@ -629,9 +627,7 @@ class RenderPassForward extends RenderPass {
 
         DebugGraphics.popGpuMarker(this.device);
 
-        // #if _PROFILER
         layer._renderTime += now() - drawTime;
-        // #endif
     }
 
     // #if _DEBUG

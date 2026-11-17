@@ -1027,9 +1027,7 @@ class ParticleEmitter {
     addTime(delta, isOnStop) {
         const device = this.graphicsDevice;
 
-        // #if _PROFILER
         const startTime = now();
-        // #endif
 
         this.simTimeTotal += delta;
 
@@ -1105,9 +1103,7 @@ class ParticleEmitter {
             this.meshInstance.drawOrder = this.drawOrder;
         }
 
-        // #if _PROFILER
         this._addTimeTime += now() - startTime;
-        // #endif
     }
 
     _destroyResources() {

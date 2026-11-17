@@ -99,8 +99,7 @@ const getJSCCOptions = (type) => {
         dbg: {
             values: {
                 ...base,
-                _DEBUG: 1,
-                _PROFILER: 1
+                _DEBUG: 1
             },
             keepLines: true
         },
@@ -108,11 +107,9 @@ const getJSCCOptions = (type) => {
             values: base,
             keepLines: false
         },
+        // matches rel; the profiler build is kept for compatibility
         prf: {
-            values: {
-                ...base,
-                _PROFILER: 1
-            },
+            values: base,
             keepLines: false
         }
     }[type];
