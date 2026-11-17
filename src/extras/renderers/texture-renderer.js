@@ -1,8 +1,8 @@
 import { Debug } from '../../core/debug.js';
 import {
     CULLFACE_NONE, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
-    PIXELFORMAT_R8, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
-    PRIMITIVE_TRISTRIP, isIntegerPixelFormat, isSrgbPixelFormat
+    PIXELFORMAT_R8, PIXELFORMAT_R16F, PIXELFORMAT_R32F,
+    PRIMITIVE_TRISTRIP, isFloat32PixelFormat, isIntegerPixelFormat, isSrgbPixelFormat
 } from '../../platform/graphics/constants.js';
 import { BLEND_NORMAL, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER_LAYER } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -240,8 +240,7 @@ class TextureRenderer {
             Debug.warnOnce('TextureRenderer cannot display comparison depth textures on WebGL2.');
             return;
         }
-        const unfilterable = !device.textureFloatFilterable &&
-            (format === PIXELFORMAT_R32F || format === PIXELFORMAT_RG32F || format === PIXELFORMAT_RGB32F || format === PIXELFORMAT_RGBA32F);
+        const unfilterable = !device.textureFloatFilterable && isFloat32PixelFormat(format);
         // WebGL still checks sampler completeness for texelFetch, even though no filtering occurs.
         // Do not change caller-owned sampler state just to make a debug preview render.
         if (device.isWebGL2 && (depth || unfilterable)) {

@@ -1210,6 +1210,20 @@ export const isIntegerPixelFormat = (format) => {
 };
 
 /**
+ * Returns true if the specified pixel format stores 32-bit floats. These are the only float formats
+ * whose filtering is optional (see {@link GraphicsDevice#textureFloatFilterable}); 16-bit float
+ * formats are always filterable.
+ *
+ * @param {number} format - The pixel format.
+ * @returns {boolean} True if the format stores 32-bit floats.
+ * @ignore
+ */
+export const isFloat32PixelFormat = (format) => {
+    return format === PIXELFORMAT_R32F || format === PIXELFORMAT_RG32F ||
+        format === PIXELFORMAT_RGB32F || format === PIXELFORMAT_RGBA32F;
+};
+
+/**
  * Returns true if the specified pixel format can be used to create a multisampled texture on
  * WebGPU (per the WebGPU texture format capabilities table). Note that support for hardware
  * resolve is a separate, narrower capability: integer formats and {@link PIXELFORMAT_R32F} are
