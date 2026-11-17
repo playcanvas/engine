@@ -73,23 +73,14 @@ jobs:
           fi
           npm publish --tag $tag --provenance
 
-      - name: Write version
-        run: echo "${{ env.VERSION }}" > version.txt
-
-      - name: Upload version
-        uses: actions/upload-artifact@v7
-        with:
-          name: version
-          path: version.txt
-
   # npm publish is asynchronous: it returns as soon as the tarball is accepted ("Your package
   # is being processed and may take a few minutes to become available"), so the job above going
   # green no longer means the version is on the registry - it can lag by many minutes, and a
   # publish that is rejected during processing would leave this workflow green having shipped
   # nothing. This job holds the run open until the version actually resolves, so the workflow's
-  # conclusion means "published" for everything keyed off it (the Upload workflow, and anyone
-  # reading the run). It is a separate job so a timeout can be re-run on its own without
-  # re-running the build and re-attempting a publish that would now conflict.
+  # conclusion means "published" for anyone reading the run. It is a separate job so a timeout
+  # can be re-run on its own without re-running the build and re-attempting a publish that would
+  # now conflict.
   await-npm:
     name: Await npm
     needs: publish
