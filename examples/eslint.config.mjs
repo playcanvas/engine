@@ -22,7 +22,7 @@ const booleanFlags = new Set([
     'WEBGL_DISABLED',
     'WEBGL_BARE_DISABLED'
 ]);
-const engineTypes = new Set(['development', 'performance', 'debug']);
+const engineTypes = new Set(['development', 'debug']);
 const preferredDeviceTypes = new Set(['webgpu', 'webgl2']);
 const creditFields = ['title', 'author', 'source', 'license'];
 const requiredCreditFields = ['title', 'author'];

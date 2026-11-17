@@ -1,5 +1,4 @@
 // @config
-// @flag ENGINE=performance
 //
 // Watch a field of objects build and dissolve as entities, materials, vertex buffers and textures
 // are allocated and released. A user counter plots a sine wave independently of the engine stats.

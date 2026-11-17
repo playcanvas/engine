@@ -205,7 +205,7 @@ Examples can also contain comments which allow you to define the default configu
 // license: CC BY 4.0
 //
 // @flag HIDDEN
-// @flag ENGINE=performance
+// @flag ENGINE=debug
 // @flag NO_DEVICE_SELECTOR
 // @flag NO_MINISTATS
 // @flag WEBGPU_DISABLED
@@ -285,7 +285,7 @@ Run `npm run dev` from the `Local examples browser development` section to serve
 
 You can view an individual iframe directly, for example [http://localhost:5555/iframe/misc_hello-world.html]().
 
-### Debug and performance engine development
+### Built engine development
 By default, `npm run dev` and `npm run develop` serve the engine from `../src/index.js`. To test against a built ESM engine instead, pass `ENGINE_PATH`, for example `ENGINE_PATH=../build/playcanvas.mjs npm run dev`.
 
 ## Example Modules

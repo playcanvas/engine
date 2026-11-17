@@ -1,6 +1,3 @@
-// @config
-// @flag ENGINE=performance
-
 import {
     AppBase,
     AppOptions,

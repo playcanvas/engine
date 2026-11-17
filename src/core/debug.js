@@ -5,8 +5,7 @@ import { Tracing } from './tracing.js';
  * and is stripped out in other builds.
  *
  * The debug build ships in the npm package: import from `'playcanvas/debug'` instead of
- * `'playcanvas'` to enable assertions, deprecation notices and validation warnings. A
- * `'playcanvas/profiler'` build is also available for per-frame timings.
+ * `'playcanvas'` to enable assertions, deprecation notices and validation warnings.
  */
 class Debug {
     /**
