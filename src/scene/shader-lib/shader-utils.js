@@ -96,8 +96,8 @@ class ShaderUtils {
         let shader = programLibrary.getCachedShader(options.uniqueName);
         if (!shader) {
 
-            // use WGSL language on WebGPU: if user provided WGSL code, or if named chunks are used
-            const wgsl = device.isWebGPU &&
+            // use WGSL on a WGSL device: if user provided WGSL code, or if named chunks are used
+            const wgsl = device.shaderLanguage === SHADERLANGUAGE_WGSL &&
                 (!!options.vertexWGSL || !!options.vertexChunk) &&
                 (!!options.fragmentWGSL || !!options.fragmentChunk);
 

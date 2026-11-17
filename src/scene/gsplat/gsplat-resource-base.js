@@ -395,7 +395,7 @@ class GSplatResourceBase {
         this.streams.syncWithFormat(this.format);
 
         // Inject format's shader chunks
-        const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+        const chunks = material.shaderChunks[this.device.shaderLanguage];
         chunks.set('gsplatDeclarationsVS', formatDeclarations);
         chunks.set('gsplatReadVS', this.format.getReadCode());
 

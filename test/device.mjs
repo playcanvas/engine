@@ -100,3 +100,15 @@ export const setupShaderLibrary = (device) => {
     ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
     setProgramLibrary(device, new ProgramLibrary(device));
 };
+
+/**
+ * Sets the shading language the engine generates its shaders in on a null device, which never
+ * compiles them, so that a test can check the shaders generated for the other language. Real
+ * devices have a fixed language.
+ *
+ * @param {NullGraphicsDevice} device - The null graphics device.
+ * @param {string} shaderLanguage - {@link SHADERLANGUAGE_GLSL} or {@link SHADERLANGUAGE_WGSL}.
+ */
+export const setTestShaderLanguage = (device, shaderLanguage) => {
+    device.shaderLanguage = shaderLanguage;
+};

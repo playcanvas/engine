@@ -156,7 +156,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
      */
     _trackEffectChunks() {
 
-        const shaderLanguage = this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const shaderLanguage = this.device.shaderLanguage;
         const shaderChunks = ShaderChunks.get(this.device, shaderLanguage);
 
         // stop tracking the chunks of effects which are no longer registered
@@ -324,7 +324,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
             this._shaderDirty = true;
         }
 
-        const shaderLanguage = this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const shaderLanguage = this.device.shaderLanguage;
         const shaderChunks = ShaderChunks.get(this.device, shaderLanguage);
 
         // detect changes to custom compose chunks and mark shader dirty
