@@ -75,7 +75,7 @@ class WorkBufferRenderInfo {
 
         // Get custom shader chunks from material (for container support)
         const fragmentIncludes = material.hasShaderChunks ?
-            (device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl) :
+            material.shaderChunks[device.shaderLanguage] :
             undefined;
 
         // Get streams to output - color-only mode uses just dataColor, otherwise all streams
@@ -277,7 +277,7 @@ class GSplatWorkBuffer {
             resource.configureMaterial(material, workBufferModifier, formatDeclarations);
 
             // Inject work buffer output declarations
-            const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+            const chunks = material.shaderChunks[this.device.shaderLanguage];
             // For color-only mode, only output color stream; otherwise output all streams
             const outputStreams = colorOnly ?
                 [workBufferFormat.getStream('dataColor')] :

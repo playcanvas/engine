@@ -111,7 +111,7 @@ class LitShader {
 
         // shader language
         const userChunks = options.shaderChunks;
-        this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        this.shaderLanguage = (device.shaderLanguage === SHADERLANGUAGE_WGSL && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
 
         if (device.isWebGPU && this.shaderLanguage === SHADERLANGUAGE_GLSL) {
             if (!device.hasTranspilers) {

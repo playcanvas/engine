@@ -3,7 +3,7 @@ import {
     pixelFormatInfo,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     SAMPLETYPE_FLOAT, SAMPLETYPE_INT, SAMPLETYPE_UINT,
-    SHADERSTAGE_COMPUTE
+    SHADERSTAGE_COMPUTE, SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { hashCode } from '../../core/hash.js';
 import { Debug } from '../../core/debug.js';
@@ -202,11 +202,11 @@ class GSplatFormat {
         this._streamNames = new Set(this.streams.map(s => s.name));
 
         // Pick the appropriate shader language based on device
-        const isWebGPU = device.isWebGPU;
-        this._read = isWebGPU ? options.readWGSL : options.readGLSL;
+        const wgsl = device.shaderLanguage === SHADERLANGUAGE_WGSL;
+        this._read = wgsl ? options.readWGSL : options.readGLSL;
 
         // Validate read code is provided for the current device
-        Debug.assert(this._read, `GSplatFormat: ${isWebGPU ? 'readWGSL' : 'readGLSL'} is required`);
+        Debug.assert(this._read, `GSplatFormat: ${wgsl ? 'readWGSL' : 'readGLSL'} is required`);
     }
 
     /**
@@ -358,9 +358,9 @@ class GSplatFormat {
      * @ignore
      */
     getInputDeclarations(streamNames) {
-        const isWebGPU = this._device.isWebGPU;
-        const template = isWebGPU ? wgslStreamDecl : glslStreamDecl;
-        const getShaderType = isWebGPU ? getWgslShaderType : getGlslShaderType;
+        const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
+        const template = wgsl ? wgslStreamDecl : glslStreamDecl;
+        const getShaderType = wgsl ? getWgslShaderType : getGlslShaderType;
         const lines = [];
 
         // Get streams - filter if names specified
@@ -373,7 +373,7 @@ class GSplatFormat {
             const info = getShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
             let textureType = info.textureType ?? '';
-            if (isWebGPU && stream.format === PIXELFORMAT_RGBA32F) {
+            if (wgsl && stream.format === PIXELFORMAT_RGBA32F) {
                 textureType = 'texture_2d<uff>';
             }
             const decl = template
@@ -467,7 +467,7 @@ class GSplatFormat {
      * @ignore
      */
     setWriteCode(writeGLSL, writeWGSL) {
-        this._write = this._device.isWebGPU ? writeWGSL : writeGLSL;
+        this._write = this._device.shaderLanguage === SHADERLANGUAGE_WGSL ? writeWGSL : writeGLSL;
     }
 
     /**
@@ -491,12 +491,12 @@ class GSplatFormat {
      * @ignore
      */
     getOutputDeclarations(outputStreams) {
-        const isWebGPU = this._device.isWebGPU;
+        const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
         const lines = [];
 
         // Generate output declarations using chunk template
-        const template = isWebGPU ? wgslStreamOutput : glslStreamOutput;
-        const getShaderType = isWebGPU ? getWgslShaderType : getGlslShaderType;
+        const template = wgsl ? wgslStreamOutput : glslStreamOutput;
+        const getShaderType = wgsl ? getWgslShaderType : getGlslShaderType;
 
         for (let i = 0; i < outputStreams.length; i++) {
             const stream = outputStreams[i];
@@ -524,10 +524,10 @@ class GSplatFormat {
      * @ignore
      */
     getOutputStubs(streams) {
-        const isWebGPU = this._device.isWebGPU;
+        const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
         const lines = [];
-        const template = isWebGPU ? wgslStreamOutput : glslStreamOutput;
-        const getShaderType = isWebGPU ? getWgslShaderType : getGlslShaderType;
+        const template = wgsl ? wgslStreamOutput : glslStreamOutput;
+        const getShaderType = wgsl ? getWgslShaderType : getGlslShaderType;
 
         for (const stream of streams) {
             const info = getShaderType(stream.format);

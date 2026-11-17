@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
-import { RENDERTARGET_ORIGIN_BOTTOM, SEMANTIC_POSITION, getGlslShaderType } from '../../platform/graphics/constants.js';
+import { RENDERTARGET_ORIGIN_BOTTOM, SEMANTIC_POSITION, SHADERLANGUAGE_WGSL, getGlslShaderType } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
@@ -397,7 +397,7 @@ class GSplatProcessor {
         this._srcResource.configureMaterialDefines(defines);
         defines.set('SH_BANDS', '0'); // SH processing is currently not supported.
 
-        const isWebGPU = device.isWebGPU;
+        const wgsl = device.shaderLanguage === SHADERLANGUAGE_WGSL;
 
         // Create shader includes for current platform
         // User's process code provides process() function + any declarations at module scope
@@ -405,11 +405,11 @@ class GSplatProcessor {
         includes.set('gsplatProcessInputVS', inputDeclarations);
         includes.set('gsplatProcessOutputVS', outputDeclarations);
         includes.set('gsplatProcessReadVS', readCode);
-        includes.set('gsplatProcessChunk', isWebGPU ? processWGSL : processGLSL);
+        includes.set('gsplatProcessChunk', wgsl ? processWGSL : processGLSL);
 
         // shader unique name hash
         const hash = hashCode([
-            isWebGPU ? processWGSL : processGLSL,
+            wgsl ? processWGSL : processGLSL,
             this._useAllInputStreams ? '1' : '0'
         ].join('|'));
         const outputStreams = this._dstStreamDescriptors.map(s => s.name).join(',');

@@ -5,7 +5,7 @@ import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
-    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT, BINDGROUP_VIEW
+    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT, BINDGROUP_VIEW, SHADERLANGUAGE_WGSL
 } from '../constants.js';
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
@@ -432,6 +432,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
+        this.shaderLanguage = SHADERLANGUAGE_WGSL;
         this.platformChunksGLSL = webgpuChunksGLSL;
         this.platformChunksWGSL = webgpuChunksWGSL;
         this.computeChunks = webgpuComputeChunksWGSL;

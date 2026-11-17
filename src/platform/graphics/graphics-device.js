@@ -16,6 +16,7 @@ import {
     PIXELFORMAT_RG11B10F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
+    SHADERLANGUAGE_GLSL,
     semanticToLocation,
     FRONTFACE_CCW
 } from './constants.js';
@@ -316,6 +317,16 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsCompute = false;
+
+    /**
+     * The shading language the engine generates its shaders in on this device,
+     * {@link SHADERLANGUAGE_GLSL} or {@link SHADERLANGUAGE_WGSL}. Shader code selects the language
+     * using this instead of the type of the device, so that the null device can generate either.
+     *
+     * @type {string}
+     * @ignore
+     */
+    shaderLanguage = SHADERLANGUAGE_GLSL;
 
     /**
      * The platform chunks added to every GLSL vertex and fragment shader: `vertexHeader`,

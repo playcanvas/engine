@@ -809,7 +809,7 @@ class GSplatShadowRenderer {
         const wbFormat = workBuffer.format;
 
         // format declarations + read code
-        const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
+        const chunks = material.shaderChunks[this.device.shaderLanguage];
         chunks.set('gsplatDeclarationsVS', wbFormat.getInputDeclarations());
         chunks.set('gsplatReadVS', wbFormat.getReadCode());
 
