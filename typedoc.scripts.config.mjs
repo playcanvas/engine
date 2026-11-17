@@ -31,6 +31,7 @@ const ATTRIBUTE_TAGS = [
  */
 const engineSymbols = {
     classes: [
+        'AnimComponent',
         'AppBase',
         'Asset',
         'BoundingBox',
@@ -66,10 +67,14 @@ const engineSymbols = {
     types: [
         'HandleEventCallback'
     ],
-    variables: [],
+    variables: [
+        'OFFSCREENUPDATE_FULL'
+    ],
     functions: [],
     // Class.member references, mapped to lowercased anchors on the class page
     members: [
+        'AnimComponent.evaluationInterval',
+        'AnimComponent.offscreenUpdate',
         'EventHandle.off',
         'Scene.ambientLight'
     ]

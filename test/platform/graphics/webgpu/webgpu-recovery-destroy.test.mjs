@@ -37,7 +37,7 @@ describe('WebGPU destruction during recovery', function () {
         restored = sinon.spy();
         device.on('devicerestored', restored);
         restoreContext = sinon.stub(GraphicsDevice.prototype, 'restoreContext');
-        // Cancelled requests must never reach GPU resource creation.
+        // Canceled requests must never reach GPU resource creation.
         initDeviceCaps = sinon.stub(device, 'initDeviceCaps').throws(new Error('Unexpected GPU initialization'));
     });
 
@@ -119,7 +119,7 @@ describe('WebGPU destruction during recovery', function () {
         expectCancelled();
     });
 
-    it('still restores resources and emits the event when recovery is not cancelled', async function () {
+    it('still restores resources and emits the event when recovery is not canceled', async function () {
         sinon.stub(device, 'createDevice').callsFake(() => {
             device.gpuProfiler = { enabled: false, destroy() {} };
             return Promise.resolve(device);

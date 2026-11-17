@@ -110,6 +110,7 @@ import reflectionCCPS from '../chunks/lit/frag/reflectionCC.js';
 import reflectionCubePS from '../chunks/lit/frag/reflectionCube.js';
 import reflectionEnvHQPS from '../chunks/lit/frag/reflectionEnvHQ.js';
 import reflectionEnvPS from '../chunks/lit/frag/reflectionEnv.js';
+import reflectionPlanarPS from '../chunks/lit/frag/reflectionPlanar.js';
 import reflectionSpherePS from '../chunks/lit/frag/reflectionSphere.js';
 import reflectionSheenPS from '../chunks/lit/frag/reflectionSheen.js';
 import refractionCubePS from '../chunks/lit/frag/refractionCube.js';
@@ -121,6 +122,7 @@ import screenDepthPS from '../chunks/common/frag/screenDepth.js';
 import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
 import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
 import shadowEVSMPS from '../chunks/lit/frag/lighting/shadowEVSM.js';
+import shadowEVSMExponentPS from '../chunks/common/frag/shadow-evsm-exponent.js';
 import shadowPCF1PS from '../chunks/lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from '../chunks/lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
@@ -144,6 +146,7 @@ import thicknessPS from '../chunks/standard/frag/thickness.js';
 import tonemappingPS from '../chunks/common/frag/tonemapping/tonemapping.js';
 import tonemappingAcesPS from '../chunks/common/frag/tonemapping/tonemappingAces.js';
 import tonemappingAces2PS from '../chunks/common/frag/tonemapping/tonemappingAces2.js';
+import tonemappingAgxPS from '../chunks/common/frag/tonemapping/tonemappingAgx.js';
 import tonemappingFilmicPS from '../chunks/common/frag/tonemapping/tonemappingFilmic.js';
 import tonemappingHejlPS from '../chunks/common/frag/tonemapping/tonemappingHejl.js';
 import tonemappingLinearPS from '../chunks/common/frag/tonemapping/tonemappingLinear.js';
@@ -162,8 +165,6 @@ import uvSetVaryingVS from '../chunks/lit/vert/uvSetVarying.js';
 import uvTransformVS from '../chunks/lit/vert/uvTransform.js';
 import uvTransformUniformsPS from '../chunks/lit/vert/uvTransformUniforms.js';
 import viewDirPS from '../chunks/lit/frag/viewDir.js';
-import webgpuPS from '../../../../platform/graphics/shader-chunks/frag/webgpu-wgsl.js';
-import webgpuVS from '../../../../platform/graphics/shader-chunks/vert/webgpu-wgsl.js';
 
 /**
  * Object containing all default WGSL shader chunks used by shader generators.
@@ -295,6 +296,7 @@ const shaderChunksWGSL = {
     reflectionCubePS,
     reflectionEnvHQPS,
     reflectionEnvPS,
+    reflectionPlanarPS,
     reflectionSpherePS,
     reflectionSheenPS,
     refractionCubePS,
@@ -306,6 +308,7 @@ const shaderChunksWGSL = {
     shadowCascadesPS,
     shadowCasterPS,
     shadowEVSMPS,
+    shadowEVSMExponentPS,
     shadowPCF1PS,
     shadowPCF3PS,
     shadowPCF5PS,
@@ -329,6 +332,7 @@ const shaderChunksWGSL = {
     tonemappingPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
+    tonemappingAgxPS,
     tonemappingFilmicPS,
     tonemappingHejlPS,
     tonemappingLinearPS,
@@ -346,9 +350,7 @@ const shaderChunksWGSL = {
     uvSetVaryingVS,
     uvTransformVS,
     uvTransformUniformsPS,
-    viewDirPS,
-    webgpuPS,
-    webgpuVS
+    viewDirPS
 };
 
 export { shaderChunksWGSL };

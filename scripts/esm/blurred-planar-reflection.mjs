@@ -435,10 +435,10 @@ class BlurredPlanarReflection extends Script {
      */
     set sceneColorMap(value) {
         this._sceneColorMap = value;
-        // Apply to existing cameras if they exist
-        if (this._reflectionCameraEntity?.camera) {
-            this._reflectionCameraEntity.camera.requestSceneColorMap(value);
-        }
+        // Apply to existing cameras if they exist. The depth camera needs it too, as the shaders
+        // of refractive materials sample the scene color map in its pass as well.
+        this._reflectionCameraEntity?.camera?.requestSceneColorMap(value);
+        this._reflectionDepthCameraEntity?.camera?.requestSceneColorMap(value);
     }
 
     get sceneColorMap() {
@@ -486,6 +486,12 @@ class BlurredPlanarReflection extends Script {
         // Set up custom shader pass for depth camera
         this._reflectionDepthCameraEntity.camera.setShaderPass('planar_reflection_depth');
         app.root.addChild(this._reflectionDepthCameraEntity);
+
+        // Apply the scene color map setting, which could have been assigned before the cameras existed
+        if (this._sceneColorMap) {
+            this._reflectionCameraEntity.camera.requestSceneColorMap(true);
+            this._reflectionDepthCameraEntity.camera.requestSceneColorMap(true);
+        }
 
         // Create the reflection material
         this._createReflectionMaterial();

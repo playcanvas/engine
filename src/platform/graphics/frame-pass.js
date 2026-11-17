@@ -249,6 +249,20 @@ class FramePass {
     }
 
     /**
+     * Called instead of rendering the pass in a frame which only compiles the shaders and the
+     * render pipelines the frame needs, without rendering it, see {@link AppBase#precompile}. Only
+     * called while {@link FramePass#executeEnabled} is true. A pass implementing it renders as its
+     * {@link FramePass#execute} does, between {@link GraphicsDevice#startPrecompilePass} and
+     * {@link GraphicsDevice#endPrecompilePass}, which compile what the rendering needs without
+     * rendering anything. It must not consume any state the next frame relies on, such as one-shot
+     * updates. Passes not implementing it compile what they need when they first render.
+     *
+     * @ignore
+     */
+    precompile() {
+    }
+
+    /**
      * Releases the resources the pass created. A pass owns only what it creates: it does not
      * destroy its {@link FramePass#beforePasses} and {@link FramePass#afterPasses}, which are
      * destroyed by whoever added them. The code which creates a pass destroys it, once, and the
@@ -270,7 +284,7 @@ class FramePass {
      * It can also be called directly, to render the pass on its own, outside of a frame, for
      * example to render into a texture once. The pass is then not prepared the way a frame
      * prepares it: its {@link FramePass#frameUpdate} is not called, its before and after passes do
-     * not render, and the frame graph does not merge it with neighbouring passes, nor ask it to
+     * not render, and the frame graph does not merge it with neighboring passes, nor ask it to
      * store the attachments a later pass loads. A {@link RenderPass} rendered on its own keeps the
      * textures of its render target: its color buffers, resolved when multisampled, and its depth
      * buffer texture. It does not keep the samples of a multisampled attachment, the stencil, or a

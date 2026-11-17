@@ -5,15 +5,16 @@ import { GSplatFormat, GSplatResourceBase, Http, PIXELFORMAT_RGBA8, PIXELFORMAT_
  */
 
 /**
- * A parser for the SPZ gaussian splat format (https://github.com/nianticlabs/spz), version 4.
+ * A parser for the SPZ gaussian splat format (https://github.com/nianticlabs/spz), versions 3
+ * and 4. Older versions are not supported.
  *
  * The splat data stays in its quantized form on the GPU (roughly 20 bytes per splat plus
  * spherical harmonics), and is dequantized in the shader, similar to how the compressed PLY and
  * SOG formats are handled by the engine.
  *
  * SPZ v4 attribute streams are ZSTD compressed. The parser uses a ZSTD wasm module which the
- * application needs to register before loading spz assets, in the same way the Draco module is
- * registered:
+ * application needs to register before loading v4 spz assets, in the same way the Draco module is
+ * registered (v3 files are gzip compressed and need no module):
  *
  * ```javascript
  * import { WasmModule } from 'playcanvas';
@@ -415,6 +416,85 @@ class GSplatSpzResource extends GSplatResourceBase {
 }
 
 /**
+ * @param {ArrayBuffer} arrayBuffer - The file data.
+ * @returns {boolean} True if the data starts with the gzip magic.
+ */
+const isGzip = (arrayBuffer) => {
+    const bytes = new Uint8Array(arrayBuffer, 0, Math.min(2, arrayBuffer.byteLength));
+    return bytes[0] === 0x1f && bytes[1] === 0x8b;
+};
+
+/**
+ * Decompresses gzip data.
+ *
+ * @param {ArrayBuffer} arrayBuffer - The gzip data.
+ * @returns {Promise<ArrayBuffer>} The decompressed data.
+ */
+const gunzip = (arrayBuffer) => {
+    const stream = new Blob([arrayBuffer]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return new Response(stream).arrayBuffer();
+};
+
+/**
+ * Parses a decompressed SPZ v3 file: a 16 byte header followed by the attribute streams, which
+ * use the same quantization as v4 but are stored back to back without a table of contents.
+ *
+ * @param {ArrayBuffer} arrayBuffer - The decompressed file data.
+ * @returns {SpzGSplatData} The parsed data.
+ */
+const parseSpzV3 = (arrayBuffer) => {
+    const dv = new DataView(arrayBuffer);
+    if (dv.byteLength < 16) {
+        throw new Error('Invalid spz file: too small');
+    }
+
+    if (dv.getUint32(0, true) !== NGSP_MAGIC) {
+        throw new Error(`Invalid spz file: unexpected magic number 0x${dv.getUint32(0, true).toString(16)}`);
+    }
+
+    const version = dv.getUint32(4, true);
+    if (version !== 3) {
+        throw new Error(`Unsupported spz version ${version}, only versions 3 and 4 are supported`);
+    }
+
+    const header = {
+        numPoints: dv.getUint32(8, true),
+        shDegree: dv.getUint8(12),
+        fractionalBits: dv.getUint8(13),
+        antialiased: (dv.getUint8(14) & FLAG_ANTIALIASED) !== 0
+    };
+
+    if (header.shDegree >= SH_DIM_FOR_DEGREE.length) {
+        throw new Error(`Invalid spz file: unsupported SH degree ${header.shDegree}`);
+    }
+
+    const { numPoints } = header;
+    const shDim = SH_DIM_FOR_DEGREE[header.shDegree];
+    const sizes = {
+        positions: numPoints * 9,
+        alphas: numPoints,
+        colors: numPoints * 3,
+        scales: numPoints * 3,
+        rotations: numPoints * 4,
+        sh: numPoints * shDim * 3
+    };
+
+    const streams = {};
+    let offset = 16;
+    for (const name in sizes) {
+        const size = sizes[name];
+        if (size === 0) continue;
+        if (offset + size > dv.byteLength) {
+            throw new Error(`Invalid spz file: the ${name} stream extends past the end of the file`);
+        }
+        streams[name] = new Uint8Array(arrayBuffer, offset, size);
+        offset += size;
+    }
+
+    return new SpzGSplatData(header, streams);
+};
+
+/**
  * Parses the SPZ v4 (NGSP) container and decompresses the attribute streams.
  *
  * @param {ArrayBuffer} arrayBuffer - The file data.
@@ -431,16 +511,16 @@ const parseSpz = (arrayBuffer, decoder) => {
     const version = dv.getUint32(4, true);
 
     if (magic !== NGSP_MAGIC) {
-        // legacy versions (1-3) store the gzipped header + streams, so the file starts with the
-        // gzip magic instead
-        if (dv.getUint8(0) === 0x1f && dv.getUint8(1) === 0x8b) {
-            throw new Error('Unsupported spz file: legacy gzip based version, only version 4 is supported');
+        // versions 1-3 store the gzipped header + streams, so the file starts with the gzip magic
+        // instead. Version 3 is handled by parseSpzV3 after decompression.
+        if (isGzip(arrayBuffer)) {
+            throw new Error('Unsupported spz file: gzip based version, only versions 3 and 4 are supported');
         }
         throw new Error(`Invalid spz file: unexpected magic number 0x${magic.toString(16)}`);
     }
 
     if (version !== 4) {
-        throw new Error(`Unsupported spz version ${version}, only version 4 is supported`);
+        throw new Error(`Unsupported spz version ${version}, only versions 3 and 4 are supported`);
     }
 
     const header = {
@@ -517,6 +597,24 @@ class SpzParser {
     }
 
     /**
+     * Checks if loading should be aborted due to asset unload or app teardown.
+     *
+     * Nothing cancels an in-flight request, so the fetch, gzip and wasm callbacks can run after
+     * {@link AppBase#destroy}, which drops the asset registry before the graphics device is
+     * marked destroyed. Every access has to tolerate that.
+     *
+     * @param {import('playcanvas').Asset} asset - The asset being loaded.
+     * @param {boolean} unloaded - Whether the asset was unloaded during async loading.
+     * @returns {boolean} True if loading should be aborted.
+     * @private
+     */
+    _shouldAbort(asset, unloaded) {
+        if (unloaded) return true;
+        if (!this.app?.graphicsDevice || this.app.graphicsDevice._destroyed) return true;
+        return !this.app.assets?.get(asset.id);
+    }
+
+    /**
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
@@ -525,26 +623,66 @@ class SpzParser {
      * @param {import('playcanvas').Asset} asset - Container asset.
      */
     load(url, callback, asset) {
-        if (!WasmModule.getConfig('ZstdDecoderModule')) {
-            callback('SpzParser: ZSTD decoder module is not registered. Use WasmModule.setConfig(\'ZstdDecoderModule\', { glueUrl, wasmUrl }) before loading spz files.');
-            return;
-        }
+        // track if the asset was unloaded during async loading
+        let unloaded = false;
+        asset.once('unload', () => {
+            unloaded = true;
+        });
+
+        // completes a load which was aborted, without reporting an error
+        const abort = () => callback(null, null);
+
+        // reports an error, unless loading was aborted in the meantime
+        const fail = (err) => {
+            if (this._shouldAbort(asset, unloaded)) {
+                abort();
+            } else {
+                callback(err);
+            }
+        };
+
+        // parses the data and creates the resource, unless loading was aborted in the meantime
+        const finish = (parse) => {
+            if (this._shouldAbort(asset, unloaded)) {
+                abort();
+                return;
+            }
+
+            let resource;
+            try {
+                const gsplatData = parse();
+                const prepareCenters = this.app.scene?.gsplatCentersEnabled !== false;
+                resource = new GSplatSpzResource(this.app.graphicsDevice, gsplatData, { prepareCenters });
+                resource.antiAlias = gsplatData.antialiased;
+            } catch (e) {
+                callback(e);
+                return;
+            }
+            callback(null, resource);
+        };
 
         this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, data) => {
             if (err) {
-                callback(err);
+                fail(err);
+                return;
+            }
+
+            // version 3 files are gzip compressed as a whole, and need no ZSTD module
+            if (isGzip(data)) {
+                gunzip(data).then(
+                    decompressed => finish(() => parseSpzV3(decompressed)),
+                    fail
+                );
+                return;
+            }
+
+            if (!WasmModule.getConfig('ZstdDecoderModule')) {
+                fail('SpzParser: ZSTD decoder module is not registered. Use WasmModule.setConfig(\'ZstdDecoderModule\', { glueUrl, wasmUrl }) before loading spz version 4 files.');
                 return;
             }
 
             WasmModule.getInstance('ZstdDecoderModule', (decoder) => {
-                try {
-                    const gsplatData = parseSpz(data, decoder);
-                    const prepareCenters = this.app.scene?.gsplatCentersEnabled !== false;
-                    const resource = new GSplatSpzResource(this.app.graphicsDevice, gsplatData, { prepareCenters });
-                    callback(null, resource);
-                } catch (e) {
-                    callback(e);
-                }
+                finish(() => parseSpz(data, decoder));
             });
         }, asset);
     }

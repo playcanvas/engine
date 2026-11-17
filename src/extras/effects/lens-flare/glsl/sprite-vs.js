@@ -1,17 +1,17 @@
 // Places one lens flare element per instance along the axis from its flare's source through the
-// screen centre. Sizes are in screen heights, so an element is the same size at any resolution and
+// screen center. Sizes are in screen heights, so an element is the same size at any resolution and
 // aspect ratio, and the element is faded by its flare's measured visibility. See FramePassLensFlare
 // for the layout of the element texture and the per-flare uniforms.
 export default /* glsl */`
     attribute vec2 aPosition;
 
-    // three texels per element: offset, size, aspect, rotation; colour, auto rotate; flare, layer
+    // three texels per element: offset, size, aspect, rotation; color, auto rotate; flare, layer
     uniform highp sampler2D lensFlareElements;
 
     // one texel per flare: the measured visibility of its source
     uniform sampler2D lensFlareVisibility;
 
-    // two per flare: xy source NDC, z fade, w scale; rgb colour
+    // two per flare: xy source NDC, z fade, w scale; rgb color
     uniform vec4 lensFlareData[64];
 
     // x: aspect ratio of the screen (height / width)

@@ -10,6 +10,7 @@ import {
     OrbitController,
     Pose,
     PROJECTION_PERSPECTIVE,
+    Quat,
     Script,
     Vec2,
     Vec3
@@ -28,6 +29,15 @@ import {
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpNear = new Vec3();
+const tmpFar = new Vec3();
+const tmpBefore = new Vec3();
+const tmpAfter = new Vec3();
+const tmpFocus = new Vec3();
+const tmpPan = new Vec3();
+const tmpRight = new Vec3();
+const tmpForward = new Vec3();
+const tmpYaw = new Quat();
 
 const pose = new Pose();
 
@@ -116,6 +126,56 @@ const screenToWorld = (camera, dx, dy, dz, out = new Vec3()) => {
 };
 
 /**
+ * Finds the point on a horizontal plane under a screen position.
+ *
+ * @param {CameraComponent} camera - The camera component.
+ * @param {number} x - The x screen position in CSS pixels.
+ * @param {number} y - The y screen position in CSS pixels.
+ * @param {number} height - The height of the plane.
+ * @param {Vec3} out - The vector to receive the point.
+ * @returns {Vec3 | null} The point, or null when the plane is not in view at the position.
+ * @private
+ */
+const screenToPlane = (camera, x, y, height, out) => {
+    const near = camera.screenToWorld(x, y, camera.nearClip, tmpNear);
+    const far = camera.screenToWorld(x, y, camera.farClip, tmpFar);
+    const t = (height - near.y) / (far.y - near.y);
+    return t >= 0 && t <= 1 ? out.lerp(near, far, t) : null;
+};
+
+/**
+ * Converts a mouse movement to the pan which keeps the point of a horizontal plane under the
+ * cursor following it, as the distances to move to the right and forward, level with the plane.
+ *
+ * @param {CameraComponent} camera - The camera component.
+ * @param {number} x - The x screen position of the cursor after the movement, in CSS pixels.
+ * @param {number} y - The y screen position of the cursor after the movement, in CSS pixels.
+ * @param {number} dx - The mouse delta x value.
+ * @param {number} dy - The mouse delta y value.
+ * @param {number} height - The height of the plane.
+ * @param {number} yaw - The yaw of the view, in degrees.
+ * @param {Vec3} out - The vector to receive the pan.
+ * @returns {Vec3} The pan, which is zero when the plane is not in view under the cursor.
+ * @private
+ */
+const screenToGroundPan = (camera, x, y, dx, dy, height, yaw, out) => {
+    const before = screenToPlane(camera, x - dx, y - dy, height, tmpBefore);
+    const after = screenToPlane(camera, x, y, height, tmpAfter);
+    if (!before || !after) {
+        return out.set(0, 0, 0);
+    }
+
+    // the view moves against the cursor, measured along the right and forward directions turned
+    // by the yaw alone - the directions the orbit controller moves the focus point along. The
+    // directions of the camera itself would flip once it looks past straight down
+    before.sub(after);
+    tmpYaw.setFromEulerAngles(0, yaw, 0);
+    const right = tmpYaw.transformVector(Vec3.RIGHT, tmpRight);
+    const forward = tmpYaw.transformVector(Vec3.FORWARD, tmpForward);
+    return out.set(before.dot(right), before.dot(forward), 0);
+};
+
+/**
  * @enum {string}
  */
 // eslint-disable-next-line no-unused-vars
@@ -125,6 +185,18 @@ const MobileInputLayout = {
     TOUCH_JOYSTICK: 'touch-joystick',
     TOUCH_TOUCH: 'touch-touch'
 };
+
+/**
+ * @enum {string}
+ */
+const MouseAction = {
+    ORBIT: 'orbit',
+    PAN: 'pan',
+    LOOK: 'look',
+    NONE: 'none'
+};
+
+const mouseActions = Object.values(MouseAction);
 
 /**
  * Provides orbit, fly and pan camera controls, driven by mouse, touch and gamepad input. Movement
@@ -253,6 +325,67 @@ class CameraControls extends Script {
      */
     // @ts-ignore
     _mode;
+
+    /**
+     * The action of each mouse button, by button index: left, middle and right.
+     *
+     * @type {MouseAction[]}
+     * @private
+     */
+    _buttonActions = ['orbit', 'pan', 'look'];
+
+    /**
+     * The index of the mouse button the mouse movement follows, which is the last one pressed
+     * until the frame after its release, or -1.
+     *
+     * @type {number}
+     * @private
+     */
+    _activeButton = -1;
+
+    /**
+     * The index of the mouse button pressed since the last update, or -1. It is taken from the
+     * press itself, as the button deltas of a press and a release between two updates cancel out,
+     * while the movement of the drag in between is still to be applied.
+     *
+     * @type {number}
+     * @private
+     */
+    _pressedButton = -1;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _groundPan = false;
+
+    /**
+     * The position of the cursor on the canvas, in CSS pixels.
+     *
+     * @type {Vec2}
+     * @private
+     */
+    _pointer = new Vec2();
+
+    /**
+     * @param {PointerEvent} event - The pointer event.
+     * @private
+     */
+    _onPointer = (event) => {
+        this._pointer.set(event.offsetX, event.offsetY);
+        if (event.type === 'pointerdown' && event.pointerType === 'mouse' &&
+            event.button >= 0 && event.button < this._buttonActions.length) {
+
+            // the movement since the last update belongs to the drag before this press. An update
+            // applies one action, so the movement is dropped when that drag had another action,
+            // rather than applied by the action of this button
+            const owner = this._pressedButton >= 0 ? this._pressedButton : this._activeButton;
+            if (owner >= 0 && this._buttonActions[owner] !== this._buttonActions[event.button]) {
+                this._desktopInput.deltas.mouse.read();
+            }
+            this._pressedButton = event.button;
+        }
+    };
 
     /**
      * @type {CameraControlsState}
@@ -561,6 +694,83 @@ class CameraControls extends Script {
     }
 
     /**
+     * The action of the left mouse button. The action can be one of the following:
+     *
+     * - `orbit`: Turns the view around the focus point, or pans it while shift is held.
+     * - `pan`: Pans the view, see {@link CameraControls#groundPan}.
+     * - `look`: Turns the view in place, as when flying with the keys.
+     * - `none`: Ignores the button, leaving it to the application.
+     *
+     * Default is `orbit`.
+     *
+     * @attribute
+     * @title Left Button
+     * @type {MouseAction}
+     * @default orbit
+     */
+    set leftButton(action) {
+        this._setButtonAction(0, action);
+    }
+
+    get leftButton() {
+        return this._buttonActions[0];
+    }
+
+    /**
+     * The action of the middle mouse button, one of the actions listed for
+     * {@link CameraControls#leftButton}. Default is `pan`.
+     *
+     * @attribute
+     * @title Middle Button
+     * @type {MouseAction}
+     * @default pan
+     */
+    set middleButton(action) {
+        this._setButtonAction(1, action);
+    }
+
+    get middleButton() {
+        return this._buttonActions[1];
+    }
+
+    /**
+     * The action of the right mouse button, one of the actions listed for
+     * {@link CameraControls#leftButton}. Default is `look`.
+     *
+     * @attribute
+     * @title Right Button
+     * @type {MouseAction}
+     * @default look
+     */
+    set rightButton(action) {
+        this._setButtonAction(2, action);
+    }
+
+    get rightButton() {
+        return this._buttonActions[2];
+    }
+
+    /**
+     * Whether panning moves across the ground instead of the plane of the view. A mouse drag then
+     * holds the point of the ground under the cursor, as when dragging a map, and the view keeps
+     * its height. The ground is the horizontal plane at the height of the focus point. Panning
+     * with two touches moves across the ground too. Default is false.
+     *
+     * @attribute
+     * @title Ground Pan
+     * @type {boolean}
+     * @default false
+     */
+    set groundPan(enable) {
+        this._groundPan = enable;
+        this._orbitController.horizontalPan = enable;
+    }
+
+    get groundPan() {
+        return this._groundPan;
+    }
+
+    /**
      * The gamepad dead zone.
      *
      * @attribute
@@ -580,7 +790,11 @@ class CameraControls extends Script {
         // set orbit controller defaults
         this._orbitController.zoomRange = new Vec2(0.01, Infinity);
 
-        // attach input
+        // attach input. The position of the cursor is tracked for the ground pan, which holds the
+        // ground under it
+        const canvas = this.app.graphicsDevice.canvas;
+        canvas.addEventListener('pointerdown', this._onPointer);
+        canvas.addEventListener('pointermove', this._onPointer);
         this._desktopInput.attach(this.app.graphicsDevice.canvas);
         this._orbitMobileInput.attach(this.app.graphicsDevice.canvas);
         this._flyMobileInput.attach(this.app.graphicsDevice.canvas);
@@ -609,6 +823,8 @@ class CameraControls extends Script {
         // state
         this.on('state', () => {
             // discard inputs
+            this._activeButton = -1;
+            this._pressedButton = -1;
             this._desktopInput.read();
             this._orbitMobileInput.read();
             this._flyMobileInput.read();
@@ -623,6 +839,10 @@ class CameraControls extends Script {
      * @private
      */
     _destroy() {
+        const canvas = this.app.graphicsDevice.canvas;
+        canvas.removeEventListener('pointerdown', this._onPointer);
+        canvas.removeEventListener('pointermove', this._onPointer);
+
         this._desktopInput.destroy();
         this._orbitMobileInput.destroy();
         this._flyMobileInput.destroy();
@@ -630,6 +850,47 @@ class CameraControls extends Script {
 
         this._flyController.destroy();
         this._orbitController.destroy();
+    }
+
+    /**
+     * @param {number} button - The index of the mouse button.
+     * @param {MouseAction} action - The action to set.
+     * @private
+     */
+    _setButtonAction(button, action) {
+        if (!mouseActions.includes(action)) {
+            console.warn(`CameraControls: invalid mouse button action: ${action}`);
+            return;
+        }
+        this._buttonActions[button] = action;
+    }
+
+    /**
+     * Appends the pan and the rotation of a mouse movement, by the action of the button which
+     * made it.
+     *
+     * @param {MouseAction} action - The action of the button.
+     * @param {Vec2} pointer - The position of the cursor at the end of the movement, in CSS pixels.
+     * @param {number} dx - The mouse delta x value.
+     * @param {number} dy - The mouse delta y value.
+     * @param {number} orbit - 1 in the orbit mode, otherwise 0.
+     * @private
+     */
+    _appendMouseMove(action, pointer, dx, dy, orbit) {
+        // a button ignored by the camera leaves its mouse movement to the application. Panning
+        // follows the pan action, or shift with any other
+        const follow = +(action !== 'none');
+        const pan = +(action === 'pan' || (this._state.shift && follow));
+
+        const panMove = this._groundPan ?
+            screenToGroundPan(this._camera, pointer.x, pointer.y, dx, dy,
+                this._pose.getFocus(tmpFocus).y, this._pose.angles.y, tmpPan) :
+            screenToWorld(this._camera, dx, dy, this._pose.distance, tmpPan);
+        panMove.mulScalar(orbit * pan * +this.enablePan);
+        frame.deltas.move.append([panMove.x, panMove.y, panMove.z]);
+
+        const rotate = follow * (1 - orbit * pan) * this.rotateSpeed;
+        frame.deltas.rotate.append([dx * rotate, dy * rotate, 0]);
     }
 
     /**
@@ -749,18 +1010,27 @@ class CameraControls extends Script {
         this._state.ctrl += key[keyCode.CTRL];
         this._state.touches += count[0];
 
-        if (button[0] === 1 || button[1] === 1 || wheel[0] !== 0) {
-            // left mouse button, middle mouse button, mouse wheel
+        // a pressed button starts the mode of its action, and the mouse movement follows the
+        // action of the last button pressed
+        const pressedButton = this._pressedButton;
+        this._pressedButton = -1;
+        if (pressedButton >= 0) {
+            this._activeButton = pressedButton;
+        }
+        const pressed = pressedButton >= 0 ? this._buttonActions[pressedButton] : 'none';
+        const action = this._activeButton >= 0 ? this._buttonActions[this._activeButton] : 'none';
+
+        if (wheel[0] !== 0 || pressed === 'orbit' || pressed === 'pan') {
+            // mouse wheel, or a button which orbits or pans
             this._setMode('orbit');
-        } else if (button[2] === 1 || this._state.axis.length() > 0) {
-            // right mouse button or any movement
+        } else if (pressed === 'look' || this._state.axis.length() > 0) {
+            // a button which looks, or any movement
             this._setMode('fly');
         }
 
         const orbit = +(this._mode === 'orbit');
         const fly = +(this._mode === 'fly');
         const double = +(this._state.touches > 1);
-        const desktopPan = +(this._state.shift || this._state.mouse[1]);
         const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
         // rate-based multipliers (keyboard, gamepad, virtual joystick)
@@ -779,17 +1049,17 @@ class CameraControls extends Script {
         const v = tmpV1.set(0, 0, 0);
         const keyMove = this._state.axis.clone().normalize();
         v.add(keyMove.mulScalar(fly * moveMult));
-        const panMove = screenToWorld(this._camera, mouse[0], mouse[1], this._pose.distance);
-        v.add(panMove.mulScalar(orbit * desktopPan * +this.enablePan));
         const wheelMove = tmpV2.set(0, 0, wheel[0]);
         v.add(wheelMove.mulScalar(orbit * zoomDeltaMult));
         deltas.move.append([v.x, v.y, v.z]);
 
-        // desktop rotate
-        v.set(0, 0, 0);
-        const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar((1 - (orbit * desktopPan)) * rotateDeltaMult));
-        deltas.rotate.append([v.x, v.y, v.z]);
+        // desktop mouse
+        this._appendMouseMove(action, this._pointer, mouse[0], mouse[1], orbit);
+
+        // the movement of the button has been applied, until it is released
+        if (this._activeButton >= 0 && this._state.mouse[this._activeButton] <= 0) {
+            this._activeButton = -1;
+        }
 
         // mobile move
         v.set(0, 0, 0);

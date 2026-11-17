@@ -123,6 +123,46 @@ describe('Color', function () {
 
     });
 
+    describe('#linear', function () {
+
+        it('converts with the exact sRGB transfer function, leaving alpha unchanged', function () {
+            const c = new Color(0.5, 0.04, 1, 0.25).linear();
+            expect(c.r).to.be.closeTo(0.214041, 1e-6);
+            // below the threshold of 0.04045 the transfer function is linear
+            expect(c.g).to.be.closeTo(0.04 / 12.92, 1e-9);
+            expect(c.b).to.equal(1);
+            expect(c.a).to.equal(0.25);
+        });
+
+        it('leaves the source color unchanged', function () {
+            const src = new Color(0.5, 0.5, 0.5);
+            const c = new Color().linear(src);
+            expect(c.r).to.be.closeTo(0.214041, 1e-6);
+            expect(src.r).to.equal(0.5);
+        });
+
+    });
+
+    describe('#gamma', function () {
+
+        it('converts with the exact sRGB transfer function, leaving alpha unchanged', function () {
+            const c = new Color(0.214041, 0.002, 1, 0.25).gamma();
+            expect(c.r).to.be.closeTo(0.5, 1e-6);
+            expect(c.g).to.be.closeTo(0.002 * 12.92, 1e-9);
+            expect(c.b).to.be.closeTo(1, 1e-9);
+            expect(c.a).to.equal(0.25);
+        });
+
+        it('inverts linear for every 8-bit value', function () {
+            const c = new Color();
+            for (let i = 0; i <= 255; i++) {
+                c.set(i / 255, i / 255, i / 255).linear().gamma();
+                expect(Math.round(c.r * 255)).to.equal(i);
+            }
+        });
+
+    });
+
     describe('#lerp', function () {
 
         it('linearly interpolates between two colors with alpha of 0', function () {
@@ -218,6 +258,22 @@ describe('Color', function () {
         it('returns a string representation of an arbitrary color (with double digit alpha)', function () {
             const c = new Color(0.1, 0.2, 0.3, 0.4);
             expect(c.toString(true)).to.equal('#1a334d66');
+        });
+
+        it('returns a two digit alpha when alpha rounds up to 16', function () {
+            const c = new Color(0.1, 0.2, 0.3, 0.062);
+            expect(c.toString(true)).to.equal('#1a334d10');
+            expect(new Color().fromString(c.toString(true)).a).to.equal(16 / 255);
+        });
+
+        it('clamps an alpha above 1 to ff', function () {
+            const c = new Color(0.1, 0.2, 0.3, 1.5);
+            expect(c.toString(true)).to.equal('#1a334dff');
+        });
+
+        it('clamps negative components to 00', function () {
+            const c = new Color(-0.1, 0.2, 0.3, -0.1);
+            expect(c.toString(true)).to.equal('#00334d00');
         });
 
     });

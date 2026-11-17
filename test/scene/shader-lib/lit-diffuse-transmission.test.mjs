@@ -236,7 +236,9 @@ describe('Lit shader diffuse transmission', function () {
         const source = forwardShader(addBox(material));
 
         const light = 'dDiffuseTransmissionLight';
-        expect(source).to.contain('transmissionAttenuation = getRectLightDiffuse(-worldNormal');
+        // the transmission lobe of the area light loop evaluates the LTC with the flipped normal
+        expect(source).to.contain(lang('lobe == 1 ? -worldNormal : worldNormal', 'select(worldNormal, -worldNormal, lobe == 1)'));
+        expect(source).to.contain('transmissionAttenuation = lobeValue * 16.0');
         expect(source).to.contain(lang(`${light} += areaTransmission;`,
             `${light} = ${light} + areaTransmission;`));
     });

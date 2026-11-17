@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { warnInsecureContext } from '../../../core/secure-context-warning.js';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
-    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
     PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT, BINDGROUP_VIEW
 } from '../constants.js';
@@ -14,6 +14,9 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
+import { webgpuChunksGLSL } from '../shader-chunks/webgpu-chunks-glsl.js';
+import { webgpuChunksWGSL } from '../shader-chunks/webgpu-chunks-wgsl.js';
+import { webgpuComputeChunksWGSL } from '../shader-chunks/webgpu-compute-chunks-wgsl.js';
 import { getCanvasNavigatorGpu } from './navigator-gpu.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
@@ -40,10 +43,15 @@ import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
+ * @import { IndexBuffer } from '../index-buffer.js'
  * @import { RenderPass } from '../render-pass.js'
  * @import { Shader } from '../shader.js'
  * @import { Texture } from '../texture.js'
+ * @import { VertexBuffer } from '../vertex-buffer.js'
  */
+
+// the methods of the pass encoder of a precompile pass, which records nothing
+const _noop = () => {};
 
 // #if _DEBUG
 const _uniqueLocations = new Map();
@@ -379,6 +387,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     externalBackbuffer = null;
 
     /**
+     * True between {@link WebgpuGraphicsDevice#frameStart} and {@link WebgpuGraphicsDevice#frameEnd},
+     * when the backbuffer has a color texture of the current frame assigned. Used to detect
+     * rendering to the backbuffer outside of this window, where the assigned texture is stale.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _backBufferValid = false;
+
+    /**
      * Current command buffer encoder.
      *
      * @type {GPUCommandEncoder|null}
@@ -414,6 +432,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
+        this.platformChunksGLSL = webgpuChunksGLSL;
+        this.platformChunksWGSL = webgpuChunksWGSL;
+        this.computeChunks = webgpuComputeChunksWGSL;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }
@@ -978,6 +999,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
         this.bindGroupFormats.length = 0;
         this.renderPipeline.cache.clear();
+        this.renderPipeline.clearAsync();
         this.computePipeline.cache.clear();
     }
 
@@ -1115,12 +1137,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // assign current frame's render texture
         wrt.assignColorTexture(outColorBuffer, attachmentViewFormat);
 
+        this._backBufferValid = true;
+
         WebgpuDebug.end(this, 'frameStart');
         WebgpuDebug.end(this, 'frameStart');
     }
 
+    precompileFrameEnd() {
+        super.precompileFrameEnd();
+
+        // submit the work recorded during the frame, such as compute dispatches, which a rendered
+        // frame submits at its end
+        this.submit();
+        this._indirectDrawNextIndex = 0;
+        this._indirectDispatchNextIndex = 0;
+    }
+
     frameEnd() {
         super.frameEnd();
+        this._backBufferValid = false;
         this.gpuProfiler.frameEnd();
 
         // submit scheduled command buffers
@@ -1202,7 +1237,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
-            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
             DebugHelper.setName(this._indirectDrawBuffer, 'WebgpuGraphicsDevice.indirectDraw');
             this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
@@ -1236,7 +1271,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDispatchBuffer === null) {
-            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
             DebugHelper.setName(this._indirectDispatchBuffer, 'WebgpuGraphicsDevice.indirectDispatch');
             this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
         }
@@ -1365,6 +1400,78 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
     // #endif
 
+    /**
+     * Looks up the render pipeline of a draw with the current device state, creating it when
+     * missing.
+     *
+     * @param {object} primitive - The primitive.
+     * @param {IndexBuffer|undefined} indexBuffer - The index buffer.
+     * @param {VertexBuffer|undefined} vb0 - The first vertex buffer.
+     * @param {VertexBuffer|undefined} vb1 - The second vertex buffer.
+     * @param {boolean} async - True to create a missing pipeline asynchronously.
+     * @returns {GPURenderPipeline|null} The pipeline, or null while it is created asynchronously.
+     * @private
+     */
+    getPipeline(primitive, indexBuffer, vb0, vb1, async) {
+        return this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+            this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+            this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage, async);
+    }
+
+    startPrecompilePass(renderTarget) {
+        Debug.assert(!this.insideRenderPass, 'A precompile pass cannot be started inside a render pass.');
+
+        const rt = renderTarget ?? this.backBuffer;
+
+        // the back buffer is set up at the start of a frame, which a precompile frame does not
+        // start, as that would present an empty frame. Its formats are what the pipelines use
+        if (rt === this.backBuffer) {
+            if (!rt.initialized) {
+                const { width, height } = this.canvas;
+                this.backBufferSize.set(width, height);
+                rt._width = width;
+                rt._height = height;
+                rt.impl.setColorAttachment(0, undefined, this.backBufferViewFormat);
+                this.initRenderTarget(rt);
+            }
+        } else {
+            this.initRenderTarget(rt);
+        }
+
+        this._uploadDirtyTextures();
+
+        // the render target is used for the formats of the render pipelines, while the commands go
+        // to a pass encoder which records nothing
+        this.renderTarget = rt;
+        this._nullPassEncoder ??= new Proxy({}, { get: () => _noop });
+        this.passEncoder = this._nullPassEncoder;
+        this.setupPassEncoderDefaults();
+        this.insideRenderPass = true;
+        this._precompilePass = true;
+
+        const { width, height } = rt;
+        this.setViewport(0, 0, width, height);
+        this.setScissor(0, 0, width, height);
+    }
+
+    endPrecompilePass() {
+
+        // the draws wrote the transforms of their mesh instances, which no command buffer submits
+        // in a frame which only precompiles. They are uploaded now, so that the next frame writing
+        // them starts a new upload, as it does after a submit
+        this.meshInstanceStorage?.upload();
+
+        this.passEncoder = null;
+        this.insideRenderPass = false;
+        this._precompilePass = false;
+        this.shaderAsyncCompile = false;
+        this.bindGroupFormats.length = 0;
+    }
+
+    getPrecompilePendingCount() {
+        return this.renderPipeline.pendingCount;
+    }
+
     draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true, firstInstance = 0) {
 
         if (this.shader.ready && !this.shader.failed) {
@@ -1410,10 +1517,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     this._pipelineVertexHash1 = vertexHash1;
                     this._pipelineIndexFormat = indexFormat;
 
-                    pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
-                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
-                    Debug.assert(pipeline);
+                    pipeline = this.getPipeline(primitive, indexBuffer, vb0, vb1, this.shaderAsyncCompile);
+
+                    // with an async compile, a missing pipeline is created asynchronously and the
+                    // draw is skipped, see setShader. It is looked up again by the next draw
+                    if (!pipeline) {
+                        Debug.assert(this.shaderAsyncCompile);
+                        this._pipelineDirty = true;
+                        if (last) {
+                            this.clearVertexBuffer();
+                        }
+                        return;
+                    }
 
                     if (this.pipeline !== pipeline) {
                         this.pipeline = pipeline;
@@ -1423,9 +1538,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                 Debug.call(() => {
                     // the pipeline reused without a lookup is the one a lookup would return
-                    const expected = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
-                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
+                    const expected = this.getPipeline(primitive, indexBuffer, vb0, vb1, false);
                     Debug.assert(expected === pipeline, 'A render state change was not tracked, the draw reused a stale render pipeline.', this);
                 });
             }
@@ -1467,7 +1580,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // track draw calls - always count as 1 (one material setup, one API call)
             this._drawCallsPerFrame++;
 
-            // #if _PROFILER
+            // #if _DEBUG
             // track primitive count
             if (drawCommands) {
                 // use pre-calculated primitive count from drawCommands
@@ -1486,6 +1599,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setShader(shader, asyncCompile = false) {
+
+        // a precompile pass compiles asynchronously whatever it renders
+        this.shaderAsyncCompile = asyncCompile || this._precompilePass;
 
         if (shader !== this.shader) {
             this.shader = shader;
@@ -1639,6 +1755,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.renderTarget = rt;
         Debug.assert(rt);
 
+        // the backbuffer color texture is acquired in frameStart, before that (for example in the
+        // application 'update' event) it is the expired texture of the previous frame, or missing
+        Debug.call(() => {
+            if (rt === this.backBuffer && !this._backBufferValid) {
+                Debug.errorOnce(`Render pass '${renderPass.name}' renders to the backbuffer outside of the frame (before frameStart or after frameEnd), where its color texture is not valid. Render to the backbuffer from the 'prerender' or 'postrender' application event, or from a render pass that is part of the frame, instead of for example the 'update' event.`);
+            }
+        });
+
         /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
 
@@ -1735,7 +1859,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (colorOps.genMipmaps) {
                 const renderTarget = renderPass.renderTarget;
                 const colorBuffer = renderTarget._colorBuffers[i];
-                this.mipmapRenderer.generate(colorBuffer.impl, renderTarget.getLayer(colorBuffer));
+                this.mipmapRenderer.generate(colorBuffer.impl, renderTarget.getLayer(colorBuffer), colorBuffer.mipmapFilter);
             }
         }
 
@@ -2107,6 +2231,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(storageBuffer.buffer);
         Debug.assert(data);
         this.wgpu.queue.writeBuffer(storageBuffer.buffer, bufferOffset, data, dataOffset, size);
+    }
+
+    /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        this.mipmapRenderer.generate(texture.impl, undefined, texture.mipmapFilter);
     }
 
     /**

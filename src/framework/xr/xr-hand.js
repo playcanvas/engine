@@ -134,7 +134,7 @@ class XrHand extends EventHandler {
 
                 this._joints.push(joint);
                 this._jointsById[jointId] = joint;
-                if (joint.tip) {
+                if (joint.isTip) {
                     this._tips.push(joint);
                     finger._tip = joint;
                 }
@@ -165,11 +165,11 @@ class XrHand extends EventHandler {
                 if (pose) {
                     joint.update(pose);
 
-                    if (joint.wrist && !this._tracking) {
+                    if (joint.isWrist && !this._tracking) {
                         this._tracking = true;
                         this.fire('tracking');
                     }
-                } else if (joint.wrist) {
+                } else if (joint.isWrist) {
                     // lost tracking
 
                     if (this._tracking) {
@@ -180,6 +180,10 @@ class XrHand extends EventHandler {
                 }
             }
         }
+
+        // a controller's hand (posed from its finger sensors) keeps the controller's own target
+        // ray and squeeze
+        if (!this._inputSource._bareHand) return;
 
         const j1 = this._jointsById['thumb-metacarpal'];
         const j4 = this._jointsById['thumb-tip'];

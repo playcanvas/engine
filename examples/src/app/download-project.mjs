@@ -102,14 +102,16 @@ const scanAssetUrls = (sources) => {
 };
 
 /**
- * A font asset loads its texture pages from urls derived from its own, which the example source
- * never names: 'name.png', then 'name1.png', 'name2.png' and so on (mirrors FontHandler).
+ * A JSON asset can load images from beside itself, which the example source never names. A font
+ * loads its texture pages: 'name.png', then 'name1.png', 'name2.png' and so on (mirrors
+ * FontHandler). A sprite sheet loads the image its `meta.image` names (mirrors
+ * TextureAtlasHandler).
  *
  * @param {string} url - Url of a bundled asset.
  * @param {Uint8Array} bytes - The asset's contents.
- * @returns {string[]} The urls of the font's texture pages, or none if the asset is not a font.
+ * @returns {string[]} The urls of the images, or none if the asset is not a font or sprite sheet.
  */
-const fontPages = (url, bytes) => {
+const jsonImages = (url, bytes) => {
     if (!url.endsWith('.json')) {
         return [];
     }
@@ -118,6 +120,11 @@ const fontPages = (url, bytes) => {
         data = JSON.parse(strFromU8(bytes));
     } catch {
         return [];
+    }
+    const image = data?.meta?.image;
+    if (typeof image === 'string' && !/^(?:[a-z][\w+.-]*:|\/)/i.test(image)) {
+        // the site's own path for the image beside the sheet
+        return [new URL(image, `https://site${url}`).pathname];
     }
     if (!data?.info || !data.chars) {
         return [];
@@ -329,7 +336,7 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
     add('vite.config.mjs', VITE_CONFIG);
 
     // scan + fetch referenced assets into public/ (paths resolve unchanged under Vite), with the
-    // texture pages of any fonts among them
+    // images any fonts or sprite sheets among them load
     const { urls, dynamic } = scanAssetUrls([files['example.mjs']]);
     /** @type {Set<string>} */
     const fetched = new Set();
@@ -349,7 +356,7 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
         }
         const bytes = new Uint8Array(await res.arrayBuffer());
         out[`${root}/public${u}`] = bytes;
-        await Promise.all(fontPages(u, bytes).map(fetchAsset));
+        await Promise.all(jsonImages(u, bytes).map(fetchAsset));
     };
     await Promise.all(urls.map(fetchAsset));
 

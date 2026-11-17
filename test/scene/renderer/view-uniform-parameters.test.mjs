@@ -72,7 +72,7 @@ describe('View uniform parameters', function () {
         material.setParameter('light_radius', 1);
         material.update();
         const meshInstance = addBox(material);
-        meshInstance.castShadow = true;
+        meshInstance.castShadows = true;
         app.render();
 
         expect(warnings()).to.include('Material#setParameter: \'light_radius\' is a uniform the renderer supplies once per pass, and a value set per material is ignored.');

@@ -2,9 +2,13 @@ import { TextParser } from '../parsers/text.js';
 import { ResourceHandler } from './handler.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ */
+
+/**
  * Resource handler for the `text` asset type. Loads a file as a string.
  *
- * @ignore
+ * @category Asset
  */
 class TextHandler extends ResourceHandler {
     /**
@@ -15,6 +19,12 @@ class TextHandler extends ResourceHandler {
      */
     decoder = null;
 
+    /**
+     * Create a new TextHandler instance.
+     *
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
+     */
     constructor(app) {
         super(app, 'text');
         this.addParser(new TextParser());
@@ -25,6 +35,7 @@ class TextHandler extends ResourceHandler {
      *
      * @param {DataView} data - The raw data as a DataView
      * @returns {string} The parsed resource data.
+     * @ignore
      */
     openBinary(data) {
         this.decoder ??= new TextDecoder('utf-8');

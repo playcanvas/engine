@@ -15,6 +15,8 @@ const _viewport = new Vec4();
  * it, and then render the result to an output render target or the screen if no output is
  * specified.
  *
+ * @deprecated Use {@link CameraFrame} and {@link CameraFrameEffect} instead.
+ * @ignore
  * @category Graphics
  */
 class PostEffect {

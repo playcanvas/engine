@@ -38,13 +38,13 @@ const LENSFLARE_ELEMENT_TEXTURE_WIDTH = 1536;
  * the effect:
  *
  * - flareData: x, y the source in normalized device coordinates, z the fade, w the scale; then
- *   r, g, b the colour.
+ *   r, g, b the color.
  * - occlusionData: x, y the source, z the depth the scene is tested against, w the occlusion
  *   radius in screen heights; then x the blend factor with the previous visibility, y 1 for a
  *   source on screen, 0 for one off screen whose visibility is kept, -1 for one behind the camera.
  *
  * The elements are supplied as an RGBA32F texture of three texels per element: offset, size,
- * aspect, rotation in radians; colour and the auto rotate flag; the index of the flare and the
+ * aspect, rotation in radians; color and the auto rotate flag; the index of the flare and the
  * layer of the shape.
  *
  * @ignore

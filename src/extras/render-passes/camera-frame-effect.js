@@ -446,8 +446,8 @@ class CameraFrameEffect {
 
     /**
      * Gets the name of the function the composition calls at the effect's slot. Derived from the
-     * id as `apply<Id>` unless given. The signature depends on the slot: colour slots take
-     * `(vec3 color, vec2 uv)` and return the colour, {@link COMPOSESLOT_SCENE} takes and returns a
+     * id as `apply<Id>` unless given. The signature depends on the slot: color slots take
+     * `(vec3 color, vec2 uv)` and return the color, {@link COMPOSESLOT_SCENE} takes and returns a
      * `vec4`.
      *
      * @type {string}

@@ -13,12 +13,12 @@ import wgslComposeAutoExposurePS from './wgsl/compose-ps.js';
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
 
-// the log2 of the brightness the average of the screen is displayed at, middle grey, before the
+// the log2 of the brightness the average of the screen is displayed at, middle gray, before the
 // exposure compensation
 const LOG2_MIDDLE_GREY = Math.log2(0.18);
 
 // how far the range of brightness the histogram covers extends beyond the brightness the limits of
-// the exposure display as middle grey, in EV, so that the parts of the screen the average leaves
+// the exposure display as middle gray, in EV, so that the parts of the screen the average leaves
 // out are still counted apart from the parts it includes
 const RANGE_MARGIN = 4;
 
@@ -28,7 +28,7 @@ const RANGE_MARGIN = 4;
  * of the brightness of the screen and averages the part of it between two fractions of the
  * screen, leaving out the darkest and the brightest parts, such as deep shadows and the sun. It
  * then changes the exposure gradually towards the one which displays that average as middle
- * grey.
+ * gray.
  *
  * The exposure it adapts is the one the camera renders with: the exposure of the scene, or the
  * exposure of the physical camera with physical units, which it scales by up to
@@ -51,7 +51,7 @@ const RANGE_MARGIN = 4;
  */
 class AutoExposureEffect extends CameraFrameEffect {
     /**
-     * The exposure compensation in EV: how much brighter than middle grey the average of the
+     * The exposure compensation in EV: how much brighter than middle gray the average of the
      * screen is displayed. Positive values brighten the image, negative values darken it, each
      * step doubling or halving it. Defaults to 0.
      *
@@ -251,7 +251,7 @@ class AutoExposureEffect extends CameraFrameEffect {
     /**
      * Gets the latest histogram of the brightness of the screen read back, the weight of each of
      * its 64 bins, from the darkest to the brightest. The bins span the brightness the limits of
-     * the exposure display as middle grey, and 4 EV beyond on either side; brightness outside of
+     * the exposure display as middle gray, and 4 EV beyond on either side; brightness outside of
      * that counts in the bin at the end. The array is updated in place as histograms arrive.
      *
      * @type {Uint32Array}
@@ -354,7 +354,7 @@ class AutoExposureEffect extends CameraFrameEffect {
         this._exposure = baseExposure * this._exposureScale;
 
         // the range of brightness the histogram measured this frame covers: from the brightness the
-        // highest exposure displays as middle grey to the brightness the lowest one does, and a
+        // highest exposure displays as middle gray to the brightness the lowest one does, and a
         // margin beyond either
         const pass = this._pass;
         pass.rangeMin = key - log2Base - maxEv - RANGE_MARGIN;
@@ -362,7 +362,7 @@ class AutoExposureEffect extends CameraFrameEffect {
         pass.centerWeight = this._centerWeight;
         pass.tag = this._measurement;
 
-        // the debug view marks the brightness the camera exposes as middle grey, along the range
+        // the debug view marks the brightness the camera exposes as middle gray, along the range
         // the displayed histogram was measured over
         const [barsMin, barsMax] = this._barsRange;
         this._markers[3] = barsMax > barsMin ? (key - Math.log2(this._exposure) - barsMin) / (barsMax - barsMin) : 0;

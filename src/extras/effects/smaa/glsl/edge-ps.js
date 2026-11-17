@@ -31,7 +31,7 @@ export default /* glsl */`
     void main(void) {
         vec2 texel = smaaMetrics.xy;
 
-        // the brightness differences to the left and the top neighbours
+        // the brightness differences to the left and the top neighbors
         float L = smaaLuma(uv0);
         float Lleft = smaaLuma(uv0 - vec2(texel.x, 0.0));
         float Ltop = smaaLuma(uv0 - vec2(0.0, texel.y));
@@ -44,7 +44,7 @@ export default /* glsl */`
             discard;
         }
 
-        // the differences to the right and the bottom neighbours
+        // the differences to the right and the bottom neighbors
         float Lright = smaaLuma(uv0 + vec2(texel.x, 0.0));
         float Lbottom = smaaLuma(uv0 + vec2(0.0, texel.y));
         delta.zw = abs(L - vec2(Lright, Lbottom));

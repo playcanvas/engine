@@ -498,7 +498,7 @@ class WebgpuShaderProcessorWGSL {
 
         // VS - convert a list of attributes to a shader block with fixed locations
         const attributesMap = new Map();
-        const attributesBlock = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader, device, vertexExtracted.src, vertexInputName);
+        const attributes = WebgpuShaderProcessorWGSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions, shader, device, vertexExtracted.src, vertexInputName);
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = WebgpuShaderProcessorWGSL.processVaryings(vertexExtracted.varyings, varyingMap, true, device);
@@ -541,11 +541,11 @@ class WebgpuShaderProcessorWGSL {
         );
 
         // inject the call to the function which copies the shader input globals
-        vertexExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(vertexExtracted.src, shader);
+        vertexExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(vertexExtracted.src, shader, attributes.builtins);
         fragmentExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(fragmentExtracted.src, shader);
 
         // VS - insert the blocks to the source
-        const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}\n${resourcesData.code}\n`;
+        const vBlock = `${attributes.code}\n${vertexVaryingsBlock}\n${uniformsData.code}\n${resourcesData.code}\n`;
         const vshader = vertexExtracted.src.replace(MARKER, vBlock);
 
         // FS - insert the blocks to the source
@@ -1333,7 +1333,8 @@ class WebgpuShaderProcessorWGSL {
             blockAttributes.length > 0
         );
 
-        return `
+        // the built-ins are not copied by _pcCopyInputs, but by the entry function, see copyInputs
+        const code = `
             struct VertexInput {
                 ${blockAttributes}
                 ${renderBuiltinStructFields(usedBuiltins)}
@@ -1344,9 +1345,10 @@ class WebgpuShaderProcessorWGSL {
 
             fn _pcCopyInputs(input: VertexInput) {
                 ${blockCopy}
-                ${renderBuiltinCopies(usedBuiltins)}
             }
         `;
+
+        return { code, builtins: usedBuiltins };
     }
 
     /**
@@ -1355,11 +1357,18 @@ class WebgpuShaderProcessorWGSL {
      * function (not hoisted) so the brace position is always derived from the current `src` - any
      * earlier source-modifying step (e.g. `renameUniformAccess`) would invalidate a cached position.
      *
+     * The given built-ins are copied right after that call, in the entry function itself. The HLSL
+     * backend of naga (Firefox on Windows) adds the first vertex and the first instance of the draw,
+     * which D3D12 leaves out of SV_VertexID and SV_InstanceID, only to the built-ins read in the
+     * entry function, and not to those of the input struct passed to another function, see
+     * https://github.com/gfx-rs/wgpu/issues/4564.
+     *
      * @param {string} src - The source string containing the WGSL code.
      * @param {Shader} shader - The shader.
+     * @param {{ pcName: string, wgslName: string }[]} [builtins] - The built-ins to copy.
      * @returns {string} - The modified source string.
      */
-    static copyInputs(src, shader) {
+    static copyInputs(src, shader, builtins = []) {
         const match = src.match(ENTRY_FUNCTION);
 
         // check if match exists AND the parameter name (Group 2) was captured
@@ -1375,7 +1384,8 @@ class WebgpuShaderProcessorWGSL {
         const beginning = src.slice(0, braceIndex + 1);
         const end = src.slice(braceIndex + 1);
 
-        const lineToInject = `\n    _pcCopyInputs(${inputName});`;
+        const builtinCopies = builtins.map(b => `\n    ${b.pcName} = ${inputName}.${b.wgslName};`).join('');
+        const lineToInject = `\n    _pcCopyInputs(${inputName});${builtinCopies}`;
         return beginning + lineToInject + end;
     }
 

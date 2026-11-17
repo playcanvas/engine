@@ -187,8 +187,11 @@ class MorphInstance {
     setWeight(key, weight) {
         const index = this._getWeightIndex(key);
         Debug.assert(index >= 0 && index < this.morph._targets.length);
-        this._weights[index] = weight;
-        this._dirty = true;
+        // only an actual change needs the morph to be updated
+        if (this._weights[index] !== weight) {
+            this._weights[index] = weight;
+            this._dirty = true;
+        }
     }
 
     /**

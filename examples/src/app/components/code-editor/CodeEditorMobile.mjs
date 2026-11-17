@@ -13,19 +13,12 @@ import { jsx } from '../../jsx.mjs';
 const GITHUB_ROOT = 'https://github.com/playcanvas/engine/blob/main';
 
 /**
- * @param {string} example - Example name.
- * @param {string} file - File suffix.
- * @returns {string} Source file name.
- */
-const sourceName = (example, file) => `${example}.${file}`;
-
-/**
  * @param {string} category - Example category.
  * @param {string} example - Example name.
- * @param {string} file - File suffix.
+ * @param {string} file - File name.
  * @returns {string} Source URL.
  */
-const sourceUrl = (category, example, file) => `${GITHUB_ROOT}/examples/src/examples/${category}/${sourceName(example, file)}`;
+const sourceUrl = (category, example, file) => `${GITHUB_ROOT}/examples/src/examples/${category}/${example}/${file}`;
 
 class CodeEditorMobile extends CodeEditorBase {
     /**

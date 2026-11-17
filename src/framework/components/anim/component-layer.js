@@ -25,7 +25,7 @@ import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
  *
  * @example
  * // Fade in an upper-body layer and play its 'Wave' state over the base layer
- * const layer = entity.anim.findAnimationLayer('UpperBody');
+ * const layer = entity.anim.findLayer('UpperBody');
  * layer.blendToWeight(1, 0.3);
  * layer.play('Wave');
  *
@@ -321,7 +321,12 @@ class AnimComponentLayer {
         this._controller.rebind();
     }
 
-    update(dt) {
+    /**
+     * @param {number} dt - The time elapsed since the last update, in seconds.
+     * @param {boolean} [evaluate] - Whether the animation should be evaluated and applied.
+     * @ignore
+     */
+    update(dt, evaluate = true) {
         if (this._blendTime) {
             if (this._blendTimeElapsed < this._blendTime) {
                 this.weight = math.lerp(this._startingWeight, this._targetWeight, this._blendTimeElapsed / this._blendTime);
@@ -334,7 +339,7 @@ class AnimComponentLayer {
                 this._targetWeight = 0;
             }
         }
-        this._controller.update(dt);
+        this._controller.update(dt, evaluate);
     }
 
 

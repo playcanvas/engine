@@ -274,6 +274,20 @@ class FrameGraph {
         renderTargetMap.clear();
     }
 
+    /**
+     * Prepares the shaders and the render pipelines of the passes of the frame, without rendering
+     * it, see {@link AppBase#precompile}. Only the passes which would execute take part.
+     */
+    precompile() {
+        const passes = this.passes;
+        for (let i = 0; i < passes.length; i++) {
+            const pass = passes[i];
+            if (pass.enabled && pass.executeEnabled) {
+                pass.precompile();
+            }
+        }
+    }
+
     render(device) {
 
         this.compile();

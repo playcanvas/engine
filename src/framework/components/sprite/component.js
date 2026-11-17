@@ -452,7 +452,9 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * Sets the dictionary that contains {@link SpriteAnimationClip}s.
+     * Sets the dictionary that contains {@link SpriteAnimationClip}s. Each entry can also be the
+     * data of a clip, as {@link addClip} takes it, in which case its key names a clip that has no
+     * name.
      *
      * @type {Object<string, SpriteAnimationClip>}
      */
@@ -470,7 +472,7 @@ class SpriteComponent extends Component {
         for (const name in this._clips) {
             let found = false;
             for (const key in value) {
-                if (value[key].name === name) {
+                if ((value[key].name ?? key) === name) {
                     found = true;
                     this._clips[name].fps = value[key].fps;
                     this._clips[name].loop = value[key].loop;
@@ -492,9 +494,9 @@ class SpriteComponent extends Component {
 
         // add clips that do not exist
         for (const key in value) {
-            if (this._clips[value[key].name]) continue;
+            if (this._clips[value[key].name ?? key]) continue;
 
-            this.addClip(value[key]);
+            this._addNamedClip(key, value[key]);
         }
 
         // auto play clip
@@ -904,8 +906,8 @@ class SpriteComponent extends Component {
         // create mesh instance if it doesn't exist yet
         if (!this._meshInstance) {
             this._meshInstance = new MeshInstance(mesh, this._material, this._node);
-            this._meshInstance.castShadow = false;
-            this._meshInstance.receiveShadow = false;
+            this._meshInstance.castShadows = false;
+            this._meshInstance.receiveShadows = false;
             this._meshInstance.drawOrder = this._drawOrder;
 
             this._updateColor();
@@ -1106,7 +1108,21 @@ class SpriteComponent extends Component {
      * @param {boolean} [data.loop] - Whether to loop the animation clip.
      * @param {number|Asset} [data.spriteAsset] - The asset id or
      * the {@link Asset} of the sprite that this clip will play.
+     * @param {Sprite} [data.sprite] - The sprite that this clip will play, for a clip with no
+     * sprite asset, such as one whose sprite is built from the frames of a {@link TextureAtlas}.
      * @returns {SpriteAnimationClip} The new clip that was added.
+     * @example
+     * // a clip of four frames of a texture atlas
+     * const clip = entity.sprite.addClip({
+     *     name: 'walk',
+     *     fps: 12,
+     *     loop: true,
+     *     sprite: new Sprite(app.graphicsDevice, {
+     *         atlas: atlas,
+     *         frameKeys: ['walk-0', 'walk-1', 'walk-2', 'walk-3'],
+     *         pixelsPerUnit: 16
+     *     })
+     * });
      */
     addClip(data) {
         const clip = new SpriteAnimationClip(this, {
@@ -1116,6 +1132,11 @@ class SpriteComponent extends Component {
             spriteAsset: data.spriteAsset
         });
 
+        // a sprite asset provides the sprite of its clip, when it loads
+        if (data.sprite && !data.spriteAsset) {
+            clip.sprite = data.sprite;
+        }
+
         this._clips[data.name] = clip;
 
         if (clip.name && clip.name === this._autoPlayClip) {
@@ -1123,6 +1144,28 @@ class SpriteComponent extends Component {
         }
 
         return clip;
+    }
+
+    /**
+     * Adds a clip from an entry of a dictionary of clips. An entry with no name is named by its
+     * key.
+     *
+     * @param {string} key - The key of the entry.
+     * @param {object} data - The clip data, as {@link addClip} takes it.
+     * @returns {SpriteAnimationClip} The new clip that was added.
+     * @ignore
+     */
+    _addNamedClip(key, data) {
+        if (data.name !== undefined) {
+            return this.addClip(data);
+        }
+        return this.addClip({
+            name: key,
+            fps: data.fps,
+            loop: data.loop,
+            spriteAsset: data.spriteAsset,
+            sprite: data.sprite
+        });
     }
 
     /**

@@ -14,7 +14,7 @@ import { createSmaaLookupTextures } from './smaa-lookup.js';
 /**
  * The SMAA effect - Subpixel Morphological Anti-Aliasing (SMAA 1x), a technique smoothing the
  * jagged edges of the rendered geometry. It finds the edges in the image, recognizes the shape of
- * each aliased edge, and blends the pixels along it with their neighbours by the area the edge
+ * each aliased edge, and blends the pixels along it with their neighbors by the area the edge
  * before aliasing would cover. Unlike temporal anti-aliasing it works within a single frame: it
  * does not jitter the camera, needs no history and does not ghost, at the cost of not resolving
  * detail finer than a pixel.
@@ -45,7 +45,7 @@ import { createSmaaLookupTextures } from './smaa-lookup.js';
  */
 class SmaaEffect extends CameraFrameEffect {
     /**
-     * The brightness difference between neighbouring pixels above which they are separated by an
+     * The brightness difference between neighboring pixels above which they are separated by an
      * edge, 0-0.5 range. Lower values smooth more edges, at a higher cost, and can smooth texture
      * detail along with the geometry. Defaults to 0.1.
      *

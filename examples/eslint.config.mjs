@@ -16,6 +16,7 @@ const booleanFlags = new Set([
     'NO_DEVICE_SELECTOR',
     'NO_MINISTATS',
     'NO_INSPECTOR',
+    'CREDITS_HIDDEN',
     'WEBGPU_DISABLED',
     'WEBGPU_BARE_DISABLED',
     'WEBGL_DISABLED',
@@ -582,7 +583,7 @@ export default [
         }
     },
     {
-        files: ['src/examples/**/*.example.mjs'],
+        files: ['src/examples/**/example.mjs'],
         rules: {
             'examples/asset-loader-top-level-await': 'error',
             'examples/config-block-at-top': 'error',

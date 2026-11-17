@@ -193,7 +193,6 @@ const getBundledOptions = ({
     metafile = false
 }) => {
     const isUMD = moduleFormat === 'umd';
-    const isDebug = buildType === 'dbg';
     const isMin = buildType === 'min';
     const prefix = OUT_PREFIX[buildType];
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
@@ -210,8 +209,13 @@ const getBundledOptions = ({
         target: TARGET,
         metafile,
         ...(preserveClassFields ? { supported: CLASS_FIELD_SUPPORT } : {}),
-        sourcemap: sourcemaps ? true : isDebug ? 'inline' : false,
-        minify: isMin,
+        sourcemap: sourcemaps,
+        minifyWhitespace: isMin,
+        minifySyntax: isMin,
+        // esbuild names identifiers by use count across the whole bundle, so a small change renames
+        // most of it and swings the compressed size. The build-size workflow sets this to measure
+        // the code itself, free of that churn
+        minifyIdentifiers: isMin && !process.env.ENGINE_BUILD_NO_MANGLE,
         drop: isMin ? ['console'] : undefined,
         legalComments: 'none',
         banner: {

@@ -23,7 +23,7 @@ class SmaaEffectScript extends CameraFrameEffectScript {
     static scriptName = 'smaaEffect';
 
     /**
-     * The brightness difference between neighbouring pixels above which they are separated by an
+     * The brightness difference between neighboring pixels above which they are separated by an
      * edge. Lower values smooth more edges, at a higher cost.
      *
      * @attribute

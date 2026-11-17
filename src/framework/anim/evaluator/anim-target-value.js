@@ -41,6 +41,7 @@ class AnimTargetValue {
         this.weights = new Float32Array(component.layers.length);
         this.totalWeight = 0;
         this.counter = 0;
+        this.layerCounter = 0;
         this.lastLayer = -1;
         this.valueType = type;
         this.dirty = true;
@@ -104,6 +105,15 @@ class AnimTargetValue {
     }
 
     updateValue(index, value) {
+        // fast path: when a single fully weighted overwrite layer drives this target, the blended
+        // result is the layer value itself, so skip resetting and blending with the base value
+        if (this.layerCounter === 1 && this.mask[index] &&
+            this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE && this.getWeight(index) === 1) {
+            // the evaluator already normalized the value, so it is passed to the setter as is
+            if (this.setter) this.setter(value);
+            return;
+        }
+
         // always reset the value of the target when the counter is 0
         if (this.counter === 0) {
             AnimBlend.set(this.value, AnimTargetValue.IDENTITY_QUAT_ARR, this.valueType);

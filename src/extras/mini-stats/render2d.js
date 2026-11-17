@@ -130,7 +130,7 @@ class Render2d {
         this.material.update();
         this.meshInstance = new MeshInstance(this.mesh, this.material, new GraphNode('MiniStatsMesh'));
         this.meshInstance.cull = false;
-        this.meshInstance.castShadow = false;
+        this.meshInstance.castShadows = false;
         this.meshInstance.shaderPassMask = 0;
         // The overlay must sort after UI elements when the layer uses manual sorting.
         this.meshInstance.drawOrder = Infinity;

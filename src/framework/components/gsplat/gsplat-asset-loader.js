@@ -151,7 +151,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         const asset = this._urlToAsset.get(url);
 
         // A previous attempt resolved successfully but produced no usable resource - most
-        // commonly because the load was cancelled (aborted) while still in flight, e.g. LOD
+        // commonly because the load was canceled (aborted) while still in flight, e.g. LOD
         // requirements moved on before it finished. This is not a failure: retry unconditionally
         // whenever something asks for this URL again (callers only poll while they still want
         // it), unless the URL has genuinely, permanently failed via a real error.

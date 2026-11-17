@@ -466,7 +466,7 @@ class BatchManager {
      * - Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024
      * on high-end).
      * - Bounding box of a batch is larger than maxAabbSize in any dimension.
-     * - Mesh instances differ in shadow casting ({@link MeshInstance#castShadow}) or directional
+     * - Mesh instances differ in shadow casting ({@link MeshInstance#castShadows}) or directional
      * shadow cascade mask ({@link MeshInstance#shadowCascadeMask}).
      *
      * @param {MeshInstance[]} meshInstances - Input list of mesh instances
@@ -529,7 +529,7 @@ class BatchManager {
             const scaleSign = getScaleSign(meshInstancesLeftA[0]);
             const vertexFormatBatchingHash = meshInstancesLeftA[0].mesh.vertexBuffer.format.batchingHash;
             const indexed = meshInstancesLeftA[0].mesh.primitive[0].indexed;
-            const castShadow = meshInstancesLeftA[0].castShadow;
+            const castShadow = meshInstancesLeftA[0].castShadows;
             const shadowCascadeMask = meshInstancesLeftA[0].shadowCascadeMask;
             skipTranslucentAabb = null;
 
@@ -574,8 +574,9 @@ class BatchManager {
                     continue;
                 }
 
-                // Split by shadow casting — the batched MeshInstance exposes a single castShadow flag
-                if (castShadow !== mi.castShadow || shadowCascadeMask !== mi.shadowCascadeMask) {
+                // Split by shadow casting — the batched MeshInstance exposes a single castShadows
+                // flag
+                if (castShadow !== mi.castShadows || shadowCascadeMask !== mi.shadowCascadeMask) {
                     skipMesh(mi);
                     continue;
                 }
@@ -586,7 +587,7 @@ class BatchManager {
                     continue;
                 }
 
-                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb) && mi.drawOrder !== drawOrder) {
+                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersectsBoundingBox(mi.aabb) && mi.drawOrder !== drawOrder) {
                     skipMesh(mi);
                     continue;
                 }
@@ -870,7 +871,7 @@ class BatchManager {
             const batchedMeshInstance = new MeshInstance(mesh, material, this.rootNode);
             const sourceMeshInstance = batch.origMeshInstances[0];
 
-            batchedMeshInstance.castShadow = sourceMeshInstance.castShadow;
+            batchedMeshInstance.castShadows = sourceMeshInstance.castShadows;
             batchedMeshInstance.shadowCascadeMask = sourceMeshInstance.shadowCascadeMask;
 
             // copy the parameters through setParameter, which splits them between the scope and the

@@ -10,6 +10,10 @@ export default /* glsl */`
     #include "linearizeDepthPS"
 #endif
 
+#if SHADOW_TYPE == VSM_16F || SHADOW_TYPE == VSM_32F
+    #include "shadowEVSMExponentPS"
+#endif
+
 void main(void) {
 
     #ifdef CLIP_PLANES
@@ -48,9 +52,9 @@ void main(void) {
         if (!(depth >= 0.0 && depth <= 1.0)) discard;
 
         #if SHADOW_TYPE == VSM_32F
-            float exponent = 15.0;
+            float exponent = VSM_EXPONENT_32F;
         #else
-            float exponent = 5.54;
+            float exponent = VSM_EXPONENT_16F;
         #endif
         depth = 2.0 * depth - 1.0;
         depth =  exp(exponent * depth);

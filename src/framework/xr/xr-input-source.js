@@ -197,6 +197,15 @@ class XrInputSource extends EventHandler {
      */
     _hand = null;
 
+    /**
+     * Whether the input source is a bare tracked hand, with no device held, whose target ray and
+     * squeeze are worked out from its joints. Some runtimes (SteamVR) also give a controller a
+     * hand, posed from its finger sensors; that keeps its grip, target ray and squeeze.
+     *
+     * @private
+     */
+    _bareHand = false;
+
     /** @private */
     _velocitiesAvailable = false;
 
@@ -297,6 +306,9 @@ class XrInputSource extends EventHandler {
 
         if (xrInputSource.hand) {
             this._hand = new XrHand(this);
+            // a bare hand has a generic-hand profile, or a gamepad without axes
+            this._bareHand = !xrInputSource.gamepad?.axes.length ||
+                xrInputSource.profiles.some(profile => profile.startsWith('generic-hand'));
         }
     }
 
@@ -374,7 +386,8 @@ class XrInputSource extends EventHandler {
 
     /**
      * If input source is a tracked hand, then it will point to {@link XrHand} otherwise it is
-     * null.
+     * null. A controller can have a hand too, posed from its finger sensors (SteamVR), while it
+     * keeps its {@link XrInputSource#grip}, target ray and squeeze.
      *
      * @type {XrHand|null}
      */
@@ -463,7 +476,10 @@ class XrInputSource extends EventHandler {
         // hand
         if (this._hand) {
             this._hand.update(frame);
-        } else {
+        }
+
+        // a bare hand's ray and squeeze come from its joints (XrHand); a device has its own
+        if (!this._bareHand) {
             // grip
             const gripSpace = this._xrInputSource.gripSpace;
             if (gripSpace) {

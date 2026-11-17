@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import {
-    PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RG11B10F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
@@ -139,7 +139,7 @@ describe('GraphicsDevice', function () {
 
         it('returns the first supported format from the supplied list', function () {
             expect(device.getRenderableHdrFormat([PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F], false)).to.equal(PIXELFORMAT_RGBA32F);
-            expect(device.getRenderableHdrFormat([PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F], false)).to.equal(PIXELFORMAT_RGBA16F);
+            expect(device.getRenderableHdrFormat([PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F], false)).to.equal(PIXELFORMAT_RGBA16F);
             expect(device.getRenderableHdrFormat()).to.equal(PIXELFORMAT_RGBA16F);
         });
 

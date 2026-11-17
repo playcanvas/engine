@@ -1,9 +1,9 @@
-// Camera Frame v 1.3
+// Camera Frame v 1.4
 
 import {
-    CameraFrame as EngineCameraFrame, Script, Color,
-    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    CameraFrame as EngineCameraFrame, Script, Color, Vec3,
+    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from 'playcanvas';
 
 /**
@@ -17,7 +17,9 @@ const ToneMapping = {
     HEJL: 'hejl',
     ACES: 'aces',
     ACES2: 'aces2',
-    NEUTRAL: 'neutral'
+    NEUTRAL: 'neutral',
+    AGX: 'agx',
+    AGX_PUNCHY: 'agx-punchy'
 };
 
 /** @enum {string} */
@@ -41,12 +43,14 @@ const toneMappingMap = new Map([
     [ToneMapping.HEJL, TONEMAP_HEJL],
     [ToneMapping.ACES, TONEMAP_ACES],
     [ToneMapping.ACES2, TONEMAP_ACES2],
-    [ToneMapping.NEUTRAL, TONEMAP_NEUTRAL]
+    [ToneMapping.NEUTRAL, TONEMAP_NEUTRAL],
+    [ToneMapping.AGX, TONEMAP_AGX],
+    [ToneMapping.AGX_PUNCHY, TONEMAP_AGX_PUNCHY]
 ]);
 
 const renderFormatMap = new Map([
     [RenderFormat.RGBA8, PIXELFORMAT_RGBA8],
-    [RenderFormat.RG11B10, PIXELFORMAT_111110F],
+    [RenderFormat.RG11B10, PIXELFORMAT_RG11B10F],
     [RenderFormat.RGBA16, PIXELFORMAT_RGBA16F],
     [RenderFormat.RGBA32, PIXELFORMAT_RGBA32F]
 ]);
@@ -72,7 +76,7 @@ const resolveToneMapping = (value) => {
  * @returns {number} The engine pixel format constant.
  */
 const resolveRenderFormat = (value) => {
-    return typeof value === 'number' ? value : (renderFormatMap.get(value) ?? PIXELFORMAT_111110F);
+    return typeof value === 'number' ? value : (renderFormatMap.get(value) ?? PIXELFORMAT_RG11B10F);
 };
 
 /** @enum {string} */
@@ -309,6 +313,33 @@ class Grading {
      * @visibleif {enabled}
      */
     tint = new Color(1, 1, 1, 1);
+
+    /**
+     * The channel mixer weights of the red output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerRed = new Vec3(1, 0, 0);
+
+    /**
+     * The channel mixer weights of the green output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerGreen = new Vec3(0, 1, 0);
+
+    /**
+     * The channel mixer weights of the blue output channel: how much of the red, green and blue
+     * input channels it is made of, -2 to 2 range per component.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     */
+    mixerBlue = new Vec3(0, 0, 1);
 }
 
 /**
@@ -884,6 +915,9 @@ class CameraFrame extends Script {
             dstGrading.contrast = grading.contrast;
             dstGrading.saturation = grading.saturation;
             dstGrading.tint.copy(grading.tint);
+            dstGrading.mixerRed.copy(grading.mixerRed);
+            dstGrading.mixerGreen.copy(grading.mixerGreen);
+            dstGrading.mixerBlue.copy(grading.mixerBlue);
         }
 
         // colorLUT

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 import { RenderPassTAA } from '../../../src/extras/effects/taa/passes/render-pass-taa.js';
-import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import { createGraphicsDevice, setupShaderLibrary } from '../../device.mjs';
@@ -48,7 +48,7 @@ describe('RenderPassTAA', function () {
     it('accumulates its history at half float precision, whatever the format of the scene', function () {
         // the scene in a low precision format, which would round away the small steps the
         // history takes towards its converged value each frame
-        pass = new RenderPassTAA(device, createCamera(), { format: PIXELFORMAT_111110F });
+        pass = new RenderPassTAA(device, createCamera(), { format: PIXELFORMAT_RG11B10F });
 
         expect(pass.historyTextures).to.have.lengthOf(2);
         for (const texture of pass.historyTextures) {
@@ -58,10 +58,10 @@ describe('RenderPassTAA', function () {
 
     it('accumulates its history in the format of the scene on a device which cannot render to half float', function () {
         stub(device, 'getRenderableHdrFormat').returns(undefined);
-        pass = new RenderPassTAA(device, createCamera(), { format: PIXELFORMAT_111110F });
+        pass = new RenderPassTAA(device, createCamera(), { format: PIXELFORMAT_RG11B10F });
 
         for (const texture of pass.historyTextures) {
-            expect(texture.format).to.equal(PIXELFORMAT_111110F);
+            expect(texture.format).to.equal(PIXELFORMAT_RG11B10F);
         }
     });
 

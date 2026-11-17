@@ -10,6 +10,10 @@ export default /* wgsl */`
     #include "linearizeDepthPS"
 #endif
 
+#if SHADOW_TYPE == VSM_16F || SHADOW_TYPE == VSM_32F
+    #include "shadowEVSMExponentPS"
+#endif
+
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
@@ -53,9 +57,9 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         }
 
         #if SHADOW_TYPE == VSM_32F
-            var exponent: f32 = 15.0;
+            var exponent: f32 = VSM_EXPONENT_32F;
         #else
-            var exponent: f32 = 5.54;
+            var exponent: f32 = VSM_EXPONENT_16F;
         #endif
 
         var depth_vsm = 2.0 * depth - 1.0;

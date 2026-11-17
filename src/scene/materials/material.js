@@ -178,7 +178,7 @@ class Material {
      * This requires a multi-sampled render target, and is silently ignored when rendering to a
      * single-sampled one. On WebGPU it additionally requires the first color attachment of the
      * render target to use a blendable format with an alpha channel, and is silently ignored
-     * otherwise - note that {@link PIXELFORMAT_111110F}, the default HDR format used by
+     * otherwise - note that {@link PIXELFORMAT_RG11B10F}, the default HDR format used by
      * {@link CameraFrame}, has no alpha channel.
      */
     alphaToCoverage = false;

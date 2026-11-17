@@ -41,10 +41,10 @@ export default /* glsl */`
 
             lum = dot(color, vec3(0.2126, 0.7152, 0.0722));
             float normalizedLum = lum / max(1.0, maxChannel);
-            vec3 grey = vec3(normalizedLum) * maxChannel;
+            vec3 gray = vec3(normalizedLum) * maxChannel;
 
             float satBoost = colorEnhanceParams.z * (1.0 - sat);
-            color = mix(grey, color, 1.0 + satBoost);
+            color = mix(gray, color, 1.0 + satBoost);
         }
 
         // Dehaze - skip if zero (coherent branch)

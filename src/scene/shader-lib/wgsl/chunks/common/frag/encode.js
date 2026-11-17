@@ -3,8 +3,10 @@ fn encodeLinear(source: vec3f) -> vec4f {
     return vec4f(source, 1.0);
 }
 
+// the exact sRGB transfer, which an sRGB texture's decode inverts
 fn encodeGamma(source: vec3f) -> vec4f {
-    return vec4f(pow(source + vec3f(0.0000001), vec3f(1.0 / 2.2)), 1.0);
+    let color = max(source, vec3f(0.0));
+    return vec4f(select(1.055 * pow(color, vec3f(1.0 / 2.4)) - vec3f(0.055), color * 12.92, color <= vec3f(0.0031308)), 1.0);
 }
 
 fn encodeRGBM(source: vec3f) -> vec4f {

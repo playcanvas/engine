@@ -1,6 +1,19 @@
 import { math } from './math.js';
 
 /**
+ * Converts a 0-1 color component to a 0-255 byte, clamping values outside that range.
+ *
+ * @param {number} v - The color component.
+ * @returns {number} The byte value.
+ */
+const toByte = v => math.clamp(Math.round(v * 255), 0, 255);
+
+// The sRGB transfer functions (IEC 61966-2-1), which GPUs apply when they sample an sRGB texture
+// or write an sRGB render target, so a color converted here matches theirs exactly
+const srgbToLinear = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+const linearToSrgb = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+
+/**
  * An RGBA color.
  *
  * Each color component is a floating point value in the range 0 to 1. The {@link r} (red),
@@ -28,34 +41,6 @@ import { math } from './math.js';
  * @category Math
  */
 class Color {
-    /**
-     * The red component of the color.
-     *
-     * @type {number}
-     */
-    r;
-
-    /**
-     * The green component of the color.
-     *
-     * @type {number}
-     */
-    g;
-
-    /**
-     * The blue component of the color.
-     *
-     * @type {number}
-     */
-    b;
-
-    /**
-     * The alpha component of the color.
-     *
-     * @type {number}
-     */
-    a;
-
     /**
      * Creates a new Color instance.
      *
@@ -86,16 +71,43 @@ class Color {
     constructor(r = 0, g = 0, b = 0, a = 1) {
         const length = r.length;
         if (length === 3 || length === 4) {
-            this.r = r[0];
-            this.g = r[1];
-            this.b = r[2];
-            this.a = r[3] ?? 1;
-        } else {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
+            a = r[3] ?? 1;
+            b = r[2];
+            g = r[1];
+            r = r[0];
         }
+
+        // Fields are assigned once here instead of declared as class fields. A declaration without
+        // an initializer stores undefined first, so V8 never unboxes the field as a double and
+        // every fractional write allocates a heap number.
+
+        /**
+         * The red component of the color.
+         *
+         * @type {number}
+         */
+        this.r = r;
+
+        /**
+         * The green component of the color.
+         *
+         * @type {number}
+         */
+        this.g = g;
+
+        /**
+         * The blue component of the color.
+         *
+         * @type {number}
+         */
+        this.b = b;
+
+        /**
+         * The alpha component of the color.
+         *
+         * @type {number}
+         */
+        this.a = a;
     }
 
     /**
@@ -199,7 +211,8 @@ class Color {
     }
 
     /**
-     * Converts the color from gamma to linear color space.
+     * Converts the color from gamma (sRGB) to linear color space, using the exact sRGB transfer
+     * function. Alpha is left unchanged.
      *
      * @param {Color} [src] - The color to convert to linear color space. If not set, the operation
      * is done in place.
@@ -207,31 +220,32 @@ class Color {
      * @example
      * const c = new Color(0.5, 0.5, 0.5, 1);
      * c.linear();
-     * // c is now approximately [0.218, 0.218, 0.218, 1]
+     * // c is now approximately [0.214, 0.214, 0.214, 1]
      */
     linear(src = this) {
-        this.r = Math.pow(src.r, 2.2);
-        this.g = Math.pow(src.g, 2.2);
-        this.b = Math.pow(src.b, 2.2);
+        this.r = srgbToLinear(src.r);
+        this.g = srgbToLinear(src.g);
+        this.b = srgbToLinear(src.b);
         this.a = src.a;
         return this;
     }
 
     /**
-     * Converts the color from linear to gamma color space.
+     * Converts the color from linear to gamma (sRGB) color space, using the exact sRGB transfer
+     * function. Alpha is left unchanged.
      *
      * @param {Color} [src] - The color to convert to gamma color space. If not set, the operation is
      * done in place.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new Color(0.218, 0.218, 0.218, 1);
+     * const c = new Color(0.214, 0.214, 0.214, 1);
      * c.gamma();
      * // c is now approximately [0.5, 0.5, 0.5, 1]
      */
     gamma(src = this) {
-        this.r = Math.pow(src.r, 1 / 2.2);
-        this.g = Math.pow(src.g, 1 / 2.2);
-        this.b = Math.pow(src.b, 1 / 2.2);
+        this.r = linearToSrgb(src.r);
+        this.g = linearToSrgb(src.g);
+        this.b = linearToSrgb(src.b);
         this.a = src.a;
         return this;
     }
@@ -304,7 +318,9 @@ class Color {
     /**
      * Converts the color to string form. The format is '#RRGGBBAA', where RR, GG, BB, AA are the
      * red, green, blue and alpha values. When the alpha value is not included (the default), this
-     * is the same format as used in HTML/CSS.
+     * is the same format as used in HTML/CSS. Negative components, and an alpha above 1, are
+     * clamped to the 0-1 range so the output always has two hex digits per component. If r, g or b
+     * exceeds 1 (HDR), the components are returned as comma-separated numbers instead.
      *
      * @param {boolean} alpha - If true, the output string will include the alpha value.
      * @param {boolean} [asArray] - If true, the output will be an array of numbers. Defaults to false.
@@ -323,14 +339,9 @@ class Color {
             return `${r.toFixed(3)}, ${g.toFixed(3)}, ${b.toFixed(3)}, ${a.toFixed(3)}`;
         }
 
-        let s = `#${((1 << 24) + (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255)).toString(16).slice(1)}`;
+        let s = `#${((1 << 24) + (toByte(r) << 16) + (toByte(g) << 8) + toByte(b)).toString(16).slice(1)}`;
         if (alpha === true) {
-            const aa = Math.round(a * 255).toString(16);
-            if (this.a < 16 / 255) {
-                s += `0${aa}`;
-            } else {
-                s += aa;
-            }
+            s += toByte(a).toString(16).padStart(2, '0');
         }
         return s;
     }

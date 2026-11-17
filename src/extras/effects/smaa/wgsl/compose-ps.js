@@ -17,7 +17,7 @@ export default /* wgsl */`
             return vec3f(textureSampleLevel(smaaEdgesTexture, smaaEdgesTextureSampler, smaaDebugUv(), 0.0).rg, 0.0);
         }
 
-        // the 'smaaweights' debug view: how much each pixel blends with its neighbours, red along
+        // the 'smaaweights' debug view: how much each pixel blends with its neighbors, red along
         // horizontal edges and green along vertical ones
         fn debugSmaaweights() -> vec3f {
             let weights = textureSampleLevel(smaaWeightsTexture, smaaWeightsTextureSampler, smaaDebugUv(), 0.0);

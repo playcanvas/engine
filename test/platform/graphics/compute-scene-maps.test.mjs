@@ -466,6 +466,10 @@ describe('Compute', function () {
             return { data, variant };
         };
 
+        // the exact sRGB transfer, both ways, as the scene color conversions apply it
+        const srgbToLinear = c => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+        const linearToSrgb = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055);
+
         const createTexture = (format, data) => new Texture(device, {
             width: 1, height: 1, format, mipmaps: false, levels: [data]
         });
@@ -477,7 +481,7 @@ describe('Compute', function () {
                 const stored = [128 / 255, 64 / 255, 1];
                 stored.forEach((value, c) => {
                     expect(data[c]).to.be.closeTo(value, 1e-3);
-                    expect(data[4 + c]).to.be.closeTo(value ** 2.2, 1e-3);
+                    expect(data[4 + c]).to.be.closeTo(srgbToLinear(value), 1e-3);
                     expect(data[8 + c]).to.be.closeTo(value, 1e-3);
                     expect(data[12 + c]).to.be.closeTo(value, 1e-3);
                 });
@@ -493,7 +497,7 @@ describe('Compute', function () {
                 const stored = [128 / 255, 64 / 255, 1];
                 stored.forEach((value, c) => {
                     expect(data[4 + c]).to.be.closeTo(value, 1e-3);
-                    expect(data[8 + c]).to.be.closeTo(value ** (1 / 2.2), 1e-3);
+                    expect(data[8 + c]).to.be.closeTo(linearToSrgb(value), 1e-3);
                 });
             }
             expect(variant.computeDefinition).to.not.equal(null);

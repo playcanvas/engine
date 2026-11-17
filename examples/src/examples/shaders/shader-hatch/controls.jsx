@@ -1,0 +1,93 @@
+import {
+    BindingTwoWay,
+    LabelGroup,
+    Panel,
+    SliderInput,
+    BooleanInput,
+    SelectInput
+} from '@playcanvas/pcui/react';
+
+import {
+    TONEMAP_ACES,
+    TONEMAP_ACES2,
+    TONEMAP_AGX,
+    TONEMAP_AGX_PUNCHY,
+    TONEMAP_FILMIC,
+    TONEMAP_HEJL,
+    TONEMAP_LINEAR,
+    TONEMAP_NEUTRAL
+} from 'playcanvas';
+
+/**
+ * @import { Observer } from '@playcanvas/observer'
+ * @import { ReactElement } from 'react'
+ */
+
+/**
+ * @param {{ observer: Observer }} props - The control panel props.
+ * @returns {ReactElement} The control panel.
+ */
+export function Controls({ observer }) {
+    return (
+        <>
+            <Panel headerText='Settings'>
+                <LabelGroup text='Color'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.color' }}
+                        min={0.0}
+                        max={1}
+                        precision={2}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Metalness'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.metalness' }}
+                        min={0.0}
+                        max={1}
+                        precision={2}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Tonemapping'>
+                    <SelectInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.tonemapping' }}
+                        type='number'
+                        options={[
+                            { v: TONEMAP_LINEAR, t: 'LINEAR' },
+                            { v: TONEMAP_FILMIC, t: 'FILMIC' },
+                            { v: TONEMAP_HEJL, t: 'HEJL' },
+                            { v: TONEMAP_ACES, t: 'ACES' },
+                            { v: TONEMAP_ACES2, t: 'ACES2' },
+                            { v: TONEMAP_NEUTRAL, t: 'NEUTRAL' },
+                            { v: TONEMAP_AGX, t: 'AGX' },
+                            { v: TONEMAP_AGX_PUNCHY, t: 'AGX_PUNCHY' }
+                        ]}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Fog'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.fog' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Toon'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.toon' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Flat shading'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.flatShading' }}
+                    />
+                </LabelGroup>
+            </Panel>
+        </>
+    );
+}

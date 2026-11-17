@@ -8,20 +8,20 @@ import { Color } from '../../../core/math/color.js';
 
 /**
  * One element of a lens flare look, see {@link LensFlareLook}: a shape placed on the axis from the
- * source of the flare through the centre of the screen.
+ * source of the flare through the center of the screen.
  *
  * @typedef {object} LensFlareElementDesc
  * @property {string} shape - The name of the shape, in the shape library of the
  * {@link LensFlareEffect} the flare is added to.
- * @property {number} [offset] - The position along the axis: 0 at the source, 1 at the centre of
- * the screen, 2 mirrored across the centre, negative beyond the source. Defaults to 0.
+ * @property {number} [offset] - The position along the axis: 0 at the source, 1 at the center of
+ * the screen, 2 mirrored across the center, negative beyond the source. Defaults to 0.
  * @property {number} [size] - The height of the element, as a fraction of the screen height.
  * Defaults to 0.1.
  * @property {number} [aspect] - The width of the element relative to its height. Defaults to 1.
  * @property {number} [rotation] - The rotation of the element, in degrees. Defaults to 0.
  * @property {boolean} [autoRotate] - Whether the element is rotated to align with the axis, for
  * streaks. Defaults to false.
- * @property {number[]|Color} [color] - The colour of the element, as a Color or an array of three
+ * @property {number[]|Color} [color] - The color of the element, as a Color or an array of three
  * numbers. Defaults to white.
  * @property {number} [intensity] - The brightness of the element. Defaults to 1.
  * @property {number} [count] - The number of copies of the element, spread along the axis around
@@ -46,7 +46,7 @@ import { Color } from '../../../core/math/color.js';
  * @typedef {object} LensFlareOptions
  * @property {LightComponent} [light] - The light the flare belongs to. A directional light gives
  * the direction of the source, an omni or spot light its position, and a spot light also limits
- * the flare to its cone. The colour of the light tints the flare, and its intensity scales it, see
+ * the flare to its cone. The color of the light tints the flare, and its intensity scales it, see
  * {@link LensFlare#useLightColor} and {@link LensFlare#useLightIntensity}.
  * @property {GraphNode} [node] - The node whose position is the source, when the flare has no
  * light.
@@ -89,7 +89,7 @@ class LensFlare {
     intensity = 1;
 
     /**
-     * The colour of the flare, tinting its elements. Defaults to white.
+     * The color of the flare, tinting its elements. Defaults to white.
      *
      * @type {Color}
      */
@@ -103,7 +103,7 @@ class LensFlare {
     scale = 1;
 
     /**
-     * Whether the colour of the light the flare belongs to tints the flare. Defaults to true.
+     * Whether the color of the light the flare belongs to tints the flare. Defaults to true.
      *
      * @type {boolean}
      */

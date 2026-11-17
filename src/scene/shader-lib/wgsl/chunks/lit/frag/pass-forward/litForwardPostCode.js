@@ -41,6 +41,8 @@ export default /* wgsl */`
     #include "reflectionCubePS"
 #elif LIT_REFLECTION_SOURCE == SPHEREMAP
     #include "reflectionSpherePS"
+#elif LIT_REFLECTION_SOURCE == PLANAR
+    #include "reflectionPlanarPS"
 #endif
 
 #ifdef LIT_REFLECTIONS

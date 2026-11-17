@@ -250,10 +250,10 @@ class ShaderInstance {
  * with {@link Layer#addMeshInstances}.
  *
  * Per-instance rendering state lives here rather than on the shared mesh or material:
- * {@link visible}, {@link castShadow} and `receiveShadow`, {@link cull} for frustum culling,
- * {@link drawOrder} for manual sorting, and {@link setParameter} for shader uniforms that override
- * the material's. {@link aabb} is the world-space bounds derived from the mesh bounds and the
- * node's transform, and can be assigned to override it.
+ * {@link visible}, {@link castShadows} and {@link receiveShadows}, {@link cull} for frustum
+ * culling, {@link drawOrder} for manual sorting, and {@link setParameter} for shader uniforms that
+ * override the material's. {@link aabb} is the world-space bounds derived from the mesh bounds and
+ * the node's transform, and can be assigned to override it.
  *
  * ### Instancing
  *
@@ -329,13 +329,15 @@ class MeshInstance {
      * casting without overhead of removing from scene. Note that this property does not add the
      * mesh instance to appropriate list of shadow casters on a {@link Layer}, but allows mesh to
      * be skipped from shadow casting while it is in the list already. Defaults to false.
+     *
+     * @type {boolean}
      */
-    castShadow = false;
+    castShadows = false;
 
     /**
      * Specifies a bitmask that controls which shadow cascades a mesh instance contributes
      * to when rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source.
-     * This setting is only effective if the {@link castShadow} property is enabled.
+     * This setting is only effective if the {@link castShadows} property is enabled.
      * Defaults to {@link SHADOW_CASCADE_ALL}, which means the mesh casts shadows into all available cascades.
      *
      * @type {number}
@@ -654,7 +656,7 @@ class MeshInstance {
     _morphInstance = null;
 
     /** @private */
-    _receiveShadow = true;
+    _receiveShadows = true;
 
     /** @private */
     _renderStyle = RENDERSTYLE_SOLID;
@@ -1143,15 +1145,25 @@ class MeshInstance {
         return this._calculateSortDistance;
     }
 
-    set receiveShadow(val) {
-        if (this._receiveShadow !== val) {
-            this._receiveShadow = val;
+    /**
+     * Sets whether this mesh instance receives shadows. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set receiveShadows(val) {
+        if (this._receiveShadows !== val) {
+            this._receiveShadows = val;
             this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
         }
     }
 
-    get receiveShadow() {
-        return this._receiveShadow;
+    /**
+     * Gets whether this mesh instance receives shadows.
+     *
+     * @type {boolean}
+     */
+    get receiveShadows() {
+        return this._receiveShadows;
     }
 
     set batching(val) {
@@ -2093,6 +2105,50 @@ class MeshInstance {
             this._skinInstance._updateBeforeCull = !this._customAabb;
         }
     }
+
+    // ---- deprecated block start ----
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#castShadows} instead.
+     * @ignore
+     */
+    set castShadow(value) {
+        Debug.deprecated('MeshInstance#castShadow is deprecated. Use MeshInstance#castShadows instead.');
+        this.castShadows = value;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#castShadows} instead.
+     * @ignore
+     */
+    get castShadow() {
+        Debug.deprecated('MeshInstance#castShadow is deprecated. Use MeshInstance#castShadows instead.');
+        return this.castShadows;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#receiveShadows} instead.
+     * @ignore
+     */
+    set receiveShadow(value) {
+        Debug.deprecated('MeshInstance#receiveShadow is deprecated. Use MeshInstance#receiveShadows instead.');
+        this.receiveShadows = value;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link MeshInstance#receiveShadows} instead.
+     * @ignore
+     */
+    get receiveShadow() {
+        Debug.deprecated('MeshInstance#receiveShadow is deprecated. Use MeshInstance#receiveShadows instead.');
+        return this.receiveShadows;
+    }
+
+    // ---- deprecated block end ----
 }
 
 export { MeshInstance };

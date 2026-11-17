@@ -38,7 +38,7 @@ fn computeSplatCov(
     scale: half3,
     viewMatrix: mat4x4f,
     viewProj: mat4x4f,
-    focal: vec2f,           // focal length in pixels, per axis
+    focal: vec2f,           // viewport size * projection scale per axis (= 2 x the focal length in pixels)
     viewportWidth: f32,
     viewportHeight: f32,
     nearClip: f32,
@@ -50,6 +50,7 @@ fn computeSplatCov(
     minContribution: f32,
     foveationStrength: f32,
     foveationCenter: f32,
+    antiAliasFilterSize: f32,   // GSplatParams#antiAliasFilterSize, in pixels squared
     #ifdef GSPLAT_FISHEYE
         fisheye_k: f32,
         fisheye_inv_k: f32,
@@ -175,8 +176,31 @@ fn computeSplatCov(
     let b = dot(b0, b1);
     let cRaw = dot(b1, b1);
 
-    let a = aRaw + 0.3;
-    let c = cRaw + 0.3;
+    // The size and contribution culls measure the footprint with GSPLAT_CULL_LOWPASS, the rendered footprint
+    // uses GSPLAT_LOWPASS (see gsplatHelpersVS). The size cull runs first, before the contribution and AA math.
+    let aCull = aRaw + GSPLAT_CULL_LOWPASS;
+    let cCull = cRaw + GSPLAT_CULL_LOWPASS;
+    if (gsplatFootprintSmallerThan(aCull, b, cCull, minPixelSize)) {
+        return result;
+    }
+
+    // Screen-space filter: the classic dilation, or for compensated splats the filter they were
+    // trained with (antiAliasFilterSize is in pixels squared, the covariance in half pixel units).
+    var lowpass = GSPLAT_LOWPASS;
+    #if GSPLAT_AA
+        var compensated = true;
+        #ifdef GSPLAT_AA_MIXED
+            // the scene mixes splats trained with and without anti-aliasing; only the ones flagged
+            // in the work buffer are compensated
+            compensated = getAntiAlias();
+        #endif
+        if (compensated) {
+            lowpass = 4.0 * antiAliasFilterSize;
+        }
+    #endif
+
+    let a = aRaw + lowpass;
+    let c = cRaw + lowpass;
 
     let det = a * c - b * b;
     if (det <= 0.0) {
@@ -187,20 +211,20 @@ fn computeSplatCov(
         // AA compensation: ratio of pre-blur to post-blur determinant. Matches the
         // quad renderer's GSPLAT_AA branch in gsplatCorner.js initCornerCov.
         let detOrig = aRaw * cRaw - b * b;
-        result.aaFactor = sqrt(max(detOrig / det, 0.0));
+        result.aaFactor = select(1.0, sqrt(max(detOrig / det, 0.0)), compensated);
     #endif
 
     // Rejects splats whose total visual contribution (opacity * projected area) is
     // negligible. Near the camera, projected areas are large so contributions naturally
     // exceed the threshold; at distance, areas shrink and low-impact splats are culled.
     //
-    // Foveation: the threshold is raised radially from the screen centre. Within
+    // Foveation: the threshold is raised radially from the screen center. Within
     // foveationCenter (NDC radius) there is no effect; the boost ramps with a smoothstep
     // to full foveationStrength at the screen edge (r = 1) and beyond (corners). With
     // strength 0 this is an exact no-op.
     let fovNdc = screen * vec2f(2.0 / viewportWidth, 2.0 / viewportHeight) - vec2f(1.0);
     #ifdef GSPLAT_XR
-        // Stereo: use the smaller of the two eyes' radii, so a splat near the centre of either
+        // Stereo: use the smaller of the two eyes' radii, so a splat near the center of either
         // eye is protected (the foveated boost only applies where it is peripheral in both).
         let fovR = min(length(fovNdc), length(ndc1));
     #else
@@ -210,7 +234,7 @@ fn computeSplatCov(
     let fovT = saturate((fovR - foveationCenter) / max(1.0 - foveationCenter, 1e-4));
     let effMinContribution = minContribution + foveationStrength * fovT * fovT * (3.0 - 2.0 * fovT);
 
-    let totalContribution = opacity * 6.283185 * sqrt(det);
+    let totalContribution = opacity * 6.283185 * sqrt(aCull * cCull - b * b);
     if (totalContribution < effMinContribution) {
         return result;
     }
@@ -221,10 +245,6 @@ fn computeSplatCov(
     let radiusYUncapped = sqrt(2.0 * c);
     let radiusX = min(radiusXUncapped, maxRadius);
     let radiusY = min(radiusYUncapped, maxRadius);
-
-    if (max(radiusX, radiusY) < minPixelSize) {
-        return result;
-    }
 
     // Frustum cull: reject splats entirely off-screen
     #ifdef GSPLAT_XR

@@ -13,7 +13,7 @@ import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
     SEMANTIC_POSITION, TYPE_FLOAT32,
-    PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RG11B10F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
@@ -39,6 +39,7 @@ import { UniformBuffer } from './uniform-buffer.js';
  * @import { MeshInstanceStorage } from './mesh-instance-storage.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
+ * @import { ShaderChunkCollection } from './shader-chunk-collection.js'
  * @import { Texture } from './texture.js'
  * @import { DrawCommands } from './draw-commands.js';
  */
@@ -317,6 +318,35 @@ class GraphicsDevice extends EventHandler {
     supportsCompute = false;
 
     /**
+     * The platform chunks added to every GLSL vertex and fragment shader: `vertexHeader`,
+     * `fragmentHeader` and `shared`. Null when the device cannot run GLSL shaders. Each device
+     * implementation imports only its own chunks, so the chunks of other devices can be dropped by
+     * tree-shaking.
+     *
+     * @type {ShaderChunkCollection|null}
+     * @ignore
+     */
+    platformChunksGLSL = null;
+
+    /**
+     * The platform chunks added to every WGSL vertex and fragment shader: `vertexHeader`,
+     * `fragmentHeader`, `shared` and `halfTypes`. Null when the device cannot run WGSL shaders.
+     *
+     * @type {ShaderChunkCollection|null}
+     * @ignore
+     */
+    platformChunksWGSL = null;
+
+    /**
+     * The built-in includes available to every compute shader, keyed by include name. Null when the
+     * device does not support compute shaders.
+     *
+     * @type {ShaderChunkCollection|null}
+     * @ignore
+     */
+    computeChunks = null;
+
+    /**
      * True if the device can read from StorageTexture in the compute shader. By default, the
      * storage texture can be only used with the write operation.
      * When a shader uses this feature, add a `requires` directive to signal non-portability at the
@@ -474,6 +504,39 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     shaders = [];
+
+    /**
+     * True while a precompile pass renders, see {@link GraphicsDevice#startPrecompilePass}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _precompilePass = false;
+
+    /**
+     * True when a precompile, see {@link AppBase#precompile}, needs a warm-up step to fully compile
+     * the shaders. On some backends a shader is not fully compiled when its compilation reports
+     * completion - the browser finishes compiling it the first time it is used for a draw, which
+     * then causes a stall during rendering. For example, WebGL in Chrome on macOS translates it
+     * to Metal, and compiles it for the GPU only when it first draws with it.
+     *
+     * On such a device, once the shaders have compiled, the precompile renders the frame once more
+     * with the draws enabled - the warm-up - so that this last step happens during loading instead.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    precompileNeedsWarmup = false;
+
+    /**
+     * True while the warm-up of a precompile renders, see
+     * {@link GraphicsDevice#precompileNeedsWarmup}. The precompile passes then draw, while
+     * otherwise they skip the draws.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    precompileWarmup = false;
 
     /**
      * A set of currently created textures.
@@ -636,7 +699,7 @@ class GraphicsDevice extends EventHandler {
     textureHalfFloatRenderable;
 
     /**
-     * True if small-float textures with format {@link PIXELFORMAT_111110F} can be used as a frame
+     * True if small-float textures with format {@link PIXELFORMAT_RG11B10F} can be used as a frame
      * buffer. This is always true on WebGL2, but optional on WebGPU device.
      *
      * @type {boolean}
@@ -1376,6 +1439,17 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        Debug.assert(false);
+    }
+
+    /**
      * Sets the specified blend state.
      *
      * @param {BlendState} blendState - New blend state.
@@ -1504,6 +1578,51 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Starts a precompile pass: the rendering until {@link GraphicsDevice#endPrecompilePass}
+     * compiles the shaders and the render pipelines it needs, without rendering anything, see
+     * {@link AppBase#precompile}. Shaders and pipelines which are not ready yet are compiled in
+     * parallel, and their draws are skipped instead of waiting for them.
+     *
+     * @param {RenderTarget|null} renderTarget - The render target the rendering is for, or null
+     * for the back buffer. It is not rendered to.
+     * @ignore
+     */
+    startPrecompilePass(renderTarget) {
+    }
+
+    /**
+     * Ends a precompile pass started by {@link GraphicsDevice#startPrecompilePass}.
+     *
+     * @ignore
+     */
+    endPrecompilePass() {
+    }
+
+    /**
+     * Ends a frame which only precompiled, without rendering, see {@link AppBase#precompile}. The
+     * frame does not start or end as a rendered frame does, as that would present an empty frame,
+     * but the work recorded during it, such as compute dispatches, is completed as at the end of
+     * a frame.
+     *
+     * @ignore
+     */
+    precompileFrameEnd() {
+        // expire frame-scoped draw commands, as frameEnd does
+        this.drawCommandsVersion++;
+    }
+
+    /**
+     * Returns the number of shaders and render pipelines still compiling, see
+     * {@link AppBase#precompile}. Zero on devices which cannot tell.
+     *
+     * @returns {number} The number of shaders and render pipelines still compiling.
+     * @ignore
+     */
+    getPrecompilePendingCount() {
+        return 0;
+    }
+
+    /**
      * Retrieves the first available slot in the {@link indirectDrawBuffer} used for indirect
      * rendering, which can be utilized by a {@link Compute} shader to generate indirect draw
      * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
@@ -1524,7 +1643,9 @@ class GraphicsDevice extends EventHandler {
      * Returns the buffer used to store arguments for indirect draw calls. The size of the buffer is
      * controlled by the {@link maxIndirectDrawCount} property. This buffer can be passed to a
      * {@link Compute} shader along with a slot obtained by calling {@link getIndirectDrawSlot}, in
-     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}.
+     * order to prepare indirect draw parameters. Also see {@link MeshInstance#setIndirect}. The
+     * buffer can also be read back, see {@link StorageBuffer#read}, for example to inspect the
+     * parameters a compute shader wrote.
      *
      * Only available on WebGPU, returns null on other platforms.
      *
@@ -1552,7 +1673,8 @@ class GraphicsDevice extends EventHandler {
      * Returns the buffer used to store arguments for indirect compute dispatch calls. The size of
      * the buffer is controlled by the {@link maxIndirectDispatchCount} property. This buffer can
      * be passed to a {@link Compute} shader along with a slot obtained by calling
-     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters.
+     * {@link getIndirectDispatchSlot}, in order to prepare indirect dispatch parameters. The
+     * buffer can also be read back, see {@link StorageBuffer#read}.
      *
      * Only available on WebGPU, returns null on other platforms.
      *
@@ -1938,7 +2060,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
-     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RG11B10F}
      * - {@link PIXELFORMAT_R16F}
      * - {@link PIXELFORMAT_R32F}
      * - {@link PIXELFORMAT_RG16F}
@@ -1960,12 +2082,12 @@ class GraphicsDevice extends EventHandler {
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_RG11B10F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
 
-                case PIXELFORMAT_111110F: {
+                case PIXELFORMAT_RG11B10F: {
                     if (this.textureRG11B10Renderable) {
                         return format;
                     }

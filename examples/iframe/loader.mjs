@@ -228,7 +228,8 @@ class ExampleLoader {
             fire('exampleLoading', {
                 showDeviceSelector: !this._config.NO_DEVICE_SELECTOR,
                 showMiniStats: !this._config.NO_MINISTATS,
-                showInspector: !this._config.NO_INSPECTOR
+                showInspector: !this._config.NO_INSPECTOR,
+                hideCredits: !!this._config.CREDITS_HIDDEN
             });
         }
 

@@ -2,7 +2,8 @@
 // level into the next one using a fullscreen quad. With UNFILTERABLE defined, for formats which
 // cannot be filtered, such as 32-bit float formats on devices without float32-filterable support,
 // the texels of the previous mip level are read without a sampler and filtered in the shader, at
-// the same position as the sampler would.
+// the same position as the sampler would. With GAUSSIAN defined, the previous mip level is filtered
+// by 13 bilinear taps, weighted to approximate a Gaussian blur over about 6x6 of its texels.
 export default /* wgsl */`
 
     var<private> pos : array<vec2f, 4> = array<vec2f, 4>(
@@ -52,6 +53,23 @@ export default /* wgsl */`
                 mix(texel(i0.x, i1.y), texel(i1.x, i1.y), f.x),
                 f.y
             );
+        #elif defined(GAUSSIAN)
+            let t = 1.0 / vec2f(textureDimensions(img));
+            let uv = input.texCoord;
+            let e = textureSampleLevel(img, imgSampler, uv, 0.0);
+            let a = textureSampleLevel(img, imgSampler, uv + vec2f(-2.0, 2.0) * t, 0.0);
+            let b = textureSampleLevel(img, imgSampler, uv + vec2f(0.0, 2.0) * t, 0.0);
+            let c = textureSampleLevel(img, imgSampler, uv + vec2f(2.0, 2.0) * t, 0.0);
+            let d = textureSampleLevel(img, imgSampler, uv + vec2f(-2.0, 0.0) * t, 0.0);
+            let f = textureSampleLevel(img, imgSampler, uv + vec2f(2.0, 0.0) * t, 0.0);
+            let g = textureSampleLevel(img, imgSampler, uv + vec2f(-2.0, -2.0) * t, 0.0);
+            let h = textureSampleLevel(img, imgSampler, uv + vec2f(0.0, -2.0) * t, 0.0);
+            let i = textureSampleLevel(img, imgSampler, uv + vec2f(2.0, -2.0) * t, 0.0);
+            let j = textureSampleLevel(img, imgSampler, uv + vec2f(-1.0, 1.0) * t, 0.0);
+            let k = textureSampleLevel(img, imgSampler, uv + vec2f(1.0, 1.0) * t, 0.0);
+            let l = textureSampleLevel(img, imgSampler, uv + vec2f(-1.0, -1.0) * t, 0.0);
+            let m = textureSampleLevel(img, imgSampler, uv + vec2f(1.0, -1.0) * t, 0.0);
+            return e * 0.125 + (a + c + g + i) * 0.03125 + (b + d + f + h) * 0.0625 + (j + k + l + m) * 0.125;
         #else
             return textureSample(img, imgSampler, input.texCoord);
         #endif

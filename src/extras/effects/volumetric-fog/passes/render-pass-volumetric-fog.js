@@ -1,6 +1,7 @@
 import { Color } from '../../../../core/math/color.js';
 import { Vec3 } from '../../../../core/math/vec3.js';
 import { SEMANTIC_POSITION } from '../../../../platform/graphics/constants.js';
+import { SHADOW_VSM_32F, shadowTypeInfo } from '../../../../scene/constants.js';
 import { RenderPassShaderQuad } from '../../../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../../../../scene/shader-lib/shader-utils.js';
 
@@ -100,13 +101,19 @@ class RenderPassVolumetricFog extends RenderPassShaderQuad {
      * Creates the shader matching the shadow sampling requirements, when those change.
      *
      * @param {boolean} shadows - True if the shadow map should be sampled.
-     * @param {boolean} pcf - True if the shadow map is a depth format texture using hardware
-     * comparison, false when it stores depth in a color texture (PCSS / VSM).
+     * @param {number} shadowType - The shadow type of the light, selecting how the shadow map is
+     * sampled: a hardware comparison of the depth format texture (PCF), a manual comparison of the
+     * depth stored in a color texture (PCSS), or a Chebyshev test of the stored depth moments (VSM).
      */
-    updateShaderVariant(shadows, pcf) {
+    updateShaderVariant(shadows, shadowType) {
+
+        const info = shadows ? shadowTypeInfo.get(shadowType) : null;
+        const pcf = !!info?.pcf;
+        const vsm = !!info?.vsm;
+        const vsm32 = vsm && shadowType === SHADOW_VSM_32F;
 
         const depthKey = ShaderUtils.getScreenDepthChunkKey(this.cameraComponent.shaderParams);
-        const key = `${shadows}-${pcf}${depthKey}`;
+        const key = `${shadows}-${pcf}-${vsm}-${vsm32}${depthKey}`;
         if (this._variantKey !== key) {
             this._variantKey = key;
 
@@ -114,6 +121,8 @@ class RenderPassVolumetricFog extends RenderPassShaderQuad {
             ShaderUtils.addScreenDepthChunkDefines(this.cameraComponent.shaderParams, defines);
             if (shadows) defines.set('FOG_SHADOWS', '');
             if (pcf) defines.set('FOG_SHADOW_PCF', '');
+            if (vsm) defines.set('FOG_SHADOW_VSM', '');
+            if (vsm32) defines.set('FOG_SHADOW_VSM_32F', '');
 
             this.shader = ShaderUtils.createShader(this.device, {
                 uniqueName: `VolumetricFogShader-${key}`,
@@ -188,7 +197,7 @@ class RenderPassVolumetricFog extends RenderPassShaderQuad {
 
             this._shadowParams[0] = light.shadowCascadeCount;
             this._shadowParams[1] = biases.bias;
-            this._shadowParams[2] = 0;
+            this._shadowParams[2] = light._isVsm ? biases.normalBias : 0;
             this._shadowParams[3] = bounds ? 1e30 : light.shadowDistance;
             this.shadowParamsId.setValue(this._shadowParams);
         }

@@ -24,7 +24,7 @@ export const SSAOTYPE_LIGHTING = 'lighting';
 export const SSAOTYPE_COMBINE = 'combine';
 
 /**
- * Compose slot applied to the scene colour immediately after it is sampled, before any other
+ * Compose slot applied to the scene color immediately after it is sampled, before any other
  * composition. Effects here receive and return the full `vec4` including alpha, and may take
  * multiple taps of the scene texture.
  *

@@ -190,7 +190,7 @@ describe('AutoExposureEffect', function () {
 
     describe('exposure', function () {
 
-        it('adapts at once to the first measurement, displaying the average as middle grey', function () {
+        it('adapts at once to the first measurement, displaying the average as middle gray', function () {
             app.scene.exposure = 2;
             cameraFrame.addEffect(autoExposure);
             cameraFrame.update();

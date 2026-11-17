@@ -24,34 +24,6 @@ import { Debug } from '../debug.js';
  */
 class Vec4 {
     /**
-     * The first component of the vector.
-     *
-     * @type {number}
-     */
-    x;
-
-    /**
-     * The second component of the vector.
-     *
-     * @type {number}
-     */
-    y;
-
-    /**
-     * The third component of the vector.
-     *
-     * @type {number}
-     */
-    z;
-
-    /**
-     * The fourth component of the vector.
-     *
-     * @type {number}
-     */
-    w;
-
-    /**
      * Creates a new Vec4 instance.
      *
      * @overload
@@ -80,16 +52,43 @@ class Vec4 {
      */
     constructor(x = 0, y = 0, z = 0, w = 0) {
         if (x.length === 4) {
-            this.x = x[0];
-            this.y = x[1];
-            this.z = x[2];
-            this.w = x[3];
-        } else {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.w = w;
+            w = x[3];
+            z = x[2];
+            y = x[1];
+            x = x[0];
         }
+
+        // Fields are assigned once here instead of declared as class fields. A declaration without
+        // an initializer stores undefined first, so V8 never unboxes the field as a double and
+        // every fractional write allocates a heap number.
+
+        /**
+         * The first component of the vector.
+         *
+         * @type {number}
+         */
+        this.x = x;
+
+        /**
+         * The second component of the vector.
+         *
+         * @type {number}
+         */
+        this.y = y;
+
+        /**
+         * The third component of the vector.
+         *
+         * @type {number}
+         */
+        this.z = z;
+
+        /**
+         * The fourth component of the vector.
+         *
+         * @type {number}
+         */
+        this.w = w;
     }
 
     /**

@@ -94,11 +94,11 @@ class OrientedBox {
     }
 
     /**
-     * Test if a ray intersects with the OBB.
+     * Test if a ray intersects with the OBB. A ray that starts inside the OBB intersects it.
      *
      * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
-     * into here.
+     * into here. For a ray that starts inside the OBB, this is the point where the ray leaves it.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {

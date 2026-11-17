@@ -6,7 +6,6 @@ import {
     LAYERID_DEPTH
 } from '../constants.js';
 import { LightList } from '../lighting/light-list.js';
-import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { LayerRenderStep } from './layer-render-step.js';
@@ -70,9 +69,6 @@ function vogelSpherePrecalculationSamples(numSamples) {
  * @ignore
  */
 class ForwardRenderer extends Renderer {
-    /** @type {WorldClustersDebug|null} */
-    _worldClustersDebug = null;
-
     /**
      * Limits how much of one render pass is drawn, for stepping through its draw calls with a
      * debugging tool. Matched by the camera and render target the pass renders with; for each layer
@@ -142,12 +138,6 @@ class ForwardRenderer extends Renderer {
 
         this.pcssDiskSamples = vogelDiskPrecalculationSamples(16);
         this.pcssSphereSamples = vogelSpherePrecalculationSamples(16);
-    }
-
-    destroy() {
-        this._worldClustersDebug?.destroy();
-        this._worldClustersDebug = null;
-        super.destroy();
     }
 
     // #if _PROFILER
@@ -308,7 +298,7 @@ class ForwardRenderer extends Renderer {
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
 
         // when the FramePassMultiView wrapper is iterating XR views, render only the active one
-        // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behaviour
+        // (xrCurrentViewIndex === -1 means "no wrapper active": fall back to the default behavior
         // of rendering all views or the single non-XR view)
         const activeView = device.xrCurrentViewIndex ?? -1;
         const viewListStart = (viewList && activeView >= 0) ? activeView : 0;
@@ -511,8 +501,6 @@ class ForwardRenderer extends Renderer {
             // add debug lines to visible list
             scene.immediate.onPreRenderLayer(layer, visible, transparent);
 
-            this._worldClustersDebug?.onPreRenderLayer(layer, visible);
-
             // cut the list short when a debugging tool steps through this pass, after the debug
             // lines were added so the indices match what the tool saw. A copy, as the layer's own
             // list is left as culled for the tool to read
@@ -550,15 +538,6 @@ class ForwardRenderer extends Renderer {
         if (clusteredLightingEnabled) {
             const lightClusters = options.lightClusters ?? this.worldClustersAllocator.empty;
             lightClusters.activate();
-
-            // debug rendering of clusters
-            if (layer) {
-                if (!this.clustersDebugRendered && scene.lighting.debugLayer === layer.id) {
-                    this.clustersDebugRendered = true;
-                    this._worldClustersDebug ??= new WorldClustersDebug();
-                    this._worldClustersDebug.render(lightClusters, scene);
-                }
-            }
         }
 
         // Set the not very clever global variable which is only useful when there's just one camera
@@ -853,7 +832,6 @@ class ForwardRenderer extends Renderer {
      */
     update(comp) {
 
-        this._worldClustersDebug?.frameUpdate();
         this.frameUpdate();
         this.shadowRenderer.frameUpdate();
 
@@ -884,8 +862,10 @@ class ForwardRenderer extends Renderer {
      * and shadow-caster culling have both read the shadow update mode before it is consumed here.
      *
      * @param {LayerComposition} comp - The layer composition.
+     * @param {boolean} [precompile] - True when the frame is only precompiled. Its shadow maps are
+     * not rendered, so the one-shot shadow updates stay pending for the frame which renders them.
      */
-    cull(comp) {
+    cull(comp, precompile = false) {
 
         // visibility culling of meshInstances and shadow casters
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
@@ -901,7 +881,9 @@ class ForwardRenderer extends Renderer {
 
         // consume one-shot (THISFRAME) shadow updates - the frame graph has been built and shadow
         // casters culled, so both have read the shadow update mode before it is changed here
-        this.culler.consumeOneShotShadows();
+        if (!precompile) {
+            this.culler.consumeOneShotShadows();
+        }
     }
 }
 

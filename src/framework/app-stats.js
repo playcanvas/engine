@@ -84,15 +84,16 @@ class AppStats {
             scriptPostUpdate: 0,
             animUpdateStart: 0,
             animUpdate: 0,
+            animEvaluated: 0,
+            animOffscreen: 0,
+            animIntervalSkipped: 0,
             cullTime: 0,
             sortTime: 0,
             skinTime: 0,
             morphTime: 0,
             instancingTime: 0, // deprecated
 
-            // #if _PROFILER
             primitives: 0,
-            // #endif
             gsplats: 0,
             gsplatSort: 0,
             gsplatBufferCopy: 0,
@@ -222,11 +223,11 @@ class AppStats {
      * application tick. Counts triangles, lines and points across all passes, including instances
      * and CPU-authored multi-draw commands. Counts are calculated before GPU clipping and culling.
      *
-     * Available only in debug and profiler builds. Returns undefined in release and minified builds.
-     * This is an estimate from draw parameters: GPU-generated indirect draws are excluded, and
-     * primitive-restart indices in indexed strips are not inspected. No GPU readback is performed.
+     * Available only in debug builds. Returns 0 in all other builds. This is an estimate from draw
+     * parameters: GPU-generated indirect draws are excluded, and primitive-restart indices in
+     * indexed strips are not inspected. No GPU readback is performed.
      *
-     * @type {number|undefined}
+     * @type {number}
      */
     get primitiveCount() {
         return this.frame.primitives;
@@ -465,7 +466,7 @@ class AppStats {
         stats.shadowMapTime = renderer._shadowMapTime;
         stats.depthMapTime = renderer._depthMapTime;
         stats.forwardTime = renderer._forwardTime;
-        // #if _PROFILER
+        // #if _DEBUG
         stats.primitives = device._primitiveCount;
         device._primitiveCount = 0;
         // #endif

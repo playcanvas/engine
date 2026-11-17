@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
@@ -203,7 +204,7 @@ class XrJoint {
      *
      * @type {boolean}
      */
-    get wrist() {
+    get isWrist() {
         return this._wrist;
     }
 
@@ -212,7 +213,7 @@ class XrJoint {
      *
      * @type {boolean}
      */
-    get tip() {
+    get isTip() {
         return this._tip;
     }
 
@@ -224,6 +225,30 @@ class XrJoint {
     get radius() {
         return this._radius || 0.005;
     }
+
+    // ---- deprecated block start ----
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link XrJoint#isWrist} instead.
+     * @ignore
+     */
+    get wrist() {
+        Debug.deprecated('XrJoint#wrist is deprecated. Use XrJoint#isWrist instead.');
+        return this.isWrist;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use {@link XrJoint#isTip} instead.
+     * @ignore
+     */
+    get tip() {
+        Debug.deprecated('XrJoint#tip is deprecated. Use XrJoint#isTip instead.');
+        return this.isTip;
+    }
+
+    // ---- deprecated block end ----
 }
 
 export { XrJoint };

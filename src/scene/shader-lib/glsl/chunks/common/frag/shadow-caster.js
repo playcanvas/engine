@@ -6,6 +6,10 @@
 // lights and VSM shadows for spot lights are not supported, as those require distance based depth.
 export default /* glsl */`
 
+#if SHADOW_TYPE == VSM_16F || SHADOW_TYPE == VSM_32F
+    #include "shadowEVSMExponentPS"
+#endif
+
 vec4 getShadowOutput() {
 
     // rasterized depth
@@ -23,9 +27,9 @@ vec4 getShadowOutput() {
 
         // exponential warp of the depth, stored with its square
         #if SHADOW_TYPE == VSM_32F
-            float exponent = 15.0;
+            float exponent = VSM_EXPONENT_32F;
         #else
-            float exponent = 5.54;
+            float exponent = VSM_EXPONENT_16F;
         #endif
         depth = 2.0 * depth - 1.0;
         depth = exp(exponent * depth);

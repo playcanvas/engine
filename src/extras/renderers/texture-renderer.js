@@ -316,7 +316,7 @@ class TextureRenderer {
             // blended so the quad counts as transparent: layers such as UI only render that sub-layer
             material.blendType = BLEND_NORMAL;
             const meshInstance = new MeshInstance(this._mesh, material, new GraphNode(`Debug texture ${pool.slots.length}`));
-            meshInstance.castShadow = false;
+            meshInstance.castShadows = false;
             meshInstance.pick = false;
             meshInstance.cull = false;
             meshInstance.shaderPassMask = 0;

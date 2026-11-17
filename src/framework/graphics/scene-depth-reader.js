@@ -208,7 +208,7 @@ class SceneDepthReader {
 
     /**
      * Requests the depth of a region of the view, as `width * height` samples in row major order. The
-     * region is point sampled rather than averaged - one sample per cell, taken at its centre - so
+     * region is point sampled rather than averaged - one sample per cell, taken at its center - so
      * asking for more samples than the region resolves to repeats them.
      *
      * Samples where nothing was rendered read as `Infinity`, as do the few which land within a hair of

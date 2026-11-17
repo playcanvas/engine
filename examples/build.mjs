@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import { buildProd } from './utils/build-prod.mjs';
 import { generateCertificates } from './utils/certificates.mjs';
 import { buildMetadata } from './utils/metadata.mjs';
-import { buildThumbnails } from './utils/thumbnails.mjs';
+import { buildThumbnails, checkThumbnails } from './utils/thumbnails.mjs';
 
 const USAGE = `Usage: node build.mjs [options]
 
@@ -12,6 +12,8 @@ Options:
   --cert          Generate local HTTPS dev certificates
   --metadata      Generate cache/metadata.mjs
   --thumbnails    Generate thumbnails
+  --check-thumbnails
+                  Fail if an example is missing a thumbnail
   --clean         Remove dist and cache
   --debug         Enable thumbnail debug logging
   --help, -h      Show help`;
@@ -22,6 +24,7 @@ const { values, positionals } = parseArgs({
         cert: { type: 'boolean' },
         metadata: { type: 'boolean' },
         thumbnails: { type: 'boolean' },
+        'check-thumbnails': { type: 'boolean' },
         clean: { type: 'boolean' },
         debug: { type: 'boolean' },
         help: { type: 'boolean', short: 'h' }
@@ -70,6 +73,12 @@ const main = async () => {
             clean: values.clean,
             debug: values.debug
         });
+        return;
+    }
+
+    if (values['check-thumbnails']) {
+        await buildMetadata();
+        process.exitCode = (await checkThumbnails()) ? 0 : 1;
         return;
     }
 

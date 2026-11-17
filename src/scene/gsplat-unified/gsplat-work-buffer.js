@@ -169,6 +169,14 @@ class GSplatWorkBuffer {
     colorRenderPass;
 
     /**
+     * Stream-set version the render targets were created for.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderTargetsVersion = -1;
+
+    /**
      * GPU frustum culler for octree node visibility.
      *
      * @type {GSplatFrustumCuller}
@@ -317,6 +325,7 @@ class GSplatWorkBuffer {
 
         // Collect all textures in order for MRT
         const colorBuffers = this.streams.getTexturesInOrder();
+        this._renderTargetsVersion = this.streams._formatVersion;
         // viewport rects used to fill the work buffer must address identical texel rows on all
         // graphics APIs, matching the WebGL layout
         this.renderTarget = new RenderTarget({
@@ -345,11 +354,13 @@ class GSplatWorkBuffer {
      * Call this before rendering to ensure all streams have textures.
      */
     syncWithFormat() {
-        const prevVersion = this.streams._formatVersion;
         this.streams.syncWithFormat(this.format);
 
-        // If format changed, recreate render targets to include new textures
-        if (prevVersion !== this.streams._formatVersion) {
+        // Recreate the render targets when they were built for an older stream set. Compared
+        // against the version the targets were built for, not the streams' version before this
+        // call: getTexture() syncs the streams on its own, so by the time this runs they can
+        // already be up to date while the targets still lack the new textures.
+        if (this._renderTargetsVersion !== this.streams._formatVersion) {
             this._createRenderTargets();
         }
     }

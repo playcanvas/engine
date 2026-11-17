@@ -692,8 +692,8 @@ class TextElement {
 
                 const mi = new MeshInstance(mesh, this._material, this._node);
                 mi.name = `Text Element: ${this._entity.name}`;
-                mi.castShadow = false;
-                mi.receiveShadow = false;
+                mi.castShadows = false;
+                mi.receiveShadows = false;
                 mi.cull = !screenSpace;
                 mi.screenSpace = screenSpace;
                 mi.drawOrder = this._drawOrder;

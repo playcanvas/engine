@@ -98,6 +98,12 @@ void main(void) {
 
     clipCorner(corner, clr.w);
 
+    // over-unity opacity (see gsplatHelpersVS): above 1, the alpha passed to the fragment shader is
+    // 1 + the core radius instead, drawn with peak alpha 1
+    if (clr.w > 1.0) {
+        clr.w = 1.0 + gsplatPlateauCore(clr.w);
+    }
+
     // write output
     #if GSPLAT_2DGS
         // 2DGS: Project world corner directly
@@ -112,7 +118,7 @@ void main(void) {
         // Overdraw visualization mode: color by elevation
         float t = clamp(modelCenter.y / 20.0, 0.0, 1.0);
         vec3 rampColor = textureLod(colorRamp, vec2(t, 0.5), 0.0).rgb;
-        clr.a *= (1.0 / 32.0) * colorRampIntensity;
+        clr.a = min(clr.a, 1.0) * (1.0 / 32.0) * colorRampIntensity;
         gaussianColor = vec4(rampColor, clr.a);
     #else
         gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0), -center.view.z), clr.w);

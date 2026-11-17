@@ -13,7 +13,7 @@ class AutoExposureEffectScript extends CameraFrameEffectScript {
     static scriptName = 'autoExposureEffect';
 
     /**
-     * The exposure compensation in EV: how much brighter than middle grey the average of the
+     * The exposure compensation in EV: how much brighter than middle gray the average of the
      * screen is displayed.
      *
      * @attribute

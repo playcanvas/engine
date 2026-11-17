@@ -49,7 +49,7 @@ export default /* wgsl */`
         var output: FragmentOutput;
         let texel = uniform.smaaMetrics.xy;
 
-        // the blending weights of the pixel, along with those its right and bottom neighbours
+        // the blending weights of the pixel, along with those its right and bottom neighbors
         // hold for it
         let own = sampleBlend(uv0);
         let a = vec4f(
@@ -61,7 +61,7 @@ export default /* wgsl */`
 
         var color = sampleColor(uv0);
 
-        // a pixel on an edge blends with its neighbours on either side, along the direction of the
+        // a pixel on an edge blends with its neighbors on either side, along the direction of the
         // stronger edge
         if (dot(a, vec4f(1.0)) >= 1.0e-5) {
             let horizontal = max(a.x, a.z) > max(a.y, a.w);

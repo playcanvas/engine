@@ -31,7 +31,8 @@ import { ShaderDefinitionUtils } from '../../../src/platform/graphics/shader-def
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
-    GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL
+    GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_AGX, TONEMAP_AGX_PUNCHY, TONEMAP_FILMIC,
+    TONEMAP_HEJL, TONEMAP_NEUTRAL
 } from '../../../src/scene/constants.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
@@ -43,7 +44,7 @@ import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections
  * Snapshot of the compose shader source across the combinations of effects it can be built for, in
  * both shader languages. The composition is being restructured around registered effects, and the
  * restructuring must not change the program any combination compiles to. This test pins the
- * preprocessed fragment source of each combination, normalised for whitespace - the restructured
+ * preprocessed fragment source of each combination, normalized for whitespace - the restructured
  * chunk leaves blank lines where nothing is included - so any change to what a combination compiles
  * to fails here rather than in a renderer.
  *
@@ -253,7 +254,7 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'depth-effect-double-include', set: pass => addDepthEffect(pass, { includeChunk: true }) },
         { name: 'all', all: true },
         { name: 'all-gamma-none', all: true, set: () => ({ _gammaCorrection: GAMMA_NONE }) },
-        ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL].map(toneMapping => ({
+        ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL, TONEMAP_AGX, TONEMAP_AGX_PUNCHY].map(toneMapping => ({
             name: `all-tonemap-${toneMapping}`, all: true, set: () => ({ toneMapping })
         })),
         ...['scene', 'bloom', 'dofcoc', 'dofblur', 'ssao', 'vignette'].map(debug => ({
@@ -279,7 +280,7 @@ describe('RenderPassCompose shader snapshot', function () {
         active.forEach(effect => effect.update());
         pass.effects = active;
         if (combination.customChunks) {
-            // the documented customisation path: user chunks at the three legacy injection points
+            // the documented customization path: user chunks at the three legacy injection points
             pass._customComposeChunks.set('composeDeclarationsPS', 'uniform float custom;');
             pass._customComposeChunks.set('composeMainStartPS', 'float customStart = 1.0;');
             pass._customComposeChunks.set('composeMainEndPS', 'result *= customStart;');
@@ -309,8 +310,8 @@ describe('RenderPassCompose shader snapshot', function () {
         });
     };
 
-    const normalise = source => source.replace(/\s+/g, ' ').trim();
-    const digest = source => createHash('sha1').update(normalise(source)).digest('hex');
+    const normalize = source => source.replace(/\s+/g, ' ').trim();
+    const digest = source => createHash('sha1').update(normalize(source)).digest('hex');
 
     // the depth an effect reads is decoded the way the producer stored it, whichever that is, and the
     // depth chunk is declared once however many times it is included

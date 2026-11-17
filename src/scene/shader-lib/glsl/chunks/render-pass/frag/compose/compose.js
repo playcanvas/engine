@@ -33,18 +33,18 @@ export default /* glsl */`
 
         vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
 
-        // COMPOSESLOT_SCENE effects - operate on the sampled scene colour including its alpha
+        // COMPOSESLOT_SCENE effects - operate on the sampled scene color including its alpha
         #include "composeSlotSceneCallPS, COMPOSE_SCENE_COUNT"
 
         vec3 result = scene.rgb;
 
-        // COMPOSESLOT_HDR effects - linear, scene-referred colour
+        // COMPOSESLOT_HDR effects - linear, scene-referred color
         #include "composeSlotHdrCallPS, COMPOSE_HDR_COUNT"
 
         // Apply Tone Mapping
         result = toneMap(max(vec3(0.0), result));
 
-        // COMPOSESLOT_LDR effects - display-referred colour, before gamma correction
+        // COMPOSESLOT_LDR effects - display-referred color, before gamma correction
         #include "composeSlotLdrCallPS, COMPOSE_LDR_COUNT"
 
         #include "composeMainEndPS"

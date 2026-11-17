@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 
 import { MainLayout } from './components/MainLayout.mjs';
 import { jsx } from './jsx.mjs';
+import { installTooltip } from './tooltip.mjs';
 import { applyInitialDeviceType } from './url-state.mjs';
 import { blockZoom } from '../../iframe/zoom.mjs';
 
@@ -15,6 +16,7 @@ if (process.env.NODE_ENV === 'development' && import.meta.hot) {
 function main() {
     blockZoom();
     applyInitialDeviceType();
+    installTooltip();
 
     // render out the app
     const container = document.getElementById('app');

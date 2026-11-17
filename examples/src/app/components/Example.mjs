@@ -1061,7 +1061,7 @@ function ExampleWithRouter(props) {
     const { category = '', example = getFirstExample(category) } = useParams();
     const { search } = useLocation();
     if (!example) {
-        return jsx(Navigate, { to: { pathname: '/misc/hello-world', search }, replace: true });
+        return jsx(Navigate, { to: { pathname: '/demos/welcome', search }, replace: true });
     }
     return jsx(Example, { ...props, match: { params: { category, example } } });
 }

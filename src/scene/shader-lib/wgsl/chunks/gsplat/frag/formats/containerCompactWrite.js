@@ -1,5 +1,15 @@
 // Write function for compact work buffer format (20 bytes/splat).
 export default /* wgsl */`
+// Anti-aliasing flag of the splats being written (GSplatResourceBase#antiAlias), stored in the
+// lowest bit of center.x and read back by getAntiAlias(). That moves the center by at most one
+// float step. An infinite or NaN center.x is left as is, as the bit would change its value class.
+uniform uAntiAlias: u32;
+
+fn gsplatPackCenterX(x: f32) -> u32 {
+    let bits = bitcast<u32>(x);
+    return select((bits & ~1u) | uniform.uAntiAlias, bits, (bits & 0x7f800000u) == 0x7f800000u);
+}
+
 fn writeSplat(center: vec3f, rotation: vec4f, scale: vec3f, color: vec4f) {
     // Pack RGB as 11+11+10 bits into R32U, range [0, 4]
     let rgb = clamp(color.rgb, vec3f(0.0), vec3f(4.0));
@@ -26,10 +36,11 @@ fn writeSplat(center: vec3f, rotation: vec4f, scale: vec3f, color: vec4f) {
         let sxBits = select(u32(clamp((log(scale.x) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.x < 1e-10);
         let syBits = select(u32(clamp((log(scale.y) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.y < 1e-10);
         let szBits = select(u32(clamp((log(scale.z) - logMin) * invLogRange + 0.5, 1.0, 255.0)), 0u, scale.z < 1e-10);
-        let alphaBits = u32(clamp(color.a, 0.0, 1.0) * 255.0 + 0.5);
+        // opacity as the SOG v3 byte, (b / 204)^2: 0..1.5625, exact at 0 and 1 (byte 204)
+        let alphaBits = u32(min(sqrt(clamp(color.a, 0.0, 1.5625)) * 204.0 + 0.5, 255.0));
         let packedScaleAlpha = sxBits | (syBits << 8u) | (szBits << 16u) | (alphaBits << 24u);
 
-        writeDataTransformA(vec4u(bitcast<u32>(center.x), bitcast<u32>(center.y), bitcast<u32>(center.z), packedScaleAlpha));
+        writeDataTransformA(vec4u(gsplatPackCenterX(center.x), bitcast<u32>(center.y), bitcast<u32>(center.z), packedScaleAlpha));
 
         writeDataTransformB(vec4u(packedQuat, 0u, 0u, 0u));
     #endif

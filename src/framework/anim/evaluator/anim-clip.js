@@ -215,11 +215,15 @@ class AnimClip {
         }
     }
 
-    progressForTime(time) {
-        return (time * this._speed) / this._track.duration;
-    }
-
-    _update(deltaTime) {
+    /**
+     * Advances the clip, firing the animation events in the elapsed time.
+     *
+     * @param {number} deltaTime - The time elapsed since the last update, in seconds.
+     * @param {boolean} [evaluate] - Whether to evaluate the curves of the track at the new time.
+     * When false, they are evaluated once evaluating is requested again.
+     * @private
+     */
+    _update(deltaTime, evaluate = true) {
         if (this._playing) {
             let time = this._time;
             const duration = this._track.duration;
@@ -260,7 +264,7 @@ class AnimClip {
         }
 
         // update snapshot if time has changed
-        if (this._time !== this._snapshot._time) {
+        if (evaluate && this._time !== this._snapshot._time) {
             this._track.eval(this._time, this._snapshot);
         }
     }

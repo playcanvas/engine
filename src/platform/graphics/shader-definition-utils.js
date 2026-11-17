@@ -7,15 +7,6 @@ import {
     SHADERLANGUAGE_GLSL,
     primitiveGlslToWgslTypeMap
 } from './constants.js';
-import gles3FS from './shader-chunks/frag/gles3.js';
-import gles3VS from './shader-chunks/vert/gles3.js';
-import webgpuFS from './shader-chunks/frag/webgpu.js';
-import webgpuVS from './shader-chunks/vert/webgpu.js';
-import wgslFS from './shader-chunks/frag/webgpu-wgsl.js';
-import wgslVS from './shader-chunks/vert/webgpu-wgsl.js';
-import sharedGLSL from './shader-chunks/frag/shared.js';
-import sharedWGSL from './shader-chunks/frag/shared-wgsl.js';
-import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
  * @import { TRANSFORM_FEEDBACK_INTERLEAVED, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js'
@@ -103,9 +94,7 @@ class ShaderDefinitionUtils {
             return fragmentOutputTypes;
         };
 
-        const getDefines = (gpu, gl2, isVertex, options) => {
-
-            const deviceIntro = device.isWebGPU ? gpu : gl2;
+        const getDefines = (deviceIntro, isVertex, options) => {
 
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
             let attachmentsDefine = '';
@@ -161,14 +150,21 @@ class ShaderDefinitionUtils {
         const fragmentDefinesCode = ShaderDefinitionUtils.getDefinesCode(device, options.fragmentDefines);
         const wgsl = options.shaderLanguage === SHADERLANGUAGE_WGSL;
 
+        // the headers come from the device, so that each device only brings its own into a bundle
+        const platformChunks = wgsl ? device.platformChunksWGSL : device.platformChunksGLSL;
+        Debug.assert(platformChunks, `Graphics device ${device.deviceType} does not support ${wgsl ? 'WGSL' : 'GLSL'} shaders, shader ${name}`);
+        const { vertexHeader, fragmentHeader, shared } = platformChunks.chunks;
+
         if (wgsl) {
+
+            const halfTypes = platformChunks.chunks.halfTypes;
 
             vertCode = `
                 ${getDefinesWgsl(true, options)}
                 ${vertexDefinesCode}
                 ${halfTypes}
-                ${wgslVS}
-                ${sharedWGSL}
+                ${vertexHeader}
+                ${shared}
                 ${options.vertexCode}
             `;
 
@@ -176,8 +172,8 @@ class ShaderDefinitionUtils {
                 ${getDefinesWgsl(false, options)}
                 ${fragmentDefinesCode}
                 ${halfTypes}
-                ${wgslFS}
-                ${sharedWGSL}
+                ${fragmentHeader}
+                ${shared}
                 ${options.fragmentCode}
             `;
 
@@ -187,10 +183,10 @@ class ShaderDefinitionUtils {
 
             // vertex code
             vertCode = `${ShaderDefinitionUtils.versionCode(device) +
-                getDefines(webgpuVS, gles3VS, true, options) +
+                getDefines(vertexHeader, true, options) +
                 vertexDefinesCode +
                 ShaderDefinitionUtils.precisionCode(device)}
-                ${sharedGLSL}
+                ${shared}
                 ${ShaderDefinitionUtils.getShaderNameCode(name)}
                 ${options.vertexCode}`;
 
@@ -199,10 +195,10 @@ class ShaderDefinitionUtils {
             // fragment code
             fragCode = `${(options.fragmentPreamble || '') +
                 ShaderDefinitionUtils.versionCode(device) +
-                getDefines(webgpuFS, gles3FS, false, options) +
+                getDefines(fragmentHeader, false, options) +
                 fragmentDefinesCode +
                 ShaderDefinitionUtils.precisionCode(device)}
-                ${sharedGLSL}
+                ${shared}
                 ${ShaderDefinitionUtils.getShaderNameCode(name)}
                 ${options.fragmentCode}`;
         }

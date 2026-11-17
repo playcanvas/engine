@@ -316,6 +316,9 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // Set placement ID for picking (unconditionally - cheap even if shader doesn't use it)
         scope.resolve('uId').setValue(splatInfo.placementId);
 
+        // anti-aliasing flag, stored per splat by writeSplat
+        scope.resolve('uAntiAlias').setValue(resource.antiAlias ? 1 : 0);
+
         // Apply per-instance shader parameters
         if (splatInfo.parameters) {
             for (const param of splatInfo.parameters.values()) {

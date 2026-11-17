@@ -35,9 +35,11 @@ export default /* glsl */`
     }
 
     vec3 applyColorLut(vec3 color, vec2 uv) {
-        // Encode linear → sRGB for the lookup coordinate. The clamp keeps the lookup
-        // inside the LUT for HDR inputs where the linear value can exceed 1.0.
-        vec3 srgbCoord = pow(max(color, vec3(0.0)) + 0.0000001, vec3(1.0 / 2.2));
+        // Encode linear → sRGB for the lookup coordinate, with the exact sRGB transfer the LUT
+        // is authored in. The clamp keeps the lookup inside the LUT for HDR inputs where the
+        // linear value can exceed 1.0.
+        vec3 linearColor = max(color, vec3(0.0));
+        vec3 srgbCoord = mix(1.055 * pow(linearColor, vec3(1.0 / 2.4)) - 0.055, linearColor * 12.92, lessThanEqual(linearColor, vec3(0.0031308)));
         vec3 c = clamp(srgbCoord, 0.0, 1.0);
 
         // Calculate blue axis slice

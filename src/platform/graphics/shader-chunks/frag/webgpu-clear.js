@@ -26,8 +26,22 @@ export default /* wgsl */`
         return output;
     }
 
+    // the clear color is written to all color attachments of a multiple render target, as each
+    // attachment needs an output; the outputs without an attachment are ignored
+    struct FragmentOutput {
+        @location(0) color0 : vec4f,
+        @location(1) color1 : vec4f,
+        @location(2) color2 : vec4f,
+        @location(3) color3 : vec4f,
+        @location(4) color4 : vec4f,
+        @location(5) color5 : vec4f,
+        @location(6) color6 : vec4f,
+        @location(7) color7 : vec4f
+    }
+
     @fragment
-    fn fragmentMain() -> @location(0) vec4f {
-        return ubMesh.color;
+    fn fragmentMain() -> FragmentOutput {
+        let color = ubMesh.color;
+        return FragmentOutput(color, color, color, color, color, color, color, color);
     }
 `;

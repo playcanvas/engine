@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+.sha-[0-9a-f]+"
       - "v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]+"
       - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
 
@@ -12,7 +12,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'playcanvas' }}
+    if: github.repository == 'playcanvas/engine'
     permissions:
       contents: read
       id-token: write
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Node.js 24.x
         uses: actions/setup-node@v7
         with:
-          node-version: 24.x
+          node-version: 26.x
           cache: "npm"
           registry-url: "https://registry.npmjs.org/"
 

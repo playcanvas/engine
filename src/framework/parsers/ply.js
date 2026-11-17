@@ -565,6 +565,35 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
 // by default load everything
 const defaultElementFilter = val => true;
 
+/**
+ * Returns whether the header comments record that the splats were trained with anti-aliasing, in
+ * the form Postshot writes (`postshot.anti_aliasing=1`, omitted without anti-aliasing) or the one
+ * Brush and splat-transform write (`SplatRenderMode: mip`). As in those tools, matching is
+ * case-insensitive and the last matching comment wins.
+ *
+ * @param {string[]} comments - The header comments, without the leading `comment `.
+ * @returns {boolean} True if the splats were trained with anti-aliasing.
+ * @ignore
+ */
+const isAntiAliased = (comments) => {
+    let antiAliased = false;
+    for (const comment of comments) {
+        const lower = comment.toLowerCase().trim();
+        if (lower.startsWith('splatrendermode:')) {
+            const mode = lower.substring(16).trim();
+            if (mode === 'mip' || mode === 'default' || mode === '2dgs') {
+                antiAliased = mode === 'mip';
+            }
+        } else if (lower.startsWith('postshot.anti_aliasing=')) {
+            const value = lower.substring(23).trim();
+            if (value === '1' || value === '0') {
+                antiAliased = value === '1';
+            }
+        }
+    }
+    return antiAliased;
+};
+
 class PlyParser {
     /** @type {AppBase} */
     app;
@@ -611,6 +640,14 @@ class PlyParser {
                     }
                 );
 
+                // nothing cancels the download, so it can complete after the application was
+                // destroyed. Skip processing the data - the loader drops the result anyway.
+                const device = this.app.graphicsDevice;
+                if (!device || device._destroyed) {
+                    callback(null, null);
+                    return;
+                }
+
                 // allow application to process the data
                 asset.fire('load:data', data);
 
@@ -626,6 +663,7 @@ class PlyParser {
                 const resource = (data.isCompressed && !asset.data.decompress) ?
                     new GSplatCompressedResource(this.app.graphicsDevice, data, { prepareCenters }) :
                     new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data, { prepareCenters });
+                resource.antiAlias = isAntiAliased(data.comments);
 
                 callback(null, resource);
             }
@@ -644,4 +682,4 @@ class PlyParser {
     }
 }
 
-export { PlyParser };
+export { PlyParser, isAntiAliased };

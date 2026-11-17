@@ -8,9 +8,13 @@ import {
 } from '../../platform/graphics/constants.js';
 import { http } from '../../platform/net/http.js';
 import { TextureAtlas } from '../../scene/texture-atlas.js';
+import { Asset } from '../asset/asset.js';
+import { ABSOLUTE_URL } from '../asset/constants.js';
+import { isSpriteSheet, parseSpriteSheet } from '../parsers/sprite-sheet.js';
 import { ResourceHandler } from './handler.js';
 
 /**
+ * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { AppBase } from '../app-base.js'
  */
 
@@ -31,10 +35,57 @@ const JSON_FILTER_MODE = {
 
 const regexFrame = /^data\.frames\.(\d+)$/;
 
+// The url of the image a json file loads: the one a sprite sheet names, relative to the json file,
+// or else a png of the same name beside it, with the same query, such as an access token
+const imageUrl = (url, json, spriteSheet) => {
+    // a json file loaded from a blob url, such as from a bundle, has its location in the original
+    const blob = url.load.startsWith('blob:') || url.load.startsWith('data:');
+    const base = blob ? url.original : url.load;
+    const queryStart = base.indexOf('?');
+    const location = queryStart < 0 ? base : base.slice(0, queryStart);
+    const query = queryStart < 0 ? '' : base.slice(queryStart);
+    const directory = path.getDirectory(location);
+
+    const image = spriteSheet ? json.meta?.image : null;
+    if (typeof image === 'string') {
+        const absolute = ABSOLUTE_URL.test(image) || image.startsWith('blob:') ||
+            image.startsWith('data:');
+        return absolute ? image : path.join(directory, image);
+    }
+
+    const name = path.getBasename(url.original.split('?')[0]).replace(/\.json$/i, '.png');
+    return path.join(directory, name) + query;
+};
+
 /**
  * Resource handler for the `textureatlas` asset type. Loads a texture and its frame definitions
- * into a {@link TextureAtlas}. The frames come from the asset data, or from a JSON file with a
- * texture of the same name beside it.
+ * into a {@link TextureAtlas}. The frames come from the asset data, or from a JSON file.
+ *
+ * The JSON file can be a sprite sheet exported by TexturePacker or Aseprite as JSON, with its
+ * frames as a hash or an array. Each frame is keyed by its name, and the image named by
+ * `meta.image` loads from beside the JSON file. A trimmed frame keeps the position it had in its
+ * untrimmed sprite. Rotated frames are not supported, so export the sheet with rotation disabled.
+ * The JSON file can also hold texture atlas frames, with a PNG image of the same name beside it.
+ *
+ * The image of a JSON file is created with the texture settings in the asset data, such as
+ * `srgb` and `minfilter`, as the image of a texture asset is.
+ *
+ * @example
+ * // a pixel art sprite sheet exported by Aseprite, with frames named "walk 0" to "walk 3"
+ * const asset = new Asset('walk', 'textureatlas', { url: 'sprites/walk.json' }, {
+ *     minfilter: 'nearest',
+ *     magfilter: 'nearest',
+ *     srgb: true
+ * });
+ * asset.ready(() => {
+ *     const sprite = new Sprite(app.graphicsDevice, {
+ *         atlas: asset.resource,
+ *         frameKeys: ['walk 0', 'walk 1', 'walk 2', 'walk 3'],
+ *         pixelsPerUnit: 32
+ *     });
+ * });
+ * app.assets.add(asset);
+ * app.assets.load(asset);
  *
  * @category Asset
  */
@@ -52,7 +103,7 @@ class TextureAtlasHandler extends ResourceHandler {
     }
 
     // Load the texture atlas texture using the texture resource loader
-    load(url, callback) {
+    load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -60,35 +111,106 @@ class TextureAtlasHandler extends ResourceHandler {
             };
         }
 
-        const self = this;
         const handler = this._loader.getHandler('texture');
 
-        // if supplied with a json file url (probably engine-only)
-        // load json data then load texture of same name
+        // if supplied with a json file url (probably engine-only), load the json data, then the
+        // image it names, or a png of the same name
         if (path.getExtension(url.original) === '.json') {
             http.get(url.load, {
                 retry: this.maxRetries > 0,
                 maxRetries: this.maxRetries
             }, (err, response) => {
-                if (!err) {
-                    // load texture
-                    const textureUrl = url.original.replace('.json', '.png');
-                    self._loader.load(textureUrl, 'texture', (err, texture) => {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            callback(null, {
-                                data: response,
-                                texture: texture
-                            });
-                        }
-                    });
-                } else {
+                if (err) {
                     callback(err);
+                    return;
                 }
+
+                const spriteSheet = isSpriteSheet(response);
+                const textureUrl = imageUrl(url, response, spriteSheet);
+
+                // the texture is created with the atlas asset's texture options, such as srgb
+                const textureAsset = asset && new Asset(asset.name, 'texture', { url: textureUrl },
+                    asset.data, asset.options);
+
+                this._loadImage(textureUrl, textureAsset, (err, texture) => {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    let data = response;
+                    if (spriteSheet) {
+                        try {
+                            const { width, height } = texture;
+                            data = { frames: parseSpriteSheet(response, width, height) };
+                        } catch (e) {
+                            texture.destroy();
+                            callback(`Error loading texture atlas ${url.original}: ${e.message}`);
+                            return;
+                        }
+                    }
+
+                    callback(null, {
+                        data: data,
+                        texture: texture
+                    });
+                });
             });
         } else {
             handler.load(url, callback);
+        }
+    }
+
+    /**
+     * Loads the image of a JSON file into a texture of the atlas's own, as the atlas destroys its
+     * texture: the loader's cache could provide a texture another asset owns. A loaded bundle that
+     * holds the image provides it, as it would through the loader.
+     *
+     * @param {string} textureUrl - The url of the image.
+     * @param {Asset} [textureAsset] - The asset whose texture settings create the texture.
+     * @param {function(string|null, Texture=): void} callback - Called with an error or the
+     * texture.
+     * @private
+     */
+    _loadImage(textureUrl, textureAsset, callback) {
+        const handler = this._loader.getHandler('texture');
+
+        const load = (request) => {
+            handler.load(request, (err, data) => {
+                if (request.load !== textureUrl) {
+                    URL.revokeObjectURL(request.load);
+                }
+
+                let texture = null;
+                if (!err) {
+                    try {
+                        texture = handler.open(textureUrl, data, textureAsset);
+                    } catch (e) {
+                        err = e.message ?? e;
+                    }
+                }
+
+                if (err) {
+                    // name the image, as some image loads fail with only a status code
+                    callback(`Error loading texture atlas image: ${textureUrl} [${err}]`);
+                } else {
+                    callback(null, texture);
+                }
+            }, textureAsset);
+        };
+
+        const file = textureUrl.split('?')[0];
+        const bundles = this._app.enableBundles ? this._app.bundles : null;
+        if (bundles?.hasUrl(file) && bundles.urlIsLoadedOrLoading(file)) {
+            bundles.loadUrl(file, (err, data) => {
+                if (err) {
+                    callback(`Error loading texture atlas image: ${textureUrl} [${err}]`);
+                    return;
+                }
+                load({ load: URL.createObjectURL(new Blob([data])), original: file });
+            });
+        } else {
+            load({ load: textureUrl, original: textureUrl });
         }
     }
 
@@ -128,40 +250,46 @@ class TextureAtlasHandler extends ResourceHandler {
             delete asset.resource.__data;
         }
 
-        // pass texture data
+        // pass texture data, unless the asset's texture options override it, as they do when the
+        // texture is created
         const texture = asset.resource.texture;
         if (texture) {
             texture.name = asset.name;
 
-            if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter]) {
-                texture.minFilter = JSON_FILTER_MODE[asset.data.minfilter];
-            }
-
-            if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter]) {
-                texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
-            }
-
-            if (asset.data.hasOwnProperty('addressu') && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu]) {
-                texture.addressU = JSON_ADDRESS_MODE[asset.data.addressu];
-            }
-
-            if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv]) {
-                texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
-            }
-
-            if (asset.data.hasOwnProperty('mipmaps') && texture.mipmaps !== asset.data.mipmaps) {
-                texture.mipmaps = asset.data.mipmaps;
-            }
-
-            if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy) {
-                texture.anisotropy = asset.data.anisotropy;
-            }
-
-            if (asset.data.hasOwnProperty('rgbm')) {
-                const type = asset.data.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
-                if (texture.type !== type) {
-                    texture.type = type;
+            const data = asset.data;
+            const options = asset.options?.texture;
+            const set = (property, value) => {
+                if (options?.[property] === undefined && texture[property] !== value) {
+                    texture[property] = value;
                 }
+            };
+
+            if (data.hasOwnProperty('minfilter')) {
+                set('minFilter', JSON_FILTER_MODE[data.minfilter]);
+            }
+
+            if (data.hasOwnProperty('magfilter')) {
+                set('magFilter', JSON_FILTER_MODE[data.magfilter]);
+            }
+
+            if (data.hasOwnProperty('addressu')) {
+                set('addressU', JSON_ADDRESS_MODE[data.addressu]);
+            }
+
+            if (data.hasOwnProperty('addressv')) {
+                set('addressV', JSON_ADDRESS_MODE[data.addressv]);
+            }
+
+            if (data.hasOwnProperty('mipmaps')) {
+                set('mipmaps', data.mipmaps);
+            }
+
+            if (data.hasOwnProperty('anisotropy')) {
+                set('anisotropy', data.anisotropy);
+            }
+
+            if (data.hasOwnProperty('rgbm')) {
+                set('type', data.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT);
             }
         }
 

@@ -301,6 +301,37 @@ describe('ParticleSystemComponent', function () {
         expect(e.particlesystem.isPlaying()).to.be.false;
     });
 
+    it('resume() unfreezes a paused particle system', function () {
+        const e = new Entity();
+        e.addComponent('particlesystem');
+        app.root.addChild(e);
+        const c = e.particlesystem;
+
+        // NullGraphicsDevice creates no emitter, so stub one to observe the paused state
+        c.emitter = { loop: true, simTimeTotal: 0, endTime: 0 };
+        c.pause();
+        c.resume();
+
+        expect(c.isPlaying()).to.be.true;
+
+        c.emitter = null;                       // drop the stub before teardown
+    });
+
+    it('forwards the deprecated unpause to resume', function () {
+        const e = new Entity();
+        e.addComponent('particlesystem');
+        app.root.addChild(e);
+        const c = e.particlesystem;
+
+        c.emitter = { loop: true, simTimeTotal: 0, endTime: 0 };
+        c.pause();
+        c.unpause();
+
+        expect(c.isPlaying()).to.be.true;
+
+        c.emitter = null;                       // drop the stub before teardown
+    });
+
     it('isPlaying() returns false when no emitter exists', function () {
         // a device with particle systems disabled (the null device's default) creates no emitter
         app.graphicsDevice.disableParticleSystem = true;

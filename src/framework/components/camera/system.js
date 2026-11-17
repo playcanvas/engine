@@ -47,6 +47,8 @@ const _properties = [
     'clippingPlanes',
     'renderSceneColorMap',
     'renderSceneDepthMap',
+    'sceneColorMapMipmaps',
+    'sceneColorMapMipmapFilter',
     'cullFaces',
     'farClip',
     'flipFaces',

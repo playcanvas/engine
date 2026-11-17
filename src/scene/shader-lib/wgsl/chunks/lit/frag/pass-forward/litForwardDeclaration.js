@@ -1,6 +1,14 @@
 // shader declarations for the lit material for forward rendering
 export default /* wgsl */`
 
+// The world position the lighting is evaluated at, and its view depth, which selects the shadow
+// cascade and limits the shadow distance. Both are the rasterized fragment's unless the front end sets
+// them; a front end setting the position also sets dVertexNormalW, dViewDirW and dViewDepth to match.
+// The position is declared here rather than with the other litArgs, as the fog reads it before a
+// front end declares those
+var<private> litArgs_worldPosition: vec3f;
+var<private> dViewDepth: f32;
+
 // globals
 var<private> sReflection: vec3f;
 var<private> dVertexNormalW: vec3f;
@@ -34,6 +42,14 @@ var<private> sSpecularLight: vec3f;
 
 #ifndef LIT_OPACITY_FADES_SPECULAR
     uniform material_alphaFade: f32;
+#endif
+
+#ifdef LIT_AO
+    uniform material_occludeDirect: f32;
+#endif
+
+#ifdef LIT_NEEDS_NORMAL
+    uniform material_twoSidedLighting: f32;
 #endif
 
 #ifdef LIT_SSAO

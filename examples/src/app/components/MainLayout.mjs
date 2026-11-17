@@ -98,6 +98,8 @@ function Redirect({ to }) {
  * @property {number} mobilePanelHeight - Active mobile panel height.
  * @property {number} mobilePanelWidth - Active mobile panel width.
  * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
+ * @property {boolean} creditsHidden - Whether the loaded example starts with its credits overlay hidden
+ * (its CREDITS_HIDDEN flag), until the credits button shows it.
  * @property {boolean} showInspector - Whether the inspector panel is shown, which hides the desktop description.
  */
 
@@ -120,6 +122,7 @@ class MainLayout extends TypedComponent {
             mobilePanelHeight: getMobilePanelHeight(height),
             mobilePanelWidth: getMobilePanelWidth(width),
             showCredits: localStorage.getItem('showCredits') !== 'false',
+            creditsHidden: false,
             showInspector: false
         };
     })();
@@ -262,6 +265,7 @@ class MainLayout extends TypedComponent {
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('orientationchange', this._onLayoutChange);
         window.addEventListener('inspector', this._handleInspector);
+        window.addEventListener('exampleLoading', this._handleExampleLoading);
     }
 
     componentWillUnmount() {
@@ -269,6 +273,7 @@ class MainLayout extends TypedComponent {
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('orientationchange', this._onLayoutChange);
         window.removeEventListener('inspector', this._handleInspector);
+        window.removeEventListener('exampleLoading', this._handleExampleLoading);
     }
 
     /**
@@ -295,15 +300,24 @@ class MainLayout extends TypedComponent {
     };
 
     /**
+     * @param {Event} event - Example loading event from the iframe.
+     */
+    _handleExampleLoading = (event) => {
+        const customEvent = /** @type {CustomEvent<{ hideCredits?: boolean }>} */ (event);
+        this.setState({ creditsHidden: !!customEvent.detail?.hideCredits });
+    };
+
+    /**
      * @param {boolean} value - Show credits state.
      */
     setShowCredits = (value) => {
         localStorage.setItem('showCredits', `${value}`);
-        this.setState({ showCredits: value });
+        this.setState({ showCredits: value, creditsHidden: false });
     };
 
     render() {
-        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth, showCredits, showInspector } = this.state;
+        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth, creditsHidden, showInspector } = this.state;
+        const showCredits = this.state.showCredits && !creditsHidden;
         return jsx(
             'div',
             {
@@ -322,7 +336,7 @@ class MainLayout extends TypedComponent {
                     null,
                     jsx(Route, {
                         path: '/',
-                        element: jsx(Navigate, { to: '/misc/hello-world', replace: true })
+                        element: jsx(Navigate, { to: '/demos/welcome', replace: true })
                     }),
                     Object.entries(exampleRedirects).map(([from, to]) => jsx(Route, {
                         key: from,

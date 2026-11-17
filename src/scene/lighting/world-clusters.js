@@ -177,7 +177,7 @@ class WorldClusters {
             this.lightsBuffer.cookiesEnabled = lightingParams.cookiesEnabled;
             this.lightsBuffer.shadowsEnabled = lightingParams.shadowsEnabled;
 
-            this.lightsBuffer.areaLightsEnabled = lightingParams.areaLightsEnabled;
+            this.lightsBuffer.areaLightShapes = lightingParams.areaLightShapes;
         }
     }
 
@@ -372,7 +372,7 @@ class WorldClusters {
         this.counts.fill(0);
         this.clusters.fill(0);
 
-        this.lightsBuffer.areaLightsEnabled = lightingParams ? lightingParams.areaLightsEnabled : false;
+        this.lightsBuffer.areaLightShapes = lightingParams ? lightingParams.areaLightShapes : 0;
 
         // local accessors
         const divX = this._cells.x;

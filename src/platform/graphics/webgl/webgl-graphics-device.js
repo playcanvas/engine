@@ -9,7 +9,9 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
+    MIPMAPFILTER_GAUSSIAN,
     PIXELFORMAT_R8, PIXELFORMAT_RG8, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -33,6 +35,7 @@ import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { TextureView } from '../texture-view.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { webglChunksGLSL } from '../shader-chunks/webgl-chunks-glsl.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
@@ -48,6 +51,7 @@ import { WebglRenderTarget } from './webgl-render-target.js';
 import { WebglUploadStream } from './webgl-upload-stream.js';
 import { WebglXrBridge } from './webgl-xr-bridge.js';
 import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
+import { WebglMipmapRenderer } from './webgl-mipmap-renderer.js';
 import { BlendState } from '../blend-state.js';
 import { validateClearValues } from '../render-pass.js';
 import { DepthState } from '../depth-state.js';
@@ -105,6 +109,9 @@ const getPixelFormatChannelsForRgbaReadback = (format) => {
 
 const invalidateAttachments = [];
 
+// formats which can only be filtered when the device supports OES_texture_float_linear
+const float32Formats = new Set([PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGBA32F]);
+
 // The extensions a bare device (DEVICETYPE_WEBGL2_BARE) keeps exposed - only those
 // available on 99%+ of devices, as reported by https://web3dsurvey.com/webgl2. Everything else the
 // device queries is hidden, so the engine takes the same code paths it would on a device without
@@ -154,6 +161,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
     gl;
 
     /**
+     * The render targets of the precompile passes, by the formats of their attachments and their
+     * number of samples.
+     *
+     * @type {Map<string, RenderTarget>}
+     * @private
+     */
+    _precompileRenderTargets = new Map();
+
+    /**
      * WebGLFramebuffer object that represents the backbuffer of the device for a rendering frame.
      * When null, this is a framebuffer created when the device was created, otherwise it is a
      * framebuffer supplied by the XR session.
@@ -177,6 +193,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _xrMsaaCopy = null;
+
+    /**
+     * Helper generating mipmaps with the Gaussian filter, which WebGL does not provide. Created
+     * lazily.
+     *
+     * @type {WebglMipmapRenderer|null}
+     * @private
+     */
+    _mipmapRenderer = null;
 
     /**
      * Copies out of a pixel buffer waiting to run at the start of the next frame, for the reads
@@ -285,6 +310,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gl = gl;
         this.isWebGL2 = true;
         this._deviceType = DEVICETYPE_WEBGL2;
+        this.platformChunksGLSL = webglChunksGLSL;
+
+        // the browser can finish compiling a shader only at its first draw, see precompileNeedsWarmup
+        this.precompileNeedsWarmup = true;
 
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
@@ -723,6 +752,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this._xrMsaaCopy?.destroy();
         this._xrMsaaCopy = null;
+
+        this._mipmapRenderer?.destroy();
+        this._mipmapRenderer = null;
+
+        this._precompileRenderTargets.forEach((rt) => {
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+        this._precompileRenderTargets.clear();
 
         this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
         this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
@@ -1216,6 +1254,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // release dynamic uniform buffers (their GL buffers are gone with the context)
         this.dynamicBuffers.loseContext();
 
+        this._mipmapRenderer?.loseContext();
+
         this.fire('devicelost');
     }
 
@@ -1252,6 +1292,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the viewport in pixels.
      */
     setViewport(x, y, w, h) {
+        // the warm-up of a precompile renders a single pixel, see startPrecompilePass
+        if (this.precompileWarmup) {
+            x = 0;
+            y = 0;
+            w = 1;
+            h = 1;
+        }
         if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vh !== h)) {
             this.gl.viewport(x, y, w, h);
             this.vx = x;
@@ -1270,6 +1317,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the scissor rectangle in pixels.
      */
     setScissor(x, y, w, h) {
+        // the warm-up of a precompile renders a single pixel, see startPrecompilePass
+        if (this.precompileWarmup) {
+            x = 0;
+            y = 0;
+            w = 1;
+            h = 1;
+        }
         if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sh !== h)) {
             this.gl.scissor(x, y, w, h);
             this.sx = x;
@@ -1475,6 +1529,98 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
+    }
+
+    startPrecompilePass(renderTarget) {
+        Debug.assert(!this.insideRenderPass, 'A precompile pass cannot be started inside a render pass.');
+
+        // the pass renders to a small render target of its own with the same formats, so that
+        // nothing renders visibly. The exception is the warm-up of the back buffer, whose actual
+        // format the browser does not expose: it renders to the back buffer itself, right before the
+        // frame renders over it, as the warm-up runs in the same frame, and the browser only
+        // presents the back buffer once the frame ends
+        const target = renderTarget ?? this.backBuffer;
+        const toBackBuffer = this.precompileWarmup && target === this.backBuffer;
+        this.renderTarget = toBackBuffer ? target : this.getPrecompileRenderTarget(target);
+        this.updateBegin();
+
+        // during the warm-up, setViewport and setScissor keep the rendering to a single pixel, which
+        // is all a draw needs to set up its state, and which limits the warm-up of the back buffer
+        // to a pixel
+        this.setViewport(0, 0, 1, 1);
+        this.setScissor(0, 0, 1, 1);
+
+        // a shader compiles when it is created, and the draws are skipped, see setShader, as they
+        // would only wait for it. Once compiled, the warm-up draws them, as the browser may complete
+        // the compilation only at the first draw - ANGLE on Metal creates the pipeline state, which
+        // runs the final compilation, at the first draw with each combination of the state
+        this.shader = null;
+        this.insideRenderPass = true;
+        this._precompilePass = !this.precompileWarmup;
+    }
+
+    /**
+     * Returns a small render target with the same formats of the attachments and the same number
+     * of samples as a render target, as they take part in the pipeline state of a draw, see
+     * {@link WebglGraphicsDevice#startPrecompilePass}. For the back buffer, which is only used for
+     * this while nothing draws, the format is the one reported for it.
+     *
+     * @param {RenderTarget} target - The render target.
+     * @returns {RenderTarget} The render target to precompile with.
+     * @private
+     */
+    getPrecompileRenderTarget(target) {
+        const colorFormats = target === this.backBuffer ? [this.backBufferFormat] :
+            (target._colorBuffers?.map(colorBuffer => colorBuffer.format) ?? []);
+        const depthFormat = target.depthBuffer?.format;
+        const { depth, stencil, samples } = target;
+        const key = `${colorFormats.join(',')}|${depthFormat ?? (depth ? (stencil ? 'depthstencil' : 'depth') : 'none')}|${samples}`;
+
+        let rt = this._precompileRenderTargets.get(key);
+        if (!rt) {
+            const createTexture = format => new Texture(this, {
+                name: 'PrecompileTarget',
+                width: 1,
+                height: 1,
+                format,
+                mipmaps: false
+            });
+            rt = new RenderTarget({
+                name: 'PrecompileTarget',
+                graphicsDevice: this,
+                colorBuffers: colorFormats.length > 0 ? colorFormats.map(createTexture) : undefined,
+                depthBuffer: depthFormat !== undefined ? createTexture(depthFormat) : undefined,
+                depth: depthFormat === undefined && depth,
+                stencil: depthFormat === undefined && stencil,
+                samples
+            });
+            this._precompileRenderTargets.set(key, rt);
+        }
+        return rt;
+    }
+
+    endPrecompilePass() {
+        this.unbindVertexArray();
+        this.renderTarget = null;
+        this.shader = null;
+        this.insideRenderPass = false;
+        this._precompilePass = false;
+    }
+
+    getPrecompilePendingCount() {
+
+        // the shaders start compiling and linking when they are created, and are pending until
+        // linked. Without the parallel shader compile extension a shader cannot be tested for
+        // completion and is not pending, and the first draw using it waits for it
+        let count = 0;
+        const shaders = this.shaders;
+        for (let i = 0; i < shaders.length; i++) {
+            const shader = shaders[i];
+            if (!shader.ready && !shader.failed && shader.impl?.glProgram && !shader.impl.isLinked(this)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     frameStart() {
@@ -1689,9 +1835,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         // TODO: this regenerates the mipmaps of all cubemap faces / array layers,
                         // not only the one rendered to (#9688)
-                        this.activeTexture(this.maxCombinedTextures - 1);
-                        this.bindTexture(colorBuffer);
-                        this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                        this.generateMipmaps(colorBuffer);
 
                         DebugGraphics.popGpuMarker(this);
                     }
@@ -1771,13 +1915,31 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
                 // TODO: this regenerates the mipmaps of all cubemap faces / array layers, not only
                 // the one rendered to (#9688)
-                this.activeTexture(this.maxCombinedTextures - 1);
-                this.bindTexture(colorBuffer);
-                this.gl.generateMipmap(colorBuffer.impl._glTarget);
+                this.generateMipmaps(colorBuffer);
             }
         }
 
         DebugGraphics.popGpuMarker(this);
+    }
+
+    /**
+     * Generates the mipmaps of a texture from its top level, with the filter the texture specifies
+     * by {@link Texture#mipmapFilter}. WebGL's own mipmap generation is used for the box filter,
+     * and for the textures the Gaussian filter does not apply to.
+     *
+     * @param {Texture} texture - The texture.
+     * @ignore
+     */
+    generateMipmaps(texture) {
+        if (texture.mipmapFilter === MIPMAPFILTER_GAUSSIAN && !texture.cubemap && !texture.array && !texture.volume &&
+            (this.textureFloatFilterable || !float32Formats.has(texture.format))) {
+            this._mipmapRenderer ??= new WebglMipmapRenderer(this);
+            this._mipmapRenderer.generate(texture);
+        } else {
+            this.activeTexture(this.maxCombinedTextures - 1);
+            this.bindTexture(texture);
+            this.gl.generateMipmap(texture.impl._glTarget);
+        }
     }
 
     /**
@@ -2313,7 +2475,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 this._drawCallsPerFrame++;
 
-                // #if _PROFILER
+                // #if _DEBUG
                 if (drawCommands) {
                     // use pre-calculated primitive count from drawCommands
                     this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type, numInstances > 0);
@@ -3152,7 +3314,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (shader !== this.shader) {
             this.shader = shader;
             this.shaderAsyncCompile = asyncCompile;
-            this.shaderValid = undefined;   // need to run activation / validation
+
+            // need to run activation / validation. A precompile pass skips the draws, see
+            // startPrecompilePass
+            this.shaderValid = this._precompilePass ? false : undefined;
 
             // #if _PROFILER
             this._shaderSwitchesPerFrame++;

@@ -360,8 +360,15 @@ class SideBar extends TypedComponent {
             if (category) {
                 this._scrollToCategory(category);
             } else {
-                const examplePath = this.props.examplePath.split('/');
-                document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
+                // start the list at the example's category so the examples before it stay in
+                // view, and only scroll further when the example itself would be off screen
+                const [, exampleCategory, example] = this.props.examplePath.split('/');
+                const contents = document.getElementById('sideBar-contents');
+                const panel = document.getElementById(`${CATEGORY_PANEL_ID}${exampleCategory}`);
+                if (contents && panel) {
+                    contents.scrollTop += panel.getBoundingClientRect().top - contents.getBoundingClientRect().top;
+                }
+                document.getElementById(`link-${exampleCategory}-${example}`)?.scrollIntoView({ block: 'nearest' });
             }
             // @ts-ignore
             window._scrolledToExample = true;

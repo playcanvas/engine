@@ -890,7 +890,7 @@ class TransformGizmo extends DragGizmo {
      * @param {GizmoAxis | 'face'} shapeAxis - The shape axis.
      * @param {boolean} enabled - The enabled state of shape.
      */
-    enableShape(shapeAxis, enabled) {
+    setShapeEnabled(shapeAxis, enabled) {
         if (shapeAxis === 'face') {
             Debug.deprecated('"face" literal is deprecated use "f" literal instead');
             shapeAxis = 'f';
@@ -1000,6 +1000,21 @@ class TransformGizmo extends DragGizmo {
             this._shapes[key].destroy();
         }
     }
+
+    // ---- deprecated block start ----
+
+    /**
+     * @param {GizmoAxis | 'face'} shapeAxis - The shape axis.
+     * @param {boolean} enabled - The enabled state of shape.
+     * @deprecated Use {@link TransformGizmo#setShapeEnabled} instead.
+     * @ignore
+     */
+    enableShape(shapeAxis, enabled) {
+        Debug.deprecated('TransformGizmo#enableShape is deprecated. Use TransformGizmo#setShapeEnabled instead.');
+        this.setShapeEnabled(shapeAxis, enabled);
+    }
+
+    // ---- deprecated block end ----
 }
 
 export { TransformGizmo };

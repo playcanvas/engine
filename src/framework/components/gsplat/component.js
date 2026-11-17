@@ -55,15 +55,16 @@ const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unifi
  * - [Billions of Splats](https://playcanvas.github.io/#/gaussian-splatting/billions)
  * - [Downtown Streaming](https://playcanvas.github.io/#/gaussian-splatting/downtown)
  * - [Global Sorting](https://playcanvas.github.io/#/gaussian-splatting/global-sorting)
- * - [LOD Instances](https://playcanvas.github.io/#/gaussian-splatting/lod-instances)
- * - [LOD Streaming](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming)
- * - [LOD Streaming with Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming-sh)
+ * - [LOD Instances](https://playcanvas.github.io/#/gaussian-splatting/streamed-instances)
  * - [Multi-Splat](https://playcanvas.github.io/#/gaussian-splatting/multi-splat)
  * - [Multi-View](https://playcanvas.github.io/#/gaussian-splatting/multi-view)
  * - [Picking](https://playcanvas.github.io/#/gaussian-splatting/picking)
- * - [Reveal Effect](https://playcanvas.github.io/#/gaussian-splatting/reveal)
- * - [Shader Effects](https://playcanvas.github.io/#/gaussian-splatting/shader-effects)
- * - [Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/spherical-harmonics)
+ * - [Reveal Effect](https://playcanvas.github.io/#/gaussian-splatting-fx/reveal)
+ * - [Shader Effects](https://playcanvas.github.io/#/gaussian-splatting-fx/shader-effects)
+ * - [Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/simple-sh)
+ * - [Streamed LCC2](https://playcanvas.github.io/#/gaussian-splatting/streamed-lcc2)
+ * - [Streamed SOG](https://playcanvas.github.io/#/gaussian-splatting/streamed-sog)
+ * - [Streamed SOG with Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/streamed-sog-sh)
  *
  * @hideconstructor
  * @category Graphics
@@ -280,7 +281,7 @@ class GSplatComponent extends Component {
             if (!mi.node) {
                 mi.node = this.entity;
             }
-            mi.castShadow = this._castShadows;
+            mi.castShadows = this._castShadows;
             mi.setCustomAabb(this._customAabb);
 
             if (this.enabled && this.entity.enabled) {
@@ -362,7 +363,7 @@ class GSplatComponent extends Component {
                     }
                 }
 
-                mi.castShadow = value;
+                mi.castShadows = value;
 
                 if (!this._castShadows && value) {
                     for (let i = 0; i < layers.length; i++) {

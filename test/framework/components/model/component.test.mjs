@@ -135,8 +135,8 @@ describe('ModelComponent', function () {
         for (let i = 0; i < srcMi.length; i++) {
             expect(srcMi[i].mask).to.equal(dstMi[i].mask);
             expect(srcMi[i].layer).to.equal(dstMi[i].layer);
-            expect(srcMi[i].receiveShadow).to.equal(dstMi[i].receiveShadow);
-            expect(srcMi[i].castShadow).to.equal(dstMi[i].castShadow);
+            expect(srcMi[i].receiveShadows).to.equal(dstMi[i].receiveShadows);
+            expect(srcMi[i].castShadows).to.equal(dstMi[i].castShadows);
             expect(srcMi[i].material.id).to.exist;
             expect(srcMi[i].material.id).to.equal(dstMi[i].material.id);
         }
@@ -151,8 +151,8 @@ describe('ModelComponent', function () {
         });
         app.root.addChild(e);
 
-        e.model.model.meshInstances[0].receiveShadow = true;
-        e.model.model.meshInstances[0].castShadow = true;
+        e.model.model.meshInstances[0].receiveShadows = true;
+        e.model.model.meshInstances[0].castShadows = true;
         e.model.model.meshInstances[0].mask = 16;
         e.model.model.meshInstances[0].layer = 16;
 
@@ -166,8 +166,8 @@ describe('ModelComponent', function () {
         const dstMi = c.model.meshInstances;
 
         for (let i = 0; i < srcMi.length; i++) {
-            expect(srcMi[i].receiveShadow).to.equal(dstMi[i].receiveShadow);
-            expect(srcMi[i].castShadow).to.equal(dstMi[i].castShadow);
+            expect(srcMi[i].receiveShadows).to.equal(dstMi[i].receiveShadows);
+            expect(srcMi[i].castShadows).to.equal(dstMi[i].castShadows);
             expect(srcMi[i].mask).to.equal(dstMi[i].mask);
             expect(srcMi[i].layer).to.equal(dstMi[i].layer);
         }

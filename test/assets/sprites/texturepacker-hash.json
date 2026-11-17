@@ -1,0 +1,37 @@
+{
+    "frames": {
+        "pivot.png": {
+            "frame": { "x": 0, "y": 0, "w": 16, "h": 16 },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+            "sourceSize": { "w": 16, "h": 16 },
+            "pivot": { "x": 0.5, "y": 1 }
+        },
+        "trimmed.png": {
+            "frame": { "x": 16, "y": 0, "w": 8, "h": 8 },
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": { "x": 2, "y": 6, "w": 8, "h": 8 },
+            "sourceSize": { "w": 16, "h": 16 },
+            "pivot": { "x": 0.5, "y": 0.5 }
+        },
+        "sliced.png": {
+            "frame": { "x": 0, "y": 16, "w": 16, "h": 16 },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+            "sourceSize": { "w": 16, "h": 16 },
+            "pivot": { "x": 0.5, "y": 0.5 },
+            "borders": { "x": 2, "y": 3, "w": 10, "h": 8 }
+        }
+    },
+    "meta": {
+        "app": "https://www.codeandweb.com/texturepacker",
+        "version": "1.0",
+        "image": "red-atlas.png",
+        "format": "RGBA8888",
+        "size": { "w": 32, "h": 32 },
+        "scale": "1"
+    }
+}

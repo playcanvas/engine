@@ -6,13 +6,13 @@ export default /* glsl */`
         uniform vec4 aeHistogram[16];
 
         // x, y: the darkest and the brightest brightness the average includes, z: the average, w: the
-        // brightness the camera exposes as middle grey - each as a position along the histogram, 0-1
+        // brightness the camera exposes as middle gray - each as a position along the histogram, 0-1
         uniform vec4 aeMarkers;
 
         // the 'autoexposure' debug view: the scene at the exposure the camera renders with, without
         // the other effects, with the histogram of its brightness drawn along the bottom - the bins
         // the average includes bright, the average in yellow and the brightness the camera exposes
-        // as middle grey in blue, which meet once the exposure has adapted
+        // as middle gray in blue, which meet once the exposure has adapted
         vec3 debugAutoexposure() {
             // the pixel sampled, flipped like the composition samples the scene
             vec2 uv = vec2(uv0.x, mix(uv0.y, 1.0 - uv0.y, composeTargetFlipY));

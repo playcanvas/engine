@@ -1,0 +1,22 @@
+Splash One Sounds
+==================
+
+The sounds of the Splash One example, cut from recordings on Freesound. All three are released
+into the public domain (CC0 1.0 Universal, https://creativecommons.org/publicdomain/zero/1.0/).
+
+splash-one-engine.mp3
+    Source:  "Afterburner sound.wav" by StoneyJ - https://freesound.org/people/StoneyJ/sounds/104883/
+             A USAF F-4 Phantom, from taxi to an afterburner takeoff.
+    Changes: 13 - 28 s cut into a seamless 15 s loop (1.5 s equal power crossfade), its slow rise
+             in level flattened, padded with 0.3 s of its own wrap around at each end so the loop
+             points sit inside the file (loop between 0.3 s and 15.3 s), 128 kbps stereo MP3.
+
+splash-one-launch.mp3
+    Source:  "Afterburner" by TiesWijnen - https://freesound.org/people/TiesWijnen/sounds/413312/
+    Changes: the first 4 s, fading out from 2.5 s, 128 kbps stereo MP3.
+
+splash-one-alarm.mp3
+    Source:  "missile lock on sound" by Alxy - https://freesound.org/people/Alxy/sounds/189327/
+    Changes: 10 whole beeps of the first half (from 0.176 s, 2.4975 s) cut into a seamless loop,
+             padded with 0.3 s of its own wrap around at each end (loop between 0.3 s and
+             2.7975 s), 96 kbps mono MP3.
