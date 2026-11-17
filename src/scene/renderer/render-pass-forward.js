@@ -297,7 +297,7 @@ class RenderPassForward extends RenderPass {
                     renderer.culler.dirLightShadows.set(light, shadowCamera);
 
                     // render the shadow before this render pass
-                    const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, shadowCamera);
+                    const shadowPass = renderer._shadowRendererDirectional?.getLightRenderPass(light, shadowCamera);
                     if (shadowPass) {
                         this.internalBeforePasses.push(shadowPass);
                     }

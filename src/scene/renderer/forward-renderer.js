@@ -644,7 +644,7 @@ class ForwardRenderer extends Renderer {
         } else {
 
             // non-clustered local shadows - these are shared by all cameras (not entirely correctly)
-            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, this.localLights);
+            this._shadowRendererLocal?.buildNonClusteredRenderPasses(frameGraph, this.localLights);
         }
 
         // main passes
@@ -821,7 +821,7 @@ class ForwardRenderer extends Renderer {
     update(comp) {
 
         this.frameUpdate();
-        this.shadowRenderer.frameUpdate();
+        this.shadowRenderer?.frameUpdate();
 
         // update the skybox, since this might change _meshInstances
         this.scene._updateSkyMesh();

@@ -1,10 +1,14 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../../../src/scene/features/feature-shadows.js';
 import { Feature } from '../../../src/scene/features/feature.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
+import { Renderer } from '../../../src/scene/renderer/renderer.js';
+import { Scene } from '../../../src/scene/scene.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shadowChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shadow-chunks-glsl.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
@@ -32,7 +36,7 @@ describe('installFeatures', function () {
         const base = new Feature({ name: 'base', install: () => order.push('base') });
         const top = new Feature({ name: 'top', requires: [base], install: () => order.push('top') });
 
-        installFeatures(host, [top], new Set());
+        installFeatures(host, [top]);
 
         expect(order).to.deep.equal(['base', 'top']);
     });
@@ -42,13 +46,20 @@ describe('installFeatures', function () {
         const shared = new Feature({ name: 'shared', install: () => count++ });
         const a = new Feature({ name: 'a', requires: [shared] });
         const b = new Feature({ name: 'b', requires: [shared] });
-        const installed = new Set();
-
-        installFeatures(host, [a, b, shared], installed);
-        installFeatures(host, [a], installed);
+        installFeatures(host, [a, b, shared]);
+        installFeatures(host, [a]);
 
         expect(count).to.equal(1);
-        expect([...installed]).to.have.members([a, b, shared]);
+        expect([...device.features]).to.have.members(['a', 'b', 'shared']);
+    });
+
+    it('asserts in debug builds when two different features share a name', function () {
+        const assert = sinon.stub(Debug, 'assert');
+
+        installFeatures(host, [new Feature({ name: 'same' }), new Feature({ name: 'same' })]);
+
+        expect(assert.calledWithMatch(false, 'Two different features are named same')).to.equal(true);
+        assert.restore();
     });
 
     it('registers the chunks of a feature in the language of its collection', function () {
@@ -57,19 +68,22 @@ describe('installFeatures', function () {
             chunks: { name: 'test', language: SHADERLANGUAGE_WGSL, chunks: { testChunkPS: 'fn test() {}' } }
         });
 
-        installFeatures(host, [feature], new Set());
+        installFeatures(host, [feature]);
 
         expect(ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('testChunkPS')).to.equal('fn test() {}');
         expect(ShaderChunks.get(device, SHADERLANGUAGE_GLSL).has('testChunkPS')).to.equal(false);
     });
 
     it('installs the shadow code once for both devices', function () {
-        const installed = new Set();
+        const scene = new Scene(device);
+        const renderer = new Renderer(device, scene);
 
-        installFeatures(host, [featureShadowsWebgl, featureShadowsWebgpu], installed);
+        installFeatures({ graphicsDevice: device, renderer }, [featureShadowsWebgl, featureShadowsWebgpu]);
+        renderer.destroy();
+        scene.destroy();
 
         // the feature of each device, and the code they share
-        expect(installed.size).to.equal(3);
+        expect([...device.features]).to.have.members(['shadows', 'shadows-webgl', 'shadows-webgpu']);
         expect(featureShadowsWebgl.requires[0]).to.equal(featureShadowsWebgpu.requires[0]);
     });
 });

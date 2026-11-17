@@ -17,12 +17,14 @@ import {
     MASK_AFFECT_LIGHTMAPPED,
     LIGHT_COLOR_DIVIDER
 } from './constants.js';
-import { ShadowRenderer } from './renderer/shadow-renderer.js';
+import { LightCamera } from './renderer/light-camera.js';
+import { FEATURE_SHADOWS } from './features/constants.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 
 /**
  * @import { BoundingBox } from '../core/shape/bounding-box.js'
+ * @import { Culler } from './renderer/culler.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { EventHandle } from '../core/event-handle.js';
  */
@@ -83,7 +85,7 @@ class LightRenderData {
         this.camera = camera;
 
         // camera used to cull / render the shadow map
-        this.shadowCamera = ShadowRenderer.createShadowCamera(light.device, light._shadowType, light._type, face);
+        this.shadowCamera = LightCamera.createShadowCamera(light.device, light._shadowType, light._type, face);
 
         // shadow view-projection matrix
         this.shadowMatrix = new Mat4();
@@ -221,6 +223,11 @@ class Light {
         this._affectSpecularity = true;
         this._luminance = 0;
         this._castShadows = false;
+
+        // whether the shadows feature is installed on the device, read once, as lights are created
+        // after the application installs its features. Without it, the light casts no shadows.
+        this._shadowsInstalled = graphicsDevice.features.has(FEATURE_SHADOWS);
+
         this._enabled = false;
         this._mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
@@ -643,6 +650,11 @@ class Light {
     }
 
     set castShadows(value) {
+        Debug.call(() => {
+            if (value && !this._shadowsInstalled) {
+                Debug.errorOnce('A light casts shadows, but the shadows feature is not installed, so it is rendered without shadows.');
+            }
+        });
         if (this._castShadows !== value) {
             this._castShadows = value;
             this._destroyShadowMap();
@@ -652,7 +664,7 @@ class Light {
     }
 
     get castShadows() {
-        return this._castShadows && this._mask !== MASK_BAKE && this._mask !== 0;
+        return this._castShadows && this._shadowsInstalled && this._mask !== MASK_BAKE && this._mask !== 0;
     }
 
     set shadowIntensity(value) {
@@ -1345,4 +1357,18 @@ class Light {
     }
 }
 
-export { Light, LightRenderData, lightTypes };
+/**
+ * Tests whether a light needs its shadow rendered this frame without consuming one-shot updates.
+ * Shadow-pass scheduling and splat caster culling share this predicate. One-shot requests are
+ * consumed by {@link Culler#consumeOneShotShadows} after both have read the update mode.
+ * Per-face overrides and atlas allocation are checked separately by callers.
+ *
+ * @param {Light} light - The light to test.
+ * @returns {boolean} Whether the light needs a shadow update.
+ * @ignore
+ */
+function needsShadowRendering(light) {
+    return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+}
+
+export { Light, LightRenderData, lightTypes, needsShadowRendering };

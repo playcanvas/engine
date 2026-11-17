@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
 
+import { featureShadowsWebgl } from '../../../src/scene/features/feature-shadows.js';
+import { installFeatures } from '../../../src/scene/features/install-features.js';
 import { Renderer } from '../../../src/scene/renderer/renderer.js';
 import { Scene } from '../../../src/scene/scene.js';
 import { createGraphicsDevice } from '../../device.mjs';
@@ -102,9 +104,13 @@ describe('Renderer destruction', function () {
     });
 
     it('destroys both passes of the clustered lighting update', function () {
+        // the shadow pass is created on the first update once shadows are installed
+        installFeatures({ graphicsDevice: device, renderer }, [featureShadowsWebgl]);
         const updatePass = renderer._renderPassUpdateClustered;
         expect(updatePass).to.exist;
+        updatePass.update(true, false, [], []);
         const { cookiesRenderPass, shadowRenderPass } = updatePass;
+        expect(shadowRenderPass).to.exist;
         const destroys = [cookiesRenderPass, shadowRenderPass].map(pass => spy(pass, 'destroy'));
 
         renderer.destroy();
