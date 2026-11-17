@@ -41,6 +41,33 @@ describe('build / treeshake', function () {
         expect(bytes, 'bundle size').to.be.lessThan(10240);
     });
 
+    // features are created at module scope, and a feature module holds the feature of each device.
+    // Without its pure annotation, a feature an application does not import would be kept, and with
+    // it the shader chunks of the language the application does not use.
+    it('a feature for one device does not retain the shader chunks of the other device', async function () {
+        const featureShadows = fileURLToPath(new URL('../../build/playcanvas/src/scene/features/feature-shadows.js', import.meta.url));
+        const retainedChunks = async (name) => {
+            const result = await bundle(`
+                import { ${name} } from ${JSON.stringify(featureShadows)};
+                globalThis.__feature = ${name};
+            `);
+            const output = Object.values(result.metafile.outputs)[0];
+            const inputs = Object.keys(output.inputs);
+            return {
+                glsl: inputs.filter(path => path.includes('/shader-lib/glsl/')),
+                wgsl: inputs.filter(path => path.includes('/shader-lib/wgsl/'))
+            };
+        };
+
+        const webgl = await retainedChunks('featureShadowsWebgl');
+        expect(webgl.glsl, 'GLSL chunks of the WebGL feature').to.not.be.empty;
+        expect(webgl.wgsl, 'retained WGSL chunks').to.deep.equal([]);
+
+        const webgpu = await retainedChunks('featureShadowsWebgpu');
+        expect(webgpu.wgsl, 'WGSL chunks of the WebGPU feature').to.not.be.empty;
+        expect(webgpu.glsl, 'retained GLSL chunks').to.deep.equal([]);
+    });
+
     it('AppBase with container loading does not retain the gsplat implementation', async function () {
         const result = await bundle(`
             import { AppBase, ContainerHandler } from "playcanvas";
