@@ -48,9 +48,12 @@ import { getApplication, setApplication } from './globals.js';
 import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
+import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
+import { installFeatures } from '../scene/features/install-features.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
+ * @import { Feature } from '../scene/features/feature.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
@@ -147,6 +150,14 @@ class AppBase extends EventHandler {
      * @private
      */
     _batcher = null;
+
+    /**
+     * The features installed in the application.
+     *
+     * @type {Set<Feature>}
+     * @private
+     */
+    _installedFeatures = new Set();
 
     /** @private */
     _destroyRequested = false;
@@ -606,6 +617,9 @@ class AppBase extends EventHandler {
         // register shader chunks
         ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
         ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
+
+        // every feature, for both devices
+        installFeatures(this, [featureShadowsWebgl, featureShadowsWebgpu], this._installedFeatures);
 
         this._initDefaultMaterial();
         this._initProgramLibrary();

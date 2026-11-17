@@ -10,7 +10,6 @@ import basePS from '../chunks/lit/frag/base.js';
 import baseNineSlicedPS from '../chunks/lit/frag/baseNineSliced.js';
 import baseNineSlicedTiledPS from '../chunks/lit/frag/baseNineSlicedTiled.js';
 import bayerPS from '../chunks/common/frag/bayer.js';
-import blurVSMPS from '../chunks/lit/frag/blurVSM.js';
 import clearCoatPS from '../chunks/standard/frag/clearCoat.js';
 import clearCoatGlossPS from '../chunks/standard/frag/clearCoatGloss.js';
 import clearCoatNormalPS from '../chunks/standard/frag/clearCoatNormal.js';
@@ -60,7 +59,6 @@ import lightDiffuseLambertPS from '../chunks/lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from '../chunks/lit/frag/lightDirPoint.js';
 import lightEvaluationPS from '../chunks/lit/frag/lighting/lightEvaluation.js';
 import lightFunctionLightPS from '../chunks/lit/frag/lighting/lightFunctionLight.js';
-import lightFunctionShadowPS from '../chunks/lit/frag/lighting/lightFunctionShadow.js';
 import lightingPS from '../chunks/lit/frag/lighting/lighting.js';
 import lightmapAddPS from '../chunks/lit/frag/lightmapAdd.js';
 import lightmapPS from '../chunks/standard/frag/lightmap.js';
@@ -79,7 +77,6 @@ import litMainVS from '../chunks/lit/vert/litMain.js';
 import litOtherMainPS from '../chunks/lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from '../chunks/standard/frag/litShaderArgs.js';
 import litShaderCorePS from '../chunks/standard/frag/litShaderCore.js';
-import litShadowMainPS from '../chunks/lit/frag/pass-shadow/litShadowMain.js';
 import ltcPS from '../chunks/lit/frag/ltc.js';
 import metalnessPS from '../chunks/standard/frag/metalness.js';
 import msdfPS from '../chunks/common/frag/msdf.js';
@@ -116,15 +113,6 @@ import reprojectPS from '../chunks/internal/frag/reproject.js';
 import reprojectVS from '../chunks/internal/vert/reproject.js';
 import reversibleTonemapPS from '../chunks/common/frag/reversibleTonemap.js';
 import screenDepthPS from '../chunks/common/frag/screenDepth.js';
-import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
-import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
-import shadowEVSMPS from '../chunks/lit/frag/lighting/shadowEVSM.js';
-import shadowEVSMExponentPS from '../chunks/common/frag/shadow-evsm-exponent.js';
-import shadowPCF1PS from '../chunks/lit/frag/lighting/shadowPCF1.js';
-import shadowPCF3PS from '../chunks/lit/frag/lighting/shadowPCF3.js';
-import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
-import shadowPCSSPS from '../chunks/lit/frag/lighting/shadowPCSS.js';
-import shadowSoftPS from '../chunks/lit/frag/lighting/shadowSoft.js';
 import skinBatchVS from '../chunks/common/vert/skinBatch.js';
 import skinVS from '../chunks/common/vert/skin.js';
 import skyboxPS from '../chunks/skybox/frag/skybox.js';
@@ -182,7 +170,6 @@ const shaderChunksGLSL = {
     baseNineSlicedPS,
     baseNineSlicedTiledPS,
     bayerPS,
-    blurVSMPS,
     clearCoatPS,
     clearCoatGlossPS,
     clearCoatNormalPS,
@@ -234,7 +221,6 @@ const shaderChunksGLSL = {
     lightDirPointPS,
     lightEvaluationPS,
     lightFunctionLightPS,
-    lightFunctionShadowPS,
     lightingPS,
     lightmapAddPS,
     lightmapPS,
@@ -253,7 +239,6 @@ const shaderChunksGLSL = {
     litOtherMainPS,
     litShaderArgsPS,
     litShaderCorePS,
-    litShadowMainPS,
     litUserDeclarationPS: '',  // empty chunk allowing user to add custom code
     litUserDeclarationVS: '',  // empty chunk allowing user to add custom code
     litUserCodePS: '',  // empty chunk allowing user to add custom code
@@ -298,15 +283,6 @@ const shaderChunksGLSL = {
     reprojectVS,
     reversibleTonemapPS,
     screenDepthPS,
-    shadowCascadesPS,
-    shadowCasterPS,
-    shadowEVSMPS,
-    shadowEVSMExponentPS,
-    shadowPCF1PS,
-    shadowPCF3PS,
-    shadowPCF5PS,
-    shadowPCSSPS,
-    shadowSoftPS,
     skinBatchVS,
     skinVS,
     skyboxPS,
