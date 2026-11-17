@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { Vec2 } from '../../core/math/vec2.js';
-import { BUFFERUSAGE_INDIRECT, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F } from './constants.js';
+import { BUFFERUSAGE_INDIRECT, isFloat32PixelFormat } from './constants.js';
 import { SceneColorMapHandle } from './scene-color-map-handle.js';
 import { SceneDepthMapHandle } from './scene-depth-map-handle.js';
 import { Shader } from './shader.js';
@@ -61,9 +61,7 @@ const addVariantDefines = (defines, key) => {
  * @param {number} format - The pixel format.
  * @returns {boolean} True when the format is not filterable.
  */
-const isUnfilterable = (device, format) => !device.textureFloatFilterable && (
-    format === PIXELFORMAT_R32F || format === PIXELFORMAT_RG32F ||
-    format === PIXELFORMAT_RGB32F || format === PIXELFORMAT_RGBA32F);
+const isUnfilterable = (device, format) => !device.textureFloatFilterable && isFloat32PixelFormat(format);
 
 /**
  * A helper class storing a parameter value.

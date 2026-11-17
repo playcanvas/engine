@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
 import {
-    ADDRESS_REPEAT, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGBA8,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U
+    ADDRESS_REPEAT, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32F
 } from '../../../../src/platform/graphics/constants.js';
 import { WebgpuTexture } from '../../../../src/platform/graphics/webgpu/webgpu-texture.js';
 
@@ -150,7 +150,7 @@ describe('WebgpuTexture', function () {
     describe('#getSampler', function () {
 
         // returns the descriptor of the sampler created for a texture with mipmaps
-        const getSamplerDesc = (minFilter) => {
+        const getSamplerDesc = (minFilter, format = PIXELFORMAT_RGBA8, textureFloatFilterable = true) => {
             const samplers = [];
             const device = createMockDevice([]);
             device.wgpu.createSampler = (desc) => {
@@ -158,8 +158,9 @@ describe('WebgpuTexture', function () {
                 return {};
             };
             device.maxTextureAnisotropy = 1;
+            device.textureFloatFilterable = textureFloatFilterable;
             const impl = new WebgpuTexture(createMockTexture(device, {
-                format: PIXELFORMAT_RGBA8,
+                format,
                 numLevels: 4,
                 minFilter,
                 magFilter: FILTER_LINEAR,
@@ -185,6 +186,29 @@ describe('WebgpuTexture', function () {
             expect(desc.minFilter).to.equal('linear');
             expect(desc.mipmapFilter).to.equal('linear');
             expect(desc.lodMaxClamp).to.equal(undefined);
+        });
+
+        it('filters half-float formats without the float32-filterable feature', function () {
+            const desc = getSamplerDesc(FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_RGBA16F, false);
+            expect(desc.minFilter).to.equal('linear');
+            expect(desc.magFilter).to.equal('linear');
+            expect(desc.mipmapFilter).to.equal('linear');
+        });
+
+        it('forces nearest filtering on 32-bit float formats without the float32-filterable feature', function () {
+            for (const format of [PIXELFORMAT_R32F, PIXELFORMAT_RGBA32F]) {
+                const desc = getSamplerDesc(FILTER_LINEAR_MIPMAP_LINEAR, format, false);
+                expect(desc.minFilter).to.equal('nearest');
+                expect(desc.magFilter).to.equal('nearest');
+                expect(desc.mipmapFilter).to.equal('nearest');
+            }
+        });
+
+        it('filters 32-bit float formats with the float32-filterable feature', function () {
+            const desc = getSamplerDesc(FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_RGBA32F, true);
+            expect(desc.minFilter).to.equal('linear');
+            expect(desc.magFilter).to.equal('linear');
+            expect(desc.mipmapFilter).to.equal('linear');
         });
     });
 });
