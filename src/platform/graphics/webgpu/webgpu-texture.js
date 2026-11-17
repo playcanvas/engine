@@ -4,7 +4,7 @@ import { math } from '../../../core/math/math.js';
 import {
     pixelFormatInfo, isCompressedPixelFormat, getPixelFormatArrayType,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_DEPTHSTENCIL,
+    PIXELFORMAT_DEPTHSTENCIL, isFloat32PixelFormat,
     SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR, isIntegerPixelFormat, SAMPLETYPE_INT, SAMPLETYPE_UINT,
@@ -305,8 +305,9 @@ class WebgpuTexture {
 
             } else {
 
-                // if the device cannot filter float textures, force nearest filtering
-                const forceNearest = !device.textureFloatFilterable && (texture.format === PIXELFORMAT_RGBA32F || texture.format === PIXELFORMAT_RGBA16F);
+                // 32-bit float formats are only filterable with the float32-filterable feature,
+                // 16-bit float formats are always filterable
+                const forceNearest = !device.textureFloatFilterable && isFloat32PixelFormat(texture.format);
 
                 if (forceNearest || this.texture.format === PIXELFORMAT_DEPTHSTENCIL || isIntegerPixelFormat(this.texture.format)) {
                     desc.magFilter = 'nearest';
