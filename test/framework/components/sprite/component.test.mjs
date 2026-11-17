@@ -261,6 +261,179 @@ describe('SpriteComponent', function () {
             sprite.destroy();
         });
 
+        it('stops a removed clip that is playing and falls back to the default clip', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const defaultClip = e.sprite.currentClip;
+            const clip = e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            e.sprite.play('walk');
+            const meshInstance = e.sprite._meshInstance;
+            const layer = app.scene.layers.getLayerById(e.sprite.layers[0]);
+            expect(layer.meshInstances).to.include(meshInstance);
+            expect(sprite.hasEvent('set:meshes')).to.equal(true);
+
+            let stopped = null;
+            e.sprite.on('stop', (c) => {
+                stopped = c;
+            });
+            e.sprite.removeClip('walk');
+
+            expect(e.sprite.clip('walk')).to.be.undefined;
+            expect(stopped).to.equal(clip);
+            expect(clip.isPlaying).to.equal(false);
+            expect(e.sprite.currentClip).to.equal(defaultClip);
+            expect(layer.meshInstances).to.not.include(meshInstance);
+            expect(sprite.hasEvent('set:meshes')).to.equal(false);
+            expect(sprite.hasEvent('set:pixelsPerUnit')).to.equal(false);
+            expect(sprite.hasEvent('set:atlas')).to.equal(false);
+
+            app.systems.fire('update', 0.15);
+            expect(clip.frame).to.equal(0);
+            expect(e.sprite.frame).to.equal(0);
+
+            // the removed clip's frame is not shown again when the entity is enabled
+            e.enabled = false;
+            e.enabled = true;
+            expect(meshInstance.mesh).to.equal(null);
+            expect(meshInstance.visible).to.equal(false);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('falls back to the default clip when the current clip is removed while the entity is disabled', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const defaultClip = e.sprite.currentClip;
+            const clip = e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            e.sprite.play('walk');
+            const meshInstance = e.sprite._meshInstance;
+
+            e.enabled = false;
+            e.sprite.removeClip('walk');
+            expect(e.sprite.currentClip).to.equal(defaultClip);
+            expect(clip.sprite).to.equal(null);
+
+            e.enabled = true;
+            expect(meshInstance.mesh).to.equal(null);
+            expect(meshInstance.visible).to.equal(false);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('falls back to the default clip when a stopped current clip is removed', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const defaultClip = e.sprite.currentClip;
+            e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            e.sprite.play('walk');
+            e.sprite.stop();
+            e.sprite.removeClip('walk');
+            expect(e.sprite.currentClip).to.equal(defaultClip);
+            expect(sprite.hasEvent('set:meshes')).to.equal(false);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('keeps a clip played by a stop handler while the current clip is removed', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            const idle = e.sprite.addClip({ name: 'idle', fps: 10, loop: true, sprite });
+            e.sprite.play('walk');
+            e.sprite.once('stop', () => {
+                e.sprite.play('idle');
+            });
+            e.sprite.removeClip('walk');
+
+            expect(e.sprite.currentClip).to.equal(idle);
+            expect(idle.isPlaying).to.equal(true);
+            expect(idle.sprite).to.equal(sprite);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('shows the sprite of the default clip when the playing clip is removed', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED, spriteAsset });
+            app.root.addChild(e);
+
+            e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            e.sprite.play('walk');
+            expect(e.sprite._meshInstance.mesh).to.equal(sprite.meshes[0]);
+
+            e.sprite.removeClip('walk');
+            expect(e.sprite.sprite).to.equal(spriteAsset.resource);
+            expect(e.sprite._meshInstance.mesh).to.equal(spriteAsset.resource.meshes[0]);
+            const layer = app.scene.layers.getLayerById(e.sprite.layers[0]);
+            expect(layer.meshInstances).to.include(e.sprite._meshInstance);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('keeps playing the current clip when another clip is removed', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const walk = e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            e.sprite.addClip({ name: 'run', fps: 20, loop: true, sprite });
+            e.sprite.play('walk');
+            e.sprite.removeClip('run');
+
+            expect(e.sprite.clip('run')).to.be.undefined;
+            expect(e.sprite.currentClip).to.equal(walk);
+            expect(walk.isPlaying).to.equal(true);
+            expect(sprite.hasEvent('set:meshes')).to.equal(true);
+
+            app.systems.fire('update', 0.15);
+            expect(e.sprite.frame).to.equal(1);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('unbinds a removed clip from its sprite asset', function () {
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+
+            e.sprite.addClip({ name: 'walk', fps: 10, loop: true, spriteAsset });
+            expect(spriteAsset.hasEvent('load')).to.equal(true);
+            expect(spriteAsset.hasEvent('remove')).to.equal(true);
+
+            e.sprite.removeClip('walk');
+            expect(spriteAsset.hasEvent('load')).to.equal(false);
+            expect(spriteAsset.hasEvent('remove')).to.equal(false);
+        });
+
+        it('does nothing when removing a name that has no clip', function () {
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+
+            expect(() => {
+                e.sprite.removeClip('missing');
+                e.sprite.removeClip('toString');
+            }).to.not.throw();
+        });
+
         it('takes the sprite of a clip with a sprite asset from the asset', function () {
             const sprite = createSprite();
             const e = new Entity();
