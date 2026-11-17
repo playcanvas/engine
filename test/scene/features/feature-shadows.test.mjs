@@ -3,6 +3,7 @@ import sinon from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { FEATURE_SHADOWS } from '../../../src/scene/features/constants.js';
 import { featureShadowsWebgl } from '../../../src/scene/features/feature-shadows.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
@@ -12,6 +13,9 @@ import { ShadowRendererDirectional } from '../../../src/scene/renderer/shadow-re
 import { ShadowRendererLocal } from '../../../src/scene/renderer/shadow-renderer-local.js';
 import { ShadowRenderer } from '../../../src/scene/renderer/shadow-renderer.js';
 import { Scene } from '../../../src/scene/scene.js';
+import { shadowChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shadow-chunks-glsl.js';
+import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
+import { shadowChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shadow-chunks-wgsl.js';
 import { createApp } from '../../app.mjs';
 import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -53,32 +57,24 @@ describe('Shadows feature', function () {
         });
     });
 
-    describe('rendering without the feature', function () {
+    // a missing feature is reported by asserts in debug builds, rather than handled
+    describe('without the feature', function () {
         let app;
+        let assert;
+
+        const failedAsserts = () => assert.getCalls().filter(call => !call.args[0]).map(call => call.args[1]);
 
         beforeEach(function () {
             jsdomSetup();
             app = createApp();
 
             // as if the application did not install the shadows feature
-            const renderer = app.renderer;
-            renderer.shadowRenderer.destroy();
-            renderer.shadowMapCache.destroy();
-            renderer.shadowMapCache = null;
-            renderer.shadowRenderer = null;
-            renderer._shadowRendererLocal = null;
-            renderer._shadowRendererDirectional = null;
             app.graphicsDevice.features.delete(FEATURE_SHADOWS);
+            assert = sinon.stub(Debug, 'assert');
 
             const camera = new Entity('Camera');
             camera.addComponent('camera');
-            camera.setPosition(0, 2, 5);
-            camera.lookAt(0, 0, 0);
             app.root.addChild(camera);
-
-            const caster = new Entity('Caster');
-            caster.addComponent('render', { type: 'box' });
-            app.root.addChild(caster);
         });
 
         afterEach(function () {
@@ -87,25 +83,63 @@ describe('Shadows feature', function () {
             jsdomTeardown();
         });
 
-        [true, false].forEach((clustered) => {
-            ['directional', 'spot', 'omni'].forEach((type) => {
-                it(`renders a ${type} light set to cast shadows without them${clustered ? ', with clustered lighting' : ''}`, function () {
-                    app.scene.clusteredLightingEnabled = clustered;
-                    const errorOnce = sinon.stub(Debug, 'errorOnce');
+        it('asserts when a light is set to cast shadows', function () {
+            const light = new Entity('Light');
+            light.addComponent('light', { type: 'directional' });
+            light.light.castShadows = true;
 
-                    const entity = new Entity('Light');
-                    entity.addComponent('light', { type, castShadows: true, shadowResolution: 256 });
-                    entity.setPosition(0, 2, 0);
-                    app.root.addChild(entity);
-                    const light = entity.light.light;
+            expect(failedAsserts()).to.include('A light casting shadows needs the shadows feature to be installed.');
+        });
 
-                    expect(errorOnce.calledWithMatch(sinon.match('the shadows feature is not installed'))).to.equal(true);
-                    expect(light.castShadows).to.equal(false);
+        it('asserts when clustered lighting with shadows generates a lit shader', function () {
+            app.scene.clusteredLightingEnabled = true;
+            const box = new Entity('Box');
+            box.addComponent('render', { type: 'box' });
+            app.root.addChild(box);
 
-                    expect(() => app.render()).to.not.throw();
-                    expect(light.shadowMap).to.not.exist;
-                });
-            });
+            app.render();
+
+            expect(failedAsserts().some(message => message.startsWith('Clustered lighting with shadows needs the shadows feature'))).to.equal(true);
+        });
+
+        it('compiles lit shaders for lights without shadows, with no shadow chunks registered', function () {
+            // WebGPU keeps clustered lighting on, so its shadows are disabled too
+            app.scene.clusteredLightingEnabled = false;
+            app.scene.lighting.shadowsEnabled = false;
+
+            // remove the shadow chunks, as if the feature had not registered them
+            const device = app.graphicsDevice;
+            for (const name of Object.keys(shadowChunksGLSL.chunks)) {
+                ShaderChunks.get(device, SHADERLANGUAGE_GLSL).delete(name);
+            }
+            for (const name of Object.keys(shadowChunksWGSL.chunks)) {
+                ShaderChunks.get(device, SHADERLANGUAGE_WGSL).delete(name);
+            }
+            const error = sinon.spy(console, 'error');
+
+            const light = new Entity('Light');
+            light.addComponent('light', { type: 'directional' });
+            app.root.addChild(light);
+            const box = new Entity('Box');
+            box.addComponent('render', { type: 'box' });
+            app.root.addChild(box);
+
+            app.render();
+
+            const unresolved = error.getCalls().map(call => String(call.args[0])).filter(message => message.includes('not resolved'));
+            expect(unresolved).to.deep.equal([]);
+        });
+
+        it('does not assert for clustered lighting with shadows disabled', function () {
+            app.scene.clusteredLightingEnabled = true;
+            app.scene.lighting.shadowsEnabled = false;
+            const box = new Entity('Box');
+            box.addComponent('render', { type: 'box' });
+            app.root.addChild(box);
+
+            app.render();
+
+            expect(failedAsserts().some(message => message.includes('shadows feature'))).to.equal(false);
         });
     });
 });

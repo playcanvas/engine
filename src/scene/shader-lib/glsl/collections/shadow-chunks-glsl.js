@@ -1,6 +1,5 @@
 import { SHADERLANGUAGE_GLSL } from '../../../../platform/graphics/constants.js';
 import blurVSMPS from '../chunks/lit/frag/blurVSM.js';
-import lightFunctionShadowPS from '../chunks/lit/frag/lighting/lightFunctionShadow.js';
 import litShadowMainPS from '../chunks/lit/frag/pass-shadow/litShadowMain.js';
 import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
 import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
@@ -28,7 +27,6 @@ export const shadowChunksGLSL = {
     language: SHADERLANGUAGE_GLSL,
     chunks: {
         blurVSMPS,
-        lightFunctionShadowPS,
         litShadowMainPS,
         shadowCascadesPS,
         shadowCasterPS,

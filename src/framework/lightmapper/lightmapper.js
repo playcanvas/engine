@@ -88,16 +88,28 @@ class Lightmapper {
         // baking renders shadows, so the shadows feature must be installed
         Debug.assert(renderer.shadowRenderer, 'The lightmapper needs the shadows feature to be installed');
 
-        /** @type {ShadowMapCache} */
+        /**
+         * @type {ShadowMapCache}
+         * @private
+         */
         this.shadowMapCache = /** @type {ShadowMapCache} */ (renderer.shadowMapCache);
 
-        /** @type {ShadowRenderer} */
+        /**
+         * @type {ShadowRenderer}
+         * @private
+         */
         this.shadowRenderer = /** @type {ShadowRenderer} */ (renderer.shadowRenderer);
 
-        /** @type {ShadowRendererLocal} */
+        /**
+         * @type {ShadowRendererLocal}
+         * @private
+         */
         this.shadowRendererLocal = /** @type {ShadowRendererLocal} */ (renderer._shadowRendererLocal);
 
-        /** @type {ShadowRendererDirectional} */
+        /**
+         * @type {ShadowRendererDirectional}
+         * @private
+         */
         this.shadowRendererDirectional = /** @type {ShadowRendererDirectional} */ (renderer._shadowRendererDirectional);
 
         this._tempSet = new Set();

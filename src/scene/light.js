@@ -223,11 +223,6 @@ class Light {
         this._affectSpecularity = true;
         this._luminance = 0;
         this._castShadows = false;
-
-        // whether the shadows feature is installed on the device, read once, as lights are created
-        // after the application installs its features. Without it, the light casts no shadows.
-        this._shadowsInstalled = graphicsDevice.features.has(FEATURE_SHADOWS);
-
         this._enabled = false;
         this._mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
@@ -650,11 +645,7 @@ class Light {
     }
 
     set castShadows(value) {
-        Debug.call(() => {
-            if (value && !this._shadowsInstalled) {
-                Debug.errorOnce('A light casts shadows, but the shadows feature is not installed, so it is rendered without shadows.');
-            }
-        });
+        Debug.assert(!value || this.device.features.has(FEATURE_SHADOWS), 'A light casting shadows needs the shadows feature to be installed.');
         if (this._castShadows !== value) {
             this._castShadows = value;
             this._destroyShadowMap();
@@ -664,7 +655,7 @@ class Light {
     }
 
     get castShadows() {
-        return this._castShadows && this._shadowsInstalled && this._mask !== MASK_BAKE && this._mask !== 0;
+        return this._castShadows && this._mask !== MASK_BAKE && this._mask !== 0;
     }
 
     set shadowIntensity(value) {
