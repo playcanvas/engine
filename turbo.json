@@ -38,13 +38,6 @@
         "build:dbg:esm"
       ]
     },
-    "build:prf": {
-      "cache": false,
-      "dependsOn": [
-        "build:prf:umd",
-        "build:prf:esm"
-      ]
-    },
     "build:min": {
       "cache": false,
       "dependsOn": [
@@ -57,7 +50,6 @@
       "dependsOn": [
         "build:rel:umd",
         "build:dbg:umd",
-        "build:prf:umd",
         "build:min:umd"
       ]
     },
@@ -66,7 +58,6 @@
       "dependsOn": [
         "build:rel:esm",
         "build:dbg:esm",
-        "build:prf:esm",
         "build:min:esm"
       ]
     },
@@ -104,24 +95,6 @@
         "build/playcanvas.dbg.mjs",
         "build/playcanvas.dbg/modules/**/*.js",
         "build/playcanvas.dbg/src/**/*.js"
-      ]
-    },
-    "build:prf:umd": {
-      "inputs": [
-        "src/**/*.js"
-      ],
-      "outputs": [
-        "build/playcanvas.prf.js"
-      ]
-    },
-    "build:prf:esm": {
-      "inputs": [
-        "src/**/*.js"
-      ],
-      "outputs": [
-        "build/playcanvas.prf.mjs",
-        "build/playcanvas.prf/modules/**/*.js",
-        "build/playcanvas.prf/src/**/*.js"
       ]
     },
     "build:min:umd": {
@@ -172,13 +145,6 @@
         "watch:dbg:esm"
       ]
     },
-    "watch:prf": {
-      "cache": false,
-      "with": [
-        "watch:prf:umd",
-        "watch:prf:esm"
-      ]
-    },
     "watch:min": {
       "cache": false,
       "with": [
@@ -191,7 +157,6 @@
       "with": [
         "watch:rel:umd",
         "watch:dbg:umd",
-        "watch:prf:umd",
         "watch:min:umd"
       ]
     },
@@ -200,7 +165,6 @@
       "with": [
         "watch:rel:esm",
         "watch:dbg:esm",
-        "watch:prf:esm",
         "watch:min:esm"
       ]
     },
@@ -226,20 +190,6 @@
       ]
     },
     "watch:dbg:esm": {
-      "cache": false,
-      "persistent": true,
-      "inputs": [
-        "src/**/*.js"
-      ]
-    },
-    "watch:prf:umd": {
-      "cache": false,
-      "persistent": true,
-      "inputs": [
-        "src/**/*.js"
-      ]
-    },
-    "watch:prf:esm": {
       "cache": false,
       "persistent": true,
       "inputs": [

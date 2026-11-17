@@ -40,8 +40,7 @@ const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = getEnginePath(NODE_ENV);
 const ENGINE_OUTPUT = {
     rel: 'playcanvas.mjs',
-    dbg: 'playcanvas.dbg.mjs',
-    prf: 'playcanvas.prf.mjs'
+    dbg: 'playcanvas.dbg.mjs'
 };
 /**
  * @template T
@@ -131,8 +130,7 @@ const copyEnginePath = async () => {
  */
 const includeEngine = (type) => {
     return (type === 'rel' && NODE_ENV === 'production') ||
-        (type === 'dbg' && (NODE_ENV === 'production' || NODE_ENV === 'development')) ||
-        (type === 'prf' && (NODE_ENV === 'production' || NODE_ENV === 'profiler'));
+        (type === 'dbg' && (NODE_ENV === 'production' || NODE_ENV === 'development'));
 };
 
 /**

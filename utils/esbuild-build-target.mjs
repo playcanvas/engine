@@ -49,14 +49,12 @@ const STRIP_FUNCTIONS = [
 const BANNER = {
     dbg: ' (DEBUG)',
     rel: ' (RELEASE)',
-    prf: ' (PROFILE)',
     min: ' (RELEASE)'
 };
 
 const OUT_PREFIX = {
     dbg: 'playcanvas.dbg',
     rel: 'playcanvas',
-    prf: 'playcanvas.prf',
     min: 'playcanvas.min'
 };
 
@@ -81,7 +79,7 @@ const PRUNABLE_IMPORTS = new Set([
 const compactIndent = code => code.replace(/^ +/gm, spaces => spaces.replace(/ {2}/g, '\t'));
 
 const shouldCompactIndent = ({ buildType, sourcemaps }) => {
-    return !sourcemaps && (buildType === 'rel' || buildType === 'prf');
+    return !sourcemaps && buildType === 'rel';
 };
 
 const parseModule = source => parse(source, {
@@ -104,11 +102,6 @@ const getJSCCOptions = (type) => {
             keepLines: true
         },
         rel: {
-            values: base,
-            keepLines: false
-        },
-        // matches rel; the profiler build is kept for compatibility
-        prf: {
             values: base,
             keepLines: false
         }
@@ -195,7 +188,7 @@ const getBundledOptions = ({
     const file = `${prefix}${isUMD ? '.js' : '.mjs'}`;
     const outfile = `${dir}/${file}`;
     const banner = getBanner(BANNER[buildType]);
-    const preserveClassFields = moduleFormat === 'esm' && (buildType === 'rel' || buildType === 'prf');
+    const preserveClassFields = moduleFormat === 'esm' && buildType === 'rel';
 
     return {
         entryPoints: [input],
@@ -423,7 +416,7 @@ const getUnbundledContext = ({
         outDir: path.resolve(`${dir}/${prefix}`),
         sourcemaps,
         compact: shouldCompactIndent({ buildType, sourcemaps }),
-        preserveClassFields: buildType === 'rel' || buildType === 'prf',
+        preserveClassFields: buildType === 'rel',
         isDebug,
         jscc,
         strip: !isDebug ? createStripTransform(STRIP_FUNCTIONS) : null

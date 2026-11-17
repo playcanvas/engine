@@ -18,11 +18,10 @@ export const EXPECTED_EXPORTS = [
     'Material', 'StandardMaterial', 'Asset', 'AssetRegistry', 'Camera'
 ];
 
-// the four single-file umd bundles, loadable as a browser global or as commonjs
+// the three single-file umd bundles, loadable as a browser global or as commonjs
 export const UMD_TARGETS = [
     { name: 'rel umd', path: build('playcanvas.js') },
     { name: 'dbg umd', path: build('playcanvas.dbg.js') },
-    { name: 'prf umd', path: build('playcanvas.prf.js') },
     { name: 'min umd', path: build('playcanvas.min.js') }
 ];
 
@@ -31,11 +30,9 @@ export const UMD_TARGETS = [
 export const ESM_TARGETS = [
     { name: 'rel esm bundle', path: build('playcanvas.mjs') },
     { name: 'dbg esm bundle', path: build('playcanvas.dbg.mjs') },
-    { name: 'prf esm bundle', path: build('playcanvas.prf.mjs') },
     { name: 'min esm bundle', path: build('playcanvas.min.mjs') },
     { name: 'rel esm tree', path: build('playcanvas/src/index.js') },
-    { name: 'dbg esm tree', path: build('playcanvas.dbg/src/index.js') },
-    { name: 'prf esm tree', path: build('playcanvas.prf/src/index.js') }
+    { name: 'dbg esm tree', path: build('playcanvas.dbg/src/index.js') }
 ];
 
 // the engine's source export surface — the authoritative api every build must preserve.
