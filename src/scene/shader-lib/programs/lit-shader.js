@@ -23,6 +23,7 @@ import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../glsl/chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
 import { ShaderChunks } from '../shader-chunks.js';
+import { FEATURE_SHADOWS } from '../../features/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -450,6 +451,7 @@ class LitShader {
 
             // shadows
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
+                Debug.assert(this.device.features.has(FEATURE_SHADOWS), 'Clustered lighting with shadows needs the shadows feature to be installed. Install it, or set scene.lighting.shadowsEnabled to false.');
                 const clusteredShadowInfo = shadowTypeInfo.get(options.clusteredLightingShadowType);
                 fDefines.set('CLUSTER_SHADOWS', true);
                 fDefines.set(`SHADOW_KIND_${clusteredShadowInfo.kind}`, true);

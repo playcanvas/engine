@@ -1,8 +1,13 @@
+import { Debug } from '../../core/debug.js';
+import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { ASPECT_MANUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../constants.js';
+import {
+    ASPECT_MANUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
+    SHADOWCAMERA_NAME, shadowTypeInfo
+} from '../constants.js';
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
 
@@ -48,6 +53,32 @@ class LightCamera {
         }
 
         return camera;
+    }
+
+    // creates shadow camera for a light and sets up its constant properties
+    static createShadowCamera(device, shadowType, type, face) {
+
+        const shadowCam = LightCamera.create(device, SHADOWCAMERA_NAME, type, face);
+
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        const isVsm = shadowInfo?.vsm ?? false;
+        const isPcf = shadowInfo?.pcf ?? false;
+
+        // don't clear the color buffer if rendering a depth map
+        if (isVsm) {
+            shadowCam.clearColor = new Color(0, 0, 0, 0);
+        } else {
+            shadowCam.clearColor = new Color(1, 1, 1, 1);
+        }
+
+        shadowCam.clearDepthBuffer = true;
+        shadowCam.clearStencilBuffer = false;
+
+        // clear color buffer only when using it
+        shadowCam.clearColorBuffer = !isPcf;
+
+        return shadowCam;
     }
 
     static _spotCookieCamera = null;

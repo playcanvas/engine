@@ -358,6 +358,15 @@ class GraphicsDevice extends EventHandler {
     computeChunks = null;
 
     /**
+     * The names of the features installed on the device. Engine code asks for a feature by name, so
+     * that it does not import, and bundle, the feature itself.
+     *
+     * @type {Set<string>}
+     * @ignore
+     */
+    features = new Set();
+
+    /**
      * True if the device can read from StorageTexture in the compute shader. By default, the
      * storage texture can be only used with the write operation.
      * When a shader uses this feature, add a `requires` directive to signal non-portability at the

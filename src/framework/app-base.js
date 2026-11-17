@@ -53,7 +53,6 @@ import { installFeatures } from '../scene/features/install-features.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
- * @import { Feature } from '../scene/features/feature.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
@@ -150,14 +149,6 @@ class AppBase extends EventHandler {
      * @private
      */
     _batcher = null;
-
-    /**
-     * The features installed in the application.
-     *
-     * @type {Set<Feature>}
-     * @private
-     */
-    _installedFeatures = new Set();
 
     /** @private */
     _destroyRequested = false;
@@ -618,9 +609,6 @@ class AppBase extends EventHandler {
         ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
         ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
 
-        // every feature, for both devices
-        installFeatures(this, [featureShadowsWebgl, featureShadowsWebgpu], this._installedFeatures);
-
         this._initDefaultMaterial();
         this._initProgramLibrary();
         this._stats = new AppStats(this);
@@ -654,6 +642,10 @@ class AppBase extends EventHandler {
         AreaLightLuts.createPlaceholder(graphicsDevice);
 
         this.renderer = new ForwardRenderer(graphicsDevice, this.scene);
+
+        // every feature, for both devices. Installed once the renderer exists, as features create
+        // their objects on it, and before anything that uses them, such as the lightmapper
+        installFeatures(this, [featureShadowsWebgl, featureShadowsWebgpu]);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);

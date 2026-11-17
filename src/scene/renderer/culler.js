@@ -193,10 +193,17 @@ class Culler {
 
         const { renderer } = this;
 
+        // the requests are only made by shadow passes, which exist when shadows are installed
+        const shadowRendererLocal = renderer._shadowRendererLocal;
+        const shadowRendererDirectional = renderer._shadowRendererDirectional;
+        if (!shadowRendererLocal || !shadowRendererDirectional) {
+            return;
+        }
+
         // Local passes share one cull per light, including the combined six-face omni cull.
         const localRequests = this._localShadowCullRequests;
         for (let i = 0; i < localRequests.length; i++) {
-            renderer._shadowRendererLocal.cull(localRequests[i].light, comp);
+            shadowRendererLocal.cull(localRequests[i].light, comp);
         }
 
         // Only scheduled directional shadow passes need caster culling and cascade fitting. A light
@@ -205,9 +212,9 @@ class Culler {
         for (let i = 0; i < requests.length; i++) {
             const { light, camera, shadowCascadeMask } = requests[i];
             if (camera) {
-                renderer._shadowRendererDirectional.cull(light, comp, camera, null, shadowCascadeMask);
+                shadowRendererDirectional.cull(light, comp, camera, null, shadowCascadeMask);
             } else {
-                renderer._shadowRendererDirectional.cullBounds(light, comp);
+                shadowRendererDirectional.cullBounds(light, comp);
             }
         }
     }
@@ -319,7 +326,7 @@ class Culler {
                                 lightList = lightList ?? [];
                                 lightList.push(light);
 
-                                renderer._shadowRendererDirectional.prepareShadowMap(light, camera);
+                                renderer._shadowRendererDirectional?.prepareShadowMap(light, camera);
                             }
                         }
                     }
@@ -414,7 +421,7 @@ class Culler {
                     // when the map was (re)created (first use, or destroyed by a property change such
                     // as shadowType) so the new map actually gets rendered.
                     if (light.castShadows && light.visibleThisFrame && !light._shadowMap) {
-                        renderer._shadowRendererLocal.prepareShadowMap(light);
+                        renderer._shadowRendererLocal?.prepareShadowMap(light);
                         if (light.shadowUpdateMode === SHADOWUPDATE_NONE) {
                             light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                         }

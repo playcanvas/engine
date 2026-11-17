@@ -27,10 +27,6 @@ import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
 import { LightSlotUniforms } from '../lighting/light-slot-uniforms.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
-import { ShadowMapCache } from './shadow-map-cache.js';
-import { ShadowRendererLocal } from './shadow-renderer-local.js';
-import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
-import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 import { Culler } from './culler.js';
@@ -53,6 +49,10 @@ import { MAX_CLIP_PLANES } from '../clip-planes.js';
  * @import { Scene } from '../scene.js'
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
+ * @import { ShadowMapCache } from './shadow-map-cache.js'
+ * @import { ShadowRenderer } from './shadow-renderer.js'
+ * @import { ShadowRendererDirectional } from './shadow-renderer-directional.js'
+ * @import { ShadowRendererLocal } from './shadow-renderer-local.js'
  */
 
 let _skinUpdateIndex = 0;
@@ -343,6 +343,37 @@ class Renderer {
     gsplatDirector = null;
 
     /**
+     * The shadow map cache, created when the shadows feature is installed.
+     *
+     * @type {ShadowMapCache|null}
+     */
+    shadowMapCache = null;
+
+    /**
+     * The shadow renderer, created when the shadows feature is installed. Null without it, and
+     * lights are then rendered without shadows.
+     *
+     * @type {ShadowRenderer|null}
+     */
+    shadowRenderer = null;
+
+    /**
+     * The renderer of the shadows of omni and spot lights, created when the shadows feature is
+     * installed.
+     *
+     * @type {ShadowRendererLocal|null}
+     */
+    _shadowRendererLocal = null;
+
+    /**
+     * The renderer of the shadows of directional lights, created when the shadows feature is
+     * installed.
+     *
+     * @type {ShadowRendererDirectional|null}
+     */
+    _shadowRendererDirectional = null;
+
+    /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
@@ -361,19 +392,12 @@ class Renderer {
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(graphicsDevice);
 
-        // shadows
-        this.shadowMapCache = new ShadowMapCache();
-        this.shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
-        this._shadowRendererLocal = new ShadowRendererLocal(this, this.shadowRenderer);
-        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
-
         // visibility culling (lights, mesh instances, shadow casters)
         this.culler = new Culler(this);
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
-            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
-                this._shadowRendererLocal, this.lightTextureAtlas);
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.lightTextureAtlas);
         }
 
         // timing
@@ -439,12 +463,12 @@ class Renderer {
     }
 
     destroy() {
-        this.shadowRenderer.destroy();
+        this.shadowRenderer?.destroy();
         this.shadowRenderer = null;
         this._shadowRendererLocal = null;
         this._shadowRendererDirectional = null;
 
-        this.shadowMapCache.destroy();
+        this.shadowMapCache?.destroy();
         this.shadowMapCache = null;
 
         this._renderPassUpdateClustered?.destroy();

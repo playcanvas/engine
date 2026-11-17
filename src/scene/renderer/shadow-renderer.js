@@ -1,6 +1,5 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
-import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
@@ -16,22 +15,18 @@ import {
     BLUR_GAUSSIAN,
     EVENT_POSTCULL,
     EVENT_PRECULL,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
-    SHADOWCAMERA_NAME,
-    SHADOWUPDATE_NONE,
-    shadowTypeInfo
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightList } from '../lighting/light-list.js';
-import { LightCamera } from './light-camera.js';
+import { needsShadowRendering } from '../light.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 
 /**
  * @import { Camera } from '../camera.js'
- * @import { Culler } from './culler.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { LightTextureAtlas } from '../lighting/light-texture-atlas.js'
  * @import { Light } from '../light.js'
@@ -40,6 +35,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { ShaderPassInfo } from '../shader-pass.js'
+ * @import { ShadowMapCache } from './shadow-map-cache.js'
  */
 
 const tempSet = new Set();
@@ -58,20 +54,6 @@ const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
 const blurScissorRect = new Vec4(1, 1, 0, 0);
 const viewportMatrix = new Mat4();
-
-/**
- * Tests whether a light needs its shadow rendered this frame without consuming one-shot updates.
- * Shadow-pass scheduling and splat caster culling share this predicate. One-shot requests are
- * consumed by {@link Culler#consumeOneShotShadows} after both have read the update mode.
- * Per-face overrides and atlas allocation are checked separately by callers.
- *
- * @param {Light} light - The light to test.
- * @returns {boolean} Whether the light needs a shadow update.
- * @ignore
- */
-function needsShadowRendering(light) {
-    return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
-}
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -123,7 +105,13 @@ class ShadowRenderer {
      * @param {Renderer} renderer - The renderer.
      * @param {LightTextureAtlas} lightTextureAtlas - The shadow map atlas.
      */
-    constructor(renderer, lightTextureAtlas) {
+    /**
+     * @param {Renderer} renderer - The renderer.
+     * @param {LightTextureAtlas} lightTextureAtlas - The atlas of the shadow maps of local lights.
+     * @param {ShadowMapCache} shadowMapCache - The cache of the temporary shadow maps used by the
+     * VSM blur.
+     */
+    constructor(renderer, lightTextureAtlas, shadowMapCache) {
         this.device = renderer.device;
 
         /** @type {Renderer} */
@@ -131,6 +119,9 @@ class ShadowRenderer {
 
         /** @type {LightTextureAtlas} */
         this.lightTextureAtlas = lightTextureAtlas;
+
+        /** @type {ShadowMapCache} */
+        this.shadowMapCache = shadowMapCache;
 
         const scope = this.device.scope;
 
@@ -157,32 +148,6 @@ class ShadowRenderer {
         this.blendStateWrite = new BlendState();
         this.blendStateNoWrite = new BlendState();
         this.blendStateNoWrite.setColorWrite(false, false, false, false);
-    }
-
-    // creates shadow camera for a light and sets up its constant properties
-    static createShadowCamera(device, shadowType, type, face) {
-
-        const shadowCam = LightCamera.create(device, SHADOWCAMERA_NAME, type, face);
-
-        const shadowInfo = shadowTypeInfo.get(shadowType);
-        Debug.assert(shadowInfo);
-        const isVsm = shadowInfo?.vsm ?? false;
-        const isPcf = shadowInfo?.pcf ?? false;
-
-        // don't clear the color buffer if rendering a depth map
-        if (isVsm) {
-            shadowCam.clearColor = new Color(0, 0, 0, 0);
-        } else {
-            shadowCam.clearColor = new Color(1, 1, 1, 1);
-        }
-
-        shadowCam.clearDepthBuffer = true;
-        shadowCam.clearStencilBuffer = false;
-
-        // clear color buffer only when using it
-        shadowCam.clearColorBuffer = !isPcf;
-
-        return shadowCam;
     }
 
     _cullShadowCastersInternal(meshInstances, visible, camera) {
@@ -877,7 +842,7 @@ class ShadowRenderer {
         // temporary render target for blurring
         // TODO: this is probably not optimal and shadow map could have depth buffer on in addition to color buffer,
         // and for blurring only one buffer is needed.
-        const tempShadowMap = this.renderer.shadowMapCache.get(device, light);
+        const tempShadowMap = this.shadowMapCache.get(device, light);
         const tempRt = tempShadowMap.renderTargets[0];
 
         const blurMode = light.vsmBlurMode;
@@ -919,7 +884,7 @@ class ShadowRenderer {
         }
 
         // return the temporary shadow map back to the cache
-        this.renderer.shadowMapCache.add(light, tempShadowMap);
+        this.shadowMapCache.add(light, tempShadowMap);
 
         DebugGraphics.popGpuMarker(device);
     }
@@ -949,4 +914,4 @@ class ShadowRenderer {
     }
 }
 
-export { ShadowRenderer, needsShadowRendering };
+export { ShadowRenderer };

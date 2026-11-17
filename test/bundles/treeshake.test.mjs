@@ -68,6 +68,23 @@ describe('build / treeshake', function () {
         expect(webgpu.glsl, 'retained GLSL chunks').to.deep.equal([]);
     });
 
+    // shadow rendering is created by the shadows feature, so the renderer alone does not bring it
+    it('the renderer does not retain shadow rendering, which the shadows feature brings', async function () {
+        const result = await bundle(`
+            import { ForwardRenderer } from "playcanvas";
+            globalThis.__renderer = ForwardRenderer;
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => /\/renderer\/shadow-renderer[^/]*\.js$/.test(path) ||
+            path.endsWith('/renderer/shadow-map-cache.js') ||
+            path.endsWith('/renderer/render-pass-shadow-directional.js') ||
+            path.endsWith('/renderer/render-pass-shadow-local-non-clustered.js') ||
+            path.includes('/shadow-chunks-') ||
+            path.endsWith('/features/feature-shadows.js'));
+        expect(retained, 'retained shadow rendering modules').to.deep.equal([]);
+    });
+
     it('AppBase with container loading does not retain the gsplat implementation', async function () {
         const result = await bundle(`
             import { AppBase, ContainerHandler } from "playcanvas";

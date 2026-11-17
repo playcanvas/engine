@@ -59,6 +59,7 @@ import lightDiffuseLambertPS from '../chunks/lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from '../chunks/lit/frag/lightDirPoint.js';
 import lightEvaluationPS from '../chunks/lit/frag/lighting/lightEvaluation.js';
 import lightFunctionLightPS from '../chunks/lit/frag/lighting/lightFunctionLight.js';
+import lightFunctionShadowPS from '../chunks/lit/frag/lighting/lightFunctionShadow.js';
 import lightingPS from '../chunks/lit/frag/lighting/lighting.js';
 import lightmapAddPS from '../chunks/lit/frag/lightmapAdd.js';
 import lightmapPS from '../chunks/standard/frag/lightmap.js';
@@ -221,6 +222,7 @@ const shaderChunksGLSL = {
     lightDirPointPS,
     lightEvaluationPS,
     lightFunctionLightPS,
+    lightFunctionShadowPS,
     lightingPS,
     lightmapAddPS,
     lightmapPS,
