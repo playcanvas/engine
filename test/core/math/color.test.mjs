@@ -260,6 +260,22 @@ describe('Color', function () {
             expect(c.toString(true)).to.equal('#1a334d66');
         });
 
+        it('returns a two digit alpha when alpha rounds up to 16', function () {
+            const c = new Color(0.1, 0.2, 0.3, 0.062);
+            expect(c.toString(true)).to.equal('#1a334d10');
+            expect(new Color().fromString(c.toString(true)).a).to.equal(16 / 255);
+        });
+
+        it('clamps an alpha above 1 to ff', function () {
+            const c = new Color(0.1, 0.2, 0.3, 1.5);
+            expect(c.toString(true)).to.equal('#1a334dff');
+        });
+
+        it('clamps negative components to 00', function () {
+            const c = new Color(-0.1, 0.2, 0.3, -0.1);
+            expect(c.toString(true)).to.equal('#00334d00');
+        });
+
     });
 
     describe('#toArray', function () {

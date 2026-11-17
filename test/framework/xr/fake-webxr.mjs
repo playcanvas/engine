@@ -8,16 +8,18 @@ import { Mat4 } from '../../../src/core/math/mat4.js';
 /**
  * Creates a stand-in for the XRInputSource of a tracked controller.
  *
+ * @param {object} [overrides] - Members to replace, such as a hand or a gamepad.
  * @returns {object} The input source.
  */
-const createController = () => ({
+const createController = (overrides = {}) => ({
     handedness: 'right',
     targetRayMode: 'tracked-pointer',
     targetRaySpace: {},
     gripSpace: {},
     profiles: [],
     gamepad: null,
-    hand: null
+    hand: null,
+    ...overrides
 });
 
 /**

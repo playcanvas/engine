@@ -742,9 +742,7 @@ class ShadowRenderer {
 
         const device = this.device;
 
-        // #if _PROFILER
         const shadowMapStartTime = now();
-        // #endif
 
         DebugGraphics.pushGpuMarker(device, `SHADOW ${light._node.name} FACE ${face}`);
 
@@ -774,9 +772,7 @@ class ShadowRenderer {
 
         DebugGraphics.popGpuMarker(device);
 
-        // #if _PROFILER
         renderer._shadowMapTime += now() - shadowMapStartTime;
-        // #endif
     }
 
     /**

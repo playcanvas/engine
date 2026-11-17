@@ -52,7 +52,7 @@ class WebglDrawCommands {
         this.glInstanceCounts[i] = instanceCount;
     }
 
-    // #if _PROFILER
+    // #if _DEBUG
     /**
      * Calculate primitives per sub-draw before accumulating, so strip overhead and incomplete
      * list primitives are handled separately for each instance.

@@ -9,7 +9,7 @@
  * measurements are read-only; {@link user} holds writable application-defined counters.
  * Includes frame cadence, CPU phase timings, overall GPU frame timing, and estimated GPU resource
  * memory usage. CPU timings, GPU timings and memory statistics are available in all builds, subject
- * to graphics capabilities. Primitive counting requires a debug or profiler build; see each getter
+ * to graphics capabilities. Primitive counting requires a debug build; see each getter
  * for its availability.
  *
  * Durations are in milliseconds and memory sizes are in bytes. Values are the latest available
@@ -93,9 +93,7 @@ class AppStats {
             morphTime: 0,
             instancingTime: 0, // deprecated
 
-            // #if _PROFILER
             primitives: 0,
-            // #endif
             gsplats: 0,
             gsplatSort: 0,
             gsplatBufferCopy: 0,
@@ -225,11 +223,11 @@ class AppStats {
      * application tick. Counts triangles, lines and points across all passes, including instances
      * and CPU-authored multi-draw commands. Counts are calculated before GPU clipping and culling.
      *
-     * Available only in debug and profiler builds. Returns undefined in release and minified builds.
-     * This is an estimate from draw parameters: GPU-generated indirect draws are excluded, and
-     * primitive-restart indices in indexed strips are not inspected. No GPU readback is performed.
+     * Available only in debug builds. Returns 0 in all other builds. This is an estimate from draw
+     * parameters: GPU-generated indirect draws are excluded, and primitive-restart indices in
+     * indexed strips are not inspected. No GPU readback is performed.
      *
-     * @type {number|undefined}
+     * @type {number}
      */
     get primitiveCount() {
         return this.frame.primitives;
@@ -450,7 +448,7 @@ class AppStats {
     }
 
     /**
-     * Update detailed per-frame stats (profiler build only). Resets per-frame
+     * Update detailed per-frame stats. Resets per-frame
      * counters on the renderer and graphics device.
      *
      * @param {ForwardRenderer} renderer - The forward renderer.
@@ -468,7 +466,7 @@ class AppStats {
         stats.shadowMapTime = renderer._shadowMapTime;
         stats.depthMapTime = renderer._depthMapTime;
         stats.forwardTime = renderer._forwardTime;
-        // #if _PROFILER
+        // #if _DEBUG
         stats.primitives = device._primitiveCount;
         device._primitiveCount = 0;
         // #endif

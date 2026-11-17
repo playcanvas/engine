@@ -6,7 +6,6 @@ import {
     LAYERID_DEPTH
 } from '../constants.js';
 import { LightList } from '../lighting/light-list.js';
-import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { LayerRenderStep } from './layer-render-step.js';
@@ -70,9 +69,6 @@ function vogelSpherePrecalculationSamples(numSamples) {
  * @ignore
  */
 class ForwardRenderer extends Renderer {
-    /** @type {WorldClustersDebug|null} */
-    _worldClustersDebug = null;
-
     /**
      * Limits how much of one render pass is drawn, for stepping through its draw calls with a
      * debugging tool. Matched by the camera and render target the pass renders with; for each layer
@@ -144,20 +140,12 @@ class ForwardRenderer extends Renderer {
         this.pcssSphereSamples = vogelSpherePrecalculationSamples(16);
     }
 
-    destroy() {
-        this._worldClustersDebug?.destroy();
-        this._worldClustersDebug = null;
-        super.destroy();
-    }
-
-    // #if _PROFILER
     // Static properties used by the Profiler in the Editor's Launch Page
     static skipRenderCamera = null;
 
     static _skipRenderCounter = 0;
 
     static skipRenderAfter = 0;
-    // #endif
 
     /**
      * @param {Scene} scene - The scene.
@@ -239,14 +227,12 @@ class ForwardRenderer extends Renderer {
                 continue;
             }
 
-            // #if _PROFILER
             if (camera === ForwardRenderer.skipRenderCamera) {
                 if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter) {
                     continue;
                 }
                 ForwardRenderer._skipRenderCounter++;
             }
-            // #endif
 
             // Skip hardware-instanced rendering with 0 instances. When draw commands (indirect /
             // multi-draw) are bound, they are the source of truth for the number of draws and
@@ -442,9 +428,7 @@ class ForwardRenderer extends Renderer {
 
     renderForward(camera, renderTarget, allDrawCalls, lightList, pass, drawCallback, layer, flipFaces, viewUniformFormat) {
 
-        // #if _PROFILER
         const forwardStartTime = now();
-        // #endif
 
         // run first pass over draw calls and handle material / shader updates
         const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, lightList, layer, pass, viewUniformFormat);
@@ -454,9 +438,7 @@ class ForwardRenderer extends Renderer {
 
         _drawCallList.clear();
 
-        // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
-        // #endif
     }
 
     /**
@@ -495,23 +477,17 @@ class ForwardRenderer extends Renderer {
 
         let visible, lightList;
         if (layer) {
-            // #if _PROFILER
             const sortTime = now();
-            // #endif
 
             layer.sortVisible(camera, transparent, this.meshInstanceSorter);
 
-            // #if _PROFILER
             this._sortTime += now() - sortTime;
-            // #endif
 
             const culledInstances = layer.getCulledInstances(camera);
             visible = transparent ? culledInstances.transparent : culledInstances.opaque;
 
             // add debug lines to visible list
             scene.immediate.onPreRenderLayer(layer, visible, transparent);
-
-            this._worldClustersDebug?.onPreRenderLayer(layer, visible);
 
             // cut the list short when a debugging tool steps through this pass, after the debug
             // lines were added so the indices match what the tool saw. A copy, as the layer's own
@@ -550,15 +526,6 @@ class ForwardRenderer extends Renderer {
         if (clusteredLightingEnabled) {
             const lightClusters = options.lightClusters ?? this.worldClustersAllocator.empty;
             lightClusters.activate();
-
-            // debug rendering of clusters
-            if (layer) {
-                if (!this.clustersDebugRendered && scene.lighting.debugLayer === layer.id) {
-                    this.clustersDebugRendered = true;
-                    this._worldClustersDebug ??= new WorldClustersDebug();
-                    this._worldClustersDebug.render(lightClusters, scene);
-                }
-            }
         }
 
         // Set the not very clever global variable which is only useful when there's just one camera
@@ -853,7 +820,6 @@ class ForwardRenderer extends Renderer {
      */
     update(comp) {
 
-        this._worldClustersDebug?.frameUpdate();
         this.frameUpdate();
         this.shadowRenderer.frameUpdate();
 

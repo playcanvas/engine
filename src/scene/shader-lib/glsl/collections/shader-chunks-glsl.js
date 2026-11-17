@@ -47,8 +47,6 @@ import fogPS from '../chunks/common/frag/fog.js';
 import fresnelSchlickPS from '../chunks/lit/frag/fresnelSchlick.js';
 import fullscreenQuadVS from '../chunks/common/vert/fullscreenQuad.js';
 import gammaPS from '../chunks/common/frag/gamma.js';
-import gles3PS from '../../../../platform/graphics/shader-chunks/frag/gles3.js';
-import gles3VS from '../../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from '../chunks/standard/frag/gloss.js';
 import quadVS from '../chunks/common/vert/quad.js';
 import immediateLinePS from '../chunks/internal/frag/immediateLine.js';
@@ -163,8 +161,6 @@ import uvSetVaryingVS from '../chunks/lit/vert/uvSetVarying.js';
 import uvTransformVS from '../chunks/lit/vert/uvTransform.js';
 import uvTransformUniformsPS from '../chunks/lit/vert/uvTransformUniforms.js';
 import viewDirPS from '../chunks/lit/frag/viewDir.js';
-import webgpuPS from '../../../../platform/graphics/shader-chunks/frag/webgpu.js';
-import webgpuVS from '../../../../platform/graphics/shader-chunks/vert/webgpu.js';
 
 /**
  * Object containing all default shader chunks used by shader generators.
@@ -225,8 +221,6 @@ const shaderChunksGLSL = {
     frontendDeclPS: '',  // empty chunk, supplied by the shader generator
     fullscreenQuadVS,
     gammaPS,
-    gles3PS,
-    gles3VS,
     glossPS,
     quadVS,
     immediateLinePS,
@@ -348,9 +342,7 @@ const shaderChunksGLSL = {
     uvSetVaryingVS,
     uvTransformVS,
     uvTransformUniformsPS,
-    viewDirPS,
-    webgpuPS,
-    webgpuVS
+    viewDirPS
 };
 
 export { shaderChunksGLSL };

@@ -157,9 +157,6 @@ class ViewUniformBuffer {
  * @ignore
  */
 class Renderer {
-    /** @type {boolean} */
-    clustersDebugRendered = false;
-
     /** @type {Scene} */
     scene;
 
@@ -703,9 +700,7 @@ class Renderer {
         const drawCallsCount = drawCalls.length;
         if (drawCallsCount === 0) return;
 
-        // #if _PROFILER
         const skinTime = now();
-        // #endif
 
         for (let i = 0; i < drawCallsCount; i++) {
             const si = drawCalls[i].skinInstance;
@@ -715,9 +710,7 @@ class Renderer {
             }
         }
 
-        // #if _PROFILER
         this._skinTime += now() - skinTime;
-        // #endif
     }
 
     /**
@@ -727,9 +720,7 @@ class Renderer {
      * @ignore
      */
     updateGpuSkinMatrices(drawCalls) {
-        // #if _PROFILER
         const skinTime = now();
-        // #endif
 
         const renderVersion = this.device.renderVersion;
         for (const drawCall of drawCalls) {
@@ -747,9 +738,7 @@ class Renderer {
             }
         }
 
-        // #if _PROFILER
         this._skinTime += now() - skinTime;
-        // #endif
     }
 
     /**
@@ -759,9 +748,7 @@ class Renderer {
      * @ignore
      */
     updateMorphing(drawCalls) {
-        // #if _PROFILER
         const morphTime = now();
-        // #endif
 
         const renderVersion = this.device.renderVersion;
         for (const drawCall of drawCalls) {
@@ -775,9 +762,7 @@ class Renderer {
             }
         }
 
-        // #if _PROFILER
         this._morphTime += now() - morphTime;
-        // #endif
     }
 
     /**
@@ -1302,13 +1287,8 @@ class Renderer {
 
         // stats
         const stats = this.scene._stats;
-
-        // #if _PROFILER
-
         stats.dynamicLights = 0;
         stats.bakedLights = 0;
-
-        // #endif
 
         const count = comp.layerList.length;
         for (let i = 0; i < count; i++) {
@@ -1332,8 +1312,6 @@ class Renderer {
                             this.localLights.push(light);
                         }
 
-                        // #if _PROFILER
-
                         // if affects dynamic or baked objects in real-time
                         if ((light.mask & MASK_AFFECT_DYNAMIC) || (light.mask & MASK_AFFECT_LIGHTMAPPED)) {
                             stats.dynamicLights++;
@@ -1343,8 +1321,6 @@ class Renderer {
                         if (light.mask & MASK_BAKE) {
                             stats.bakedLights++;
                         }
-
-                        // #endif
                     }
                 }
             }
@@ -1432,9 +1408,7 @@ class Renderer {
             }
         }
 
-        // #if _PROFILER
         scene._stats.meshInstances = totalMeshInstances;
-        // #endif
 
         // update shaders if needed
         if (updateShaders) {
@@ -1466,9 +1440,7 @@ class Renderer {
      */
     updateLayerComposition(comp) {
 
-        // #if _PROFILER
         const layerCompositionUpdateTime = now();
-        // #endif
 
         const len = comp.layerList.length;
         const scene = this.scene;
@@ -1476,24 +1448,18 @@ class Renderer {
         for (let i = 0; i < len; i++) {
             const layer = comp.layerList[i];
             layer._shaderVersion = shaderVersion;
-            // #if _PROFILER
             layer._forwardDrawCalls = 0;
             layer._shadowDrawCalls = 0;
             layer._renderTime = 0;
-            // #endif
         }
 
         // update composition
         comp._update();
 
-        // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
-        // #endif
     }
 
     frameUpdate() {
-
-        this.clustersDebugRendered = false;
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();

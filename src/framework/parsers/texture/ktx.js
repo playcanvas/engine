@@ -67,9 +67,7 @@ class KtxParser extends TextureParser {
 
         const texture = new Texture(device, {
             name: url,
-            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
-            // #endif
             addressU: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             addressV: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: textureData.width,
