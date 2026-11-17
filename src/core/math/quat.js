@@ -223,7 +223,9 @@ class Quat {
      * console.log(v.toString());
      */
     getAxisAngle(axis) {
-        let rad = Math.acos(this.w) * 2;
+        // rounding can leave w of a unit quaternion just outside [-1, 1] (e.g. a rotation
+        // multiplied by its inverse gives w = 1.0000000000000002), where acos is NaN
+        let rad = Math.acos(math.clamp(this.w, -1, 1)) * 2;
         const s = Math.sin(rad / 2);
         if (s !== 0) {
             axis.x = this.x / s;
