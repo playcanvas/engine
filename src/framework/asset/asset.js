@@ -493,6 +493,14 @@ class Asset extends EventHandler {
         const newFile = value ? new AssetFile(value.url, value.filename, value.hash, value.size, value.opt, value.contents) : null;
 
         if (!!newFile !== !!oldFile || (newFile && !newFile.equals(oldFile))) {
+            // drop the loader's cached resource of the old file, as the asset no longer owns it and
+            // can destroy it - a cubemap does on reload. Setting that file again later would
+            // otherwise reuse the destroyed resource from the cache
+            const oldUrl = this.getFileUrl();
+            if (oldUrl) {
+                this.registry?._loader.clearCache(oldUrl, this.type);
+            }
+
             this._file = newFile;
             this.fire('change', this, 'file', newFile, oldFile);
             this.reload();
