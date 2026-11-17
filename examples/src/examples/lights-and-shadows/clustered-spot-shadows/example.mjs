@@ -23,6 +23,7 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
+    WorldClustersDebug,
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -117,6 +118,10 @@ app.scene.clusteredLightingEnabled = true;
 
 // Adjust default clustered lighting parameters to handle many lights
 const lighting = app.scene.lighting;
+
+// visualizes the light clusters of a layer, enabled by the debug 'Cells' toggle
+const clustersDebug = new WorldClustersDebug(app);
+app.on('destroy', () => clustersDebug.destroy());
 
 // 1) subdivide space with lights into this many cells
 lighting.cells = new Vec3(12, 4, 12);
@@ -313,7 +318,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         lighting.atlasSplit = splitOptions[value];
     } else if (pathArray[1] === 'debug') {
         // debug rendering of lighting clusters on world layer
-        lighting.debugLayer = value ? app.scene.layers.getLayerByName('World').id : undefined;
+        clustersDebug.layer = value ? app.scene.layers.getLayerByName('World') : null;
     } else if (pathArray[1] === 'use16BitIndex') {
         // switch the light grid between an 8bit and a 16bit light index
         lighting.maxLights = value ? maxLights16Bit : 255;

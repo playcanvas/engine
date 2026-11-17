@@ -350,6 +350,15 @@ class GSplatShadowRenderer {
     }
 
     /**
+     * Forces the next shadow cull to re-upload interval metadata, even for the same world-state
+     * version. Called after a work-buffer rebuild, where bounds indices may have shifted, or the
+     * intervals buffer was recreated empty by a device restore.
+     */
+    invalidateCullUpload() {
+        this._compaction?.invalidateUpload();
+    }
+
+    /**
      * Rebinds to a new work buffer after a format/resize swap. The per-light materials read the
      * work-buffer textures, so they must be re-pointed when the manager recreates it.
      *
@@ -357,7 +366,7 @@ class GSplatShadowRenderer {
      */
     setDataSource(workBuffer) {
         // Force a re-upload of intervals; offsets/bounds indices may have shifted.
-        this._compaction?.invalidateUpload();
+        this.invalidateCullUpload();
         // Force a cull-shader rebuild against the new work-buffer format (a swapped format object
         // can reset its version, so don't rely on extraStreamsVersion alone).
         this._cullFormatVersion = -1;

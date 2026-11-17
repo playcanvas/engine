@@ -5,10 +5,6 @@ import { Preprocessor } from '../../core/preprocessor.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { ShaderDefinitionUtils } from './shader-definition-utils.js';
-import halfTypes from './shader-chunks/frag/half-types.js';
-import dispatchThreadsCS from './shader-chunks/compute/dispatch-threads.js';
-import sceneColorCS from './shader-chunks/compute/scene-color.js';
-import sceneDepthCS from './shader-chunks/compute/scene-depth.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
@@ -223,20 +219,14 @@ class Shader {
 
             const cshader = enablesCode + definesCode + definition.cshader;
 
-            // Add the built-in includes for compute shaders (if not already provided by user). Note
-            // this copies the supplied map, which must not be modified.
+            // Add the device's built-in includes for compute shaders (if not already provided by
+            // user). Note this copies the supplied map, which must not be modified.
             const cincludes = new Map(definition.cincludes);
-            if (!cincludes.has('halfTypesCS')) {
-                cincludes.set('halfTypesCS', halfTypes);
-            }
-            if (!cincludes.has('sceneDepthCS')) {
-                cincludes.set('sceneDepthCS', sceneDepthCS);
-            }
-            if (!cincludes.has('sceneColorCS')) {
-                cincludes.set('sceneColorCS', sceneColorCS);
-            }
-            if (!cincludes.has('dispatchThreadsCS')) {
-                cincludes.set('dispatchThreadsCS', dispatchThreadsCS);
+            const builtInIncludes = graphicsDevice.computeChunks?.chunks;
+            for (const includeName in builtInIncludes) {
+                if (!cincludes.has(includeName)) {
+                    cincludes.set(includeName, builtInIncludes[includeName]);
+                }
             }
 
             // pre-process compute shader source

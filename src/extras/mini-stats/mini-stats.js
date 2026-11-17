@@ -105,8 +105,7 @@ const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) -
  *
  * The default CPU timings, including render time, draw call count and memory estimates are
  * available in all builds. GPU timing requires device support and is enabled when MiniStats
- * creates its GPU timer. Some additional counters, such as {@link AppStats#primitiveCount},
- * require a debug or profiler build. See {@link AppStats} for measurement scope and availability.
+ * creates its GPU timer. {@link AppStats#primitiveCount} requires a debug build. See {@link AppStats} for measurement scope and availability.
  * In the detailed views, click a category heading to collapse or expand its sub-counters.
  * Click elsewhere in the overlay to change size. Collapsing a category preserves its sampling
  * and graph history. Resources is enabled and collapsed by default, and displays current counts

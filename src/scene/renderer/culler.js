@@ -97,10 +97,6 @@ class Culler {
      * @param {CulledInstances} culledInstances - Stores culled instances.
      */
     cullMeshInstances(camera, drawCalls, culledInstances) {
-        // #if _PROFILER
-        const cullTime = now();
-        // #endif
-
         const opaque = culledInstances.opaque;
         opaque.length = 0;
         const transparent = culledInstances.transparent;
@@ -135,10 +131,8 @@ class Culler {
             }
         }
 
-        // #if _PROFILER
-        this.renderer._cullTime += now() - cullTime;
+        // cull time is measured by cullComposition, which covers this call
         this.renderer._numDrawCallsCulled += doCull ? count : 0;
-        // #endif
     }
 
     /**
@@ -504,9 +498,7 @@ class Culler {
      */
     cullComposition(comp) {
 
-        // #if _PROFILER
         const cullTime = now();
-        // #endif
 
         const { renderer } = this;
         const { scene } = renderer;
@@ -525,9 +517,7 @@ class Culler {
         // event after the engine has finished culling all cameras
         scene?.fire(EVENT_CULL_END);
 
-        // #if _PROFILER
         renderer._cullTime += now() - cullTime;
-        // #endif
     }
 }
 

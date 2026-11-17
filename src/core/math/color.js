@@ -1,5 +1,13 @@
 import { math } from './math.js';
 
+/**
+ * Converts a 0-1 color component to a 0-255 byte, clamping values outside that range.
+ *
+ * @param {number} v - The color component.
+ * @returns {number} The byte value.
+ */
+const toByte = v => math.clamp(Math.round(v * 255), 0, 255);
+
 // The sRGB transfer functions (IEC 61966-2-1), which GPUs apply when they sample an sRGB texture
 // or write an sRGB render target, so a color converted here matches theirs exactly
 const srgbToLinear = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
@@ -310,7 +318,9 @@ class Color {
     /**
      * Converts the color to string form. The format is '#RRGGBBAA', where RR, GG, BB, AA are the
      * red, green, blue and alpha values. When the alpha value is not included (the default), this
-     * is the same format as used in HTML/CSS.
+     * is the same format as used in HTML/CSS. Negative components, and an alpha above 1, are
+     * clamped to the 0-1 range so the output always has two hex digits per component. If r, g or b
+     * exceeds 1 (HDR), the components are returned as comma-separated numbers instead.
      *
      * @param {boolean} alpha - If true, the output string will include the alpha value.
      * @param {boolean} [asArray] - If true, the output will be an array of numbers. Defaults to false.
@@ -329,14 +339,9 @@ class Color {
             return `${r.toFixed(3)}, ${g.toFixed(3)}, ${b.toFixed(3)}, ${a.toFixed(3)}`;
         }
 
-        let s = `#${((1 << 24) + (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255)).toString(16).slice(1)}`;
+        let s = `#${((1 << 24) + (toByte(r) << 16) + (toByte(g) << 8) + toByte(b)).toString(16).slice(1)}`;
         if (alpha === true) {
-            const aa = Math.round(a * 255).toString(16);
-            if (this.a < 16 / 255) {
-                s += `0${aa}`;
-            } else {
-                s += aa;
-            }
+            s += toByte(a).toString(16).padStart(2, '0');
         }
         return s;
     }

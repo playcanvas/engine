@@ -344,7 +344,9 @@ class SoundComponent extends Component {
     }
 
     /**
-     * Sets a dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
+     * Sets a dictionary that contains the {@link SoundSlot}s managed by this SoundComponent. Each
+     * entry can also be the settings of a slot, as {@link addSlot} takes them, with an optional
+     * `name`. The key of such an entry names a slot that has no `name`.
      *
      * @type {Object<string, SoundSlot>}
      */
@@ -363,9 +365,10 @@ class SoundComponent extends Component {
         // convert data to slots
         for (const key in newValue) {
             if (!(newValue[key] instanceof SoundSlot)) {
-                if (newValue[key].name) {
-                    slots[newValue[key].name] = new SoundSlot(this, newValue[key].name, newValue[key]);
-                }
+                // scene data keys its slots by index and names each one in its entry, so the
+                // name of an entry comes before its key
+                const name = newValue[key].name || key;
+                slots[name] = new SoundSlot(this, name, newValue[key]);
             } else {
                 slots[newValue[key].name] = newValue[key];
             }

@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { warnInsecureContext } from '../../../core/secure-context-warning.js';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
-    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, BUFFERUSAGE_COPY_SRC, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
     PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT, BINDGROUP_VIEW
 } from '../constants.js';
@@ -14,6 +14,9 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
+import { webgpuChunksGLSL } from '../shader-chunks/webgpu-chunks-glsl.js';
+import { webgpuChunksWGSL } from '../shader-chunks/webgpu-chunks-wgsl.js';
+import { webgpuComputeChunksWGSL } from '../shader-chunks/webgpu-compute-chunks-wgsl.js';
 import { getCanvasNavigatorGpu } from './navigator-gpu.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
@@ -429,6 +432,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
+        this.platformChunksGLSL = webgpuChunksGLSL;
+        this.platformChunksWGSL = webgpuChunksWGSL;
+        this.computeChunks = webgpuComputeChunksWGSL;
 
         this.scope.resolve(UNUSED_UNIFORM_NAME).setValue(0);
     }
@@ -1231,7 +1237,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDrawBuffer === null) {
-            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDrawBuffer = new StorageBuffer(this, this.maxIndirectDrawCount * _indirectEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
             DebugHelper.setName(this._indirectDrawBuffer, 'WebgpuGraphicsDevice.indirectDraw');
             this._indirectDrawBufferCount = this.maxIndirectDrawCount;
         }
@@ -1265,7 +1271,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // allocate buffer
         if (this._indirectDispatchBuffer === null) {
-            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
+            this._indirectDispatchBuffer = new StorageBuffer(this, this.maxIndirectDispatchCount * _indirectDispatchEntryByteSize, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST | BUFFERUSAGE_COPY_SRC);
             DebugHelper.setName(this._indirectDispatchBuffer, 'WebgpuGraphicsDevice.indirectDispatch');
             this._indirectDispatchBufferCount = this.maxIndirectDispatchCount;
         }
@@ -1574,7 +1580,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // track draw calls - always count as 1 (one material setup, one API call)
             this._drawCallsPerFrame++;
 
-            // #if _PROFILER
+            // #if _DEBUG
             // track primitive count
             if (drawCommands) {
                 // use pre-calculated primitive count from drawCommands
@@ -1601,10 +1607,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this.shader = shader;
             this._pipelineDirty = true;
 
-            // #if _PROFILER
             // TODO: we should probably track other stats instead, like pipeline switches
             this._shaderSwitchesPerFrame++;
-            // #endif
         }
     }
 

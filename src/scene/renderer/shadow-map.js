@@ -97,9 +97,7 @@ class ShadowMap {
         }
 
         const texture = new Texture(device, {
-            // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
-            // #endif
             format: format,
             width: size,
             height: size,
@@ -146,9 +144,7 @@ class ShadowMap {
         const filter = isPcss ? FILTER_NEAREST : FILTER_LINEAR;
 
         const cubemap = new Texture(device, {
-            // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
-            // #endif
             format: shadowInfo?.format,
             width: size,
             height: size,

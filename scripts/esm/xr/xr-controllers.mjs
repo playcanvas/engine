@@ -392,9 +392,16 @@ class XrControllers extends Script {
         const sessionVisible = this.app.xr.visibilityState === 'visible';
 
         for (const [inputSource, controller] of this.controllers) {
+            const { entity, jointMap } = controller;
+
+            // a hand model is posed joint by joint; any other model at the grip. Some runtimes
+            // (SteamVR) give a controller a hand too, posed from its finger sensors, while its
+            // profile still loads the controller's model, which has no joints to pose
+            const handModel = jointMap.size > 0;
+
             // a hand also loses tracking when it leaves the view of the headset. A model hidden
             // while untracked gets back the enabled state it had, so one the app hid stays hidden
-            const tracked = sessionVisible && (!inputSource.hand || inputSource.hand.tracking);
+            const tracked = sessionVisible && (!handModel || inputSource.hand.tracking);
             if (controller.tracked !== tracked) {
                 controller.tracked = tracked;
                 if (tracked) {
@@ -406,9 +413,7 @@ class XrControllers extends Script {
             }
             if (!tracked) continue;
 
-            const { entity, jointMap } = controller;
-
-            if (inputSource.hand) {
+            if (handModel) {
                 // Update hand joint positions
                 for (const [joint, jointEntity] of jointMap) {
                     jointEntity.setPosition(joint.getPosition());
