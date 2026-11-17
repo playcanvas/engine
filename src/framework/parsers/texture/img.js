@@ -77,9 +77,7 @@ class ImgParser extends TextureParser {
     open(url, data, device, textureOptions = {}) {
         const texture = new Texture(device, {
             name: url,
-            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
-            // #endif
             width: data.width,
             height: data.height,
             format: PIXELFORMAT_RGBA8,

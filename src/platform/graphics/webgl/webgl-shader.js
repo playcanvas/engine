@@ -213,12 +213,10 @@ class WebglShader {
             this.compileDuration = now() - startTime;
         });
 
-        // #if _PROFILER
         device._shaderStats.linked++;
         if (definition.tag === SHADERTAG_MATERIAL) {
             device._shaderStats.materialShaders++;
         }
-        // #endif
     }
 
     /**
@@ -249,13 +247,11 @@ class WebglShader {
         let glShader = shaderCache.map.get(src);
 
         if (!glShader) {
-            // #if _PROFILER
             const startTime = now();
             device.fire('shader:compile:start', {
                 timestamp: startTime,
                 target: device
             });
-            // #endif
 
             glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
 
@@ -264,7 +260,6 @@ class WebglShader {
 
             shaderCache.map.set(src, glShader);
 
-            // #if _PROFILER
             const endTime = now();
             device.fire('shader:compile:end', {
                 timestamp: endTime,
@@ -277,7 +272,6 @@ class WebglShader {
             } else {
                 device._shaderStats.fsCompiled++;
             }
-            // #endif
         }
 
         return glShader;
@@ -301,13 +295,11 @@ class WebglShader {
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
-        // #if _PROFILER
         const startTime = now();
         device.fire('shader:link:start', {
             timestamp: startTime,
             target: device
         });
-        // #endif
 
         // this is the main thead blocking part of the shader compilation, time it
         let linkStartTime = 0;
@@ -414,14 +406,12 @@ class WebglShader {
 
         shader.ready = true;
 
-        // #if _PROFILER
         const endTime = now();
         device.fire('shader:link:end', {
             timestamp: endTime,
             target: device
         });
         device._shaderStats.compileTime += endTime - startTime;
-        // #endif
 
         Debug.call(() => {
             const duration = now() - linkStartTime;

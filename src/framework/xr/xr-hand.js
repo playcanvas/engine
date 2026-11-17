@@ -181,6 +181,10 @@ class XrHand extends EventHandler {
             }
         }
 
+        // a controller's hand (posed from its finger sensors) keeps the controller's own target
+        // ray and squeeze
+        if (!this._inputSource._bareHand) return;
+
         const j1 = this._jointsById['thumb-metacarpal'];
         const j4 = this._jointsById['thumb-tip'];
         const j6 = this._jointsById['index-finger-phalanx-proximal'];

@@ -103,9 +103,7 @@ class DdsParser extends TextureParser {
 
         texture = new Texture(device, {
             name: url,
-            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
-            // #endif
             addressU: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             addressV: isCubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: width,

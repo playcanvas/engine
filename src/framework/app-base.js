@@ -268,9 +268,7 @@ class AppBase extends EventHandler {
 
         this.stats.updateBasic(currentTime, dt, ms, this.renderer, this.graphicsDevice);
 
-        // #if _PROFILER
         this.stats.updateDetailed(this.renderer, this.graphicsDevice);
-        // #endif
 
         this.fire('frameupdate', ms);
 
@@ -1246,9 +1244,7 @@ class AppBase extends EventHandler {
             this._batcher.updateAll();
         }
 
-        // #if _PROFILER
         ForwardRenderer._skipRenderCounter = 0;
-        // #endif
 
         // render the scene composition
         this.renderComposition(this.scene.layers);

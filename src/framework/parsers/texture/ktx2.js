@@ -41,9 +41,7 @@ class Ktx2Parser extends TextureParser {
     open(url, data, device, textureOptions = {}) {
         const texture = new Texture(device, {
             name: url,
-            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
-            // #endif
             addressU: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             addressV: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: data.width,

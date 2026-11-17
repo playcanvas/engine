@@ -9,7 +9,7 @@
  * measurements are read-only; {@link user} holds writable application-defined counters.
  * Includes frame cadence, CPU phase timings, overall GPU frame timing, and estimated GPU resource
  * memory usage. CPU timings, GPU timings and memory statistics are available in all builds, subject
- * to graphics capabilities. Primitive counting requires a debug or profiler build; see each getter
+ * to graphics capabilities. Primitive counting requires a debug build; see each getter
  * for its availability.
  *
  * Durations are in milliseconds and memory sizes are in bytes. Values are the latest available
@@ -448,7 +448,7 @@ class AppStats {
     }
 
     /**
-     * Update detailed per-frame stats (profiler build only). Resets per-frame
+     * Update detailed per-frame stats. Resets per-frame
      * counters on the renderer and graphics device.
      *
      * @param {ForwardRenderer} renderer - The forward renderer.

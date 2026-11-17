@@ -82,12 +82,10 @@ class BatchManager {
         this._batchList = [];
         this._dirtyGroups = [];
 
-        // #if _PROFILER
         this._stats = {
             createTime: 0,
             updateLastFrameTime: 0
         };
-        // #endif
     }
 
     destroy() {
@@ -686,9 +684,7 @@ class BatchManager {
      */
     create(meshInstances, dynamic, batchGroupId) {
 
-        // #if _PROFILER
         const time = now();
-        // #endif
 
         if (!this._init) {
             this.vertexFormats = {};
@@ -915,9 +911,7 @@ class BatchManager {
             batch.updateBoundingBox();
         }
 
-        // #if _PROFILER
         this._stats.createTime += now() - time;
-        // #endif
 
         return batch;
     }
@@ -934,18 +928,14 @@ class BatchManager {
             this.generate(this._dirtyGroups);
         }
 
-        // #if _PROFILER
         const time = now();
-        // #endif
 
         for (let i = 0; i < this._batchList.length; i++) {
             if (!this._batchList[i].dynamic) continue;
             this._batchList[i].updateBoundingBox();
         }
 
-        // #if _PROFILER
         this._stats.updateLastFrameTime = now() - time;
-        // #endif
     }
 
     clone(batch, clonedMeshInstances) {

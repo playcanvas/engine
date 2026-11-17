@@ -883,11 +883,9 @@ class GraphicsDevice extends EventHandler {
         this.buffers = new Set();
 
         this._vram = {
-            // #if _PROFILER
             texShadow: 0,
             texAsset: 0,
             texLightmap: 0,
-            // #endif
             tex: 0,
             vb: 0,
             ib: 0,
@@ -1715,20 +1713,16 @@ class GraphicsDevice extends EventHandler {
 
         if (target.initialized) return;
 
-        // #if _PROFILER
         const startTime = now();
         this.fire('fbo:create', {
             timestamp: startTime,
             target: this
         });
-        // #endif
 
         target.init();
         this.targets.add(target);
 
-        // #if _PROFILER
         this._renderTargetCreationTime += now() - startTime;
-        // #endif
     }
 
     /**

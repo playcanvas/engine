@@ -39,9 +39,7 @@ class HdrParser extends TextureParser {
 
         const texture = new Texture(device, {
             name: url,
-            // #if _PROFILER
             profilerHint: TEXHINT_ASSET,
-            // #endif
             addressU: ADDRESS_REPEAT,
             addressV: ADDRESS_CLAMP_TO_EDGE,
             minFilter: FILTER_NEAREST,

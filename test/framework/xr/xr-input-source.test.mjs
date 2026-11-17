@@ -22,9 +22,10 @@ describe('XrInputSource', function () {
      * @param {object} [options] - Options.
      * @param {boolean} [options.velocitiesSupported] - Whether the browser reports velocities.
      * Defaults to true.
+     * @param {object} [options.controller] - Members of the WebXR input source to replace.
      * @returns {{ inputSource: XrInputSource, rig: GraphNode }} The input source and the rig.
      */
-    const createInputSource = ({ velocitiesSupported = true } = {}) => {
+    const createInputSource = ({ velocitiesSupported = true, controller = {} } = {}) => {
         const rig = new GraphNode();
         const camera = new GraphNode();
         rig.addChild(camera);
@@ -35,8 +36,48 @@ describe('XrInputSource', function () {
             _referenceSpace: {}
         };
 
-        return { inputSource: new XrInputSource(manager, createController()), rig };
+        return { inputSource: new XrInputSource(manager, createController(controller)), rig };
     };
+
+    describe('a controller with a hand', function () {
+
+        // SteamVR gives a controller a hand, posed from its finger sensors, beside its grip and
+        // gamepad
+        const controller = {
+            profiles: ['valve-index', 'generic-trigger-squeeze-thumbstick'],
+            gamepad: { axes: [0, 0, 0, 0], buttons: [] },
+            hand: { get: id => (id === 'wrist' ? {} : undefined) }
+        };
+
+        const createHandFrame = (position) => {
+            const frame = createFrame(position);
+            return {
+                ...frame,
+                session: { visibilityState: 'visible' },
+                getJointPose: frame.getPose
+            };
+        };
+
+        it('keeps its grip and target ray', function () {
+            const { inputSource } = createInputSource({ controller });
+            inputSource.update(createHandFrame({ x: 0.2, y: 1.1, z: -0.4 }));
+
+            expect(inputSource.hand.tracking).to.be.true;
+            expect(inputSource.grip).to.be.true;
+            expect(inputSource.getPosition().distance(new Vec3(0.2, 1.1, -0.4))).to.be.below(1e-6);
+            expect(inputSource.getOrigin().distance(new Vec3(0.2, 1.1, -0.4))).to.be.below(1e-6);
+            expect(inputSource.getDirection().distance(new Vec3(0, 0, -1))).to.be.below(1e-6);
+        });
+
+        it('keeps the squeeze its grip button reports', function () {
+            const { inputSource } = createInputSource({ controller });
+            inputSource._squeezing = true;
+            inputSource.update(createHandFrame({ x: 0, y: 1, z: 0 }));
+
+            expect(inputSource.squeezing).to.be.true;
+        });
+
+    });
 
     describe('#getOrigin', function () {
 

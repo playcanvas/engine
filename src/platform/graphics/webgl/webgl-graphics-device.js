@@ -3319,9 +3319,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // startPrecompilePass
             this.shaderValid = this._precompilePass ? false : undefined;
 
-            // #if _PROFILER
             this._shaderSwitchesPerFrame++;
-            // #endif
         }
     }
 
