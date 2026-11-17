@@ -411,6 +411,31 @@ describe('AnimComponent', function () {
             expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
         });
 
+        it('blends the lowest layer again when it starts animating the target after stopping', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Move', positionTrack(10));
+            root.anim.assignAnimation('Idle', track('Idle'));
+            root.anim.baseLayer.weight = 0.5;
+            const upperLayer = root.anim.addLayer('Upper', 0.5);
+            upperLayer.assignAnimation('Move', positionTrack(20));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            root.anim.baseLayer.transition('Idle');
+            app.systems.anim.onAnimationUpdate(0.1);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+
+            root.anim.baseLayer.transition('Move');
+            app.systems.anim.onAnimationUpdate(0.1);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+        });
+
         it('stops blending a layer with normalized weights once it no longer animates the target', function () {
             const root = new Entity('root', app);
             app.root.addChild(root);

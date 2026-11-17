@@ -41,7 +41,7 @@ class AnimTargetValue {
         this.weights = new Float32Array(component.layers.length);
         this.totalWeight = 0;
         this.counter = 0;
-        this.layerCounter = 0;
+        this.lastLayer = -1;
         this.valueType = type;
         this.dirty = true;
         this.value = (type === AnimTargetValue.TYPE_QUAT ? [0, 0, 0, 1] : [0, 0, 0]);
@@ -65,16 +65,6 @@ class AnimTargetValue {
 
     _layerBlendType(index) {
         return this._component.layers[index].blendType;
-    }
-
-    setMask(index, value) {
-        this.mask[index] = value;
-        if (this._normalizeWeights) {
-            if (this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE) {
-                this.mask = this.mask.fill(0, 0, index);
-            }
-            this.dirty = true;
-        }
     }
 
     /**

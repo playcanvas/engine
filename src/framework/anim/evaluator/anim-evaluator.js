@@ -84,7 +84,6 @@ class AnimEvaluator {
                         }
                         // keep a reference, the component replaces its targets map when it rebinds
                         target.layerTarget = binder.animComponent.targets[resolved.targetPath];
-                        target.layerTarget.layerCounter++;
                         target.layerTarget.setLayerBound(binder.layerIndex, 1);
                     }
                 }
@@ -124,7 +123,6 @@ class AnimEvaluator {
                 delete targets[target.target.targetPath];
                 const layerTarget = target.layerTarget;
                 if (layerTarget) {
-                    layerTarget.layerCounter--;
                     layerTarget.setLayerBound(binder.layerIndex, 0);
                 }
             }
@@ -258,8 +256,9 @@ class AnimEvaluator {
                 // if this evaluator is associated with an anim component then we should blend the result of this evaluator with all other anim layer's evaluators
                 if (binder.animComponent && target.target.usesLayerBlending) {
                     const animTarget = binder.animComponent.targets[path];
-                    // a layer that stops animating this target leaves the counter ahead of layerCounter
-                    if (animTarget.counter >= animTarget.layerCounter) {
+                    // layers update in index order, so a layer at or below the last one that wrote this
+                    // target starts a new frame
+                    if (binder.layerIndex <= animTarget.lastLayer) {
                         animTarget.counter = 0;
                     }
                     if (!animTarget.path) {
@@ -271,6 +270,7 @@ class AnimEvaluator {
                     animTarget.updateValue(binder.layerIndex, target.value);
 
                     animTarget.counter++;
+                    animTarget.lastLayer = binder.layerIndex;
                 } else {
                     target.target.set(target.value);
                 }

@@ -26,7 +26,7 @@ describe('AnimTargetValue', function () {
 
     });
 
-    describe('#setMask', function () {
+    describe('#setLayerBound', function () {
 
         it('sets dirty to true if normalizeWeights is true', function () {
             const mockComponent = {
@@ -44,7 +44,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.dirty = false;
-            animTargetValue.setMask(0, 1);
+            animTargetValue.setLayerBound(0, 1);
             expect(animTargetValue.dirty).to.equal(true);
         });
 
@@ -64,7 +64,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.dirty = false;
-            animTargetValue.setMask(0, 1);
+            animTargetValue.setLayerBound(0, 1);
             expect(animTargetValue.dirty).to.equal(false);
         });
 
@@ -84,7 +84,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
             expect(animTargetValue.mask[0]).to.equal(0);
-            animTargetValue.setMask(0, 1);
+            animTargetValue.setLayerBound(0, 1);
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
@@ -103,8 +103,8 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.mask[0] = 1;
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             expect(animTargetValue.mask[0]).to.equal(0);
         });
 
@@ -123,8 +123,8 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.mask[0] = 1;
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
@@ -143,8 +143,8 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.mask[0] = 1;
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
@@ -163,8 +163,8 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.mask[0] = 1;
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
@@ -208,8 +208,8 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.totalWeight).to.equal(0);
             animTargetValue.updateWeights();
             expect(animTargetValue.totalWeight).to.equal(0);
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateWeights();
             expect(animTargetValue.totalWeight).to.equal(3);
         });
@@ -297,7 +297,7 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.mask[0] = 1;
+            animTargetValue.setLayerBound(0, 1);
             expect(animTargetValue.getWeight(0)).to.equal(1);
         });
 
@@ -317,7 +317,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
             animTargetValue.totalWeight = 0;
-            animTargetValue.mask[0] = 1;
+            animTargetValue.setLayerBound(0, 1);
             animTargetValue.dirty = false;
             const weight = animTargetValue.getWeight(0);
             expect(weight).to.equal(0);
@@ -338,7 +338,7 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.mask[0] = 1;
+            animTargetValue.setLayerBound(0, 1);
             animTargetValue.mask[1] = 1;
             animTargetValue.dirty = true;
             const weight = animTargetValue.getWeight(0);
@@ -360,7 +360,7 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent);
-            animTargetValue.mask[0] = 1;
+            animTargetValue.setLayerBound(0, 1);
             animTargetValue.mask[1] = 1;
             animTargetValue.dirty = true;
             const weight = animTargetValue.getWeight(0);
@@ -382,7 +382,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
+            animTargetValue.setLayerBound(0, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             expect(animTargetValue.value).to.deep.equal([1, 1, 1]);
         });
@@ -399,7 +399,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
+            animTargetValue.setLayerBound(0, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             expect(animTargetValue.value).to.deep.equal([1, 1, 1]);
         });
@@ -415,7 +415,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
+            animTargetValue.setLayerBound(0, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             expect(animTargetValue.value).to.deep.equal([1, 0, 0, 0]);
         });
@@ -432,7 +432,7 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
+            animTargetValue.setLayerBound(0, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             expect(animTargetValue.value).to.deep.equal([1, 0, 0, 0]);
         });
@@ -452,8 +452,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -476,8 +476,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -499,8 +499,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
@@ -523,8 +523,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
@@ -552,8 +552,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -576,8 +576,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -599,8 +599,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
@@ -623,8 +623,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
@@ -646,8 +646,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -669,8 +669,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -693,8 +693,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -716,8 +716,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
@@ -740,8 +740,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
@@ -763,8 +763,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -787,8 +787,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_VEC3);
             animTargetValue.baseValue = [0, 0, 0];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
@@ -810,8 +810,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
@@ -834,8 +834,8 @@ describe('AnimTargetValue', function () {
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
             animTargetValue.baseValue = [0, 0, 0, 1];
-            animTargetValue.setMask(0, 1);
-            animTargetValue.setMask(1, 1);
+            animTargetValue.setLayerBound(0, 1);
+            animTargetValue.setLayerBound(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
