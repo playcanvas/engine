@@ -1,6 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { Asset } from '../asset/asset.js';
-import { DEFAULT_LOCALE, DEFAULT_LOCALE_FALLBACKS } from './constants.js';
+import { DEFAULT_LOCALE, DEFAULT_LOCALE_FALLBACKS, I18N_EVENT_CHANGE } from './constants.js';
 import { findAvailableLocale, getLang, getPluralFn, replaceLang } from './utils.js';
 import { I18nParser } from './i18n-parser.js';
 
@@ -25,7 +25,7 @@ class I18n extends EventHandler {
      *    console.log(`Locale changed from ${oldLocale} to ${newLocale}`);
      * });
      */
-    static EVENT_CHANGE = 'change';
+    static EVENT_CHANGE = I18N_EVENT_CHANGE;
 
     /**
      * Create a new I18n instance.

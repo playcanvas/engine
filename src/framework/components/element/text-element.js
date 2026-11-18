@@ -20,7 +20,8 @@ import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { LocalizedAsset } from '../../asset/asset-localized.js';
-import { I18n } from '../../i18n/i18n.js';
+import { I18N_EVENT_CHANGE } from '../../i18n/constants.js';
+import { FEATURE_I18N } from '../../features/constants.js';
 import { FONT_BITMAP, FONT_MSDF } from '../../font/constants.js';
 import { Markup } from './markup.js';
 
@@ -252,9 +253,11 @@ class TextElement {
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
 
-        this._system.app.i18n.on(I18n.EVENT_CHANGE, this._onLocaleSet, this);
-        this._system.app.i18n.on('data:add', this._onLocalizationData, this);
-        this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
+        // text elements are localized only with the i18n feature
+        const i18n = this._system.app.i18n;
+        i18n?.on(I18N_EVENT_CHANGE, this._onLocaleSet, this);
+        i18n?.on('data:add', this._onLocalizationData, this);
+        i18n?.on('data:remove', this._onLocalizationData, this);
 
         // substring render range
         this._rangeStart = 0;
@@ -290,9 +293,10 @@ class TextElement {
         this._element.off('set:draworder', this._onDrawOrderChange, this);
         this._element.off('set:pivot', this._onPivotChange, this);
 
-        this._system.app.i18n.off(I18n.EVENT_CHANGE, this._onLocaleSet, this);
-        this._system.app.i18n.off('data:add', this._onLocalizationData, this);
-        this._system.app.i18n.off('data:remove', this._onLocalizationData, this);
+        const i18n = this._system.app.i18n;
+        i18n?.off(I18N_EVENT_CHANGE, this._onLocaleSet, this);
+        i18n?.off('data:add', this._onLocalizationData, this);
+        i18n?.off('data:remove', this._onLocalizationData, this);
     }
 
     _onParentResize(width, height) {
@@ -1716,6 +1720,7 @@ class TextElement {
 
         this._i18nKey = str;
         if (str) {
+            Debug.assert(this._system.app.graphicsDevice.features.has(FEATURE_I18N), 'A localized text element needs the i18n feature to be installed.');
             this._fontAsset.disableLocalization = false;
             this._resetLocalizedText();
         } else {

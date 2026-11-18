@@ -8,3 +8,11 @@
  * @ignore
  */
 export const FEATURE_BUNDLES = 'bundles';
+
+/**
+ * The name of the i18n feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_I18N = 'i18n';
