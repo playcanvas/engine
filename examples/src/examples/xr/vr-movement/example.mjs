@@ -17,6 +17,7 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
+    WireRenderer,
     XRHAND_LEFT,
     XRHAND_RIGHT,
     XRSPACE_LOCAL,
@@ -64,6 +65,9 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
 
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -274,7 +278,8 @@ if (app.xr.supported) {
             tmpVec3A.copy(inputSource.getOrigin());
             tmpVec3B.copy(inputSource.getDirection());
             tmpVec3B.mulScalar(100).add(tmpVec3A);
-            app.drawLine(tmpVec3A, tmpVec3B, lineColor);
+            wire.color = lineColor;
+            wire.line(tmpVec3A, tmpVec3B);
 
             // Render controller
             if (inputSource.grip) {

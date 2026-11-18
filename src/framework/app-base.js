@@ -1882,24 +1882,16 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @deprecated Use {@link WireRenderer#line} instead.
      * @example
-     * // Render a 1-unit long white line
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * app.drawLine(start, end);
-     * @example
-     * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * app.drawLine(start, end, Color.RED, false);
-     * @example
-     * // Render a 1-unit long white line into the world layer
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * const worldLayer = app.scene.layers.getLayerById(LAYERID_WORLD);
-     * app.drawLine(start, end, Color.WHITE, true, worldLayer);
+     * // replacement: set the color, depth test and layer on the renderer
+     * const wire = new WireRenderer(app);
+     * wire.color = Color.RED;
+     * wire.depthTest = false;
+     * wire.line(start, end);
      */
     drawLine(start, end, color, depthTest, layer) {
+        Debug.deprecated('AppBase#drawLine is deprecated. Use WireRenderer#line instead.');
         this.scene.drawLine(start, end, color, depthTest, layer);
     }
 
@@ -1918,32 +1910,14 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @deprecated Use {@link WireRenderer#lines} instead.
      * @example
-     * // Render a single line, with unique colors for each point
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * app.drawLines([start, end], [Color.RED, Color.WHITE]);
-     * @example
-     * // Render 2 discrete line segments
-     * const points = [
-     *     // Line 1
-     *     new Vec3(0, 0, 0),
-     *     new Vec3(1, 0, 0),
-     *     // Line 2
-     *     new Vec3(1, 1, 0),
-     *     new Vec3(1, 1, 1)
-     * ];
-     * const colors = [
-     *     // Line 1
-     *     Color.RED,
-     *     Color.YELLOW,
-     *     // Line 2
-     *     Color.CYAN,
-     *     Color.BLUE
-     * ];
-     * app.drawLines(points, colors);
+     * // replacement: a single color is set on the renderer, per-point colors are passed in
+     * const wire = new WireRenderer(app);
+     * wire.lines([start, end], [Color.RED, Color.WHITE]);
      */
     drawLines(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        Debug.deprecated('AppBase#drawLines is deprecated. Use WireRenderer#lines instead.');
         this.scene.drawLines(positions, colors, depthTest, layer);
     }
 
@@ -1960,27 +1934,14 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @deprecated Use {@link WireRenderer#linesPacked} instead.
      * @example
-     * // Render 2 discrete line segments
-     * const points = [
-     *     // Line 1
-     *     0, 0, 0,
-     *     1, 0, 0,
-     *     // Line 2
-     *     1, 1, 0,
-     *     1, 1, 1
-     * ];
-     * const colors = [
-     *     // Line 1
-     *     1, 0, 0, 1,  // red
-     *     0, 1, 0, 1,  // green
-     *     // Line 2
-     *     0, 0, 1, 1,  // blue
-     *     1, 1, 1, 1   // white
-     * ];
-     * app.drawLineArrays(points, colors);
+     * // replacement: a single color is set on the renderer, per-point colors are passed in
+     * const wire = new WireRenderer(app);
+     * wire.linesPacked([0, 0, 0, 1, 0, 0], [1, 0, 0, 1, 1, 1, 1, 1]);
      */
     drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        Debug.deprecated('AppBase#drawLineArrays is deprecated. Use WireRenderer#linesPacked instead.');
         this.scene.drawLineArrays(positions, colors, depthTest, layer);
     }
 
