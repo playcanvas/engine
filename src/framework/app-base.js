@@ -1885,6 +1885,8 @@ class AppBase extends EventHandler {
      * @deprecated Use {@link WireRenderer#line} instead.
      * @example
      * // replacement: set the color, depth test and layer on the renderer
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
      * const wire = new WireRenderer(app);
      * wire.color = Color.RED;
      * wire.depthTest = false;
@@ -1913,6 +1915,8 @@ class AppBase extends EventHandler {
      * @deprecated Use {@link WireRenderer#lines} instead.
      * @example
      * // replacement: a single color is set on the renderer, per-point colors are passed in
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
      * const wire = new WireRenderer(app);
      * wire.lines([start, end], [Color.RED, Color.WHITE]);
      */
