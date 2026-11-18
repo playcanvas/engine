@@ -34,9 +34,7 @@ import {
 } from './constants.js';
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
-import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { BundleHandler } from './handlers/bundle.js';
 import { ResourceLoader } from './handlers/loader.js';
 import { I18n } from './i18n/i18n.js';
 import { ScriptRegistry } from './script/script-registry.js';
@@ -48,6 +46,8 @@ import { getApplication, setApplication } from './globals.js';
 import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
+import { featureBundles } from './features/feature-bundles.js';
+import { FEATURE_BUNDLES } from './features/constants.js';
 import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/features/feature-area-lights.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
 import { FEATURE_AREA_LIGHTS } from '../scene/features/constants.js';
@@ -56,6 +56,7 @@ import { installFeatures } from '../scene/features/install-features.js';
 /**
  * @import { AppOptions } from './app-options.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { BundleRegistry } from './bundle/bundle-registry.js'
  * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { EventHandle } from '../core/event-handle.js'
@@ -208,14 +209,6 @@ class AppBase extends EventHandler {
 
     /** @ignore */
     _time = 0;
-
-    /**
-     * Set this to false if you want to run without using bundles. We set it to true only if
-     * TextDecoder is available because we currently rely on it for untarring.
-     *
-     * @ignore
-     */
-    enableBundles = (typeof TextDecoder !== 'undefined');
 
     /**
      * A request id returned by requestAnimationFrame, allowing us to cancel it.
@@ -466,12 +459,12 @@ class AppBase extends EventHandler {
     assets = new AssetRegistry(this.loader);
 
     /**
-     * The bundle registry managed by the application.
+     * The bundle registry managed by the application, created by the bundles feature.
      *
-     * @type {BundleRegistry}
+     * @type {BundleRegistry|null}
      * @ignore
      */
-    bundles;
+    bundles = null;
 
     /**
      * The scene registry managed by the application.
@@ -621,7 +614,6 @@ class AppBase extends EventHandler {
 
         if (assetPrefix) this.assets.prefix = assetPrefix;
 
-        this.bundles = new BundleRegistry(this.assets);
         this.scriptsOrder = scriptsOrder || [];
 
         this.defaultLayerWorld = new Layer({ name: 'World', id: LAYERID_WORLD });
@@ -646,7 +638,8 @@ class AppBase extends EventHandler {
         // their objects on it, and before anything that uses them, such as the lightmapper
         installFeatures(this, [
             featureShadowsWebgl, featureShadowsWebgpu,
-            featureAreaLightsWebgl, featureAreaLightsWebgpu
+            featureAreaLightsWebgl, featureAreaLightsWebgpu,
+            featureBundles
         ]);
 
         if (lightmapper) {
@@ -672,10 +665,6 @@ class AppBase extends EventHandler {
         if (this.elementInput) this.elementInput.attachSelectEvents();
 
         this._scriptPrefix = scriptPrefix || '';
-
-        if (this.enableBundles) {
-            this.loader.addHandler('bundle', new BundleHandler(this));
-        }
 
         // Create and register all required resource handlers
         resourceHandlers.forEach((resourceHandler) => {
@@ -1063,12 +1052,11 @@ class AppBase extends EventHandler {
         }
 
         // then add bundles
-        if (this.enableBundles) {
-            for (const id in assets) {
-                if (assets[id].type === 'bundle') {
-                    bundlesIndex[id] = true;
-                    list.push(assets[id]);
-                }
+        for (const id in assets) {
+            if (assets[id].type === 'bundle') {
+                Debug.assert(this.graphicsDevice.features.has(FEATURE_BUNDLES), `Bundle asset [${assets[id].name}] needs the bundles feature to be installed.`);
+                bundlesIndex[id] = true;
+                list.push(assets[id]);
             }
         }
 
@@ -2120,7 +2108,7 @@ class AppBase extends EventHandler {
         this.systems.destroy();
 
         // destroy bundle registry
-        this.bundles.destroy();
+        this.bundles?.destroy();
         this.bundles = null;
 
         this.i18n.destroy();

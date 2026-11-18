@@ -1690,20 +1690,7 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
 
 // parse the gltf chunk, returns the gltf json
 const parseGltf = (gltfChunk, callback) => {
-    const decodeBinaryUtf8 = (array) => {
-        if (typeof TextDecoder !== 'undefined') {
-            return new TextDecoder().decode(array);
-        }
-
-        let str = '';
-        for (let i = 0; i < array.length; i++) {
-            str += String.fromCharCode(array[i]);
-        }
-
-        return decodeURIComponent(escape(str));
-    };
-
-    const gltf = JSON.parse(decodeBinaryUtf8(gltfChunk));
+    const gltf = JSON.parse(new TextDecoder().decode(gltfChunk));
 
     // check gltf version
     if (gltf.asset && gltf.asset.version && parseFloat(gltf.asset.version) < 2) {

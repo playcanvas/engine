@@ -200,7 +200,7 @@ class TextureAtlasHandler extends ResourceHandler {
         };
 
         const file = textureUrl.split('?')[0];
-        const bundles = this._app.enableBundles ? this._app.bundles : null;
+        const bundles = this._app.bundles;
         if (bundles?.hasUrl(file) && bundles.urlIsLoadedOrLoading(file)) {
             bundles.loadUrl(file, (err, data) => {
                 if (err) {

@@ -477,7 +477,7 @@ class Asset extends EventHandler {
                     // if the variant does not exist but the asset is in a bundle
                     // and the bundle contain assets with this variant then return the default
                     // file for the asset
-                    if (app.enableBundles) {
+                    if (app.bundles) {
                         const bundles = app.bundles.listBundlesForAsset(this);
                         if (bundles && bundles.find((b) => {
                             return b?.file?.variants[variant];
