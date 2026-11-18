@@ -89,6 +89,7 @@ export default /* glsl */`
 #endif
 
 #ifdef LIT_ADD_AMBIENT
+    #include "ambientModifierPS"
     #include "ambientPS"
 #endif
 

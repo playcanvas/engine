@@ -15,6 +15,9 @@ export default /* wgsl */`
 #endif
 
 fn addAmbient(worldNormal: vec3f) {
+
+    var ambient: vec3f = vec3f(0.0);
+
     #ifdef LIT_AMBIENT_SOURCE == AMBIENTSH
 
         let n: vec3f = cubeMapRotate(worldNormal);
@@ -29,7 +32,7 @@ fn addAmbient(worldNormal: vec3f) {
             uniform.ambientSH[7] * (3.0 * n.z * n.z - 1.0) +
             uniform.ambientSH[8] * (n.x * n.x - n.y * n.y);
 
-        dDiffuseLight += processEnvironment(max(color, vec3f(0.0)));
+        ambient = processEnvironment(max(color, vec3f(0.0)));
 
     #endif
 
@@ -40,14 +43,16 @@ fn addAmbient(worldNormal: vec3f) {
 
         let raw: vec4f = textureSample({LIT_ENV_ATLAS}, {LIT_ENV_ATLAS}Sampler, uv);
         let linear: vec3f = {ambientDecode}(raw);
-        dDiffuseLight += processEnvironment(linear);
+        ambient = processEnvironment(linear);
 
     #endif
 
     #if LIT_AMBIENT_SOURCE == CONSTANT
 
-        dDiffuseLight += uniform.light_globalAmbient;
+        ambient = uniform.light_globalAmbient;
 
     #endif
+
+    dDiffuseLight += modifyAmbient(ambient, worldNormal);
 }
 `;

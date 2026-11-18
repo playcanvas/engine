@@ -143,6 +143,15 @@ void evaluateBackend() {
 
             #endif
 
+            // the occlusion of the reflections of the environment, see ambientModifierPS
+            #ifdef LIT_ADD_AMBIENT
+                float reflectionOcclusion = getReflectionOcclusion();
+                dReflection.rgb *= reflectionOcclusion;
+                #ifdef LIT_CLEARCOAT
+                    ccReflection *= reflectionOcclusion;
+                #endif
+            #endif
+
         #endif
 
         #ifdef AREA_LIGHTS

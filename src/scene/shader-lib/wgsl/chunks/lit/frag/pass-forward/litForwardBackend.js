@@ -148,6 +148,15 @@ fn evaluateBackend() -> FragmentOutput {
 
             #endif
 
+            // the occlusion of the reflections of the environment, see ambientModifierPS
+            #ifdef LIT_ADD_AMBIENT
+                let reflectionOcclusion = getReflectionOcclusion();
+                dReflection = vec4f(dReflection.rgb * reflectionOcclusion, dReflection.a);
+                #ifdef LIT_CLEARCOAT
+                    ccReflection = ccReflection * reflectionOcclusion;
+                #endif
+            #endif
+
         #endif
 
         #ifdef AREA_LIGHTS
