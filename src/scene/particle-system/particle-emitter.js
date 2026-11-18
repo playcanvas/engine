@@ -45,6 +45,7 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 import { ParticleMaterial } from './particle-material.js';
+import { FEATURE_PARTICLES } from '../features/constants.js';
 const particleVerts = [
     [-1, -1],
     [1, -1],
@@ -240,6 +241,7 @@ class ParticleEmitter {
     colorParam = null;
 
     constructor(graphicsDevice, options) {
+        Debug.assert(graphicsDevice.features.has(FEATURE_PARTICLES), 'A particle emitter needs the particles feature to be installed.');
         this.graphicsDevice = graphicsDevice;
         const gd = graphicsDevice;
         const precision = 32;
