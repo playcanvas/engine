@@ -626,6 +626,8 @@ class ProbeVolumeBaker {
         if (lighting) {
             captureCameras.add(lighting.camera.camera);
         } else {
+            // the rigs for the current probesPerFrame, created before they are collected
+            this._createRigs();
             this._rigs.forEach(rig => rig.cameras.forEach(camera => captureCameras.add(camera)));
         }
         const prerenderHandle = this.app.scene.on(EVENT_PRERENDER, (camera) => {
