@@ -8,7 +8,6 @@ import shadowEVSMExponentPS from '../chunks/common/frag/shadow-evsm-exponent.js'
 import shadowPCF1PS from '../chunks/lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from '../chunks/lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
-import shadowSoftPS from '../chunks/lit/frag/lighting/shadowSoft.js';
 
 /**
  * @import { ShaderChunkCollection } from '../../../../platform/graphics/shader-chunk-collection.js'
@@ -33,8 +32,7 @@ export const shadowChunksWGSL = {
         shadowEVSMExponentPS,
         shadowPCF1PS,
         shadowPCF3PS,
-        shadowPCF5PS,
-        shadowSoftPS
+        shadowPCF5PS
         // shadowPCSSPS: omni / spot PCSS is not supported on WebGPU currently, as this is only for
         // non-clustered lights
     }

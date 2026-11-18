@@ -47,7 +47,8 @@ describe('build / treeshake', function () {
     const features = [
         { module: 'feature-shadows.js', webgl: 'featureShadowsWebgl', webgpu: 'featureShadowsWebgpu' },
         { module: 'feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' },
-        { module: 'feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' }
+        { module: 'feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
+        { module: 'feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' }
     ];
 
     for (const feature of features) {

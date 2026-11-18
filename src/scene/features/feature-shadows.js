@@ -33,9 +33,14 @@ function installShadows(host) {
     renderer._shadowRendererDirectional = new ShadowRendererDirectional(renderer, shadowRenderer);
 }
 
-// The engine code of shadow rendering, shared by the feature for each device, so that it is
-// installed once when a host installs both.
-const shadowsCode = /* #__PURE__ */ new Feature({
+/**
+ * The engine code of shadow rendering, shared by the feature for each device, so that it is
+ * installed once when a host installs both. Required by the features that build on shadows.
+ *
+ * @type {Feature}
+ * @ignore
+ */
+export const shadowsCode = /* #__PURE__ */ new Feature({
     name: FEATURE_SHADOWS,
     install: installShadows
 });
