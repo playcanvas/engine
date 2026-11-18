@@ -238,7 +238,8 @@ describe('Lit shader diffuse transmission', function () {
         const light = 'dDiffuseTransmissionLight';
         // the transmission lobe of the area light loop evaluates the LTC with the flipped normal
         expect(source).to.contain(lang('lobe == 1 ? -worldNormal : worldNormal', 'select(worldNormal, -worldNormal, lobe == 1)'));
-        expect(source).to.contain('transmissionAttenuation = lobeValue * 16.0');
+        expect(source).to.contain('lobes.transmission = lobeValue * 16.0');
+        expect(source).to.contain('transmissionAttenuation = areaLobes.transmission * falloffAttenuation');
         expect(source).to.contain(lang(`${light} += areaTransmission;`,
             `${light} = ${light} + areaTransmission;`));
     });

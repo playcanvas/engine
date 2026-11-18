@@ -78,7 +78,6 @@ import litMainVS from '../chunks/lit/vert/litMain.js';
 import litOtherMainPS from '../chunks/lit/frag/pass-other/litOtherMain.js';
 import litShaderArgsPS from '../chunks/standard/frag/litShaderArgs.js';
 import litShaderCorePS from '../chunks/standard/frag/litShaderCore.js';
-import ltcPS from '../chunks/lit/frag/ltc.js';
 import metalnessPS from '../chunks/standard/frag/metalness.js';
 import msdfPS from '../chunks/common/frag/msdf.js';
 import metalnessModulatePS from '../chunks/lit/frag/metalnessModulate.js';
@@ -249,7 +248,6 @@ const shaderChunksGLSL = {
     litUserMainStartVS: '',  // empty chunk allowing user to add custom code
     litUserMainEndPS: '',  // empty chunk allowing user to add custom code
     litUserMainEndVS: '',  // empty chunk allowing user to add custom code
-    ltcPS,
     metalnessPS,
     metalnessModulatePS,
     morphPS,

@@ -8,3 +8,11 @@
  * @ignore
  */
 export const FEATURE_SHADOWS = 'shadows';
+
+/**
+ * The name of the area lights feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_AREA_LIGHTS = 'areaLights';

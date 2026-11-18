@@ -18,7 +18,7 @@ import {
     LIGHT_COLOR_DIVIDER
 } from './constants.js';
 import { LightCamera } from './renderer/light-camera.js';
-import { FEATURE_SHADOWS } from './features/constants.js';
+import { FEATURE_AREA_LIGHTS, FEATURE_SHADOWS } from './features/constants.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 
@@ -555,6 +555,8 @@ class Light {
         if (this._shape === value) {
             return;
         }
+
+        Debug.assert(value === LIGHTSHAPE_PUNCTUAL || this.device.features.has(FEATURE_AREA_LIGHTS), 'A light of an area shape needs the area lights feature to be installed.');
 
         this._shape = value;
         this._destroyShadowMap();
