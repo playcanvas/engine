@@ -155,6 +155,9 @@ fn evaluateBackend() -> FragmentOutput {
                 #ifdef LIT_CLEARCOAT
                     ccReflection = ccReflection * reflectionOcclusion;
                 #endif
+                #ifdef LIT_SHEEN
+                    sReflection = sReflection * reflectionOcclusion;
+                #endif
             #endif
 
         #endif

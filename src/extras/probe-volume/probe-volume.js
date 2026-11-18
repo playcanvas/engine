@@ -103,6 +103,7 @@ class ProbeVolume {
      * The graphics device.
      *
      * @type {GraphicsDevice}
+     * @ignore
      */
     device;
 

@@ -36,7 +36,6 @@ import { halfToFloat } from './probe-volume.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Light } from '../../scene/light.js'
- * @import { Material } from '../../scene/materials/material.js'
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { ProbeVolume } from './probe-volume.js'
  */
@@ -134,12 +133,12 @@ class ProbeVolumeBaker {
      * The application.
      *
      * @type {AppBase}
+     * @ignore
      */
     app;
 
     /**
-     * The number of probes captured each frame. It can be changed at any time, including during a
-     * capture.
+     * The number of probes captured each frame. A change applies from the next capture or bake.
      *
      * @type {number}
      */
@@ -490,15 +489,16 @@ class ProbeVolumeBaker {
         const probeValid = new Uint8Array(probeCount).fill(1);
         const allProbes = Array.from({ length: probeCount }, (value, i) => i);
 
-        // the materials render their back faces, which make probes invalid, and the transparent ones
-        // don't render, as the geometry can't be blended
+        // the capture cameras render the back faces, which make probes invalid, and the transparent
+        // materials don't render, as the geometry can't be blended
         const passName = this._emissive ? GEOMETRY_EMISSIVE_PASS : GEOMETRY_PASS;
         const restore = this._prepareGeometryMaterials(passName);
         try {
             const capture = (probes, capturePositions, progressStart, progressEnd) => this._captureTiles(this._geometryTarget, probes, capturePositions, {
                 shaderPass: passName,
                 layers: this._layers.filter(id => id !== LAYERID_SKYBOX),
-                clearColor: geometryClearColor
+                clearColor: geometryClearColor,
+                cullFaces: false
             }, p => onProgress(progressStart + (progressEnd - progressStart) * p));
 
             await capture(allProbes, positions, 0, 0.7);
@@ -568,6 +568,10 @@ class ProbeVolumeBaker {
             restore();
         }
 
+        // the offsets of an earlier capture which moved probes don't apply to this one
+        if (!virtualOffset) {
+            volume.setOffsets(null);
+        }
         volume.setValidity(probeValid);
         this._probeValid = probeValid;
         this._positions = positions;
@@ -792,11 +796,11 @@ class ProbeVolumeBaker {
     }
 
     /**
-     * Makes the opaque materials of the captured layers render their back faces in the geometry
-     * pass, and the transparent ones skip it.
+     * Makes the transparent materials of the captured layers skip the geometry pass. Only the
+     * shader pass of the capture is affected, so the other cameras render them as usual.
      *
      * @param {string} passName - The name of the geometry pass.
-     * @returns {Function} Restores the materials and the mesh instances.
+     * @returns {Function} Restores the mesh instances.
      * @private
      */
     _prepareGeometryMaterials(passName) {
@@ -804,8 +808,6 @@ class ProbeVolumeBaker {
         const passIndex = this._rigs[0].cameras[0].setShaderPass(passName);
         this._rigs[0].cameras[0].setShaderPass(null);
 
-        /** @type {Map<Material, number>} */
-        const culls = new Map();
         /** @type {Map<MeshInstance, number>} */
         const masks = new Map();
         this._layers.forEach((id) => {
@@ -814,22 +816,14 @@ class ProbeVolumeBaker {
                 if (!material) {
                     return;
                 }
-                if (material.blendType !== BLEND_NONE) {
-                    if (!masks.has(meshInstance)) {
-                        masks.set(meshInstance, meshInstance.shaderPassMask);
-                        meshInstance.shaderPassMask &= ~(1 << passIndex);
-                    }
-                } else if (!culls.has(material)) {
-                    culls.set(material, material.cull);
-                    material.cull = CULLFACE_NONE;
+                if (material.blendType !== BLEND_NONE && !masks.has(meshInstance)) {
+                    masks.set(meshInstance, meshInstance.shaderPassMask);
+                    meshInstance.shaderPassMask &= ~(1 << passIndex);
                 }
             });
         });
 
         return () => {
-            culls.forEach((cull, material) => {
-                material.cull = cull;
-            });
             masks.forEach((mask, meshInstance) => {
                 meshInstance.shaderPassMask = mask;
             });
@@ -872,6 +866,8 @@ class ProbeVolumeBaker {
                 priority: -100,
                 toneMapping: TONEMAP_NONE,
                 gammaCorrection: GAMMA_NONE,
+                // without a sky, the directions without geometry receive no light
+                clearColor: radianceClearColor,
                 layers: [LAYERID_SKYBOX],
                 renderTarget
             });
@@ -908,20 +904,32 @@ class ProbeVolumeBaker {
      * @param {RenderTarget} target - The atlas.
      * @param {number[]} probes - The indices of the probes.
      * @param {Float32Array} positions - The positions of all probes.
-     * @param {{ shaderPass: string|null, layers: number[], clearColor: Color }} setup - The shader
-     * pass, layers and clear color of the cameras.
+     * @param {{ shaderPass: string|null, layers: number[], clearColor: Color, cullFaces?: boolean }} setup - The
+     * shader pass, layers and clear color of the cameras, and whether they cull the faces of the
+     * materials, true by default.
      * @param {Function} onProgress - Called each frame with the progress.
      * @returns {Promise<void>} Resolves once all probes rendered.
      * @private
      */
     _captureTiles(target, probes, positions, setup, onProgress) {
         const { width, height, faceSize } = this._atlas;
-        const rigs = this._rigs;
+
+        // the rigs capturing the probes each frame, the pool can be larger after probesPerFrame
+        // was lowered
+        this._createRigs();
+        const count = Math.max(1, Math.min(this.probesPerFrame, this._rigs.length));
+        this._rigs.forEach((rig, index) => {
+            if (index >= count) {
+                rig.entity.enabled = false;
+            }
+        });
+        const rigs = this._rigs.slice(0, count);
         rigs.forEach((rig) => {
             rig.cameras.forEach((camera) => {
                 camera.renderTarget = target;
                 camera.layers = setup.layers;
                 camera.clearColor = setup.clearColor;
+                camera.cullFaces = setup.cullFaces ?? true;
                 camera.setShaderPass(setup.shaderPass);
             });
         });

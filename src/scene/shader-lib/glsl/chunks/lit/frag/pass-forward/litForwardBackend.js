@@ -150,6 +150,9 @@ void evaluateBackend() {
                 #ifdef LIT_CLEARCOAT
                     ccReflection *= reflectionOcclusion;
                 #endif
+                #ifdef LIT_SHEEN
+                    sReflection *= reflectionOcclusion;
+                #endif
             #endif
 
         #endif
