@@ -1,0 +1,50 @@
+import { AreaLightLuts } from '../area-light-luts.js';
+import { areaLightChunksGLSL } from '../shader-lib/glsl/collections/area-light-chunks-glsl.js';
+import { areaLightChunksWGSL } from '../shader-lib/wgsl/collections/area-light-chunks-wgsl.js';
+import { FEATURE_AREA_LIGHTS } from './constants.js';
+import { Feature } from './feature.js';
+
+/**
+ * @import { FeatureHost } from './feature.js'
+ */
+
+/**
+ * Creates the placeholder LUT textures of area lights, used until the application sets the LUT
+ * tables.
+ *
+ * @param {FeatureHost} host - The host the feature is installed into.
+ */
+function installAreaLights(host) {
+    AreaLightLuts.createPlaceholder(host.graphicsDevice);
+}
+
+// The engine code of area lights, shared by the feature for each device, so that it is installed
+// once when a host installs both.
+const areaLightsCode = /* #__PURE__ */ new Feature({
+    name: FEATURE_AREA_LIGHTS,
+    install: installAreaLights
+});
+
+/**
+ * Area lights on a WebGL device.
+ *
+ * @type {Feature}
+ * @ignore
+ */
+export const featureAreaLightsWebgl = /* #__PURE__ */ new Feature({
+    name: 'areaLights-webgl',
+    chunks: areaLightChunksGLSL,
+    requires: [areaLightsCode]
+});
+
+/**
+ * Area lights on a WebGPU device.
+ *
+ * @type {Feature}
+ * @ignore
+ */
+export const featureAreaLightsWebgpu = /* #__PURE__ */ new Feature({
+    name: 'areaLights-webgpu',
+    chunks: areaLightChunksWGSL,
+    requires: [areaLightsCode]
+});

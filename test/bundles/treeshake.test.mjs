@@ -44,29 +44,36 @@ describe('build / treeshake', function () {
     // features are created at module scope, and a feature module holds the feature of each device.
     // Without its pure annotation, a feature an application does not import would be kept, and with
     // it the shader chunks of the language the application does not use.
-    it('a feature for one device does not retain the shader chunks of the other device', async function () {
-        const featureShadows = fileURLToPath(new URL('../../build/playcanvas/src/scene/features/feature-shadows.js', import.meta.url));
-        const retainedChunks = async (name) => {
-            const result = await bundle(`
-                import { ${name} } from ${JSON.stringify(featureShadows)};
-                globalThis.__feature = ${name};
-            `);
-            const output = Object.values(result.metafile.outputs)[0];
-            const inputs = Object.keys(output.inputs);
-            return {
-                glsl: inputs.filter(path => path.includes('/shader-lib/glsl/')),
-                wgsl: inputs.filter(path => path.includes('/shader-lib/wgsl/'))
+    const features = [
+        { module: 'feature-shadows.js', webgl: 'featureShadowsWebgl', webgpu: 'featureShadowsWebgpu' },
+        { module: 'feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' }
+    ];
+
+    for (const feature of features) {
+        it(`${feature.module}: a feature for one device does not retain the shader chunks of the other device`, async function () {
+            const featureModule = fileURLToPath(new URL(`../../build/playcanvas/src/scene/features/${feature.module}`, import.meta.url));
+            const retainedChunks = async (name) => {
+                const result = await bundle(`
+                    import { ${name} } from ${JSON.stringify(featureModule)};
+                    globalThis.__feature = ${name};
+                `);
+                const output = Object.values(result.metafile.outputs)[0];
+                const inputs = Object.keys(output.inputs);
+                return {
+                    glsl: inputs.filter(path => path.includes('/shader-lib/glsl/')),
+                    wgsl: inputs.filter(path => path.includes('/shader-lib/wgsl/'))
+                };
             };
-        };
 
-        const webgl = await retainedChunks('featureShadowsWebgl');
-        expect(webgl.glsl, 'GLSL chunks of the WebGL feature').to.not.be.empty;
-        expect(webgl.wgsl, 'retained WGSL chunks').to.deep.equal([]);
+            const webgl = await retainedChunks(feature.webgl);
+            expect(webgl.glsl, 'GLSL chunks of the WebGL feature').to.not.be.empty;
+            expect(webgl.wgsl, 'retained WGSL chunks').to.deep.equal([]);
 
-        const webgpu = await retainedChunks('featureShadowsWebgpu');
-        expect(webgpu.wgsl, 'WGSL chunks of the WebGPU feature').to.not.be.empty;
-        expect(webgpu.glsl, 'retained GLSL chunks').to.deep.equal([]);
-    });
+            const webgpu = await retainedChunks(feature.webgpu);
+            expect(webgpu.wgsl, 'WGSL chunks of the WebGPU feature').to.not.be.empty;
+            expect(webgpu.glsl, 'retained GLSL chunks').to.deep.equal([]);
+        });
+    }
 
     // shadow rendering is created by the shadows feature, so the renderer alone does not bring it
     it('the renderer does not retain shadow rendering, which the shadows feature brings', async function () {
@@ -83,6 +90,26 @@ describe('build / treeshake', function () {
             path.includes('/shadow-chunks-') ||
             path.endsWith('/features/feature-shadows.js'));
         expect(retained, 'retained shadow rendering modules').to.deep.equal([]);
+    });
+
+    // area lights are brought by the area lights feature, so the core shader chunks and the
+    // renderer do not retain their shader chunks or LUT code
+    it('the core shader chunks and the renderer do not retain area lights', async function () {
+        const collection = language => fileURLToPath(new URL(`../../build/playcanvas/src/scene/shader-lib/${language}/collections/shader-chunks-${language}.js`, import.meta.url));
+        const result = await bundle(`
+            import { ForwardRenderer } from "playcanvas";
+            import { shaderChunksGLSL } from ${JSON.stringify(collection('glsl'))};
+            import { shaderChunksWGSL } from ${JSON.stringify(collection('wgsl'))};
+            globalThis.__imports = { ForwardRenderer, shaderChunksGLSL, shaderChunksWGSL };
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.endsWith('/area-light-luts.js') ||
+            path.endsWith('/lit/frag/ltc.js') ||
+            path.endsWith('/lit/frag/clusteredLightArea.js') ||
+            path.includes('/area-light-chunks-') ||
+            path.endsWith('/features/feature-area-lights.js'));
+        expect(retained, 'retained area light modules').to.deep.equal([]);
     });
 
     it('AppBase with container loading does not retain the gsplat implementation', async function () {

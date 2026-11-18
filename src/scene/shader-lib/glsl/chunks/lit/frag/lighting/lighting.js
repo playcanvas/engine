@@ -9,11 +9,6 @@ export default /* glsl */`
     #define LIT_CODE_LIGHTS_SPOT
 #endif
 
-#ifdef AREA_LIGHTS
-    uniform highp sampler2D areaLightsLutTex1;
-    uniform highp sampler2D areaLightsLutTex2;
-#endif
-
 #ifdef LIT_LIGHTING
     #include "lightDiffuseLambertPS"
 

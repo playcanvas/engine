@@ -48,7 +48,9 @@ import { getApplication, setApplication } from './globals.js';
 import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
+import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/features/feature-area-lights.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
+import { FEATURE_AREA_LIGHTS } from '../scene/features/constants.js';
 import { installFeatures } from '../scene/features/install-features.js';
 
 /**
@@ -638,14 +640,14 @@ class AppBase extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
 
-        // Placeholder texture for area light LUTs
-        AreaLightLuts.createPlaceholder(graphicsDevice);
-
         this.renderer = new ForwardRenderer(graphicsDevice, this.scene);
 
         // every feature, for both devices. Installed once the renderer exists, as features create
         // their objects on it, and before anything that uses them, such as the lightmapper
-        installFeatures(this, [featureShadowsWebgl, featureShadowsWebgpu]);
+        installFeatures(this, [
+            featureShadowsWebgl, featureShadowsWebgpu,
+            featureAreaLightsWebgl, featureAreaLightsWebgpu
+        ]);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
@@ -1806,6 +1808,7 @@ class AppBase extends EventHandler {
      * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
     setAreaLightLuts(ltcMat1, ltcMat2) {
+        Debug.assert(this.graphicsDevice.features.has(FEATURE_AREA_LIGHTS), 'setAreaLightLuts: area lights need the area lights feature to be installed.');
 
         if (ltcMat1 && ltcMat2) {
             AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);

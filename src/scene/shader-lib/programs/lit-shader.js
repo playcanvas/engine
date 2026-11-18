@@ -23,7 +23,7 @@ import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../glsl/chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
 import { ShaderChunks } from '../shader-chunks.js';
-import { FEATURE_SHADOWS } from '../../features/constants.js';
+import { FEATURE_AREA_LIGHTS, FEATURE_SHADOWS } from '../../features/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -531,6 +531,7 @@ class LitShader {
         const hasAreaLights = clusteredAreaLights || options.lights.some((light) => {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
+        Debug.assert(!hasAreaLights || this.device.features.has(FEATURE_AREA_LIGHTS), 'Area lights need the area lights feature to be installed. Install it, or set scene.lighting.areaLightsEnabled to false.');
         const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
         // parallax mapping transforms the view direction to tangent space, so it needs the TBN matrix
         // as well
