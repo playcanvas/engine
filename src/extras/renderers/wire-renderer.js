@@ -409,7 +409,7 @@ class WireRenderer {
 
         // pass user data straight through when it needs no transform
         if (!this.transform) {
-            this.app.drawLines(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
+            this._scene.drawLines(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
             return;
         }
 
@@ -433,7 +433,7 @@ class WireRenderer {
             'WireRenderer#linesPacked colors must hold four values per position, or be undefined.');
 
         if (!this.transform) {
-            this.app.drawLineArrays(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
+            this._scene.drawLineArrays(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
             return;
         }
 

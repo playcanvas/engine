@@ -31,6 +31,7 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
+    WireRenderer,
     XRSPACE_LOCALFLOOR,
     XRTYPE_AR,
     XrManager,
@@ -95,6 +96,10 @@ createOptions.resourceHandlers = [TextureHandler, FontHandler, ContainerHandler]
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
+wire.depthTest = false;
 
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -303,9 +308,12 @@ if (app.xr.supported) {
                 transform.transformPoint(vec3A, vec3A);
                 transform.transformPoint(vec3B, vec3B);
                 transform.transformPoint(vec3C, vec3C);
-                app.drawLine(mesh.getPosition(), vec3A, Color.RED, false);
-                app.drawLine(mesh.getPosition(), vec3B, Color.GREEN, false);
-                app.drawLine(mesh.getPosition(), vec3C, Color.BLUE, false);
+                wire.color = Color.RED;
+                wire.line(mesh.getPosition(), vec3A);
+                wire.color = Color.GREEN;
+                wire.line(mesh.getPosition(), vec3B);
+                wire.color = Color.BLUE;
+                wire.line(mesh.getPosition(), vec3C);
             }
         }
     });

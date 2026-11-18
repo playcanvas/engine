@@ -53,6 +53,7 @@ import {
     VertexBuffer,
     VertexFormat,
     WasmModule,
+    WireRenderer,
     createGraphicsDevice,
     math
 } from 'playcanvas';
@@ -106,6 +107,10 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
+wire.depthTest = false;
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -601,7 +606,8 @@ const showProbeSpheres = (/** @type {boolean} */ show) => {
 const lineColor = new Color(1, 0.9, 0.1);
 app.on('update', () => {
     if (probeSpheres.enabled && probeLines.length > 0) {
-        app.drawLineArrays(probeLines, lineColor, false);
+        wire.color = lineColor;
+        wire.linesPacked(probeLines);
     }
 });
 

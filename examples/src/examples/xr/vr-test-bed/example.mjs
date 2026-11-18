@@ -33,6 +33,7 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
+    WireRenderer,
     XRSPACE_LOCALFLOOR,
     XRTARGETRAY_POINTER,
     XRTYPE_VR,
@@ -93,6 +94,9 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, FontHandler]
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
 
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -235,7 +239,8 @@ app.on('update', () => {
         const origin = source.getOrigin();
         const direction = source.getDirection();
         rayEnd.copy(direction).mulScalar(rayLength).add(origin);
-        app.drawLine(origin, rayEnd, rayColor);
+        wire.color = rayColor;
+        wire.line(origin, rayEnd);
     }
 });
 

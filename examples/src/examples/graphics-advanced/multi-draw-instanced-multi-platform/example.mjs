@@ -36,6 +36,7 @@ import {
     Vec3,
     VertexBuffer,
     VertexFormat,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 
@@ -69,6 +70,9 @@ createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -270,5 +274,5 @@ app.on('update', (dt) => {
     camera.setLocalPosition(15 * Math.sin(angle), 7, 15 * Math.cos(angle));
     camera.lookAt(Vec3.ZERO);
 
-    app.drawLines(linesPositions, linesColors);
+    wire.lines(linesPositions, linesColors);
 });
