@@ -202,10 +202,11 @@ class ResourceLoader {
             };
 
             const normalizedUrl = url.split('?')[0];
-            if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl) && !(options && options.bundlesIgnore)) {
+            const bundleRegistry = this._app.bundles;
+            if (bundleRegistry?.hasUrl(normalizedUrl) && !(options && options.bundlesIgnore)) {
                 // if there is no loaded bundle with asset, then start loading a bundle
-                if (!this._app.bundles.urlIsLoadedOrLoading(normalizedUrl)) {
-                    const bundles = this._app.bundles.listBundlesForAsset(asset);
+                if (!bundleRegistry.urlIsLoadedOrLoading(normalizedUrl)) {
+                    const bundles = bundleRegistry.listBundlesForAsset(asset);
                     let bundle;
 
                     if (options && options.bundlesFilter) {
@@ -223,7 +224,7 @@ class ResourceLoader {
                     if (bundle) this._app.assets?.load(bundle);
                 }
 
-                this._app.bundles.loadUrl(normalizedUrl, (err, fileUrlFromBundle) => {
+                bundleRegistry.loadUrl(normalizedUrl, (err, fileUrlFromBundle) => {
                     handleLoad(err, {
                         load: fileUrlFromBundle,
                         original: normalizedUrl

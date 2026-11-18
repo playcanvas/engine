@@ -112,6 +112,22 @@ describe('build / treeshake', function () {
         expect(retained, 'retained area light modules').to.deep.equal([]);
     });
 
+    // asset bundles are brought by the bundles feature, so the asset code that loads from bundles
+    // when the feature is installed does not retain them
+    it('asset loading does not retain asset bundles, which the bundles feature brings', async function () {
+        const result = await bundle(`
+            import { Asset, AssetRegistry, ResourceLoader, TextureAtlasHandler } from "playcanvas";
+            globalThis.__imports = { Asset, AssetRegistry, ResourceLoader, TextureAtlasHandler };
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.includes('/framework/bundle/') ||
+            path.endsWith('/handlers/bundle.js') ||
+            path.endsWith('/handlers/untar.js') ||
+            path.endsWith('/features/feature-bundles.js'));
+        expect(retained, 'retained asset bundle modules').to.deep.equal([]);
+    });
+
     it('AppBase with container loading does not retain the gsplat implementation', async function () {
         const result = await bundle(`
             import { AppBase, ContainerHandler } from "playcanvas";
