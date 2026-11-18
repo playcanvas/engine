@@ -387,8 +387,9 @@ class ProbeVolumeBaker {
      * @param {number} [options.validityThreshold] - The fraction of the sphere around a probe
      * covered by back faces above which the probe is invalid. Defaults to 0.25.
      * @param {boolean} [options.virtualOffset] - Whether to capture the invalid probes at a position
-     * moved out of the geometry, through the closest back face, by up to 0.45 of a cell, see
-     * {@link ProbeVolume#offsets}. Defaults to true.
+     * moved out of the geometry, through the closest back face, by up to 0.45 of a cell. The probes
+     * are still interpolated at their positions in the grid, but the leak reduction and the
+     * visibility use the positions they were captured at. Defaults to true.
      * @param {boolean} [options.visibility] - Whether to compute the visibility of the probes.
      * Defaults to true.
      * @param {number} [options.visibilitySize] - The number of texels along a side of the
