@@ -125,8 +125,10 @@ class RenderPassPrepass extends RenderPass {
                 }
             }
 
+            // the prepass render target is sized to the camera's viewport, see FramePassCameraFrame
             renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_PREPASS, {
-                meshInstances: tempMeshInstances
+                meshInstances: tempMeshInstances,
+                fullViewport: true
             });
 
             tempMeshInstances.length = 0;

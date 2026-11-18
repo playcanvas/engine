@@ -495,12 +495,21 @@ class Renderer {
      *
      * @param {Camera} camera - The camera containing the viewport information.
      * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
+     * @param {boolean} [fullViewport] - True to render to the whole render target, ignoring the
+     * camera's viewport and scissor rectangles. Used by passes rendering to an intermediate render
+     * target sized to the camera's viewport. Defaults to false.
      */
-    setupViewport(camera, renderTarget) {
+    setupViewport(camera, renderTarget, fullViewport = false) {
 
         const device = this.device;
         const pixelWidth = renderTarget ? renderTarget.width : device.width;
         const pixelHeight = renderTarget ? renderTarget.height : device.height;
+
+        if (fullViewport) {
+            device.setViewport(0, 0, pixelWidth, pixelHeight);
+            device.setScissor(0, 0, pixelWidth, pixelHeight);
+            return;
+        }
 
         const rect = camera.rect;
         let x = Math.floor(rect.x * pixelWidth);
@@ -520,7 +529,16 @@ class Renderer {
         device.setScissor(x, y, w, h);
     }
 
-    setCameraUniforms(camera, target) {
+    /**
+     * Set up the camera uniforms for rendering to a render target.
+     *
+     * @param {Camera} camera - The camera.
+     * @param {RenderTarget} [target] - The render target. NULL for the default one.
+     * @param {boolean} [fullViewport] - True if the camera renders to the whole render target,
+     * ignoring its viewport rectangle. Defaults to false.
+     * @ignore
+     */
+    setCameraUniforms(camera, target, fullViewport = false) {
 
         // flipping proj matrix
         const flipY = target?.flipY;
@@ -647,8 +665,10 @@ class Renderer {
         const xrView = camera.xrActive ? (camera.xrViews[0] ?? null) : null;
         let viewportWidth = xrView ? xrView.viewport.z : (target ? target.width : this.device.width);
         let viewportHeight = xrView ? xrView.viewport.w : (target ? target.height : this.device.height);
-        viewportWidth *= camera.rect.z;
-        viewportHeight *= camera.rect.w;
+        if (!fullViewport) {
+            viewportWidth *= camera.rect.z;
+            viewportHeight *= camera.rect.w;
+        }
 
         this.viewportSize[0] = viewportWidth;
         this.viewportSize[1] = viewportHeight;
