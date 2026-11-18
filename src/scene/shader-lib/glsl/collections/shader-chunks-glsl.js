@@ -1,5 +1,6 @@
 import alphaTestPS from '../chunks/standard/frag/alphaTest.js';
 import ambientPS from '../chunks/lit/frag/ambient.js';
+import ambientModifierPS from '../chunks/lit/frag/ambientModifier.js';
 import anisotropyPS from '../chunks/standard/frag/anisotropy.js';
 import aoPS from '../chunks/standard/frag/ao.js';
 import aoDiffuseOccPS from '../chunks/lit/frag/aoDiffuseOcc.js';
@@ -160,6 +161,7 @@ import viewDirPS from '../chunks/lit/frag/viewDir.js';
 const shaderChunksGLSL = {
     alphaTestPS,
     ambientPS,
+    ambientModifierPS,
     anisotropyPS,
     aoPS,
     aoDiffuseOccPS,
