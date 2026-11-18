@@ -46,7 +46,8 @@ describe('build / treeshake', function () {
     // it the shader chunks of the language the application does not use.
     const features = [
         { module: 'feature-shadows.js', webgl: 'featureShadowsWebgl', webgpu: 'featureShadowsWebgpu' },
-        { module: 'feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' }
+        { module: 'feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' },
+        { module: 'feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' }
     ];
 
     for (const feature of features) {

@@ -16,3 +16,11 @@ export const FEATURE_SHADOWS = 'shadows';
  * @ignore
  */
 export const FEATURE_AREA_LIGHTS = 'areaLights';
+
+/**
+ * The name of the particles feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_PARTICLES = 'particles';
