@@ -1,5 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
-import { I18n } from '../i18n/i18n.js';
+import { DEFAULT_LOCALE, I18N_EVENT_CHANGE } from '../i18n/constants.js';
 
 import { Asset } from './asset.js';
 
@@ -15,7 +15,8 @@ class LocalizedAsset extends EventHandler {
         super();
 
         this._app = app;
-        app.i18n.on(I18n.EVENT_CHANGE, this._onSetLocale, this);
+        // without the i18n feature, the assets of the default locale are used
+        app.i18n?.on(I18N_EVENT_CHANGE, this._onSetLocale, this);
 
         this._autoLoad = false;
         this._disableLocalization = false;
@@ -45,7 +46,7 @@ class LocalizedAsset extends EventHandler {
         }
 
         // reset localized asset
-        this._onSetLocale(this._app.i18n.locale);
+        this._onSetLocale(this._locale);
     }
 
     get defaultAsset() {
@@ -103,7 +104,7 @@ class LocalizedAsset extends EventHandler {
         this._disableLocalization = value;
 
         // reset localized asset
-        this._onSetLocale(this._app.i18n.locale);
+        this._onSetLocale(this._locale);
     }
 
     get disableLocalization() {
@@ -195,17 +196,27 @@ class LocalizedAsset extends EventHandler {
     }
 
     _onLocaleAdd(locale, assetId) {
-        if (this._app.i18n.locale !== locale) return;
+        if (this._locale !== locale) return;
 
         // reset localized asset
         this._onSetLocale(locale);
     }
 
     _onLocaleRemove(locale, assetId) {
-        if (this._app.i18n.locale !== locale) return;
+        if (this._locale !== locale) return;
 
         // reset localized asset
         this._onSetLocale(locale);
+    }
+
+    /**
+     * The current locale of the application, or the default locale without the i18n feature.
+     *
+     * @type {string}
+     * @private
+     */
+    get _locale() {
+        return this._app.i18n?.locale ?? DEFAULT_LOCALE;
     }
 
     _onSetLocale(locale) {
@@ -231,7 +242,7 @@ class LocalizedAsset extends EventHandler {
 
     destroy() {
         this.defaultAsset = null;
-        this._app.i18n.off(I18n.EVENT_CHANGE, this._onSetLocale, this);
+        this._app.i18n?.off(I18N_EVENT_CHANGE, this._onSetLocale, this);
         this.off();
     }
 }

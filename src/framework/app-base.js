@@ -36,7 +36,6 @@ import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
 import { ResourceLoader } from './handlers/loader.js';
-import { I18n } from './i18n/i18n.js';
 import { ScriptRegistry } from './script/script-registry.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
@@ -47,7 +46,8 @@ import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-ch
 import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 import { featureBundles } from './features/feature-bundles.js';
-import { FEATURE_BUNDLES } from './features/constants.js';
+import { featureI18n } from './features/feature-i18n.js';
+import { FEATURE_BUNDLES, FEATURE_I18N } from './features/constants.js';
 import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/features/feature-area-lights.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
 import { FEATURE_AREA_LIGHTS } from '../scene/features/constants.js';
@@ -57,6 +57,7 @@ import { installFeatures } from '../scene/features/install-features.js';
  * @import { AppOptions } from './app-options.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { BundleRegistry } from './bundle/bundle-registry.js'
+ * @import { I18n } from './i18n/i18n.js'
  * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { EventHandle } from '../core/event-handle.js'
@@ -504,7 +505,7 @@ class AppBase extends EventHandler {
      *
      * @type {I18n}
      */
-    i18n = new I18n(this);
+    i18n;
 
     /**
      * The keyboard device.
@@ -639,7 +640,8 @@ class AppBase extends EventHandler {
         installFeatures(this, [
             featureShadowsWebgl, featureShadowsWebgpu,
             featureAreaLightsWebgl, featureAreaLightsWebgpu,
-            featureBundles
+            featureBundles,
+            featureI18n
         ]);
 
         if (lightmapper) {
@@ -971,6 +973,7 @@ class AppBase extends EventHandler {
 
         // set localization assets
         if (props.i18nAssets) {
+            Debug.assert(this.graphicsDevice.features.has(FEATURE_I18N), 'Localization assets need the i18n feature to be installed.');
             this.i18n.assets = props.i18nAssets;
         }
 
@@ -2111,7 +2114,7 @@ class AppBase extends EventHandler {
         this.bundles?.destroy();
         this.bundles = null;
 
-        this.i18n.destroy();
+        this.i18n?.destroy();
         this.i18n = null;
 
         const scriptHandler = this.loader.getHandler('script');

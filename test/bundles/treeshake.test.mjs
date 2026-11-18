@@ -129,6 +129,21 @@ describe('build / treeshake', function () {
         expect(retained, 'retained asset bundle modules').to.deep.equal([]);
     });
 
+    // localization is brought by the i18n feature, so text elements and localized assets alone do
+    // not retain it
+    it('text elements do not retain localization, which the i18n feature brings', async function () {
+        const result = await bundle(`
+            import { ElementComponentSystem, LocalizedAsset } from "playcanvas";
+            globalThis.__imports = { ElementComponentSystem, LocalizedAsset };
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.endsWith('/i18n/i18n.js') ||
+            path.endsWith('/i18n/i18n-parser.js') ||
+            path.endsWith('/features/feature-i18n.js'));
+        expect(retained, 'retained localization modules').to.deep.equal([]);
+    });
+
     it('AppBase with container loading does not retain the gsplat implementation', async function () {
         const result = await bundle(`
             import { AppBase, ContainerHandler } from "playcanvas";
