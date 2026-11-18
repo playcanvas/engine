@@ -118,17 +118,15 @@ export default /* glsl */`
 
             #if LIGHT{i}SHADOWTYPE == PCSS_32F
 
-                #if LIGHT{i}SHAPE != PUNCTUAL
-                    vec2 shadowSearchArea = vec2(length(light{i}_halfWidth), length(light{i}_halfHeight)) * light{i}_shadowSearchArea;
-                    return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, light{i}_cameraParams, shadowSearchArea, lightDirW);
-                #else
-                    // Use the camera fitting stored with the cascade this fragment samples.
-                    vec4 pcssCameraParams = light{i}_cameraParams;
-                    #ifdef LIGHT{i}_SHADOW_CASCADES
-                        pcssCameraParams = light{i}_shadowCascadeParams[cascadeIndex];
-                    #endif
-                    return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, pcssCameraParams, light{i}_softShadowParams, lightDirW);
+                // the softness of directional PCSS is set by the penumbra size in softShadowParams,
+                // for punctual and area shapes alike
+
+                // Use the camera fitting stored with the cascade this fragment samples.
+                vec4 pcssCameraParams = light{i}_cameraParams;
+                #ifdef LIGHT{i}_SHADOW_CASCADES
+                    pcssCameraParams = light{i}_shadowCascadeParams[cascadeIndex];
                 #endif
+                return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, pcssCameraParams, light{i}_softShadowParams, lightDirW);
 
             #endif
 

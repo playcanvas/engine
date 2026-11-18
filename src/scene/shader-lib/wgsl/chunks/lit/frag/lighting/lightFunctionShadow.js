@@ -119,18 +119,16 @@ export default /* wgsl */`
 
             #if LIGHT{i}SHADOWTYPE == PCSS_32F
 
-                #if LIGHT{i}SHAPE != PUNCTUAL
-                    let shadowSearchArea = vec2f(length(uniform.light{i}_halfWidth), length(uniform.light{i}_halfHeight)) * uniform.light{i}_shadowSearchArea;
-                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, uniform.light{i}_cameraParams, shadowSearchArea, lightDirW_in);
-                #else
-                    // Use the camera fitting stored with the cascade this fragment samples.
-                    var pcssCameraParams: vec4f = uniform.light{i}_cameraParams;
-                    #ifdef LIGHT{i}_SHADOW_CASCADES
-                        var cascadeParams: mat4x4f = uniform.light{i}_shadowCascadeParams;
-                        pcssCameraParams = cascadeParams[cascadeIndex];
-                    #endif
-                    return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, pcssCameraParams, uniform.light{i}_softShadowParams, lightDirW_in);
+                // the softness of directional PCSS is set by the penumbra size in softShadowParams,
+                // for punctual and area shapes alike
+
+                // Use the camera fitting stored with the cascade this fragment samples.
+                var pcssCameraParams: vec4f = uniform.light{i}_cameraParams;
+                #ifdef LIGHT{i}_SHADOW_CASCADES
+                    var cascadeParams: mat4x4f = uniform.light{i}_shadowCascadeParams;
+                    pcssCameraParams = cascadeParams[cascadeIndex];
                 #endif
+                return getShadowPCSS(light{i}_shadowMap, light{i}_shadowMapSampler, shadowCoord, uniform.light{i}_shadowParams, pcssCameraParams, uniform.light{i}_softShadowParams, lightDirW_in);
 
             #endif
 
