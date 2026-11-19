@@ -82,9 +82,13 @@ describe('installFeatures', function () {
         renderer.destroy();
         scene.destroy();
 
-        // the feature of each device, and the code they share
-        expect([...device.features]).to.have.members(['shadows', 'shadows-webgl', 'shadows-webgpu']);
-        expect(featureShadowsWebgl.requires[0]).to.equal(featureShadowsWebgpu.requires[0]);
+        // the features of each device, and the code of each light type they share, recorded once
+        expect([...device.features]).to.have.members([
+            'shadows', 'shadowsCore-webgl', 'shadowsCore-webgpu',
+            'directionalShadows', 'directionalShadows-webgl', 'directionalShadows-webgpu',
+            'localShadows', 'localShadows-webgl', 'localShadows-webgpu',
+            'shadows-webgl', 'shadows-webgpu'
+        ]);
     });
 });
 

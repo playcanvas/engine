@@ -17,7 +17,6 @@ import clearCoatNormalPS from '../chunks/standard/frag/clearCoatNormal.js';
 import clipPlanesPS from '../chunks/common/frag/clipPlanes.js';
 import clusteredLightUtilsPS from '../chunks/lit/frag/clusteredLightUtils.js';
 import clusteredLightCookiesPS from '../chunks/lit/frag/clusteredLightCookies.js';
-import clusteredLightShadowsPS from '../chunks/lit/frag/clusteredLightShadows.js';
 import clusteredLightPS from '../chunks/lit/frag/clusteredLight.js';
 import combinePS from '../chunks/lit/frag/combine.js';
 import cookieBlit2DPS from '../chunks/internal/frag/cookie-blit-2d.js';
@@ -181,7 +180,6 @@ const shaderChunksWGSL = {
     clearCoatNormalPS,
     clipPlanesPS,
     clusteredLightCookiesPS,
-    clusteredLightShadowsPS,
     clusteredLightUtilsPS,
     clusteredLightPS,
     combinePS,

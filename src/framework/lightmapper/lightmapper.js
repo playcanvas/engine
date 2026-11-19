@@ -85,8 +85,8 @@ class Lightmapper {
         this.renderer = renderer;
         this.assets = assets;
 
-        // baking renders shadows, so the shadows feature must be installed
-        Debug.assert(renderer.shadowRenderer, 'The lightmapper needs the shadows feature to be installed');
+        // baking renders the shadows of all light types, so both shadows features must be installed
+        Debug.assert(renderer._shadowRendererDirectional && renderer._shadowRendererLocal, 'The lightmapper needs the directional and local shadows features to be installed');
 
         /**
          * @type {ShadowMapCache}

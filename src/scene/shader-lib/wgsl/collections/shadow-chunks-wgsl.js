@@ -1,7 +1,6 @@
 import { SHADERLANGUAGE_WGSL } from '../../../../platform/graphics/constants.js';
 import blurVSMPS from '../chunks/lit/frag/blurVSM.js';
 import litShadowMainPS from '../chunks/lit/frag/pass-shadow/litShadowMain.js';
-import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
 import shadowCasterPS from '../chunks/common/frag/shadow-caster.js';
 import shadowEVSMPS from '../chunks/lit/frag/lighting/shadowEVSM.js';
 import shadowEVSMExponentPS from '../chunks/common/frag/shadow-evsm-exponent.js';
@@ -14,8 +13,8 @@ import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
  */
 
 /**
- * The WGSL shader chunks of shadow rendering: the shadow pass, shadow casters, and the sampling
- * of shadow maps by lit materials.
+ * The WGSL shader chunks shared by the shadows of all light types: the shadow pass, shadow
+ * casters, and the PCF and VSM sampling of shadow maps by lit materials.
  *
  * @type {ShaderChunkCollection}
  * @ignore
@@ -26,7 +25,6 @@ export const shadowChunksWGSL = {
     chunks: {
         blurVSMPS,
         litShadowMainPS,
-        shadowCascadesPS,
         shadowCasterPS,
         shadowEVSMPS,
         shadowEVSMExponentPS,

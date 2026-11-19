@@ -4,7 +4,9 @@ import sinon from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
-import { FEATURE_SHADOWS } from '../../../src/scene/features/constants.js';
+import { FEATURE_DIRECTIONAL_SHADOWS, FEATURE_LOCAL_SHADOWS } from '../../../src/scene/features/constants.js';
+import { featureDirectionalShadowsWebgl } from '../../../src/scene/features/feature-directional-shadows.js';
+import { featureLocalShadowsWebgl } from '../../../src/scene/features/feature-local-shadows.js';
 import { featureShadowsWebgl } from '../../../src/scene/features/feature-shadows.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
 import { Renderer } from '../../../src/scene/renderer/renderer.js';
@@ -13,14 +15,35 @@ import { ShadowRendererDirectional } from '../../../src/scene/renderer/shadow-re
 import { ShadowRendererLocal } from '../../../src/scene/renderer/shadow-renderer-local.js';
 import { ShadowRenderer } from '../../../src/scene/renderer/shadow-renderer.js';
 import { Scene } from '../../../src/scene/scene.js';
+import { directionalShadowChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/directional-shadow-chunks-glsl.js';
+import { localShadowChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/local-shadow-chunks-glsl.js';
+import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shadowChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shadow-chunks-glsl.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
+import { directionalShadowChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/directional-shadow-chunks-wgsl.js';
+import { localShadowChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/local-shadow-chunks-wgsl.js';
+import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { shadowChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shadow-chunks-wgsl.js';
 import { createApp } from '../../app.mjs';
 import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Shadows feature', function () {
+
+    it('keeps the directional and local shadow chunks out of the core and shared shadow chunks', function () {
+        for (const collection of [directionalShadowChunksGLSL, localShadowChunksGLSL]) {
+            for (const name of Object.keys(collection.chunks)) {
+                expect(shaderChunksGLSL, name).to.not.have.property(name);
+                expect(shadowChunksGLSL.chunks, name).to.not.have.property(name);
+            }
+        }
+        for (const collection of [directionalShadowChunksWGSL, localShadowChunksWGSL]) {
+            for (const name of Object.keys(collection.chunks)) {
+                expect(shaderChunksWGSL, name).to.not.have.property(name);
+                expect(shadowChunksWGSL.chunks, name).to.not.have.property(name);
+            }
+        }
+    });
 
     describe('installation', function () {
         let device;
@@ -55,6 +78,40 @@ describe('Shadows feature', function () {
             expect(renderer._shadowRendererLocal).to.be.an.instanceof(ShadowRendererLocal);
             expect(renderer._shadowRendererDirectional).to.be.an.instanceof(ShadowRendererDirectional);
         });
+
+        it('creates only the directional shadow renderer with the directional shadows feature', function () {
+            installFeatures({ graphicsDevice: device, renderer }, [featureDirectionalShadowsWebgl]);
+
+            expect(renderer.shadowRenderer).to.be.an.instanceof(ShadowRenderer);
+            expect(renderer._shadowRendererDirectional).to.be.an.instanceof(ShadowRendererDirectional);
+            expect(renderer._shadowRendererLocal).to.be.null;
+            expect(device.features.has(FEATURE_LOCAL_SHADOWS)).to.equal(false);
+
+            // the shared shadow chunks and the directional ones, of the device's language only
+            const glsl = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
+            for (const name of [...Object.keys(shadowChunksGLSL.chunks), ...Object.keys(directionalShadowChunksGLSL.chunks)]) {
+                expect(glsl.get(name), name).to.exist;
+            }
+            for (const name of Object.keys(localShadowChunksGLSL.chunks)) {
+                expect(glsl.get(name), name).to.be.undefined;
+            }
+            expect(ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('shadowCascadesPS')).to.be.undefined;
+        });
+
+        it('creates only the local shadow renderer with the local shadows feature', function () {
+            installFeatures({ graphicsDevice: device, renderer }, [featureLocalShadowsWebgl]);
+
+            expect(renderer.shadowRenderer).to.be.an.instanceof(ShadowRenderer);
+            expect(renderer._shadowRendererLocal).to.be.an.instanceof(ShadowRendererLocal);
+            expect(renderer._shadowRendererDirectional).to.be.null;
+            expect(device.features.has(FEATURE_DIRECTIONAL_SHADOWS)).to.equal(false);
+
+            const glsl = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
+            for (const name of [...Object.keys(shadowChunksGLSL.chunks), ...Object.keys(localShadowChunksGLSL.chunks)]) {
+                expect(glsl.get(name), name).to.exist;
+            }
+            expect(glsl.get('shadowCascadesPS')).to.be.undefined;
+        });
     });
 
     // a missing feature is reported by asserts in debug builds, rather than handled
@@ -68,8 +125,9 @@ describe('Shadows feature', function () {
             jsdomSetup();
             app = createApp();
 
-            // as if the application did not install the shadows feature
-            app.graphicsDevice.features.delete(FEATURE_SHADOWS);
+            // as if the application did not install the shadows features
+            app.graphicsDevice.features.delete(FEATURE_DIRECTIONAL_SHADOWS);
+            app.graphicsDevice.features.delete(FEATURE_LOCAL_SHADOWS);
             assert = sinon.stub(Debug, 'assert');
 
             const camera = new Entity('Camera');
@@ -83,12 +141,32 @@ describe('Shadows feature', function () {
             jsdomTeardown();
         });
 
-        it('asserts when a light is set to cast shadows', function () {
+        it('asserts when a directional light is set to cast shadows', function () {
             const light = new Entity('Light');
             light.addComponent('light', { type: 'directional' });
             light.light.castShadows = true;
 
-            expect(failedAsserts()).to.include('A light casting shadows needs the shadows feature to be installed.');
+            expect(failedAsserts()).to.include('A directional light casting shadows needs the directional shadows feature to be installed.');
+        });
+
+        it('asserts when an omni light is set to cast shadows', function () {
+            const light = new Entity('Light');
+            light.addComponent('light', { type: 'omni' });
+            light.light.castShadows = true;
+
+            expect(failedAsserts()).to.include('An omni or spot light casting shadows needs the local shadows feature to be installed.');
+        });
+
+        it('asserts when a shadow casting light changes to a type whose shadows are not installed', function () {
+            // only directional shadows installed
+            app.graphicsDevice.features.add(FEATURE_DIRECTIONAL_SHADOWS);
+            const light = new Entity('Light');
+            light.addComponent('light', { type: 'directional', castShadows: true });
+            expect(failedAsserts()).to.deep.equal([]);
+
+            light.light.type = 'spot';
+
+            expect(failedAsserts()).to.include('An omni or spot light casting shadows needs the local shadows feature to be installed.');
         });
 
         it('asserts when clustered lighting with shadows generates a lit shader', function () {
@@ -99,7 +177,7 @@ describe('Shadows feature', function () {
 
             app.render();
 
-            expect(failedAsserts().some(message => message.startsWith('Clustered lighting with shadows needs the shadows feature'))).to.equal(true);
+            expect(failedAsserts().some(message => message.startsWith('Clustered lighting with shadows needs the local shadows feature'))).to.equal(true);
         });
 
         it('compiles lit shaders for lights without shadows, with no shadow chunks registered', function () {
@@ -109,11 +187,15 @@ describe('Shadows feature', function () {
 
             // remove the shadow chunks, as if the feature had not registered them
             const device = app.graphicsDevice;
-            for (const name of Object.keys(shadowChunksGLSL.chunks)) {
-                ShaderChunks.get(device, SHADERLANGUAGE_GLSL).delete(name);
+            for (const collection of [shadowChunksGLSL, directionalShadowChunksGLSL, localShadowChunksGLSL]) {
+                for (const name of Object.keys(collection.chunks)) {
+                    ShaderChunks.get(device, SHADERLANGUAGE_GLSL).delete(name);
+                }
             }
-            for (const name of Object.keys(shadowChunksWGSL.chunks)) {
-                ShaderChunks.get(device, SHADERLANGUAGE_WGSL).delete(name);
+            for (const collection of [shadowChunksWGSL, directionalShadowChunksWGSL, localShadowChunksWGSL]) {
+                for (const name of Object.keys(collection.chunks)) {
+                    ShaderChunks.get(device, SHADERLANGUAGE_WGSL).delete(name);
+                }
             }
             const error = sinon.spy(console, 'error');
 

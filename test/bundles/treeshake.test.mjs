@@ -46,6 +46,8 @@ describe('build / treeshake', function () {
     // it the shader chunks of the language the application does not use.
     const features = [
         { module: 'feature-shadows.js', webgl: 'featureShadowsWebgl', webgpu: 'featureShadowsWebgpu' },
+        { module: 'feature-directional-shadows.js', webgl: 'featureDirectionalShadowsWebgl', webgpu: 'featureDirectionalShadowsWebgpu' },
+        { module: 'feature-local-shadows.js', webgl: 'featureLocalShadowsWebgl', webgpu: 'featureLocalShadowsWebgpu' },
         { module: 'feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' },
         { module: 'feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
         { module: 'feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' }
@@ -90,7 +92,10 @@ describe('build / treeshake', function () {
             path.endsWith('/renderer/render-pass-shadow-directional.js') ||
             path.endsWith('/renderer/render-pass-shadow-local-non-clustered.js') ||
             path.includes('/shadow-chunks-') ||
-            path.endsWith('/features/feature-shadows.js'));
+            path.endsWith('/features/feature-shadows.js') ||
+            path.includes('/features/feature-shadows-core') ||
+            path.endsWith('/features/feature-directional-shadows.js') ||
+            path.endsWith('/features/feature-local-shadows.js'));
         expect(retained, 'retained shadow rendering modules').to.deep.equal([]);
     });
 
