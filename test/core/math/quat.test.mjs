@@ -139,6 +139,18 @@ describe('Quat', function () {
             expect(axis.z).to.equal(0);
         });
 
+        it('returns the x axis and 0 angle when rounding puts w just above 1', function () {
+            // a rotation times its inverse is the identity, up to rounding
+            const q = new Quat().setFromAxisAngle(Vec3.UP, 20);
+            const identity = new Quat().mul2(q, q.clone().invert());
+            const axis = new Vec3();
+            const angle = identity.getAxisAngle(axis);
+            expect(angle).to.equal(0);
+            expect(axis.x).to.equal(1);
+            expect(axis.y).to.equal(0);
+            expect(axis.z).to.equal(0);
+        });
+
         it('returns what is set with setFromAxisAngle', function () {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.UP, Math.PI / 2);
