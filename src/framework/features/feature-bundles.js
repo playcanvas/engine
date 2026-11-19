@@ -1,3 +1,4 @@
+import { DebugHelper } from '../../core/debug.js';
 import { Feature } from '../../scene/features/feature.js';
 import { BundleRegistry } from '../bundle/bundle-registry.js';
 import { BundleHandler } from '../handlers/bundle.js';
@@ -26,6 +27,6 @@ function installBundles(host) {
  * @ignore
  */
 export const featureBundles = /* #__PURE__ */ new Feature({
-    name: FEATURE_BUNDLES,
     install: installBundles
 });
+DebugHelper.setName(featureBundles, FEATURE_BUNDLES);

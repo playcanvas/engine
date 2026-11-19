@@ -1,3 +1,4 @@
+import { DebugHelper } from '../../core/debug.js';
 import { ShadowRendererDirectional } from '../renderer/shadow-renderer-directional.js';
 import { directionalShadowChunksGLSL } from '../shader-lib/glsl/collections/directional-shadow-chunks-glsl.js';
 import { directionalShadowChunksWGSL } from '../shader-lib/wgsl/collections/directional-shadow-chunks-wgsl.js';
@@ -24,9 +25,9 @@ function installDirectionalShadows(host) {
 // The engine code of the shadows of directional lights, installed once when a host installs the features of
 // both devices.
 const directionalShadowsCode = /* #__PURE__ */ new Feature({
-    name: FEATURE_DIRECTIONAL_SHADOWS,
     install: installDirectionalShadows
 });
+DebugHelper.setName(directionalShadowsCode, FEATURE_DIRECTIONAL_SHADOWS);
 
 /**
  * The shadows of directional lights on a WebGL device.
@@ -35,11 +36,11 @@ const directionalShadowsCode = /* #__PURE__ */ new Feature({
  * @ignore
  */
 export const featureDirectionalShadowsWebgl = /* #__PURE__ */ new Feature({
-    name: 'directionalShadows-webgl',
     chunks: directionalShadowChunksGLSL,
     // the shared shadow rendering of the same device, installed before the code that builds on it
     requires: [shadowsCoreWebgl, directionalShadowsCode]
 });
+DebugHelper.setName(featureDirectionalShadowsWebgl, 'directionalShadows-webgl');
 
 /**
  * The shadows of directional lights on a WebGPU device.
@@ -48,8 +49,8 @@ export const featureDirectionalShadowsWebgl = /* #__PURE__ */ new Feature({
  * @ignore
  */
 export const featureDirectionalShadowsWebgpu = /* #__PURE__ */ new Feature({
-    name: 'directionalShadows-webgpu',
     chunks: directionalShadowChunksWGSL,
     // the shared shadow rendering of the same device, installed before the code that builds on it
     requires: [shadowsCoreWebgpu, directionalShadowsCode]
 });
+DebugHelper.setName(featureDirectionalShadowsWebgpu, 'directionalShadows-webgpu');

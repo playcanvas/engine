@@ -9,6 +9,7 @@ import { FEATURE_BUNDLES } from '../../../src/framework/features/constants.js';
 import { featureBundles } from '../../../src/framework/features/feature-bundles.js';
 import { BundleHandler } from '../../../src/framework/handlers/bundle.js';
 import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
+import { hasFeature } from '../../../src/scene/features/constants.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
 import { createApp } from '../../app.mjs';
 import { createGraphicsDevice } from '../../device.mjs';
@@ -36,7 +37,7 @@ describe('Bundles feature', function () {
         it('creates the bundle registry and the bundle handler', function () {
             installFeatures(host, [featureBundles]);
 
-            expect(device.features.has(FEATURE_BUNDLES)).to.equal(true);
+            expect(hasFeature(device, FEATURE_BUNDLES)).to.equal(true);
             expect(host.bundles).to.be.an.instanceof(BundleRegistry);
             expect(host.assets.bundles).to.equal(host.bundles);
             expect(host.loader.getHandler('bundle')).to.be.an.instanceof(BundleHandler);
@@ -58,7 +59,7 @@ describe('Bundles feature', function () {
         });
 
         it('is installed by the application', function () {
-            expect(app.graphicsDevice.features.has(FEATURE_BUNDLES)).to.equal(true);
+            expect(hasFeature(app.graphicsDevice, FEATURE_BUNDLES)).to.equal(true);
             expect(app.bundles).to.be.an.instanceof(BundleRegistry);
             expect(app.loader.getHandler('bundle')).to.be.an.instanceof(BundleHandler);
         });
@@ -78,7 +79,7 @@ describe('Bundles feature', function () {
         });
 
         it('asserts when a bundle asset is parsed without the feature', function () {
-            app.graphicsDevice.features.delete(FEATURE_BUNDLES);
+            app.graphicsDevice.featureNames.delete(FEATURE_BUNDLES);
             const assert = sinon.stub(Debug, 'assert');
 
             app._parseAssets({

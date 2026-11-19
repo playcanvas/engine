@@ -18,7 +18,7 @@ import {
     LIGHT_COLOR_DIVIDER
 } from './constants.js';
 import { LightCamera } from './renderer/light-camera.js';
-import { FEATURE_AREA_LIGHTS, FEATURE_DIRECTIONAL_PCSS, FEATURE_DIRECTIONAL_SHADOWS, FEATURE_LOCAL_SHADOWS } from './features/constants.js';
+import { FEATURE_AREA_LIGHTS, FEATURE_DIRECTIONAL_PCSS, FEATURE_DIRECTIONAL_SHADOWS, FEATURE_LOCAL_SHADOWS, hasFeature } from './features/constants.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 
@@ -560,7 +560,7 @@ class Light {
             return;
         }
 
-        Debug.assert(value === LIGHTSHAPE_PUNCTUAL || this.device.features.has(FEATURE_AREA_LIGHTS), 'A light of an area shape needs the area lights feature to be installed.');
+        Debug.assert(value === LIGHTSHAPE_PUNCTUAL || hasFeature(this.device, FEATURE_AREA_LIGHTS), 'A light of an area shape needs the area lights feature to be installed.');
 
         this._shape = value;
         this._destroyShadowMap();
@@ -626,7 +626,7 @@ class Light {
         this._isPcf = shadowInfo?.pcf ?? false;
         this._isPcss = shadowInfo?.pcss ?? false;
 
-        Debug.assert(!this._isPcss || this._type !== LIGHTTYPE_DIRECTIONAL || device.features.has(FEATURE_DIRECTIONAL_PCSS), 'PCSS shadows of a directional light need the directional PCSS feature to be installed.');
+        Debug.assert(!this._isPcss || this._type !== LIGHTTYPE_DIRECTIONAL || hasFeature(device, FEATURE_DIRECTIONAL_PCSS), 'PCSS shadows of a directional light need the directional PCSS feature to be installed.');
 
         this._shadowType = value;
 
@@ -1380,9 +1380,9 @@ function needsShadowRendering(light) {
  */
 function assertShadowsFeature(device, type) {
     if (type === LIGHTTYPE_DIRECTIONAL) {
-        Debug.assert(device.features.has(FEATURE_DIRECTIONAL_SHADOWS), 'A directional light casting shadows needs the directional shadows feature to be installed.');
+        Debug.assert(hasFeature(device, FEATURE_DIRECTIONAL_SHADOWS), 'A directional light casting shadows needs the directional shadows feature to be installed.');
     } else {
-        Debug.assert(device.features.has(FEATURE_LOCAL_SHADOWS), 'An omni or spot light casting shadows needs the local shadows feature to be installed.');
+        Debug.assert(hasFeature(device, FEATURE_LOCAL_SHADOWS), 'An omni or spot light casting shadows needs the local shadows feature to be installed.');
     }
 }
 

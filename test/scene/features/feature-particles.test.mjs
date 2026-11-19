@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { ParticleSystemComponentSystem } from '../../../src/framework/components/particle-system/system.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
-import { FEATURE_PARTICLES } from '../../../src/scene/features/constants.js';
+import { FEATURE_PARTICLES, hasFeature } from '../../../src/scene/features/constants.js';
 import { featureParticlesWebgl } from '../../../src/scene/features/feature-particles.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
 import { ParticleEmitter } from '../../../src/scene/particle-system/particle-emitter.js';
@@ -30,7 +30,7 @@ describe('Particles feature', function () {
         try {
             installFeatures({ graphicsDevice: device }, [featureParticlesWebgl]);
 
-            expect(device.features.has(FEATURE_PARTICLES)).to.equal(true);
+            expect(hasFeature(device, FEATURE_PARTICLES)).to.equal(true);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('particle_shaderVS')).to.equal(particleChunksGLSL.chunks.particle_shaderVS);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('particle_shaderVS')).to.be.undefined;
         } finally {
@@ -54,13 +54,13 @@ describe('Particles feature', function () {
 
         it('is installed by the particle system component system, for both languages', function () {
             expect(app.systems.particlesystem).to.be.an.instanceof(ParticleSystemComponentSystem);
-            expect(app.graphicsDevice.features.has(FEATURE_PARTICLES)).to.equal(true);
+            expect(hasFeature(app.graphicsDevice, FEATURE_PARTICLES)).to.equal(true);
             expect(ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).get('particle_shaderPS')).to.equal(particleChunksGLSL.chunks.particle_shaderPS);
             expect(ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).get('particle_shaderPS')).to.equal(particleChunksWGSL.chunks.particle_shaderPS);
         });
 
         it('asserts when a particle emitter is created without the feature', function () {
-            app.graphicsDevice.features.delete(FEATURE_PARTICLES);
+            app.graphicsDevice.featureNames.delete(FEATURE_PARTICLES);
             const assert = sinon.stub(Debug, 'assert');
 
             const createEmitter = () => new ParticleEmitter(app.graphicsDevice, {});

@@ -6,6 +6,7 @@ import { Entity } from '../../../src/framework/entity.js';
 import { FEATURE_I18N } from '../../../src/framework/features/constants.js';
 import { featureI18n } from '../../../src/framework/features/feature-i18n.js';
 import { I18n } from '../../../src/framework/i18n/i18n.js';
+import { hasFeature } from '../../../src/scene/features/constants.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
 import { createApp } from '../../app.mjs';
 import { createGraphicsDevice } from '../../device.mjs';
@@ -19,7 +20,7 @@ describe('I18n feature', function () {
         try {
             installFeatures(host, [featureI18n]);
 
-            expect(device.features.has(FEATURE_I18N)).to.equal(true);
+            expect(hasFeature(device, FEATURE_I18N)).to.equal(true);
             expect(host.i18n).to.be.an.instanceof(I18n);
         } finally {
             host.i18n.destroy();
@@ -42,7 +43,7 @@ describe('I18n feature', function () {
         });
 
         it('is installed by the application', function () {
-            expect(app.graphicsDevice.features.has(FEATURE_I18N)).to.equal(true);
+            expect(hasFeature(app.graphicsDevice, FEATURE_I18N)).to.equal(true);
             expect(app.i18n).to.be.an.instanceof(I18n);
         });
 
@@ -60,7 +61,7 @@ describe('I18n feature', function () {
         });
 
         it('asserts when a text element is localized without the feature', function () {
-            app.graphicsDevice.features.delete(FEATURE_I18N);
+            app.graphicsDevice.featureNames.delete(FEATURE_I18N);
             const assert = sinon.stub(Debug, 'assert');
 
             const text = new Entity('Text');
@@ -72,7 +73,7 @@ describe('I18n feature', function () {
         });
 
         it('asserts when the application properties list localization assets without the feature', function () {
-            app.graphicsDevice.features.delete(FEATURE_I18N);
+            app.graphicsDevice.featureNames.delete(FEATURE_I18N);
             const assert = sinon.stub(Debug, 'assert');
 
             app._parseApplicationProperties({ i18nAssets: [1], libraries: [] }, () => {});

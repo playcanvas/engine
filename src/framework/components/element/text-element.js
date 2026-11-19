@@ -22,6 +22,7 @@ import { Mesh } from '../../../scene/mesh.js';
 import { LocalizedAsset } from '../../asset/asset-localized.js';
 import { I18N_EVENT_CHANGE } from '../../i18n/constants.js';
 import { FEATURE_I18N } from '../../features/constants.js';
+import { hasFeature } from '../../../scene/features/constants.js';
 import { FONT_BITMAP, FONT_MSDF } from '../../font/constants.js';
 import { Markup } from './markup.js';
 
@@ -1720,7 +1721,7 @@ class TextElement {
 
         this._i18nKey = str;
         if (str) {
-            Debug.assert(this._system.app.graphicsDevice.features.has(FEATURE_I18N), 'A localized text element needs the i18n feature to be installed.');
+            Debug.assert(hasFeature(this._system.app.graphicsDevice, FEATURE_I18N), 'A localized text element needs the i18n feature to be installed.');
             this._fontAsset.disableLocalization = false;
             this._resetLocalizedText();
         } else {

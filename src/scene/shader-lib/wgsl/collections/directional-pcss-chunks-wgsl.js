@@ -12,7 +12,6 @@ import shadowSoftPS from '../chunks/lit/frag/lighting/shadowSoft.js';
  * @ignore
  */
 export const directionalPcssChunksWGSL = {
-    name: 'directionalPcss',
     language: SHADERLANGUAGE_WGSL,
     chunks: {
         shadowSoftPS

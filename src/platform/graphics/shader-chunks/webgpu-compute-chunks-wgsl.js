@@ -16,7 +16,6 @@ import halfTypes from './frag/half-types.js';
  * @ignore
  */
 export const webgpuComputeChunksWGSL = {
-    name: 'webgpu-compute',
     language: SHADERLANGUAGE_WGSL,
     chunks: {
         halfTypesCS: halfTypes,

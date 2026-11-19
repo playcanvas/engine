@@ -20,7 +20,6 @@ import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
  * @ignore
  */
 export const shadowChunksGLSL = {
-    name: 'shadows',
     language: SHADERLANGUAGE_GLSL,
     chunks: {
         blurVSMPS,

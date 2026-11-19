@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { ShadowMapCache } from '../renderer/shadow-map-cache.js';
 import { ShadowRenderer } from '../renderer/shadow-renderer.js';
 import { shadowChunksGLSL } from '../shader-lib/glsl/collections/shadow-chunks-glsl.js';
@@ -31,9 +31,9 @@ function installShadowsCore(host) {
 // The engine code shared by the shadows of all light types, installed once when a host installs
 // the features of both devices.
 const shadowsCoreCode = /* #__PURE__ */ new Feature({
-    name: FEATURE_SHADOWS,
     install: installShadowsCore
 });
+DebugHelper.setName(shadowsCoreCode, FEATURE_SHADOWS);
 
 /**
  * The shadow rendering shared by the shadows of all light types on a WebGL device, required by
@@ -43,10 +43,10 @@ const shadowsCoreCode = /* #__PURE__ */ new Feature({
  * @ignore
  */
 export const shadowsCoreWebgl = /* #__PURE__ */ new Feature({
-    name: 'shadowsCore-webgl',
     chunks: shadowChunksGLSL,
     requires: [shadowsCoreCode]
 });
+DebugHelper.setName(shadowsCoreWebgl, 'shadowsCore-webgl');
 
 /**
  * The shadow rendering shared by the shadows of all light types on a WebGPU device, required by
@@ -56,7 +56,7 @@ export const shadowsCoreWebgl = /* #__PURE__ */ new Feature({
  * @ignore
  */
 export const shadowsCoreWebgpu = /* #__PURE__ */ new Feature({
-    name: 'shadowsCore-webgpu',
     chunks: shadowChunksWGSL,
     requires: [shadowsCoreCode]
 });
+DebugHelper.setName(shadowsCoreWebgpu, 'shadowsCore-webgpu');

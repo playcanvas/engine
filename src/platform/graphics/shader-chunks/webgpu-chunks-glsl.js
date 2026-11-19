@@ -14,7 +14,6 @@ import webgpuVS from './vert/webgpu.js';
  * @ignore
  */
 export const webgpuChunksGLSL = {
-    name: 'webgpu',
     language: SHADERLANGUAGE_GLSL,
     chunks: {
         vertexHeader: webgpuVS,
