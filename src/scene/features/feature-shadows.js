@@ -1,3 +1,4 @@
+import { DebugHelper } from '../../core/debug.js';
 import { Feature } from './feature.js';
 import { featureDirectionalShadowsWebgl, featureDirectionalShadowsWebgpu } from './feature-directional-shadows.js';
 import { featureLocalShadowsWebgl, featureLocalShadowsWebgpu } from './feature-local-shadows.js';
@@ -9,9 +10,9 @@ import { featureLocalShadowsWebgl, featureLocalShadowsWebgpu } from './feature-l
  * @ignore
  */
 export const featureShadowsWebgl = /* #__PURE__ */ new Feature({
-    name: 'shadows-webgl',
     requires: [featureDirectionalShadowsWebgl, featureLocalShadowsWebgl]
 });
+DebugHelper.setName(featureShadowsWebgl, 'shadows-webgl');
 
 /**
  * Shadow rendering of all light types on a WebGPU device: the directional and local shadows.
@@ -20,6 +21,6 @@ export const featureShadowsWebgl = /* #__PURE__ */ new Feature({
  * @ignore
  */
 export const featureShadowsWebgpu = /* #__PURE__ */ new Feature({
-    name: 'shadows-webgpu',
     requires: [featureDirectionalShadowsWebgpu, featureLocalShadowsWebgpu]
 });
+DebugHelper.setName(featureShadowsWebgpu, 'shadows-webgpu');

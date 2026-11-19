@@ -12,7 +12,6 @@ import shadowCascadesPS from '../chunks/lit/frag/lighting/shadowCascades.js';
  * @ignore
  */
 export const directionalShadowChunksGLSL = {
-    name: 'directionalShadows',
     language: SHADERLANGUAGE_GLSL,
     chunks: {
         shadowCascadesPS

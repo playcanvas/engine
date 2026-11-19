@@ -5,7 +5,7 @@ import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { LIGHTSHAPE_DISK, LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../src/scene/constants.js';
-import { FEATURE_AREA_LIGHTS } from '../../../src/scene/features/constants.js';
+import { FEATURE_AREA_LIGHTS, hasFeature } from '../../../src/scene/features/constants.js';
 import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../../../src/scene/features/feature-area-lights.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
 import { areaLightChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/area-light-chunks-glsl.js';
@@ -45,7 +45,7 @@ describe('Area lights feature', function () {
 
             installFeatures({ graphicsDevice: device }, [featureAreaLightsWebgl]);
 
-            expect(device.features.has(FEATURE_AREA_LIGHTS)).to.equal(true);
+            expect(hasFeature(device, FEATURE_AREA_LIGHTS)).to.equal(true);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('ltcPS')).to.equal(areaLightChunksGLSL.chunks.ltcPS);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('ltcPS')).to.be.undefined;
             expect(setValue.calledOnce).to.equal(true);
@@ -75,7 +75,7 @@ describe('Area lights feature', function () {
             app = createApp();
 
             // as if the application did not install the area lights feature
-            app.graphicsDevice.features.delete(FEATURE_AREA_LIGHTS);
+            app.graphicsDevice.featureNames.delete(FEATURE_AREA_LIGHTS);
             assert = sinon.stub(Debug, 'assert');
 
             const camera = new Entity('Camera');

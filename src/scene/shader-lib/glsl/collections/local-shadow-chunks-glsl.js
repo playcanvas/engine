@@ -14,7 +14,6 @@ import shadowPCSSPS from '../chunks/lit/frag/lighting/shadowPCSS.js';
  * @ignore
  */
 export const localShadowChunksGLSL = {
-    name: 'localShadows',
     language: SHADERLANGUAGE_GLSL,
     chunks: {
         clusteredLightShadowsPS,

@@ -1,3 +1,4 @@
+import { DebugHelper } from '../../core/debug.js';
 import { Feature } from '../../scene/features/feature.js';
 import { I18n } from '../i18n/i18n.js';
 import { FEATURE_I18N } from './constants.js';
@@ -24,6 +25,6 @@ function installI18n(host) {
  * @ignore
  */
 export const featureI18n = /* #__PURE__ */ new Feature({
-    name: FEATURE_I18N,
     install: installI18n
 });
+DebugHelper.setName(featureI18n, FEATURE_I18N);

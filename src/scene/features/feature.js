@@ -24,13 +24,17 @@
  * `/* #__PURE__ *\/` for bundlers to drop the features an application does not use, together with
  * the chunks they reference. The constructor must therefore stay free of side effects.
  *
+ * A feature is named with `DebugHelper.setName` after its definition. The name is used by debug
+ * checks and error messages only, so release builds strip it and identify features by object.
+ *
  * @ignore
  */
 class Feature {
     /**
-     * The name of the feature, used in error messages.
+     * The name of the feature, assigned with `DebugHelper.setName`, which only debug builds keep, for
+     * the debug checks of installed features and for error messages.
      *
-     * @type {string}
+     * @type {string|undefined}
      * @ignore
      */
     name;
@@ -64,15 +68,13 @@ class Feature {
      * Creates a new Feature.
      *
      * @param {object} definition - The definition of the feature.
-     * @param {string} definition.name - The name of the feature, used in error messages.
      * @param {ShaderChunkCollection} [definition.chunks] - The shader chunks of the feature.
      * @param {(host: FeatureHost) => void} [definition.install] - Creates the engine objects of
      * the feature.
      * @param {Feature[]} [definition.requires] - The features this feature needs.
      * @ignore
      */
-    constructor({ name, chunks = null, install = null, requires = [] }) {
-        this.name = name;
+    constructor({ chunks = null, install = null, requires = [] }) {
         this.chunks = chunks;
         this.install = install;
         this.requires = requires;

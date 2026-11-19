@@ -12,7 +12,6 @@ import clusteredLightShadowsPS from '../chunks/lit/frag/clusteredLightShadows.js
  * @ignore
  */
 export const localShadowChunksWGSL = {
-    name: 'localShadows',
     language: SHADERLANGUAGE_WGSL,
     chunks: {
         clusteredLightShadowsPS

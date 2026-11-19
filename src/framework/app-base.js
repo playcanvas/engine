@@ -51,7 +51,7 @@ import { FEATURE_BUNDLES, FEATURE_I18N } from './features/constants.js';
 import { featureDirectionalPcssWebgl, featureDirectionalPcssWebgpu } from '../scene/features/feature-directional-pcss.js';
 import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/features/feature-area-lights.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
-import { FEATURE_AREA_LIGHTS } from '../scene/features/constants.js';
+import { FEATURE_AREA_LIGHTS, hasFeature } from '../scene/features/constants.js';
 import { installFeatures } from '../scene/features/install-features.js';
 
 /**
@@ -975,7 +975,7 @@ class AppBase extends EventHandler {
 
         // set localization assets
         if (props.i18nAssets) {
-            Debug.assert(this.graphicsDevice.features.has(FEATURE_I18N), 'Localization assets need the i18n feature to be installed.');
+            Debug.assert(hasFeature(this.graphicsDevice, FEATURE_I18N), 'Localization assets need the i18n feature to be installed.');
             this.i18n.assets = props.i18nAssets;
         }
 
@@ -1059,7 +1059,7 @@ class AppBase extends EventHandler {
         // then add bundles
         for (const id in assets) {
             if (assets[id].type === 'bundle') {
-                Debug.assert(this.graphicsDevice.features.has(FEATURE_BUNDLES), `Bundle asset [${assets[id].name}] needs the bundles feature to be installed.`);
+                Debug.assert(hasFeature(this.graphicsDevice, FEATURE_BUNDLES), `Bundle asset [${assets[id].name}] needs the bundles feature to be installed.`);
                 bundlesIndex[id] = true;
                 list.push(assets[id]);
             }
@@ -1801,7 +1801,7 @@ class AppBase extends EventHandler {
      * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
     setAreaLightLuts(ltcMat1, ltcMat2) {
-        Debug.assert(this.graphicsDevice.features.has(FEATURE_AREA_LIGHTS), 'setAreaLightLuts: area lights need the area lights feature to be installed.');
+        Debug.assert(hasFeature(this.graphicsDevice, FEATURE_AREA_LIGHTS), 'setAreaLightLuts: area lights need the area lights feature to be installed.');
 
         if (ltcMat1 && ltcMat2) {
             AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);

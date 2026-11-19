@@ -53,7 +53,6 @@ import particle_wrapVS from '../chunks/particle/vert/particle_wrap.js';
  * @ignore
  */
 export const particleChunksGLSL = {
-    name: 'particles',
     language: SHADERLANGUAGE_GLSL,
     chunks: {
         particlePS,

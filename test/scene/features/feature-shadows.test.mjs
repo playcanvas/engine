@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
-import { FEATURE_DIRECTIONAL_SHADOWS, FEATURE_LOCAL_SHADOWS } from '../../../src/scene/features/constants.js';
+import { FEATURE_DIRECTIONAL_SHADOWS, FEATURE_LOCAL_SHADOWS, hasFeature } from '../../../src/scene/features/constants.js';
 import { featureDirectionalShadowsWebgl } from '../../../src/scene/features/feature-directional-shadows.js';
 import { featureLocalShadowsWebgl } from '../../../src/scene/features/feature-local-shadows.js';
 import { featureShadowsWebgl } from '../../../src/scene/features/feature-shadows.js';
@@ -85,7 +85,7 @@ describe('Shadows feature', function () {
             expect(renderer.shadowRenderer).to.be.an.instanceof(ShadowRenderer);
             expect(renderer._shadowRendererDirectional).to.be.an.instanceof(ShadowRendererDirectional);
             expect(renderer._shadowRendererLocal).to.be.null;
-            expect(device.features.has(FEATURE_LOCAL_SHADOWS)).to.equal(false);
+            expect(hasFeature(device, FEATURE_LOCAL_SHADOWS)).to.equal(false);
 
             // the shared shadow chunks and the directional ones, of the device's language only
             const glsl = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
@@ -104,7 +104,7 @@ describe('Shadows feature', function () {
             expect(renderer.shadowRenderer).to.be.an.instanceof(ShadowRenderer);
             expect(renderer._shadowRendererLocal).to.be.an.instanceof(ShadowRendererLocal);
             expect(renderer._shadowRendererDirectional).to.be.null;
-            expect(device.features.has(FEATURE_DIRECTIONAL_SHADOWS)).to.equal(false);
+            expect(hasFeature(device, FEATURE_DIRECTIONAL_SHADOWS)).to.equal(false);
 
             const glsl = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
             for (const name of [...Object.keys(shadowChunksGLSL.chunks), ...Object.keys(localShadowChunksGLSL.chunks)]) {
@@ -126,8 +126,8 @@ describe('Shadows feature', function () {
             app = createApp();
 
             // as if the application did not install the shadows features
-            app.graphicsDevice.features.delete(FEATURE_DIRECTIONAL_SHADOWS);
-            app.graphicsDevice.features.delete(FEATURE_LOCAL_SHADOWS);
+            app.graphicsDevice.featureNames.delete(FEATURE_DIRECTIONAL_SHADOWS);
+            app.graphicsDevice.featureNames.delete(FEATURE_LOCAL_SHADOWS);
             assert = sinon.stub(Debug, 'assert');
 
             const camera = new Entity('Camera');
@@ -159,7 +159,7 @@ describe('Shadows feature', function () {
 
         it('asserts when a shadow casting light changes to a type whose shadows are not installed', function () {
             // only directional shadows installed
-            app.graphicsDevice.features.add(FEATURE_DIRECTIONAL_SHADOWS);
+            app.graphicsDevice.featureNames.add(FEATURE_DIRECTIONAL_SHADOWS);
             const light = new Entity('Light');
             light.addComponent('light', { type: 'directional', castShadows: true });
             expect(failedAsserts()).to.deep.equal([]);

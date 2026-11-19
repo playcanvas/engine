@@ -358,13 +358,21 @@ class GraphicsDevice extends EventHandler {
     computeChunks = null;
 
     /**
-     * The names of the features installed on the device. Engine code asks for a feature by name, so
-     * that it does not import, and bundle, the feature itself.
+     * The features installed on the device, so that each is installed once.
+     *
+     * @type {Set<object>}
+     * @ignore
+     */
+    features = new Set();
+
+    /**
+     * The names of the features installed on the device, recorded in debug builds only. Debug
+     * checks ask for a feature by name, so that they do not import, and bundle, the feature itself.
      *
      * @type {Set<string>}
      * @ignore
      */
-    features = new Set();
+    featureNames = new Set();
 
     /**
      * True if the device can read from StorageTexture in the compute shader. By default, the

@@ -23,7 +23,7 @@ import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../glsl/chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
 import { ShaderChunks } from '../shader-chunks.js';
-import { FEATURE_AREA_LIGHTS, FEATURE_LOCAL_SHADOWS } from '../../features/constants.js';
+import { FEATURE_AREA_LIGHTS, FEATURE_LOCAL_SHADOWS, hasFeature } from '../../features/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -460,7 +460,7 @@ class LitShader {
 
             // shadows
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
-                Debug.assert(this.device.features.has(FEATURE_LOCAL_SHADOWS), 'Clustered lighting with shadows needs the local shadows feature to be installed. Install it, or set scene.lighting.shadowsEnabled to false.');
+                Debug.assert(hasFeature(this.device, FEATURE_LOCAL_SHADOWS), 'Clustered lighting with shadows needs the local shadows feature to be installed. Install it, or set scene.lighting.shadowsEnabled to false.');
                 const clusteredShadowInfo = shadowTypeInfo.get(options.clusteredLightingShadowType);
                 fDefines.set('CLUSTER_SHADOWS', true);
                 fDefines.set(`SHADOW_KIND_${clusteredShadowInfo.kind}`, true);
@@ -545,7 +545,7 @@ class LitShader {
         const hasAreaLights = clusteredAreaLights || options.lights.some((light) => {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
-        Debug.assert(!hasAreaLights || this.device.features.has(FEATURE_AREA_LIGHTS), 'Area lights need the area lights feature to be installed. Install it, or set scene.lighting.areaLightsEnabled to false.');
+        Debug.assert(!hasAreaLights || hasFeature(this.device, FEATURE_AREA_LIGHTS), 'Area lights need the area lights feature to be installed. Install it, or set scene.lighting.areaLightsEnabled to false.');
         const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
         // parallax mapping transforms the view direction to tangent space, so it needs the TBN matrix
         // as well

@@ -1,3 +1,4 @@
+import { DebugHelper } from '../../core/debug.js';
 import { ShadowRendererLocal } from '../renderer/shadow-renderer-local.js';
 import { localShadowChunksGLSL } from '../shader-lib/glsl/collections/local-shadow-chunks-glsl.js';
 import { localShadowChunksWGSL } from '../shader-lib/wgsl/collections/local-shadow-chunks-wgsl.js';
@@ -24,9 +25,9 @@ function installLocalShadows(host) {
 // The engine code of the shadows of local (omni and spot) lights, installed once when a host installs the features of
 // both devices.
 const localShadowsCode = /* #__PURE__ */ new Feature({
-    name: FEATURE_LOCAL_SHADOWS,
     install: installLocalShadows
 });
+DebugHelper.setName(localShadowsCode, FEATURE_LOCAL_SHADOWS);
 
 /**
  * The shadows of local (omni and spot) lights on a WebGL device.
@@ -35,11 +36,11 @@ const localShadowsCode = /* #__PURE__ */ new Feature({
  * @ignore
  */
 export const featureLocalShadowsWebgl = /* #__PURE__ */ new Feature({
-    name: 'localShadows-webgl',
     chunks: localShadowChunksGLSL,
     // the shared shadow rendering of the same device, installed before the code that builds on it
     requires: [shadowsCoreWebgl, localShadowsCode]
 });
+DebugHelper.setName(featureLocalShadowsWebgl, 'localShadows-webgl');
 
 /**
  * The shadows of local (omni and spot) lights on a WebGPU device.
@@ -48,8 +49,8 @@ export const featureLocalShadowsWebgl = /* #__PURE__ */ new Feature({
  * @ignore
  */
 export const featureLocalShadowsWebgpu = /* #__PURE__ */ new Feature({
-    name: 'localShadows-webgpu',
     chunks: localShadowChunksWGSL,
     // the shared shadow rendering of the same device, installed before the code that builds on it
     requires: [shadowsCoreWebgpu, localShadowsCode]
 });
+DebugHelper.setName(featureLocalShadowsWebgpu, 'localShadows-webgpu');

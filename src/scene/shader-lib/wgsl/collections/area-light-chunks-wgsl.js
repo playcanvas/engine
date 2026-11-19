@@ -14,7 +14,6 @@ import ltcPS from '../chunks/lit/frag/ltc.js';
  * @ignore
  */
 export const areaLightChunksWGSL = {
-    name: 'areaLights',
     language: SHADERLANGUAGE_WGSL,
     chunks: {
         clusteredLightAreaPS,

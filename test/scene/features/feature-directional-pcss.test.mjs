@@ -5,7 +5,7 @@ import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { SHADOW_PCF3_32F, SHADOW_PCSS_32F } from '../../../src/scene/constants.js';
-import { FEATURE_DIRECTIONAL_PCSS, FEATURE_SHADOWS } from '../../../src/scene/features/constants.js';
+import { FEATURE_DIRECTIONAL_PCSS, FEATURE_SHADOWS, hasFeature } from '../../../src/scene/features/constants.js';
 import { featureDirectionalPcssWebgl } from '../../../src/scene/features/feature-directional-pcss.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
@@ -37,8 +37,8 @@ describe('Directional PCSS feature', function () {
         try {
             installFeatures({ graphicsDevice: device, renderer }, [featureDirectionalPcssWebgl]);
 
-            expect(device.features.has(FEATURE_DIRECTIONAL_PCSS)).to.equal(true);
-            expect(device.features.has(FEATURE_SHADOWS)).to.equal(true);
+            expect(hasFeature(device, FEATURE_DIRECTIONAL_PCSS)).to.equal(true);
+            expect(hasFeature(device, FEATURE_SHADOWS)).to.equal(true);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('shadowSoftPS')).to.equal(directionalPcssChunksGLSL.chunks.shadowSoftPS);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('shadowSoftPS')).to.be.undefined;
 
@@ -130,7 +130,7 @@ describe('Directional PCSS feature', function () {
         });
 
         it('asserts when a directional light uses PCSS without the feature', function () {
-            app.graphicsDevice.features.delete(FEATURE_DIRECTIONAL_PCSS);
+            app.graphicsDevice.featureNames.delete(FEATURE_DIRECTIONAL_PCSS);
             const assert = sinon.stub(Debug, 'assert');
 
             addLight({ type: 'directional', castShadows: true, shadowType: SHADOW_PCSS_32F });

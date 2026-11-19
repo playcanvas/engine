@@ -14,7 +14,6 @@ import gles3VS from './vert/gles3.js';
  * @ignore
  */
 export const webglChunksGLSL = {
-    name: 'webgl',
     language: SHADERLANGUAGE_GLSL,
     chunks: {
         vertexHeader: gles3VS,
