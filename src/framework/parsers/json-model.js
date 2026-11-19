@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
@@ -73,6 +74,8 @@ class JsonModelParser {
             callback(null, null);
             return;
         }
+
+        Debug.deprecated('The legacy PlayCanvas JSON model format is deprecated and will be removed in Engine V3. Convert your models to GLB instead. In the Editor, enable Project Settings > Asset Import > Convert to GLB and reimport the model assets.');
 
         if (modelData.version <= 1) {
             callback('JsonModelParser#parse: Trying to parse unsupported model format.');
