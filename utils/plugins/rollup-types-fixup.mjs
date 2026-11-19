@@ -93,7 +93,6 @@ const STANDARD_MAT_PROPS = [
     ['emissiveVertexColorChannel', 'string'],
     ['enableGGXSpecular', 'boolean'],
     ['envAtlas', 'Texture|null'],
-    ['fresnelModel', 'number'],
     ['glossInvert', 'boolean'],
     ['glossMap', 'Texture|null'],
     ['glossMapChannel', 'string'],

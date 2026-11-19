@@ -91,15 +91,12 @@ describe('Standard material fresnel model', function () {
         expect(generateKey.returnValues[1]).to.equal(generateKey.returnValues[0]);
     });
 
-    it('renders FRESNEL_NONE with the Schlick model', function () {
+    it('ignores the deprecated fresnelModel', function () {
         const none = createMaterial();
         none.fresnelModel = FRESNEL_NONE;
         none.update();
 
-        const schlick = createMaterial();
-        schlick.fresnelModel = FRESNEL_SCHLICK;
-        schlick.update();
-
-        expect(getShader(none, SHADER_FORWARD)).to.equal(getShader(schlick, SHADER_FORWARD));
+        expect(none.fresnelModel).to.equal(FRESNEL_SCHLICK);
+        expect(getShader(none, SHADER_FORWARD)).to.equal(getShader(createMaterial(), SHADER_FORWARD));
     });
 });
