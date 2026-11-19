@@ -1,12 +1,7 @@
 // @config
 //
-// Mesh compression shrinks a glTF's geometry so it downloads faster, and the engine decodes it as
-// the file loads. This is the same Stanford dragon three ways: uncompressed, compressed with the
-// [EXT_meshopt_compression](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression)
-// glTF extension by `gltfpack -cc`, and with
-// [KHR_draco_mesh_compression](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_draco_mesh_compression).
-// Each label shows the file's size and the vertices and triangles it decodes to. Before loading,
-// meshopt needs `meshoptInitialize`, and Draco the `DracoDecoderModule` wasm module.
+// The same mesh uncompressed, and compressed with **meshopt** and **Draco**, each labeled with its
+// file size, vertices and triangles.
 //
 // `LMB` / `RMB` Orbit · Hold `Shift` / `MMB` Pan · `Wheel` / `Pinch` Zoom
 //
