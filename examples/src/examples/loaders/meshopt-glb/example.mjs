@@ -1,3 +1,8 @@
+// @config
+//
+// Loads a glb compressed with **meshopt** by `gltfpack -cc`. `meshoptInitialize` gives the engine
+// the decoder, which unpacks the knight's mesh, skin and both animations when the glb loads.
+
 import {
     AnimComponentSystem,
     AppBase,
