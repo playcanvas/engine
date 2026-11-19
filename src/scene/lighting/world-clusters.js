@@ -37,6 +37,15 @@ class WorldClusters {
     /** @type {Texture} */
     clusterTexture;
 
+    /**
+     * True when the cluster texture holds no lights (every cell set to the 'no light' index 0).
+     * While that stays true, a frame without lights does not need to refill and upload it.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _clusterTextureEmpty = false;
+
     constructor(device) {
         this.device = device;
         this.name = 'Untitled';
@@ -221,6 +230,7 @@ class WorldClusters {
             this.releaseClusterTexture();
             this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height,
                 use16BitIndex ? PIXELFORMAT_R16U : PIXELFORMAT_R8U, 'ClusterTexture');
+            this._clusterTextureEmpty = false;
         }
     }
 
@@ -439,8 +449,18 @@ class WorldClusters {
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();
+
+        // without lights every cell holds the 'no light' index, and the shader never reads the lights
+        // texture. When the cluster texture already holds that from an earlier frame, it is up to date
+        const empty = this._usedLights.length <= 1;
+        if (empty && this._clusterTextureEmpty) {
+            this.lightsBuffer.areaLightShapes = lightingParams ? lightingParams.areaLightShapes : 0;
+            return;
+        }
+
         this.updateClusters(lightingParams);
         this.uploadTextures();
+        this._clusterTextureEmpty = empty;
     }
 
     // called on already updated clusters, activates for rendering by setting up uniforms / textures on the device
