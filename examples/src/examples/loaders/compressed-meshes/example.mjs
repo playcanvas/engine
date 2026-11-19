@@ -3,8 +3,6 @@
 // The same mesh uncompressed, and compressed with **meshopt** and **Draco**, each labeled with its
 // file size, vertices and triangles.
 //
-// `LMB` / `RMB` Orbit · Hold `Shift` / `MMB` Pan · `Wheel` / `Pinch` Zoom
-//
 // @credit
 // title: Stanford Dragon
 // author: Stanford Computer Graphics Laboratory
