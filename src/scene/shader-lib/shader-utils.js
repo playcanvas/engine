@@ -101,6 +101,12 @@ class ShaderUtils {
                 (!!options.vertexWGSL || !!options.vertexChunk) &&
                 (!!options.fragmentWGSL || !!options.fragmentChunk);
 
+            Debug.call(() => {
+                if (device.isWebGPU && !wgsl) {
+                    Debug.deprecated(`ShaderUtils.createShader [${options.uniqueName}] has no vertexWGSL and fragmentWGSL, so its GLSL code is transpiled to WGSL on WebGPU. GLSL shaders on WebGPU are deprecated and will be removed in Engine V3. Provide vertexWGSL and fragmentWGSL.`);
+                }
+            });
+
             // chunks map
             const chunksMap = ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
 

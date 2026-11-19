@@ -37,9 +37,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: './assets/wasm/glslang/glslang.js',
-    twgslUrl: './assets/wasm/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await createGraphicsDevice(canvas, gfxOptions);
