@@ -77,8 +77,6 @@ const standardMaterialParameterTypes = {
     diffuseTransmissionColor: 'rgb',
     ..._textureParameter('diffuseTransmissionColor'),
 
-    fresnelModel: 'number',
-
     emissive: 'rgb',
     ..._textureParameter('emissive'),
     emissiveIntensity: 'number',
@@ -188,6 +186,7 @@ for (const key in standardMaterialParameterTypes) {
 }
 
 const standardMaterialRemovedParameters = {
+    fresnelModel: 'number',
     aoMapVertexColor: 'boolean',
     diffuseMapTint: 'boolean',
     diffuseMapVertexColor: 'boolean',
