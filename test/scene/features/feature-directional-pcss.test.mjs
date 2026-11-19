@@ -30,7 +30,7 @@ describe('Directional PCSS feature', function () {
         }
     });
 
-    it('registers the chunks of its language and installs shadows', function () {
+    it('installs the shadows feature of its device, with its chunks', function () {
         const device = createGraphicsDevice({ width: 1, height: 1 });
         const scene = new Scene(device);
         const renderer = new Renderer(device, scene);
@@ -41,6 +41,12 @@ describe('Directional PCSS feature', function () {
             expect(device.features.has(FEATURE_SHADOWS)).to.equal(true);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('shadowSoftPS')).to.equal(directionalPcssChunksGLSL.chunks.shadowSoftPS);
             expect(ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('shadowSoftPS')).to.be.undefined;
+
+            // the shadow chunks of the same device, which directional PCSS builds on
+            for (const name of Object.keys(shadowChunksGLSL.chunks)) {
+                expect(ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get(name), name).to.equal(shadowChunksGLSL.chunks[name]);
+            }
+            expect(ShaderChunks.get(device, SHADERLANGUAGE_WGSL).get('litShadowMainPS')).to.be.undefined;
         } finally {
             renderer.destroy();
             scene.destroy();

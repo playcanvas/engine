@@ -2,13 +2,12 @@ import { directionalPcssChunksGLSL } from '../shader-lib/glsl/collections/direct
 import { directionalPcssChunksWGSL } from '../shader-lib/wgsl/collections/directional-pcss-chunks-wgsl.js';
 import { FEATURE_DIRECTIONAL_PCSS } from './constants.js';
 import { Feature } from './feature.js';
-import { shadowsCode } from './feature-shadows.js';
+import { featureShadowsWebgl, featureShadowsWebgpu } from './feature-shadows.js';
 
 // Directional PCSS needs no engine code of its own, so the shared feature only records that it is
 // installed, once when a host installs the feature for both devices.
 const directionalPcssCode = /* #__PURE__ */ new Feature({
-    name: FEATURE_DIRECTIONAL_PCSS,
-    requires: [shadowsCode]
+    name: FEATURE_DIRECTIONAL_PCSS
 });
 
 /**
@@ -20,7 +19,8 @@ const directionalPcssCode = /* #__PURE__ */ new Feature({
 export const featureDirectionalPcssWebgl = /* #__PURE__ */ new Feature({
     name: 'directionalPcss-webgl',
     chunks: directionalPcssChunksGLSL,
-    requires: [directionalPcssCode]
+    // the shadows feature of the same device, for its shader chunks as well as its engine code
+    requires: [featureShadowsWebgl, directionalPcssCode]
 });
 
 /**
@@ -32,5 +32,6 @@ export const featureDirectionalPcssWebgl = /* #__PURE__ */ new Feature({
 export const featureDirectionalPcssWebgpu = /* #__PURE__ */ new Feature({
     name: 'directionalPcss-webgpu',
     chunks: directionalPcssChunksWGSL,
-    requires: [directionalPcssCode]
+    // the shadows feature of the same device, for its shader chunks as well as its engine code
+    requires: [featureShadowsWebgpu, directionalPcssCode]
 });
