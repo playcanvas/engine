@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Http } from '../../platform/net/http.js';
@@ -20,6 +21,7 @@ class JsonAnimationParser {
             if (err) {
                 callback(`Error loading animation resource: ${original} [${err}]`);
             } else {
+                Debug.deprecated('The legacy PlayCanvas JSON animation format is deprecated and will be removed in Engine V3. Convert your animations to GLB instead. In the Editor, enable Project Settings > Asset Import > Convert to GLB and reimport the animation assets.');
                 callback(null, this[`_parseAnimationV${response.animation.version}`](response));
             }
         }, asset);

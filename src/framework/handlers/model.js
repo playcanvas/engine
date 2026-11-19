@@ -8,10 +8,14 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * Resource handler for the `model` asset type. Loads legacy PlayCanvas JSON models and GLB files
+ * Resource handler for the `model` asset type. Loads GLB files and legacy PlayCanvas JSON models
  * into a {@link Model}. OBJ files are supported once the `ObjModelParser` shipped in
  * `playcanvas/scripts/esm/parsers/obj-model.mjs` is registered with
  * {@link ResourceHandler#addParser}.
+ *
+ * Support for the legacy PlayCanvas JSON model format is deprecated and will be removed in Engine
+ * V3. Convert JSON models to GLB instead. In the Editor, enable Project Settings > Asset Import >
+ * Convert to GLB and reimport the model assets.
  *
  * @category Asset
  */
