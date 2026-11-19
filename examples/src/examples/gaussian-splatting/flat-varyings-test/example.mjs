@@ -1,9 +1,6 @@
 // @config
 //
-// Measures the GPU cost of the flat per-splat varyings (gaussianColor, id, vLinearDepth) in the
-// gsplat shaders, see https://github.com/playcanvas/engine/issues/10085. Renders a synthetic
-// splat scene with the stock shaders and with the flat qualifiers removed, alternating the
-// variants, and reports the median GPU frame time of each. Temporary test, not to be merged.
+// Temporary GPU timing test for the flat gsplat varyings (engine issue #10085). Not to be merged.
 //
 // @flag NO_MINISTATS
 // @flag NO_DEVICE_SELECTOR
@@ -36,6 +33,10 @@ import {
 /**
  * @import { GraphicsDevice } from 'playcanvas'
  */
+
+// Renders a synthetic splat scene with the stock shaders (flat gaussianColor, id, vLinearDepth),
+// with the flat qualifiers removed and, on WebGPU, with @interpolate(flat, first), alternating the
+// variants, and reports the median GPU frame time of each.
 
 // ── Test parameters ──
 
@@ -100,7 +101,8 @@ Object.assign(panel.style, {
     color: '#eee',
     background: '#111',
     font: '13px monospace',
-    padding: '16px',
+    // clear the examples browser toolbar and description overlay at the top
+    padding: '20vh 16px 16px',
     boxSizing: 'border-box',
     whiteSpace: 'pre-wrap'
 });
