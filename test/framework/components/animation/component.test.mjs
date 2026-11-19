@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import { spy } from 'sinon';
 
+import { Debug } from '../../../../src/core/debug.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
@@ -275,4 +277,40 @@ describe('AnimationComponent', function () {
 
     });
 
+    describe('deprecation', function () {
+
+        let warn;
+
+        beforeEach(function () {
+            jsdomSetup();
+            app = createApp();
+            Debug._loggedMessages.clear();
+            warn = spy(console, 'warn');
+        });
+
+        afterEach(function () {
+            warn.restore();
+            app.destroy();
+            jsdomTeardown();
+        });
+
+        it('logs a single deprecation warning for any number of components', function () {
+            for (let i = 0; i < 3; i++) {
+                const entity = new Entity();
+                entity.addComponent('animation', {});
+                app.root.addChild(entity);
+                entity.clone();
+            }
+
+            const deprecations = warn.getCalls().filter(call => String(call.args[0]).includes('AnimationComponent is deprecated'));
+            expect(deprecations.length).to.equal(1);
+        });
+
+        it('does not log a deprecation warning without animation components', function () {
+            const entity = new Entity();
+            app.root.addChild(entity);
+
+            expect(warn.getCalls().some(call => String(call.args[0]).includes('AnimationComponent is deprecated'))).to.equal(false);
+        });
+    });
 });
