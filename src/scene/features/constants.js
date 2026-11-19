@@ -24,3 +24,11 @@ export const FEATURE_AREA_LIGHTS = 'areaLights';
  * @ignore
  */
 export const FEATURE_PARTICLES = 'particles';
+
+/**
+ * The name of the directional PCSS feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_DIRECTIONAL_PCSS = 'directionalPcss';

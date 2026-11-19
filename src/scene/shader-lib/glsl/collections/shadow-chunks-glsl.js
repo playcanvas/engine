@@ -9,7 +9,6 @@ import shadowPCF1PS from '../chunks/lit/frag/lighting/shadowPCF1.js';
 import shadowPCF3PS from '../chunks/lit/frag/lighting/shadowPCF3.js';
 import shadowPCF5PS from '../chunks/lit/frag/lighting/shadowPCF5.js';
 import shadowPCSSPS from '../chunks/lit/frag/lighting/shadowPCSS.js';
-import shadowSoftPS from '../chunks/lit/frag/lighting/shadowSoft.js';
 
 /**
  * @import { ShaderChunkCollection } from '../../../../platform/graphics/shader-chunk-collection.js'
@@ -35,7 +34,6 @@ export const shadowChunksGLSL = {
         shadowPCF1PS,
         shadowPCF3PS,
         shadowPCF5PS,
-        shadowPCSSPS,
-        shadowSoftPS
+        shadowPCSSPS
     }
 };

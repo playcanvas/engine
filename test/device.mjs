@@ -3,11 +3,13 @@ import { NullGraphicsDevice } from '../src/platform/graphics/null/null-graphics-
 import { WebgpuGraphicsDevice } from '../src/platform/graphics/webgpu/webgpu-graphics-device.js';
 import { setProgramLibrary } from '../src/scene/shader-lib/get-program-library.js';
 import { areaLightChunksGLSL } from '../src/scene/shader-lib/glsl/collections/area-light-chunks-glsl.js';
+import { directionalPcssChunksGLSL } from '../src/scene/shader-lib/glsl/collections/directional-pcss-chunks-glsl.js';
 import { shaderChunksGLSL } from '../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shadowChunksGLSL } from '../src/scene/shader-lib/glsl/collections/shadow-chunks-glsl.js';
 import { ProgramLibrary } from '../src/scene/shader-lib/program-library.js';
 import { ShaderChunks } from '../src/scene/shader-lib/shader-chunks.js';
 import { areaLightChunksWGSL } from '../src/scene/shader-lib/wgsl/collections/area-light-chunks-wgsl.js';
+import { directionalPcssChunksWGSL } from '../src/scene/shader-lib/wgsl/collections/directional-pcss-chunks-wgsl.js';
 import { shaderChunksWGSL } from '../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { shadowChunksWGSL } from '../src/scene/shader-lib/wgsl/collections/shadow-chunks-wgsl.js';
 
@@ -106,6 +108,8 @@ export const setupShaderLibrary = (device) => {
     ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(shadowChunksWGSL.chunks);
     ShaderChunks.get(device, SHADERLANGUAGE_GLSL).add(areaLightChunksGLSL.chunks);
     ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(areaLightChunksWGSL.chunks);
+    ShaderChunks.get(device, SHADERLANGUAGE_GLSL).add(directionalPcssChunksGLSL.chunks);
+    ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(directionalPcssChunksWGSL.chunks);
     setProgramLibrary(device, new ProgramLibrary(device));
 };
 

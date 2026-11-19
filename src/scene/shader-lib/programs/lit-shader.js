@@ -528,6 +528,11 @@ class LitShader {
             if (castShadow) {
                 fDefines.set(`SHADOW_KIND_${shadowInfo.kind}`, true);
                 if (lightType === LIGHTTYPE_DIRECTIONAL) fDefines.set('SHADOW_DIRECTIONAL', true);
+
+                // directional and local lights use different PCSS code, which is included separately
+                if (light._isPcss) {
+                    fDefines.set(lightType === LIGHTTYPE_DIRECTIONAL ? 'SHADOW_KIND_PCSS_DIRECTIONAL' : 'SHADOW_KIND_PCSS_LOCAL', true);
+                }
             }
         }
     }

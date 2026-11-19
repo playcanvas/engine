@@ -48,6 +48,7 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 import { featureBundles } from './features/feature-bundles.js';
 import { featureI18n } from './features/feature-i18n.js';
 import { FEATURE_BUNDLES, FEATURE_I18N } from './features/constants.js';
+import { featureDirectionalPcssWebgl, featureDirectionalPcssWebgpu } from '../scene/features/feature-directional-pcss.js';
 import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/features/feature-area-lights.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
 import { FEATURE_AREA_LIGHTS } from '../scene/features/constants.js';
@@ -639,6 +640,7 @@ class AppBase extends EventHandler {
         // their objects on it, and before anything that uses them, such as the lightmapper
         installFeatures(this, [
             featureShadowsWebgl, featureShadowsWebgpu,
+            featureDirectionalPcssWebgl, featureDirectionalPcssWebgpu,
             featureAreaLightsWebgl, featureAreaLightsWebgpu,
             featureBundles,
             featureI18n
