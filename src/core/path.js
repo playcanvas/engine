@@ -140,11 +140,10 @@ const path = {
      * path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
      */
     getExtension(pathname) {
-        const ext = pathname.split('?')[0].split('.').pop();
-        if (ext !== pathname) {
-            return `.${ext}`;
-        }
-        return '';
+        // the extension belongs to the last path segment, without the query string or fragment
+        const name = pathname.split(/[?#]/)[0].split('/').pop();
+        const index = name.lastIndexOf('.');
+        return index === -1 ? '' : name.slice(index);
     },
 
     /**
