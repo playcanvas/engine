@@ -81,6 +81,7 @@ export const exampleRedirects = {
     'graphics/volumetric-fog': 'camera-frame/volumetric-fog',
     'graphics/volumetric-fog-local-lights': 'camera-frame/volumetric-fog-local-lights',
     'graphics/volumetric-fog-shafts': 'camera-frame/volumetric-fog-shafts',
+    'loaders/draco-glb': 'loaders/compressed-meshes',
     'loaders/loaders-gl': 'integrations/loaders-gl',
     'misc/spineboy': 'integrations/spine',
     'render-targets/render-pass': 'render-targets/render-pass-camera',
