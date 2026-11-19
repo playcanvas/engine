@@ -1,8 +1,11 @@
+import vm from 'node:vm';
+
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { ResourceHandler } from '../../../src/framework/handlers/handler.js';
 import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
 import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -237,6 +240,54 @@ describe('AssetRegistry', function () {
 
     });
 
+    describe('#load', function () {
+
+        it('keeps the array data of a json asset as its one resource', function () {
+            const data = [{ id: 1 }, { id: 2 }, { id: 3 }];
+            const asset = new Asset('Levels', 'json', null, data);
+            app.assets.add(asset);
+            app.assets.load(asset);
+
+            expect(asset.loaded).to.equal(true);
+            expect(asset.resource).to.equal(data);
+            expect(asset.resources).to.have.lengthOf(1);
+        });
+
+        it('keeps the array data of a json asset from another realm as its one resource', function () {
+            // as an array from another window or iframe is, this is no instance of Array
+            const data = vm.runInNewContext('[{ id: 1 }, { id: 2 }, { id: 3 }]');
+            expect(data).to.not.be.an.instanceof(Array);
+
+            const asset = new Asset('Levels', 'json', null, data);
+            app.assets.add(asset);
+            app.assets.load(asset);
+
+            expect(asset.loaded).to.equal(true);
+            expect(asset.resource).to.equal(data);
+            expect(asset.resources).to.have.lengthOf(1);
+        });
+
+        it('takes the array a handler opens as the resources of its asset, whichever realm made it', function () {
+            // the base handler opens the data of an asset as it is
+            app.loader.addHandler('rows', new ResourceHandler(app, 'rows'));
+
+            const local = ['a', 'b'];
+            const foreign = vm.runInNewContext('["a", "b"]');
+            expect(foreign).to.not.be.an.instanceof(Array);
+
+            for (const data of [local, foreign]) {
+                const asset = new Asset('Rows', 'rows', null, data);
+                app.assets.add(asset);
+                app.assets.load(asset);
+
+                expect(asset.loaded).to.equal(true);
+                expect(asset.resources).to.equal(data);
+                expect(asset.resource).to.equal('a');
+            }
+        });
+
+    });
+
     describe('#loadFromUrl', function () {
 
         const assetPath = '/test/assets/';
@@ -381,6 +432,15 @@ describe('AssetRegistry', function () {
                 expect(asset.resource.a).to.equal(1);
                 expect(asset.resource.b).to.equal(true);
                 expect(asset.resource.c).to.equal('hello world');
+                done();
+            });
+        });
+
+        it('loads a json file that holds an array as one resource', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test-array.json`, 'json', (err, asset) => {
+                expect(err).to.be.null;
+                expect(asset.resource).to.deep.equal([{ id: 1 }, { id: 2 }, { id: 3 }]);
+                expect(asset.resources).to.have.lengthOf(1);
                 done();
             });
         });

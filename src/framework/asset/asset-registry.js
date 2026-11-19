@@ -480,7 +480,9 @@ class AssetRegistry extends EventHandler {
 
         // open has completed on the resource
         const _opened = (resource) => {
-            if (resource instanceof Array) {
+            // an array is the list of resources a handler opened, such as the animations of a glb
+            // file. The resource of a json asset is the value its file encodes, array included
+            if (Array.isArray(resource) && asset.type !== 'json') {
                 asset.resources = resource;
             } else {
                 asset.resource = resource;
