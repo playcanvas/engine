@@ -2176,30 +2176,6 @@ class StandardMaterial extends Material {
         const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
         return this.anisotropyIntensity * sign;
     }
-
-    /**
-     * Sets the Fresnel model. This has no effect, as the material always uses Schlick's
-     * approximation of Fresnel.
-     *
-     * @type {number}
-     * @ignore
-     * @deprecated The material always uses Schlick's approximation of Fresnel.
-     */
-    set fresnelModel(value) {
-        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
-    }
-
-    /**
-     * Gets the Fresnel model, which is always {@link FRESNEL_SCHLICK}.
-     *
-     * @type {number}
-     * @ignore
-     * @deprecated The material always uses Schlick's approximation of Fresnel.
-     */
-    get fresnelModel() {
-        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
-        return FRESNEL_SCHLICK;
-    }
 }
 
 // registers the default value and copy behavior of a property, used by reset and copy
@@ -2599,3 +2575,13 @@ _defineDeprecatedAlias('aoMapUv', 'aoUvSet');
 
 _defineDeprecatedAlias('sheenGloss', 'sheenGlossiness');
 _defineDeprecatedAlias('clearCoatGloss', 'clearCoatGlossiness');
+
+Object.defineProperty(StandardMaterial.prototype, 'fresnelModel', {
+    get: function () {
+        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
+        return FRESNEL_SCHLICK;
+    },
+    set: function (value) {
+        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
+    }
+});
