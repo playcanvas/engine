@@ -18,7 +18,7 @@ import {
     LIGHT_COLOR_DIVIDER
 } from './constants.js';
 import { LightCamera } from './renderer/light-camera.js';
-import { FEATURE_AREA_LIGHTS, FEATURE_DIRECTIONAL_PCSS, FEATURE_SHADOWS } from './features/constants.js';
+import { FEATURE_AREA_LIGHTS, FEATURE_DIRECTIONAL_PCSS, FEATURE_DIRECTIONAL_SHADOWS, FEATURE_LOCAL_SHADOWS } from './features/constants.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 
@@ -535,6 +535,10 @@ class Light {
             return;
         }
 
+        Debug.call(() => {
+            if (this._castShadows) assertShadowsFeature(this.device, value);
+        });
+
         this._type = value;
         this._destroyShadowMap();
         this._updateShadowBias();
@@ -649,7 +653,9 @@ class Light {
     }
 
     set castShadows(value) {
-        Debug.assert(!value || this.device.features.has(FEATURE_SHADOWS), 'A light casting shadows needs the shadows feature to be installed.');
+        Debug.call(() => {
+            if (value) assertShadowsFeature(this.device, this._type);
+        });
         if (this._castShadows !== value) {
             this._castShadows = value;
             this._destroyShadowMap();
@@ -1364,6 +1370,20 @@ class Light {
  */
 function needsShadowRendering(light) {
     return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+}
+
+/**
+ * Asserts that the shadows feature of a light type is installed. Only called from debug builds.
+ *
+ * @param {GraphicsDevice} device - The graphics device.
+ * @param {number} type - The light type.
+ */
+function assertShadowsFeature(device, type) {
+    if (type === LIGHTTYPE_DIRECTIONAL) {
+        Debug.assert(device.features.has(FEATURE_DIRECTIONAL_SHADOWS), 'A directional light casting shadows needs the directional shadows feature to be installed.');
+    } else {
+        Debug.assert(device.features.has(FEATURE_LOCAL_SHADOWS), 'An omni or spot light casting shadows needs the local shadows feature to be installed.');
+    }
 }
 
 export { Light, LightRenderData, lightTypes, needsShadowRendering };

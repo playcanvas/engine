@@ -32,3 +32,19 @@ export const FEATURE_PARTICLES = 'particles';
  * @ignore
  */
 export const FEATURE_DIRECTIONAL_PCSS = 'directionalPcss';
+
+/**
+ * The name of the directional shadows feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_DIRECTIONAL_SHADOWS = 'directionalShadows';
+
+/**
+ * The name of the local shadows feature, the shadows of omni and spot lights.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_LOCAL_SHADOWS = 'localShadows';
