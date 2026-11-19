@@ -530,6 +530,29 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Define the uniform commit functions
         let scopeX, scopeY, scopeZ, scopeW;
         let uniformValue;
+
+        // Returns true when a matrix differs from the value last sent to this uniform of the program,
+        // and stores it as the sent value. A program keeps its uniform values, so a matrix equal to
+        // the one it holds (consecutive draws of the same node, for example) is not sent again.
+        const matrixChanged = (uniform, value, size) => {
+            let sent = uniform.matrixValue;
+            if (!sent) {
+                // NaN never compares equal, so the first value is always sent
+                sent = uniform.matrixValue = new Float32Array(size).fill(NaN);
+            }
+            let i = 0;
+            while (i < size && sent[i] === value[i]) {
+                i++;
+            }
+            if (i === size) {
+                return false;
+            }
+            for (; i < size; i++) {
+                sent[i] = value[i];
+            }
+            return true;
+        };
+
         this.commitFunction = [];
         this.commitFunction[UNIFORMTYPE_BOOL] = function (uniform, value) {
             if (uniform.value !== value) {
@@ -620,13 +643,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
         };
         this.commitFunction[UNIFORMTYPE_BVEC4] = this.commitFunction[UNIFORMTYPE_IVEC4];
         this.commitFunction[UNIFORMTYPE_MAT2]  = function (uniform, value) {
-            gl.uniformMatrix2fv(uniform.locationId, false, value);
+            if (matrixChanged(uniform, value, 4)) {
+                gl.uniformMatrix2fv(uniform.locationId, false, value);
+            }
         };
         this.commitFunction[UNIFORMTYPE_MAT3]  = function (uniform, value) {
-            gl.uniformMatrix3fv(uniform.locationId, false, value);
+            if (matrixChanged(uniform, value, 9)) {
+                gl.uniformMatrix3fv(uniform.locationId, false, value);
+            }
         };
         this.commitFunction[UNIFORMTYPE_MAT4]  = function (uniform, value) {
-            gl.uniformMatrix4fv(uniform.locationId, false, value);
+            if (matrixChanged(uniform, value, 16)) {
+                gl.uniformMatrix4fv(uniform.locationId, false, value);
+            }
         };
         this.commitFunction[UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
             gl.uniform1fv(uniform.locationId, value);
