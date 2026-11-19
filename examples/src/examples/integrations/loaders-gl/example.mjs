@@ -27,8 +27,10 @@ import {
 
 import { deviceType } from 'examples/context';
 
-import shaderFrag from './shader.frag';
-import shaderVert from './shader.vert';
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 /**
  * @import { GraphicsDevice } from 'playcanvas'
@@ -53,9 +55,7 @@ const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.
 // This example uses draco point cloud loader library from https://loaders.gl/
 // Note that many additional formats are supported by the library and can be used.
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: './assets/wasm/glslang/glslang.js',
-    twgslUrl: './assets/wasm/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 /** @type {GraphicsDevice} */
@@ -110,8 +110,10 @@ async function loadModel(url) {
     // Create material using the shader
     const material = new ShaderMaterial({
         uniqueName: 'MyShader',
-        vertexGLSL: shaderVert,
-        fragmentGLSL: shaderFrag,
+        vertexGLSL: shaderGlslVert,
+        fragmentGLSL: shaderGlslFrag,
+        vertexWGSL: shaderWgslVert,
+        fragmentWGSL: shaderWgslFrag,
         attributes: {
             aPosition: SEMANTIC_POSITION,
             aColor: SEMANTIC_COLOR

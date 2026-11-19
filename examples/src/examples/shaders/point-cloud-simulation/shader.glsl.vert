@@ -1,4 +1,3 @@
-
 // Attributes per vertex: position
 attribute vec4 aPosition;
 
@@ -21,11 +20,8 @@ void main(void)
     vec4 vertexWorld = matrix_model * aPosition;
 
     // point sprite size depends on its distance to camera
-    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
-    #ifndef WEBGPU
-        float dist = 25.0 - length(vertexWorld.xyz - view_position);
-        gl_PointSize = clamp(dist * 2.0 - 1.0, 1.0, 15.0);
-    #endif
+    float dist = 25.0 - length(vertexWorld.xyz - view_position);
+    gl_PointSize = clamp(dist * 2.0 - 1.0, 1.0, 15.0);
 
     // color depends on position of particle
     outColor = vec4(vertexWorld.y * 0.1, 0.1, vertexWorld.z * 0.1, 1.0);

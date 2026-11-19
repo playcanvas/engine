@@ -53,9 +53,6 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: './assets/wasm/glslang/glslang.js',
-    twgslUrl: './assets/wasm/twgsl/twgsl.js',
-
     // Disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
 };

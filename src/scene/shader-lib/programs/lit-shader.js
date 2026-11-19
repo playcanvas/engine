@@ -115,6 +115,15 @@ class LitShader {
         this.shaderLanguage = (device.shaderLanguage === SHADERLANGUAGE_WGSL && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
 
         if (device.isWebGPU && this.shaderLanguage === SHADERLANGUAGE_GLSL) {
+
+            // GLSL-only chunk overrides force the whole lit shader to GLSL (LitMaterial without WGSL
+            // passes allowWGSL = false and reports its own cause)
+            Debug.call(() => {
+                if (allowWGSL && userChunks && !userChunks.useWGSL) {
+                    Debug.deprecated(`Shader chunk overrides [${[...userChunks.glsl.keys()].join(', ')}] are provided only in GLSL, so the whole lit shader is generated in GLSL and transpiled to WGSL on WebGPU. GLSL shaders on WebGPU are deprecated and will be removed in Engine V3. Provide WGSL versions of the chunk overrides using material.shaderChunks.wgsl.`);
+                }
+            });
+
             if (!device.hasTranspilers) {
                 Debug.errorOnce('Cannot use GLSL shader on WebGPU without transpilers', {
                     litShader: this

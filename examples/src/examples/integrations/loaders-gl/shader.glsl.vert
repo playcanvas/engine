@@ -13,10 +13,7 @@ void main(void)
     mat4 modelViewProj = matrix_viewProjection * matrix_model;
     gl_Position = modelViewProj * aPosition;
 
-    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
-    #ifndef WEBGPU
-        gl_PointSize = 1.5;
-    #endif
+    gl_PointSize = 1.5;
 
     outColor = aColor;
 }

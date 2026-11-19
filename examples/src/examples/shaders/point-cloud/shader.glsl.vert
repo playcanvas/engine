@@ -1,4 +1,3 @@
-
 // Attributes per vertex: position
 attribute vec4 aPosition;
 
@@ -27,10 +26,7 @@ void main(void)
     intensity = smoothstep(0.9, 1.0, intensity);
 
     // point size depends on intensity
-    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
-    #ifndef WEBGPU
-        gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
-    #endif
+    gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
 
     // color mixes red and yellow based on intensity
     outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);

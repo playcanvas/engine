@@ -205,6 +205,9 @@ class WebgpuShader {
         Debug.assert(this._ownedMeshBindGroupFormat === null, 'Shader processing must not replace an owned mesh bind group format.');
         const shader = this.shader;
 
+        // keyed by shader name rather than label, as the label contains a unique id per shader instance
+        Debug.deprecated(`Shader [${shader.name}] is written in GLSL and is transpiled to WGSL on WebGPU. GLSL shaders on WebGPU are deprecated and will be removed in Engine V3. Provide the shader in WGSL instead.`);
+
         // process the shader source to allow for uniforms
         const processed = ShaderProcessorGLSL.run(shader.device, shader.definition, shader);
 
