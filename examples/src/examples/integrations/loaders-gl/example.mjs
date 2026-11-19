@@ -1,6 +1,3 @@
-// @config
-// @flag WEBGPU_DISABLED
-
 import {
     AppBase,
     AppOptions,
