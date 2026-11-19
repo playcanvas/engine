@@ -34,7 +34,7 @@ class ZoneComponentSystem extends ComponentSystem {
         if (data.size) {
             if (data.size instanceof Vec3) {
                 component.size.copy(data.size);
-            } else if (data.size instanceof Array && data.size.length >= 3) {
+            } else if (Array.isArray(data.size) && data.size.length >= 3) {
                 component.size.set(data.size[0], data.size[1], data.size[2]);
             }
         }

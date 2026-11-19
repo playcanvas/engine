@@ -66,11 +66,11 @@ class LightComponentSystem extends ComponentSystem {
             data.color = new Color(data.color[0], data.color[1], data.color[2]);
         }
 
-        if (data.cookieOffset && data.cookieOffset instanceof Array) {
+        if (data.cookieOffset && Array.isArray(data.cookieOffset)) {
             data.cookieOffset = new Vec2(data.cookieOffset[0], data.cookieOffset[1]);
         }
 
-        if (data.cookieScale && data.cookieScale instanceof Array) {
+        if (data.cookieScale && Array.isArray(data.cookieScale)) {
             data.cookieScale = new Vec2(data.cookieScale[0], data.cookieScale[1]);
         }
 

@@ -1,3 +1,5 @@
+import vm from 'node:vm';
+
 import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
@@ -164,6 +166,23 @@ describe('LightComponent', function () {
             expect(e.light.color.r).to.be.closeTo(0.5, 1e-6);
             expect(e.light.color.g).to.be.closeTo(0.25, 1e-6);
             expect(e.light.color.b).to.be.closeTo(0.125, 1e-6);
+            expect(e.light.cookieOffset).to.be.instanceof(Vec2);
+            expect(e.light.cookieOffset.x).to.equal(0.5);
+            expect(e.light.cookieOffset.y).to.equal(0.75);
+            expect(e.light.cookieScale).to.be.instanceof(Vec2);
+            expect(e.light.cookieScale.x).to.equal(2);
+            expect(e.light.cookieScale.y).to.equal(4);
+        });
+
+        it('accepts cookieOffset/cookieScale as arrays from another realm', function () {
+            // as an array from another window or iframe is, this is no instance of Array
+            const cookieOffset = vm.runInNewContext('[0.5, 0.75]');
+            const cookieScale = vm.runInNewContext('[2, 4]');
+            expect(cookieOffset).to.not.be.an.instanceof(Array);
+
+            const e = new Entity();
+            e.addComponent('light', { cookieOffset, cookieScale });
+
             expect(e.light.cookieOffset).to.be.instanceof(Vec2);
             expect(e.light.cookieOffset.x).to.equal(0.5);
             expect(e.light.cookieOffset.y).to.equal(0.75);
