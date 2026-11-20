@@ -27,6 +27,30 @@ describe('string', function () {
             expect(result).to.equal('abc a string def');
         });
 
+        it('replaces every occurrence of a placeholder', function () {
+            const result = string.format('{0} and {0} again, then {1} and {1}', 'abc', 'def');
+
+            expect(result).to.equal('abc and abc again, then def and def');
+        });
+
+        it('inserts args containing $ replacement patterns literally', function () {
+            const result = string.format('cost: {0}, match: {1}', '$&5', '$1 $$');
+
+            expect(result).to.equal('cost: $&5, match: $1 $$');
+        });
+
+        it('does not substitute placeholders that come from an arg', function () {
+            const result = string.format('{0} {1}', '{1}', 'x');
+
+            expect(result).to.equal('{1} x');
+        });
+
+        it('leaves placeholders without a matching arg untouched', function () {
+            const result = string.format('{0} {2}', 'a', 'b');
+
+            expect(result).to.equal('a {2}');
+        });
+
     });
 
     describe('#getSymbols', function () {

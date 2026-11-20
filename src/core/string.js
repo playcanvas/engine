@@ -135,10 +135,9 @@ const string = {
      * console.log(s); // Prints "Hello world"
      */
     format(s, ...args) {
-        for (let i = 0; i < args.length; i++) {
-            s = s.replace(`{${i}}`, args[i]);
-        }
-        return s;
+        // one pass, so every occurrence is replaced, `$` patterns in args are inserted as-is and
+        // placeholders that appear inside an arg are not substituted again
+        return s.replace(/\{(0|[1-9]\d*)\}/g, (match, index) => (index < args.length ? String(args[index]) : match));
     },
 
     /**
