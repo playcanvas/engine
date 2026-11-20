@@ -25,15 +25,22 @@ class FramePassDepthGrab extends FramePass {
         this.releaseRenderTarget(this.depthRenderTarget);
     }
 
-    shouldReallocate(targetRT, sourceTexture) {
+    shouldReallocate(targetRT, sourceTexture, format, isDepth) {
 
         // need to reallocate if dimensions don't match
         const width = sourceTexture?.width || this.device.width;
         const height = sourceTexture?.height || this.device.height;
-        return !targetRT || width !== targetRT.width || height !== targetRT.height;
+        if (!targetRT || width !== targetRT.width || height !== targetRT.height) {
+            return true;
+        }
+
+        // or if the texture grabbed into no longer has the format needed: the destination's depth
+        // can change format, or between copied and resolved (multi-sampled), at the same size
+        const texture = isDepth ? targetRT.depthBuffer : targetRT.colorBuffer;
+        return texture?.format !== format;
     }
 
-    allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
+    allocateRenderTarget(sourceRenderTarget, device, format, isDepth) {
 
         // allocate texture buffer
         const texture = Texture.createDataTexture2D(
@@ -44,36 +51,16 @@ class FramePassDepthGrab extends FramePass {
             format
         );
 
-        if (renderTarget) {
-
-            // if reallocating RT size, release previous framebuffer
-            renderTarget.destroyFrameBuffers();
-
-            // assign new texture
-            if (isDepth) {
-                renderTarget._depthBuffer = texture;
-            } else {
-                renderTarget._colorBuffer = texture;
-                renderTarget._colorBuffers = [texture];
-            }
-
-            // update cached dimensions
-            renderTarget.evaluateDimensions();
-
-        } else {
-
-            // create new render target with the texture
-            renderTarget = new RenderTarget({
-                name: 'DepthGrabRT',
-                colorBuffer: isDepth ? null : texture,
-                depthBuffer: isDepth ? texture : null,
-                depth: !isDepth,
-                stencil: device.supportsStencil,
-                autoResolve: false
-            });
-        }
-
-        return renderTarget;
+        // a new render target each time: its depth and stencil flags follow from the buffers it is
+        // created with, and would be stale for a texture of another format swapped into an old one
+        return new RenderTarget({
+            name: 'DepthGrabRT',
+            colorBuffer: isDepth ? null : texture,
+            depthBuffer: isDepth ? texture : null,
+            depth: !isDepth,
+            stencil: device.supportsStencil,
+            autoResolve: false
+        });
     }
 
     releaseRenderTarget(rt) {
@@ -90,25 +77,32 @@ class FramePassDepthGrab extends FramePass {
         const device = this.device;
         const destinationRt = camera?.renderTarget ?? device.backBuffer;
 
+        // the depth is copied, which needs the format it was allocated with: that of a provided depth
+        // buffer, else the one a render target allocates for its depth. WebGPU allocates
+        // depth24plus-stencil8 whether or not stencil was requested, WebGL2 allocates it when stencil
+        // was requested, else depth32float. A multi-sampled depth is allocated that way on WebGL2
+        // even with a provided depth buffer.
         let useDepthBuffer = true;
-        let format = destinationRt.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
-        if (device.isWebGPU) {
-            const numSamples = destinationRt.samples;
+        let format = destinationRt.stencil || device.isWebGPU ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
+        if (destinationRt.samples > 1) {
 
-            // when depth buffer is multi-sampled, instead of copying it out, we use custom shader to resolve it
-            // to a R32F texture, used as a color attachment of the render target
-            if (numSamples > 1) {
+            // when depth buffer is multi-sampled on WebGPU, instead of copying it out, we use custom
+            // shader to resolve it to a R32F texture, used as a color attachment of the render target.
+            // WebGL2 resolves the multi-sampled depth, allocated in the format above, by a blit.
+            if (device.isWebGPU) {
                 format = PIXELFORMAT_R32F;
                 useDepthBuffer = false;
             }
+        } else if (destinationRt.depthBuffer) {
+            format = destinationRt.depthBuffer.format;
         }
 
         const sourceTexture = camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer;
 
         // allocate / resize existing RT as needed
-        if (this.shouldReallocate(this.depthRenderTarget, sourceTexture)) {
+        if (this.shouldReallocate(this.depthRenderTarget, sourceTexture, format, useDepthBuffer)) {
             this.releaseRenderTarget(this.depthRenderTarget);
-            this.depthRenderTarget = this.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer);
+            this.depthRenderTarget = this.allocateRenderTarget(camera.renderTarget, device, format, useDepthBuffer);
         }
 
         // publish the depth texture - the grab copies (or resolves) the depth buffer values as they
