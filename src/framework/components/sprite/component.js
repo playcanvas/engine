@@ -1189,7 +1189,8 @@ class SpriteComponent extends Component {
 
     /**
      * Plays a sprite animation clip by name. If the animation clip is already playing then this
-     * will do nothing.
+     * will do nothing. If there is no clip with the given name, the current clip is left as it is
+     * and nothing is returned.
      *
      * @param {string} name - The name of the clip to play.
      * @returns {SpriteAnimationClip} The clip that started playing.
@@ -1197,19 +1198,19 @@ class SpriteComponent extends Component {
     play(name) {
         const clip = this._clips[name];
 
+        // leave the current clip as it is, so the component never ends up without one
+        if (!clip) {
+            Debug.warn(`Trying to play sprite animation ${name} which does not exist.`);
+            return clip;
+        }
+
         const current = this._currentClip;
         if (current && current !== clip) {
             current._playing = false;
         }
 
         this._currentClip = clip;
-
-        if (this._currentClip) {
-            this._currentClip = clip;
-            this._currentClip.play();
-        } else {
-            Debug.warn(`Trying to play sprite animation ${name} which does not exist.`);
-        }
+        this._currentClip.play();
 
         return clip;
     }
