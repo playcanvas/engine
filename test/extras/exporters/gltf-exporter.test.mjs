@@ -23,6 +23,7 @@ describe('GltfExporter', function () {
         const texture = { name: 'ao' };
         const material = new StandardMaterial();
         material.aoMap = texture;
+        material.aoMapChannel = 'r';
         material.aoIntensity = aoIntensity;
 
         const json = {};
@@ -61,27 +62,30 @@ describe('GltfExporter', function () {
     };
 
     // the material layers whose gloss is exported as the roughness of a glTF extension, with the
-    // material properties that enable each layer
+    // material properties that enable each layer and the channel glTF reads the roughness from
     const layers = [{
         extension: 'KHR_materials_clearcoat',
         enable: { clearCoat: 0.25 },
         gloss: 'clearCoatGloss',
         factor: 'clearcoatRoughnessFactor',
-        texture: 'clearcoatRoughnessTexture'
+        texture: 'clearcoatRoughnessTexture',
+        channel: 'g'
     }, {
         extension: 'KHR_materials_sheen',
         enable: { useSheen: true },
         gloss: 'sheenGloss',
         factor: 'sheenRoughnessFactor',
-        texture: 'sheenRoughnessTexture'
+        texture: 'sheenRoughnessTexture',
+        channel: 'a'
     }];
 
-    const createMaterial = ({ enable, gloss }, value, invert, map = null) => {
+    const createMaterial = ({ enable, gloss, channel }, value, invert, map = null) => {
         const material = new StandardMaterial();
         Object.assign(material, enable);
         material[gloss] = value;
         material[`${gloss}Invert`] = invert;
         material[`${gloss}Map`] = map;
+        material[`${gloss}MapChannel`] = channel;
         return material;
     };
 
@@ -143,6 +147,183 @@ describe('GltfExporter', function () {
         material.sheen.set(0, 0, 0);
 
         expect(writeMaterial(material).extensionsUsed ?? []).not.to.include('KHR_materials_sheen');
+    });
+
+    // the glTF textures that are read from fixed channels, by their path in a glTF material, with
+    // the maps exported as each texture, the channel glTF reads each map from, the material
+    // properties that export the texture, and whether the exporter moves the channel the material
+    // samples into the one glTF reads
+    const channelTextures = [{
+        path: ['pbrMetallicRoughness', 'baseColorTexture'],
+        maps: { diffuseMap: 'rgb' }
+    }, {
+        path: ['pbrMetallicRoughness', 'metallicRoughnessTexture'],
+        maps: { metalnessMap: 'b', glossMap: 'g' },
+        enable: { glossInvert: true }
+    }, {
+        path: ['occlusionTexture'],
+        maps: { aoMap: 'r' }
+    }, {
+        path: ['emissiveTexture'],
+        maps: { emissiveMap: 'rgb' }
+    }, {
+        path: ['extensions', 'KHR_materials_clearcoat', 'clearcoatTexture'],
+        maps: { clearCoatMap: 'r' },
+        enable: { clearCoat: 0.25 }
+    }, {
+        path: ['extensions', 'KHR_materials_clearcoat', 'clearcoatRoughnessTexture'],
+        maps: { clearCoatGlossMap: 'g' },
+        enable: { clearCoat: 0.25, clearCoatGlossInvert: true }
+    }, {
+        path: ['extensions', 'KHR_materials_diffuse_transmission', 'diffuseTransmissionTexture'],
+        maps: { diffuseTransmissionMap: 'a' },
+        enable: { diffuseTransmission: 1 },
+        moved: true
+    }, {
+        path: ['extensions', 'KHR_materials_diffuse_transmission', 'diffuseTransmissionColorTexture'],
+        maps: { diffuseTransmissionColorMap: 'rgb' },
+        enable: { diffuseTransmission: 1 }
+    }, {
+        path: ['extensions', 'KHR_materials_iridescence', 'iridescenceTexture'],
+        maps: { iridescenceMap: 'r' },
+        enable: { useIridescence: true }
+    }, {
+        path: ['extensions', 'KHR_materials_iridescence', 'iridescenceThicknessTexture'],
+        maps: { iridescenceThicknessMap: 'g' },
+        enable: { useIridescence: true }
+    }, {
+        path: ['extensions', 'KHR_materials_sheen', 'sheenColorTexture'],
+        maps: { sheenMap: 'rgb' },
+        enable: { useSheen: true }
+    }, {
+        path: ['extensions', 'KHR_materials_sheen', 'sheenRoughnessTexture'],
+        maps: { sheenGlossMap: 'a' },
+        enable: { useSheen: true, sheenGlossInvert: true }
+    }, {
+        path: ['extensions', 'KHR_materials_specular', 'specularColorTexture'],
+        maps: { specularMap: 'rgb' },
+        enable: { useMetalnessSpecularColor: true }
+    }, {
+        path: ['extensions', 'KHR_materials_specular', 'specularTexture'],
+        maps: { specularityFactorMap: 'a' },
+        enable: { useMetalnessSpecularColor: true }
+    }, {
+        path: ['extensions', 'KHR_materials_transmission', 'transmissionTexture'],
+        maps: { refractionMap: 'r' },
+        enable: { useDynamicRefraction: true }
+    }, {
+        path: ['extensions', 'KHR_materials_volume', 'thicknessTexture'],
+        maps: { thicknessMap: 'g' },
+        enable: { useDynamicRefraction: true }
+    }];
+
+    const valueAt = (object, path) => path.reduce((value, key) => value?.[key], object);
+
+    describe('texture channels', function () {
+
+        channelTextures.forEach(({ path, maps, enable, moved }) => {
+
+            const name = path[path.length - 1];
+
+            describe(name, function () {
+
+                // exports a material that samples each map from the given channel of one texture
+                const exportTexture = (channels) => {
+                    const texture = { name: 'texture' };
+                    const material = new StandardMaterial();
+                    Object.assign(material, enable);
+                    Object.entries(channels).forEach(([map, channel]) => {
+                        material[map] = texture;
+                        material[`${map}Channel`] = channel;
+                    });
+
+                    const json = {};
+                    new GltfExporter().writeMaterials({ materials: [material], textures: [texture] }, json);
+                    return valueAt(json.materials[0], path);
+                };
+
+                const sampled = Object.entries(maps).map(([map, channel]) => `${map} from channel '${channel}'`);
+
+                it(`exports ${sampled.join(' and ')}`, function () {
+                    const warn = stub(console, 'warn');
+
+                    expect(exportTexture(maps)).to.deep.equal({ index: 0 });
+                    expect(warn.called).to.equal(false);
+                });
+
+                // a map whose channel the exporter moves is covered by the KHR_materials_diffuse_transmission tests
+                if (moved) {
+                    return;
+                }
+
+                Object.entries(maps).forEach(([map, channel]) => {
+                    const other = channel === 'g' ? 'r' : 'g';
+
+                    it(`warns that ${map} sampled from channel '${other}' is exported unchanged`, function () {
+                        const warn = stub(console, 'warn');
+
+                        expect(exportTexture({ ...maps, [map]: other })).to.deep.equal({ index: 0 });
+                        expect(warn.calledOnce).to.equal(true);
+                        expect(warn.firstCall.args[0]).to.include(`${map}Channel set to '${other}'`);
+                        expect(warn.firstCall.args[0]).to.include(`reads ${name} from channel '${channel}'`);
+                    });
+                });
+            });
+        });
+
+        describe('gloss map', function () {
+
+            // exports the metallic-roughness properties of a material that samples its maps from the
+            // channels glTF reads, where only the metalness map can be exported
+            const exportPbr = (glossMap, metalnessMap, glossInvert = true) => {
+                const material = new StandardMaterial();
+                material.glossMap = glossMap;
+                material.glossInvert = glossInvert;
+                material.metalnessMap = metalnessMap;
+                material.metalnessMapChannel = 'b';
+
+                const json = {};
+                new GltfExporter().writeMaterials({ materials: [material], textures: [metalnessMap] }, json);
+                return json.materials[0].pbrMetallicRoughness;
+            };
+
+            it('warns that a gloss map is exported as the roughness texture unchanged', function () {
+                const warn = stub(console, 'warn');
+                const map = { name: 'metalnessGloss' };
+                const pbr = exportPbr(map, map, false);
+
+                expect(pbr.metallicRoughnessTexture).to.deep.equal({ index: 0 });
+                expect(warn.calledOnce).to.equal(true);
+                expect(warn.firstCall.args[0]).to.include('glossInvert set to false');
+            });
+
+            it('warns that a gloss map without a metalness map isn\'t exported', function () {
+                const warn = stub(console, 'warn');
+                const pbr = exportPbr({ name: 'gloss' }, null);
+
+                expect(pbr).not.to.have.property('metallicRoughnessTexture');
+                expect(warn.calledOnce).to.equal(true);
+                expect(warn.firstCall.args[0]).to.include('the same texture for glossMap and metalnessMap');
+            });
+
+            it('warns that a gloss map other than the metalness map isn\'t exported', function () {
+                const warn = stub(console, 'warn');
+                const pbr = exportPbr({ name: 'gloss' }, { name: 'metalness' });
+
+                expect(pbr.metallicRoughnessTexture).to.deep.equal({ index: 0 });
+                expect(warn.calledOnce).to.equal(true);
+                expect(warn.firstCall.args[0]).to.include('the same texture for glossMap and metalnessMap');
+            });
+
+            it('warns that glTF reads roughness from a metalness map without a gloss map', function () {
+                const warn = stub(console, 'warn');
+                const pbr = exportPbr(null, { name: 'metalness' });
+
+                expect(pbr.metallicRoughnessTexture).to.deep.equal({ index: 0 });
+                expect(warn.calledOnce).to.equal(true);
+                expect(warn.firstCall.args[0]).to.include('reads roughness from channel \'g\' of metallicRoughnessTexture');
+            });
+        });
     });
 
     describe('round trip', function () {
@@ -209,6 +390,63 @@ describe('GltfExporter', function () {
                 expect(actual.g).to.be.closeTo(expected.g, 1e-6);
                 expect(actual.b).to.be.closeTo(expected.b, 1e-6);
             });
+        });
+
+        it('exports the textures of a material imported from glTF without warnings', async function () {
+            // a glTF material with each texture, using an image of its own
+            const gltfMaterial = {
+                extensions: {
+                    KHR_materials_clearcoat: { clearcoatFactor: 1 },
+                    KHR_materials_diffuse_transmission: { diffuseTransmissionFactor: 1 }
+                }
+            };
+            channelTextures.forEach(({ path }, index) => {
+                const parent = path.slice(0, -1).reduce((object, key) => {
+                    object[key] = object[key] ?? {};
+                    return object[key];
+                }, gltfMaterial);
+                parent[path[path.length - 1]] = { index };
+            });
+
+            const images = channelTextures.map((texture, index) => ({ name: `image${index}` }));
+            const gltf = {
+                asset: { version: '2.0' },
+                scenes: [],
+                nodes: [],
+                images,
+                textures: images.map((image, index) => ({ source: index })),
+                materials: [gltfMaterial]
+            };
+            const data = new TextEncoder().encode(JSON.stringify(gltf));
+
+            // supply each image as a texture rather than loading it
+            const imageTextures = images.map(({ name }) => ({ name }));
+            const options = {
+                image: {
+                    processAsync: (gltfImage, callback) => {
+                        callback(null, { resource: imageTextures.find(texture => texture.name === gltfImage.name) });
+                    }
+                }
+            };
+
+            const material = await new Promise((resolve, reject) => {
+                GlbParser.parse('material.gltf', '', data, app.graphicsDevice, app.assets, options, [], (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result.materials[0]);
+                    }
+                });
+            });
+
+            const warn = stub(console, 'warn');
+            const json = {};
+            new GltfExporter().writeMaterials({ materials: [material], textures: imageTextures }, json);
+
+            channelTextures.forEach(({ path }, index) => {
+                expect(valueAt(json.materials[0], path)).to.deep.equal({ index });
+            });
+            expect(warn.called).to.equal(false);
         });
     });
 
