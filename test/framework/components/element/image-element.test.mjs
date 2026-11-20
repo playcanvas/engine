@@ -8,8 +8,9 @@ import { Asset } from '../../../../src/framework/asset/asset.js';
 import { FITMODE_CONTAIN, FITMODE_STRETCH } from '../../../../src/framework/components/element/constants.js';
 import { ImageElement } from '../../../../src/framework/components/element/image-element.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { FILTER_LINEAR, FILTER_NEAREST } from '../../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../../src/platform/graphics/texture.js';
-import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED } from '../../../../src/scene/constants.js';
+import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../../src/scene/constants.js';
 import { StandardMaterial } from '../../../../src/scene/materials/standard-material.js';
 import { Sprite } from '../../../../src/scene/sprite.js';
 import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
@@ -101,6 +102,60 @@ describe('ImageElement', function () {
         });
 
         expect(e.element.type).to.equal('image');
+    });
+
+    // A tiled image of a 40 x 20 frame whose 6 pixel ends and 2 pixel top border leave a 28 x 18
+    // middle to repeat, sampled nearest
+    const createTiledImage = function () {
+        const atlas = new TextureAtlas();
+        atlas.texture = new Texture(app.graphicsDevice, { width: 64, height: 32, minFilter: FILTER_NEAREST, magFilter: FILTER_NEAREST });
+        atlas.frames = {
+            tile: { rect: new Vec4(4, 8, 40, 20), pivot: new Vec2(0.5, 0.5), border: new Vec4(6, 0, 6, 2) }
+        };
+        const sprite = new Sprite(app.graphicsDevice, {
+            atlas,
+            frameKeys: ['tile'],
+            pixelsPerUnit: 1,
+            renderMode: SPRITE_RENDERMODE_TILED
+        });
+
+        const e = new Entity();
+        app.root.addChild(e);
+        e.addComponent('element', { type: 'image', sprite, width: 100, height: 20 });
+        return e;
+    };
+
+    it('Follows changes to the texture filtering of a tiled image', function () {
+        const e = createTiledImage();
+        const texture = e.element.sprite.atlas.texture;
+        const halfTexel = e.element._image._renderable.meshInstance.getParameter('tileHalfTexel').data;
+        expect(halfTexel[0]).to.be.closeTo(0.5 / 28, 1e-7);
+        expect(halfTexel[1]).to.be.closeTo(0.5 / 18, 1e-7);
+
+        texture.magFilter = FILTER_LINEAR;
+        app.update(0.1);
+        expect(halfTexel[0]).to.equal(0);
+        expect(halfTexel[1]).to.equal(0);
+
+        texture.magFilter = FILTER_NEAREST;
+        app.update(0.1);
+        expect(halfTexel[0]).to.be.closeTo(0.5 / 28, 1e-7);
+        expect(halfTexel[1]).to.be.closeTo(0.5 / 18, 1e-7);
+    });
+
+    it('Stops following the texture filtering of a tiled image once it is gone', function () {
+        const e = createTiledImage();
+        const tileHalfTexels = app.systems.element._tileHalfTexels;
+        expect(tileHalfTexels.size).to.equal(1);
+
+        e.element.sprite.renderMode = SPRITE_RENDERMODE_SIMPLE;
+        expect(tileHalfTexels.size).to.equal(0);
+
+        e.element.sprite.renderMode = SPRITE_RENDERMODE_TILED;
+        expect(tileHalfTexels.size).to.equal(1);
+
+        e.destroy();
+        expect(tileHalfTexels.size).to.equal(0);
     });
 
     it('Add / Remove Image Element', function () {
