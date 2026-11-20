@@ -68,6 +68,14 @@ class WebglShaderInput {
 
         // Array to hold texture unit ids
         this.array = [];
+
+        /**
+         * The texture unit of a sampler, the first of them for an array of samplers, assigned when
+         * the shader is linked, see WebglGraphicsDevice#assignTextureUnits.
+         *
+         * @type {number}
+         */
+        this.unit = 0;
     }
 }
 
