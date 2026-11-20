@@ -1169,12 +1169,43 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * Removes a clip by name.
+     * Removes a clip by name. If the clip is the current clip, it is stopped and the component
+     * falls back to its default clip. The removed clip is unbound from its sprite and sprite
+     * asset, so its `sprite` and `spriteAsset` become null.
      *
      * @param {string} name - The name of the animation clip to remove.
      */
     removeClip(name) {
+        if (!this._clips.hasOwnProperty(name)) return;
+
+        const clip = this._clips[name];
         delete this._clips[name];
+
+        if (clip === this._currentClip) {
+            clip.stop();
+
+            // a 'stop' handler may have played another clip
+            if (this._currentClip === clip) {
+                this._currentClip = this._defaultClip;
+
+                if (this._currentClip.sprite) {
+                    this._showFrame(this._currentClip.frame);
+                    if (this.enabled && this.entity.enabled) {
+                        this.addToLayers();
+                    }
+                } else {
+                    // clear the removed clip's frame, so that enabling the entity does not show it
+                    this.removeFromLayers();
+                    if (this._meshInstance) {
+                        this._meshInstance.mesh = null;
+                        this._meshInstance.visible = false;
+                    }
+                }
+            }
+        }
+
+        // the clip is no longer current, so this only unbinds it from its sprite and sprite asset
+        clip._destroy();
     }
 
     /**
