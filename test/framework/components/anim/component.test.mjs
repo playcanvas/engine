@@ -35,6 +35,118 @@ describe('AnimComponent', function () {
 
     const track = name => new AnimTrack(name, 1, [], [], []);
 
+    describe('normalized layer blending', function () {
+        const hold = (property, value) => new AnimTrack('Hold', 1,
+            [new AnimData(1, [0, 1])], [new AnimData(value.length, [...value, ...value])],
+            [new AnimCurve([{ entityPath: ['root'], component: 'graph', propertyPath: [property] }], 0, 0, INTERPOLATION_LINEAR)]);
+
+        const animate = (values, weights, { property = 'localPosition', normalize = true, blends = [], initial = 0 } = {}) => {
+            const root = new Entity('root', app);
+            root.setLocalPosition(initial, 0, 0);
+            app.root.addChild(root);
+            root.addComponent('anim', { activate: true, normalizeWeights: normalize });
+            root.anim.assignAnimation('Hold', hold(property, values[0]));
+            root.anim.baseLayer.weight = weights[0];
+            for (let i = 1; i < values.length; i++) {
+                root.anim.addLayer(`Layer${i}`, weights[i], null, blends[i] ?? ANIM_LAYER_ADDITIVE).assignAnimation('Hold', hold(property, values[i]));
+            }
+            app.systems.anim.onAnimationUpdate(0.1);
+            return root;
+        };
+
+        const expectRotation = (root, expected) => {
+            const q = root.getLocalRotation();
+            expect(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w).to.be.closeTo(1, 1e-6);
+            expect(Math.abs(q.x * expected[0] + q.y * expected[1] + q.z * expected[2] + q.w * expected[3])).to.be.closeTo(1, 1e-6);
+        };
+
+        it('keeps identical positions unchanged across two layers', function () {
+            const root = animate([[10, 0, 0], [10, 0, 0]], [1, 1]);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+        });
+
+        it('averages positions using equal layer weights', function () {
+            const root = animate([[10, 0, 0], [20, 0, 0]], [1, 1]);
+            expect(root.getLocalPosition().x).to.be.closeTo(15, 1e-5);
+        });
+
+        it('averages positions using unequal layer weights', function () {
+            const root = animate([[10, 0, 0], [20, 0, 0]], [1, 0.5]);
+            expect(root.getLocalPosition().x).to.be.closeTo(40 / 3, 1e-5);
+        });
+
+        it('includes each of three vector layers at its full normalized weight', function () {
+            const root = animate([[6, 0, 0], [0, 6, 0], [0, 0, 6]], [1, 2, 3]);
+            const position = root.getLocalPosition();
+            [position.x, position.y, position.z].forEach((value, index) => expect(value).to.be.closeTo(index + 1, 1e-6));
+        });
+
+        it('keeps identical rotations unchanged across two layers', function () {
+            const q = [0, Math.SQRT1_2, 0, Math.SQRT1_2];
+            const root = animate([q, q], [1, 1], { property: 'localRotation' });
+            expectRotation(root, q);
+        });
+
+        it('blends antipodal representations as the same rotation', function () {
+            const q = [0, Math.SQRT1_2, 0, Math.SQRT1_2];
+            const root = animate([q, q.map(value => -value), q], [1, 2, 1], { property: 'localRotation' });
+            expectRotation(root, q);
+        });
+
+        it('preserves the weights of three quaternion layers', function () {
+            const s = Math.SQRT1_2;
+            const root = animate([[s, 0, 0, s], [0, s, 0, s], [0, 0, s, s]], [1, 2, 3], { property: 'localRotation' });
+            const length = Math.sqrt(50);
+            expectRotation(root, [1 / length, 2 / length, 3 / length, 6 / length]);
+        });
+
+        it('does not let a zero-weight final layer affect the rotation', function () {
+            const q = [0, Math.SQRT1_2, 0, Math.SQRT1_2];
+            const root = animate([q, q, [0, 0, 0, 1]], [1, 1, 0], { property: 'localRotation' });
+            expectRotation(root, q);
+        });
+
+        it('resets the weighted sum each frame and updates changed weights', function () {
+            const root = animate([[10, 0, 0], [20, 0, 0]], [1, 1]);
+            root.anim.layers[1].weight = 3;
+            for (let frame = 0; frame < 3; frame++) {
+                app.systems.anim.onAnimationUpdate(0.1);
+                expect(root.getLocalPosition().x).to.be.closeTo(17.5, 1e-5);
+            }
+        });
+
+        it('keeps the current pose when all contributing weights are zero', function () {
+            const root = animate([[10, 0, 0], [20, 0, 0]], [0, 0], { initial: 3 });
+            expect(root.getLocalPosition().x).to.equal(3);
+        });
+
+        it('lets an overwrite layer mask all lower layers', function () {
+            const root = animate([[10, 0, 0], [20, 0, 0]], [1, 1], { blends: [ANIM_LAYER_OVERWRITE, ANIM_LAYER_OVERWRITE] });
+            expect(root.getLocalPosition().x).to.equal(20);
+        });
+
+        it('keeps the single-layer normalized fast path', function () {
+            const root = animate([[10, 0, 0]], [0.25], { initial: 3 });
+            expect(root.getLocalPosition().x).to.equal(10);
+        });
+
+        it('preserves non-normalized additive blending relative to the base pose', function () {
+            const root = animate([[10, 0, 0], [20, 0, 0]], [0.5, 0.25], { normalize: false, initial: 6 });
+            expect(root.getLocalPosition().x).to.equal(11.5);
+        });
+
+        it('switches between normalized and non-normalized modes without retaining a previous sum', function () {
+            const root = animate([[10, 0, 0], [20, 0, 0]], [1, 0.5], { initial: 3 });
+            expect(root.getLocalPosition().x).to.be.closeTo(40 / 3, 1e-5);
+            root.anim.normalizeWeights = false;
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(18.5, 1e-5);
+            root.anim.normalizeWeights = true;
+            app.systems.anim.onAnimationUpdate(0.1);
+            expect(root.getLocalPosition().x).to.be.closeTo(40 / 3, 1e-5);
+        });
+    });
+
     describe('#clone', function () {
 
         // Regression test for https://github.com/playcanvas/engine/issues/6395
