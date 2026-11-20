@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import { restore, spy } from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { GSplatDirector } from '../../../src/scene/gsplat-unified/gsplat-director.js';
 import { Layer } from '../../../src/scene/layer.js';
 
@@ -58,6 +60,56 @@ describe('GSplatDirector#update', function () {
         };
         return { director, layer, comp, managers: cameras.map(c => c.manager) };
     };
+
+    describe('with a camera rendering with reverse-z', function () {
+
+        afterEach(function () {
+            restore();
+        });
+
+        it('warns that gaussian splats are not supported with it', function () {
+            const { director, comp } = makeScene(2);
+            const [standard, reversed] = comp.cameras.map(c => c.camera);
+            reversed.reverseZActive = true;
+            reversed.node = { name: 'reversed' };
+            standard.node = { name: 'standard' };
+            const warn = spy(Debug, 'warnOnce');
+
+            director.update(comp);
+
+            const warnings = warn.args.map(args => args[0]).filter(message => message.includes('gaussian splats'));
+            expect(warnings).to.have.lengthOf(1);
+            expect(warnings[0]).to.include('reversed');
+        });
+
+        it('does not warn without splat managers', function () {
+            const { director, comp } = makeScene(1);
+            const camera = comp.cameras[0].camera;
+            camera.reverseZActive = true;
+            director.camerasMap.get(camera).layersMap.clear();
+            const warn = spy(Debug, 'warnOnce');
+
+            director.update(comp);
+            expect(warn.called).to.equal(false);
+        });
+
+        it('does not warn for the shadows of gaussian splats, which render without it', function () {
+            const { director, comp } = makeScene(1);
+            const camera = comp.cameras[0].camera;
+            camera.reverseZActive = true;
+            camera.node = { name: 'reversed' };
+
+            // the layer of the camera has only splats casting shadows
+            const layerData = director.camerasMap.get(camera).layersMap.values().next().value;
+            layerData.gsplatManagerShadow = layerData.gsplatManager;
+            layerData.gsplatManager = null;
+            const warn = spy(Debug, 'warnOnce');
+
+            director.update(comp);
+
+            expect(warn.args.some(args => args[0].includes('gaussian splats'))).to.equal(false);
+        });
+    });
 
     it('reconciles a placement added while the managers update', function () {
         const { director, layer, comp, managers: [manager] } = makeScene(1);

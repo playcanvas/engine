@@ -771,6 +771,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageRGBA8 = has('bgra8unorm-storage');
         this.textureRG11B10Renderable = has('rg11b10ufloat-renderable');
         this.supportsClipDistances = has('clip-distances');
+        this.supportsReverseZ = true;
         this.supportsDualSourceBlending = has('dual-source-blending');
         this.supportsTextureFormatsTier1 = has('texture-formats-tier1');
         this.supportsTextureFormatsTier2 = has('texture-formats-tier2');

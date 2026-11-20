@@ -620,6 +620,15 @@ class GraphicsDevice extends EventHandler {
     usesMeshBindGroups = false;
 
     /**
+     * True if the device supports rendering with a reversed depth buffer, see
+     * {@link CameraComponent#reverseZ}. Supported on WebGPU.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsReverseZ = false;
+
+    /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
      * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
      */
