@@ -27,8 +27,8 @@ import { Asset } from '../asset/asset.js';
  * @property {() => void} release - Releases the textures; each is destroyed once nothing holds
  * it. Calling it again does nothing.
  * @property {() => void} releaseSource - Drops the CPU-side source (the decoded image kept to
- * re-upload after a device loss) of the textures this holder loaded itself; the first holder of a
- * texture decides for all that share it.
+ * re-upload after a device loss) of the textures this holder was the first to hold; the first
+ * holder of a texture decides for all that share it.
  * @ignore
  */
 
@@ -57,8 +57,9 @@ class SogTextureEntry extends RefCountedObject {
     promise;
 
     /**
-     * Set once the last holder releases it. The texture is then destroyed, or is when a load
-     * still in flight completes.
+     * Set when the last holder releases it while its load is still in flight. It then stays
+     * cached, so a request for its url meanwhile revives it, and is destroyed when the load
+     * completes otherwise.
      */
     released = false;
 
@@ -125,15 +126,17 @@ class SogTextureCache {
      * @returns {SogTextureHandle} The holder's handle.
      */
     acquire(files) {
-        // the textures this holder loads itself: only it decides about their CPU source
-        const created = [];
+        // the textures this holder is the first to hold: only it decides about their CPU source
+        const first = [];
 
         const entries = files.map((file) => {
-            let entry = this._entries.get(file.url);
-            if (!entry) {
-                entry = this._create(file);
-                created.push(entry);
+            const entry = this._entries.get(file.url) ?? this._create(file);
+            if (entry.refCount === 0) {
+                first.push(entry);
             }
+
+            // revives an entry released while its load is still in flight
+            entry.released = false;
             entry.incRefCount();
             return entry;
         });
@@ -141,7 +144,7 @@ class SogTextureCache {
         return {
             entries,
             release: () => entries.splice(0).forEach(entry => this._release(entry)),
-            releaseSource: () => created.forEach(entry => entry.texture?.setReleaseSourceAfterUpload())
+            releaseSource: () => first.forEach(entry => entry.texture?.setReleaseSourceAfterUpload())
         };
     }
 
@@ -181,6 +184,12 @@ class SogTextureCache {
                 if (this._entries.get(url) === entry) {
                     this._entries.delete(url);
                 }
+
+                // every holder left while it was loading
+                if (entry.released) {
+                    this._destroy(entry);
+                }
+
                 reject(err);
             });
         });
@@ -208,16 +217,13 @@ class SogTextureCache {
         entry.decRefCount();
         if (entry.refCount > 0) return;
 
-        entry.released = true;
-        if (this._entries.get(entry.url) === entry) {
-            this._entries.delete(entry.url);
-        }
-
-        // keep the asset out of the registry from now on, also while a load is still in flight
-        this._app.assets?.remove(entry.asset);
-
-        // a texture still loading is destroyed when its load completes
-        if (!entry.asset.loading) {
+        if (entry.asset.loading) {
+            // Keep a texture that is still loading cached, so a request for its url meanwhile
+            // revives this entry. A second entry would load the url again, and the resource loader
+            // would merge that request into this one and hand both the same texture, which this
+            // entry would then destroy. Destroyed when its load completes unless revived.
+            entry.released = true;
+        } else {
             this._destroy(entry);
         }
     }
@@ -227,8 +233,12 @@ class SogTextureCache {
      * @private
      */
     _destroy(entry) {
-        const { asset } = entry;
+        const { url, asset } = entry;
         const fileUrl = asset.getFileUrl();
+
+        if (this._entries.get(url) === entry) {
+            this._entries.delete(url);
+        }
 
         this._app.assets?.remove(asset);
 

@@ -26,7 +26,7 @@ import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCen
  * @property {() => void} release - Releases the textures; each is destroyed once nothing holds it.
  * Calling it again does nothing.
  * @property {() => void} releaseSource - Drops the CPU-side source of the textures this holder
- * loaded itself; the first holder of a texture decides for all that share it.
+ * was the first to hold; the first holder of a texture decides for all that share it.
  * @ignore
  */
 

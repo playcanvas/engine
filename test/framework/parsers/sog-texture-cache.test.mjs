@@ -217,12 +217,29 @@ describe('SogTextureCache', function () {
             const a = acquirePalette();
             a.handle.release();
 
-            // gone from the cache and the registry straight away
-            expect(cache._entries.size).to.equal(0);
-            expect(app.assets.list()).to.not.include(a.entry.asset);
+            // kept until the load completes, so a request meanwhile can revive it
+            expect(cache._entries.size).to.equal(1);
 
             completeLoad(PALETTE_URL);
             const texture = await a.entry.promise;
+            expect(destroyed(texture)).to.be.true;
+            expect(cache._entries.size).to.equal(0);
+            expect(app.assets.list()).to.not.include(a.entry.asset);
+        });
+
+        it('revives a texture released while loading when its url is requested again', async function () {
+            deferLoads = true;
+            const a = acquirePalette();
+            a.handle.release();
+            const b = acquirePalette();
+            expect(b.entry).to.equal(a.entry);
+            expect(loads).to.deep.equal([PALETTE_URL]);
+
+            completeLoad(PALETTE_URL);
+            const texture = await b.entry.promise;
+            expect(destroyed(texture)).to.be.false;
+
+            b.handle.release();
             expect(destroyed(texture)).to.be.true;
         });
     });
@@ -268,6 +285,18 @@ describe('SogTextureCache', function () {
             a.handle.release();
             b.handle.releaseSource();
             expect(texture.releaseSourceAfterUpload).to.not.equal(true);
+        });
+
+        it('lets the holder that revives a released texture decide', async function () {
+            deferLoads = true;
+            const a = acquirePalette();
+            a.handle.release();
+            const b = acquirePalette();
+
+            completeLoad(PALETTE_URL);
+            const texture = await b.entry.promise;
+            b.handle.releaseSource();
+            expect(texture.releaseSourceAfterUpload).to.equal(true);
         });
     });
 
@@ -474,5 +503,83 @@ describe('SogTextureCache', function () {
     it('is created per app by the gsplat handler', function () {
         expect(cache).to.be.an.instanceof(SogTextureCache);
         expect(cache._entries.size).to.equal(0);
+    });
+});
+
+// The real asset registry and resource loader, which merge requests for one url into a single
+// load. Only the texture handler is replaced, by one whose loads complete when the test says so.
+describe('SogTextureCache with the resource loader', function () {
+    let app;
+    let cache;
+
+    // callbacks of the loads the handler was asked for
+    let requests;
+
+    const acquirePalette = () => {
+        const handle = cache.acquire([{ url: PALETTE_URL, filename: 'shN_centroids.webp' }]);
+        return { handle, entry: handle.entries[0] };
+    };
+
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+        cache = app.loader.getHandler('gsplat').sogTextureCache;
+
+        requests = [];
+        app.loader.addHandler('texture', {
+            load: (url, callback) => requests.push(callback),
+            open: (url, data) => data,
+            patch: () => {}
+        });
+    });
+
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
+    });
+
+    it('gives a holder that joins a cancelled load a live texture', async function () {
+        const a = acquirePalette();
+        a.handle.release();
+        const b = acquirePalette();
+
+        expect(requests).to.have.lengthOf(1);
+        requests[0](null, new Texture(app.graphicsDevice, { width: 1, height: 1 }));
+
+        const texture = await b.entry.promise;
+        expect(destroyed(texture)).to.be.false;
+        expect(b.entry.refCount).to.equal(1);
+
+        b.handle.release();
+        expect(destroyed(texture)).to.be.true;
+        expect(app.loader.getFromCache(PALETTE_URL, 'texture')).to.equal(undefined);
+    });
+
+    it('destroys a cancelled load once it completes, and loads the url again later', async function () {
+        const a = acquirePalette();
+        a.handle.release();
+
+        requests[0](null, new Texture(app.graphicsDevice, { width: 1, height: 1 }));
+        const first = await a.entry.promise;
+        expect(destroyed(first)).to.be.true;
+        expect(cache._entries.size).to.equal(0);
+        expect(app.assets.list()).to.be.empty;
+
+        const b = acquirePalette();
+        expect(requests).to.have.lengthOf(2);
+        requests[1](null, new Texture(app.graphicsDevice, { width: 1, height: 1 }));
+        expect(destroyed(await b.entry.promise)).to.be.false;
+    });
+
+    it('removes a cancelled load that fails', async function () {
+        const a = acquirePalette();
+        a.handle.release();
+
+        requests[0]('not found');
+        const results = await Promise.allSettled([a.entry.promise]);
+        expect(results[0].status).to.equal('rejected');
+        expect(cache._entries.size).to.equal(0);
+        expect(app.assets.list()).to.be.empty;
     });
 });
