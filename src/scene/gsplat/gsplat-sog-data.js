@@ -19,14 +19,14 @@ import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCen
 import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
 
 /**
- * A holder's handle on a texture that may be shared with other holders. Issued by the texture
- * cache of the framework-level SOG parsers.
+ * A holder's handle on its source textures, which may be shared with other holders. Issued by the
+ * texture cache of the framework-level SOG parsers.
  *
- * @typedef {object} GSplatTextureRef
- * @property {() => void} release - Releases the handle; the texture is destroyed once its last
- * handle is released. Calling it again does nothing.
- * @property {() => void} releaseSource - Asks for the texture's CPU-side source to be dropped
- * after upload, which happens once every live handle has asked.
+ * @typedef {object} GSplatTextureHandle
+ * @property {() => void} release - Releases the textures; each is destroyed once nothing holds it.
+ * Calling it again does nothing.
+ * @property {() => void} releaseSource - Drops the CPU-side source of the textures this holder
+ * loaded itself; the first holder of a texture decides for all that share it.
  * @ignore
  */
 
@@ -225,15 +225,15 @@ class GSplatSogData {
     blind = [];
 
     /**
-     * Handles on the source textures, set by the parser when it takes them from a shared texture
-     * cache. When set, {@link GSplatSogData#destroy} releases these handles instead of destroying
-     * the textures, and the cache destroys each texture once nothing holds it, so several SOG
-     * files can share one texture (for example one SH palette). When null, this data owns its
-     * source textures and destroys them.
+     * Handle on the source textures, set by the parser when it takes them from a shared texture
+     * cache. When set, {@link GSplatSogData#destroy} releases the handle instead of destroying the
+     * textures, and the cache destroys each texture once nothing holds it, so several SOG files
+     * can share one texture (for example one SH palette). When null, this data owns its source
+     * textures and destroys them.
      *
-     * @type {GSplatTextureRef[]|null}
+     * @type {GSplatTextureHandle|null}
      */
-    textureRefs = null;
+    textureHandle = null;
 
     /**
      * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
@@ -273,10 +273,10 @@ class GSplatSogData {
     shBands = 0;
 
     _destroyGpuResources() {
-        if (this.textureRefs) {
+        if (this.textureHandle) {
             // shared textures: the cache destroys them once their last holder releases them.
-            // Releasing a handle again does nothing, so destroy() stays safe to repeat.
-            this.textureRefs.forEach(ref => ref.release());
+            // Releasing the handle again does nothing, so destroy() stays safe to repeat.
+            this.textureHandle.release();
         } else {
             this.means_l?.destroy();
             this.means_u?.destroy();

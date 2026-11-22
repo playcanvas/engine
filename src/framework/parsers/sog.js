@@ -157,14 +157,18 @@ class SogParser {
             }));
         });
 
-        // a handle per texture from the app's texture cache: a url another file already holds is
-        // shared, not loaded again
+        // one handle on all textures from the app's texture cache: a url another file already
+        // holds is shared, not loaded again. Releasing the handle again does nothing.
+        const handle = cache.acquire(subs.map(sub => files[sub]).flat());
+        const releaseAll = handle.release;
+
+        // the textures, all and by sub
+        const allRefs = handle.entries.slice();
         const refs = {};
+        let first = 0;
         subs.forEach((sub) => {
-            refs[sub] = files[sub].map(f => cache.acquire(f.url, { filename: f.filename }));
+            refs[sub] = allRefs.slice(first, first += files[sub].length);
         });
-        const allRefs = subs.map(sub => refs[sub]).flat();
-        const releaseAll = () => allRefs.forEach(ref => ref.release());
 
         // Track if asset was unloaded during async loading
         let unloaded = false;
@@ -203,7 +207,7 @@ class SogParser {
             return;
         }
 
-        Debug.call(() => checkSharedSogPalette(cache, refs.shN?.[0], meta, url.original));
+        Debug.call(() => checkSharedSogPalette(refs.shN?.[0], meta, url.original));
 
         // the resource, once created, holds the data and with it the textures (except when
         // decompressing); until then a throw (for example a malformed meta) releases them here
@@ -225,7 +229,7 @@ class SogParser {
             data.sh_labels = refs.shN?.[1]?.texture;
             data.blind = refs.blind.map(ref => ref.texture);
             data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
-            data.textureRefs = allRefs;
+            data.textureHandle = handle;
             ownedByData = true;
 
             const decompress = asset.data?.decompress;

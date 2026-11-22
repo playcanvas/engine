@@ -190,9 +190,10 @@ class SogBundleParser {
     async load(url, callback, asset) {
         const gsplatCentersEnabledAtLoad = this.app.scene?.gsplatCentersEnabled !== false;
 
-        // handles on the referenced textures, by file name
+        // the handle on the referenced textures, and the textures by file name
+        let handle = null;
         const refs = new Map();
-        const releaseAll = () => refs.forEach(ref => ref.release());
+        const releaseAll = () => handle?.release();
 
         // Set once `data` holds the texture handles: from then on they are released only through
         // data.destroy(), which the resource calls in its (ref-count deferred) destroy, as the
@@ -264,22 +265,20 @@ class SogBundleParser {
                 ...(meta.blind ?? []).map(t => t.files[0])
             ];
 
-            // a handle per texture from the app's texture cache: a url another file already
+            // one handle on all textures from the app's texture cache: a url another file already
             // holds is shared, not loaded again. The texture cache drops the encoded bytes of an
             // embedded file (views into the downloaded zip arrayBuffer) once it is decoded, so
             // the whole archive buffer can be garbage collected.
-            for (const filename of filenames) {
-                if (refs.has(filename)) continue;
+            const unique = [...new Set(filenames)];
+            handle = cache.acquire(unique.map((filename) => {
                 const file = files.find(f => f.filename === filename);
-                if (file) {
+                return file ?
                     // file is embedded
-                    refs.set(filename, cache.acquire(`${url.load}/${filename}`, { filename, contents: file.data }));
-                } else {
+                    { url: `${url.load}/${filename}`, filename, contents: file.data } :
                     // file doesn't exist in bundle, treat it as a url
-                    const fileUrl = (new URL(filename, new URL(filename, window.location.href).toString())).toString();
-                    refs.set(filename, cache.acquire(fileUrl, { filename }));
-                }
-            }
+                    { url: (new URL(filename, new URL(filename, window.location.href).toString())).toString(), filename };
+            }));
+            unique.forEach((filename, i) => refs.set(filename, handle.entries[i]));
 
             const results = await Promise.allSettled(filenames.map(filename => refs.get(filename).promise));
 
@@ -298,7 +297,7 @@ class SogBundleParser {
             }
 
             const textureOf = filename => refs.get(filename)?.texture;
-            Debug.call(() => checkSharedSogPalette(cache, refs.get(meta.shN?.files[0]), meta, url.original));
+            Debug.call(() => checkSharedSogPalette(refs.get(meta.shN?.files[0]), meta, url.original));
 
             // construct the gsplat resource
             const decompress = asset.data?.decompress;
@@ -316,7 +315,7 @@ class SogBundleParser {
             data.sh_labels = textureOf(meta.shN?.files[1]);
             data.blind = (meta.blind ?? []).map(t => textureOf(t.files[0]));
             data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
-            data.textureRefs = [...refs.values()];
+            data.textureHandle = handle;
             ownedByData = true;
 
             if (!decompress) {

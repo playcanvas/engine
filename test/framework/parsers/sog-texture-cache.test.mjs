@@ -106,83 +106,107 @@ describe('SogTextureCache', function () {
         restore();
     });
 
+    // acquires the palette for one holder; returns the handle and the texture's entry, kept here
+    // because releasing a handle empties its entries
+    const acquirePalette = (extra = {}) => {
+        const handle = cache.acquire([{ url: PALETTE_URL, filename: 'shN_centroids.webp', ...extra }]);
+        return { handle, entry: handle.entries[0] };
+    };
+
     describe('#acquire', function () {
         it('loads a url once and hands every holder the same texture', async function () {
-            const a = cache.acquire(PALETTE_URL);
-            const b = cache.acquire(PALETTE_URL);
+            const a = acquirePalette();
+            const b = acquirePalette();
 
-            const [ta, tb] = await Promise.all([a.promise, b.promise]);
+            const [ta, tb] = await Promise.all([a.entry.promise, b.entry.promise]);
             expect(loads).to.deep.equal([PALETTE_URL]);
             expect(ta).to.be.an.instanceof(Texture);
             expect(tb).to.equal(ta);
-            expect(a.texture).to.equal(ta);
-            expect(a.asset).to.equal(b.asset);
-            expect(a.shared).to.be.true;
-            expect(app.assets.getByUrl(PALETTE_URL)).to.equal(a.asset);
+            expect(b.entry).to.equal(a.entry);
+            expect(a.entry.texture).to.equal(ta);
+            expect(a.entry.refCount).to.equal(2);
+            expect(app.assets.getByUrl(PALETTE_URL)).to.equal(a.entry.asset);
         });
 
         it('joins a load that is still in flight', async function () {
             deferLoads = true;
-            const a = cache.acquire(PALETTE_URL);
-            const b = cache.acquire(PALETTE_URL);
+            const a = acquirePalette();
+            const b = acquirePalette();
             expect(loads).to.deep.equal([PALETTE_URL]);
 
             completeLoad(PALETTE_URL);
-            expect(await b.promise).to.equal(await a.promise);
+            expect(await b.entry.promise).to.equal(await a.entry.promise);
+        });
+
+        it('acquires several textures with one handle, in order', async function () {
+            const other = `${SPLATS}shared/other.webp`;
+            const handle = cache.acquire([
+                { url: PALETTE_URL, filename: 'shN_centroids.webp' },
+                { url: other, filename: 'other.webp' }
+            ]);
+            const [palette, second] = handle.entries;
+            expect(palette.url).to.equal(PALETTE_URL);
+            expect(second.url).to.equal(other);
+
+            const textures = await Promise.all(handle.entries.map(entry => entry.promise));
+            handle.release();
+            expect(handle.entries).to.be.empty;
+            expect(textures.every(destroyed)).to.be.true;
+            expect(cache._entries.size).to.equal(0);
         });
 
         it('uses the given contents and drops them once decoded', async function () {
             deferLoads = true;
             const contents = new Uint8Array(4);
-            const ref = cache.acquire(PALETTE_URL, { filename: 'shN_centroids.webp', contents });
-            expect(ref.asset.name).to.equal('shN_centroids.webp');
-            expect(ref.asset.file.contents).to.equal(contents);
+            const { entry } = acquirePalette({ contents });
+            expect(entry.asset.name).to.equal('shN_centroids.webp');
+            expect(entry.asset.file.contents).to.equal(contents);
 
             completeLoad(PALETTE_URL);
-            await ref.promise;
-            expect(ref.asset.file.contents).to.equal(null);
+            await entry.promise;
+            expect(entry.asset.file.contents).to.equal(null);
         });
     });
 
     describe('#release', function () {
         it('destroys the texture only when its last holder releases it', async function () {
-            const a = cache.acquire(PALETTE_URL);
-            const b = cache.acquire(PALETTE_URL);
-            const texture = await a.promise;
-            const asset = a.asset;
+            const a = acquirePalette();
+            const b = acquirePalette();
+            const texture = await a.entry.promise;
+            const asset = a.entry.asset;
 
-            a.release();
+            a.handle.release();
             expect(destroyed(texture)).to.be.false;
-            expect(b.shared).to.be.false;
-            expect(cache.size).to.equal(1);
+            expect(b.entry.refCount).to.equal(1);
+            expect(cache._entries.size).to.equal(1);
 
-            b.release();
+            b.handle.release();
             expect(destroyed(texture)).to.be.true;
-            expect(cache.size).to.equal(0);
+            expect(cache._entries.size).to.equal(0);
             expect(app.assets.list()).to.not.include(asset);
             expect(app.loader.getFromCache(PALETTE_URL, 'texture')).to.equal(undefined);
         });
 
         it('ignores a second release of the same handle', async function () {
-            const a = cache.acquire(PALETTE_URL);
-            const b = cache.acquire(PALETTE_URL);
-            const texture = await a.promise;
+            const a = acquirePalette();
+            const b = acquirePalette();
+            const texture = await a.entry.promise;
 
-            a.release();
-            a.release();
+            a.handle.release();
+            a.handle.release();
             expect(destroyed(texture)).to.be.false;
 
-            b.release();
+            b.handle.release();
             expect(destroyed(texture)).to.be.true;
         });
 
         it('loads the url again after its texture was destroyed', async function () {
-            const a = cache.acquire(PALETTE_URL);
-            const first = await a.promise;
-            a.release();
+            const a = acquirePalette();
+            const first = await a.entry.promise;
+            a.handle.release();
 
-            const b = cache.acquire(PALETTE_URL);
-            const second = await b.promise;
+            const b = acquirePalette();
+            const second = await b.entry.promise;
             expect(loads).to.deep.equal([PALETTE_URL, PALETTE_URL]);
             expect(second).to.not.equal(first);
             expect(destroyed(second)).to.be.false;
@@ -190,16 +214,15 @@ describe('SogTextureCache', function () {
 
         it('destroys a texture released while loading once the load completes', async function () {
             deferLoads = true;
-            const a = cache.acquire(PALETTE_URL);
-            const asset = a.asset;
-            a.release();
+            const a = acquirePalette();
+            a.handle.release();
 
             // gone from the cache and the registry straight away
-            expect(cache.size).to.equal(0);
-            expect(app.assets.list()).to.not.include(asset);
+            expect(cache._entries.size).to.equal(0);
+            expect(app.assets.list()).to.not.include(a.entry.asset);
 
             completeLoad(PALETTE_URL);
-            const texture = await a.promise;
+            const texture = await a.entry.promise;
             expect(destroyed(texture)).to.be.true;
         });
     });
@@ -207,43 +230,44 @@ describe('SogTextureCache', function () {
     describe('failed loads', function () {
         it('rejects every holder and loads again on the next request', async function () {
             failing.add(PALETTE_URL);
-            const a = cache.acquire(PALETTE_URL);
-            const results = await Promise.allSettled([a.promise]);
+            const a = acquirePalette();
+            const results = await Promise.allSettled([a.entry.promise]);
             expect(results[0].status).to.equal('rejected');
-            expect(cache.size).to.equal(0);
+            expect(cache._entries.size).to.equal(0);
 
             failing.delete(PALETTE_URL);
-            const b = cache.acquire(PALETTE_URL);
-            expect(await b.promise).to.be.an.instanceof(Texture);
+            const b = acquirePalette();
+            expect(await b.entry.promise).to.be.an.instanceof(Texture);
             expect(loads).to.deep.equal([PALETTE_URL, PALETTE_URL]);
 
             // releasing the failed handle leaves the new texture alone
-            a.release();
-            expect(destroyed(b.texture)).to.be.false;
+            a.handle.release();
+            expect(destroyed(b.entry.texture)).to.be.false;
         });
     });
 
     describe('#releaseSource', function () {
-        it('drops the CPU source only once every holder has asked', async function () {
-            const a = cache.acquire(PALETTE_URL);
-            const b = cache.acquire(PALETTE_URL);
-            const texture = await a.promise;
+        it('drops the CPU source when the holder that loaded the texture asks', async function () {
+            const a = acquirePalette();
+            const b = acquirePalette();
+            const texture = await a.entry.promise;
 
-            a.releaseSource();
+            // a holder that joined later does not decide
+            b.handle.releaseSource();
             expect(texture.releaseSourceAfterUpload).to.not.equal(true);
 
-            b.releaseSource();
+            a.handle.releaseSource();
             expect(texture.releaseSourceAfterUpload).to.equal(true);
         });
 
-        it('drops it when the holder that kept it leaves', async function () {
-            const a = cache.acquire(PALETTE_URL);
-            const b = cache.acquire(PALETTE_URL);
-            const texture = await a.promise;
+        it('keeps it when the holder that loaded it never asks', async function () {
+            const a = acquirePalette();
+            const texture = await a.entry.promise;
+            const b = acquirePalette();
 
-            a.releaseSource();
-            b.release();
-            expect(texture.releaseSourceAfterUpload).to.equal(true);
+            a.handle.release();
+            b.handle.releaseSource();
+            expect(texture.releaseSourceAfterUpload).to.not.equal(true);
         });
     });
 
@@ -306,7 +330,7 @@ describe('SogTextureCache', function () {
             b.unload();
             c.unload();
             expect(destroyed(palette)).to.be.true;
-            expect(cache.size).to.equal(0);
+            expect(cache._entries.size).to.equal(0);
             expect(app.assets.list().filter(asset => asset.type === 'texture')).to.be.empty;
         });
 
@@ -336,10 +360,10 @@ describe('SogTextureCache', function () {
         });
 
         it('keep a palette the application holds while no file uses it', async function () {
-            const hold = cache.acquire(PALETTE_URL);
+            const hold = acquirePalette();
             const a = await loadSog(META_A);
             const palette = a.resource.gsplatData.sh_centroids;
-            expect(palette).to.equal(hold.texture);
+            expect(palette).to.equal(hold.entry.texture);
 
             a.unload();
             expect(destroyed(palette)).to.be.false;
@@ -349,7 +373,7 @@ describe('SogTextureCache', function () {
             expect(loads.filter(url => url === PALETTE_URL)).to.have.lengthOf(1);
 
             b.unload();
-            hold.release();
+            hold.handle.release();
             expect(destroyed(palette)).to.be.true;
         });
 
@@ -400,7 +424,7 @@ describe('SogTextureCache', function () {
             // only the healthy file's textures are left, the palette held by it alone
             expect(app.assets.list().filter(asset => asset.type === 'texture')).to.have.lengthOf(7);
             a.unload();
-            expect(cache.size).to.equal(0);
+            expect(cache._entries.size).to.equal(0);
         });
 
         it('are released, and the palette destroyed, when the app is destroyed', async function () {
@@ -413,12 +437,12 @@ describe('SogTextureCache', function () {
             app = null;
 
             expect(destroyed(palette)).to.be.true;
-            expect(cache.size).to.equal(0);
+            expect(cache._entries.size).to.equal(0);
         });
 
         it('leave a texture the application still holds to the app teardown', async function () {
-            const hold = cache.acquire(PALETTE_URL);
-            const palette = await hold.promise;
+            const hold = acquirePalette();
+            const palette = await hold.entry.promise;
 
             app.destroy();
             app = null;
@@ -426,9 +450,9 @@ describe('SogTextureCache', function () {
             // the texture asset was registered, so the teardown destroyed its texture; the entry
             // stays until the holder releases it, which no longer touches the destroyed app
             expect(destroyed(palette)).to.be.true;
-            expect(cache.size).to.equal(1);
-            expect(() => hold.release()).to.not.throw();
-            expect(cache.size).to.equal(0);
+            expect(cache._entries.size).to.equal(1);
+            expect(() => hold.handle.release()).to.not.throw();
+            expect(cache._entries.size).to.equal(0);
         });
 
         it('warn when files sharing a palette disagree on its codebook', async function () {
@@ -449,6 +473,6 @@ describe('SogTextureCache', function () {
 
     it('is created per app by the gsplat handler', function () {
         expect(cache).to.be.an.instanceof(SogTextureCache);
-        expect(cache.size).to.equal(0);
+        expect(cache._entries.size).to.equal(0);
     });
 });

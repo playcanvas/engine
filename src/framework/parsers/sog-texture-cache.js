@@ -8,8 +8,32 @@ import { Asset } from '../asset/asset.js';
  */
 
 /**
- * One cached texture, shared by every handle on its url. Its reference count is the number of
- * live handles.
+ * A texture file to acquire from a {@link SogTextureCache}.
+ *
+ * @typedef {object} SogTextureFile
+ * @property {string} url - Absolute url of the texture, the key it is shared by.
+ * @property {string} filename - File name for the texture asset.
+ * @property {Uint8Array} [contents] - Encoded file contents when already in memory (for example
+ * extracted from a bundle). Dropped once the texture has loaded.
+ * @ignore
+ */
+
+/**
+ * A holder's handle on the textures it acquired from a {@link SogTextureCache}.
+ *
+ * @typedef {object} SogTextureHandle
+ * @property {SogTextureEntry[]} entries - The textures, in the order they were acquired. Emptied
+ * when the handle is released.
+ * @property {() => void} release - Releases the textures; each is destroyed once nothing holds
+ * it. Calling it again does nothing.
+ * @property {() => void} releaseSource - Drops the CPU-side source (the decoded image kept to
+ * re-upload after a device loss) of the textures this holder loaded itself; the first holder of a
+ * texture decides for all that share it.
+ * @ignore
+ */
+
+/**
+ * One cached texture. Its reference count is the number of holders; it is shared by url.
  *
  * The cache keeps its own map of these rather than using RefCountedKeyCache, which releases by
  * key: after a failed load the entry leaves the map so the next request downloads again, while
@@ -32,80 +56,20 @@ class SogTextureEntry extends RefCountedObject {
      */
     promise;
 
-    /** Number of live handles that asked for the texture's CPU source to be released. */
-    sourceReleases = 0;
-
     /**
-     * Set once the last handle is released. The texture is then destroyed, or is when a load
+     * Set once the last holder releases it. The texture is then destroyed, or is when a load
      * still in flight completes.
      */
     released = false;
 
     /**
-     * Value the first holder registered with {@link SogTextureCache#checkShared}, compared
-     * against later holders in debug builds.
-     *
-     * @type {string|undefined}
+     * @param {string} url - Absolute url of the texture.
+     * @param {Asset} asset - The texture asset.
      */
-    sharedKey;
-
     constructor(url, asset) {
         super();
         this.url = url;
         this.asset = asset;
-    }
-}
-
-/**
- * A holder's handle on a texture in a {@link SogTextureCache}. Each handle is released once, with
- * {@link SogTextureRef#release}; the texture is destroyed when its last handle is released.
- *
- * @ignore
- */
-class SogTextureRef {
-    /** @private */
-    _released = false;
-
-    /** @private */
-    _sourceReleased = false;
-
-    /**
-     * @param {SogTextureCache} cache - The cache that issued the handle.
-     * @param {SogTextureEntry} entry - The cached texture.
-     */
-    constructor(cache, entry) {
-        /** @private */
-        this._cache = cache;
-
-        /** @private */
-        this._entry = entry;
-    }
-
-    /**
-     * The url the texture is shared by.
-     *
-     * @type {string}
-     */
-    get url() {
-        return this._entry.url;
-    }
-
-    /**
-     * The texture asset. Shared by all handles on the url, so it must not be unloaded directly.
-     *
-     * @type {Asset}
-     */
-    get asset() {
-        return this._entry.asset;
-    }
-
-    /**
-     * Resolves with the texture once loaded, rejects when the load fails.
-     *
-     * @type {Promise<Texture>}
-     */
-    get promise() {
-        return this._entry.promise;
     }
 
     /**
@@ -114,46 +78,16 @@ class SogTextureRef {
      * @type {Texture|null}
      */
     get texture() {
-        return /** @type {Texture|null} */ (this._entry.asset.resource ?? null);
-    }
-
-    /**
-     * True when other handles share the texture.
-     *
-     * @type {boolean}
-     */
-    get shared() {
-        return this._entry.refCount > 1;
-    }
-
-    /**
-     * Releases this handle. Calling it again does nothing.
-     */
-    release() {
-        if (this._released) return;
-        this._released = true;
-        this._cache._release(this._entry, this._sourceReleased);
-    }
-
-    /**
-     * Asks for the texture's CPU-side source (the decoded image kept to re-upload after a device
-     * loss) to be dropped after upload. It is dropped only once every live handle has asked, so a
-     * holder that relies on context-loss recovery keeps it for all.
-     */
-    releaseSource() {
-        if (this._released || this._sourceReleased) return;
-        this._sourceReleased = true;
-        this._entry.sourceReleases++;
-        this._cache._applySourceRelease(this._entry);
+        return /** @type {Texture|null} */ (this.asset.resource ?? null);
     }
 }
 
 /**
  * Ref-counted cache of the textures SOG files load, keyed by absolute url. Files whose metadata
  * point at the same texture url (for example one SH palette shared by the files of a
- * level-of-detail scene) share one download and one GPU texture. Each holder gets its own
- * {@link SogTextureRef}, and the texture is destroyed, and removed from the asset registry and
- * loader cache, once its last handle is released.
+ * level-of-detail scene) share one download and one GPU texture. Each holder gets one
+ * {@link SogTextureHandle} for the textures it acquires, and a texture is destroyed, and removed
+ * from the asset registry and loader cache, once its last holder releases it.
  *
  * Besides the SOG parsers, an application can hold a texture itself, so it stays resident while
  * no file uses it (for example between unloading some files and loading others that share it),
@@ -162,9 +96,10 @@ class SogTextureRef {
  *
  * @example
  * const cache = app.loader.getHandler('gsplat').sogTextureCache;
- * const palette = cache.acquire(new URL('shared/shN_centroids.webp', rootUrl).toString());
+ * const url = new URL('shared/shN_centroids.webp', rootUrl).toString();
+ * const hold = cache.acquire([{ url, filename: 'shN_centroids.webp' }]);
  * // ... load and unload the files that share the palette ...
- * palette.release();
+ * hold.release();
  *
  * @ignore
  */
@@ -184,65 +119,39 @@ class SogTextureCache {
     }
 
     /**
-     * Number of urls with live handles.
+     * Acquires textures for one holder, starting the load of each url no live holder has.
      *
-     * @type {number}
+     * @param {SogTextureFile[]} files - The textures.
+     * @returns {SogTextureHandle} The holder's handle.
      */
-    get size() {
-        return this._entries.size;
+    acquire(files) {
+        // the textures this holder loads itself: only it decides about their CPU source
+        const created = [];
+
+        const entries = files.map((file) => {
+            let entry = this._entries.get(file.url);
+            if (!entry) {
+                entry = this._create(file);
+                created.push(entry);
+            }
+            entry.incRefCount();
+            return entry;
+        });
+
+        return {
+            entries,
+            release: () => entries.splice(0).forEach(entry => this._release(entry)),
+            releaseSource: () => created.forEach(entry => entry.texture?.setReleaseSourceAfterUpload())
+        };
     }
 
     /**
-     * Returns a handle on the texture at a url, starting its load if no live handle holds it.
-     *
-     * @param {string} url - Absolute url of the texture.
-     * @param {object} [options] - Options used when the texture is not cached yet.
-     * @param {string} [options.filename] - File name for the texture asset. Defaults to the url.
-     * @param {ArrayBuffer|Uint8Array} [options.contents] - Encoded file contents, when already
-     * in memory (for example extracted from a bundle). Dropped once the texture has loaded.
-     * @returns {SogTextureRef} The handle. Release it with {@link SogTextureRef#release}.
-     */
-    acquire(url, options = {}) {
-        let entry = this._entries.get(url);
-        if (!entry) {
-            entry = this._create(url, options);
-        }
-        entry.incRefCount();
-        return new SogTextureRef(this, entry);
-    }
-
-    /**
-     * Registers a value that every holder of a shared texture must agree on, and warns once when a
-     * later holder brings a different one. Used in debug builds to check that SOG files sharing an
-     * SH palette also share its codebook, without which the palette decodes to wrong colors.
-     *
-     * @param {SogTextureRef} ref - A handle on the texture.
-     * @param {object} value - JSON-serializable value to compare.
-     * @param {string} context - Name of the holder, for the warning.
-     */
-    checkShared(ref, value, context) {
-        const entry = ref._entry;
-        const key = JSON.stringify(value);
-        if (entry.sharedKey === undefined) {
-            entry.sharedKey = key;
-        } else if (entry.sharedKey !== key) {
-            Debug.warnOnce(`SogTextureCache: ${context} shares ${entry.url} with other SOG files but its codebook differs, so the shared texture decodes to wrong values.`);
-        }
-    }
-
-    /**
-     * @param {string} url - Absolute url of the texture.
-     * @param {object} options - See {@link SogTextureCache#acquire}.
+     * @param {SogTextureFile} file - The texture to load.
      * @returns {SogTextureEntry} The new entry.
      * @private
      */
-    _create(url, { filename = url, contents } = {}) {
-        const file = { url, filename };
-        if (contents) {
-            file.contents = contents;
-        }
-
-        const asset = new Asset(filename, 'texture', file, {
+    _create({ url, filename, contents }) {
+        const asset = new Asset(filename, 'texture', { url, filename, contents }, {
             mipmaps: false
         }, {
             crossOrigin: 'anonymous'
@@ -254,14 +163,12 @@ class SogTextureCache {
             asset.once('load', () => {
                 // encoded contents are only needed for the decode, and may pin a whole downloaded
                 // archive; the decoded image kept for context loss recovery is unaffected
-                if (asset.file?.contents) {
-                    asset.file.contents = null;
-                }
+                asset.file.contents = null;
 
                 const texture = /** @type {Texture} */ (asset.resource);
 
+                // every holder left while it was loading
                 if (entry.released) {
-                    // every holder left while it was loading
                     this._destroy(entry);
                 }
 
@@ -292,23 +199,14 @@ class SogTextureCache {
     }
 
     /**
-     * @param {SogTextureEntry} entry - The entry a handle was released on.
-     * @param {boolean} sourceReleased - Whether that handle had asked to release the source.
+     * @param {SogTextureEntry} entry - The entry a holder released.
      * @private
      */
-    _release(entry, sourceReleased) {
+    _release(entry) {
         Debug.assert(entry.refCount > 0, `SogTextureCache: ${entry.url} released more times than acquired.`);
 
         entry.decRefCount();
-        if (sourceReleased) {
-            entry.sourceReleases--;
-        }
-
-        if (entry.refCount > 0) {
-            // the holders left may all have asked to release the source
-            this._applySourceRelease(entry);
-            return;
-        }
+        if (entry.refCount > 0) return;
 
         entry.released = true;
         if (this._entries.get(entry.url) === entry) {
@@ -321,17 +219,6 @@ class SogTextureCache {
         // a texture still loading is destroyed when its load completes
         if (!entry.asset.loading) {
             this._destroy(entry);
-        }
-    }
-
-    /**
-     * @param {SogTextureEntry} entry - The entry to check.
-     * @private
-     */
-    _applySourceRelease(entry) {
-        if (entry.refCount > 0 && entry.sourceReleases === entry.refCount) {
-            // permanent: a holder that joins later shares the texture without a CPU source
-            /** @type {Texture|null} */ (entry.asset.resource)?.setReleaseSourceAfterUpload();
         }
     }
 
@@ -368,20 +255,27 @@ const getSogTextureCache = (parser) => {
 };
 
 /**
- * Warns when SOG files sharing an SH palette disagree on its codebook. Meant for debug builds,
- * through `Debug.call`.
+ * Warns when SOG files sharing an SH palette disagree on its codebook, without which the shared
+ * palette decodes to wrong colors. Debug builds only: call it through `Debug.call`, so release
+ * builds drop both the call and this function.
  *
- * @param {SogTextureCache} cache - The texture cache.
- * @param {SogTextureRef|undefined} centroids - Handle on the SH palette, if the file has SH.
+ * @param {SogTextureEntry|undefined} centroids - The SH palette, if the file has SH.
  * @param {object} meta - The file's meta.
  * @param {string} name - The file, for the warning.
  * @ignore
  */
-const checkSharedSogPalette = (cache, centroids, meta, name) => {
+const checkSharedSogPalette = (centroids, meta, name) => {
     if (centroids) {
         const { codebook, mins, maxs } = meta.shN;
-        cache.checkShared(centroids, { codebook, mins, maxs }, name);
+        const key = JSON.stringify({ codebook, mins, maxs });
+
+        // the first file to bring the palette sets the codebook the others must match
+        const entry = /** @type {SogTextureEntry & { _shNKey?: string }} */ (centroids);
+        entry._shNKey ??= key;
+        if (entry._shNKey !== key) {
+            Debug.warnOnce(`SogTextureCache: ${name} shares ${entry.url} with other SOG files but its codebook differs, so the shared texture decodes to wrong values.`);
+        }
     }
 };
 
-export { SogTextureCache, SogTextureRef, getSogTextureCache, checkSharedSogPalette };
+export { SogTextureCache, getSogTextureCache, checkSharedSogPalette };
