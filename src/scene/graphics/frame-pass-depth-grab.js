@@ -1,4 +1,4 @@
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -25,12 +25,34 @@ class FramePassDepthGrab extends FramePass {
         this.releaseRenderTarget(this.depthRenderTarget);
     }
 
-    shouldReallocate(targetRT, sourceTexture) {
+    /**
+     * Format of the texture the grab copies into. A supplied depth texture keeps its format, so a
+     * later blit stays inside one internal format. An automatic depth buffer is 32-bit float, or
+     * 24-bit depth with stencil when the target has a stencil.
+     *
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget} destinationRt - The
+     * camera target the depth is copied from.
+     * @returns {number} The pixel format of the grab texture.
+     */
+    depthFormat(destinationRt) {
+        const format = destinationRt.depthBuffer?.format;
+        if (format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16 || format === PIXELFORMAT_DEPTHSTENCIL) {
+            return format;
+        }
+        return destinationRt.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
+    }
 
-        // need to reallocate if dimensions don't match
+    shouldReallocate(targetRT, sourceTexture, format, isDepth) {
+
+        // need to reallocate if dimensions don't match, or the grab texture is a different format
+        // (a 32-bit grab cannot be reused for a 16-bit or depth-stencil source)
         const width = sourceTexture?.width || this.device.width;
         const height = sourceTexture?.height || this.device.height;
-        return !targetRT || width !== targetRT.width || height !== targetRT.height;
+        if (!targetRT || width !== targetRT.width || height !== targetRT.height) {
+            return true;
+        }
+        const texture = isDepth ? targetRT.depthBuffer : targetRT.colorBuffer;
+        return texture?.format !== format;
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
@@ -91,7 +113,7 @@ class FramePassDepthGrab extends FramePass {
         const destinationRt = camera?.renderTarget ?? device.backBuffer;
 
         let useDepthBuffer = true;
-        let format = destinationRt.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
+        let format = this.depthFormat(destinationRt);
         if (device.isWebGPU) {
             const numSamples = destinationRt.samples;
 
@@ -105,10 +127,12 @@ class FramePassDepthGrab extends FramePass {
 
         const sourceTexture = camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer;
 
-        // allocate / resize existing RT as needed
-        if (this.shouldReallocate(this.depthRenderTarget, sourceTexture)) {
+        // allocate / resize existing RT as needed. Reconstruct it: the depth-buffer format also
+        // decides the stencil flag, and a reused target would keep the previous one.
+        if (this.shouldReallocate(this.depthRenderTarget, sourceTexture, format, useDepthBuffer)) {
             this.releaseRenderTarget(this.depthRenderTarget);
-            this.depthRenderTarget = this.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer);
+            this.depthRenderTarget = null;
+            this.depthRenderTarget = this.allocateRenderTarget(null, camera.renderTarget, device, format, useDepthBuffer);
         }
 
         // publish the depth texture - the grab copies (or resolves) the depth buffer values as they

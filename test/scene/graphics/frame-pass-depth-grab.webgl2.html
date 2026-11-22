@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>WebGL2 scene depth grab</title>
+<canvas width="32" height="32"></canvas>
+<pre id="result">Running WebGL2 scene depth grab
+</pre>
+<script type="module">
+    const output = document.querySelector('#result');
+    const log = (line) => output.append(document.createTextNode(line + '\n'));
+    try {
+        const { run } = await import('./frame-pass-depth-grab.webgl2.mjs');
+        await run(document.querySelector('canvas'), log);
+        log('PASS');
+        output.dataset.result = 'pass';
+    } catch (error) {
+        log(`FAIL ${error.message}`);
+        output.dataset.result = 'fail';
+        console.error(error);
+    }
+</script>
+</html>
