@@ -1,9 +1,9 @@
-import { Asset } from '../../framework/asset/asset.js';
 import { Debug } from '../../core/debug.js';
 import { http, Http } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogData } from '../../scene/gsplat/gsplat-sog-data.js';
 import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
+import { checkSharedSogPalette, getSogTextureCache } from './sog-texture-cache.js';
 
 // combine the progress updates from multiple assets
 // and fire progress events on the target
@@ -86,6 +86,7 @@ const upgradeMeta = (meta) => {
 
 /**
  * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
@@ -136,86 +137,60 @@ class SogParser {
             return;
         }
 
-        const { assets } = this.app;
+        const cache = getSogTextureCache(this);
 
         // v3 may carry per-gaussian blind data
         const subs = ['means', 'quats', 'scales', 'sh0', 'shN', 'blind'];
 
-        const textures = {};
-        const promises = [];
+        // resolve every texture url first, so a malformed meta throws before anything is acquired.
+        // Urls are relative to the meta.json, so several files (for example those of a
+        // level-of-detail scene) can point at one shared file (`../shared/shN_centroids.webp`).
         const base = window.document?.baseURI ?? window.location.href;
-
+        const metaUrl = new URL(url.load, base).toString();
+        const files = {};
         subs.forEach((sub) => {
             // blind is a list of textures, each with its own file
-            const files = sub === 'blind' ? (meta.blind ?? []).map(t => t.files[0]) : (meta[sub]?.files ?? []);
-            textures[sub] = files.map((filename) => {
-                const texture = new Asset(filename, 'texture', {
-                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, base).toString())).toString(),
-                    filename
-                }, {
-                    mipmaps: false
-                }, {
-                    crossOrigin: 'anonymous'
-                });
-
-                const promise = new Promise((resolve, reject) => {
-                    texture.on('load', () => resolve(null));
-                    texture.on('error', err => reject(err));
-                });
-
-                assets.add(texture);
-                promises.push(promise);
-
-                return texture;
-            });
+            const filenames = sub === 'blind' ? (meta.blind ?? []).map(t => t.files[0]) : (meta[sub]?.files ?? []);
+            files[sub] = filenames.map(filename => ({
+                filename,
+                url: asset.options?.mapUrl?.(filename) ?? new URL(filename, metaUrl).toString()
+            }));
         });
 
-        const textureAssets = subs.map(sub => textures[sub]).flat();
+        // a handle per texture from the app's texture cache: a url another file already holds is
+        // shared, not loaded again
+        const refs = {};
+        subs.forEach((sub) => {
+            refs[sub] = files[sub].map(f => cache.acquire(f.url, { filename: f.filename }));
+        });
+        const allRefs = subs.map(sub => refs[sub]).flat();
+        const releaseAll = () => allRefs.forEach(ref => ref.release());
 
         // Track if asset was unloaded during async loading
         let unloaded = false;
 
-        // Set once the GSplatSogResource takes ownership of the textures: from then on they may
-        // only be destroyed through the resource's (ref-count deferred) destroy, as the unified
-        // world may still be rendering from them when the asset unloads.
-        let ownedByResource = false;
+        // Set once `data` holds the texture handles: from then on they are released only through
+        // data.destroy(), which the resource calls in its (ref-count deferred) destroy, as the
+        // unified world may still be rendering from them when the asset unloads.
+        let ownedByData = false;
 
-        // When the parent gsplat asset unloads, remove child texture assets from the registry.
-        // Destroy their texture resources only while the load is still in flight (cancellation);
-        // once owned by the resource, destruction is left to it.
+        // When the parent gsplat asset unloads while the textures still load (cancellation),
+        // release them; the cache destroys a texture once nothing else holds it.
         asset.once('unload', () => {
             unloaded = true;
-
-            textureAssets.forEach((t) => {
-                // remove from registry
-                assets.remove(t);
-
-                if (!ownedByResource) {
-                    // destroys resource
-                    t.unload();
-                } else {
-                    // The resource destroys the textures (possibly deferred), but they stay in
-                    // the loader cache as t.unload() is not called. Clear the cache entries so
-                    // a later load of the same urls recreates the textures instead of reusing
-                    // the cached, destroyed ones.
-                    assets._loader.clearCache(t.getFileUrl(), t.type);
-                }
-            });
+            if (!ownedByData) {
+                releaseAll();
+            }
         });
 
-        combineProgress(asset, textureAssets);
-
-        textureAssets.forEach(t => assets.load(t));
+        // only textures still loading report progress
+        combineProgress(asset, allRefs.filter(ref => !ref.asset.loaded).map(ref => ref.asset));
 
         // wait for all textures to complete loading
-        const results = await Promise.allSettled(promises);
+        const results = await Promise.allSettled(allRefs.map(ref => ref.promise));
 
         if (this._shouldAbort(asset, unloaded)) {
-            // Clean up texture assets that were created during the async load
-            textureAssets.forEach((t) => {
-                assets.remove(t);
-                t.unload();
-            });
+            releaseAll();
             callback(null, null);
             return;
         }
@@ -223,66 +198,82 @@ class SogParser {
         // a texture that failed to load has no resource, so fail the whole load
         const failed = results.findIndex(r => r.status === 'rejected');
         if (failed !== -1) {
-            textureAssets.forEach((t) => {
-                assets.remove(t);
-                t.unload();
-            });
-            callback(`Error loading gsplat: failed to load ${textureAssets[failed].file.filename} in ${url.original}: ${results[failed].reason}`);
+            releaseAll();
+            callback(`Error loading gsplat: failed to load ${allRefs[failed].asset.file.filename} in ${url.original}: ${results[failed].reason}`);
             return;
         }
 
-        // construct the gsplat resource
-        const data = new GSplatSogData();
-        data.url = url.original;
-        data.meta = meta;
-        data.numSplats = meta.count;
-        data.means_l = textures.means[0].resource;
-        data.means_u = textures.means[1].resource;
-        data.quats = textures.quats[0].resource;
-        data.scales = textures.scales[0].resource;
-        data.sh0 = textures.sh0[0].resource;
-        data.sh_centroids = textures.shN?.[0]?.resource;
-        data.sh_labels = textures.shN?.[1]?.resource;
-        data.blind = textures.blind.map(t => t.resource);
-        data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
+        Debug.call(() => checkSharedSogPalette(cache, refs.shN?.[0], meta, url.original));
 
-        const decompress = asset.data?.decompress;
+        // the resource, once created, holds the data and with it the textures (except when
+        // decompressing); until then a throw (for example a malformed meta) releases them here
+        let data = null;
+        let resource = null;
 
-        if (!decompress) {
+        try {
+            // construct the gsplat resource
+            data = new GSplatSogData();
+            data.url = url.original;
+            data.meta = meta;
+            data.numSplats = meta.count;
+            data.means_l = refs.means[0].texture;
+            data.means_u = refs.means[1].texture;
+            data.quats = refs.quats[0].texture;
+            data.scales = refs.scales[0].texture;
+            data.sh0 = refs.sh0[0].texture;
+            data.sh_centroids = refs.shN?.[0]?.texture;
+            data.sh_labels = refs.shN?.[1]?.texture;
+            data.blind = refs.blind.map(ref => ref.texture);
+            data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
+            data.textureRefs = allRefs;
+            ownedByData = true;
+
+            const decompress = asset.data?.decompress;
+
+            if (!decompress) {
+                if (this._shouldAbort(asset, unloaded)) {
+                    data.destroy();
+                    callback(null, null);
+                    return;
+                }
+
+                // no need to prepare gpu data if decompressing
+                data.prepareCodebook();
+                if (gsplatCentersEnabledAtLoad) {
+                    // An unload must cancel preparation even if the device never recovers.
+                    const onUnload = asset.once('unload', () => data.destroy());
+                    try {
+                        await data.prepareGpuData();
+                    } finally {
+                        onUnload.off();
+                    }
+                }
+            }
+
             if (this._shouldAbort(asset, unloaded)) {
                 data.destroy();
                 callback(null, null);
                 return;
             }
 
-            // no need to prepare gpu data if decompressing
-            data.prepareCodebook();
-            if (gsplatCentersEnabledAtLoad) {
-                // An unload must cancel preparation even if the device never recovers.
-                const onUnload = asset.once('unload', () => data.destroy());
-                try {
-                    await data.prepareGpuData();
-                } finally {
-                    onUnload.off();
-                }
+            const prepareCenters = gsplatCentersEnabledAtLoad;
+            if (decompress) {
+                // the decompressed data is a copy, so the textures are released straight away
+                const decompressed = await data.decompress();
+                data.destroy();
+                resource = new GSplatResource(this.app.graphicsDevice, decompressed, { prepareCenters });
+            } else {
+                resource = new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
             }
+            resource.antiAlias = data.meta.model === 'antialiased';
+        } catch (err) {
+            if (!resource) {
+                // handles are released once, so this is safe after a data.destroy() too
+                data?.destroy();
+                releaseAll();
+            }
+            throw err;
         }
-
-        if (this._shouldAbort(asset, unloaded)) {
-            data.destroy();
-            callback(null, null);
-            return;
-        }
-
-        const prepareCenters = gsplatCentersEnabledAtLoad;
-        const resource = decompress ?
-            new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
-            new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
-        resource.antiAlias = data.meta.model === 'antialiased';
-
-        // the sog resource now owns the textures in `data` (when decompressing, the decompressed
-        // data was copied out instead and the textures stay with the texture assets)
-        ownedByResource = !decompress;
 
         if (this._shouldAbort(asset, unloaded)) {
             resource.destroy();

@@ -115,6 +115,13 @@ class GSplatSogResource extends GSplatResourceBase {
      */
     releaseTextureSources() {
         const d = /** @type {GSplatSogData} */ (this.gsplatData);
+
+        // shared textures keep their source until every holder has asked to drop it
+        if (d.textureRefs) {
+            d.textureRefs.forEach(ref => ref.releaseSource());
+            return;
+        }
+
         d.means_l?.setReleaseSourceAfterUpload();
         d.means_u?.setReleaseSourceAfterUpload();
         d.quats?.setReleaseSourceAfterUpload();
