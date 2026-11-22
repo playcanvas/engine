@@ -66,6 +66,7 @@ class Sprite extends EventHandler {
         this._meshesDirty = false;
 
         if (this._atlas && this._frameKeys) {
+            this._subscribeToAtlas();
             this._createMeshes();
         }
     }
@@ -79,11 +80,14 @@ class Sprite extends EventHandler {
         this._frameKeys = value;
 
         if (this._atlas && this._frameKeys) {
+            this._subscribeToAtlas();
             if (this._updatingProperties) {
                 this._meshesDirty = true;
             } else {
                 this._createMeshes();
             }
+        } else {
+            this._unsubscribeFromAtlas();
         }
 
         this.fire('set:frameKeys', value);
@@ -106,17 +110,11 @@ class Sprite extends EventHandler {
     set atlas(value) {
         if (value === this._atlas) return;
 
-        if (this._atlas) {
-            this._atlas.off('set:frames', this._onSetFrames, this);
-            this._atlas.off('set:frame', this._onFrameChanged, this);
-            this._atlas.off('remove:frame', this._onFrameRemoved, this);
-        }
+        this._unsubscribeFromAtlas();
 
         this._atlas = value;
         if (this._atlas && this._frameKeys) {
-            this._atlas.on('set:frames', this._onSetFrames, this);
-            this._atlas.on('set:frame', this._onFrameChanged, this);
-            this._atlas.on('remove:frame', this._onFrameRemoved, this);
+            this._subscribeToAtlas();
 
             if (this._updatingProperties) {
                 this._meshesDirty = true;
@@ -213,6 +211,21 @@ class Sprite extends EventHandler {
      */
     get meshes() {
         return this._meshes;
+    }
+
+    _subscribeToAtlas() {
+        this._unsubscribeFromAtlas();
+        this._atlas.on('set:frames', this._onSetFrames, this);
+        this._atlas.on('set:frame', this._onFrameChanged, this);
+        this._atlas.on('remove:frame', this._onFrameRemoved, this);
+    }
+
+    _unsubscribeFromAtlas() {
+        if (this._atlas) {
+            this._atlas.off('set:frames', this._onSetFrames, this);
+            this._atlas.off('set:frame', this._onFrameChanged, this);
+            this._atlas.off('remove:frame', this._onFrameRemoved, this);
+        }
     }
 
     _createMeshes() {
@@ -346,28 +359,36 @@ class Sprite extends EventHandler {
     }
 
     _onFrameChanged(frameKey, frame) {
-        const idx = this._frameKeys.indexOf(frameKey);
-        if (idx < 0) return;
+        let changed = false;
+        for (let i = 0; i < this._frameKeys.length; i++) {
+            if (this._frameKeys[i] !== frameKey) continue;
 
-        if (frame) {
-            // only re-create frame for simple render mode, since
-            // 9-sliced meshes don't need frame info to create their mesh
-            if (this.renderMode === SPRITE_RENDERMODE_SIMPLE) {
-                this._meshes[idx] = this._createSimpleMesh(frame);
+            changed = true;
+            const oldMesh = this._meshes[i];
+            let newMesh = oldMesh;
+            if (frame) {
+                if (this.renderMode === SPRITE_RENDERMODE_SIMPLE) {
+                    newMesh = this._createSimpleMesh(frame);
+                } else if (!oldMesh) {
+                    newMesh = this._create9SliceMesh();
+                }
+            } else {
+                newMesh = null;
             }
-        } else {
-            this._meshes[idx] = null;
+
+            if (newMesh !== oldMesh) {
+                oldMesh?.destroy();
+                this._meshes[i] = newMesh;
+            }
         }
 
-        this.fire('set:meshes');
+        if (changed) {
+            this.fire('set:meshes');
+        }
     }
 
     _onFrameRemoved(frameKey) {
-        const idx = this._frameKeys.indexOf(frameKey);
-        if (idx < 0) return;
-
-        this._meshes[idx] = null;
-        this.fire('set:meshes');
+        this._onFrameChanged(frameKey, null);
     }
 
     startUpdate() {
@@ -388,6 +409,7 @@ class Sprite extends EventHandler {
      * Free up the meshes created by the sprite.
      */
     destroy() {
+        this._unsubscribeFromAtlas();
         for (const mesh of this._meshes) {
             if (mesh) {
                 mesh.destroy();
