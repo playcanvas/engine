@@ -69,6 +69,10 @@ class AnimBlendTree extends AnimNode {
         }
     }
 
+    set weight(value) {
+        super.weight = value;
+    }
+
     get weight() {
         this.calculateWeights();
         return this._parent ? this._parent.weight * this._weight : this._weight;
