@@ -78,12 +78,11 @@ class FramePassDepthGrab extends FramePass {
         const destinationRt = camera?.renderTarget ?? device.backBuffer;
 
         // the depth is copied, which needs the format it was allocated with: that of a provided depth
-        // buffer, else the one a render target allocates for its depth. WebGPU allocates
-        // depth24plus-stencil8 whether or not stencil was requested, WebGL2 allocates it when stencil
-        // was requested, else depth32float. A multi-sampled depth is allocated that way on WebGL2
-        // even with a provided depth buffer.
+        // buffer, else the one a render target allocates for its depth - depth24plus-stencil8 when
+        // stencil was requested, else depth32float. A multi-sampled depth is allocated that way on
+        // WebGL2 even with a provided depth buffer.
         let useDepthBuffer = true;
-        let format = destinationRt.stencil || device.isWebGPU ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
+        let format = destinationRt.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
         if (destinationRt.samples > 1) {
 
             // when depth buffer is multi-sampled on WebGPU, instead of copying it out, we use custom

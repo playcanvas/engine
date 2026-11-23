@@ -40,7 +40,6 @@ describe('FramePassDepthGrab', function () {
     });
 
     it('grabs the depth of a render target created with depth but without stencil', function () {
-        const device = app.graphicsDevice;
         const colorBuffer = createColorBuffer();
         const renderTarget = new RenderTarget({ colorBuffer, depth: true, stencil: false });
         const camera = createGrabbingCamera(renderTarget);
@@ -48,9 +47,9 @@ describe('FramePassDepthGrab', function () {
         app.render();
 
         // the grab copies the depth, so its format must be the one the render target's depth was
-        // allocated with: WebGPU allocates depth24plus-stencil8 whether stencil was requested or not
+        // allocated with: depth32float without stencil, on both WebGL2 and WebGPU
         const grabbed = camera.camera.renderPassDepthGrab.depthRenderTarget.depthBuffer;
-        expect(grabbed.format).to.equal(device.isWebGPU ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH);
+        expect(grabbed.format).to.equal(PIXELFORMAT_DEPTH);
 
         renderTarget.destroy();
         colorBuffer.destroy();
@@ -112,7 +111,6 @@ describe('FramePassDepthGrab', function () {
     });
 
     it('follows the stencil of the render target switched off and on at the same size', function () {
-        const device = app.graphicsDevice;
         const colorBuffer = createColorBuffer();
         const first = new RenderTarget({ colorBuffer, depth: true, stencil: true });
         const camera = createGrabbingCamera(first);
@@ -127,20 +125,19 @@ describe('FramePassDepthGrab', function () {
 
         app.render();
 
-        // WebGL2 allocates a depth without stencil as depth32float, WebGPU as depth24plus-stencil8.
-        // The flags of the render target grabbed into follow its new depth buffer.
-        const format = device.isWebGPU ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
+        // a depth without stencil is allocated as depth32float, so the camera grabs into a new
+        // render target, whose flags follow its new depth buffer
         const rt = grab.depthRenderTarget;
-        expect(rt.depthBuffer.format).to.equal(format);
+        expect(rt.depthBuffer.format).to.equal(PIXELFORMAT_DEPTH);
         expect(rt.depth).to.equal(true);
-        expect(rt.stencil).to.equal(format === PIXELFORMAT_DEPTHSTENCIL);
-        expect(rt === firstGrab).to.equal(device.isWebGPU);
+        expect(rt.stencil).to.equal(false);
+        expect(rt).to.not.equal(firstGrab);
 
         camera.renderTarget = first;
         app.render();
         expect(grab.depthRenderTarget.depthBuffer.format).to.equal(PIXELFORMAT_DEPTHSTENCIL);
         expect(grab.depthRenderTarget.stencil).to.equal(true);
-        expect(grab.depthRenderTarget === rt).to.equal(device.isWebGPU);
+        expect(grab.depthRenderTarget).to.not.equal(rt);
 
         first.destroy();
         second.destroy();
@@ -169,7 +166,7 @@ describe('FramePassDepthGrab', function () {
         };
         const expectCopied = () => {
             const rt = grab.depthRenderTarget;
-            expect(rt.depthBuffer.format).to.equal(PIXELFORMAT_DEPTHSTENCIL);
+            expect(rt.depthBuffer.format).to.equal(PIXELFORMAT_DEPTH);
             expect(rt.colorBuffer).to.not.be.ok;
         };
 
