@@ -383,6 +383,26 @@ class HandleGizmo extends DragGizmo {
     }
 
     /**
+     * Sets the depth bias of filled volumes, so they don't fight a surface they match. Positive
+     * values push them away from the camera, behind the surface; negative values pull them in
+     * front of it. Defaults to 2.
+     *
+     * @type {number}
+     */
+    set fillDepthBias(value) {
+        this._renderer.fillDepthBias = value;
+    }
+
+    /**
+     * Gets the depth bias of filled volumes.
+     *
+     * @type {number}
+     */
+    get fillDepthBias() {
+        return this._renderer.fillDepthBias;
+    }
+
+    /**
      * Sets the icon size in CSS pixels. Defaults to 24.
      *
      * @type {number}

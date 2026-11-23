@@ -116,6 +116,22 @@ class OverlayRenderer {
     tint = null;
 
     /**
+     * The depth bias of filled shapes.
+     *
+     * @type {number}
+     * @private
+     */
+    _fillDepthBias = FILL_DEPTH_BIAS;
+
+    /**
+     * The pools of filled shapes.
+     *
+     * @type {ShapePool[]}
+     * @private
+     */
+    _fills = [];
+
+    /**
      * @type {Gizmo}
      * @private
      */
@@ -241,10 +257,15 @@ class OverlayRenderer {
 
         // filled shapes sit just behind their surface, so lines and matching meshes don't z-fight
         const filled = (/** @type {Shape} */ shape) => {
-            shape.depthBias = FILL_DEPTH_BIAS;
+            shape.depthBias = this._fillDepthBias;
             return shape;
         };
-        this._boxes = pool((base, occluded) => filled(new BoxShape(device, args(base, occluded))), FILL_DRAW_ORDER);
+        const fill = (/** @type {(base: Color, occluded: Color) => Shape} */ create) => {
+            const p = pool((base, occluded) => filled(create(base, occluded)), FILL_DRAW_ORDER);
+            this._fills.push(p);
+            return p;
+        };
+        this._boxes = fill((base, occluded) => new BoxShape(device, args(base, occluded)));
 
         // bracket arms draw over the shapes behind them
         this._arms = pool((base, occluded) => {
@@ -266,10 +287,10 @@ class OverlayRenderer {
             gizmo.intersectShapes.push(disc);
             return disc;
         });
-        this._spheres = pool((base, occluded) => filled(new SphereShape(device, args(base, occluded))), FILL_DRAW_ORDER);
-        this._capsules = pool((base, occluded) => filled(new CapsuleShape(device, args(base, occluded))), FILL_DRAW_ORDER);
+        this._spheres = fill((base, occluded) => new SphereShape(device, args(base, occluded)));
+        this._capsules = fill((base, occluded) => new CapsuleShape(device, args(base, occluded)));
 
-        const cone = (/** @type {keyof CONES} */ kind) => pool((base, occluded) => filled(new ConeShape(device, { ...args(base, occluded), ...CONES[kind] })), FILL_DRAW_ORDER);
+        const cone = (/** @type {keyof CONES} */ kind) => fill((base, occluded) => new ConeShape(device, { ...args(base, occluded), ...CONES[kind] }));
         /**
          * The pools of each kind of cone.
          *
@@ -297,6 +318,30 @@ class OverlayRenderer {
                 return glyph;
             });
         }
+    }
+
+    /**
+     * Sets the depth bias of filled shapes. Positive values push them away from the camera.
+     *
+     * @type {number}
+     */
+    set fillDepthBias(value) {
+        this._fillDepthBias = value;
+        for (let i = 0; i < this._fills.length; i++) {
+            const { items } = this._fills[i];
+            for (let j = 0; j < items.length; j++) {
+                items[j].shape.depthBias = value;
+            }
+        }
+    }
+
+    /**
+     * Gets the depth bias of filled shapes.
+     *
+     * @type {number}
+     */
+    get fillDepthBias() {
+        return this._fillDepthBias;
     }
 
     /**
