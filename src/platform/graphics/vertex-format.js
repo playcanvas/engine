@@ -109,6 +109,15 @@ class VertexFormat {
      * @property {boolean} [asInt] - If true, vertex attribute data will be accessible
      * as integer numbers in shader code. Defaults to false, which means that vertex attribute data
      * will be accessible as floating point numbers. Can be only used with INT and UINT data types.
+     * @property {number} [offset] - The number of bytes from the start of a vertex to this
+     * attribute. When unspecified, interleaved attributes are packed in order and each one starts
+     * on a 4-byte boundary. Ignored when `vertexCount` is specified. Each attribute is then stored
+     * in its own array, and the offset is that array's byte offset from the start of the buffer,
+     * rounded up to a multiple of the attribute's size.
+     * @property {number} [stride] - The number of bytes between this attribute in one vertex and
+     * the same attribute in the next. When unspecified, an interleaved format uses the vertex
+     * size: the sum of the attribute sizes, with each size rounded up to a multiple of 4. Ignored
+     * when `vertexCount` is specified, where the stride is the size of the attribute in bytes.
      */
 
     /**
