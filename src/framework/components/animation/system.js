@@ -1,4 +1,3 @@
-import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { AnimationComponent } from './component.js';
 
@@ -18,7 +17,6 @@ const _properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
  * never by calling the system directly. New work should use {@link AnimComponent}.
  *
  * @category Animation (Legacy)
- * @deprecated Use {@link AnimComponentSystem} instead.
  */
 class AnimationComponentSystem extends ComponentSystem {
     /**
@@ -48,9 +46,6 @@ class AnimationComponentSystem extends ComponentSystem {
      * @ignore
      */
     initializeComponentData(component, data) {
-        // logged once, however many animation components are created
-        Debug.deprecated('AnimationComponent is deprecated and will be removed in Engine V3. Use AnimComponent instead.');
-
         for (const property of _properties) {
             if (data.hasOwnProperty(property)) {
                 component[property] = data[property];

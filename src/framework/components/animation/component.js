@@ -14,9 +14,8 @@ import { Component } from '../component.js';
 
 /**
  * The AnimationComponent enables an {@link Entity} to play back skeletal animations on a model.
- * It is a legacy component that has been superseded by {@link AnimComponent}, which supports
- * more advanced features such as animation state graphs and blending. The AnimationComponent is
- * deprecated and will be removed in Engine V3.
+ * It is a legacy component that has largely been superseded by {@link AnimComponent}, which
+ * supports more advanced features such as animation state graphs and blending.
  *
  * You should never need to use the AnimationComponent constructor directly. To add an
  * AnimationComponent to an {@link Entity}, use {@link Entity#addComponent}:
@@ -40,7 +39,6 @@ import { Component } from '../component.js';
  *
  * @hideconstructor
  * @category Animation (Legacy)
- * @deprecated Use {@link AnimComponent} instead.
  */
 class AnimationComponent extends Component {
     /**
