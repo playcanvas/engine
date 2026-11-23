@@ -67,17 +67,20 @@ var<storage, read> projCache: array<u32>;
 var<storage, read> numSplatsStorage: array<u32>;
 
 varying gaussianUV: half2;
-varying @interpolate(flat, either) gaussianColor: half4;
+// gaussianColor, id and vLinearDepth are constant across each splat, but deliberately not flat:
+// flat varyings cost 20-60% GPU time on Apple GPUs before Apple9 (M1, M2, A14-A16), and gain at
+// most a few percent elsewhere. See https://github.com/playcanvas/engine/issues/10085
+varying gaussianColor: half4;
 
 // Must match the fragment side exactly (see gsplatPS) - the dither id is the only consumer.
 #if defined(GSPLAT_STOCHASTIC) && !defined(DITHER_NONE)
     varying @interpolate(flat, either) stochasticId: u32;
 #elif !defined(DITHER_NONE)
-    varying @interpolate(flat, either) id: f32;
+    varying id: f32;
 #endif
 
 #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
-    varying @interpolate(flat, either) vLinearDepth: f32;
+    varying vLinearDepth: f32;
 #endif
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
