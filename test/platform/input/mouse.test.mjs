@@ -15,7 +15,9 @@ describe('Mouse', function () {
     beforeEach(function () {
         jsdomSetup();
         mouse = new Mouse(document.body);
-        sinon.stub(mouse, '_getTargetCoords').returns({ x: 0, y: 0 });
+        sinon.stub(document.body, 'clientWidth').get(() => 100);
+        sinon.stub(document.body, 'clientHeight').get(() => 80);
+        sinon.stub(document.body, 'getBoundingClientRect').returns(new window.DOMRect(0, 0, 100, 80));
     });
 
     afterEach(function () {
@@ -230,6 +232,69 @@ describe('Mouse', function () {
 
             const mouseUpEvent = new MouseEvent('mouseup', { button: 0 });
             window.dispatchEvent(mouseUpEvent);
+        });
+
+    });
+
+    describe('mouseup outside the target', function () {
+
+        it('should dispatch an outside release with the original event and target-relative coordinates', function () {
+            document.body.getBoundingClientRect.returns(new window.DOMRect(20, 30, 100, 80));
+            const onMouseUp = sinon.spy();
+            mouse.on('mouseup', onMouseUp);
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT, clientX: 25, clientY: 35 }));
+            mouse.update();
+
+            const release = new MouseEvent('mouseup', { button: MOUSEBUTTON_LEFT, clientX: 10, clientY: 120, shiftKey: true });
+            window.dispatchEvent(release);
+
+            expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.be.false;
+            expect(mouse.wasReleased(MOUSEBUTTON_LEFT)).to.be.true;
+            expect(onMouseUp.calledOnce).to.be.true;
+            expect(onMouseUp.firstCall.args[0]).to.include({
+                x: -10,
+                y: 90,
+                button: MOUSEBUTTON_LEFT,
+                event: release,
+                shiftKey: true
+            });
+            expect(onMouseUp.firstCall.args[0].buttons).to.deep.equal([false, false, false]);
+        });
+
+        it('should only dispatch an outside release for the matching press inside the target', function () {
+            const released = [];
+            mouse.on('mouseup', event => released.push(event.button));
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT, clientX: 50, clientY: 40 }));
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_RIGHT, clientX: 150, clientY: 40 }));
+            expect(mouse.isPressed(MOUSEBUTTON_RIGHT)).to.be.true;
+
+            window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_RIGHT, clientX: 150, clientY: 40 }));
+            window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_LEFT, clientX: 150, clientY: 40 }));
+            window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_LEFT, clientX: 150, clientY: 40 }));
+
+            expect(mouse.isPressed(MOUSEBUTTON_RIGHT)).to.be.false;
+            expect(released).to.deep.equal([MOUSEBUTTON_LEFT]);
+        });
+
+        it('should not dispatch an outside release after losing focus', function () {
+            const onMouseUp = sinon.spy();
+            mouse.on('mouseup', onMouseUp);
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT, clientX: 50, clientY: 40 }));
+            window.dispatchEvent(new window.Event('blur'));
+            window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_LEFT, clientX: 150, clientY: 40 }));
+
+            expect(onMouseUp.called).to.be.false;
+        });
+
+        it('should preserve pointer-locked coordinates for an outside release', function () {
+            Object.defineProperty(document, 'pointerLockElement', { configurable: true, value: document.body });
+            const onMouseUp = sinon.spy();
+            mouse.on('mouseup', onMouseUp);
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT, clientX: 150, clientY: 40 }));
+            window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_LEFT, clientX: 150, clientY: 40 }));
+
+            expect(onMouseUp.calledOnce).to.be.true;
+            expect(onMouseUp.firstCall.args[0]).to.include({ x: 0, y: 0, button: MOUSEBUTTON_LEFT });
         });
 
     });

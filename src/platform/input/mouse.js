@@ -57,7 +57,9 @@ class Mouse extends EventHandler {
     static EVENT_MOUSEDOWN = 'mousedown';
 
     /**
-     * Fired when a mouse button is released. The handler is passed a {@link MouseEvent}.
+     * Fired when a mouse button is released. Releases received from the browser outside the
+     * target also fire if this Mouse dispatched the corresponding `mousedown`. The handler is
+     * passed a {@link MouseEvent}, whose coordinates can be outside the target bounds.
      *
      * @event
      * @example
@@ -89,6 +91,9 @@ class Mouse extends EventHandler {
 
     /** @private */
     _buttons = [false, false, false];
+
+    /** @private */
+    _targetButtons = [false, false, false];
 
     /** @private */
     _lastbuttons = [false, false, false];
@@ -370,6 +375,7 @@ class Mouse extends EventHandler {
      */
     _handleWindowBlur() {
         this._buttons.fill(false);
+        this._targetButtons.fill(false);
         this._lastbuttons.fill(false);
         this._lastPositionValid = false;
     }
@@ -379,6 +385,7 @@ class Mouse extends EventHandler {
         this._buttons[event.button] = false;
 
         const e = new MouseEvent(this, event);
+        this._targetButtons[event.button] = false;
         if (!e.event) return;
 
         // send 'mouseup' event
@@ -390,6 +397,7 @@ class Mouse extends EventHandler {
         this._buttons[event.button] = true;
 
         const e = new MouseEvent(this, event);
+        this._targetButtons[event.button] = !!e.event;
         if (!e.event) return;
 
         this.fire('mousedown', e);
@@ -423,12 +431,14 @@ class Mouse extends EventHandler {
         const left = Math.floor(rect.left);
         const top = Math.floor(rect.top);
 
-        // mouse is outside of canvas
-        if (event.clientX < left ||
+        const outside = event.clientX < left ||
             event.clientX >= left + this._target.clientWidth ||
             event.clientY < top ||
-            event.clientY >= top + this._target.clientHeight) {
+            event.clientY >= top + this._target.clientHeight;
 
+        // Complete an observed press without forwarding unrelated outside events. Keep the
+        // existing pointer-lock fallback for events without in-bounds coordinates.
+        if (outside && !(event.type === 'mouseup' && this._targetButtons[event.button] && !isMousePointerLocked())) {
             return null;
         }
 
