@@ -29,75 +29,14 @@ Object.defineProperty(Vehicle.prototype, 'speed', {
 
 // initialize code called once per entity
 Vehicle.prototype.initialize = function () {
-    var body = this.entity.rigidbody.body;
-    var dynamicsWorld = this.app.systems.rigidbody.dynamicsWorld;
-
-    // Create vehicle
-    var tuning = new Ammo.btVehicleTuning();
-    var vehicleRayCaster = new Ammo.btDefaultVehicleRaycaster(dynamicsWorld);
-    var vehicle = new Ammo.btRaycastVehicle(tuning, body, vehicleRayCaster);
-    vehicle.setCoordinateSystem(0, 1, 2);
-
-    // Never deactivate the vehicle
-    var DISABLE_DEACTIVATION = 4;
-    body.setActivationState(DISABLE_DEACTIVATION);
-
-    // Add wheels to the vehicle
-    var wheelAxle = new Ammo.btVector3(-1, 0, 0);
-    var wheelDirection = new Ammo.btVector3(0, -1, 0);
-    var connectionPoint = new Ammo.btVector3(0, 0, 0);
-
-    this.wheels.forEach((wheelEntity) => {
-        var wheelScript = wheelEntity.script.vehicleWheel;
-
-        var frictionSlip = wheelScript.frictionSlip;
-        var isFront = wheelScript.isFront;
-        var radius = wheelScript.radius;
-        var rollInfluence = wheelScript.rollInfluence;
-        var suspensionCompression = wheelScript.suspensionCompression;
-        var suspensionDamping = wheelScript.suspensionDamping;
-        var suspensionRestLength = wheelScript.suspensionRestLength;
-        var suspensionStiffness = wheelScript.suspensionStiffness;
-
-        var wheelPos = wheelEntity.getLocalPosition();
-        connectionPoint.setValue(wheelPos.x, wheelPos.y, wheelPos.z);
-        var wheelInfo = vehicle.addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, radius, tuning, isFront);
-
-        wheelInfo.set_m_suspensionStiffness(suspensionStiffness);
-        wheelInfo.set_m_wheelsDampingRelaxation(suspensionDamping);
-        wheelInfo.set_m_wheelsDampingCompression(suspensionCompression);
-        wheelInfo.set_m_frictionSlip(frictionSlip);
-        wheelInfo.set_m_rollInfluence(rollInfluence);
-    }, this);
-
-    Ammo.destroy(wheelAxle);
-    Ammo.destroy(wheelDirection);
-    Ammo.destroy(connectionPoint);
-
-    // Add the vehicle to the dynamics world
-    dynamicsWorld.addAction(vehicle);
-
-    this.vehicle = vehicle;
-
+    this.vehicle = null;
     this.engineForce = 0;
     this.brakingForce = 0;
     this.steering = 0;
 
-    // Event handling
-    this.on('enable', () => {
-        dynamicsWorld.addAction(vehicle);
-    });
-
-    this.on('disable', () => {
-        dynamicsWorld.removeAction(vehicle);
-    });
-
-    this.on('destroy', () => {
-        dynamicsWorld.removeAction(vehicle);
-
-        Ammo.destroy(vehicleRayCaster);
-        Ammo.destroy(vehicle);
-    });
+    this.on('enable', this._syncVehicle);
+    this.on('disable', this._removeVehicleAction);
+    this.on('destroy', this._destroyVehicle);
 
     this.on('vehicle:controls', function (steering, throttle) {
         this.steering = pc.math.lerp(this.steering, steering * this.maxSteering, 0.3);
@@ -113,16 +52,136 @@ Vehicle.prototype.initialize = function () {
             this.engineForce = 0;
         }
     });
+
+    this._syncVehicle();
+};
+
+Vehicle.prototype._syncVehicle = function () {
+    if (!this.enabled) {
+        return null;
+    }
+
+    var rigidbody = this.entity.rigidbody;
+    var body = rigidbody?._simulationEnabled ? rigidbody.body : null;
+    var dynamicsWorld = this.app.systems.rigidbody.dynamicsWorld;
+
+    if (this.vehicle && (body !== this._vehicleBody || dynamicsWorld !== this._vehicleWorld)) {
+        this._destroyVehicle();
+    }
+
+    if (!body || !dynamicsWorld) {
+        return null;
+    }
+
+    if (!this.vehicle) {
+        this._createVehicle(body, dynamicsWorld);
+
+        // Compound shape changes can retire the chassis before the next script update.
+        this._bodyDisabled = rigidbody.on('simulationdisabled', this._destroyVehicle, this);
+        this._bodyRemoved = rigidbody.on('beforeremove', this._destroyVehicle, this);
+    }
+
+    if (!this._vehicleRegistered) {
+        dynamicsWorld.addAction(this.vehicle);
+        this._vehicleRegistered = true;
+    }
+
+    return this.vehicle;
+};
+
+Vehicle.prototype._createVehicle = function (body, dynamicsWorld) {
+    // Create vehicle
+    // The bundled Ammo builds cannot destroy btVehicleTuning, so reuse it across body rebuilds.
+    this._vehicleTuning ??= new Ammo.btVehicleTuning();
+    var tuning = this._vehicleTuning;
+    var vehicleRayCaster = new Ammo.btDefaultVehicleRaycaster(dynamicsWorld);
+    var vehicle = new Ammo.btRaycastVehicle(tuning, body, vehicleRayCaster);
+    vehicle.setCoordinateSystem(0, 1, 2);
+
+    // Never deactivate the vehicle
+    var DISABLE_DEACTIVATION = 4;
+    body.setActivationState(DISABLE_DEACTIVATION);
+
+    // Add wheels to the vehicle
+    var wheelAxle = new Ammo.btVector3(-1, 0, 0);
+    var wheelDirection = new Ammo.btVector3(0, -1, 0);
+    var connectionPoint = new Ammo.btVector3(0, 0, 0);
+
+    // The visual wheel transforms are overwritten on update; use the original mounts when rebuilding.
+    this._wheelPositions ??= this.wheels.map(wheel => wheel.getLocalPosition().clone());
+
+    this.wheels.forEach((wheelEntity, index) => {
+        var wheelScript = wheelEntity.script.vehicleWheel;
+
+        var frictionSlip = wheelScript.frictionSlip;
+        var isFront = wheelScript.isFront;
+        var radius = wheelScript.radius;
+        var rollInfluence = wheelScript.rollInfluence;
+        var suspensionCompression = wheelScript.suspensionCompression;
+        var suspensionDamping = wheelScript.suspensionDamping;
+        var suspensionRestLength = wheelScript.suspensionRestLength;
+        var suspensionStiffness = wheelScript.suspensionStiffness;
+
+        var wheelPos = this._wheelPositions[index];
+        connectionPoint.setValue(wheelPos.x, wheelPos.y, wheelPos.z);
+        var wheelInfo = vehicle.addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, radius, tuning, isFront);
+
+        wheelInfo.set_m_suspensionStiffness(suspensionStiffness);
+        wheelInfo.set_m_wheelsDampingRelaxation(suspensionDamping);
+        wheelInfo.set_m_wheelsDampingCompression(suspensionCompression);
+        wheelInfo.set_m_frictionSlip(frictionSlip);
+        wheelInfo.set_m_rollInfluence(rollInfluence);
+    });
+
+    Ammo.destroy(wheelAxle);
+    Ammo.destroy(wheelDirection);
+    Ammo.destroy(connectionPoint);
+
+    this.vehicle = vehicle;
+    this._vehicleBody = body;
+    this._vehicleWorld = dynamicsWorld;
+    this._vehicleRayCaster = vehicleRayCaster;
+};
+
+Vehicle.prototype._removeVehicleAction = function () {
+    if (this._vehicleRegistered) {
+        this._vehicleWorld.removeAction(this.vehicle);
+        this._vehicleRegistered = false;
+    }
+};
+
+Vehicle.prototype._destroyVehicle = function () {
+    if (!this.vehicle) {
+        return;
+    }
+
+    this._removeVehicleAction();
+
+    this._bodyDisabled.off();
+    this._bodyRemoved.off();
+    this._bodyDisabled = null;
+    this._bodyRemoved = null;
+
+    Ammo.destroy(this.vehicle);
+    Ammo.destroy(this._vehicleRayCaster);
+
+    this.vehicle = null;
+    this._vehicleBody = null;
+    this._vehicleWorld = null;
+    this._vehicleRayCaster = null;
 };
 
 // update code called every frame
 Vehicle.prototype.update = function (dt) {
-    var vehicle = this.vehicle;
+    var vehicle = this._syncVehicle();
+    if (!vehicle) {
+        return;
+    }
+
     var i;
 
-    var body = this.entity.rigidbody.body;
     var DISABLE_DEACTIVATION = 4;
-    body.setActivationState(DISABLE_DEACTIVATION);
+    this._vehicleBody.setActivationState(DISABLE_DEACTIVATION);
 
     // Apply steering to the front wheels
     vehicle.setSteeringValue(this.steering, 0);
@@ -138,7 +197,7 @@ Vehicle.prototype.update = function (dt) {
     for (i = 0; i < numWheels; i++) {
         // synchronize the wheels with the (interpolated) chassis worldtransform
         vehicle.updateWheelTransform(i, true);
-        var t = this.vehicle.getWheelTransformWS(i);
+        var t = vehicle.getWheelTransformWS(i);
 
         var p = t.getOrigin();
         var q = t.getRotation();
