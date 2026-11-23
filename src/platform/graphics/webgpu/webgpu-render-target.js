@@ -326,8 +326,9 @@ class WebgpuRenderTarget {
             // allocate depth buffer if not provided
             if (!depthBuffer) {
 
-                // TODO: support rendering to 32bit depth without a stencil as well
-                this.depthAttachment = new DepthAttachment('depth24plus-stencil8');
+                // a stencil aspect only when the render target requests it, as on WebGL2 - the
+                // pipelines use the stencil only on such render targets
+                this.depthAttachment = new DepthAttachment(renderTarget.stencil ? 'depth24plus-stencil8' : 'depth32float');
 
                 /** @type {GPUTextureDescriptor} */
                 const depthTextureDesc = {
@@ -393,8 +394,9 @@ class WebgpuRenderTarget {
                 if (samples > 1) {  // create a multi-sampled depth buffer for the provided depth buffer
 
                     // single-sampled depthBuffer.impl.format can be R32F in some cases, but that cannot be used as a depth
-                    // buffer, only as a texture to resolve it to. We always use depth24plus-stencil8 for msaa depth buffers.
-                    const depthFormat = 'depth24plus-stencil8';
+                    // buffer, only as a texture to resolve it to. The msaa depth buffer has a stencil aspect only when the
+                    // provided depth buffer has one.
+                    const depthFormat = renderTarget.stencil ? 'depth24plus-stencil8' : 'depth32float';
                     this.depthAttachment.format = depthFormat;
                     this.depthAttachment.hasStencil = depthFormat === 'depth24plus-stencil8';
 
@@ -413,9 +415,9 @@ class WebgpuRenderTarget {
                             dimension: '2d',
                             sampleCount: samples,
                             format: depthFormat,
-                            usage: GPUTextureUsage.RENDER_ATTACHMENT |
-                                // if msaa and resolve targets are different formats, we need to be able to bind the msaa target as a texture for manual shader resolve
-                                (depthFormat !== depthBuffer.impl.format ? GPUTextureUsage.TEXTURE_BINDING : 0)
+                            // WebGPU has no hardware depth resolve: the msaa depth is resolved by a shader, which binds it
+                            // as a texture - into a provided R32F buffer, or by a depth grab whatever the provided format
+                            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
                         };
 
                         // allocate multi-sampled depth buffer
