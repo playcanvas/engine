@@ -4,7 +4,7 @@ export default /* glsl */`
     // note: opacityDitherPS pulls in bayerPS itself for the Bayer modes - including it here as
     // well would redeclare its functions, as the preprocessor does not deduplicate includes
     #include "opacityDitherPS"
-    flat varying float id;
+    varying float id;
 #endif
 
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
@@ -12,13 +12,13 @@ export default /* glsl */`
 #endif
 
 #ifdef PREPASS_PASS
-    flat varying float vLinearDepth;
+    varying float vLinearDepth;
     #include "floatAsUintPS"
 #endif
 
 // the prepass declares this varying above, and the two passes are never generated as one
 #if defined(SCENE_TEXTURE_DEPTH) && !defined(PREPASS_PASS)
-    flat varying float vLinearDepth;
+    varying float vLinearDepth;
 #endif
 
 #include "sceneTexturesPS"
@@ -28,7 +28,10 @@ export default /* glsl */`
 #endif
 
 varying mediump vec2 gaussianUV;
-flat varying mediump vec4 gaussianColor;
+// gaussianColor, id and vLinearDepth are constant across each splat, but deliberately not flat:
+// flat varyings cost 20-60% GPU time on Apple GPUs before Apple9 (M1, M2, A14-A16), and gain at
+// most a few percent elsewhere. See https://github.com/playcanvas/engine/issues/10085
+varying mediump vec4 gaussianColor;
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     flat varying uint vPickId;
