@@ -728,8 +728,8 @@ class AnimComponent extends Component {
     /**
      * Associates an animation with a state or blend tree node in the loaded state graph. If all
      * states are linked and the {@link activate} value was set to true then the component will
-     * begin playing. If no state graph is loaded, a default state graph will be created with a
-     * single state based on the provided nodePath parameter.
+     * begin playing. If there is no state graph and there are no layers, a default state graph
+     * will be created with a single state based on the provided nodePath parameter.
      *
      * @param {string} nodePath - Either the state name or the path to a blend tree node that this
      * animation should be associated with. Each section of a blend tree path is split using a
@@ -738,15 +738,15 @@ class AnimComponent extends Component {
      * @param {AnimTrack} animTrack - The animation track that will be assigned to this state and
      * played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the
-     * default layer is used. If no state graph has been previously loaded this parameter is
-     * ignored.
+     * default layer is used. If there is no state graph and there are no layers, this parameter
+     * is ignored and the default Base layer is created.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to.
      * Defaults to 1.
      * @param {boolean} [loop] - Update the loop property of the state you are assigning an
      * animation to. Defaults to true.
      */
     assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
-        if (!this._stateGraph && nodePath.indexOf('.') === -1) {
+        if (!this._stateGraph && this._layers.length === 0 && nodePath.indexOf('.') === -1) {
             this.loadStateGraph(new AnimStateGraph({
                 'layers': [
                     {
@@ -780,6 +780,11 @@ class AnimComponent extends Component {
         if (!layer) {
             Debug.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             return;
+        }
+        if (!this._stateGraph && nodePath.indexOf('.') === -1) {
+            // Runtime layers already have controllers and are not part of the state graph asset.
+            // Initialize graph metadata without replacing those layers.
+            this._stateGraph = new AnimStateGraph({ layers: [], parameters: {} });
         }
         layer.assignAnimation(nodePath, animTrack, speed, loop);
     }

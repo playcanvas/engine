@@ -116,6 +116,75 @@ describe('AnimComponent', function () {
 
     });
 
+    describe('#assignAnimation', function () {
+
+        function createAnim() {
+            const entity = new Entity('model', app);
+            app.root.addChild(entity);
+            return entity.addComponent('anim', { activate: true });
+        }
+
+        it('keeps existing layer objects and state routing on the first implicit assignment', function () {
+            const anim = createAnim();
+            const base = anim.addLayer('Locomotion');
+            const upper = anim.addLayer('UpperBody', 0.4, null, ANIM_LAYER_ADDITIVE);
+            upper.assignAnimation('Existing', track('Existing'));
+
+            anim.assignAnimation('Walk', track('Walk'));
+            expect(anim.layers).to.deep.equal([base, upper]);
+            expect(anim.baseLayer).to.equal(base);
+            expect(anim.findLayer('UpperBody')).to.equal(upper);
+            expect(anim.addLayer('UpperBody')).to.equal(upper);
+            expect(base.states).to.include('Walk');
+            expect(upper.states).to.not.include('Walk');
+
+            anim.assignAnimation('Wave', track('Wave'), 'UpperBody');
+            expect(upper.states).to.have.members(['START', 'Existing', 'Wave']);
+            expect(base.states).to.not.include('Wave');
+            expect(upper.weight).to.equal(0.4);
+            expect(upper.blendType).to.equal(ANIM_LAYER_ADDITIVE);
+        });
+
+        it('uses an existing named layer on the first assignment', function () {
+            const anim = createAnim();
+            const base = anim.addLayer('Locomotion');
+            const upper = anim.addLayer('UpperBody');
+
+            anim.assignAnimation('Wave', track('Wave'), 'UpperBody');
+            expect(anim.baseLayer).to.equal(base);
+            expect(upper.states).to.include('Wave');
+            expect(base.states).to.not.include('Wave');
+
+            const clone = anim.entity.clone();
+            expect(clone.anim.layers.map(layer => layer.name)).to.deep.equal(['Locomotion', 'UpperBody']);
+            expect(clone.anim.findLayer('UpperBody').states).to.include('Wave');
+        });
+
+        it('keeps the original base layer when an additional layer is added after assignment', function () {
+            const anim = createAnim();
+            anim.assignAnimation('Walk', track('Walk'));
+            const base = anim.baseLayer;
+            const upper = anim.addLayer('UpperBody');
+
+            anim.assignAnimation('Wave', track('Wave'), 'UpperBody');
+            expect(anim.baseLayer).to.equal(base);
+            expect(anim.findLayer('UpperBody')).to.equal(upper);
+            expect(upper.states).to.include('Wave');
+            expect(base.states).to.not.include('Wave');
+        });
+
+        it('creates the default Base and ignores the layer name on a truly empty component', function () {
+            const anim = createAnim();
+            anim.assignAnimation('Walk', track('Walk'), 'UpperBody');
+
+            expect(anim.layers).to.have.lengthOf(1);
+            expect(anim.baseLayer.name).to.equal('Base');
+            expect(anim.baseLayer.states).to.include('Walk');
+            expect(anim.findLayer('UpperBody')).to.equal(null);
+        });
+
+    });
+
     describe('morph target weights', function () {
 
         const MORPH_TARGET = 'Blink';
