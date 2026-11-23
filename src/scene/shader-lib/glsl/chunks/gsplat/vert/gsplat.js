@@ -5,16 +5,19 @@ export default /* glsl */`
 #include "gsplatCommonVS"
 
 varying mediump vec2 gaussianUV;
-flat varying mediump vec4 gaussianColor;
+// gaussianColor, id and vLinearDepth are constant across each splat, but deliberately not flat:
+// flat varyings cost 20-60% GPU time on Apple GPUs before Apple9 (M1, M2, A14-A16), and gain at
+// most a few percent elsewhere. See https://github.com/playcanvas/engine/issues/10085
+varying mediump vec4 gaussianColor;
 
 #ifndef DITHER_NONE
-    flat varying float id;
+    varying float id;
 #endif
 
 mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
-    flat varying float vLinearDepth;
+    varying float vLinearDepth;
 #endif
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
