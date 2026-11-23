@@ -120,10 +120,12 @@ class VertexIteratorAccessor {
      * @param {boolean} vertexElement.normalize - If true, vertex attribute data will be mapped
      * from a 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data
      * is left unchanged. If this property is unspecified, false is assumed.
-     * @param {number} vertexElement.offset - The number of initial bytes at the start of a vertex
-     * that are not relevant to this attribute.
-     * @param {number} vertexElement.stride - The number of total bytes that are between the start
-     * of one vertex, and the start of the next.
+     * @param {number} vertexElement.offset - The byte offset of this attribute's data. In an
+     * interleaved format this is the offset from the start of a vertex. In a non-interleaved
+     * format this is the offset of the attribute's array from the start of the buffer.
+     * @param {number} vertexElement.stride - The number of bytes from this attribute in one vertex
+     * to the same attribute in the next. Interleaved attributes share the vertex size. In a
+     * non-interleaved format the stride is the size of the attribute in bytes.
      * @param {number} vertexElement.size - The size of the attribute in bytes.
      * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data
      * inside the buffer.
