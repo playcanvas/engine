@@ -255,4 +255,83 @@ describe('WebgpuRenderTarget#initDepthStencil', function () {
         }]);
         expect(impl.renderPassDescriptor.depthStencilAttachment.view.desc).to.equal(views[0]);
     });
+
+    const createTextureMocks = () => {
+        const created = [];
+        const wgpu = {
+            createTexture(desc) {
+                created.push(desc);
+                return {
+                    desc,
+                    createView() {
+                        return {};
+                    }
+                };
+            }
+        };
+        return { created, wgpu };
+    };
+
+    it('allocates its depth with a stencil aspect only when the render target requests stencil', function () {
+        [false, true].forEach((stencil) => {
+            const { created, wgpu } = createTextureMocks();
+            const renderTarget = {
+                samples: 1,
+                width: 4,
+                height: 4,
+                depth: true,
+                stencil,
+                name: `depth-rt-${stencil}`,
+                transientDepth: false
+            };
+            const impl = new WebgpuRenderTarget(renderTarget);
+            impl.initDepthStencil({}, wgpu, renderTarget);
+
+            const format = stencil ? 'depth24plus-stencil8' : 'depth32float';
+            expect(created).to.have.lengthOf(1);
+            expect(created[0].format).to.equal(format);
+            expect(impl.depthAttachment.format).to.equal(format);
+            expect(impl.depthAttachment.hasStencil).to.equal(stencil);
+        });
+    });
+
+    it('allocates the multisampled depth over a provided depth buffer with its stencil, bindable for the shader resolve', function () {
+        const device = { on() {} };
+        [
+            { format: 'depth32float', stencil: false },
+            { format: 'depth16unorm', stencil: false },
+            { format: 'depth24plus-stencil8', stencil: true }
+        ].forEach(({ format, stencil }, index) => {
+            const { created, wgpu } = createTextureMocks();
+            const depthBuffer = {
+                id: 223456 + index,
+                cubemap: false,
+                array: false,
+                samples: 1,
+                impl: { format, gpuTexture: {} }
+            };
+            const renderTarget = {
+                samples: 4,
+                width: 4,
+                height: 4,
+                depth: true,
+                stencil,
+                depthBuffer,
+                name: `msaa-depth-${format}`,
+                getLayer: () => 0
+            };
+            const impl = new WebgpuRenderTarget(renderTarget);
+            impl.initDepthStencil(device, wgpu, renderTarget);
+
+            // the multisampled depth is only ever resolved by a shader, which binds it as a
+            // texture - also when it has the format of the provided depth buffer
+            const msFormat = stencil ? 'depth24plus-stencil8' : 'depth32float';
+            expect(created).to.have.lengthOf(1);
+            expect(created[0].format).to.equal(msFormat);
+            expect(created[0].sampleCount).to.equal(4);
+            expect(created[0].usage & GPUTextureUsage.TEXTURE_BINDING).to.not.equal(0);
+            expect(impl.depthAttachment.format).to.equal(msFormat);
+            expect(impl.depthAttachment.hasStencil).to.equal(stencil);
+        });
+    });
 });
