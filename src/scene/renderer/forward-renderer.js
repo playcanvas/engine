@@ -301,10 +301,6 @@ class ForwardRenderer extends Renderer {
         const viewListStart = (viewList && activeView >= 0) ? activeView : 0;
         const viewListEnd = (viewList && activeView >= 0) ? activeView + 1 : (viewList ? viewList.length : 0);
 
-        // the depth tests and biases of the materials are reversed for a camera rendering with
-        // reverse-z
-        const reverseZ = camera.reverseZActive;
-
         // Render the scene
         for (let i = 0; i < preparedCallsCount; i++) {
 
@@ -334,7 +330,7 @@ class ForwardRenderer extends Renderer {
                 const blendState = (attachmentCount > 1 && !material.sceneTexturesWrite) ?
                     getSingleAttachmentBlendState(material.blendState, attachmentCount) : material.blendState;
                 device.setBlendState(blendState);
-                device.setDepthState(reverseZ ? this.getReverseZDepthState(material.depthState) : material.depthState);
+                device.setDepthState(material.depthState);
                 device.setAlphaToCoverage(material.alphaToCoverage);
             }
 

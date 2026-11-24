@@ -1489,6 +1489,17 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Sets whether the current render pass renders into a reversed depth buffer, see
+     * {@link RenderPass#reverseZ}. Called by the render pass when it renders.
+     *
+     * @param {boolean} reverseZ - True for a reversed depth buffer.
+     * @ignore
+     */
+    setReverseZ(reverseZ) {
+        Debug.assert(!reverseZ || this.supportsReverseZ, 'Reverse-z is not supported by the graphics device.');
+    }
+
+    /**
      * Controls how triangles are culled based on their face direction. The default cull mode is
      * {@link CULLFACE_BACK}.
      *

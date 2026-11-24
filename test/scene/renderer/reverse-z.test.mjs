@@ -240,22 +240,42 @@ describe('Reverse-z', function () {
             expect(camera.camera.shaderParams.defines.has('REVERSE_Z')).to.equal(true);
         });
 
-        it('reverses the depth tests and biases of the materials', function () {
-            requireReverseZ(this);
-            createCamera('camera', true);
+        // the depth states the render pipelines are looked up with, copied as the device reuses the
+        // object it passes
+        const capturePipelineDepthStates = () => {
+            const pipeline = app.graphicsDevice.renderPipeline;
+            const get = pipeline.get.bind(pipeline);
+            const states = [];
+            pipeline.get = (...args) => {
+                states.push(args[8].clone());
+                return get(...args);
+            };
+            return states;
+        };
+
+        const createBiasedMaterial = () => {
             const material = new StandardMaterial();
             material.depthBias = 2;
             material.slopeDepthBias = 3;
             material.update();
+            return material;
+        };
+
+        it('reverses the depth tests and biases of the materials', function () {
+            requireReverseZ(this);
+            createCamera('camera', true);
+            const material = createBiasedMaterial();
             addBox(material);
 
-            const setDepthState = spy(app.graphicsDevice, 'setDepthState');
+            const setRenderPassReverseZ = spy(app.graphicsDevice, 'setReverseZ');
+            const states = capturePipelineDepthStates();
             app.render();
 
-            const states = setDepthState.args.map(args => args[0]);
+            // the renderer sets the depth state of the material, which the device reverses
+            expect(setRenderPassReverseZ.args.some(args => args[0] === true)).to.equal(true);
             const reversed = states.find(state => state.func === FUNC_GREATEREQUAL);
             expect(reversed, 'the depth state of the box').to.not.equal(undefined);
-            expect(states.some(state => state === material.depthState)).to.equal(false);
+            expect(states.some(state => state.func === FUNC_LESSEQUAL && state.depthBias === 2)).to.equal(false);
             expect(reversed.write).to.equal(true);
             expect(reversed.depthBias).to.equal(-2);
             expect(reversed.depthBiasSlope).to.equal(-3);
@@ -263,6 +283,24 @@ describe('Reverse-z', function () {
             // the material keeps its depth state
             expect(material.depthState.func).to.equal(FUNC_LESSEQUAL);
             expect(material.depthState.depthBias).to.equal(2);
+        });
+
+        it('reverses the depth states only for the passes of a camera with reverse-z', function () {
+            requireReverseZ(this);
+
+            // both cameras render the same material, so the depth state the renderer sets does not
+            // change between their passes, only the reverse-z setting does
+            const reversedCamera = createCamera('reversed', true);
+            reversedCamera.priority = 0;
+            const standardCamera = createCamera('standard', false);
+            standardCamera.priority = 1;
+            addBox(createBiasedMaterial());
+
+            const states = capturePipelineDepthStates();
+            app.render();
+
+            expect(states.some(state => state.func === FUNC_GREATEREQUAL && state.depthBias === -2), 'reversed').to.equal(true);
+            expect(states.some(state => state.func === FUNC_LESSEQUAL && state.depthBias === 2), 'standard').to.equal(true);
         });
 
         it('keeps the depth tests of the materials of a camera without reverse-z', function () {
@@ -506,52 +544,37 @@ describe('Reverse-z', function () {
         });
     });
 
-    describe('Renderer#getReverseZDepthState', function () {
-
-        /** @type {Application} */
-        let app;
-
-        beforeEach(function () {
-            jsdomSetup();
-            app = createApp();
-        });
-
-        afterEach(function () {
-            app.destroy();
-            jsdomTeardown();
-        });
+    describe('DepthState#copyReversed', function () {
 
         it('reverses the depth test functions', function () {
             const funcs = [FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL, FUNC_GREATEREQUAL, FUNC_ALWAYS];
-            const reversed = funcs.map(func => app.renderer.getReverseZDepthState(new DepthState(func, false)).func);
+            const reversed = funcs.map(func => new DepthState().copyReversed(new DepthState(func, false)).func);
 
             expect(reversed).to.deep.equal([FUNC_NEVER, FUNC_GREATER, FUNC_EQUAL, FUNC_GREATEREQUAL, FUNC_LESS, FUNC_NOTEQUAL, FUNC_LESSEQUAL, FUNC_ALWAYS]);
         });
 
         it('keeps the write and reverses the biases', function () {
-            const depthState = new DepthState(FUNC_LESS, false);
-            depthState.depthBias = -0.5;
-            depthState.depthBiasSlope = 4;
-            const reversed = app.renderer.getReverseZDepthState(depthState);
+            for (const write of [false, true]) {
+                const depthState = new DepthState(FUNC_LESS, write);
+                depthState.depthBias = -0.5;
+                depthState.depthBiasSlope = 4;
+                const reversed = new DepthState().copyReversed(depthState);
 
-            expect(reversed.write).to.equal(false);
-            expect(reversed.depthBias).to.equal(0.5);
-            expect(reversed.depthBiasSlope).to.equal(-4);
+                expect(reversed.write).to.equal(write);
+                expect(reversed.depthBias).to.equal(0.5);
+                expect(reversed.depthBiasSlope).to.equal(-4);
+            }
         });
 
-        it('creates a depth state once for equal depth states', function () {
-            const reversed = app.renderer.getReverseZDepthState(new DepthState(FUNC_LESSEQUAL, true));
+        it('keeps the source depth state', function () {
+            const depthState = new DepthState(FUNC_LESSEQUAL, true);
+            depthState.depthBias = 1;
+            const key = depthState.key;
+            new DepthState().copyReversed(depthState);
 
-            expect(app.renderer.getReverseZDepthState(new DepthState(FUNC_LESSEQUAL, true))).to.equal(reversed);
-            expect(app.renderer.getReverseZDepthState(DepthState.DEFAULT)).to.equal(reversed);
-            expect(app.renderer.getReverseZDepthState(new DepthState(FUNC_LESSEQUAL, false))).to.not.equal(reversed);
-
-            // the biases are part of the key of a depth state, so each one gets its own reversed state
-            const biased = new DepthState(FUNC_LESSEQUAL, true);
-            biased.depthBias = 1;
-            const reversedBiased = app.renderer.getReverseZDepthState(biased);
-            expect(reversedBiased).to.not.equal(reversed);
-            expect(reversedBiased.depthBias).to.equal(-1);
+            expect(depthState.func).to.equal(FUNC_LESSEQUAL);
+            expect(depthState.depthBias).to.equal(1);
+            expect(depthState.key).to.equal(key);
         });
     });
 });

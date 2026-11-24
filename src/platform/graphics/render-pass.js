@@ -330,6 +330,19 @@ class RenderPass extends FramePass {
     fullSizeClearRect = true;
 
     /**
+     * True if the pass renders into a reversed depth buffer, which stores a depth of 1 at the near
+     * plane and 0 at the far plane, see {@link CameraComponent#reverseZ}. The graphics device then
+     * reverses the depth states set during the pass: the depth test functions and the depth
+     * biases keep their meaning, so {@link FUNC_LESSEQUAL} still passes the nearer fragments.
+     * Requires {@link GraphicsDevice#supportsReverseZ}. Read when the pass renders, after
+     * {@link RenderPass#before}. Defaults to false.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    reverseZ = false;
+
+    /**
      * Sets what the render target of the pass is resized to each frame: a texture or a render
      * target, whose size, scaled by {@link RenderPass#scaleX} and {@link RenderPass#scaleY}, the
      * render target takes, or null to take the size of the back buffer. Undefined, the default,
@@ -772,8 +785,14 @@ class RenderPass extends FramePass {
 
             if (this.executeEnabled) {
 
-                if (realPass && !this._skipStart) {
-                    device.startRenderPass(this);
+                if (realPass) {
+                    if (!this._skipStart) {
+                        device.startRenderPass(this);
+                    }
+
+                    // set for each pass, including a pass merged into the GPU render pass of a
+                    // neighboring one
+                    device.setReverseZ(this.reverseZ);
                 }
 
                 this.execute();

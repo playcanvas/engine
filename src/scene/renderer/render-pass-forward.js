@@ -455,6 +455,9 @@ class RenderPassForward extends RenderPass {
             this.scene.fire(EVENT_PRERENDER, this.cameraComponent);
         }
 
+        // the device reverses the depth states of the draws of a camera rendering with reverse-z
+        this.reverseZ = this.cameraComponent.camera.reverseZActive;
+
         // the prerender handlers, called from the first pass of the camera, can still change the
         // depth the camera renders with; every pass of the camera clearing the depth reads it again
         // here, before it starts
