@@ -8,6 +8,8 @@ import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.j
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
+import { AnimStateGraph } from '../../../../src/framework/anim/state-graph/anim-state-graph.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { MeshInstance } from '../../../../src/scene/mesh-instance.js';
@@ -181,6 +183,117 @@ describe('AnimComponent', function () {
             expect(anim.baseLayer.name).to.equal('Base');
             expect(anim.baseLayer.states).to.include('Walk');
             expect(anim.findLayer('UpperBody')).to.equal(null);
+        });
+
+    });
+
+    describe('#loadStateGraph', function () {
+
+        function createAnim() {
+            const entity = new Entity('model', app);
+            app.root.addChild(entity);
+            entity.addComponent('anim', { activate: true });
+            return entity.anim;
+        }
+
+        it('preserves runtime layers and tracks when reloading its own generated graph', function () {
+            const anim = createAnim();
+            const base = anim.addLayer('Locomotion');
+            const upper = anim.addLayer('UpperBody');
+            const walk = track('Walk');
+            const wave = track('Wave');
+
+            anim.assignAnimation('Walk', walk);
+            anim.assignAnimation('Wave', wave, 'UpperBody');
+            app.systems.anim.onAnimationUpdate(0.1);
+            const graph = anim.stateGraph;
+            anim.loadStateGraph(graph);
+
+            expect(anim.stateGraph).to.equal(graph);
+            expect(anim.layers).to.have.lengthOf(2);
+            expect(anim.baseLayer).to.equal(base);
+            expect(anim.layers[1]).to.equal(upper);
+            expect(anim.findLayer('UpperBody')).to.equal(upper);
+            expect(base.activeState).to.equal('Walk');
+            expect(upper.activeState).to.equal('Wave');
+            expect(base._controller.activeStateAnimations[0].animTrack).to.equal(walk);
+            expect(upper._controller.activeStateAnimations[0].animTrack).to.equal(wave);
+        });
+
+        it('preserves independently cloned runtime layers on reload', function () {
+            const anim = createAnim();
+            anim.addLayer('Locomotion');
+            anim.addLayer('UpperBody');
+            const walk = track('Walk');
+            const wave = track('Wave');
+            anim.assignAnimation('Walk', walk);
+            anim.assignAnimation('Wave', wave, 'UpperBody');
+
+            // Cloning of directly assigned tracks is independent of graph reload.
+            const walkAsset = new Asset('Walk', 'animation');
+            const waveAsset = new Asset('Wave', 'animation');
+            walkAsset.resource = walk;
+            waveAsset.resource = wave;
+            app.assets.add(walkAsset);
+            app.assets.add(waveAsset);
+            anim.animationAssets = {
+                'Locomotion:Walk': { asset: walkAsset.id },
+                'UpperBody:Wave': { asset: waveAsset.id }
+            };
+
+            const clone = anim.entity.clone();
+            app.root.addChild(clone);
+            app.systems.anim.onAnimationUpdate(0.1);
+            const layers = clone.anim.layers.slice();
+            expect(layers.map(layer => layer.name)).to.deep.equal(['Locomotion', 'UpperBody']);
+            expect(layers[0]).to.not.equal(anim.layers[0]);
+            expect(layers[1]).to.not.equal(anim.layers[1]);
+
+            clone.anim.loadStateGraph(clone.anim.stateGraph);
+            expect(clone.anim.layers).to.have.lengthOf(2);
+            expect(clone.anim.layers[0]).to.equal(layers[0]);
+            expect(clone.anim.layers[1]).to.equal(layers[1]);
+            expect(layers[0]._controller.activeStateAnimations[0].animTrack).to.equal(walk);
+            expect(layers[1]._controller.activeStateAnimations[0].animTrack).to.equal(wave);
+        });
+
+        it('replaces runtime layers when a different empty graph is explicitly loaded', function () {
+            const anim = createAnim();
+            anim.addLayer('Locomotion');
+            anim.addLayer('UpperBody');
+            anim.assignAnimation('Walk', track('Walk'));
+
+            const graph = new AnimStateGraph({ layers: [], parameters: {} });
+            anim.loadStateGraph(graph);
+
+            expect(anim.stateGraph).to.equal(graph);
+            expect(anim.layers).to.be.empty;
+        });
+
+        it('rebuilds layers when the same authored graph is loaded again', function () {
+            const anim = createAnim();
+            anim.addLayer('Locomotion');
+            anim.assignAnimation('Walk', track('Walk'));
+            const generated = anim.stateGraph;
+            const authored = new AnimStateGraph({
+                layers: [{
+                    name: 'Authored',
+                    states: [{ name: 'START' }],
+                    transitions: []
+                }],
+                parameters: {}
+            });
+            anim.loadStateGraph(authored);
+            const layer = anim.baseLayer;
+            expect(layer.name).to.equal('Authored');
+
+            anim.loadStateGraph(authored);
+            expect(anim.baseLayer.name).to.equal('Authored');
+            expect(anim.baseLayer).to.not.equal(layer);
+
+            anim.loadStateGraph(generated);
+            expect(anim.stateGraph).to.equal(generated);
+            expect(anim.layers).to.be.empty;
         });
 
     });

@@ -22,6 +22,9 @@ const ANIMUPDATE_INTERVAL = 2;
 // the components with the same interval over the frames of the interval
 const evaluationPhaseCounters = new Map();
 
+// Distinguish generated runtime metadata from authored empty graphs, including when cloning.
+class RuntimeAnimStateGraph extends AnimStateGraph { }
+
 /**
  * The AnimComponent enables an {@link Entity} to play back animations on models and entity
  * properties. Animations are driven by animation state graphs, which can be authored in the
@@ -104,6 +107,14 @@ class AnimComponent extends Component {
 
     /** @private */
     _stateGraph = null;
+
+    /**
+     * The generated runtime metadata currently installed on this component.
+     *
+     * @type {AnimStateGraph|null}
+     * @private
+     */
+    _runtimeStateGraph = null;
 
     /** @private */
     _layers = [];
@@ -353,6 +364,9 @@ class AnimComponent extends Component {
     }
 
     set stateGraph(value) {
+        if (value !== this._stateGraph) {
+            this._runtimeStateGraph = null;
+        }
         this._stateGraph = value;
     }
 
@@ -508,7 +522,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * Initializes component animation controllers using the provided state graph.
+     * Initializes component animation controllers using the provided state graph. Reloading this
+     * component's own implicitly generated runtime graph preserves its programmatic layers.
      *
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the
      * states, transitions and parameters used to define a complete animation controller.
@@ -541,6 +556,11 @@ class AnimComponent extends Component {
      * });
      */
     loadStateGraph(stateGraph) {
+        // Reloading our own metadata must not rebuild or clear the live runtime layers.
+        if (this._runtimeStateGraph && stateGraph === this._runtimeStateGraph && stateGraph === this._stateGraph) {
+            return;
+        }
+        this._runtimeStateGraph = stateGraph instanceof RuntimeAnimStateGraph ? stateGraph : null;
         this._stateGraph = stateGraph;
         this._assignParameters(stateGraph);
         this._layers = [];
@@ -616,6 +636,7 @@ class AnimComponent extends Component {
      * Removes all layers from the anim component.
      */
     removeStateGraph() {
+        this._runtimeStateGraph = null;
         this._stateGraph = null;
         this._stateGraphAsset = null;
         this._animationAssets = {};
@@ -784,7 +805,8 @@ class AnimComponent extends Component {
         if (!this._stateGraph && nodePath.indexOf('.') === -1) {
             // Runtime layers already have controllers and are not part of the state graph asset.
             // Initialize graph metadata without replacing those layers.
-            this._stateGraph = new AnimStateGraph({ layers: [], parameters: {} });
+            this._runtimeStateGraph = new RuntimeAnimStateGraph({ layers: [], parameters: {} });
+            this._stateGraph = this._runtimeStateGraph;
         }
         layer.assignAnimation(nodePath, animTrack, speed, loop);
     }
