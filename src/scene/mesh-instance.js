@@ -800,6 +800,7 @@ class MeshInstance {
     set renderStyle(renderStyle) {
         this._renderStyle = renderStyle;
         this.mesh.prepareRenderState(renderStyle);
+        Debug.call(() => this._warnMultiDrawRenderStyle());
     }
 
     /**
@@ -1674,8 +1675,27 @@ class MeshInstance {
         } else {
             cmd = this._allocDrawCommands(key, true);
             cmd.allocate(maxCount);
+            Debug.call(() => this._warnMultiDrawRenderStyle());
         }
         return cmd;
+    }
+
+    /**
+     * Warns when multi-draw is combined with a render style other than solid. The sub-draws are
+     * ranges of the solid index buffer, which the wireframe and points render styles do not use.
+     * Both can only change through their setters, so checking there catches every combination.
+     *
+     * @private
+     */
+    _warnMultiDrawRenderStyle() {
+        if (this._renderStyle !== RENDERSTYLE_SOLID && this.drawCommands) {
+            for (const cmd of this.drawCommands.values()) {
+                if (cmd.multiDraw) {
+                    Debug.warnOnce('MeshInstance: multi-draw is only supported with RENDERSTYLE_SOLID. Its sub-draws are ranges of the solid index buffer, so wireframe and points render incorrectly.', this);
+                    return;
+                }
+            }
+        }
     }
 
     /**
