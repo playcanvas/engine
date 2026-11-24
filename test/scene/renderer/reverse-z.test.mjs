@@ -33,12 +33,13 @@ const clipDepth = (projection, z) => {
 
 describe('Reverse-z', function () {
 
-    describe('Camera.applyShaderProjectionTransform', function () {
+    describe('Camera.reverseClipDepth', function () {
 
         const projection = new Mat4().setPerspective(60, 1, 0.5, 1000);
 
-        it('maps the near plane to 1 and the far plane to 0 with reverse-z', function () {
-            const reversed = Camera.applyShaderProjectionTransform(projection, new Mat4(), false, true, true);
+        it('maps the near plane to 1 and the far plane to 0', function () {
+            const standard = Camera.applyShaderProjectionTransform(projection, new Mat4(), false, true);
+            const reversed = Camera.reverseClipDepth(standard, new Mat4());
 
             expect(clipDepth(reversed, -0.5)).to.be.closeTo(1, 1e-6);
             expect(clipDepth(reversed, -1000)).to.be.closeTo(0, 1e-6);
@@ -47,7 +48,7 @@ describe('Reverse-z', function () {
         it('reverses the depth of the standard WebGPU range, with and without the flip', function () {
             for (const flipY of [false, true]) {
                 const standard = Camera.applyShaderProjectionTransform(projection, new Mat4(), flipY, true);
-                const reversed = Camera.applyShaderProjectionTransform(projection, new Mat4(), flipY, true, true);
+                const reversed = Camera.reverseClipDepth(standard, new Mat4());
 
                 for (const z of [-0.5, -3, -40, -999]) {
                     expect(clipDepth(reversed, z)).to.be.closeTo(1 - clipDepth(standard, z), 1e-6);
@@ -55,9 +56,13 @@ describe('Reverse-z', function () {
             }
         });
 
-        it('ignores reverse-z without the WebGPU depth range', function () {
-            const reversed = Camera.applyShaderProjectionTransform(projection, new Mat4(), false, false, true);
-            expect(reversed.data).to.deep.equal(projection.data);
+        it('gives back the standard matrix when applied twice, also in place', function () {
+            const standard = Camera.applyShaderProjectionTransform(projection, new Mat4(), true, true);
+            const matrix = standard.clone();
+            Camera.reverseClipDepth(matrix, matrix);
+            expect(matrix.data).to.not.deep.equal(standard.data);
+            Camera.reverseClipDepth(matrix, matrix);
+            expect(matrix.data).to.deep.equal(standard.data);
         });
     });
 
@@ -71,7 +76,7 @@ describe('Reverse-z', function () {
                         new Mat4().setOrtho(-1, 1, -1, 1, near, far);
 
                     for (const flipY of [false, true]) {
-                        const projection = Camera.applyShaderProjectionTransform(source, new Mat4(), flipY, true, true);
+                        const projection = Camera.applyShaderProjectionTransform(source, new Mat4(), flipY, true);
                         const before = Array.from(projection.data);
                         Camera.setReverseZDepth(projection, perspective, near, far);
 
@@ -150,13 +155,14 @@ describe('Reverse-z', function () {
 
         describe('CameraComponent#reverseZ', function () {
 
-            it('is set only on a device supporting it', function () {
+            it('keeps the setting, and applies it only on a device supporting it', function () {
                 const warn = spy(Debug, 'warnOnce');
                 const entity = new Entity('camera');
                 entity.addComponent('camera', { reverseZ: true });
 
                 const supported = app.graphicsDevice.supportsReverseZ;
-                expect(entity.camera.reverseZ).to.equal(supported);
+                expect(entity.camera.reverseZ).to.equal(true);
+                expect(entity.camera.camera.reverseZActive).to.equal(supported);
                 expect(entity.camera.camera.shaderParams.reverseZ).to.equal(false);
                 expect(warn.calledWithMatch('not supported by the device')).to.equal(!supported);
 
@@ -165,12 +171,12 @@ describe('Reverse-z', function () {
                 entity.destroy();
             });
 
-            it('is cloned', function () {
+            it('is cloned, also on a device not supporting it', function () {
                 const entity = new Entity('camera');
                 entity.addComponent('camera', { reverseZ: true });
                 const clone = entity.clone();
 
-                expect(clone.camera.reverseZ).to.equal(entity.camera.reverseZ);
+                expect(clone.camera.reverseZ).to.equal(true);
                 clone.destroy();
                 entity.destroy();
             });
@@ -200,19 +206,20 @@ describe('Reverse-z', function () {
             try {
                 const camera = new Camera(device);
                 camera.reverseZ = true;
-                expect(camera.reverseZ).to.equal(!supported);
+                expect(camera.reverseZ).to.equal(true);
+                expect(camera.reverseZActive).to.equal(!supported);
             } finally {
                 device.supportsReverseZ = supported;
             }
         });
 
-        it('is set on the Camera only on a device supporting it', function () {
+        it('is kept on the Camera, and applied only on a device supporting it', function () {
             const warn = spy(Debug, 'warnOnce');
             const camera = new Camera(app.graphicsDevice);
             camera.reverseZ = true;
 
             const supported = app.graphicsDevice.supportsReverseZ;
-            expect(camera.reverseZ).to.equal(supported);
+            expect(camera.reverseZ).to.equal(true);
             expect(camera.reverseZActive).to.equal(supported);
             expect(warn.calledWithMatch('not supported by the device')).to.equal(!supported);
         });
@@ -465,6 +472,26 @@ describe('Reverse-z', function () {
             expect(clipDepth(projection, -0.01)).to.be.closeTo(1, 1e-6);
             expect(clipDepth(projection, -100000)).to.be.closeTo(0, 1e-6);
             expect(clipDepth(projection, -50000.005)).to.be.closeTo(0.5, 1e-6);
+        });
+
+        it('reverses a projection the application calculates', function () {
+            requireReverseZ(this);
+
+            const camera = createCamera('camera', true);
+            camera.calculateProjection = (matrix) => {
+                matrix.setPerspective(50, 1, 0.5, 1000);
+            };
+            addBox();
+            app.render();
+
+            const resolve = name => new Mat4().set(app.graphicsDevice.scope.resolve(name).value);
+            const projection = resolve('matrix_projection');
+            expect(clipDepth(projection, -0.5)).to.be.closeTo(1, 1e-6);
+            expect(clipDepth(projection, -1000)).to.be.closeTo(0, 1e-6);
+
+            // the frustum is that of the calculated projection with the standard depth
+            const standard = Camera.applyShaderProjectionTransform(new Mat4().setPerspective(50, 1, 0.5, 1000), new Mat4(), false, true);
+            expect(clipDepth(Camera.reverseClipDepth(projection, new Mat4()), -40)).to.be.closeTo(clipDepth(standard, -40), 1e-6);
         });
     });
 

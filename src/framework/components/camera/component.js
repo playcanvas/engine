@@ -835,10 +835,10 @@ class CameraComponent extends Component {
      * buffer, this keeps the depth precise over large view distances, avoiding the z-fighting of
      * distant surfaces.
      *
-     * The rest of the engine keeps the standard depth convention: the depth buffer clears to the
-     * reverse of the clear depth of the camera (to 0 for the default of 1), and the depth test
-     * functions and biases of the materials keep their meaning - {@link FUNC_LESSEQUAL} still passes
-     * the nearer fragments. Shaders are compiled with the `REVERSE_Z` define, which custom shaders
+     * The rest of the engine keeps the standard depth convention, which the graphics device
+     * reverses: it clears the depth buffer to the reverse of the clear depth of the camera (to 0
+     * for the default of 1), and reverses the depth test functions and biases, which keep their
+     * meaning - {@link FUNC_LESSEQUAL} still passes the nearer fragments. Shaders are compiled with the `REVERSE_Z` define, which custom shaders
      * writing or reading the depth of the camera need to handle. Cameras rendering to the same
      * depth buffer need the same setting.
      *
@@ -850,7 +850,12 @@ class CameraComponent extends Component {
      * sample count. With MSAA and a single-sampled depth texture, the engine still renders into an
      * internal `depth24plus-stencil8` attachment; resolving to float does not recover lost precision.
      *
-     * Reverse-z is ignored on a device not supporting it, see
+     * The depth of the built-in projections is computed from the clip planes, keeping the far
+     * plane in place with any ratio of the far clip to the near clip. A projection calculated by
+     * {@link CameraComponent#calculateProjection} is reversed from its own 32-bit terms, which
+     * loses some of that precision with a large ratio.
+     *
+     * A device not supporting reverse-z renders without it, keeping the setting, see
      * {@link GraphicsDevice#supportsReverseZ}, which is true on WebGPU. It is not applied to the
      * views of an XR session. The features reading the depth the camera renders do not support it
      * yet: the scene depth map ({@link CameraComponent#requestSceneDepthMap}), the depth prepass of
@@ -864,8 +869,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Gets whether the camera is set to render with a reversed depth buffer. It stays set while
-     * the camera renders the views of an XR session, which are rendered without it.
+     * Gets whether the camera is set to render with a reversed depth buffer. It stays set on a
+     * device not supporting it, and while the camera renders the views of an XR session, which
+     * both render without it.
      *
      * @type {boolean}
      */

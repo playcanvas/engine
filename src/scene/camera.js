@@ -61,19 +61,6 @@ class Camera {
         0, 0, 0.5, 1
     ]);
 
-    /**
-     * Maps the clip depth from -1..1 to the reversed 1..0 range of reverse-z, see
-     * {@link Camera#reverseZ}.
-     *
-     * @private
-     */
-    static _webGpuDepthRangeMatrixReverseZ = new Mat4().set([
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, -0.5, 0,
-        0, 0, 0.5, 1
-    ]);
-
     /** @private */
     static _applyShaderProjectionScratch = new Mat4();
 
@@ -85,37 +72,59 @@ class Camera {
      * @param {Mat4} out - Receives the transformed matrix.
      * @param {boolean} flipY - When true, apply render-target Y flip first.
      * @param {boolean} applyWebGpuDepthRange - When true, map clip Z from -1..1 to 0..1.
-     * @param {boolean} [reverseZ] - When true together with applyWebGpuDepthRange, map clip Z from
-     * -1..1 to the reversed 1..0 instead, see {@link Camera#reverseZ}. Defaults to false.
      * @returns {Mat4} out
      */
-    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange, reverseZ = false) {
+    static applyShaderProjectionTransform(projection, out, flipY, applyWebGpuDepthRange) {
         if (!flipY && !applyWebGpuDepthRange) {
             out.copy(projection);
             return out;
         }
-        const depthRange = reverseZ ? Camera._webGpuDepthRangeMatrixReverseZ : Camera._webGpuDepthRangeMatrix;
         if (flipY && applyWebGpuDepthRange) {
             const scratch = Camera._applyShaderProjectionScratch;
             scratch.mul2(Camera._flipYProjectionMatrix, projection);
-            out.mul2(depthRange, scratch);
+            out.mul2(Camera._webGpuDepthRangeMatrix, scratch);
             return out;
         }
         if (flipY) {
             out.mul2(Camera._flipYProjectionMatrix, projection);
             return out;
         }
-        out.mul2(depthRange, projection);
+        out.mul2(Camera._webGpuDepthRangeMatrix, projection);
+        return out;
+    }
+
+    /**
+     * Reverses the clip depth of a matrix with the WebGPU depth range, a projection built by
+     * {@link Camera.applyShaderProjectionTransform} or a view projection made from it, for reverse-z
+     * (see {@link Camera#reverseZ}): the clip depth z becomes w - z, so the depth is 1 at the near
+     * plane and 0 at the far plane. Applied to a reversed matrix, it gives back the standard one.
+     * Computed from the 32-bit terms of the matrix, it loses the precision of the depth with a
+     * large ratio of the far clip to the near clip, see {@link Camera.setReverseZDepth}.
+     *
+     * @param {Mat4} matrix - The matrix to reverse the clip depth of.
+     * @param {Mat4} out - Receives the result. Can be the matrix itself.
+     * @returns {Mat4} out
+     * @ignore
+     */
+    static reverseClipDepth(matrix, out) {
+        if (out !== matrix) {
+            out.copy(matrix);
+        }
+        const d = out.data;
+        d[2] = d[3] - d[2];
+        d[6] = d[7] - d[6];
+        d[10] = d[11] - d[10];
+        d[14] = d[15] - d[14];
         return out;
     }
 
     /**
      * Writes the depth of reverse-z, computed from the clip planes, to a projection built by
-     * {@link Camera.applyShaderProjectionTransform} with reverse-z. That builds the reversed depth
-     * from the float32 terms of the projection, whose difference loses the precision of a small near
-     * clip with a large far clip and moves the far plane towards the camera: with a near clip of
-     * 0.01 and a far clip of 100000, it is at about 83900. Computed here in double precision, the
-     * depth is 1 at the near plane and 0 at the far plane.
+     * {@link Camera.applyShaderProjectionTransform} from a built-in projection, with the WebGPU
+     * depth range: the depth is 1 at the near plane and 0 at the far plane. Computed in double
+     * precision, the far plane stays in place with any ratio of the far clip to the near clip,
+     * unlike reversing the 32-bit terms of the projection with {@link Camera.reverseClipDepth},
+     * which with a near clip of 0.01 and a far clip of 100000 moves it to about 83900.
      *
      * @param {Mat4} out - The projection to write the depth of. Its other terms are kept.
      * @param {boolean} perspective - True for a perspective projection, false for an orthographic
@@ -707,19 +716,18 @@ class Camera {
 
     /**
      * Sets whether the camera renders with a reversed depth buffer, see
-     * {@link CameraComponent#reverseZ}. It is set only on a device supporting it, see
-     * {@link GraphicsDevice#supportsReverseZ}.
+     * {@link CameraComponent#reverseZ}. The setting is kept on a device not supporting it (see
+     * {@link GraphicsDevice#supportsReverseZ}), which renders without it.
      *
      * @type {boolean}
      */
     set reverseZ(value) {
-        const supported = this.device.supportsReverseZ;
         Debug.call(() => {
-            if (value && !supported) {
-                Debug.warnOnce('Camera#reverseZ is not supported by the device (GraphicsDevice#supportsReverseZ), ignoring.');
+            if (value && !this.device.supportsReverseZ) {
+                Debug.warnOnce('Camera#reverseZ is not supported by the device (GraphicsDevice#supportsReverseZ), rendering without it.');
             }
         });
-        this._reverseZ = value && supported;
+        this._reverseZ = value;
     }
 
     /**
@@ -734,14 +742,15 @@ class Camera {
 
     /**
      * True when the camera renders with a reversed depth buffer: the depth is 1 at the near plane
-     * and 0 at the far plane, the depth buffer clears to the reverse of {@link Camera#clearDepth},
-     * and the depth tests of the materials are reversed. This is {@link Camera#reverseZ}, unless the
-     * camera renders the views of an XR session, whose projections are not reversed.
+     * and 0 at the far plane, and the device reverses the depth clears and the depth tests of the
+     * camera. This is {@link Camera#reverseZ}, unless the device does not support it (see
+     * {@link GraphicsDevice#supportsReverseZ}), or the camera renders the views of an XR session,
+     * whose projections are not reversed.
      *
      * @type {boolean}
      */
     get reverseZActive() {
-        return this._reverseZ && !this.xrActive;
+        return this._reverseZ && this.device.supportsReverseZ && !this.xrActive;
     }
 
     set horizontalFov(newValue) {

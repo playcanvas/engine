@@ -96,18 +96,6 @@ const _tempProjMat1 = new Mat4();
 const _tempProjMat4 = new Mat4();
 const _tempProjMat5 = new Mat4();
 const _tempViewProjMat = new Mat4();
-
-// Reverses back the clip depth of a view projection rendering with reverse-z (see
-// Camera#reverseZ), which maps the clip depth z to w - z, and so does again when applied twice.
-const reverseClipDepth = (matrix, out) => {
-    out.copy(matrix);
-    const d = out.data;
-    d[2] = d[3] - d[2];
-    d[6] = d[7] - d[6];
-    d[10] = d[11] - d[10];
-    d[14] = d[15] - d[14];
-    return out;
-};
 const _tempSet = new Set();
 
 const _tempMeshInstances = [];
@@ -534,17 +522,21 @@ class Renderer {
             let projMatSkybox = camera.getProjectionMatrixSkybox();
 
             const webgpu = this.device.isWebGPU;
-            const reverseZ = camera.reverseZActive;
-            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu, reverseZ);
-            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu, reverseZ);
+            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu);
+            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu);
 
-            // the reversed depth computed from the clip planes, which keeps the far plane in place
-            // with a small near clip and a large far clip. A projection the application calculates
-            // keeps the reversed depth of its own terms. The skybox projection is perspective for
-            // both projections of the camera.
-            if (reverseZ && !camera.calculateProjection) {
+            // reverse-z: the depth of a built-in projection is computed from the clip planes, which
+            // keeps the far plane in place with a small near clip and a large far clip, while a
+            // projection the application calculates is reversed from its own terms. The skybox
+            // projection is always a built-in perspective one.
+            const reverseZ = camera.reverseZActive;
+            if (reverseZ) {
                 const { nearClip, farClip } = camera;
-                Camera.setReverseZDepth(projMat, camera.projection === PROJECTION_PERSPECTIVE, nearClip, farClip);
+                if (camera.calculateProjection) {
+                    Camera.reverseClipDepth(projMat, projMat);
+                } else {
+                    Camera.setReverseZDepth(projMat, camera.projection === PROJECTION_PERSPECTIVE, nearClip, farClip);
+                }
                 Camera.setReverseZDepth(projMatSkybox, true, nearClip, farClip);
             }
 
@@ -611,9 +603,9 @@ class Renderer {
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
 
-            // with reverse-z, from the view projection with the standard depth, so that the frustum
-            // planes are those of a camera rendering without it
-            camera.frustum.setFromMat4(reverseZ ? reverseClipDepth(viewProjMat, _tempViewProjMat) : viewProjMat);
+            // with reverse-z, from the view projection with its depth reversed back to the standard
+            // one, so that the frustum planes are those of a camera rendering without it
+            camera.frustum.setFromMat4(reverseZ ? Camera.reverseClipDepth(viewProjMat, _tempViewProjMat) : viewProjMat);
         }
 
         // set for all passes including XR, to keep the uniform fresh per render pass - it is
