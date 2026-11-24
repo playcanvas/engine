@@ -94,6 +94,62 @@ class Camera {
     }
 
     /**
+     * Reverses the clip depth of a matrix with the WebGPU depth range, a projection built by
+     * {@link Camera.applyShaderProjectionTransform} or a view projection made from it, for reverse-z
+     * (see {@link Camera#reverseZ}): the clip depth z becomes w - z, so the depth is 1 at the near
+     * plane and 0 at the far plane. Applied to a reversed matrix, it gives back the standard one.
+     * Computed from the 32-bit terms of the matrix, it loses the precision of the depth with a
+     * large ratio of the far clip to the near clip, see {@link Camera.setReverseZDepth}.
+     *
+     * @param {Mat4} matrix - The matrix to reverse the clip depth of.
+     * @param {Mat4} out - Receives the result. Can be the matrix itself.
+     * @returns {Mat4} out
+     * @ignore
+     */
+    static reverseClipDepth(matrix, out) {
+        if (out !== matrix) {
+            out.copy(matrix);
+        }
+        const d = out.data;
+        d[2] = d[3] - d[2];
+        d[6] = d[7] - d[6];
+        d[10] = d[11] - d[10];
+        d[14] = d[15] - d[14];
+        return out;
+    }
+
+    /**
+     * Writes the depth of reverse-z, computed from the clip planes, to a projection built by
+     * {@link Camera.applyShaderProjectionTransform} from a built-in projection, with the WebGPU
+     * depth range: the depth is 1 at the near plane and 0 at the far plane. Computed in double
+     * precision, the far plane stays in place with any ratio of the far clip to the near clip,
+     * unlike reversing the 32-bit terms of the projection with {@link Camera.reverseClipDepth},
+     * which with a near clip of 0.01 and a far clip of 100000 moves it to about 83900.
+     *
+     * @param {Mat4} out - The projection to write the depth of. Its other terms are kept.
+     * @param {boolean} perspective - True for a perspective projection, false for an orthographic
+     * one.
+     * @param {number} near - The near clip distance.
+     * @param {number} far - The far clip distance.
+     * @returns {Mat4} out
+     * @ignore
+     */
+    static setReverseZDepth(out, perspective, near, far) {
+        const d = out.data;
+        const range = far - near;
+        if (perspective) {
+            // depth = (near * z + far * near) / (far - near) / -z, for the view space z
+            d[10] = near / range;
+            d[14] = far * near / range;
+        } else {
+            // depth = (z + far) / (far - near)
+            d[10] = 1 / range;
+            d[14] = far / range;
+        }
+        return out;
+    }
+
+    /**
      * @type {ShaderPassInfo|null}
      */
     shaderPassInfo = null;
@@ -190,6 +246,14 @@ class Camera {
 
     /** @type {number} */
     jitter = 0;
+
+    /**
+     * True when the camera is set to render with reverse-z, see {@link Camera#reverseZ}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _reverseZ = false;
 
     /**
      * The scale of the exposure the camera renders with, multiplying the exposure of the scene, or
@@ -650,6 +714,45 @@ class Camera {
         return this._frustumCulling;
     }
 
+    /**
+     * Sets whether the camera renders with a reversed depth buffer, see
+     * {@link CameraComponent#reverseZ}. The setting is kept on a device not supporting it (see
+     * {@link GraphicsDevice#supportsReverseZ}), which renders without it.
+     *
+     * @type {boolean}
+     */
+    set reverseZ(value) {
+        Debug.call(() => {
+            if (value && !this.device.supportsReverseZ) {
+                Debug.warnOnce('Camera#reverseZ is not supported by the device (GraphicsDevice#supportsReverseZ), rendering without it.');
+            }
+        });
+        this._reverseZ = value;
+    }
+
+    /**
+     * Gets whether the camera is set to render with a reversed depth buffer. See
+     * {@link Camera#reverseZActive} for whether it renders with it at the moment.
+     *
+     * @type {boolean}
+     */
+    get reverseZ() {
+        return this._reverseZ;
+    }
+
+    /**
+     * True when the camera renders with a reversed depth buffer: the depth is 1 at the near plane
+     * and 0 at the far plane, and the device reverses the depth clears and the depth tests of the
+     * camera. This is {@link Camera#reverseZ}, unless the device does not support it (see
+     * {@link GraphicsDevice#supportsReverseZ}), or the camera renders the views of an XR session,
+     * whose projections are not reversed.
+     *
+     * @type {boolean}
+     */
+    get reverseZActive() {
+        return this._reverseZ && this.device.supportsReverseZ && !this.xrActive;
+    }
+
     set horizontalFov(newValue) {
         if (this._horizontalFov !== newValue) {
             this._horizontalFov = newValue;
@@ -926,6 +1029,7 @@ class Camera {
         this.cullFaces = other.cullFaces;
         this.flipFaces = other.flipFaces;
         this.frustumCulling = other.frustumCulling;
+        this.reverseZ = other.reverseZ;
         this.layers = other.layers;
         this.orthoHeight = other.orthoHeight;
         this.projection = other.projection;

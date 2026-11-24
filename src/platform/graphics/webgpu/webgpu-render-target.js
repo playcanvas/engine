@@ -647,7 +647,10 @@ class WebgpuRenderTarget {
 
         const depthAttachment = this.renderPassDescriptor.depthStencilAttachment;
         if (depthAttachment) {
-            depthAttachment.depthClearValue = renderPass.depthStencilOps.clearDepthValue;
+            // the clear value keeps the standard convention, and is reversed for a pass rendering
+            // into a reversed depth buffer, see RenderPass#reverseZ
+            const clearDepthValue = renderPass.depthStencilOps.clearDepthValue;
+            depthAttachment.depthClearValue = renderPass.reverseZ ? 1 - clearDepthValue : clearDepthValue;
             depthAttachment.depthLoadOp = renderPass.depthStencilOps.clearDepth ? 'clear' : 'load';
             depthAttachment.depthStoreOp = renderPass.depthStencilOps.storeDepth ? 'store' : 'discard';
             depthAttachment.depthReadOnly = false;

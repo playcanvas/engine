@@ -1,10 +1,23 @@
 import { BitPacking } from '../../core/math/bit-packing.js';
 import { StringIds } from '../../core/string-ids.js';
 import {
-    FUNC_LESSEQUAL, FUNC_ALWAYS
+    FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL, FUNC_GREATEREQUAL,
+    FUNC_ALWAYS
 } from './constants.js';
 
 const stringIds = new StringIds();
+
+// the depth test functions with a reversed depth buffer, indexed by the function they replace: a
+// nearer fragment has the greater depth
+const reverseZFunc = [];
+reverseZFunc[FUNC_NEVER] = FUNC_NEVER;
+reverseZFunc[FUNC_LESS] = FUNC_GREATER;
+reverseZFunc[FUNC_EQUAL] = FUNC_EQUAL;
+reverseZFunc[FUNC_LESSEQUAL] = FUNC_GREATEREQUAL;
+reverseZFunc[FUNC_GREATER] = FUNC_LESS;
+reverseZFunc[FUNC_NOTEQUAL] = FUNC_NOTEQUAL;
+reverseZFunc[FUNC_GREATEREQUAL] = FUNC_LESSEQUAL;
+reverseZFunc[FUNC_ALWAYS] = FUNC_ALWAYS;
 
 // masks (to only keep relevant bits)
 const funcMask = 0b111;
@@ -181,6 +194,26 @@ class DepthState {
         this.data = rhs.data;
         this._depthBias = rhs._depthBias;
         this._depthBiasSlope = rhs._depthBiasSlope;
+        this.key = rhs.key;
+        return this;
+    }
+
+    /**
+     * Copies a source depth state to this depth state, reversed for rendering into a reversed
+     * depth buffer (see {@link RenderPass#reverseZ}): the depth test function is reversed, so that
+     * it keeps passing the nearer or the farther fragments, and so are the depth biases, so that
+     * they keep moving the depth towards or away from the camera. The key is copied from the
+     * source without being updated, as the reversed state is used only by the graphics device,
+     * which compares the keys of the source depth states.
+     *
+     * @param {DepthState} rhs - A depth state to copy from.
+     * @returns {DepthState} Self for chaining.
+     * @ignore
+     */
+    copyReversed(rhs) {
+        this.data = BitPacking.set(rhs.data, reverseZFunc[rhs.func], funcShift, funcMask);
+        this._depthBias = -rhs._depthBias;
+        this._depthBiasSlope = -rhs._depthBiasSlope;
         this.key = rhs.key;
         return this;
     }

@@ -32,6 +32,15 @@ class CameraShaderParams {
      */
     _clipPlanes = false;
 
+    /**
+     * True when the camera renders with a reversed depth buffer, see {@link Camera#reverseZ}. It
+     * supplies the REVERSE_Z define, so that the shaders writing or reading the depth of the camera
+     * can handle its convention.
+     *
+     * @private
+     */
+    _reverseZ = false;
+
     /** @private */
     _sceneDepthMapLinear = false;
 
@@ -103,7 +112,7 @@ class CameraShaderParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this._clipPlanes}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}_${this.sceneDepthMapReciprocal}_${this._sceneTextures.join('-')}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this._clipPlanes}_${this.ssaoEnabled}_${this._reverseZ}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}_${this.sceneDepthMapReciprocal}_${this._sceneTextures.join('-')}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -136,6 +145,8 @@ class CameraShaderParams {
             });
             if (this.shaderOutputGamma === GAMMA_SRGB) defines.set('SCENE_COLORMAP_GAMMA', '');
             defines.set('FOG', this._fog.toUpperCase());
+
+            if (this._reverseZ) defines.set('REVERSE_Z', '');
 
             // CLIP_PLANES enables clipping in the shaders that support it, which with
             // CLIP_PLANES_CAMERA read the planes of the camera, see the clipPlanesPS chunk
@@ -174,6 +185,17 @@ class CameraShaderParams {
 
     get clipPlanes() {
         return this._clipPlanes;
+    }
+
+    set reverseZ(value) {
+        if (this._reverseZ !== value) {
+            this._reverseZ = value;
+            this.markDirty();
+        }
+    }
+
+    get reverseZ() {
+        return this._reverseZ;
     }
 
     set ssaoEnabled(value) {

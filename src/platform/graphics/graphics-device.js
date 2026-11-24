@@ -631,6 +631,15 @@ class GraphicsDevice extends EventHandler {
     usesMeshBindGroups = false;
 
     /**
+     * True if the device supports rendering with a reversed depth buffer, see
+     * {@link CameraComponent#reverseZ}. Supported on WebGPU.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsReverseZ = false;
+
+    /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
      * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
      */
@@ -1516,6 +1525,17 @@ class GraphicsDevice extends EventHandler {
      */
     setDepthState(depthState) {
         Debug.assert(false);
+    }
+
+    /**
+     * Sets whether the current render pass renders into a reversed depth buffer, see
+     * {@link RenderPass#reverseZ}. Called by the render pass when it renders.
+     *
+     * @param {boolean} reverseZ - True for a reversed depth buffer.
+     * @ignore
+     */
+    setReverseZ(reverseZ) {
+        Debug.assert(!reverseZ || this.supportsReverseZ, 'Reverse-z is not supported by the graphics device.');
     }
 
     /**
