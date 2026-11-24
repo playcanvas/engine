@@ -1560,7 +1560,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 Debug.call(() => {
                     const impl = drawCommands.impl;
                     if (impl?.storage && impl.indexed !== !!indexBuffer) {
-                        Debug.warnOnce(`Draw commands were written for ${impl.indexed ? 'an indexed' : 'a non-indexed'} mesh, but are used to draw ${indexBuffer ? 'an indexed' : 'a non-indexed'} one. Call MeshInstance#setMultiDraw again after changing the mesh.`, drawCommands);
+                        Debug.warnOnce(`Draw commands were written for ${impl.indexed ? 'an indexed' : 'a non-indexed'} mesh, but are used to draw ${indexBuffer ? 'an indexed' : 'a non-indexed'} one. Call MeshInstance#setMultiDraw again and re-add the commands after changing the mesh or its index buffer.`, drawCommands);
                     }
                 });
 
