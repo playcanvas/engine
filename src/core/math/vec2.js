@@ -559,7 +559,7 @@ class Vec2 {
      * console.log("The angle between vectors a and b: " + angle);
      */
     angleTo(rhs) {
-        return Math.atan2(this.x * rhs.y + this.y * rhs.x, this.x * rhs.x + this.y * rhs.y) * math.RAD_TO_DEG;
+        return Math.atan2(this.y * rhs.x - this.x * rhs.y, this.x * rhs.x + this.y * rhs.y) * math.RAD_TO_DEG;
     }
 
     /**
