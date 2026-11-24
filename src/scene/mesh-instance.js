@@ -1680,6 +1680,7 @@ class MeshInstance {
         return cmd;
     }
 
+    // #if _DEBUG
     /**
      * Warns when multi-draw is combined with a render style other than solid. The sub-draws are
      * ranges of the solid index buffer, which the wireframe and points render styles do not use.
@@ -1697,6 +1698,7 @@ class MeshInstance {
             }
         }
     }
+    // #endif
 
     /**
      * Returns the cached draw commands for a key, allocating them when missing. A cached set of
