@@ -291,6 +291,17 @@ class GraphicsDevice extends EventHandler {
     supportsIndirectDraw = false;
 
     /**
+     * True if indirect draw commands can use a non-zero `firstInstance` (WebGPU only, requires the
+     * `indirect-first-instance` feature). When false, the GPU skips any indirect draw whose
+     * `firstInstance` is not zero. This applies to {@link DrawCommands#add} on WebGPU, and to the
+     * commands written for {@link MeshInstance#setIndirect}.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsIndirectFirstInstance = false;
+
+    /**
      * True if the vertex shaders can read the model and normal matrices of a mesh instance from
      * a storage buffer the device holds, see {@link GraphicsDevice#meshInstanceStorage} (WebGPU
      * only).

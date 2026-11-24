@@ -1191,7 +1191,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createDrawCommandImpl(drawCommands) {
-        return new WebgpuDrawCommands(this);
+        return new WebgpuDrawCommands(this, drawCommands.indexSizeBytes > 0);
     }
 
     createTextureImpl(texture) {
@@ -1555,6 +1555,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // draw
             if (drawCommands) { // indirect draw path
+
+                // commands written on the CPU are packed for an indexed or a non-indexed draw
+                Debug.call(() => {
+                    const impl = drawCommands.impl;
+                    if (impl?.storage && impl.indexed !== !!indexBuffer) {
+                        Debug.warnOnce(`Draw commands were written for ${impl.indexed ? 'an indexed' : 'a non-indexed'} mesh, but are used to draw ${indexBuffer ? 'an indexed' : 'a non-indexed'} one. Call MeshInstance#setMultiDraw again after changing the mesh.`, drawCommands);
+                    }
+                });
 
                 const storage = drawCommands.impl?.storage ?? this.indirectDrawBuffer;
                 const indirectBuffer = storage.impl.buffer;
