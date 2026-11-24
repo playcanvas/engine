@@ -332,9 +332,9 @@ class RenderPass extends FramePass {
     /**
      * True if the pass renders into a reversed depth buffer, which stores a depth of 1 at the near
      * plane and 0 at the far plane, see {@link CameraComponent#reverseZ}. The graphics device then
-     * reverses the depth states set during the pass: the depth test functions and the depth
-     * biases keep their meaning, so {@link FUNC_LESSEQUAL} still passes the nearer fragments.
-     * Requires {@link GraphicsDevice#supportsReverseZ}. Read when the pass renders, after
+     * reverses the depth clears and the depth states of the pass, which keep their meaning: the
+     * depth clear value of the pass and of {@link GraphicsDevice#clear}, 1 for the far plane, clears
+     * to 0, and {@link FUNC_LESSEQUAL} still passes the nearer fragments. Requires {@link GraphicsDevice#supportsReverseZ}. Read when the pass renders, after
      * {@link RenderPass#before}. Defaults to false.
      *
      * @type {boolean}

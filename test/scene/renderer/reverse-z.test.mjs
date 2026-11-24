@@ -315,7 +315,45 @@ describe('Reverse-z', function () {
             expect(setDepthState.args.some(args => args[0].func === FUNC_GREATEREQUAL)).to.equal(false);
         });
 
+        // the depth clear value of each GPU render pass started, as the device sets it up
+        const captureDepthClearValues = () => {
+            const device = app.graphicsDevice;
+            const startRenderPass = device.startRenderPass.bind(device);
+            const values = [];
+            device.startRenderPass = (renderPass) => {
+                startRenderPass(renderPass);
+                const renderTarget = renderPass.renderTarget || device.backBuffer;
+                const attachment = renderTarget.impl.renderPassDescriptor.depthStencilAttachment;
+                if (renderPass.depthStencilOps.clearDepth && attachment) {
+                    values.push(attachment.depthClearValue);
+                }
+            };
+            return values;
+        };
+
         it('clears the depth to the reverse of the clear depth of the camera', function () {
+            requireReverseZ(this);
+            const camera = createCamera('camera', true);
+            camera.clearDepth = 0.75;
+
+            const values = captureDepthClearValues();
+            app.render();
+
+            expect(values).to.deep.equal([0.25]);
+        });
+
+        it('keeps the clear depth of a camera without reverse-z', function () {
+            requireReverseZ(this);
+            const camera = createCamera('camera', false);
+            camera.clearDepth = 0.75;
+
+            const values = captureDepthClearValues();
+            app.render();
+
+            expect(values).to.deep.equal([0.75]);
+        });
+
+        it('keeps the clear depth of the camera on its passes, which the device reverses', function () {
             requireReverseZ(this);
             const reversed = createCamera('reversed', true);
             const standard = createCamera('standard', false);
@@ -329,60 +367,46 @@ describe('Reverse-z', function () {
 
             app.renderer.frameUpdate();
             passes.forEach(pass => pass.frameUpdate());
-            expect(passes.map(pass => pass.depthStencilOps.clearDepthValue)).to.deep.equal([0, 1]);
-
-            reversed.camera.clearDepth = 0.75;
-            passes[0].frameUpdate();
-            expect(passes[0].depthStencilOps.clearDepthValue).to.equal(0.25);
+            passes.forEach(pass => pass.before());
+            expect(passes.map(pass => pass.depthStencilOps.clearDepthValue)).to.deep.equal([1, 1]);
+            expect(passes.map(pass => pass.reverseZ)).to.deep.equal([true, false]);
 
             passes.forEach(pass => pass.destroy());
         });
 
         it('clears the depth for a reverse-z setting changed by a prerender handler', function () {
             requireReverseZ(this);
-            const camera = createCamera('camera', false);
-            const pass = new RenderPassForward(app.graphicsDevice, app.scene, camera);
-            pass.init(null);
-            pass.addLayer(app.scene.layers.getLayerByName('World'), false);
-
-            app.renderer.frameUpdate();
-            pass.frameUpdate();
-            expect(pass.depthStencilOps.clearDepthValue).to.equal(1);
-
-            // the event fires in before(), after the clears were set up, and before the pass starts
+            createCamera('camera', false);
             app.scene.on('prerender', (cameraComponent) => {
                 cameraComponent.reverseZ = true;
             });
-            pass.before();
-            expect(pass.depthStencilOps.clearDepthValue).to.equal(0);
 
-            pass.destroy();
+            const values = captureDepthClearValues();
+            app.render();
+
+            expect(values).to.deep.equal([0]);
         });
 
-        it('clears the depth in every pass of the camera for a reverse-z setting changed by a prerender handler', function () {
+        it('reverses the depth of the clears within a pass rendering with reverse-z', function () {
             requireReverseZ(this);
-            const camera = createCamera('camera', false);
-            const passes = [0, 1].map(() => {
-                const pass = new RenderPassForward(app.graphicsDevice, app.scene, camera);
-                pass.init(null);
-                pass.addLayer(app.scene.layers.getLayerByName('World'), false);
-                return pass;
-            });
 
-            app.renderer.frameUpdate();
-            passes.forEach(pass => pass.frameUpdate());
-            expect(passes.map(pass => pass.firstCameraUse)).to.deep.equal([true, false]);
-            expect(passes.map(pass => pass.depthStencilOps.clearDepth)).to.deep.equal([true, true]);
-            expect(passes.map(pass => pass.depthStencilOps.clearDepthValue)).to.deep.equal([1, 1]);
+            // a camera covering part of its render target clears with GraphicsDevice#clear within
+            // its pass, instead of with the clear of the pass
+            const clearDepthOf = (reverseZ) => {
+                const camera = createCamera(reverseZ ? 'reversed' : 'standard', reverseZ);
+                camera.rect = new Vec4(0, 0, 0.5, 1);
+                camera.clearDepth = 0.75;
 
-            // the event fires in the first pass only; the second still clears for the new setting
-            app.scene.on('prerender', (cameraComponent) => {
-                cameraComponent.reverseZ = true;
-            });
-            passes.forEach(pass => pass.before());
-            expect(passes.map(pass => pass.depthStencilOps.clearDepthValue)).to.deep.equal([0, 0]);
+                const set = spy(app.graphicsDevice.clearRenderer.uniformBuffer, 'set');
+                app.render();
+                const depths = set.args.filter(args => args[0] === 'depth').map(args => args[1]);
+                set.restore();
+                camera.entity.destroy();
+                return depths;
+            };
 
-            passes.forEach(pass => pass.destroy());
+            expect(clearDepthOf(true)).to.deep.equal([0.25]);
+            expect(clearDepthOf(false)).to.deep.equal([0.75]);
         });
 
         it('keeps the frustum of the camera without reverse-z', function () {

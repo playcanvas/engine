@@ -1664,6 +1664,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    /**
+     * True while the current render pass renders into a reversed depth buffer, see
+     * {@link RenderPass#reverseZ}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get reverseZ() {
+        return this._reverseZ;
+    }
+
     setStencilState(stencilFront, stencilBack) {
         if (stencilFront || stencilBack) {
             const front = stencilFront ?? StencilParameters.DEFAULT;

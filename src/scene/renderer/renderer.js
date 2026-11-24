@@ -693,7 +693,7 @@ class Renderer {
             _tempClearColor[1] = c.g;
             _tempClearColor[2] = c.b;
             _tempClearColor[3] = c.a;
-            _tempClearOptions.depth = camera.reverseZActive ? 1 - camera._clearDepth : camera._clearDepth;
+            _tempClearOptions.depth = camera._clearDepth;
             _tempClearOptions.stencil = camera._clearStencil;
             _tempClearOptions.flags = flags;
             device.clear(_tempClearOptions);

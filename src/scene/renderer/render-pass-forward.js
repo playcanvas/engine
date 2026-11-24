@@ -374,7 +374,7 @@ class RenderPassForward extends RenderPass {
                     this.setClearColor(clearColor ? camera.getClearColor(i) : undefined, i);
                 }
             }
-            this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? this.getClearDepthValue() : undefined);
+            this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }
     }
@@ -455,27 +455,9 @@ class RenderPassForward extends RenderPass {
             this.scene.fire(EVENT_PRERENDER, this.cameraComponent);
         }
 
-        // the device reverses the depth states of the draws of a camera rendering with reverse-z
+        // the device reverses the depth clears and depth states of a camera rendering with
+        // reverse-z. Read after the prerender handlers, which can still change it.
         this.reverseZ = this.cameraComponent.camera.reverseZActive;
-
-        // the prerender handlers, called from the first pass of the camera, can still change the
-        // depth the camera renders with; every pass of the camera clearing the depth reads it again
-        // here, before it starts
-        if (this.depthStencilOps.clearDepth) {
-            this.depthStencilOps.clearDepthValue = this.getClearDepthValue();
-        }
-    }
-
-    /**
-     * Returns the value the pass clears the depth to: the clear depth of the camera, reversed when
-     * the camera renders with reverse-z (see {@link Camera#reverseZActive}).
-     *
-     * @returns {number} The value the depth is cleared to.
-     * @private
-     */
-    getClearDepthValue() {
-        const camera = this.cameraComponent.camera;
-        return camera.reverseZActive ? 1 - camera.clearDepth : camera.clearDepth;
     }
 
     execute() {
