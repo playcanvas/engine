@@ -1,6 +1,6 @@
 import { BUFFERUSAGE_COPY_DST, BUFFERUSAGE_INDIRECT } from '../constants.js';
 import { StorageBuffer } from '../storage-buffer.js';
-import { DebugHelper } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 
 /**
@@ -32,10 +32,20 @@ class WebgpuDrawCommands {
     count = 0;
 
     /**
-     * @param {WebgpuGraphicsDevice} device - Graphics device.
+     * Whether the commands are written for an indexed draw (drawIndexedIndirect), or a non-indexed
+     * draw (drawIndirect). The two read a different number of words from each 20-byte entry.
+     *
+     * @type {boolean}
      */
-    constructor(device) {
+    indexed;
+
+    /**
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
+     * @param {boolean} indexed - Whether the commands are used for an indexed draw.
+     */
+    constructor(device, indexed) {
         this.device = device;
+        this.indexed = indexed;
         device._drawCommands.add(this);
     }
 
@@ -57,21 +67,39 @@ class WebgpuDrawCommands {
     }
 
     /**
-     * Write a single draw entry.
+     * Write a single draw entry. An indexed entry uses the GPUDrawIndexedIndirect layout of five
+     * words [indexCount, instanceCount, firstIndex, baseVertex, firstInstance]. A non-indexed entry
+     * uses the GPUDrawIndirect layout of four words [vertexCount, instanceCount, firstVertex,
+     * firstInstance], as drawIndirect does not read the fifth word.
+     *
      * @param {number} i - Draw index.
      * @param {number} indexOrVertexCount - Count of indices/vertices.
      * @param {number} instanceCount - Instance count.
      * @param {number} firstIndexOrVertex - First index/vertex.
-     * @param {number} baseVertex - Base vertex (signed).
+     * @param {number} baseVertex - Base vertex (signed), used by indexed draws only.
      * @param {number} firstInstance - First instance.
      */
     add(i, indexOrVertexCount, instanceCount, firstIndexOrVertex, baseVertex = 0, firstInstance = 0) {
+        Debug.call(() => {
+            if (!this.indexed && baseVertex !== 0) {
+                Debug.warnOnce('DrawCommands#add: baseVertex is ignored for a mesh without an index buffer. Use firstInstance to pass a value to the instance index.');
+            }
+            if (firstInstance !== 0 && !this.device.supportsIndirectFirstInstance) {
+                Debug.warnOnce('DrawCommands#add: a non-zero firstInstance requires GraphicsDevice#supportsIndirectFirstInstance, the draw is skipped by the GPU.');
+            }
+        });
+
         const o = i * 5;
         this.gpuIndirect[o + 0] = indexOrVertexCount;
         this.gpuIndirect[o + 1] = instanceCount;
         this.gpuIndirect[o + 2] = firstIndexOrVertex;
-        this.gpuIndirectSigned[o + 3] = baseVertex;
-        this.gpuIndirect[o + 4] = firstInstance;
+        if (this.indexed) {
+            this.gpuIndirectSigned[o + 3] = baseVertex;
+            this.gpuIndirect[o + 4] = firstInstance;
+        } else {
+            this.gpuIndirect[o + 3] = firstInstance;
+            this.gpuIndirect[o + 4] = 0;
+        }
     }
 
     /**

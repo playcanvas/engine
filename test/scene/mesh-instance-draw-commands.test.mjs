@@ -1,9 +1,12 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 
+import { Debug } from '../../src/core/debug.js';
+import { INDEXFORMAT_UINT16 } from '../../src/platform/graphics/constants.js';
 import { VertexBuffer } from '../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../src/platform/graphics/vertex-format.js';
 import { Camera } from '../../src/scene/camera.js';
-import { SHADERDEF_INSTANCEINDEX, SHADERDEF_INSTANCING } from '../../src/scene/constants.js';
+import { RENDERSTYLE_POINTS, RENDERSTYLE_WIREFRAME, SHADERDEF_INSTANCEINDEX, SHADERDEF_INSTANCING } from '../../src/scene/constants.js';
 import { ShaderMaterial } from '../../src/scene/materials/shader-material.js';
 import { MeshInstance } from '../../src/scene/mesh-instance.js';
 import { Mesh } from '../../src/scene/mesh.js';
@@ -75,6 +78,57 @@ describe('MeshInstance draw commands', function () {
         // and they stay valid from there on, like any other multi-draw commands
         device.frameEnd();
         expect(meshInstance.getDrawCommands(null)).to.equal(commands);
+    });
+
+    it('replaces a cached multi-draw set when the index size of the mesh changes', function () {
+        const nonIndexed = meshInstance.setMultiDraw(null, 2);
+        expect(nonIndexed.indexSizeBytes).to.equal(0);
+
+        // the same index size reuses the cached set
+        expect(meshInstance.setMultiDraw(null, 2)).to.equal(nonIndexed);
+
+        // commands are packed for the index size, so a set written for another one is replaced
+        meshInstance.mesh.indexBuffer[0] = { format: INDEXFORMAT_UINT16 };
+        const indexed = meshInstance.setMultiDraw(null, 2);
+        expect(indexed).to.not.equal(nonIndexed);
+        expect(indexed.indexSizeBytes).to.equal(2);
+        meshInstance.mesh.indexBuffer[0] = undefined;
+    });
+
+    describe('render style warning', function () {
+
+        let warnOnce;
+
+        beforeEach(function () {
+            warnOnce = sinon.stub(Debug, 'warnOnce');
+            sinon.stub(meshInstance.mesh, 'prepareRenderState');
+        });
+
+        afterEach(function () {
+            sinon.restore();
+        });
+
+        const warned = () => warnOnce.getCalls().some(call => call.args[0].includes('RENDERSTYLE_SOLID'));
+
+        it('warns when wireframe is set while multi-draw is enabled', function () {
+            meshInstance.setMultiDraw(null, 2);
+            expect(warned()).to.be.false;
+            meshInstance.renderStyle = RENDERSTYLE_WIREFRAME;
+            expect(warned()).to.be.true;
+        });
+
+        it('warns when multi-draw is enabled while points are set', function () {
+            meshInstance.renderStyle = RENDERSTYLE_POINTS;
+            expect(warned()).to.be.false;
+            meshInstance.setMultiDraw(null, 2);
+            expect(warned()).to.be.true;
+        });
+
+        it('does not warn for indirect drawing', function () {
+            meshInstance.renderStyle = RENDERSTYLE_WIREFRAME;
+            meshInstance.setIndirect(null, 3);
+            expect(warned()).to.be.false;
+        });
     });
 
     it('replaces a cached set when a key switches from multi-draw to indirect', function () {

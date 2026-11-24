@@ -138,11 +138,19 @@ class DrawCommands {
     /**
      * Writes one draw command into the allocated storage.
      *
+     * The `baseVertex` and `firstInstance` arguments are used on WebGPU only, and ignored on WebGL2.
+     * On WebGPU, `baseVertex` applies to a mesh with an index buffer only, and is ignored for a
+     * mesh without one. A non-zero `firstInstance` requires
+     * {@link GraphicsDevice#supportsIndirectFirstInstance}, otherwise the GPU skips the draw. The
+     * shader reads `firstInstance` as part of the instance index (`pcInstanceIndex` in WGSL), which
+     * makes it suitable for passing a per-draw value, such as an offset into instance data.
+     *
      * @param {number} i - Draw index to update.
      * @param {number} indexOrVertexCount - Number of indices or vertices to draw.
      * @param {number} instanceCount - Number of instances to draw (use 1 if not instanced).
      * @param {number} firstIndexOrVertex - Starting index (in indices, not bytes) or starting vertex.
-     * @param {number} [baseVertex] - Signed base vertex (WebGPU only). Defaults to 0.
+     * @param {number} [baseVertex] - Signed base vertex, added to each index (WebGPU only, indexed
+     * meshes only). Defaults to 0.
      * @param {number} [firstInstance] - First instance (WebGPU only). Defaults to 0.
      */
     add(i, indexOrVertexCount, instanceCount, firstIndexOrVertex, baseVertex = 0, firstInstance = 0) {
