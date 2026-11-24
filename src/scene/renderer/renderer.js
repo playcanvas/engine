@@ -20,7 +20,8 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
-    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    PROJECTION_PERSPECTIVE
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -94,6 +95,7 @@ const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
 const _tempProjMat4 = new Mat4();
 const _tempProjMat5 = new Mat4();
+const _tempViewProjMat = new Mat4();
 const _tempSet = new Set();
 
 const _tempMeshInstances = [];
@@ -547,6 +549,21 @@ class Renderer {
             projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu);
             projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu);
 
+            // reverse-z: the depth of a built-in projection is computed from the clip planes, which
+            // keeps the far plane in place with a small near clip and a large far clip, while a
+            // projection the application calculates is reversed from its own terms. The skybox
+            // projection is always a built-in perspective one.
+            const reverseZ = camera.reverseZActive;
+            if (reverseZ) {
+                const { nearClip, farClip } = camera;
+                if (camera.calculateProjection) {
+                    Camera.reverseClipDepth(projMat, projMat);
+                } else {
+                    Camera.setReverseZDepth(projMat, camera.projection === PROJECTION_PERSPECTIVE, nearClip, farClip);
+                }
+                Camera.setReverseZDepth(projMatSkybox, true, nearClip, farClip);
+            }
+
             // camera jitter
             const { jitter } = camera;
             let jitterX = 0;
@@ -610,7 +627,9 @@ class Renderer {
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
 
-            camera.frustum.setFromMat4(viewProjMat);
+            // with reverse-z, from the view projection with its depth reversed back to the standard
+            // one, so that the frustum planes are those of a camera rendering without it
+            camera.frustum.setFromMat4(reverseZ ? Camera.reverseClipDepth(viewProjMat, _tempViewProjMat) : viewProjMat);
         }
 
         // set for all passes including XR, to keep the uniform fresh per render pass - it is

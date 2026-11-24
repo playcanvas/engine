@@ -101,8 +101,9 @@ class WebgpuClearRenderer {
             // setup depth clear
             let depthState;
             if ((flags & CLEARFLAG_DEPTH) && renderTarget.depth) {
+                // reversed in a pass rendering into a reversed depth buffer, see RenderPass#reverseZ
                 const depth = options.depth ?? defaultOptions.depth;
-                uniformBuffer.set('depth', depth);
+                uniformBuffer.set('depth', device.reverseZ ? 1 - depth : depth);
                 depthState = DepthState.WRITEDEPTH;
             } else {
                 uniformBuffer.set('depth', 1);

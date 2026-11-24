@@ -10,6 +10,7 @@ import {
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { DepthState } from '../depth-state.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
@@ -245,6 +246,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _pipelineDirty = true;
+
+    /**
+     * True while the current render pass renders into a reversed depth buffer, see
+     * {@link RenderPass#reverseZ}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _reverseZ = false;
+
+    /**
+     * The reversed copy of {@link GraphicsDevice#depthState} the render pipelines are created with
+     * while {@link WebgpuGraphicsDevice#_reverseZ} is set. It is updated only when the depth state
+     * or the reverse-z setting changes, so the draws do not pay for it.
+     *
+     * @type {DepthState}
+     * @private
+     */
+    _reverseZDepthState = new DepthState();
 
     /**
      * The per-draw inputs of the render pipeline, as of its last lookup - these are arguments of
@@ -771,6 +791,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsStorageRGBA8 = has('bgra8unorm-storage');
         this.textureRG11B10Renderable = has('rg11b10ufloat-renderable');
         this.supportsClipDistances = has('clip-distances');
+        this.supportsReverseZ = true;
         this.supportsDualSourceBlending = has('dual-source-blending');
         this.supportsTextureFormatsTier1 = has('texture-formats-tier1');
         this.supportsTextureFormatsTier2 = has('texture-formats-tier2');
@@ -1415,7 +1436,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     getPipeline(primitive, indexBuffer, vb0, vb1, async) {
         return this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
-            this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+            this.bindGroupFormats, this.blendState, this._reverseZ ? this._reverseZDepthState : this.depthState, this.cullMode,
             this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage, async);
     }
 
@@ -1634,8 +1655,33 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     setDepthState(depthState) {
         if (this.depthState.key !== depthState.key) {
             this._pipelineDirty = true;
+            if (this._reverseZ) {
+                this._reverseZDepthState.copyReversed(depthState);
+            }
         }
         this.depthState.copy(depthState);
+    }
+
+    setReverseZ(reverseZ) {
+        super.setReverseZ(reverseZ);
+        if (this._reverseZ !== reverseZ) {
+            this._reverseZ = reverseZ;
+            this._pipelineDirty = true;
+            if (reverseZ) {
+                this._reverseZDepthState.copyReversed(this.depthState);
+            }
+        }
+    }
+
+    /**
+     * True while the current render pass renders into a reversed depth buffer, see
+     * {@link RenderPass#reverseZ}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get reverseZ() {
+        return this._reverseZ;
     }
 
     setStencilState(stencilFront, stencilBack) {

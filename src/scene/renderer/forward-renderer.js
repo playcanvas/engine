@@ -201,6 +201,7 @@ class ForwardRenderer extends Renderer {
         const shaderParams = camera.shaderParams;
         shaderParams.fog = fogParams.type;
         shaderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;    // output gamma correction is determined by the render target
+        shaderParams.reverseZ = camera.reverseZActive;
 
         const addCall = (drawCall, shaderInstance, isNewMaterial) => {
             _drawCallList.drawCalls.push(drawCall);
