@@ -70,7 +70,7 @@ app.on('destroy', () => {
 // centimeter apart hundreds of kilometers away - at 300 km they step by about 3 cm - so a fixed gap
 // would z-fight far away whatever the depth buffer. This gap stays well above that, and far below
 // what the standard depth can resolve at the same distance.
-const gap = distance => Math.max(0.01, distance * 2e-6);
+const gap = (distance) => Math.max(0.01, distance * 2e-6);
 
 /**
  * @param {Color} color - The color of the material.
@@ -116,15 +116,11 @@ const columns = 6;
 distances.forEach((distance, i) => {
     const column = i % columns;
     const row = Math.floor(i / columns);
-    const yaw = (-30 + 60 * column / (columns - 1)) * Math.PI / 180;
-    const elevation = (row === 0 ? 8 : -8) * Math.PI / 180;
+    const yaw = ((-30 + (60 * column) / (columns - 1)) * Math.PI) / 180;
+    const elevation = ((row === 0 ? 8 : -8) * Math.PI) / 180;
 
     const panel = new Entity(`Panel ${distance}m`);
-    panel.setLocalPosition(
-        Math.sin(yaw) * distance,
-        Math.tan(elevation) * distance,
-        -Math.cos(yaw) * distance
-    );
+    panel.setLocalPosition(Math.sin(yaw) * distance, Math.tan(elevation) * distance, -Math.cos(yaw) * distance);
     app.root.addChild(panel);
 
     // face the eye: the planes face up, which the rotation turns towards the eye
@@ -176,10 +172,7 @@ const createView = (name, reverseZ, right) => {
 };
 
 // the standard depth on the left, and reverse-z on the right
-const views = [
-    createView('StandardCamera', false, false),
-    createView('ReverseZCamera', true, true)
-];
+const views = [createView('StandardCamera', false, false), createView('ReverseZCamera', true, true)];
 
 // the camera displaying the render targets on the screen
 const displayCamera = new Entity('DisplayCamera');
@@ -280,10 +273,7 @@ const createTitle = (text) => {
     titles.appendChild(title);
     return format;
 };
-const formatLabels = [
-    createTitle('Standard depth'),
-    createTitle('Reverse-Z')
-];
+const formatLabels = [createTitle('Standard depth'), createTitle('Reverse-Z')];
 
 const caption = document.createElement('div');
 caption.style.cssText =
@@ -305,9 +295,9 @@ const applySettings = () => {
         view.camera.camera.nearClip = data.get('data.nearClip');
     });
 
-    const status = device.supportsReverseZ ?
-        `${depthFormatNames[data.get('data.depthFormat')]} - left standard, right reverse-z` :
-        'reverse-z is not supported';
+    const status = device.supportsReverseZ
+        ? `${depthFormatNames[data.get('data.depthFormat')]} - left standard, right reverse-z`
+        : 'reverse-z is not supported';
     if (data.get('data.status') !== status) {
         data.set('data.status', status);
     }
