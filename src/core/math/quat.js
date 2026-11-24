@@ -277,19 +277,21 @@ class Quat {
         const qz = this.z;
         const qw = this.w;
 
+        // sin(y), and sin(x) * cos(y) and cos(x) * cos(y), whose length is cos(y)
         const a2 = 2 * (qw * qy - qx * qz);
+        const sxcy = 2 * (qw * qx + qy * qz);
+        const cxcy = 1 - 2 * (qx * qx + qy * qy);
+        const cy = Math.sqrt(sxcy * sxcy + cxcy * cxcy);
 
-        if (a2 <= -0.99999) {
+        // asin(a2) loses precision close to +-90 degrees, so y comes from atan2, and only a
+        // cos(y) too small to tell x and z apart (gimbal lock) puts the rotation in x alone
+        if (cy < 1e-8) {
             x = 2 * Math.atan2(qx, qw);
-            y = -Math.PI / 2;
-            z = 0;
-        } else if (a2 >= 0.99999) {
-            x = 2 * Math.atan2(qx, qw);
-            y = Math.PI / 2;
+            y = a2 < 0 ? -Math.PI / 2 : Math.PI / 2;
             z = 0;
         } else {
-            x = Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
-            y = Math.asin(a2);
+            x = Math.atan2(sxcy, cxcy);
+            y = Math.atan2(a2, cy);
             z = Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
         }
 

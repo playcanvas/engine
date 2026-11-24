@@ -278,6 +278,17 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
+        it('round-trips rotations close to a 90° turn around y axis', function () {
+            for (const y of [89.9, 89.99, 89.999, -89.9, -89.999]) {
+                const q = new Quat().setFromEulerAngles(30, y, 60);
+                const eulers = q.getEulerAngles();
+                const q2 = new Quat().setFromEulerAngles(eulers.x, eulers.y, eulers.z);
+                const dot = q.x * q2.x + q.y * q2.y + q.z * q2.z + q.w * q2.w;
+                expect(Math.abs(dot)).to.be.closeTo(1, 1e-12);
+                expect(eulers.y).to.be.closeTo(y, 1e-6);
+            }
+        });
+
         it('extracts a 90° turn around z axis', function () {
             const q = new Quat(0, 0, Math.sqrt(0.5), Math.sqrt(0.5));
             const eulers = new Vec3();
