@@ -58,7 +58,6 @@ import { installFeatures } from '../scene/features/install-features.js';
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { BundleRegistry } from './bundle/bundle-registry.js'
  * @import { I18n } from './i18n/i18n.js'
- * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { EventHandle } from '../core/event-handle.js'
  * @import { GamePads } from '../platform/input/game-pads.js'
@@ -68,7 +67,6 @@ import { installFeatures } from '../scene/features/install-features.js';
  * @import { Mouse } from '../platform/input/mouse.js'
  * @import { SoundManager } from '../platform/sound/manager.js'
  * @import { TouchDevice } from '../platform/input/touch-device.js'
- * @import { Vec3 } from '../core/math/vec3.js'
  * @import { XrManager } from './xr/xr-manager.js'
  */
 
@@ -1862,120 +1860,6 @@ class AppBase extends EventHandler {
      */
     _processTimestamp(timestamp) {
         return timestamp;
-    }
-
-    /**
-     * Draws a single line. Line start and end coordinates are specified in world space. The line
-     * will be flat-shaded with the specified color.
-     *
-     * @param {Vec3} start - The start world space coordinate of the line.
-     * @param {Vec3} end - The end world space coordinate of the line.
-     * @param {Color} [color] - The color of the line, specified in sRGB color space. It defaults
-     * to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
-     * buffer. Defaults to true.
-     * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @deprecated Use {@link WireRenderer#line} instead.
-     * @example
-     * // replacement: set the color, depth test and layer on the renderer
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * const wire = new WireRenderer(app);
-     * wire.color = Color.RED;
-     * wire.depthTest = false;
-     * wire.line(start, end);
-     */
-    drawLine(start, end, color, depthTest, layer) {
-        Debug.deprecated('AppBase#drawLine is deprecated. Use WireRenderer#line instead.');
-        this.scene.drawLine(start, end, color, depthTest, layer);
-    }
-
-    /**
-     * Renders an arbitrary number of discrete line segments. The lines are not connected by each
-     * subsequent point in the array. Instead, they are individual segments specified by two
-     * points. Therefore, the lengths of the supplied position and color arrays must be the same
-     * and also must be a multiple of 2. The colors of the ends of each line segment will be
-     * interpolated along the length of each line.
-     *
-     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
-     * array must be a multiple of 2.
-     * @param {Color[] | Color} colors - An array of colors or a single color. If an array is
-     * specified, this must be the same length as the position array. The length of the array
-     * must also be a multiple of 2.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
-     * buffer. Defaults to true.
-     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @deprecated Use {@link WireRenderer#lines} instead.
-     * @example
-     * // replacement: a single color is set on the renderer, per-point colors are passed in
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * const wire = new WireRenderer(app);
-     * wire.lines([start, end], [Color.RED, Color.WHITE]);
-     */
-    drawLines(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
-        Debug.deprecated('AppBase#drawLines is deprecated. Use WireRenderer#lines instead.');
-        this.scene.drawLines(positions, colors, depthTest, layer);
-    }
-
-    /**
-     * Renders an arbitrary number of discrete line segments. The lines are not connected by each
-     * subsequent point in the array. Instead, they are individual segments specified by two
-     * points.
-     *
-     * @param {number[]} positions - An array of points to draw lines between. Each point is
-     * represented by 3 numbers - x, y and z coordinate.
-     * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
-     * the lines. If an array is specified, the number of colors it stores must match the number
-     * of positions provided.
-     * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
-     * buffer. Defaults to true.
-     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @deprecated Use {@link WireRenderer#linesPacked} instead.
-     * @example
-     * // replacement: a single color is set on the renderer, per-point colors are passed in
-     * const wire = new WireRenderer(app);
-     * wire.linesPacked([0, 0, 0, 1, 0, 0], [1, 0, 0, 1, 1, 1, 1, 1]);
-     */
-    drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
-        Debug.deprecated('AppBase#drawLineArrays is deprecated. Use WireRenderer#linesPacked instead.');
-        this.scene.drawLineArrays(positions, colors, depthTest, layer);
-    }
-
-    /**
-     * @deprecated Use {@link WireRenderer#sphere} instead.
-     * @ignore
-     */
-    drawWireSphere() {
-        Debug.removed('AppBase#drawWireSphere is removed. Use WireRenderer#sphere instead.');
-    }
-
-    /**
-     * @deprecated Use {@link WireRenderer#boxMinMax} instead.
-     * @ignore
-     */
-    drawWireAlignedBox() {
-        Debug.removed('AppBase#drawWireAlignedBox is removed. Use WireRenderer#boxMinMax instead.');
-    }
-
-    drawMeshInstance() {
-        Debug.removed('AppBase#drawMeshInstance is removed. Use Layer#addMeshInstances instead.');
-    }
-
-    drawMesh() {
-        Debug.removed('AppBase#drawMesh is removed. Create a MeshInstance and use Layer#addMeshInstances instead.');
-    }
-
-    drawQuad() {
-        Debug.removed('AppBase#drawQuad is removed. Create a quad MeshInstance and use Layer#addMeshInstances, or use TextureRenderer#draw for texture previews.');
-    }
-
-    drawTexture() {
-        Debug.removed('AppBase#drawTexture is removed. Use TextureRenderer#draw instead.');
-    }
-
-    drawDepthTexture() {
-        Debug.removed('AppBase#drawDepthTexture is removed. Use TextureRenderer#sceneDepth instead.');
     }
 
     /**
