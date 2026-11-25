@@ -38,8 +38,7 @@ const _invViewProjMat = new Mat4();
 const _xrViewProjMat = new Mat4();
 const _xrViewFrustum = new Frustum();
 const _publishProjMat = new Mat4();
-const _publishViewInvMat = new Mat4();
-const _publishViewProjMat = new Mat4();
+const _publishViewMat = new Mat4();
 const _frustumViewMat = new Mat4();
 const _frustumViewProjMat = new Mat4();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
@@ -430,12 +429,14 @@ class Camera {
 
         // the matrices the shaders were given this frame, captured when the camera first rendered
         // in it - see Camera#_storeShaderMatrices. A depth published before that, by a pass of the
-        // application, gets this frame's matrices computed the same way, without the jitter
+        // application, gets this frame's matrices computed the same way, without the jitter - see
+        // Camera#_centerShaderProjection and Camera#_centerViewInverse
         if (this._shaderMatricesVersion === renderVersion || !this._node) {
             handle.viewProjectionInverse.copy(this._viewProjInverse);
         } else {
-            this._frameViewProjection(flipY, _publishViewProjMat);
-            handle.viewProjectionInverse.invert(_publishViewProjMat);
+            const projMat = this._centerShaderProjection(flipY, _publishProjMat);
+            const viewMat = this._centerViewInverse(_publishViewMat).invert();
+            handle.viewProjectionInverse.mul2(projMat, viewMat).invert();
         }
 
         // the viewport the camera rendered to, the way Renderer#setupViewport sets it. WebGPU places
@@ -468,32 +469,6 @@ class Camera {
         handle.gamma = gamma;
 
         SceneColorMapHandle.setUniform(this.device, texture);
-    }
-
-    /**
-     * Computes the view projection matrix the renderer gives the shaders of this camera, the way
-     * Renderer#setCameraUniforms does it, without the jitter.
-     *
-     * @param {boolean} flipY - The flipY of the render target rendered to.
-     * @param {Mat4} out - Receives the matrix.
-     * @returns {Mat4} out
-     * @private
-     */
-    _frameViewProjection(flipY, out) {
-        const projMat = this.projectionMatrix;
-        if (this.calculateProjection) {
-            this.calculateProjection(projMat, VIEW_CENTER);
-        }
-        Camera.applyShaderProjectionTransform(projMat, _publishProjMat, flipY, this.device.isWebGPU);
-
-        if (this.calculateTransform) {
-            this.calculateTransform(_publishViewInvMat, VIEW_CENTER);
-        } else {
-            _publishViewInvMat.setTRS(this._node.getPosition(), this._node.getRotation(), Vec3.ONE);
-        }
-        _publishViewInvMat.invert();
-
-        return out.mul2(_publishProjMat, _publishViewInvMat);
     }
 
     /**
