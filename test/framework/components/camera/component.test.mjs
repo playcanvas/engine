@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
+import { Mat4 } from '../../../../src/core/math/mat4.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Entity } from '../../../../src/framework/entity.js';
@@ -238,6 +239,46 @@ describe('CameraComponent', function () {
             app.render();
             expectMatricesOfThisFrame();
             expect(published.equals(first)).to.equal(false);
+
+            texture.destroy();
+        });
+
+        it('matches the matrices to the flipY of the target the depth was rendered to after the camera rendered', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            e.setPosition(1, 2, 3);
+            app.root.addChild(e);
+            const texture = createDepthTexture();
+            const camera = e.camera.camera;
+
+            // a pass of the application after the camera's own render, to the backbuffer, which
+            // publishes a depth rendered to a target of either orientation
+            const pass = new FramePass(app.graphicsDevice);
+            const published = [];
+            pass.onAfter = () => {
+                [false, true].forEach((flipY) => {
+                    e.camera.publishSceneDepthMap(texture, { flipY });
+                    published.push(e.camera.sceneDepthMapHandle.viewProjectionInverse.clone());
+                });
+            };
+            e.camera.afterPasses.push(pass);
+            app.render();
+
+            // the matrices the shaders would be given rendering to a target of that orientation,
+            // the camera having no jitter
+            const expected = (flipY) => {
+                const projMat = camera._centerShaderProjection(flipY, new Mat4());
+                const viewMat = camera._centerViewInverse(new Mat4()).invert();
+                return new Mat4().mul2(projMat, viewMat).invert();
+            };
+            [false, true].forEach((flipY, index) => {
+                const data = expected(flipY).data;
+                published[index].data.forEach((value, i) => {
+                    expect(value).to.be.closeTo(data[i], 1e-6 * Math.max(1, Math.abs(data[i])));
+                });
+            });
+            expect(published[0].equals(camera._viewProjInverse)).to.equal(true);
+            expect(published[1].equals(published[0])).to.equal(false);
 
             texture.destroy();
         });

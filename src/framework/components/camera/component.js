@@ -1417,7 +1417,8 @@ class CameraComponent extends Component {
      * channel float texture holding the depth.
      * @param {object} [options] - Options.
      * @param {boolean} [options.flipY] - The flipY of the render target the depth was rendered to,
-     * which the texture matches the layout of. Defaults to false.
+     * which the texture matches the layout of. The viewport and the matrices published with it match
+     * it too, also when the camera rendered to a target of the other orientation. Defaults to false.
      * @example
      * // a depth pre-pass of the application, rendering the hardware depth of a few occluders
      * depthPass.onAfter = () => {

@@ -599,7 +599,7 @@ class Renderer {
             this.viewProjId.setValue(viewProjMat.data);
 
             // store matrices needed by TAA
-            camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion);
+            camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion, flipY);
 
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
