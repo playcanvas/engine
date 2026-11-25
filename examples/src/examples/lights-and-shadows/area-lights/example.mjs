@@ -18,7 +18,6 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
-    JsonHandler,
     LIGHTFALLOFF_INVERSESQUARED,
     LIGHTSHAPE_DISK,
     LIGHTSHAPE_PUNCTUAL,
@@ -53,8 +52,7 @@ window.focus();
 
 const assets = {
     room: new Asset('room', 'container', { url: './assets/models/area-lights-room.glb' }),
-    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
+    statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' })
 };
 
 const device = await createGraphicsDevice(canvas, {
@@ -72,7 +70,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -129,10 +127,6 @@ data.set('settings', {
         bloom: true
     }
 });
-
-// The lookup tables the area lights are evaluated with
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // The omni and spot lights are clustered, which supports area lights once enabled
 const lighting = app.scene.lighting;

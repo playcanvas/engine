@@ -16,8 +16,6 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     AppBase,
     AppOptions,
-    Asset,
-    AssetListLoader,
     BoxGeometry,
     CameraComponentSystem,
     CameraFrame,
@@ -28,7 +26,6 @@ import {
     FILTER_LINEAR,
     FILTER_LINEAR_MIPMAP_LINEAR,
     FOG_LINEAR,
-    JsonHandler,
     LIGHTFALLOFF_INVERSESQUARED,
     LIGHTSHAPE_RECT,
     LightComponentSystem,
@@ -57,10 +54,6 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const assets = {
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
-};
-
 const device = await createGraphicsDevice(canvas, {
     deviceTypes: [deviceType]
 });
@@ -76,7 +69,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -111,15 +104,10 @@ app.on('destroy', () => {
     video.remove();
 });
 
-// load the assets, and the first frame of the video, which gives its size
-await Promise.all([
-    new Promise((resolve) => {
-        new AssetListLoader(Object.values(assets), app.assets).load(resolve);
-    }),
-    new Promise((resolve) => {
-        video.addEventListener('loadeddata', resolve, { once: true });
-    })
-]);
+// load the first frame of the video, which gives its size
+await new Promise((resolve) => {
+    video.addEventListener('loadeddata', resolve, { once: true });
+});
 
 app.start();
 
@@ -162,10 +150,6 @@ if (frameCallbacks) {
 }
 
 // ----- The scene -----
-
-// The lookup tables the area light is evaluated with
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // The lights are clustered, which supports area lights once enabled
 app.scene.lighting.areaLightsEnabled = true;

@@ -592,7 +592,6 @@ export default [
     },
     {
         ignores: [
-            'assets/scripts/utils/area-light-lut-bin-gen.js',
             'assets/wasm',
             'cache',
             'dist',

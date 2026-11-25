@@ -21,7 +21,6 @@ import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { FrameGraph } from '../scene/frame-graph.js';
-import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Scene } from '../scene/scene.js';
@@ -51,7 +50,7 @@ import { FEATURE_BUNDLES, FEATURE_I18N } from './features/constants.js';
 import { featureDirectionalPcssWebgl, featureDirectionalPcssWebgpu } from '../scene/features/feature-directional-pcss.js';
 import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/features/feature-area-lights.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
-import { FEATURE_AREA_LIGHTS, hasFeature } from '../scene/features/constants.js';
+import { hasFeature } from '../scene/features/constants.js';
 import { installFeatures } from '../scene/features/install-features.js';
 
 /**
@@ -1795,19 +1794,11 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Sets the area light LUT tables for this app.
-     *
-     * @param {number[]} ltcMat1 - LUT table of type `array` to be set.
-     * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
+     * @deprecated The area lights feature brings its LUT tables.
+     * @ignore
      */
-    setAreaLightLuts(ltcMat1, ltcMat2) {
-        Debug.assert(hasFeature(this.graphicsDevice, FEATURE_AREA_LIGHTS), 'setAreaLightLuts: area lights need the area lights feature to be installed.');
-
-        if (ltcMat1 && ltcMat2) {
-            AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
-        } else {
-            Debug.warn('setAreaLightLuts: LUTs for area light are not valid');
-        }
+    setAreaLightLuts() {
+        Debug.removed('AppBase#setAreaLightLuts is removed. The area lights feature brings its LUT tables, so no call is needed.');
     }
 
     /**

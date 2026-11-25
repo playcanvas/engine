@@ -15,7 +15,6 @@ import {
     FILLMODE_FILL_WINDOW,
     FOG_EXP2,
     Geometry,
-    JsonHandler,
     LAYERID_UI,
     LAYERID_WORLD,
     LIGHTFALLOFF_INVERSESQUARED,
@@ -63,7 +62,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, JsonHandler];
+createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -85,9 +84,8 @@ const envAtlas = new Asset(
     { url: './assets/cubemaps/studio-env-atlas.png' },
     { type: TEXTURETYPE_RGBP, mipmaps: false }
 );
-const luts = new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' });
 await new Promise((resolve) => {
-    new AssetListLoader([envAtlas, luts], app.assets).load(resolve);
+    new AssetListLoader([envAtlas], app.assets).load(resolve);
 });
 
 app.start();
@@ -319,8 +317,6 @@ cube.forEach((node) => {
 // a rectangular area light, a spot light shaped as a rectangle that shines in a cone towards the
 // cube, and a glowing rectangle showing it. The lights are clustered, which supports area
 // lights once enabled.
-const areaLuts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (luts.resource);
-app.setAreaLightLuts(areaLuts.LTC_MAT_1, areaLuts.LTC_MAT_2);
 app.scene.lighting.areaLightsEnabled = true;
 
 // Both softboxes are rectangles, so the shaders of the materials compile no disk and sphere light

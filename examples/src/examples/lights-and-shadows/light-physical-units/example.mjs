@@ -22,7 +22,6 @@ import {
     FILLMODE_FILL_WINDOW,
     FOG_EXP2,
     Gizmo,
-    JsonHandler,
     Keyboard,
     LIGHTFALLOFF_INVERSESQUARED,
     LIGHTSHAPE_RECT,
@@ -56,8 +55,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
+    sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' })
 };
 
 const gfxOptions = {
@@ -79,7 +77,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -120,10 +118,6 @@ app.scene.lighting.areaLightsEnabled = true;
 // light code, which makes them faster to compile
 app.scene.lighting.areaLightDiskEnabled = false;
 app.scene.lighting.areaLightSphereEnabled = false;
-
-// Set the loaded area light LUT data
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // A row of chairs in alternating fabrics, the outer ones turned in a little
 [

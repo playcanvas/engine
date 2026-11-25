@@ -5,14 +5,11 @@
 import {
     AppBase,
     AppOptions,
-    Asset,
-    AssetListLoader,
     CameraComponentSystem,
     Color,
     Entity,
     FILLMODE_FILL_WINDOW,
     Gizmo,
-    JsonHandler,
     Keyboard,
     LIGHTSHAPE_PUNCTUAL,
     LightComponentSystem,
@@ -39,10 +36,6 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const assets = {
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
-};
-
 const gfxOptions = {
     deviceTypes: [deviceType]
 };
@@ -61,7 +54,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [ScriptHandler, JsonHandler];
+createOptions.resourceHandlers = [ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -70,17 +63,11 @@ app.init(createOptions);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-await new Promise((resolve) => {
-    new AssetListLoader(Object.values(assets), app.assets).load(resolve);
-});
-
 app.start();
 
 // Scene settings, with area lights so the light can take a shape
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 app.scene.lighting.areaLightsEnabled = true;
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // Create entities
 const box = new Entity('box');

@@ -24,7 +24,6 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
-    JsonHandler,
     LAYERID_UI,
     LAYERID_WORLD,
     LIGHTFALLOFF_INVERSESQUARED,
@@ -80,7 +79,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -113,8 +112,7 @@ const assets = {
         'texture',
         { url: './assets/cubemaps/car-showroom-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
-    ),
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
+    )
 };
 await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
@@ -218,8 +216,6 @@ room.findComponents('render').forEach((render) => {
 
 // Rectangular area lights in place of the strips light the car, which reflects them exactly where
 // they are. The environment does not show the strips, so the car does not reflect them twice.
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 app.scene.lighting.areaLightsEnabled = true;
 
 // All the area lights are rectangles, so the shaders of the materials compile no disk and sphere
