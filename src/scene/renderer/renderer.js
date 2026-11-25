@@ -2,7 +2,6 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
@@ -20,8 +19,7 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
-    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
-    PROJECTION_PERSPECTIVE
+    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -538,30 +536,15 @@ class Renderer {
             camera.updateViewTransforms();
         } else {
 
-            // Projection Matrix
-            let projMat = camera.projectionMatrix;
-            if (camera.calculateProjection) {
-                camera.calculateProjection(projMat, VIEW_CENTER);
-            }
+            // Projection Matrix, including the flipY, the depth range and reverse-z
+            let projMat = camera._centerShaderProjection(flipY, _tempProjMat0);
+
+            // the skybox projection is always a built-in perspective one
             let projMatSkybox = camera.getProjectionMatrixSkybox();
-
-            const webgpu = this.device.isWebGPU;
-            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu);
-            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu);
-
-            // reverse-z: the depth of a built-in projection is computed from the clip planes, which
-            // keeps the far plane in place with a small near clip and a large far clip, while a
-            // projection the application calculates is reversed from its own terms. The skybox
-            // projection is always a built-in perspective one.
+            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, this.device.isWebGPU);
             const reverseZ = camera.reverseZActive;
             if (reverseZ) {
-                const { nearClip, farClip } = camera;
-                if (camera.calculateProjection) {
-                    Camera.reverseClipDepth(projMat, projMat);
-                } else {
-                    Camera.setReverseZDepth(projMat, camera.projection === PROJECTION_PERSPECTIVE, nearClip, farClip);
-                }
-                Camera.setReverseZDepth(projMatSkybox, true, nearClip, farClip);
+                Camera.setReverseZDepth(projMatSkybox, true, camera.nearClip, camera.farClip);
             }
 
             // camera jitter
@@ -600,13 +583,7 @@ class Renderer {
             this.projSkyboxId.setValue(projMatSkybox.data);
 
             // ViewInverse Matrix
-            if (camera.calculateTransform) {
-                camera.calculateTransform(viewInvMat, VIEW_CENTER);
-            } else {
-                const pos = camera._node.getPosition();
-                const rot = camera._node.getRotation();
-                viewInvMat.setTRS(pos, rot, Vec3.ONE);
-            }
+            camera._centerViewInverse(viewInvMat);
             this.viewInvId.setValue(viewInvMat.data);
 
             // View Matrix

@@ -37,7 +37,6 @@ const _point = new Vec3();
 const _invViewProjMat = new Mat4();
 const _xrViewProjMat = new Mat4();
 const _xrViewFrustum = new Frustum();
-const _frustumViewInvMat = new Mat4();
 const _frustumViewMat = new Mat4();
 const _frustumViewProjMat = new Mat4();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
@@ -1141,6 +1140,69 @@ class Camera {
     }
 
     /**
+     * Evaluates the projection matrix of the combined (VIEW_CENTER) view, the way the renderer
+     * uses it: {@link Camera#projectionMatrix}, with {@link Camera#calculateProjection} applied to
+     * it when set. Neither the flipY / depth range adjustment of
+     * {@link Camera.applyShaderProjectionTransform} nor any jitter is applied.
+     *
+     * @returns {Mat4} The projection matrix of the camera, which calculateProjection updates in
+     * place.
+     * @ignore
+     */
+    _centerProjection() {
+        const projMat = this.projectionMatrix;
+        if (this.calculateProjection) {
+            this.calculateProjection(projMat, VIEW_CENTER);
+        }
+        return projMat;
+    }
+
+    /**
+     * Evaluates the projection matrix of the combined (VIEW_CENTER) view the renderer gives the
+     * shaders of this camera: {@link Camera#_centerProjection}, with the flipY and depth range
+     * adjustment of {@link Camera.applyShaderProjectionTransform}, and the depth of reverse-z when
+     * the camera renders with it (see {@link Camera#reverseZActive}). The jitter is not applied.
+     *
+     * @param {boolean} flipY - The flipY of the render target rendered to.
+     * @param {Mat4} out - Receives the matrix.
+     * @returns {Mat4} The out matrix.
+     * @ignore
+     */
+    _centerShaderProjection(flipY, out) {
+        Camera.applyShaderProjectionTransform(this._centerProjection(), out, flipY, this.device.isWebGPU);
+
+        // reverse-z: the depth of a built-in projection is computed from the clip planes, which
+        // keeps the far plane in place with a small near clip and a large far clip, while a
+        // projection the application calculates is reversed from its own terms
+        if (this.reverseZActive) {
+            if (this.calculateProjection) {
+                Camera.reverseClipDepth(out, out);
+            } else {
+                Camera.setReverseZDepth(out, this.projection === PROJECTION_PERSPECTIVE, this.nearClip, this.farClip);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Evaluates the inverse view matrix of the combined (VIEW_CENTER) view, the way the renderer
+     * uses it: from {@link Camera#calculateTransform} when set, otherwise from the world position
+     * and rotation of the camera's node, without its scale.
+     *
+     * @param {Mat4} out - Receives the matrix.
+     * @returns {Mat4} The out matrix.
+     * @ignore
+     */
+    _centerViewInverse(out) {
+        if (this.calculateTransform) {
+            this.calculateTransform(out, VIEW_CENTER);
+        } else {
+            out.setTRS(this._node.getPosition(), this._node.getRotation(), Vec3.ONE);
+        }
+        return out;
+    }
+
+    /**
      * Updates {@link Camera#frustum} for the camera's current transform and projection, for
      * visibility culling. Uses the combined (VIEW_CENTER) view; XR cameras delegate to
      * {@link Camera#updateXrFrustum}. Honors the {@link Camera#calculateProjection} and
@@ -1155,21 +1217,9 @@ class Camera {
             return;
         }
 
-        const projMat = this.projectionMatrix;
-        if (this.calculateProjection) {
-            this.calculateProjection(projMat, VIEW_CENTER);
-        }
-
-        if (this.calculateTransform) {
-            this.calculateTransform(_frustumViewInvMat, VIEW_CENTER);
-        } else {
-            const pos = this._node.getPosition();
-            const rot = this._node.getRotation();
-            _frustumViewInvMat.setTRS(pos, rot, Vec3.ONE);
-        }
-        _frustumViewMat.copy(_frustumViewInvMat).invert();
-
-        _frustumViewProjMat.mul2(projMat, _frustumViewMat);
+        const projMat = this._centerProjection();
+        const viewMat = this._centerViewInverse(_frustumViewMat).invert();
+        _frustumViewProjMat.mul2(projMat, viewMat);
         this.frustum.setFromMat4(_frustumViewProjMat);
     }
 
