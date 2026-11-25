@@ -11,14 +11,14 @@ name: PR Report
 #   swings gzip by hundreds of bytes. Brotli deltas are not reported at all - quality 11 moves by
 #   hundreds of bytes on a one-line change even without renaming.
 # There is no stored baseline: the base commit is rebuilt fresh in the same run, so the comparison is
-# always "this PR vs the main it targets". Informative only; never fails the build.
+# always "this PR vs the branch it targets". Informative only; never fails the build.
 #
 # Note: comments directly, so on fork PRs (read-only token) the comment steps can't post; they are
 # marked continue-on-error so those runs stay green (just without comments).
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, main-v3]
     types: [opened, synchronize, reopened]
 
 permissions:
