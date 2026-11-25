@@ -6,7 +6,6 @@ import {
     BINDGROUP_MATERIAL, BINDGROUP_MESH, BINDGROUP_VIEW, SAMPLETYPE_DEPTH, SAMPLETYPE_UINT,
     SEMANTIC_POSITION
 } from '../../../src/platform/graphics/constants.js';
-import { ShaderProcessorGLSL } from '../../../src/platform/graphics/shader-processor-glsl.js';
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { WebglShaderProcessorGLSL } from '../../../src/platform/graphics/webgl/webgl-shader-processor-glsl.js';
 import { WebgpuShaderProcessorWGSL } from '../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
@@ -55,19 +54,6 @@ describe('View textures in the view bind group', function () {
         const list = new LightList();
         list.update(lights, false);
         return app.renderer.getViewUniformFormat(false, list);
-    };
-
-    const runGLSL = (textures, processingOptions = options()) => {
-        const definition = {
-            attributes: { vertex_position: SEMANTIC_POSITION },
-            vshader: glslSource(textures),
-            fshader: glslSource(textures, 'gl_FragColor'),
-            processingOptions
-        };
-        const shader = { failed: false, name: 'view-textures-test' };
-        const result = ShaderProcessorGLSL.run(device, definition, shader);
-        expect(shader.failed).to.equal(false);
-        return result;
     };
 
     const runWGSL = (textures, processingOptions = options()) => {
@@ -158,79 +144,6 @@ describe('View textures in the view bind group', function () {
         });
     });
 
-    describe('GLSL for WebGPU', function () {
-
-        it('declares the view textures in the view bind group after the uniform buffer, ordered by name', function () {
-            const result = runGLSL([
-                'uniform sampler2D uSceneColorMap;',
-                'uniform sampler2D texture_meshMap;',
-                'uniform highp usampler2D clusterWorldTexture;'
-            ]);
-
-            const viewFormat = result.viewBindGroupFormat;
-            expect(viewFormat).to.be.an.instanceof(BindGroupFormat);
-            expect(viewFormat.uniformBufferFormats).to.have.length(1);
-            expect(viewFormat.uniformBufferFormats[0].slot).to.equal(0);
-            expect(textureNames(viewFormat)).to.deep.equal(['clusterWorldTexture', 'uSceneColorMap']);
-            expect(viewFormat.textureFormats.map(format => format.slot)).to.deep.equal([1, 3]);
-            expect(viewFormat.getTexture('clusterWorldTexture').sampleType).to.equal(SAMPLETYPE_UINT);
-
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_VIEW}, binding = 0, std140) uniform ub_view {`);
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_VIEW}, binding = 1) uniform utexture2D clusterWorldTexture;`);
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_VIEW}, binding = 2) uniform sampler clusterWorldTexture_sampler;`);
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_VIEW}, binding = 3) uniform texture2D uSceneColorMap;`);
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_VIEW}, binding = 4) uniform sampler uSceneColorMap_sampler;`);
-
-            // the other textures stay in the mesh bind group
-            expect(textureNames(result.meshBindGroupFormat)).to.deep.equal(['texture_meshMap']);
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_MESH}, binding = 0) uniform texture2D texture_meshMap;`);
-        });
-
-        it('shares one format between shaders declaring the same view textures in any order', function () {
-            const a = runGLSL(['uniform sampler2D uSceneColorMap;', 'uniform sampler2D blueNoiseTex32;']);
-            const b = runGLSL(['uniform sampler2D blueNoiseTex32;', 'uniform sampler2D texture_meshMap;', 'uniform sampler2D uSceneColorMap;']);
-            expect(a.viewBindGroupFormat).to.equal(b.viewBindGroupFormat);
-        });
-
-        it('keeps a light slot shadow map a depth texture', function () {
-            viewUniformFormat = formatWithLights();
-            const result = runGLSL(['uniform sampler2DShadow light0_shadowMap;']);
-            expect(result.viewBindGroupFormat.getTexture('light0_shadowMap').sampleType).to.equal(SAMPLETYPE_DEPTH);
-            expect(result.meshBindGroupFormat.empty).to.equal(true);
-        });
-
-        it('keeps the texture of a light slot the format does not hold in the mesh bind group', function () {
-            const result = runGLSL(['uniform sampler2DShadow light0_shadowMap;']);
-            expect(result.viewBindGroupFormat).to.equal(null);
-            expect(textureNames(result.meshBindGroupFormat)).to.deep.equal(['light0_shadowMap']);
-        });
-
-        it('has no view bind group format without view textures', function () {
-            const result = runGLSL(['uniform sampler2D texture_meshMap;']);
-            expect(result.viewBindGroupFormat).to.equal(null);
-            expect(result.vshader).not.to.contain(`layout(set = ${BINDGROUP_VIEW}, binding = 1)`);
-        });
-
-        it('keeps the view textures in the mesh bind group without the predicate', function () {
-            const result = runGLSL(['uniform sampler2D uSceneColorMap;'], options(null));
-            expect(result.viewBindGroupFormat).to.equal(null);
-            expect(textureNames(result.meshBindGroupFormat)).to.deep.equal(['uSceneColorMap']);
-        });
-
-        it('leaves a texture a supplied bind group claims to that group', function () {
-            const processingOptions = options();
-            const materialFormat = new BindGroupFormat(device, [
-                new BindUniformBufferFormat('default', 3),
-                new BindTextureFormat('uSceneColorMap', 3)
-            ]);
-            processingOptions.bindGroupFormats[BINDGROUP_MATERIAL] = materialFormat;
-            const result = runGLSL(['uniform sampler2D uSceneColorMap;'], processingOptions);
-            expect(result.viewBindGroupFormat).to.equal(null);
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_MATERIAL}, binding = 1) uniform texture2D uSceneColorMap;`);
-            materialFormat.destroy();
-        });
-    });
-
     describe('WGSL', function () {
 
         it('declares the view textures and their samplers in the view bind group, ordered by name', function () {
@@ -248,6 +161,7 @@ describe('View textures in the view bind group', function () {
             expect(textureNames(viewFormat)).to.deep.equal(['clusterWorldTexture', 'shadowAtlasTexture', 'uSceneColorMap']);
             expect(viewFormat.textureFormats.map(format => format.slot)).to.deep.equal([1, 2, 4]);
             expect(viewFormat.getTexture('clusterWorldTexture').hasSampler).to.equal(false);
+            expect(viewFormat.getTexture('clusterWorldTexture').sampleType).to.equal(SAMPLETYPE_UINT);
 
             const code = result.fshader;
             expect(code).to.contain(`@group(${BINDGROUP_VIEW}) @binding(0) var<uniform> ub_view`);
@@ -294,6 +208,38 @@ describe('View textures in the view bind group', function () {
             const result = runWGSL(['var scene_envAtlas: texture_2d<f32>;', 'var scene_envAtlasSampler: sampler;']);
             expect(result.meshBindGroupFormat.empty).to.equal(true);
             expect(result.fshader).not.to.contain(`@group(${BINDGROUP_MESH}) @binding(0)`);
+        });
+
+        it('keeps a light slot shadow map a depth texture', function () {
+            viewUniformFormat = formatWithLights();
+            const result = runWGSL(['var light0_shadowMap: texture_depth_2d;', 'var light0_shadowMapSampler: sampler_comparison;']);
+            expect(result.viewBindGroupFormat.getTexture('light0_shadowMap').sampleType).to.equal(SAMPLETYPE_DEPTH);
+            expect(result.meshBindGroupFormat.empty).to.equal(true);
+        });
+
+        it('keeps the texture of a light slot the format does not hold in the mesh bind group', function () {
+            const result = runWGSL(['var light0_shadowMap: texture_depth_2d;', 'var light0_shadowMapSampler: sampler_comparison;']);
+            expect(result.viewBindGroupFormat).to.equal(null);
+            expect(textureNames(result.meshBindGroupFormat)).to.deep.equal(['light0_shadowMap']);
+        });
+
+        it('keeps the view textures in the mesh bind group without the predicate', function () {
+            const result = runWGSL(['var uSceneColorMap: texture_2d<f32>;', 'var uSceneColorMapSampler: sampler;'], options(null));
+            expect(result.viewBindGroupFormat).to.equal(null);
+            expect(textureNames(result.meshBindGroupFormat)).to.deep.equal(['uSceneColorMap']);
+        });
+
+        it('leaves a texture a supplied bind group claims to that group', function () {
+            const processingOptions = options();
+            const materialFormat = new BindGroupFormat(device, [
+                new BindUniformBufferFormat('default', 3),
+                new BindTextureFormat('uSceneColorMap', 3)
+            ]);
+            processingOptions.bindGroupFormats[BINDGROUP_MATERIAL] = materialFormat;
+            const result = runWGSL(['var uSceneColorMap: texture_2d<f32>;', 'var uSceneColorMapSampler: sampler;'], processingOptions);
+            expect(result.viewBindGroupFormat).to.equal(null);
+            expect(result.meshBindGroupFormat.empty).to.equal(true);
+            materialFormat.destroy();
         });
     });
 

@@ -103,11 +103,6 @@ class ShaderChunks {
      */
     version = '';
 
-    get useWGSL() {
-        // if we have no glsl overrides, or have wgsl overrides, wgsl is used on WebGPU
-        return this.glsl.size === 0 || this.wgsl.size > 0;
-    }
-
     get key() {
         return `GLSL:${this.glsl.key}|WGSL:${this.wgsl.key}|API:${this.version}`;
     }

@@ -13,9 +13,8 @@ import { Material } from './material.js';
 
 /**
  * @typedef {object} ShaderDesc - Defines the vertex and fragment shader source for
- * {@link ShaderMaterial}, supporting both GLSL and WGSL formats. WebGL always uses the GLSL code.
- * WebGPU prefers the WGSL code if available, otherwise it automatically transpiles the provided
- * GLSL code at runtime.
+ * {@link ShaderMaterial}, supporting both GLSL and WGSL formats. WebGL uses the GLSL code and
+ * WebGPU uses the WGSL code, so provide the code for each platform the shader is used on.
  * @property {string} uniqueName - Unique name for the shader. If a shader with this name already
  * exists, it will be returned instead of a new shader instance.
  * @property {string} [vertexGLSL] - The vertex shader code in GLSL.

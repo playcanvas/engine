@@ -15,7 +15,6 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
-import { webgpuChunksGLSL } from '../shader-chunks/webgpu-chunks-glsl.js';
 import { webgpuChunksWGSL } from '../shader-chunks/webgpu-chunks-wgsl.js';
 import { webgpuComputeChunksWGSL } from '../shader-chunks/webgpu-compute-chunks-wgsl.js';
 import { getCanvasNavigatorGpu } from './navigator-gpu.js';
@@ -438,12 +437,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     limits;
 
-    /** GLSL to SPIR-V transpiler */
-    glslang = null;
-
-    /** SPIR-V to WGSL transpiler */
-    twgsl = null;
-
     constructor(canvas, options = {}) {
         super(canvas, options);
         options = this.initOptions;
@@ -453,7 +446,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this._deviceType = DEVICETYPE_WEBGPU;
         this.featureLevel = options.featureLevel;
         this.shaderLanguage = SHADERLANGUAGE_WGSL;
-        this.platformChunksGLSL = webgpuChunksGLSL;
         this.platformChunksWGSL = webgpuChunksWGSL;
         this.computeChunks = webgpuComputeChunksWGSL;
 
@@ -644,7 +636,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.initCapsDefines();
     }
 
-    async initWebGpu(glslangUrl, twgslUrl) {
+    async initWebGpu() {
 
         if (!getCanvasNavigatorGpu(this.canvas)) {
             warnInsecureContext('WebGPU');
@@ -654,29 +646,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log('WebgpuGraphicsDevice initialization ..');
 
-        // Import shader transpilers only if both URLs are provided
-        if (glslangUrl && twgslUrl) {
-
-            // build a full URL from a relative or absolute path
-            const baseUrl = window.document?.baseURI ?? window.location.href;
-            const buildUrl = (srcPath) => {
-                return new URL(srcPath, baseUrl).toString();
-            };
-            const twgslScriptUrl = buildUrl(twgslUrl);
-            const twgslWasmUrl = buildUrl(twgslUrl.replace('.js', '.wasm'));
-            const glslangScriptUrl = buildUrl(glslangUrl);
-
-            const results = await Promise.all([
-                import(`${twgslScriptUrl}`).then(() => twgsl(twgslWasmUrl)),
-                import(`${glslangScriptUrl}`).then(module => module.default())
-            ]);
-
-            this.twgsl = results[0];
-            this.glslang = results[1];
-        }
-
         // create the device
-        return this.createDevice();
+        return await this.createDevice();
     }
 
     async createDevice() {
@@ -2429,10 +2400,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
-    }
-
-    get hasTranspilers() {
-        return this.glslang && this.twgsl;
     }
 
     // #if _DEBUG

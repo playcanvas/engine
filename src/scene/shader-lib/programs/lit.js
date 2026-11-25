@@ -1,4 +1,3 @@
-import { Debug } from '../../../core/debug.js';
 import { LitShader } from './lit-shader.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
@@ -33,13 +32,7 @@ class ShaderGeneratorLit extends ShaderGenerator {
      * @returns {object} Returns the created shader definition.
      */
     createShaderDefinition(device, options) {
-        const allowWGSL = !!options.shaderChunkWGSL;
-        Debug.call(() => {
-            if (device.isWebGPU && !allowWGSL) {
-                Debug.deprecated('LitMaterial has no shaderChunkWGSL, so its shader is generated in GLSL and transpiled to WGSL on WebGPU. GLSL shaders on WebGPU are deprecated and will be removed in Engine V3. Set LitMaterial#shaderChunkWGSL.');
-            }
-        });
-        const litShader = new LitShader(device, options.litOptions, allowWGSL);
+        const litShader = new LitShader(device, options.litOptions);
 
         const definitionOptions = {
             name: 'LitShader',

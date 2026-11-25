@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL2_BARE, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE, DEVICETYPE_NULL } from './constants.js';
 import { getCanvasNavigatorGpu } from './webgpu/navigator-gpu.js';
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
@@ -55,15 +54,6 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * requested to have a depth buffer of at least 16 bits. Defaults to true.
  * @param {boolean} [options.stencil] - Boolean that indicates that the drawing buffer is
  * requested to have a stencil buffer of at least 8 bits. Defaults to true.
- * @param {string} [options.glslangUrl] - Deprecated: GLSL to WGSL transpilation on WebGPU will be
- * removed in Engine V3, provide user-defined shaders and shader chunk overrides in WGSL instead.
- * The URL to the glslang script. Required only if user-defined shaders or shader chunk overrides
- * are specified in GLSL and need to be transpiled to WGSL for use with the
- * {@link DEVICETYPE_WEBGPU} device type. This is not required if only the engine's built-in
- * shaders are used, as those are provided directly in WGSL. Not used for
- * {@link DEVICETYPE_WEBGL2} device type creation.
- * @param {string} [options.twgslUrl] - Deprecated: see `glslangUrl`. An url to twgsl script,
- * required if glslangUrl was specified.
  * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
  * compatible graphics adapter for an immersive XR device. When omitted in a browser, defaults to
  * `true` if `navigator.xr` is present, otherwise `false` (see {@link GraphicsDevice} constructor).
@@ -96,12 +86,6 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  */
 function createGraphicsDevice(canvas, options = {}) {
 
-    Debug.call(() => {
-        if (options.glslangUrl || options.twgslUrl) {
-            Debug.deprecated('createGraphicsDevice: the glslangUrl and twgslUrl options are deprecated. GLSL to WGSL transpilation on WebGPU will be removed in Engine V3. Provide user-defined shaders and shader chunk overrides in WGSL instead.');
-        }
-    });
-
     const deviceTypes = options.deviceTypes ?? [];
 
     // automatically added fallback. The null device is not added, as it renders nothing, so the
@@ -119,7 +103,7 @@ function createGraphicsDevice(canvas, options = {}) {
             const featureLevel = deviceType === DEVICETYPE_WEBGPU_BARE ? 'bare' : undefined;
             deviceCreateFuncs.push(() => {
                 const device = new WebgpuGraphicsDevice(canvas, { ...options, featureLevel });
-                return device.initWebGpu(options.glslangUrl, options.twgslUrl);
+                return device.initWebGpu();
             });
         }
 

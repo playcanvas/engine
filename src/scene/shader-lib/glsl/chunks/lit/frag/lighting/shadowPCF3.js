@@ -50,8 +50,6 @@ float getShadowSpotPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 sh
 
 // ----- Omni Sampling -----
 
-#ifndef WEBGPU
-
 float getShadowOmniPCF3x3(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) {
     
     // Calculate shadow depth from the light direction
@@ -74,6 +72,4 @@ float getShadowOmniPCF3x3(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 d
 float getShadowOmniPCF3x3(samplerCubeShadow shadowMap, vec3 shadowCoord, vec4 shadowParams, vec3 lightDir) {
     return getShadowOmniPCF3x3(shadowMap, shadowParams, lightDir);
 }
-
-#endif
 `;

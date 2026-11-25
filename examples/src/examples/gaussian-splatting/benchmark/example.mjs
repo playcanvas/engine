@@ -579,7 +579,7 @@ async function createDevice(canvas, deviceType) {
     const opts = { antialias: false };
     if (deviceType === 'webgpu') {
         const device = new WebgpuGraphicsDevice(canvas, opts);
-        await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
+        await device.initWebGpu();
         return device;
     }
     return new WebglGraphicsDevice(canvas, opts);
