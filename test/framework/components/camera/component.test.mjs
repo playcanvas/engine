@@ -283,6 +283,30 @@ describe('CameraComponent', function () {
             texture.destroy();
         });
 
+        it('keeps the stored matrices in an XR session, which renders the views with their own', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            e.setPosition(1, 2, 3);
+            app.root.addChild(e);
+            const texture = createDepthTexture();
+            const camera = e.camera.camera;
+            const handle = e.camera.sceneDepthMapHandle;
+
+            // outside of a session, a depth published before the camera renders gets the matrices
+            // of this frame
+            app.graphicsDevice.renderVersion++;
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.viewProjectionInverse.equals(camera._viewProjInverse)).to.equal(false);
+
+            // in a session, as the XrManager sets it up
+            camera._xrViews = [];
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.viewProjectionInverse.equals(camera._viewProjInverse)).to.equal(true);
+            camera._xrViews = null;
+
+            texture.destroy();
+        });
+
     });
 
     describe('#setShaderPass', function () {

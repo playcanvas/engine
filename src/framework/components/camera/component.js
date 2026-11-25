@@ -1400,7 +1400,8 @@ class CameraComponent extends Component {
      * {@link ComputePass} placed after it, which culls the geometry the camera is about to render
      * against it, in the same frame. A depth published before the camera renders in the frame
      * comes with the camera's matrices of this frame, without the jitter of
-     * {@link CameraComponent#jitter}.
+     * {@link CameraComponent#jitter}. In an XR session, where each view renders with matrices of its
+     * own, the matrices published with the depth do not describe the views.
      *
      * The texture must store the depth the way the shaders of this camera read it: the depth buffer
      * values, or the linear depth when the camera's {@link CameraFrame} renders the depth. A camera

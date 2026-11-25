@@ -432,13 +432,17 @@ class Camera {
         // in it - see Camera#_storeShaderMatrices. When the depth was rendered to a target of the
         // other orientation, the clip space y of those is flipped to match it. A depth published
         // before that, by a pass of the application, gets this frame's matrices computed the same
-        // way, without the jitter - see Camera#_centerShaderProjection and Camera#_centerViewInverse
-        if (this._shaderMatricesVersion === renderVersion || !this._node) {
-            if (this._shaderMatricesVersion === renderVersion && this._shaderMatricesFlipY !== !!flipY) {
+        // way, without the jitter - see Camera#_centerShaderProjection and Camera#_centerViewInverse.
+        // In XR, where the views are rendered with matrices of their own and none are stored, the
+        // handle cannot describe them, and keeps the stored matrices as before
+        if (this._shaderMatricesVersion === renderVersion) {
+            if (this._shaderMatricesFlipY !== !!flipY) {
                 handle.viewProjectionInverse.mul2(this._viewProjInverse, Camera._flipYProjectionMatrix);
             } else {
                 handle.viewProjectionInverse.copy(this._viewProjInverse);
             }
+        } else if (!this._node || this.xrActive) {
+            handle.viewProjectionInverse.copy(this._viewProjInverse);
         } else {
             const projMat = this._centerShaderProjection(flipY, _publishProjMat);
             const viewMat = this._centerViewInverse(_publishViewMat).invert();
