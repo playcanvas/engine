@@ -1,0 +1,54 @@
+name: Close Issues
+
+# GitHub closes the issues a pull request fixes ("Fixes #123") only when it merges into the default
+# branch. This does the same for pull requests merged into main-v3: it closes each issue of this
+# repository that the description names after a closing keyword, with a comment linking the pull
+# request. Issues that are already closed, and pull requests, are left alone.
+#
+# Runs on pull_request_target so that pull requests from forks get a token that can close issues.
+# It never checks out the pull request's code, and reads its description only from the event.
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main-v3]
+
+permissions:
+  contents: read
+
+jobs:
+  close-issues:
+    name: Close Issues
+    runs-on: ubuntu-latest
+    if: github.repository == 'playcanvas/engine' && github.event.pull_request.merged
+    permissions:
+      issues: write
+    steps:
+      - name: Close fixed issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # the same keywords GitHub recognizes, followed by #123, playcanvas/engine#123 or the
+          # issue's URL
+          issues=$(printf '%s' "$BODY" |
+            grep -oiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?):?[[:space:]]+((playcanvas/engine)?#|https://github\.com/playcanvas/engine/issues/)[0-9]+\b' |
+            grep -oE '[0-9]+$' | sort -un || true)
+
+          if [[ -z "$issues" ]]; then
+            echo "No issues to close"
+            exit 0
+          fi
+
+          for issue in $issues; do
+            read -r state is_pr < <(gh api "repos/$GH_REPO/issues/$issue" --jq '"\(.state) \(.pull_request != null)"' || echo "missing false")
+            if [[ "$state" != "open" || "$is_pr" == "true" ]]; then
+              echo "Skipping #$issue ($state, pull request: $is_pr)"
+              continue
+            fi
+            gh issue close "$issue" --reason completed --comment "Done in #$PR, merged into $BASE."
+            echo "Closed #$issue"
+          done
