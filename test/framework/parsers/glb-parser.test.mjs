@@ -8,7 +8,7 @@ import {
 } from '../../../src/framework/parsers/glb/extensions/khr-materials-diffuse-transmission.js';
 import { GlbParser } from '../../../src/framework/parsers/glb-parser.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_NEAREST
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_NEAREST, SEMANTIC_COLOR
 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
@@ -488,6 +488,80 @@ describe('GlbParser', function () {
 
             const mesh = result.renders[0].meshes[0];
             expect(result.meshDefaultMaterials[mesh.id]).to.equal(1);
+        });
+    });
+
+    describe('vertex attributes which are not 4-byte aligned', function () {
+
+        // four vertices with tightly packed uint8 RGB colors - a stride of 3 bytes, which the glTF
+        // spec disallows but some exporters write, and other loaders accept
+        const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0]);
+        const colors = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]);
+        const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+        const bytes = new Uint8Array(positions.byteLength + colors.byteLength + indices.byteLength);
+        bytes.set(new Uint8Array(positions.buffer), 0);
+        bytes.set(colors, positions.byteLength);
+        bytes.set(new Uint8Array(indices.buffer), positions.byteLength + colors.byteLength);
+        const bufferUri = `data:application/octet-stream;base64,${Buffer.from(bytes).toString('base64')}`;
+
+        const parseColoredQuad = () => {
+            const gltf = {
+                asset: { version: '2.0' },
+                scene: 0,
+                scenes: [{ nodes: [0] }],
+                nodes: [{ mesh: 0 }],
+                meshes: [{ primitives: [{ attributes: { POSITION: 0, COLOR_0: 1 }, indices: 2 }] }],
+                accessors: [
+                    { bufferView: 0, componentType: 5126, count: 4, type: 'VEC3', min: [0, 0, 0], max: [1, 1, 0] },
+                    { bufferView: 1, componentType: 5121, normalized: true, count: 4, type: 'VEC3' },
+                    { bufferView: 2, componentType: 5123, count: 6, type: 'SCALAR' }
+                ],
+                bufferViews: [
+                    { buffer: 0, byteOffset: 0, byteLength: positions.byteLength },
+                    { buffer: 0, byteOffset: positions.byteLength, byteLength: colors.byteLength },
+                    { buffer: 0, byteOffset: positions.byteLength + colors.byteLength, byteLength: indices.byteLength }
+                ],
+                buffers: [{ byteLength: bytes.length, uri: bufferUri }]
+            };
+            const data = new TextEncoder().encode(JSON.stringify(gltf));
+
+            return new Promise((resolve, reject) => {
+                GlbParser.parse('quad.gltf', '', data, app.graphicsDevice, app.assets, {}, [], (err, result) => {
+                    if (err) reject(err);
+                    else resolve(result);
+                });
+            });
+        };
+
+        // reads back the color of every vertex from the vertex buffer the parser built
+        const readColors = (result) => {
+            const vertexBuffer = result.renders[0].meshes[0].vertexBuffer;
+            const element = vertexBuffer.format.elements.find(e => e.name === SEMANTIC_COLOR);
+            const vertexBytes = new Uint8Array(vertexBuffer.storage);
+            const read = [];
+            for (let v = 0; v < vertexBuffer.numVertices; v++) {
+                const offset = v * element.stride + element.offset;
+                read.push(Array.from(vertexBytes.subarray(offset, offset + element.numComponents)));
+            }
+            return read;
+        };
+
+        it('copies a tightly packed uint8 RGB color of every vertex', async function () {
+            const result = await parseColoredQuad();
+
+            expect(readColors(result)).to.deep.equal([
+                [10, 20, 30], [40, 50, 60], [70, 80, 90], [100, 110, 120]
+            ]);
+        });
+
+        it('widens a uint8 RGB color to RGBA with opaque alpha on WebGPU', async function () {
+            // WebGPU has no 3-byte vertex format, so the parser widens the color to 4 components
+            app.graphicsDevice.isWebGPU = true;
+            const result = await parseColoredQuad();
+
+            expect(readColors(result)).to.deep.equal([
+                [10, 20, 30, 255], [40, 50, 60, 255], [70, 80, 90, 255], [100, 110, 120, 255]
+            ]);
         });
     });
 });

@@ -14,7 +14,7 @@ import {
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
-    TYPE_FLOAT32
+    TYPE_FLOAT32, TYPE_UINT8, TYPE_UINT16
 } from '../../platform/graphics/constants.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -293,23 +293,58 @@ const createVertexBufferInternal = (device, sourceDesc) => {
         // copy data and interleave
         for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
             target = vertexBuffer.format.elements[i];
-            targetStride = target.stride / 4;
-
             source = sourceDesc[target.name];
-            sourceStride = source.stride / 4;
-            // ensure we don't go beyond the end of the arraybuffer when dealing with
-            // interlaced vertex formats
-            sourceArray = new Uint32Array(source.buffer, source.offset, (source.count - 1) * sourceStride + (source.size + 3) / 4);
 
-            let src = 0;
-            let dst = target.offset / 4;
-            const kend = Math.floor((source.size + 3) / 4);
-            for (j = 0; j < numVertices; ++j) {
-                for (k = 0; k < kend; ++k) {
-                    targetArray[dst + k] = sourceArray[src + k];
+            if ((source.stride % 4) === 0 && (source.offset % 4) === 0) {
+                targetStride = target.stride / 4;
+                sourceStride = source.stride / 4;
+                // ensure we don't go beyond the end of the arraybuffer when dealing with
+                // interlaced vertex formats
+                sourceArray = new Uint32Array(source.buffer, source.offset, (source.count - 1) * sourceStride + (source.size + 3) / 4);
+
+                let src = 0;
+                let dst = target.offset / 4;
+                const kend = Math.floor((source.size + 3) / 4);
+                for (j = 0; j < numVertices; ++j) {
+                    for (k = 0; k < kend; ++k) {
+                        targetArray[dst + k] = sourceArray[src + k];
+                    }
+                    src += sourceStride;
+                    dst += targetStride;
                 }
-                src += sourceStride;
-                dst += targetStride;
+            } else {
+                // the glTF spec requires vertex attributes to be 4-byte aligned, but some exporters
+                // write tightly packed data such as a uint8 VEC3 color with a stride of 3 bytes, which
+                // cannot be copied in 32-bit words, so copy it byte by byte instead
+                const sourceBytes = new Uint8Array(source.buffer, source.offset, (source.count - 1) * source.stride + source.size);
+                const targetBytes = new Uint8Array(vertexData);
+
+                let src = 0;
+                let dst = target.offset;
+                for (j = 0; j < numVertices; ++j) {
+                    for (k = 0; k < source.size; ++k) {
+                        targetBytes[dst + k] = sourceBytes[src + k];
+                    }
+                    src += source.stride;
+                    dst += target.stride;
+                }
+            }
+
+            // an RGB color widened to RGBA for WebGPU gets an opaque alpha, matching WebGL where a
+            // missing alpha component reads as 1
+            if (target.name === SEMANTIC_COLOR && source.components === 3 && target.numComponents === 4 && target.normalize) {
+                const alpha = target.dataType === TYPE_UINT8 ? 0xff : (target.dataType === TYPE_UINT16 ? 0xffff : 0);
+                if (alpha) {
+                    const TypedArray = typedArrayTypes[target.dataType];
+                    const bytesPerComponent = typedArrayTypesByteSize[target.dataType];
+                    const targetComponents = new TypedArray(vertexData);
+                    const elementStride = target.stride / bytesPerComponent;
+                    let dst = target.offset / bytesPerComponent + 3;
+                    for (j = 0; j < numVertices; ++j) {
+                        targetComponents[dst] = alpha;
+                        dst += elementStride;
+                    }
+                }
             }
         }
     }
