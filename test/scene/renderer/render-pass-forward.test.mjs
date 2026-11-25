@@ -3,7 +3,10 @@ import { restore, stub } from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
+import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { LayerComposition } from '../../../src/scene/composition/layer-composition.js';
 import { LayerRenderStep } from '../../../src/scene/renderer/layer-render-step.js';
 import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
@@ -249,6 +252,41 @@ describe('RenderPassForward', function () {
                 schedule(pass);
                 expect(assertFailed(assertion)).to.equal(false);
             });
+        });
+    });
+
+    describe('#before', function () {
+
+        const createTexture = format => new Texture(app.graphicsDevice, {
+            width: 4, height: 4, format, mipmaps: false
+        });
+
+        it('warns when the scene depth is an attachment of the render target it renders into', function () {
+            const colorBuffer = createTexture(PIXELFORMAT_RGBA8);
+            const depthTexture = createTexture(PIXELFORMAT_R32F);
+            const renderTarget = new RenderTarget({ colorBuffer, depth: true });
+            const pass = new RenderPassForward(app.graphicsDevice, app.scene, first);
+            pass.init(renderTarget);
+            pass.addLayer(app.scene.layers.getLayerByName('World'), false);
+            schedule(pass);
+
+            const warn = stub(Debug, 'warnOnce');
+
+            // a depth rendered to a texture of its own
+            first.publishSceneDepthMap(depthTexture);
+            pass.before();
+            expect(warn.called).to.equal(false);
+
+            // a color buffer of the render target the pass renders into, for a camera without a
+            // CameraFrame, which leaves the uniform as published
+            first.publishSceneDepthMap(colorBuffer);
+            pass.before();
+            expect(warn.calledOnce).to.equal(true);
+            expect(warn.firstCall.args[0]).to.include('attachment');
+
+            renderTarget.destroy();
+            colorBuffer.destroy();
+            depthTexture.destroy();
         });
     });
 });

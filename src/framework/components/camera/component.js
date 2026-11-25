@@ -1408,6 +1408,11 @@ class CameraComponent extends Component {
      * its {@link CameraFrame}, publishes it the same way later in the frame, and its consumers read
      * that one from then on.
      *
+     * The texture must not be an attachment of a render target the camera renders into, such as the
+     * depth buffer of {@link CameraComponent#renderTarget} primed by a depth pre-pass: materials
+     * sampling the scene depth would read the texture they render to. Render or copy the depth to a
+     * texture of its own instead. Debug builds warn about it.
+     *
      * @param {Texture} texture - The texture the depth was rendered to: a depth texture, or a single
      * channel float texture holding the depth.
      * @param {object} [options] - Options.

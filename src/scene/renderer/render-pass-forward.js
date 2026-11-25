@@ -444,22 +444,32 @@ class RenderPassForward extends RenderPass {
     _publishedSceneDepth() {
         const handle = this.cameraComponent.camera.sceneDepthMapHandle;
         const { texture } = handle;
-        if (!texture || handle.renderVersion !== this.device.renderVersion) {
+        if (!texture || handle.renderVersion !== this.device.renderVersion || this._isAttachment(texture)) {
             return null;
         }
+        return texture;
+    }
 
+    /**
+     * Whether a texture is an attachment of the render target this pass renders into.
+     *
+     * @param {Texture} texture - The texture.
+     * @returns {boolean} True when it is the depth buffer or a color buffer of the render target.
+     * @private
+     */
+    _isAttachment(texture) {
         const rt = this.renderTarget;
         if (rt) {
             if (rt.depthBuffer === texture) {
-                return null;
+                return true;
             }
             for (let i = 0; i < rt.colorBufferCount; i++) {
                 if (rt.getColorBuffer(i) === texture) {
-                    return null;
+                    return true;
                 }
             }
         }
-        return texture;
+        return false;
     }
 
     before() {
@@ -480,6 +490,15 @@ class RenderPassForward extends RenderPass {
                 }
             });
         }
+
+        // the scene depth materials sample must not be a texture this pass renders into, which a depth
+        // published by the application can be, for a camera that renders without a CameraFrame
+        Debug.call(() => {
+            const sceneDepth = this.device.scope.resolve(SceneDepthMapHandle.uniformName).value;
+            if (sceneDepth && this._isAttachment(sceneDepth)) {
+                Debug.warnOnce(`RenderPassForward: the scene depth map [${sceneDepth.name}] is an attachment of the render target [${this.renderTarget.name}] the pass renders into, so materials sampling the scene depth read the texture they render to. Publish a depth rendered to another texture, see CameraComponent#publishSceneDepthMap.`);
+            }
+        });
 
         // onPreRender event
         if (this.firstCameraUse) {
