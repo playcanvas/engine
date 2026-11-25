@@ -1,4 +1,3 @@
-import { Debug } from '../../../core/debug.js';
 import { hashCode } from '../../../core/hash.js';
 import { MapUtils } from '../../../core/map-utils.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
@@ -106,17 +105,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
     createShaderDefinition(device, options) {
 
         const desc = options.shaderDesc;
-        const wgsl = device.shaderLanguage === SHADERLANGUAGE_WGSL && !!desc.vertexWGSL && !!desc.fragmentWGSL && (options.shaderChunks?.useWGSL ?? true);
-
-        Debug.call(() => {
-            if (device.isWebGPU && !wgsl) {
-                if (!desc.vertexWGSL || !desc.fragmentWGSL) {
-                    Debug.deprecated(`ShaderMaterial [${desc.uniqueName}] has no vertexWGSL and fragmentWGSL, so its GLSL code is transpiled to WGSL on WebGPU. GLSL shaders on WebGPU are deprecated and will be removed in Engine V3. Provide vertexWGSL and fragmentWGSL in the ShaderDesc.`);
-                } else {
-                    Debug.deprecated(`ShaderMaterial [${desc.uniqueName}] has shader chunk overrides [${[...options.shaderChunks.glsl.keys()].join(', ')}] provided only in GLSL, so its GLSL code is transpiled to WGSL on WebGPU. GLSL shaders on WebGPU are deprecated and will be removed in Engine V3. Provide WGSL versions of the chunk overrides using material.shaderChunks.wgsl.`);
-                }
-            }
-        });
+        const wgsl = device.shaderLanguage === SHADERLANGUAGE_WGSL;
 
         const definitionOptions = {
             name: `ShaderMaterial-${desc.uniqueName}`,

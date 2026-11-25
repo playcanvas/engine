@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 
 import { BINDGROUP_MATERIAL, SEMANTIC_POSITION } from '../../../src/platform/graphics/constants.js';
-import { ShaderProcessorGLSL } from '../../../src/platform/graphics/shader-processor-glsl.js';
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { WebglShaderProcessorGLSL } from '../../../src/platform/graphics/webgl/webgl-shader-processor-glsl.js';
 import { WebgpuShaderProcessorWGSL } from '../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
@@ -71,22 +70,6 @@ describe('Material uniform buffer shader processing', function () {
         expect(result.vshader).to.contain('ub_material.material_diffuse');
         expect(result.vshader).to.contain('ub_mesh_ub.uMeshValue');
         expect(result.fshader).to.contain('ub_material.material_diffuse');
-        expect(result.meshUniformBufferFormat.get('material_diffuse')).not.to.exist;
-        expect(result.meshUniformBufferFormat.get('uMeshValue')).to.exist;
-    });
-
-    it('GLSL for WebGPU declares the material block at the material bind group', function () {
-        const definition = {
-            attributes: { vertex_position: SEMANTIC_POSITION },
-            vshader: glslSource,
-            fshader: glslSource.replace('gl_Position', 'gl_FragColor'),
-            processingOptions
-        };
-        const shader = { failed: false, name: 'material-ub-test' };
-        const result = ShaderProcessorGLSL.run(app.graphicsDevice, definition, shader);
-        expect(shader.failed).to.equal(false);
-        expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_MATERIAL}, binding = 0, std140) uniform ub_material {`);
-        expect(result.vshader).to.contain('vec3 material_diffuse;');
         expect(result.meshUniformBufferFormat.get('material_diffuse')).not.to.exist;
         expect(result.meshUniformBufferFormat.get('uMeshValue')).to.exist;
     });

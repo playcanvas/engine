@@ -348,16 +348,9 @@ class Material {
      * material. The chunks can be also be included in shaders using the `#include "ChunkName"`
      * directive.
      *
-     * On the WebGL platform:
-     *  - If GLSL chunks are provided, they are used directly.
-     *
-     * On the WebGPU platform:
-     * - If WGSL chunks are provided, they are used directly.
-     * - If only GLSL chunks are provided, a GLSL shader is generated and then transpiled to WGSL,
-     * which is less efficient.
-     *
-     * To ensure faster shader compilation, it is recommended to provide shader chunks for all
-     * supported platforms.
+     * The WebGL platform uses the GLSL chunks, and the WebGPU platform uses the WGSL chunks. Chunks
+     * provided in only one language are ignored on the other platform, so provide the chunks in
+     * both languages to customize the material on all platforms.
      *
      * A simple example on how to override a shader chunk providing emissive color for both GLSL and
      * WGSL to simply return a red color:

@@ -45,7 +45,7 @@ async function createGraphicsDevice(canvas, deviceType) {
     let device;
     if (deviceType === 'webgpu') {
         device = new WebgpuGraphicsDevice(canvas, {});
-        await device.initWebGpu('./assets/wasm/glslang/glslang.js', './assets/wasm/twgsl/twgsl.js');
+        await device.initWebGpu();
     } else if (deviceType === 'webgl2') {
         device = new WebglGraphicsDevice(canvas);
     } else {

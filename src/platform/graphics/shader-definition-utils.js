@@ -13,6 +13,9 @@ import {
  * @import { GraphicsDevice } from './graphics-device.js'
  */
 
+// the version directive of a GLSL shader
+const glslVersion = '#version 300 es\n';
+
 const _attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
     vertex_normal: SEMANTIC_NORMAL,
@@ -182,7 +185,7 @@ class ShaderDefinitionUtils {
             Debug.assert(options.vertexCode);
 
             // vertex code
-            vertCode = `${ShaderDefinitionUtils.versionCode(device) +
+            vertCode = `${glslVersion +
                 getDefines(vertexHeader, true, options) +
                 vertexDefinesCode +
                 ShaderDefinitionUtils.precisionCode(device)}
@@ -194,7 +197,7 @@ class ShaderDefinitionUtils {
 
             // fragment code
             fragCode = `${(options.fragmentPreamble || '') +
-                ShaderDefinitionUtils.versionCode(device) +
+                glslVersion +
                 getDefines(fragmentHeader, false, options) +
                 fragmentDefinesCode +
                 ShaderDefinitionUtils.precisionCode(device)}
@@ -290,10 +293,6 @@ class ShaderDefinitionUtils {
     // SpectorJS integration
     static getShaderNameCode(name) {
         return `#define SHADER_NAME ${name}\n`;
-    }
-
-    static versionCode(device) {
-        return device.isWebGPU ? '#version 450\n' : '#version 300 es\n';
     }
 
     static precisionCode(device, forcePrecision) {

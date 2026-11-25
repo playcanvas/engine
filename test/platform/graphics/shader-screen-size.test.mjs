@@ -3,7 +3,6 @@ import sinon from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
 import { SEMANTIC_POSITION } from '../../../src/platform/graphics/constants.js';
-import { ShaderProcessorGLSL } from '../../../src/platform/graphics/shader-processor-glsl.js';
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { WebglShaderProcessorGLSL } from '../../../src/platform/graphics/webgl/webgl-shader-processor-glsl.js';
 import { WebgpuShaderProcessorWGSL } from '../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
@@ -71,7 +70,6 @@ describe('Screen size shader uniform compatibility', function () {
 
     [
         ['WebGL2', WebglShaderProcessorGLSL, false],
-        ['GLSL for WebGPU', ShaderProcessorGLSL, false],
         ['WGSL', WebgpuShaderProcessorWGSL, true]
     ].forEach(([name, processor, wgsl]) => {
         [false, true].forEach((legacy) => {
@@ -95,10 +93,8 @@ describe('Screen size shader uniform compatibility', function () {
                 } else {
                     expect(result.meshUniformBufferFormat.get('screen_size')).not.to.exist;
                     expect(!!result.meshUniformBufferFormat.get('uScreenSize')).to.equal(legacy);
-                    if (wgsl) {
-                        expect(result.vshader).to.contain('ub_view.screen_size');
-                        if (legacy) expect(result.vshader).to.contain('ub_mesh_ub.uScreenSize');
-                    }
+                    expect(result.vshader).to.contain('ub_view.screen_size');
+                    if (legacy) expect(result.vshader).to.contain('ub_mesh_ub.uScreenSize');
                 }
                 expect(warn.callCount).to.equal(legacy ? 1 : 0);
                 if (legacy) expect(warn.firstCall.args[0]).to.equal(`DEPRECATED: ${warning}`);

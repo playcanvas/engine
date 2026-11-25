@@ -4,7 +4,6 @@ import sinon from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { BINDGROUP_VIEW, SEMANTIC_POSITION } from '../../../src/platform/graphics/constants.js';
-import { ShaderProcessorGLSL } from '../../../src/platform/graphics/shader-processor-glsl.js';
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { WebglShaderProcessorGLSL } from '../../../src/platform/graphics/webgl/webgl-shader-processor-glsl.js';
 import { WebgpuShaderProcessorWGSL } from '../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
@@ -175,12 +174,12 @@ describe('View uniform format with lights', function () {
             try {
                 const definition = {
                     attributes: { vertex_position: SEMANTIC_POSITION },
-                    vshader: glslSource.replace(/light0_/g, 'light1_'),
-                    fshader: glslSource.replace(/light0_/g, 'light1_').replace('gl_Position', 'gl_FragColor'),
+                    vshader: wgslSource(true).replace(/light0_/g, 'light1_'),
+                    fshader: wgslSource(false).replace(/light0_/g, 'light1_'),
                     processingOptions
                 };
                 const shader = { failed: false, name: 'view-lights-test' };
-                const result = ShaderProcessorGLSL.run(app.graphicsDevice, definition, shader);
+                const result = WebgpuShaderProcessorWGSL.run(app.graphicsDevice, definition, shader);
                 expect(result.meshUniformBufferFormat.get('light1_color')).to.exist;
                 expect(warn.calledWith(message)).to.equal(true);
             } finally {
@@ -209,24 +208,6 @@ describe('View uniform format with lights', function () {
             expect(result.vshader).to.contain('ub_view.light0_color');
             expect(result.vshader).to.contain('ub_view.light0_shadowMatrixPalette[1]');
             expect(result.vshader).to.contain('ub_mesh_ub.uMeshValue');
-            expect(result.meshUniformBufferFormat.get('light0_color')).not.to.exist;
-            expect(result.meshUniformBufferFormat.get('light0_shadowMatrixPalette')).not.to.exist;
-            expect(result.meshUniformBufferFormat.get('uMeshValue')).to.exist;
-        });
-
-        it('GLSL for WebGPU declares the light uniforms in the view block only', function () {
-            const definition = {
-                attributes: { vertex_position: SEMANTIC_POSITION },
-                vshader: glslSource,
-                fshader: glslSource.replace('gl_Position', 'gl_FragColor'),
-                processingOptions
-            };
-            const shader = { failed: false, name: 'view-lights-test' };
-            const result = ShaderProcessorGLSL.run(app.graphicsDevice, definition, shader);
-            expect(shader.failed).to.equal(false);
-            expect(result.vshader).to.contain(`layout(set = ${BINDGROUP_VIEW}, binding = 0, std140) uniform ub_view {`);
-            expect(result.vshader).to.contain('mat4 light0_shadowMatrixPalette[4];');
-            expect(result.vshader).not.to.contain('uniform vec3 light0_color;');
             expect(result.meshUniformBufferFormat.get('light0_color')).not.to.exist;
             expect(result.meshUniformBufferFormat.get('light0_shadowMatrixPalette')).not.to.exist;
             expect(result.meshUniformBufferFormat.get('uMeshValue')).to.exist;

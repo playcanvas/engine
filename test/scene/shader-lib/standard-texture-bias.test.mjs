@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { Preprocessor } from '../../../src/core/preprocessor.js';
 import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, TYPE_FLOAT32 } from '../../../src/platform/graphics/constants.js';
-import { ShaderProcessorGLSL } from '../../../src/platform/graphics/shader-processor-glsl.js';
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
@@ -36,8 +35,8 @@ describe('Standard material texture bias', function () {
 
     /**
      * @param {number} nineSlicedMode - The nine-slice mode of the material.
-     * @returns {{ generated: string, webgl: string, webgpu: string }} The generated fragment shader
-     * of a textured standard material, and its processed forms for WebGL2 and for WebGPU (GLSL).
+     * @returns {{ generated: string, webgl: string }} The generated fragment shader of a textured
+     * standard material, and its processed form for WebGL2.
      */
     const fragmentShaders = (nineSlicedMode) => {
         const device = app.graphicsDevice;
@@ -67,14 +66,11 @@ describe('Standard material texture bias', function () {
             processingOptions: new ShaderProcessorOptions(viewUniformFormat, shader.definition.vertexFormat)
         };
         const webgl = { failed: false, name: 'texture-bias-test' };
-        const webgpu = { failed: false, name: 'texture-bias-test' };
         const result = {
             generated,
-            webgl: WebglShaderProcessorGLSL.run(device, definition, webgl).fshader,
-            webgpu: ShaderProcessorGLSL.run(device, definition, webgpu).fshader
+            webgl: WebglShaderProcessorGLSL.run(device, definition, webgl).fshader
         };
         expect(webgl.failed).to.equal(false);
-        expect(webgpu.failed).to.equal(false);
         return result;
     };
 
@@ -88,14 +84,12 @@ describe('Standard material texture bias', function () {
         if (app.graphicsDevice.isWebGPU) {
             this.skip();
         }
-        const { generated, webgl, webgpu } = fragmentShaders(SPRITE_RENDERMODE_SIMPLE);
+        const { generated, webgl } = fragmentShaders(SPRITE_RENDERMODE_SIMPLE);
         expect(generated).not.to.contain('{STD_TEXTURE_BIAS}');
         expect(generated).to.contain(', textureBias)');
-        for (const processed of [webgl, webgpu]) {
-            expect(processed).not.to.contain('const float textureBias');
-            expect(processed).not.to.contain('uniform float textureBias;');
-            expect(processed.match(/float textureBias;/g)).to.have.lengthOf(1);
-        }
+        expect(webgl).not.to.contain('const float textureBias');
+        expect(webgl).not.to.contain('uniform float textureBias;');
+        expect(webgl.match(/float textureBias;/g)).to.have.lengthOf(1);
     });
 
     it('forces the top mip in the tiled nine-slice mode without redeclaring the uniform', function () {
@@ -103,14 +97,12 @@ describe('Standard material texture bias', function () {
         if (app.graphicsDevice.isWebGPU) {
             this.skip();
         }
-        const { generated, webgl, webgpu } = fragmentShaders(SPRITE_RENDERMODE_TILED);
+        const { generated, webgl } = fragmentShaders(SPRITE_RENDERMODE_TILED);
         expect(generated).not.to.contain('{STD_TEXTURE_BIAS}');
         expect(generated).to.contain(', (-1000.0))');
         expect(generated).not.to.contain(', textureBias)');
-        for (const processed of [webgl, webgpu]) {
-            expect(processed).not.to.contain('const float textureBias');
-            expect(processed.match(/float textureBias;/g)).to.have.lengthOf(1);
-        }
+        expect(webgl).not.to.contain('const float textureBias');
+        expect(webgl.match(/float textureBias;/g)).to.have.lengthOf(1);
     });
 
     describe('WGSL', function () {

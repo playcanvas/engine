@@ -15,10 +15,6 @@ uniform mat4 matrix_model;
         ivec2 textureSize = ivec2(morph_tex_params);
         int morphGridV = int(morph_vertex_id) / textureSize.x;
         int morphGridU = int(morph_vertex_id) - (morphGridV * textureSize.x);
-        #ifdef WEBGPU
-            // flipY
-            morphGridV = textureSize.y - morphGridV - 1;
-        #endif
         return ivec2(morphGridU, morphGridV);
     }
 

@@ -50,11 +50,7 @@ bool initCenter(vec3 modelCenter, inout SplatCenter center) {
             float near = camera_params.z;
             float far = camera_params.y;
             float linearDepth = neg_z;
-            #if WEBGPU
-                float depthNdc = clamp((linearDepth - near) / (far - near), 0.0, 1.0);
-            #else
-                float depthNdc = clamp(2.0 * (linearDepth - near) / (far - near) - 1.0, -1.0, 1.0);
-            #endif
+            float depthNdc = clamp(2.0 * (linearDepth - near) / (far - near) - 1.0, -1.0, 1.0);
 
             center.proj = vec4(ndc, depthNdc, 1.0);
             center.projMat00 = fisheye_projMat00;
@@ -74,11 +70,7 @@ bool initCenter(vec3 modelCenter, inout SplatCenter center) {
             vec4 centerProj = matrix_projection * centerView;
 
             // ensure gaussians are not clipped by camera near and far
-            #if WEBGPU
-                centerProj.z = clamp(centerProj.z, 0, abs(centerProj.w));
-            #else
-                centerProj.z = clamp(centerProj.z, -abs(centerProj.w), abs(centerProj.w));
-            #endif
+            centerProj.z = clamp(centerProj.z, -abs(centerProj.w), abs(centerProj.w));
 
             center.proj = centerProj;
             center.projMat00 = matrix_projection[0][0];
