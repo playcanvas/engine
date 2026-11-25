@@ -22,7 +22,6 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
-    JsonHandler,
     Keyboard,
     LIGHTFALLOFF_INVERSESQUARED,
     LIGHTSHAPE_RECT,
@@ -68,7 +67,6 @@ const assets = {
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
     cube: new Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),
     asset: new Asset('asset', 'container', { url: './assets/models/robot-arm.glb' })
 };
 
@@ -96,7 +94,6 @@ createOptions.resourceHandlers = [
     TextureHandler,
     ContainerHandler,
     ScriptHandler,
-    JsonHandler,
     AnimClipHandler,
     AnimStateGraphHandler
 ];
@@ -129,10 +126,6 @@ app.scene.setSkybox(assets.helipad.resources);
 // Enable area lights which are disabled by default for clustered lighting
 app.scene.clusteredLightingEnabled = false;
 app.scene.skyboxIntensity = 0.1;
-
-// Set the loaded area light LUT data
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 const planeMaterial = new StandardMaterial();
 planeMaterial.gloss = 0.0;

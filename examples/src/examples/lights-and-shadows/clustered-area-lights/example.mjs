@@ -18,7 +18,6 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     FOG_LINEAR,
-    JsonHandler,
     LIGHTFALLOFF_INVERSESQUARED,
     LIGHTSHAPE_DISK,
     LIGHTSHAPE_RECT,
@@ -51,8 +50,7 @@ window.focus();
 const assets = {
     color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })
+    gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
 };
 
 const device = await createGraphicsDevice(canvas, {
@@ -73,7 +71,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -102,10 +100,6 @@ data.set('settings', {
         metalness: 0.7
     }
 });
-
-// The lookup tables the area lights are evaluated with
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // The clustered lighting subdivides the space the lights occupy into cells, each holding the lights
 // overlapping it. The small light ranges keep that number well below the limit per cell.

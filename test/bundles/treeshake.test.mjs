@@ -112,6 +112,7 @@ describe('build / treeshake', function () {
         const output = Object.values(result.metafile.outputs)[0];
         const inputs = Object.keys(output.inputs);
         const retained = inputs.filter(path => path.endsWith('/area-light-luts.js') ||
+            path.endsWith('/area-light-luts-data.js') ||
             path.endsWith('/lit/frag/ltc.js') ||
             path.endsWith('/lit/frag/clusteredLightArea.js') ||
             path.includes('/area-light-chunks-') ||

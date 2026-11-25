@@ -11,7 +11,6 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
-    JsonHandler,
     Keyboard,
     LightComponentSystem,
     Mouse,
@@ -46,7 +45,6 @@ const assets = {
     color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -69,7 +67,7 @@ createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, JsonHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -157,10 +155,6 @@ function createPrimitive(primitiveType, position, scale, assetManifest, id = fal
 
 // Enable area lights which are disabled by default for clustered lighting
 app.scene.lighting.areaLightsEnabled = true;
-
-// Set the loaded area light LUT data
-const luts = /** @type {{ LTC_MAT_1: number[], LTC_MAT_2: number[] }} */ (assets.luts.resource);
-app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
 // Setup skydome
 app.scene.skyboxMip = 1;

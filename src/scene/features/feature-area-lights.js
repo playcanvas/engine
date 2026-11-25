@@ -10,13 +10,12 @@ import { Feature } from './feature.js';
  */
 
 /**
- * Creates the placeholder LUT textures of area lights, used until the application sets the LUT
- * tables.
+ * Creates the LUT textures of area lights from the LUT data the feature brings.
  *
  * @param {FeatureHost} host - The host the feature is installed into.
  */
 function installAreaLights(host) {
-    AreaLightLuts.createPlaceholder(host.graphicsDevice);
+    AreaLightLuts.create(host.graphicsDevice);
 }
 
 // The engine code of area lights, shared by the feature for each device, so that it is installed
