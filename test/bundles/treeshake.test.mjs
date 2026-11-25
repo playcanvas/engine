@@ -41,6 +41,115 @@ describe('build / treeshake', function () {
         expect(bytes, 'bundle size').to.be.lessThan(10240);
     });
 
+    // features are created at module scope, and a feature module holds the feature of each device.
+    // Without its pure annotation, a feature an application does not import would be kept, and with
+    // it the shader chunks of the language the application does not use.
+    const features = [
+        { module: 'feature-shadows.js', webgl: 'featureShadowsWebgl', webgpu: 'featureShadowsWebgpu' },
+        { module: 'feature-directional-shadows.js', webgl: 'featureDirectionalShadowsWebgl', webgpu: 'featureDirectionalShadowsWebgpu' },
+        { module: 'feature-local-shadows.js', webgl: 'featureLocalShadowsWebgl', webgpu: 'featureLocalShadowsWebgpu' },
+        { module: 'feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' },
+        { module: 'feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
+        { module: 'feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' }
+    ];
+
+    for (const feature of features) {
+        it(`${feature.module}: a feature for one device does not retain the shader chunks of the other device`, async function () {
+            const featureModule = fileURLToPath(new URL(`../../build/playcanvas/src/scene/features/${feature.module}`, import.meta.url));
+            const retainedChunks = async (name) => {
+                const result = await bundle(`
+                    import { ${name} } from ${JSON.stringify(featureModule)};
+                    globalThis.__feature = ${name};
+                `);
+                const output = Object.values(result.metafile.outputs)[0];
+                const inputs = Object.keys(output.inputs);
+                return {
+                    glsl: inputs.filter(path => path.includes('/shader-lib/glsl/')),
+                    wgsl: inputs.filter(path => path.includes('/shader-lib/wgsl/'))
+                };
+            };
+
+            const webgl = await retainedChunks(feature.webgl);
+            expect(webgl.glsl, 'GLSL chunks of the WebGL feature').to.not.be.empty;
+            expect(webgl.wgsl, 'retained WGSL chunks').to.deep.equal([]);
+
+            const webgpu = await retainedChunks(feature.webgpu);
+            expect(webgpu.wgsl, 'WGSL chunks of the WebGPU feature').to.not.be.empty;
+            expect(webgpu.glsl, 'retained GLSL chunks').to.deep.equal([]);
+        });
+    }
+
+    // shadow rendering is created by the shadows feature, so the renderer alone does not bring it
+    it('the renderer does not retain shadow rendering, which the shadows feature brings', async function () {
+        const result = await bundle(`
+            import { ForwardRenderer } from "playcanvas";
+            globalThis.__renderer = ForwardRenderer;
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => /\/renderer\/shadow-renderer[^/]*\.js$/.test(path) ||
+            path.endsWith('/renderer/shadow-map-cache.js') ||
+            path.endsWith('/renderer/render-pass-shadow-directional.js') ||
+            path.endsWith('/renderer/render-pass-shadow-local-non-clustered.js') ||
+            path.includes('/shadow-chunks-') ||
+            path.endsWith('/features/feature-shadows.js') ||
+            path.includes('/features/feature-shadows-core') ||
+            path.endsWith('/features/feature-directional-shadows.js') ||
+            path.endsWith('/features/feature-local-shadows.js'));
+        expect(retained, 'retained shadow rendering modules').to.deep.equal([]);
+    });
+
+    // area lights are brought by the area lights feature, so the core shader chunks and the
+    // renderer do not retain their shader chunks or LUT code
+    it('the core shader chunks and the renderer do not retain area lights', async function () {
+        const collection = language => fileURLToPath(new URL(`../../build/playcanvas/src/scene/shader-lib/${language}/collections/shader-chunks-${language}.js`, import.meta.url));
+        const result = await bundle(`
+            import { ForwardRenderer } from "playcanvas";
+            import { shaderChunksGLSL } from ${JSON.stringify(collection('glsl'))};
+            import { shaderChunksWGSL } from ${JSON.stringify(collection('wgsl'))};
+            globalThis.__imports = { ForwardRenderer, shaderChunksGLSL, shaderChunksWGSL };
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.endsWith('/area-light-luts.js') ||
+            path.endsWith('/lit/frag/ltc.js') ||
+            path.endsWith('/lit/frag/clusteredLightArea.js') ||
+            path.includes('/area-light-chunks-') ||
+            path.endsWith('/features/feature-area-lights.js'));
+        expect(retained, 'retained area light modules').to.deep.equal([]);
+    });
+
+    // asset bundles are brought by the bundles feature, so the asset code that loads from bundles
+    // when the feature is installed does not retain them
+    it('asset loading does not retain asset bundles, which the bundles feature brings', async function () {
+        const result = await bundle(`
+            import { Asset, AssetRegistry, ResourceLoader, TextureAtlasHandler } from "playcanvas";
+            globalThis.__imports = { Asset, AssetRegistry, ResourceLoader, TextureAtlasHandler };
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.includes('/framework/bundle/') ||
+            path.endsWith('/handlers/bundle.js') ||
+            path.endsWith('/handlers/untar.js') ||
+            path.endsWith('/features/feature-bundles.js'));
+        expect(retained, 'retained asset bundle modules').to.deep.equal([]);
+    });
+
+    // localization is brought by the i18n feature, so text elements and localized assets alone do
+    // not retain it
+    it('text elements do not retain localization, which the i18n feature brings', async function () {
+        const result = await bundle(`
+            import { ElementComponentSystem, LocalizedAsset } from "playcanvas";
+            globalThis.__imports = { ElementComponentSystem, LocalizedAsset };
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.endsWith('/i18n/i18n.js') ||
+            path.endsWith('/i18n/i18n-parser.js') ||
+            path.endsWith('/features/feature-i18n.js'));
+        expect(retained, 'retained localization modules').to.deep.equal([]);
+    });
+
     it('AppBase with container loading does not retain the gsplat implementation', async function () {
         const result = await bundle(`
             import { AppBase, ContainerHandler } from "playcanvas";

@@ -63,7 +63,7 @@ import { exampleRedirects } from '../src/app/redirects.mjs';
  */
 export let exampleMetaData = [];
 
-export const BUILD_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf']);
+export const BUILD_TYPES = /** @type {const} */ (['rel', 'dbg']);
 export const TARGET = 'es2020';
 export const EXAMPLE_TARGET = 'esnext';
 export const EXAMPLE_TEMPLATE = 'templates/example.html';
@@ -154,8 +154,6 @@ export const engineUrl = (type) => {
     switch (type) {
         case 'development':
             return '../iframe/ENGINE_PATH/index.js';
-        case 'performance':
-            return '../iframe/playcanvas.prf.mjs';
         case 'debug':
             return '../iframe/playcanvas.dbg.mjs';
     }

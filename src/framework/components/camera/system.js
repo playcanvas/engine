@@ -64,6 +64,7 @@ const _properties = [
     'projectionOffset',
     'priority',
     'rect',
+    'reverseZ',
     'scissorRect',
     'aperture',
     'shutter',

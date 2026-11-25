@@ -477,7 +477,7 @@ class Asset extends EventHandler {
                     // if the variant does not exist but the asset is in a bundle
                     // and the bundle contain assets with this variant then return the default
                     // file for the asset
-                    if (app.enableBundles) {
+                    if (app.bundles) {
                         const bundles = app.bundles.listBundlesForAsset(this);
                         if (bundles && bundles.find((b) => {
                             return b?.file?.variants[variant];
@@ -493,6 +493,14 @@ class Asset extends EventHandler {
         const newFile = value ? new AssetFile(value.url, value.filename, value.hash, value.size, value.opt, value.contents) : null;
 
         if (!!newFile !== !!oldFile || (newFile && !newFile.equals(oldFile))) {
+            // drop the loader's cached resource of the old file, as the asset no longer owns it and
+            // can destroy it - a cubemap does on reload. Setting that file again later would
+            // otherwise reuse the destroyed resource from the cache
+            const oldUrl = this.getFileUrl();
+            if (oldUrl) {
+                this.registry?._loader.clearCache(oldUrl, this.type);
+            }
+
             this._file = newFile;
             this.fire('change', this, 'file', newFile, oldFile);
             this.reload();

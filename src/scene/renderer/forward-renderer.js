@@ -201,6 +201,7 @@ class ForwardRenderer extends Renderer {
         const shaderParams = camera.shaderParams;
         shaderParams.fog = fogParams.type;
         shaderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;    // output gamma correction is determined by the render target
+        shaderParams.reverseZ = camera.reverseZActive;
 
         const addCall = (drawCall, shaderInstance, isNewMaterial) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -644,7 +645,7 @@ class ForwardRenderer extends Renderer {
         } else {
 
             // non-clustered local shadows - these are shared by all cameras (not entirely correctly)
-            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, this.localLights);
+            this._shadowRendererLocal?.buildNonClusteredRenderPasses(frameGraph, this.localLights);
         }
 
         // main passes
@@ -821,7 +822,7 @@ class ForwardRenderer extends Renderer {
     update(comp) {
 
         this.frameUpdate();
-        this.shadowRenderer.frameUpdate();
+        this.shadowRenderer?.frameUpdate();
 
         // update the skybox, since this might change _meshInstances
         this.scene._updateSkyMesh();

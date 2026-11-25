@@ -7,7 +7,7 @@ export default /* wgsl */`
     #ifdef GSPLAT_STOCHASTIC
         varying @interpolate(flat, either) stochasticId: u32;
     #else
-        varying @interpolate(flat, either) id: f32;
+        varying id: f32;
     #endif
 #endif
 
@@ -16,13 +16,13 @@ export default /* wgsl */`
 #endif
 
 #ifdef PREPASS_PASS
-    varying @interpolate(flat, either) vLinearDepth: f32;
+    varying vLinearDepth: f32;
     #include "floatAsUintPS"
 #endif
 
 // the prepass declares this varying above, and the two passes are never generated as one
 #if defined(SCENE_TEXTURE_DEPTH) && !defined(PREPASS_PASS)
-    varying @interpolate(flat, either) vLinearDepth: f32;
+    varying vLinearDepth: f32;
 #endif
 
 #include "sceneTexturesPS"
@@ -39,7 +39,10 @@ fn normExp(x: half) -> half {
 }
 
 varying gaussianUV: half2;
-varying @interpolate(flat, either) gaussianColor: half4;
+// gaussianColor, id and vLinearDepth are constant across each splat, but deliberately not flat:
+// flat varyings cost 20-60% GPU time on Apple GPUs before Apple9 (M1, M2, A14-A16), and gain at
+// most a few percent elsewhere. See https://github.com/playcanvas/engine/issues/10085
+varying gaussianColor: half4;
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     varying @interpolate(flat, either) vPickId: u32;

@@ -17,12 +17,14 @@ import {
     MASK_AFFECT_LIGHTMAPPED,
     LIGHT_COLOR_DIVIDER
 } from './constants.js';
-import { ShadowRenderer } from './renderer/shadow-renderer.js';
+import { LightCamera } from './renderer/light-camera.js';
+import { FEATURE_AREA_LIGHTS, FEATURE_DIRECTIONAL_PCSS, FEATURE_DIRECTIONAL_SHADOWS, FEATURE_LOCAL_SHADOWS, hasFeature } from './features/constants.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 
 /**
  * @import { BoundingBox } from '../core/shape/bounding-box.js'
+ * @import { Culler } from './renderer/culler.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { EventHandle } from '../core/event-handle.js';
  */
@@ -83,7 +85,7 @@ class LightRenderData {
         this.camera = camera;
 
         // camera used to cull / render the shadow map
-        this.shadowCamera = ShadowRenderer.createShadowCamera(light.device, light._shadowType, light._type, face);
+        this.shadowCamera = LightCamera.createShadowCamera(light.device, light._shadowType, light._type, face);
 
         // shadow view-projection matrix
         this.shadowMatrix = new Mat4();
@@ -533,6 +535,10 @@ class Light {
             return;
         }
 
+        Debug.call(() => {
+            if (this._castShadows) assertShadowsFeature(this.device, value);
+        });
+
         this._type = value;
         this._destroyShadowMap();
         this._updateShadowBias();
@@ -553,6 +559,8 @@ class Light {
         if (this._shape === value) {
             return;
         }
+
+        Debug.assert(value === LIGHTSHAPE_PUNCTUAL || hasFeature(this.device, FEATURE_AREA_LIGHTS), 'A light of an area shape needs the area lights feature to be installed.');
 
         this._shape = value;
         this._destroyShadowMap();
@@ -618,6 +626,8 @@ class Light {
         this._isPcf = shadowInfo?.pcf ?? false;
         this._isPcss = shadowInfo?.pcss ?? false;
 
+        Debug.assert(!this._isPcss || this._type !== LIGHTTYPE_DIRECTIONAL || hasFeature(device, FEATURE_DIRECTIONAL_PCSS), 'PCSS shadows of a directional light need the directional PCSS feature to be installed.');
+
         this._shadowType = value;
 
         // hardware depth bias is skipped for PCSS, so refresh it now that _isPcss is known
@@ -643,6 +653,9 @@ class Light {
     }
 
     set castShadows(value) {
+        Debug.call(() => {
+            if (value) assertShadowsFeature(this.device, this._type);
+        });
         if (this._castShadows !== value) {
             this._castShadows = value;
             this._destroyShadowMap();
@@ -1345,4 +1358,32 @@ class Light {
     }
 }
 
-export { Light, LightRenderData, lightTypes };
+/**
+ * Tests whether a light needs its shadow rendered this frame without consuming one-shot updates.
+ * Shadow-pass scheduling and splat caster culling share this predicate. One-shot requests are
+ * consumed by {@link Culler#consumeOneShotShadows} after both have read the update mode.
+ * Per-face overrides and atlas allocation are checked separately by callers.
+ *
+ * @param {Light} light - The light to test.
+ * @returns {boolean} Whether the light needs a shadow update.
+ * @ignore
+ */
+function needsShadowRendering(light) {
+    return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+}
+
+/**
+ * Asserts that the shadows feature of a light type is installed. Only called from debug builds.
+ *
+ * @param {GraphicsDevice} device - The graphics device.
+ * @param {number} type - The light type.
+ */
+function assertShadowsFeature(device, type) {
+    if (type === LIGHTTYPE_DIRECTIONAL) {
+        Debug.assert(hasFeature(device, FEATURE_DIRECTIONAL_SHADOWS), 'A directional light casting shadows needs the directional shadows feature to be installed.');
+    } else {
+        Debug.assert(hasFeature(device, FEATURE_LOCAL_SHADOWS), 'An omni or spot light casting shadows needs the local shadows feature to be installed.');
+    }
+}
+
+export { Light, LightRenderData, lightTypes, needsShadowRendering };

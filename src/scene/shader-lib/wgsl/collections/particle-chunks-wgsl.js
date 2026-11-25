@@ -1,3 +1,4 @@
+import { SHADERLANGUAGE_WGSL } from '../../../../platform/graphics/constants.js';
 import particlePS from '../chunks/particle/frag/particle.js';
 import particleVS from '../chunks/particle/vert/particle.js';
 import particleAnimFrameClampVS from '../chunks/particle/vert/particleAnimFrameClamp.js';
@@ -40,46 +41,60 @@ import particle_stretchVS from '../chunks/particle/vert/particle_stretch.js';
 import particle_TBNVS from '../chunks/particle/vert/particle_TBN.js';
 import particle_wrapVS from '../chunks/particle/vert/particle_wrap.js';
 
+/**
+ * @import { ShaderChunkCollection } from '../../../../platform/graphics/shader-chunk-collection.js'
+ */
+
+/**
+ * The WGSL shader chunks of particle systems: the particle rendering, and the simulation of GPU
+ * particles.
+ *
+ * @type {ShaderChunkCollection}
+ * @ignore
+ */
 export const particleChunksWGSL = {
-    particlePS,
-    particleVS,
-    particleAnimFrameClampVS,
-    particleAnimFrameLoopVS,
-    particleAnimTexVS,
-    particleInputPS,
-    particleOutputPS,
-    particleUpdaterAABBPS,
-    particleUpdaterEndPS,
-    particleUpdaterInitPS,
-    particleUpdaterNoRespawnPS,
-    particleUpdaterOnStopPS,
-    particleUpdaterRespawnPS,
-    particleUpdaterSpherePS,
-    particleUpdaterStartPS,
-    particle_billboardVS,
-    particle_blendAddPS,
-    particle_blendMultiplyPS,
-    particle_blendNormalPS,
-    particle_cpuVS,
-    particle_cpu_endVS,
-    particle_customFaceVS,
-    particle_endPS,
-    particle_endVS,
-    particle_halflambertPS,
-    particle_initVS,
-    particle_lambertPS,
-    particle_lightingPS,
-    particle_localShiftVS,
-    particle_meshVS,
-    particle_normalVS,
-    particle_normalMapPS,
-    particle_pointAlongVS,
-    particle_simulationPS,
-    particle_shaderPS,
-    particle_shaderVS,
-    particle_softPS,
-    particle_softVS,
-    particle_stretchVS,
-    particle_TBNVS,
-    particle_wrapVS
+    language: SHADERLANGUAGE_WGSL,
+    chunks: {
+        particlePS,
+        particleVS,
+        particleAnimFrameClampVS,
+        particleAnimFrameLoopVS,
+        particleAnimTexVS,
+        particleInputPS,
+        particleOutputPS,
+        particleUpdaterAABBPS,
+        particleUpdaterEndPS,
+        particleUpdaterInitPS,
+        particleUpdaterNoRespawnPS,
+        particleUpdaterOnStopPS,
+        particleUpdaterRespawnPS,
+        particleUpdaterSpherePS,
+        particleUpdaterStartPS,
+        particle_billboardVS,
+        particle_blendAddPS,
+        particle_blendMultiplyPS,
+        particle_blendNormalPS,
+        particle_cpuVS,
+        particle_cpu_endVS,
+        particle_customFaceVS,
+        particle_endPS,
+        particle_endVS,
+        particle_halflambertPS,
+        particle_initVS,
+        particle_lambertPS,
+        particle_lightingPS,
+        particle_localShiftVS,
+        particle_meshVS,
+        particle_normalVS,
+        particle_normalMapPS,
+        particle_pointAlongVS,
+        particle_simulationPS,
+        particle_shaderPS,
+        particle_shaderVS,
+        particle_softPS,
+        particle_softVS,
+        particle_stretchVS,
+        particle_TBNVS,
+        particle_wrapVS
+    }
 };

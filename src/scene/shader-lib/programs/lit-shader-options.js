@@ -175,7 +175,7 @@ class LitShaderOptions {
     enableGGXSpecular = false;
 
     /**
-     * The value of {@link StandardMaterial#fresnelModel}.
+     * The Fresnel model: {@link FRESNEL_NONE} or {@link FRESNEL_SCHLICK}.
      */
     fresnelModel = 0;
 

@@ -9,13 +9,6 @@ export default /* wgsl */`
     #define LIT_CODE_LIGHTS_SPOT
 #endif
 
-#ifdef AREA_LIGHTS
-    var areaLightsLutTex1: texture_2d<f32>;
-    var areaLightsLutTex1Sampler: sampler;
-    var areaLightsLutTex2: texture_2d<f32>;
-    var areaLightsLutTex2Sampler: sampler;
-#endif
-
 #ifdef LIT_LIGHTING
     #include "lightDiffuseLambertPS"
 
@@ -41,11 +34,10 @@ export default /* wgsl */`
     #include "shadowPCF5PS"
 #endif
 
-#if defined(SHADOW_KIND_PCSS)
-    #include "linearizeDepthPS"
+// PCSS of local lights is not supported on WebGPU, as it is only for non-clustered lights
 
-    // omni / spot PCSS is not supported on WebGPU currently, as this is only for non-clustered lights
-    // #include "shadowPCSSPS"
+// PCSS of directional lights
+#if defined(SHADOW_KIND_PCSS_DIRECTIONAL)
     #include "shadowSoftPS"
 #endif
 

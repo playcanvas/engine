@@ -8,7 +8,7 @@ import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { JsonStandardMaterialParser } from '../../../src/framework/parsers/material/json-standard-material.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
-    AMBIENTSRC_CONSTANT, AMBIENTSRC_ENVALATLAS, CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK,
+    AMBIENTSRC_CONSTANT, AMBIENTSRC_ENVALATLAS, CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE,
     REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_NONE, REFLECTIONSRC_PLANAR, SHADER_FORWARD,
     SPECOCC_AO
 } from '../../../src/scene/constants.js';
@@ -170,8 +170,6 @@ describe('StandardMaterial', function () {
 
         expect(material.enableGGXSpecular).to.equal(false);
         expect(material.flatShading).to.equal(false);
-        expect(material.fresnelModel).to.equal(FRESNEL_SCHLICK);
-
         expect(material.gloss).to.equal(0.25);
         expect(material.glossMap).to.be.null;
         expect(material.glossMapChannel).to.equal('g');

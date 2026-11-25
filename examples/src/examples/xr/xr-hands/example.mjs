@@ -17,6 +17,7 @@ import {
     TextureHandler,
     TouchDevice,
     Vec3,
+    WireRenderer,
     XRSPACE_LOCALFLOOR,
     XRTARGETRAY_POINTER,
     XRTYPE_AR,
@@ -75,6 +76,9 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
 
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -288,7 +292,8 @@ if (app.xr.supported) {
             if (inputSource.targetRayMode === XRTARGETRAY_POINTER) {
                 vec3A.copy(inputSource.getDirection()).add(inputSource.getOrigin());
                 const color = inputSource.selecting ? Color.GREEN : Color.WHITE;
-                app.drawLine(inputSource.getOrigin(), vec3A, color);
+                wire.color = color;
+                wire.line(inputSource.getOrigin(), vec3A);
             }
         }
     });

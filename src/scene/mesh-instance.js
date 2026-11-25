@@ -800,6 +800,7 @@ class MeshInstance {
     set renderStyle(renderStyle) {
         this._renderStyle = renderStyle;
         this.mesh.prepareRenderState(renderStyle);
+        Debug.call(() => this._warnMultiDrawRenderStyle());
     }
 
     /**
@@ -1594,6 +1595,35 @@ class MeshInstance {
      * {@link GraphicsDevice#supportsIndirectDraw}), and ignored on other platforms, where the
      * mesh instance renders as a normal draw call.
      *
+     * Each slot in {@link GraphicsDevice#indirectDrawBuffer} is 20 bytes. The engine issues an
+     * indexed draw (`drawIndexedIndirect`) for a mesh with an index buffer, and a non-indexed draw
+     * (`drawIndirect`) for a mesh without one, and the two read a different layout from the slot:
+     *
+     * ```wgsl
+     * // mesh with an index buffer: all five words are read
+     * struct DrawIndexedIndirectArgs {
+     *     indexCount: u32,
+     *     instanceCount: u32,
+     *     firstIndex: u32,
+     *     baseVertex: i32,
+     *     firstInstance: u32
+     * };
+     *
+     * // mesh without an index buffer: only the first four words are read
+     * struct DrawIndirectArgs {
+     *     vertexCount: u32,
+     *     instanceCount: u32,
+     *     firstVertex: u32,
+     *     firstInstance: u32,
+     *     unused: u32 // keeps the 20-byte slot stride
+     * };
+     * ```
+     *
+     * A non-zero `firstInstance` requires {@link GraphicsDevice#supportsIndirectFirstInstance},
+     * otherwise the GPU skips the draw. The shader reads it as part of the instance index
+     * (`pcInstanceIndex` in WGSL), which makes it suitable for passing a per-draw value. Note that
+     * `baseVertex` is added to each index, so it offsets the vertex index the shader receives.
+     *
      * @param {CameraComponent|null} camera - Camera component to set indirect data for, or
      * null if the indirect slot should be used for all cameras.
      * @param {number} slot - Slot in the buffer to set the draw call parameters. Allocate a slot
@@ -1645,9 +1675,30 @@ class MeshInstance {
         } else {
             cmd = this._allocDrawCommands(key, true);
             cmd.allocate(maxCount);
+            Debug.call(() => this._warnMultiDrawRenderStyle());
         }
         return cmd;
     }
+
+    // #if _DEBUG
+    /**
+     * Warns when multi-draw is combined with a render style other than solid. The sub-draws are
+     * ranges of the solid index buffer, which the wireframe and points render styles do not use.
+     * Both can only change through their setters, so checking there catches every combination.
+     *
+     * @private
+     */
+    _warnMultiDrawRenderStyle() {
+        if (this._renderStyle !== RENDERSTYLE_SOLID && this.drawCommands) {
+            for (const cmd of this.drawCommands.values()) {
+                if (cmd.multiDraw) {
+                    Debug.warnOnce('MeshInstance: multi-draw is only supported with RENDERSTYLE_SOLID. Its sub-draws are ranges of the solid index buffer, so wireframe and points render incorrectly.', this);
+                    return;
+                }
+            }
+        }
+    }
+    // #endif
 
     /**
      * Returns the cached draw commands for a key, allocating them when missing. A cached set of
@@ -1665,8 +1716,17 @@ class MeshInstance {
         // lazy map allocation
         const cmds = this.drawCommands ??= new Map();
 
+        // multi-draw commands are written for the index size of the current mesh index buffer, which
+        // WebGL uses for byte offsets, and WebGPU to pick the indexed or non-indexed command layout
+        let indexSizeBytes = 0;
+        if (multiDraw) {
+            const indexFormat = this.mesh.indexBuffer?.[0]?.format;
+            indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
+        }
+
+        // release cached commands of the other kind, or written for a different index size
         let cmd = cmds.get(key);
-        if (cmd && cmd.multiDraw !== multiDraw) {
+        if (cmd && (cmd.multiDraw !== multiDraw || cmd.indexSizeBytes !== indexSizeBytes)) {
             cmd.destroy();
             cmd = undefined;
         }
@@ -1677,12 +1737,6 @@ class MeshInstance {
             // mesh instance storage would take for the slot
             this._updateShaderDefs(this._applyInstanceIndexDef(this._shaderDefs));
 
-            // multi-draw on WebGL needs the index size of the current mesh index buffer
-            let indexSizeBytes = 0;
-            if (multiDraw) {
-                const indexFormat = this.mesh.indexBuffer?.[0]?.format;
-                indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
-            }
             cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
             cmd.multiDraw = multiDraw;
             cmds.set(key, cmd);
@@ -1730,7 +1784,9 @@ class MeshInstance {
      * is typically needed when generating indirect draw call parameters using Compute shader. These
      * can be provided to the Compute shader using vec4i uniform. The values are based on
      * {@link Mesh#primitive}, stored in this order: [count, base, baseVertex, 0]. The last value is
-     * always zero and is reserved for future use.
+     * always zero and is reserved for future use. Note that this is not the layout of an indirect
+     * draw command, and the reserved value is not `firstInstance`. See {@link setIndirect} for the
+     * layout of the command.
      */
     getIndirectMetaData() {
         const prim = this.mesh?.primitive[this.renderStyle];
@@ -1738,7 +1794,7 @@ class MeshInstance {
         data[0] = prim.count;
         data[1] = prim.base;
         data[2] = prim.baseVertex;
-        // data[3] is padding, can be used for first instance in the future
+        // data[3] is reserved
         return data;
     }
 

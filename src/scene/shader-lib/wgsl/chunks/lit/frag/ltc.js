@@ -3,6 +3,12 @@ export default /* wgsl */`
 // by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt
 // code: https://github.com/selfshadow/ltc_code/
 
+// LUT tables, set by AreaLightLuts
+var areaLightsLutTex1: texture_2d<f32>;
+var areaLightsLutTex1Sampler: sampler;
+var areaLightsLutTex2: texture_2d<f32>;
+var areaLightsLutTex2Sampler: sampler;
+
 fn LTC_Uv(N: vec3f, V: vec3f, roughness: f32) -> vec2f {
     const LUT_SIZE: f32 = 64.0;
     const LUT_SCALE: f32 = (LUT_SIZE - 1.0) / LUT_SIZE;

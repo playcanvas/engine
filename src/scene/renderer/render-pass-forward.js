@@ -298,7 +298,7 @@ class RenderPassForward extends RenderPass {
                     renderer.culler.dirLightShadows.set(light, shadowCamera);
 
                     // render the shadow before this render pass
-                    const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, shadowCamera);
+                    const shadowPass = renderer._shadowRendererDirectional?.getLightRenderPass(light, shadowCamera);
                     if (shadowPass) {
                         this.internalBeforePasses.push(shadowPass);
                     }
@@ -485,6 +485,10 @@ class RenderPassForward extends RenderPass {
         if (this.firstCameraUse) {
             this.scene.fire(EVENT_PRERENDER, this.cameraComponent);
         }
+
+        // the device reverses the depth clears and depth states of a camera rendering with
+        // reverse-z. Read after the prerender handlers, which can still change it.
+        this.reverseZ = this.cameraComponent.camera.reverseZActive;
     }
 
     execute() {

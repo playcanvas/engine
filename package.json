@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.25.0-beta.7",
+  "version": "2.25.0-beta.13",
   "packageManager": "npm@11.19.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
@@ -39,10 +39,6 @@
         "import": "./build/playcanvas.dbg/src/index.js",
         "require": "./build/playcanvas.dbg.js"
       },
-      "profiler": {
-        "import": "./build/playcanvas.prf/src/index.js",
-        "require": "./build/playcanvas.prf.js"
-      },
       "production": {
         "import": "./build/playcanvas/src/index.js",
         "require": "./build/playcanvas.js"
@@ -56,11 +52,6 @@
       "types": "./build/playcanvas.d.ts",
       "import": "./build/playcanvas.dbg/src/index.js",
       "require": "./build/playcanvas.dbg.js"
-    },
-    "./profiler": {
-      "types": "./build/playcanvas.d.ts",
-      "import": "./build/playcanvas.prf/src/index.js",
-      "require": "./build/playcanvas.prf.js"
     },
     "./build/*": "./build/*",
     "./scripts/*": "./scripts/*"
@@ -121,8 +112,6 @@
     "build:rel:esm": "node build.mjs --type=rel --format=esm",
     "build:dbg:umd": "node build.mjs --type=dbg --format=umd",
     "build:dbg:esm": "node build.mjs --type=dbg --format=esm",
-    "build:prf:umd": "node build.mjs --type=prf --format=umd",
-    "build:prf:esm": "node build.mjs --type=prf --format=esm",
     "build:min:umd": "node build.mjs --type=min --format=umd",
     "build:min:esm": "node build.mjs --type=min --format=esm",
     "build:treemap": "node build.mjs --treemap",
@@ -134,8 +123,6 @@
     "watch:rel:esm": "node build.mjs --type=rel --format=esm --watch",
     "watch:dbg:umd": "node build.mjs --type=dbg --format=umd --watch --sourcemaps",
     "watch:dbg:esm": "node build.mjs --type=dbg --format=esm --watch --sourcemaps",
-    "watch:prf:umd": "node build.mjs --type=prf --format=umd --watch",
-    "watch:prf:esm": "node build.mjs --type=prf --format=esm --watch",
     "watch:min:umd": "node build.mjs --type=min --format=umd --watch",
     "watch:min:esm": "node build.mjs --type=min --format=esm --watch",
     "watch:types": "node build.mjs --type=types --watch",

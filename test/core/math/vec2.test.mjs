@@ -87,6 +87,32 @@ describe('Vec2', function () {
 
     });
 
+    describe('#angleTo', function () {
+
+        it('returns 0 for the same direction', function () {
+            expect(new Vec2(1, 2).angleTo(new Vec2(1, 2))).to.equal(0);
+            expect(new Vec2(1, 2).angleTo(new Vec2(2, 4))).to.equal(0);
+        });
+
+        it('returns 180 for opposite directions', function () {
+            expect(new Vec2(1, 2).angleTo(new Vec2(-1, -2))).to.be.closeTo(180, 0.00001);
+        });
+
+        it('measures clockwise like angle() and rotate()', function () {
+            expect(new Vec2(0, 1).angleTo(new Vec2(1, 0))).to.be.closeTo(90, 0.00001);
+            expect(new Vec2(1, 0).angleTo(new Vec2(0, 1))).to.be.closeTo(-90, 0.00001);
+            expect(new Vec2(0, 10).angleTo(new Vec2(1, -1))).to.be.closeTo(135, 0.00001);
+        });
+
+        it('matches the angle that rotate() turns by', function () {
+            const a = new Vec2(3, 1);
+            const b = a.clone().rotate(40);
+            expect(a.angleTo(b)).to.be.closeTo(40, 0.00001);
+            expect(b.angleTo(a)).to.be.closeTo(-40, 0.00001);
+        });
+
+    });
+
     describe('#ceil', function () {
 
         it('leaves integers unchanged', function () {

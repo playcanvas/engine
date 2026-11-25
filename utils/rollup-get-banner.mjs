@@ -3,7 +3,7 @@ import { version, revision } from './rollup-version-revision.mjs';
 /**
  * Build the banner with build date and revision. Revision only works for git repo, not zip.
  *
- * @param {string} config - A string like `(DEBUG PROFILER)` or even an empty string.
+ * @param {string} config - A string like ` (DEBUG)` or even an empty string.
  * @returns {string} - The banner.
  */
 function getBanner(config) {

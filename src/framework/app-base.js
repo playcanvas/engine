@@ -34,11 +34,8 @@ import {
 } from './constants.js';
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
-import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { BundleHandler } from './handlers/bundle.js';
 import { ResourceLoader } from './handlers/loader.js';
-import { I18n } from './i18n/i18n.js';
 import { ScriptRegistry } from './script/script-registry.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
@@ -48,10 +45,20 @@ import { getApplication, setApplication } from './globals.js';
 import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
+import { featureBundles } from './features/feature-bundles.js';
+import { featureI18n } from './features/feature-i18n.js';
+import { FEATURE_BUNDLES, FEATURE_I18N } from './features/constants.js';
+import { featureDirectionalPcssWebgl, featureDirectionalPcssWebgpu } from '../scene/features/feature-directional-pcss.js';
+import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/features/feature-area-lights.js';
+import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
+import { FEATURE_AREA_LIGHTS, hasFeature } from '../scene/features/constants.js';
+import { installFeatures } from '../scene/features/install-features.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { BundleRegistry } from './bundle/bundle-registry.js'
+ * @import { I18n } from './i18n/i18n.js'
  * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { EventHandle } from '../core/event-handle.js'
@@ -204,14 +211,6 @@ class AppBase extends EventHandler {
 
     /** @ignore */
     _time = 0;
-
-    /**
-     * Set this to false if you want to run without using bundles. We set it to true only if
-     * TextDecoder is available because we currently rely on it for untarring.
-     *
-     * @ignore
-     */
-    enableBundles = (typeof TextDecoder !== 'undefined');
 
     /**
      * A request id returned by requestAnimationFrame, allowing us to cancel it.
@@ -462,12 +461,12 @@ class AppBase extends EventHandler {
     assets = new AssetRegistry(this.loader);
 
     /**
-     * The bundle registry managed by the application.
+     * The bundle registry managed by the application, created by the bundles feature.
      *
-     * @type {BundleRegistry}
+     * @type {BundleRegistry|null}
      * @ignore
      */
-    bundles;
+    bundles = null;
 
     /**
      * The scene registry managed by the application.
@@ -507,7 +506,7 @@ class AppBase extends EventHandler {
      *
      * @type {I18n}
      */
-    i18n = new I18n(this);
+    i18n;
 
     /**
      * The keyboard device.
@@ -617,7 +616,6 @@ class AppBase extends EventHandler {
 
         if (assetPrefix) this.assets.prefix = assetPrefix;
 
-        this.bundles = new BundleRegistry(this.assets);
         this.scriptsOrder = scriptsOrder || [];
 
         this.defaultLayerWorld = new Layer({ name: 'World', id: LAYERID_WORLD });
@@ -636,10 +634,17 @@ class AppBase extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
 
-        // Placeholder texture for area light LUTs
-        AreaLightLuts.createPlaceholder(graphicsDevice);
-
         this.renderer = new ForwardRenderer(graphicsDevice, this.scene);
+
+        // every feature, for both devices. Installed once the renderer exists, as features create
+        // their objects on it, and before anything that uses them, such as the lightmapper
+        installFeatures(this, [
+            featureShadowsWebgl, featureShadowsWebgpu,
+            featureDirectionalPcssWebgl, featureDirectionalPcssWebgpu,
+            featureAreaLightsWebgl, featureAreaLightsWebgpu,
+            featureBundles,
+            featureI18n
+        ]);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
@@ -664,10 +669,6 @@ class AppBase extends EventHandler {
         if (this.elementInput) this.elementInput.attachSelectEvents();
 
         this._scriptPrefix = scriptPrefix || '';
-
-        if (this.enableBundles) {
-            this.loader.addHandler('bundle', new BundleHandler(this));
-        }
 
         // Create and register all required resource handlers
         resourceHandlers.forEach((resourceHandler) => {
@@ -974,6 +975,7 @@ class AppBase extends EventHandler {
 
         // set localization assets
         if (props.i18nAssets) {
+            Debug.assert(hasFeature(this.graphicsDevice, FEATURE_I18N), 'Localization assets need the i18n feature to be installed.');
             this.i18n.assets = props.i18nAssets;
         }
 
@@ -1055,12 +1057,11 @@ class AppBase extends EventHandler {
         }
 
         // then add bundles
-        if (this.enableBundles) {
-            for (const id in assets) {
-                if (assets[id].type === 'bundle') {
-                    bundlesIndex[id] = true;
-                    list.push(assets[id]);
-                }
+        for (const id in assets) {
+            if (assets[id].type === 'bundle') {
+                Debug.assert(hasFeature(this.graphicsDevice, FEATURE_BUNDLES), `Bundle asset [${assets[id].name}] needs the bundles feature to be installed.`);
+                bundlesIndex[id] = true;
+                list.push(assets[id]);
             }
         }
 
@@ -1800,6 +1801,7 @@ class AppBase extends EventHandler {
      * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
     setAreaLightLuts(ltcMat1, ltcMat2) {
+        Debug.assert(hasFeature(this.graphicsDevice, FEATURE_AREA_LIGHTS), 'setAreaLightLuts: area lights need the area lights feature to be installed.');
 
         if (ltcMat1 && ltcMat2) {
             AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
@@ -1882,24 +1884,18 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @deprecated Use {@link WireRenderer#line} instead.
      * @example
-     * // Render a 1-unit long white line
+     * // replacement: set the color, depth test and layer on the renderer
      * const start = new Vec3(0, 0, 0);
      * const end = new Vec3(1, 0, 0);
-     * app.drawLine(start, end);
-     * @example
-     * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * app.drawLine(start, end, Color.RED, false);
-     * @example
-     * // Render a 1-unit long white line into the world layer
-     * const start = new Vec3(0, 0, 0);
-     * const end = new Vec3(1, 0, 0);
-     * const worldLayer = app.scene.layers.getLayerById(LAYERID_WORLD);
-     * app.drawLine(start, end, Color.WHITE, true, worldLayer);
+     * const wire = new WireRenderer(app);
+     * wire.color = Color.RED;
+     * wire.depthTest = false;
+     * wire.line(start, end);
      */
     drawLine(start, end, color, depthTest, layer) {
+        Debug.deprecated('AppBase#drawLine is deprecated. Use WireRenderer#line instead.');
         this.scene.drawLine(start, end, color, depthTest, layer);
     }
 
@@ -1918,32 +1914,16 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @deprecated Use {@link WireRenderer#lines} instead.
      * @example
-     * // Render a single line, with unique colors for each point
+     * // replacement: a single color is set on the renderer, per-point colors are passed in
      * const start = new Vec3(0, 0, 0);
      * const end = new Vec3(1, 0, 0);
-     * app.drawLines([start, end], [Color.RED, Color.WHITE]);
-     * @example
-     * // Render 2 discrete line segments
-     * const points = [
-     *     // Line 1
-     *     new Vec3(0, 0, 0),
-     *     new Vec3(1, 0, 0),
-     *     // Line 2
-     *     new Vec3(1, 1, 0),
-     *     new Vec3(1, 1, 1)
-     * ];
-     * const colors = [
-     *     // Line 1
-     *     Color.RED,
-     *     Color.YELLOW,
-     *     // Line 2
-     *     Color.CYAN,
-     *     Color.BLUE
-     * ];
-     * app.drawLines(points, colors);
+     * const wire = new WireRenderer(app);
+     * wire.lines([start, end], [Color.RED, Color.WHITE]);
      */
     drawLines(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        Debug.deprecated('AppBase#drawLines is deprecated. Use WireRenderer#lines instead.');
         this.scene.drawLines(positions, colors, depthTest, layer);
     }
 
@@ -1960,27 +1940,14 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @deprecated Use {@link WireRenderer#linesPacked} instead.
      * @example
-     * // Render 2 discrete line segments
-     * const points = [
-     *     // Line 1
-     *     0, 0, 0,
-     *     1, 0, 0,
-     *     // Line 2
-     *     1, 1, 0,
-     *     1, 1, 1
-     * ];
-     * const colors = [
-     *     // Line 1
-     *     1, 0, 0, 1,  // red
-     *     0, 1, 0, 1,  // green
-     *     // Line 2
-     *     0, 0, 1, 1,  // blue
-     *     1, 1, 1, 1   // white
-     * ];
-     * app.drawLineArrays(points, colors);
+     * // replacement: a single color is set on the renderer, per-point colors are passed in
+     * const wire = new WireRenderer(app);
+     * wire.linesPacked([0, 0, 0, 1, 0, 0], [1, 0, 0, 1, 1, 1, 1, 1]);
      */
     drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
+        Debug.deprecated('AppBase#drawLineArrays is deprecated. Use WireRenderer#linesPacked instead.');
         this.scene.drawLineArrays(positions, colors, depthTest, layer);
     }
 
@@ -2111,10 +2078,10 @@ class AppBase extends EventHandler {
         this.systems.destroy();
 
         // destroy bundle registry
-        this.bundles.destroy();
+        this.bundles?.destroy();
         this.bundles = null;
 
-        this.i18n.destroy();
+        this.i18n?.destroy();
         this.i18n = null;
 
         const scriptHandler = this.loader.getHandler('script');

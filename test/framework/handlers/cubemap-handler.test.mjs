@@ -91,4 +91,20 @@ describe('CubemapHandler', function () {
         expect(cubemap.resource.type).to.equal(TEXTURETYPE_DEFAULT);
         expect(cubemap.resource.srgb).to.be.true;
     });
+
+    // sets the file of a loaded cubemap asset, resolving once the asset has reloaded
+    const setFile = (asset, file) => new Promise((resolve) => {
+        asset.once('load', resolve);
+        asset.file = file;
+    });
+
+    it('keeps valid faces when the file is removed and set back', async function () {
+        const file = { url: 'sky.png', filename: 'sky.png', hash: 'abc' };
+        const cubemap = await loadCubemap(file, { textures: faceUrls });
+
+        await setFile(cubemap, null);
+        await setFile(cubemap, file);
+
+        expect(cubemap.resource.device).to.exist;
+    });
 });

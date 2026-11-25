@@ -3,6 +3,7 @@ import { GSplatOctreeParser } from '../parsers/gsplat-octree.js';
 import { PlyParser } from '../parsers/ply.js';
 import { SogBundleParser } from '../parsers/sog-bundle.js';
 import { SogParser } from '../parsers/sog.js';
+import { SogTextureCache } from '../parsers/sog-texture-cache.js';
 import { ResourceHandler } from './handler.js';
 
 /**
@@ -20,6 +21,16 @@ import { ResourceHandler } from './handler.js';
  */
 class GSplatHandler extends ResourceHandler {
     /**
+     * Ref-counted cache of the textures SOG files and SOG bundles load. Files pointing at the
+     * same texture url share one download and one GPU texture, which is destroyed once the last
+     * file using it unloads.
+     *
+     * @type {SogTextureCache}
+     * @ignore
+     */
+    sogTextureCache;
+
+    /**
      * Create a new GSplatHandler instance.
      *
      * @param {AppBase} app - The running {@link AppBase}.
@@ -27,6 +38,8 @@ class GSplatHandler extends ResourceHandler {
      */
     constructor(app) {
         super(app, 'gsplat');
+
+        this.sogTextureCache = new SogTextureCache(app);
 
         // `lod-meta.json` matches both the octree parser (by basename) and the SOG parser (by its
         // `.json` extension); the octree parser is registered last so that, with newest-first

@@ -16,6 +16,7 @@ import {
     PIXELFORMAT_RG11B10F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
+    SHADERLANGUAGE_GLSL,
     semanticToLocation,
     FRONTFACE_CCW
 } from './constants.js';
@@ -290,6 +291,17 @@ class GraphicsDevice extends EventHandler {
     supportsIndirectDraw = false;
 
     /**
+     * True if indirect draw commands can use a non-zero `firstInstance` (WebGPU only, requires the
+     * `indirect-first-instance` feature). When false, the GPU skips any indirect draw whose
+     * `firstInstance` is not zero. This applies to {@link DrawCommands#add} on WebGPU, and to the
+     * commands written for {@link MeshInstance#setIndirect}.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsIndirectFirstInstance = false;
+
+    /**
      * True if the vertex shaders can read the model and normal matrices of a mesh instance from
      * a storage buffer the device holds, see {@link GraphicsDevice#meshInstanceStorage} (WebGPU
      * only).
@@ -316,6 +328,16 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsCompute = false;
+
+    /**
+     * The shading language the engine generates its shaders in on this device,
+     * {@link SHADERLANGUAGE_GLSL} or {@link SHADERLANGUAGE_WGSL}. Shader code selects the language
+     * using this instead of the type of the device, so that the null device can generate either.
+     *
+     * @type {string}
+     * @ignore
+     */
+    shaderLanguage = SHADERLANGUAGE_GLSL;
 
     /**
      * The platform chunks added to every GLSL vertex and fragment shader: `vertexHeader`,
@@ -345,6 +367,23 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     computeChunks = null;
+
+    /**
+     * The features installed on the device, so that each is installed once.
+     *
+     * @type {Set<object>}
+     * @ignore
+     */
+    features = new Set();
+
+    /**
+     * The names of the features installed on the device, recorded in debug builds only. Debug
+     * checks ask for a feature by name, so that they do not import, and bundle, the feature itself.
+     *
+     * @type {Set<string>}
+     * @ignore
+     */
+    featureNames = new Set();
 
     /**
      * True if the device can read from StorageTexture in the compute shader. By default, the
@@ -590,6 +629,15 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     usesMeshBindGroups = false;
+
+    /**
+     * True if the device supports rendering with a reversed depth buffer, see
+     * {@link CameraComponent#reverseZ}. Supported on WebGPU.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsReverseZ = false;
 
     /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
@@ -1477,6 +1525,17 @@ class GraphicsDevice extends EventHandler {
      */
     setDepthState(depthState) {
         Debug.assert(false);
+    }
+
+    /**
+     * Sets whether the current render pass renders into a reversed depth buffer, see
+     * {@link RenderPass#reverseZ}. Called by the render pass when it renders.
+     *
+     * @param {boolean} reverseZ - True for a reversed depth buffer.
+     * @ignore
+     */
+    setReverseZ(reverseZ) {
+        Debug.assert(!reverseZ || this.supportsReverseZ, 'Reverse-z is not supported by the graphics device.');
     }
 
     /**

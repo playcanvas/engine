@@ -139,6 +139,67 @@ describe('Quat', function () {
             expect(axis.z).to.equal(0);
         });
 
+        it('returns the x axis and 0 angle when rounding moves w of an identity quaternion', function () {
+            const quats = [
+                new Quat(0, 0, 0, 1 + Number.EPSILON),
+                new Quat(0, 2.7755575615628914e-17, 0, 1 - Number.EPSILON / 2),
+                new Quat(0, 0, 0, -1),
+                new Quat(1e-17, 0, 0, -1 - Number.EPSILON),
+                new Quat(1.1102230246251565e-16, -2.7755575615628914e-17, 1.1102230246251565e-16, -1)
+            ];
+            for (const q of quats) {
+                const axis = new Vec3();
+                const angle = q.getAxisAngle(axis);
+                expect(angle).to.equal(0);
+                expect(axis.x).to.equal(1);
+                expect(axis.y).to.equal(0);
+                expect(axis.z).to.equal(0);
+            }
+        });
+
+        it('returns the x axis and 0 angle for a rotation multiplied by its inverse', function () {
+            for (const dir of [Vec3.UP, new Vec3(1, -2, 3).normalize()]) {
+                for (const deg of [20, 90, 137, 290]) {
+                    const q = new Quat().setFromAxisAngle(dir, deg);
+                    // the same rotation as q, with the quaternion negated
+                    const negated = new Quat().setFromAxisAngle(dir, deg + 360);
+                    for (const rhs of [q, negated]) {
+                        const product = new Quat().mul2(q, rhs.clone().invert());
+                        const axis = new Vec3();
+                        const angle = product.getAxisAngle(axis);
+                        expect(angle).to.equal(0);
+                        expect(axis.x).to.equal(1);
+                        expect(axis.y).to.equal(0);
+                        expect(axis.z).to.equal(0);
+                    }
+                }
+            }
+        });
+
+        it('returns angles above 180 set with setFromAxisAngle', function () {
+            for (const deg of [10, 179, 181, 270, 359]) {
+                const q = new Quat().setFromAxisAngle(Vec3.UP, deg);
+                const axis = new Vec3();
+                const angle = q.getAxisAngle(axis);
+                expect(angle).to.be.closeTo(deg, 1e-10);
+                expect(axis.x).to.equal(0);
+                expect(axis.y).to.be.closeTo(1, 1e-12);
+                expect(axis.z).to.equal(0);
+            }
+        });
+
+        it('returns the rotation of a quaternion that is not unit length', function () {
+            const q = new Quat().setFromAxisAngle(Vec3.RIGHT, 45);
+            // scaled so that w is above 1
+            q.set(q.x * 1.3, q.y * 1.3, q.z * 1.3, q.w * 1.3);
+            const axis = new Vec3();
+            const angle = q.getAxisAngle(axis);
+            expect(angle).to.be.closeTo(45, 1e-10);
+            expect(axis.x).to.be.closeTo(1, 1e-12);
+            expect(axis.y).to.equal(0);
+            expect(axis.z).to.equal(0);
+        });
+
         it('returns what is set with setFromAxisAngle', function () {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.UP, Math.PI / 2);

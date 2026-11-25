@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import {
-    BUFFERUSAGE_STORAGE, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RG32F,
-    PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, SAMPLETYPE_FLOAT, pixelFormatInfo
+    BUFFERUSAGE_STORAGE, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, SAMPLETYPE_FLOAT,
+    isFloat32PixelFormat, pixelFormatInfo
 } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebgpuDebug } from './webgpu-debug.js';
@@ -128,7 +128,7 @@ class WebgpuBindGroup {
                 if (textureFormat.sampleType === SAMPLETYPE_FLOAT) {
                     const pixelFormat = texture.format;
                     const depth = pixelFormat === PIXELFORMAT_DEPTH || pixelFormat === PIXELFORMAT_DEPTH16 || pixelFormat === PIXELFORMAT_DEPTHSTENCIL;
-                    const float32 = pixelFormat === PIXELFORMAT_R32F || pixelFormat === PIXELFORMAT_RG32F || pixelFormat === PIXELFORMAT_RGB32F || pixelFormat === PIXELFORMAT_RGBA32F;
+                    const float32 = isFloat32PixelFormat(pixelFormat);
 
                     if (depth || (float32 && !device.textureFloatFilterable)) {
                         const reason = depth ? 'depth formats cannot be filtered' : 'the device does not support the float32-filterable feature';

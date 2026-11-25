@@ -3,7 +3,7 @@
  * Usage: node build.mjs [options]
  *
  * Options:
- * --type - Specify the build type: rel, dbg, prf, min, types.
+ * --type - Specify the build type: rel, dbg, min, types.
  * --format - Specify the module format: esm, umd.
  * --watch - Rebuild when inputs change.
  * --sourcemaps - Build with source maps.
@@ -22,7 +22,7 @@ import { parseArgs, stripVTControlCharacters } from 'node:util';
 import { buildTarget, OUT_PREFIX, watchTarget } from './utils/esbuild-build-target.mjs';
 import { buildTypes, TYPES_INPUT, TYPES_OUTPUT, watchTypes } from './utils/types-build-target.mjs';
 
-const JS_TYPES = /** @type {const} */ (['rel', 'dbg', 'prf', 'min']);
+const JS_TYPES = /** @type {const} */ (['rel', 'dbg', 'min']);
 const BUILD_TYPES = /** @type {const} */ ([...JS_TYPES, 'types']);
 const MODULE_FORMATS = /** @type {const} */ (['umd', 'esm']);
 
@@ -45,7 +45,7 @@ const COLORS = process.env.FORCE_COLOR !== '0' && !process.env.NO_COLOR;
 const USAGE = `Usage: node build.mjs [options]
 
 Options:
-  --type <rel|dbg|prf|min|types>
+  --type <rel|dbg|min|types>
   --format <esm|umd> (required for JS builds, tree visualizers default to both)
   --watch, -w
   --sourcemaps, -m
@@ -280,7 +280,7 @@ const getJSTargets = () => {
         return fail('--type=types cannot be combined with --format');
     }
 
-    /** @type {{ buildType: 'rel'|'dbg'|'prf'|'min', moduleFormat: 'umd'|'esm' }[]} */
+    /** @type {{ buildType: 'rel'|'dbg'|'min', moduleFormat: 'umd'|'esm' }[]} */
     const targets = [];
     JS_TYPES.forEach((buildType) => {
         MODULE_FORMATS.forEach((moduleFormat) => {

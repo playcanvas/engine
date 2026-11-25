@@ -21,16 +21,16 @@ import {
 
 import { deviceType } from 'examples/context';
 
-import shaderFrag from './shader.frag';
-import shaderVert from './shader.vert';
+import shaderGlslFrag from './shader.glsl.frag';
+import shaderGlslVert from './shader.glsl.vert';
+import shaderWgslFrag from './shader.wgsl.frag';
+import shaderWgslVert from './shader.wgsl.vert';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: './assets/wasm/glslang/glslang.js',
-    twgslUrl: './assets/wasm/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await createGraphicsDevice(canvas, gfxOptions);
@@ -107,8 +107,10 @@ mesh.aabb = new BoundingBox(new Vec3(0, 0, 0), new Vec3(15, 15, 15));
 // Create a new material with a custom shader
 const material = new ShaderMaterial({
     uniqueName: 'MyShader',
-    vertexGLSL: shaderVert,
-    fragmentGLSL: shaderFrag,
+    vertexGLSL: shaderGlslVert,
+    fragmentGLSL: shaderGlslFrag,
+    vertexWGSL: shaderWgslVert,
+    fragmentWGSL: shaderWgslFrag,
     attributes: {
         aPosition: SEMANTIC_POSITION,
         aUv0: SEMANTIC_TEXCOORD0

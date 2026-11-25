@@ -28,6 +28,7 @@ import {
     TextureHandler,
     TextureRenderer,
     Vec3,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 
@@ -72,6 +73,9 @@ createOptions.resourceHandlers = [TextureHandler, CubemapHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
 
 const textures = new TextureRenderer(app);
 
@@ -219,7 +223,7 @@ app.on('update', (dt) => {
     // A decal projection box is an orthographic projection from some position. We calculate position
     // here to be in an orbit around the sphere. Draw a line showing the projection point and direction.
     const decalProjectionPos = new Vec3(8 * Math.cos(time), 8 * Math.cos(time * 0.3), 8 * Math.sin(time));
-    app.drawLine(decalProjectionPos, Vec3.ZERO, Color.WHITE);
+    wire.line(decalProjectionPos, Vec3.ZERO);
 
     // Render decal every half a second
     decalTime += dt;

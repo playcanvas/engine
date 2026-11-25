@@ -9,7 +9,15 @@ import { RenderPassShadowLocalClustered } from './render-pass-shadow-local-clust
  * @ignore
  */
 class FramePassUpdateClustered extends FramePass {
-    constructor(device, renderer, shadowRenderer, shadowRendererLocal, lightTextureAtlas) {
+    /**
+     * The pass rendering the shadows of local lights, created on first use when the shadows
+     * feature is installed.
+     *
+     * @type {RenderPassShadowLocalClustered|null}
+     */
+    shadowRenderPass = null;
+
+    constructor(device, renderer, lightTextureAtlas) {
         super(device);
         this.renderer = renderer;
 
@@ -23,10 +31,6 @@ class FramePassUpdateClustered extends FramePass {
         // render cookies for all local visible lights
         this.cookiesRenderPass = RenderPassCookieRenderer.create(lightTextureAtlas.cookieRenderTarget, lightTextureAtlas.cubeSlotsOffsets);
         this.beforePasses.push(this.cookiesRenderPass);
-
-        // local shadows - these are shared by all cameras (not entirely correctly)
-        this.shadowRenderPass = new RenderPassShadowLocalClustered(device, shadowRenderer, shadowRendererLocal);
-        this.beforePasses.push(this.shadowRenderPass);
     }
 
     update(shadowsEnabled, cookiesEnabled, lights, localLights) {
@@ -40,9 +44,19 @@ class FramePassUpdateClustered extends FramePass {
             this.cookiesRenderPass.update(lights);
         }
 
-        this.shadowRenderPass.enabled = shadowsEnabled;
-        if (shadowsEnabled) {
-            this.shadowRenderPass.update(localLights);
+        // local shadows - these are shared by all cameras (not entirely correctly). The renderer
+        // creates this pass before features are installed, so the shadow pass is created here.
+        const { shadowRenderer, _shadowRendererLocal: shadowRendererLocal } = this.renderer;
+        if (!this.shadowRenderPass && shadowRenderer && shadowRendererLocal) {
+            this.shadowRenderPass = new RenderPassShadowLocalClustered(this.device, shadowRenderer, shadowRendererLocal);
+            this.beforePasses.push(this.shadowRenderPass);
+        }
+
+        if (this.shadowRenderPass) {
+            this.shadowRenderPass.enabled = shadowsEnabled;
+            if (shadowsEnabled) {
+                this.shadowRenderPass.update(localLights);
+            }
         }
     }
 
@@ -50,7 +64,7 @@ class FramePassUpdateClustered extends FramePass {
         this.cookiesRenderPass.destroy();
         this.cookiesRenderPass = null;
 
-        this.shadowRenderPass.destroy();
+        this.shadowRenderPass?.destroy();
         this.shadowRenderPass = null;
 
         this.beforePasses.length = 0;

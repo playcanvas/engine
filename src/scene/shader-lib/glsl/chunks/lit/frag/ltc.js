@@ -3,6 +3,10 @@ export default /* glsl */`
 // by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt
 // code: https://github.com/selfshadow/ltc_code/
 
+// LUT tables, set by AreaLightLuts
+uniform highp sampler2D areaLightsLutTex1;
+uniform highp sampler2D areaLightsLutTex2;
+
 mat3 transposeMat3( const in mat3 m ) {
     mat3 tmp;
     tmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );

@@ -10,6 +10,10 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `animation` asset type. Loads an {@link AnimTrack} from a GLB file, or
  * a legacy {@link Animation} from a PlayCanvas JSON animation file.
  *
+ * Support for the legacy PlayCanvas JSON animation format is deprecated and will be removed in
+ * Engine V3. Convert JSON animations to GLB instead. In the Editor, enable Project Settings > Asset
+ * Import > Convert to GLB and reimport the animation assets.
+ *
  * @category Asset
  */
 class AnimationHandler extends ResourceHandler {

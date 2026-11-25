@@ -134,6 +134,10 @@ describe('Local shadow cull requests', function () {
                         scene: app.scene,
                         renderer: app.renderer,
                         device: app.graphicsDevice,
+                        shadowMapCache: app.renderer.shadowMapCache,
+                        shadowRenderer: app.renderer.shadowRenderer,
+                        shadowRendererLocal: app.renderer._shadowRendererLocal,
+                        shadowRendererDirectional: app.renderer._shadowRendererDirectional,
                         shadowLocalClusteredPass: pass
                     }, app.scene.layers, false, caster.render.meshInstances, { light });
                     expect(cull.calledOnce).to.equal(true);

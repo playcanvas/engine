@@ -630,15 +630,6 @@ const isBlack = (color) => {
  *
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
- * @property {number} fresnelModel Defines the formula used for Fresnel effect.
- * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components
- * are combined. When Fresnel is off, legacy non energy-conserving combining is used. When it is
- * on, combining behavior is energy-conserving.
- *
- * - {@link FRESNEL_NONE}: No Fresnel.
- * - {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by
- * specular color.
- *
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
@@ -2429,7 +2420,6 @@ function _defineMaterialProps() {
     });
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
-    _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('useFog', true);
@@ -2585,3 +2575,13 @@ _defineDeprecatedAlias('aoMapUv', 'aoUvSet');
 
 _defineDeprecatedAlias('sheenGloss', 'sheenGlossiness');
 _defineDeprecatedAlias('clearCoatGloss', 'clearCoatGlossiness');
+
+Object.defineProperty(StandardMaterial.prototype, 'fresnelModel', {
+    get: function () {
+        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
+        return FRESNEL_SCHLICK;
+    },
+    set: function (value) {
+        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
+    }
+});

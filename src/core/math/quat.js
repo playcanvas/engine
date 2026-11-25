@@ -208,7 +208,8 @@ class Quat {
     /**
      * Gets the rotation axis and angle for a given quaternion. If a quaternion is created with
      * `setFromAxisAngle`, this method will return the same values as provided in the original
-     * parameter list OR functionally equivalent values.
+     * parameter list OR functionally equivalent values. The axis is unit length. For a quaternion
+     * with no rotation (up to rounding), the angle is 0 and the axis is the x axis.
      *
      * @param {Vec3} axis - The 3-dimensional vector to receive the axis of rotation.
      * @returns {number} Angle, in degrees, of the rotation.
@@ -223,9 +224,13 @@ class Quat {
      * console.log(v.toString());
      */
     getAxisAngle(axis) {
-        let rad = Math.acos(this.w) * 2;
-        const s = Math.sin(rad / 2);
-        if (s !== 0) {
+        // s is the length of the vector part, sin(angle / 2) for a unit quaternion. The angle and
+        // axis are derived from it rather than from acos(w), which is NaN when rounding leaves w
+        // just outside [-1, 1] and gives a zero length axis when w rounds to just inside it
+        const s = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        let rad = 0;
+        if (s > 1e-8) {
+            rad = Math.atan2(s, this.w) * 2;
             axis.x = this.x / s;
             axis.y = this.y / s;
             axis.z = this.z / s;
@@ -237,7 +242,7 @@ class Quat {
                 rad *= -1;
             }
         } else {
-            // If s is zero, return any axis (no rotation - axis does not matter)
+            // No rotation (w is close to 1 or -1), so any axis will do
             axis.x = 1;
             axis.y = 0;
             axis.z = 0;

@@ -30,6 +30,11 @@ export { WorldClustersDebug } from './debug/world-clusters-debug.js';
 // VOXELS
 export * from './voxel/voxel-occupancy.js';
 
+// PROBE VOLUMES
+export { PROBESOURCE_GBUFFER, PROBESOURCE_SCENE } from './probe-volume/constants.js';
+export { ProbeVolume } from './probe-volume/probe-volume.js';
+export { ProbeVolumeBaker } from './probe-volume/probe-volume-baker.js';
+
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';

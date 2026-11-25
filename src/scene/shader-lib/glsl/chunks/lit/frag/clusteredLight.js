@@ -89,12 +89,6 @@ struct ClusterLightSpotData {
     float outerConeAngleCos;
 };
 
-// Area light dimensions and orientation, decoded on demand only for non-punctual lights.
-struct ClusterLightAreaData {
-    vec3 halfWidth;
-    vec3 halfHeight;
-};
-
 // Shadow bias parameters, decoded on demand only when the light casts shadows.
 struct ClusterLightShadowData {
     float shadowBias;
@@ -184,12 +178,9 @@ vec3 decodeClusterLightOmniAtlasViewport(int lightIndex) {
     return sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_0}).xyz;
 }
 
-ClusterLightAreaData decodeClusterLightAreaData(int lightIndex) {
-    return ClusterLightAreaData(
-        sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_AREA_DATA_WIDTH}).xyz,
-        sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_AREA_DATA_HEIGHT}).xyz
-    );
-}
+#ifdef CLUSTER_AREALIGHTS
+    #include "clusteredLightAreaPS"
+#endif
 
 mat4 decodeClusterLightProjectionMatrixData(int lightIndex) {
     // shadow matrix
@@ -235,13 +226,11 @@ void evaluateLight(
 ) {
 
     vec3 cookieAttenuation = vec3(1.0);
-    float diffuseAttenuation = 1.0;
     float falloffAttenuation = 1.0;
 
     #ifdef CLUSTER_AREALIGHTS
-        // LTC specular terms of an area light, evaluated together with its diffuse term
-        float areaLightSpecular = 0.0;
-        float areaLightSpecularCC = 0.0;
+        // LTC evaluations of an area light
+        ClusterAreaLightLobes areaLobes = ClusterAreaLightLobes(0.0, 0.0, 0.0, 0.0);
     #endif
 
     #ifdef LIT_DIFFUSE_TRANSMISSION
@@ -258,22 +247,7 @@ void evaluateLight(
 
     // distance attenuation
     if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
-
-        // area lights
-        ClusterLightAreaData areaData = decodeClusterLightAreaData(light.lightIndex);
-
-        // handle light shape, only the enabled shapes are compiled (a disk uses the rect coordinates)
-        #ifdef CLUSTER_AREALIGHT_SPHERE
-        if (light.shape == {LIGHTSHAPE_SPHERE}) {
-            calcSphereLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
-        } else
-        #endif
-        {
-            calcRectLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
-        }
-
-        falloffAttenuation = getFalloffWindow(light.range, lightDirW);
-
+        falloffAttenuation = prepareClusterAreaLight(light, lightDirW);
     } else
 
     #endif
@@ -292,75 +266,10 @@ void evaluateLight(
 
         if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
 
-            // All LTC evaluations of the light - diffuse (0), diffuse transmission (1), specular (2)
-            // and clear coat specular (3) - go through a single loop, so the large LTC functions are
-            // emitted once instead of once per term and shape. Shader compilers inline all calls,
-            // and on Windows (FXC / DXC) the compile time of the inlined copies dominates.
-            bool areaIsRect = light.shape == {LIGHTSHAPE_RECT};
-            bool areaIsDisk = light.shape == {LIGHTSHAPE_DISK};
-
-            // LTC matrices of the specular and the clear coat specular, from their own gloss and normal
-            #ifdef LIT_SPECULAR
-                mat3 areaSpecularInvMat = getLTCLightInvMat(dLTCUV);
-            #endif
-            #ifdef LIT_CLEARCOAT
-                mat3 areaClearcoatInvMat = getLTCLightInvMat(ccLTCUV);
-            #endif
-
-            for (int lobe = 0; lobe < 4; lobe++) {
-
-                #ifndef LIT_DIFFUSE_TRANSMISSION
-                    if (lobe == 1) continue;
-                #endif
-                #ifndef LIT_SPECULAR
-                    if (lobe == 2) break;
-                #endif
-                #ifndef LIT_CLEARCOAT
-                    if (lobe == 3) break;
-                #endif
-
-                vec3 lobeNormal = lobe == 1 ? -worldNormal : worldNormal;
-                mat3 lobeInvMat = mat3(1.0);
-                #ifdef LIT_SPECULAR
-                    if (lobe >= 2) lobeInvMat = areaSpecularInvMat;
-                #endif
-                #ifdef LIT_CLEARCOAT
-                    if (lobe == 3) {
-                        lobeNormal = clearcoat_worldNormal;
-                        lobeInvMat = areaClearcoatInvMat;
-                    }
-                #endif
-
-                // only the enabled area light shapes are compiled
-                float lobeValue = 0.0;
-                #ifdef CLUSTER_AREALIGHT_RECT
-                if (areaIsRect) {
-                    lobeValue = LTC_EvaluateRect(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
-                } else
-                #endif
-                #if defined(CLUSTER_AREALIGHT_DISK) || defined(CLUSTER_AREALIGHT_SPHERE)
-                if (areaIsDisk || lobe >= 2) {
-                    // the specular of a sphere light uses the disk facing the reflection
-                    lobeValue = LTC_EvaluateDisk(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
-                    if (lobe < 2) lobeValue = FixNan(lobeValue);
-                } else
-                #endif
-                {
-                    #ifdef CLUSTER_AREALIGHT_SPHERE
-                        lobeValue = getSphereLightDiffuse(lobeNormal, viewDir, lightDirW, lightDirNormW);
-                    #endif
-                }
-
-                if (lobe == 0) diffuseAttenuation = lobeValue * 16.0;
-                #ifdef LIT_DIFFUSE_TRANSMISSION
-                    if (lobe == 1) transmissionAttenuation = lobeValue * 16.0;
-                #endif
-                if (lobe == 2) areaLightSpecular = lobeValue;
-                if (lobe == 3) areaLightSpecularCC = lobeValue;
-            }
+            areaLobes = evaluateClusterAreaLightLobes(light, worldNormal, viewDir, lightDirW, lightDirNormW, clearcoat_worldNormal);
 
             #ifdef LIT_DIFFUSE_TRANSMISSION
-                transmissionAttenuation *= falloffAttenuation;
+                transmissionAttenuation = areaLobes.transmission * falloffAttenuation;
             #endif
 
         } else
@@ -495,41 +404,10 @@ void evaluateLight(
 
         if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
 
-            // area light diffuse
-            {
-                vec3 areaDiffuse = (diffuseAttenuation * falloffAttenuation) * light.color * cookieAttenuation;
-
-                #if defined(LIT_SPECULAR)
-                    areaDiffuse = mix(areaDiffuse, vec3(0), dLTCSpecFres);
-                #endif
-
-                // area light diffuse - it does not mix diffuse lighting into specular attenuation
-                dDiffuseLight += areaDiffuse;
-
-                #ifdef LIT_DIFFUSE_TRANSMISSION
-                    vec3 areaTransmission = transmissionAttenuation * light.color * cookieAttenuation;
-
-                    #if defined(LIT_SPECULAR)
-                        areaTransmission = mix(areaTransmission, vec3(0), dLTCSpecFres);
-                    #endif
-
-                    dDiffuseTransmissionLight += areaTransmission;
-                #endif
-            }
-
-            // specular and clear coat are material settings and get included by a define based on the material
-            #ifdef LIT_SPECULAR
-
-                // area light specular, evaluated together with the diffuse term
-                dSpecularLight += dLTCSpecFres * areaLightSpecular * falloffAttenuation * light.color * cookieAttenuation;
-
-                #ifdef LIT_CLEARCOAT
-
-                    // area light specular clear coat
-                    ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * falloffAttenuation * light.color  * cookieAttenuation;
-
-                #endif
-
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                addClusterAreaLight(areaLobes, falloffAttenuation, transmissionAttenuation, light.color * cookieAttenuation);
+            #else
+                addClusterAreaLight(areaLobes, falloffAttenuation, 0.0, light.color * cookieAttenuation);
             #endif
 
         } else

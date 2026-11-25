@@ -91,12 +91,6 @@ struct ClusterLightSpotData {
     outerConeAngleCos: f32
 }
 
-// Area light dimensions and orientation, decoded on demand only for non-punctual lights.
-struct ClusterLightAreaData {
-    halfWidth: vec3f,
-    halfHeight: vec3f
-}
-
 // Shadow bias parameters, decoded on demand only when the light casts shadows.
 struct ClusterLightShadowData {
     shadowBias: f32,
@@ -186,12 +180,9 @@ fn decodeClusterLightOmniAtlasViewport(lightIndex: i32) -> vec3f {
     return sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_PROJ_MAT_0}).xyz;
 }
 
-fn decodeClusterLightAreaData(lightIndex: i32) -> ClusterLightAreaData {
-    return ClusterLightAreaData(
-        sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_AREA_DATA_WIDTH}).xyz,
-        sampleLightTextureF(lightIndex, {CLUSTER_TEXTURE_AREA_DATA_HEIGHT}).xyz
-    );
-}
+#ifdef CLUSTER_AREALIGHTS
+    #include "clusteredLightAreaPS"
+#endif
 
 fn decodeClusterLightProjectionMatrixData(lightIndex: i32) -> mat4x4f {
     // shadow matrix
@@ -238,13 +229,11 @@ fn evaluateLight(
 ) {
 
     var cookieAttenuation: vec3f = vec3f(1.0);
-    var diffuseAttenuation: f32 = 1.0;
     var falloffAttenuation: f32 = 1.0;
 
     #ifdef CLUSTER_AREALIGHTS
-        // LTC specular terms of an area light, evaluated together with its diffuse term
-        var areaLightSpecular: f32 = 0.0;
-        var areaLightSpecularCC: f32 = 0.0;
+        // LTC evaluations of an area light
+        var areaLobes: ClusterAreaLightLobes;
     #endif
 
     #ifdef LIT_DIFFUSE_TRANSMISSION
@@ -261,22 +250,7 @@ fn evaluateLight(
 
     // distance attenuation
     if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
-
-        // area lights
-        let areaData: ClusterLightAreaData = decodeClusterLightAreaData(light.lightIndex);
-
-        // handle light shape, only the enabled shapes are compiled (a disk uses the rect coordinates)
-        #ifdef CLUSTER_AREALIGHT_SPHERE
-        if (light.shape == {LIGHTSHAPE_SPHERE}) {
-            calcSphereLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
-        } else
-        #endif
-        {
-            calcRectLightValues(light.position, areaData.halfWidth, areaData.halfHeight);
-        }
-
-        falloffAttenuation = getFalloffWindow(light.range, lightDirW);
-
+        falloffAttenuation = prepareClusterAreaLight(light, lightDirW);
     } else
 
     #endif
@@ -296,76 +270,10 @@ fn evaluateLight(
 
         if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
 
-            // All LTC evaluations of the light - diffuse (0), diffuse transmission (1), specular (2)
-            // and clear coat specular (3) - go through a single loop, so the large LTC functions are
-            // emitted once instead of once per term and shape. Shader compilers inline all calls,
-            // and on Windows (FXC / DXC) the compile time of the inlined copies dominates.
-            let areaIsRect: bool = light.shape == {LIGHTSHAPE_RECT};
-            let areaIsDisk: bool = light.shape == {LIGHTSHAPE_DISK};
-            let identityInvMat = mat3x3f(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
-
-            // LTC matrices of the specular and the clear coat specular, from their own gloss and normal
-            #ifdef LIT_SPECULAR
-                let areaSpecularInvMat: mat3x3f = getLTCLightInvMat(dLTCUV);
-            #endif
-            #ifdef LIT_CLEARCOAT
-                let areaClearcoatInvMat: mat3x3f = getLTCLightInvMat(ccLTCUV);
-            #endif
-
-            for (var lobe: i32 = 0; lobe < 4; lobe++) {
-
-                #ifndef LIT_DIFFUSE_TRANSMISSION
-                    if (lobe == 1) { continue; }
-                #endif
-                #ifndef LIT_SPECULAR
-                    if (lobe == 2) { break; }
-                #endif
-                #ifndef LIT_CLEARCOAT
-                    if (lobe == 3) { break; }
-                #endif
-
-                var lobeNormal: vec3f = select(worldNormal, -worldNormal, lobe == 1);
-                var lobeInvMat: mat3x3f = identityInvMat;
-                #ifdef LIT_SPECULAR
-                    if (lobe >= 2) { lobeInvMat = areaSpecularInvMat; }
-                #endif
-                #ifdef LIT_CLEARCOAT
-                    if (lobe == 3) {
-                        lobeNormal = clearcoat_worldNormal;
-                        lobeInvMat = areaClearcoatInvMat;
-                    }
-                #endif
-
-                // only the enabled area light shapes are compiled
-                var lobeValue: f32 = 0.0;
-                #ifdef CLUSTER_AREALIGHT_RECT
-                if (areaIsRect) {
-                    lobeValue = LTC_EvaluateRect(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
-                } else
-                #endif
-                #if defined(CLUSTER_AREALIGHT_DISK) || defined(CLUSTER_AREALIGHT_SPHERE)
-                if (areaIsDisk || lobe >= 2) {
-                    // the specular of a sphere light uses the disk facing the reflection
-                    lobeValue = LTC_EvaluateDisk(lobeNormal, viewDir, litArgs_worldPosition, lobeInvMat, dLTCCoords);
-                    if (lobe < 2) { lobeValue = FixNan(lobeValue); }
-                } else
-                #endif
-                {
-                    #ifdef CLUSTER_AREALIGHT_SPHERE
-                        lobeValue = getSphereLightDiffuse(lobeNormal, viewDir, lightDirW, lightDirNormW);
-                    #endif
-                }
-
-                if (lobe == 0) { diffuseAttenuation = lobeValue * 16.0; }
-                #ifdef LIT_DIFFUSE_TRANSMISSION
-                    if (lobe == 1) { transmissionAttenuation = lobeValue * 16.0; }
-                #endif
-                if (lobe == 2) { areaLightSpecular = lobeValue; }
-                if (lobe == 3) { areaLightSpecularCC = lobeValue; }
-            }
+            areaLobes = evaluateClusterAreaLightLobes(light, worldNormal, viewDir, lightDirW, lightDirNormW, clearcoat_worldNormal);
 
             #ifdef LIT_DIFFUSE_TRANSMISSION
-                transmissionAttenuation = transmissionAttenuation * falloffAttenuation;
+                transmissionAttenuation = areaLobes.transmission * falloffAttenuation;
             #endif
 
         } else
@@ -500,41 +408,10 @@ fn evaluateLight(
 
         if (light.shape != {LIGHTSHAPE_PUNCTUAL}) { // area light
 
-            // area light diffuse
-            {
-                var areaDiffuse: vec3f = (diffuseAttenuation * falloffAttenuation) * light.color * cookieAttenuation;
-
-                #if defined(LIT_SPECULAR)
-                    areaDiffuse = mix(areaDiffuse, vec3f(0.0), dLTCSpecFres);
-                #endif
-
-                // area light diffuse - it does not mix diffuse lighting into specular attenuation
-                dDiffuseLight = dDiffuseLight + areaDiffuse;
-
-                #ifdef LIT_DIFFUSE_TRANSMISSION
-                    var areaTransmission: vec3f = transmissionAttenuation * light.color * cookieAttenuation;
-
-                    #if defined(LIT_SPECULAR)
-                        areaTransmission = mix(areaTransmission, vec3f(0.0), dLTCSpecFres);
-                    #endif
-
-                    dDiffuseTransmissionLight = dDiffuseTransmissionLight + areaTransmission;
-                #endif
-            }
-
-            // specular and clear coat are material settings and get included by a define based on the material
-            #ifdef LIT_SPECULAR
-
-                // area light specular, evaluated together with the diffuse term
-                dSpecularLight = dSpecularLight + dLTCSpecFres * areaLightSpecular * falloffAttenuation * light.color * cookieAttenuation;
-
-                #ifdef LIT_CLEARCOAT
-
-                    // area light specular clear coat
-                    ccSpecularLight = ccSpecularLight + ccLTCSpecFres * areaLightSpecularCC * falloffAttenuation * light.color  * cookieAttenuation;
-
-                #endif
-
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                addClusterAreaLight(areaLobes, falloffAttenuation, transmissionAttenuation, light.color * cookieAttenuation);
+            #else
+                addClusterAreaLight(areaLobes, falloffAttenuation, 0.0, light.color * cookieAttenuation);
             #endif
 
         } else

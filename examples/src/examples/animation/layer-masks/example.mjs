@@ -21,6 +21,7 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 
@@ -69,6 +70,10 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHand
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
+wire.depthTest = false;
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -206,12 +211,8 @@ const drawSkeleton = (entity) => {
     entity.children.forEach((/** @type {Entity} */ c) => {
         const target = modelEntity.anim.targets[`${entity.path}/graph/localPosition`];
         if (target) {
-            app.drawLine(
-                entity.getPosition(),
-                c.getPosition(),
-                new Color(target.getWeight(0), 0, target.getWeight(1), 1),
-                false
-            );
+            wire.color.set(target.getWeight(0), 0, target.getWeight(1), 1);
+            wire.line(entity.getPosition(), c.getPosition());
         }
         drawSkeleton(c);
     });

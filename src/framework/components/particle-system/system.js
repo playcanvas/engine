@@ -5,10 +5,8 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Asset } from '../../asset/asset.js';
 import { ComponentSystem } from '../system.js';
 import { _properties, ParticleSystemComponent } from './component.js';
-import { particleChunksGLSL } from '../../../scene/shader-lib/glsl/collections/particle-chunks-glsl.js';
-import { particleChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/particle-chunks-wgsl.js';
-import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
-import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
+import { featureParticlesWebgl, featureParticlesWebgpu } from '../../../scene/features/feature-particles.js';
+import { installFeatures } from '../../../scene/features/install-features.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -118,9 +116,8 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('update', this.onUpdate, this);
 
-        // register particle shader chunks
-        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(particleChunksGLSL);
-        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).add(particleChunksWGSL);
+        // the particles feature, for both devices, as the application lists the component system
+        installFeatures(app, [featureParticlesWebgl, featureParticlesWebgpu]);
     }
 
     initializeComponentData(component, _data) {

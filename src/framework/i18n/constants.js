@@ -17,3 +17,7 @@ export const DEFAULT_LOCALE_FALLBACKS = {
     'ru': 'ru-RU',
     'ja': 'ja-JP'
 };
+
+// The name of the event fired by I18n when the locale changes, kept apart from I18n so that its
+// listeners do not import it.
+export const I18N_EVENT_CHANGE = 'change';

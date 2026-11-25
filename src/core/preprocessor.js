@@ -484,7 +484,7 @@ class Preprocessor {
                             // process the just included test
                             KEYWORD.lastIndex = include.index - 1;
                         } else {
-                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { originalSource: originalSource, source: source });
+                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}. The shader chunk may belong to a feature that is not installed.`, { originalSource: originalSource, source: source });
                             error = true;
                             continue;
                         }

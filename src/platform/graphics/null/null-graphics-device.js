@@ -5,7 +5,6 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
 import { webglChunksGLSL } from '../shader-chunks/webgl-chunks-glsl.js';
 import { webgpuChunksWGSL } from '../shader-chunks/webgpu-chunks-wgsl.js';
-import { webgpuComputeChunksWGSL } from '../shader-chunks/webgpu-compute-chunks-wgsl.js';
 
 import { NullIndexBuffer } from './null-index-buffer.js';
 import { NullRenderTarget } from './null-render-target.js';
@@ -28,11 +27,11 @@ class NullGraphicsDevice extends GraphicsDevice {
         this._deviceType = DEVICETYPE_NULL;
         this.samples = 1;
 
-        // shaders are created but never compiled, so generate them in both languages as the real
-        // devices do
+        // shaders are created but never compiled, so they can be generated in either language: the
+        // engine generates GLSL, the inherited shaderLanguage, and code that asks for a language
+        // explicitly can use WGSL
         this.platformChunksGLSL = webglChunksGLSL;
         this.platformChunksWGSL = webgpuChunksWGSL;
-        this.computeChunks = webgpuComputeChunksWGSL;
 
         this.backBuffer = new RenderTarget({
             name: 'Framebuffer',

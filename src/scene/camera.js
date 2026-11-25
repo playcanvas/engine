@@ -37,7 +37,6 @@ const _point = new Vec3();
 const _invViewProjMat = new Mat4();
 const _xrViewProjMat = new Mat4();
 const _xrViewFrustum = new Frustum();
-const _frustumViewInvMat = new Mat4();
 const _publishProjMat = new Mat4();
 const _publishViewInvMat = new Mat4();
 const _publishViewProjMat = new Mat4();
@@ -93,6 +92,62 @@ class Camera {
             return out;
         }
         out.mul2(Camera._webGpuDepthRangeMatrix, projection);
+        return out;
+    }
+
+    /**
+     * Reverses the clip depth of a matrix with the WebGPU depth range, a projection built by
+     * {@link Camera.applyShaderProjectionTransform} or a view projection made from it, for reverse-z
+     * (see {@link Camera#reverseZ}): the clip depth z becomes w - z, so the depth is 1 at the near
+     * plane and 0 at the far plane. Applied to a reversed matrix, it gives back the standard one.
+     * Computed from the 32-bit terms of the matrix, it loses the precision of the depth with a
+     * large ratio of the far clip to the near clip, see {@link Camera.setReverseZDepth}.
+     *
+     * @param {Mat4} matrix - The matrix to reverse the clip depth of.
+     * @param {Mat4} out - Receives the result. Can be the matrix itself.
+     * @returns {Mat4} out
+     * @ignore
+     */
+    static reverseClipDepth(matrix, out) {
+        if (out !== matrix) {
+            out.copy(matrix);
+        }
+        const d = out.data;
+        d[2] = d[3] - d[2];
+        d[6] = d[7] - d[6];
+        d[10] = d[11] - d[10];
+        d[14] = d[15] - d[14];
+        return out;
+    }
+
+    /**
+     * Writes the depth of reverse-z, computed from the clip planes, to a projection built by
+     * {@link Camera.applyShaderProjectionTransform} from a built-in projection, with the WebGPU
+     * depth range: the depth is 1 at the near plane and 0 at the far plane. Computed in double
+     * precision, the far plane stays in place with any ratio of the far clip to the near clip,
+     * unlike reversing the 32-bit terms of the projection with {@link Camera.reverseClipDepth},
+     * which with a near clip of 0.01 and a far clip of 100000 moves it to about 83900.
+     *
+     * @param {Mat4} out - The projection to write the depth of. Its other terms are kept.
+     * @param {boolean} perspective - True for a perspective projection, false for an orthographic
+     * one.
+     * @param {number} near - The near clip distance.
+     * @param {number} far - The far clip distance.
+     * @returns {Mat4} out
+     * @ignore
+     */
+    static setReverseZDepth(out, perspective, near, far) {
+        const d = out.data;
+        const range = far - near;
+        if (perspective) {
+            // depth = (near * z + far * near) / (far - near) / -z, for the view space z
+            d[10] = near / range;
+            d[14] = far * near / range;
+        } else {
+            // depth = (z + far) / (far - near)
+            d[10] = 1 / range;
+            d[14] = far / range;
+        }
         return out;
     }
 
@@ -193,6 +248,14 @@ class Camera {
 
     /** @type {number} */
     jitter = 0;
+
+    /**
+     * True when the camera is set to render with reverse-z, see {@link Camera#reverseZ}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _reverseZ = false;
 
     /**
      * The scale of the exposure the camera renders with, multiplying the exposure of the scene, or
@@ -685,6 +748,45 @@ class Camera {
         return this._frustumCulling;
     }
 
+    /**
+     * Sets whether the camera renders with a reversed depth buffer, see
+     * {@link CameraComponent#reverseZ}. The setting is kept on a device not supporting it (see
+     * {@link GraphicsDevice#supportsReverseZ}), which renders without it.
+     *
+     * @type {boolean}
+     */
+    set reverseZ(value) {
+        Debug.call(() => {
+            if (value && !this.device.supportsReverseZ) {
+                Debug.warnOnce('Camera#reverseZ is not supported by the device (GraphicsDevice#supportsReverseZ), rendering without it.');
+            }
+        });
+        this._reverseZ = value;
+    }
+
+    /**
+     * Gets whether the camera is set to render with a reversed depth buffer. See
+     * {@link Camera#reverseZActive} for whether it renders with it at the moment.
+     *
+     * @type {boolean}
+     */
+    get reverseZ() {
+        return this._reverseZ;
+    }
+
+    /**
+     * True when the camera renders with a reversed depth buffer: the depth is 1 at the near plane
+     * and 0 at the far plane, and the device reverses the depth clears and the depth tests of the
+     * camera. This is {@link Camera#reverseZ}, unless the device does not support it (see
+     * {@link GraphicsDevice#supportsReverseZ}), or the camera renders the views of an XR session,
+     * whose projections are not reversed.
+     *
+     * @type {boolean}
+     */
+    get reverseZActive() {
+        return this._reverseZ && this.device.supportsReverseZ && !this.xrActive;
+    }
+
     set horizontalFov(newValue) {
         if (this._horizontalFov !== newValue) {
             this._horizontalFov = newValue;
@@ -961,6 +1063,7 @@ class Camera {
         this.cullFaces = other.cullFaces;
         this.flipFaces = other.flipFaces;
         this.frustumCulling = other.frustumCulling;
+        this.reverseZ = other.reverseZ;
         this.layers = other.layers;
         this.orthoHeight = other.orthoHeight;
         this.projection = other.projection;
@@ -1072,6 +1175,69 @@ class Camera {
     }
 
     /**
+     * Evaluates the projection matrix of the combined (VIEW_CENTER) view, the way the renderer
+     * uses it: {@link Camera#projectionMatrix}, with {@link Camera#calculateProjection} applied to
+     * it when set. Neither the flipY / depth range adjustment of
+     * {@link Camera.applyShaderProjectionTransform} nor any jitter is applied.
+     *
+     * @returns {Mat4} The projection matrix of the camera, which calculateProjection updates in
+     * place.
+     * @ignore
+     */
+    _centerProjection() {
+        const projMat = this.projectionMatrix;
+        if (this.calculateProjection) {
+            this.calculateProjection(projMat, VIEW_CENTER);
+        }
+        return projMat;
+    }
+
+    /**
+     * Evaluates the projection matrix of the combined (VIEW_CENTER) view the renderer gives the
+     * shaders of this camera: {@link Camera#_centerProjection}, with the flipY and depth range
+     * adjustment of {@link Camera.applyShaderProjectionTransform}, and the depth of reverse-z when
+     * the camera renders with it (see {@link Camera#reverseZActive}). The jitter is not applied.
+     *
+     * @param {boolean} flipY - The flipY of the render target rendered to.
+     * @param {Mat4} out - Receives the matrix.
+     * @returns {Mat4} The out matrix.
+     * @ignore
+     */
+    _centerShaderProjection(flipY, out) {
+        Camera.applyShaderProjectionTransform(this._centerProjection(), out, flipY, this.device.isWebGPU);
+
+        // reverse-z: the depth of a built-in projection is computed from the clip planes, which
+        // keeps the far plane in place with a small near clip and a large far clip, while a
+        // projection the application calculates is reversed from its own terms
+        if (this.reverseZActive) {
+            if (this.calculateProjection) {
+                Camera.reverseClipDepth(out, out);
+            } else {
+                Camera.setReverseZDepth(out, this.projection === PROJECTION_PERSPECTIVE, this.nearClip, this.farClip);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Evaluates the inverse view matrix of the combined (VIEW_CENTER) view, the way the renderer
+     * uses it: from {@link Camera#calculateTransform} when set, otherwise from the world position
+     * and rotation of the camera's node, without its scale.
+     *
+     * @param {Mat4} out - Receives the matrix.
+     * @returns {Mat4} The out matrix.
+     * @ignore
+     */
+    _centerViewInverse(out) {
+        if (this.calculateTransform) {
+            this.calculateTransform(out, VIEW_CENTER);
+        } else {
+            out.setTRS(this._node.getPosition(), this._node.getRotation(), Vec3.ONE);
+        }
+        return out;
+    }
+
+    /**
      * Updates {@link Camera#frustum} for the camera's current transform and projection, for
      * visibility culling. Uses the combined (VIEW_CENTER) view; XR cameras delegate to
      * {@link Camera#updateXrFrustum}. Honors the {@link Camera#calculateProjection} and
@@ -1086,21 +1252,9 @@ class Camera {
             return;
         }
 
-        const projMat = this.projectionMatrix;
-        if (this.calculateProjection) {
-            this.calculateProjection(projMat, VIEW_CENTER);
-        }
-
-        if (this.calculateTransform) {
-            this.calculateTransform(_frustumViewInvMat, VIEW_CENTER);
-        } else {
-            const pos = this._node.getPosition();
-            const rot = this._node.getRotation();
-            _frustumViewInvMat.setTRS(pos, rot, Vec3.ONE);
-        }
-        _frustumViewMat.copy(_frustumViewInvMat).invert();
-
-        _frustumViewProjMat.mul2(projMat, _frustumViewMat);
+        const projMat = this._centerProjection();
+        const viewMat = this._centerViewInverse(_frustumViewMat).invert();
+        _frustumViewProjMat.mul2(projMat, viewMat);
         this.frustum.setFromMat4(_frustumViewProjMat);
     }
 

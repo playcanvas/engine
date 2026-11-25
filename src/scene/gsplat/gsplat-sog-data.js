@@ -18,6 +18,18 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCenters.js';
 import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
 
+/**
+ * A holder's handle on its source textures, which may be shared with other holders. Issued by the
+ * texture cache of the framework-level SOG parsers.
+ *
+ * @typedef {object} GSplatTextureHandle
+ * @property {() => void} release - Releases the textures; each is destroyed once nothing holds it.
+ * Calling it again does nothing.
+ * @property {() => void} releaseSource - Drops the CPU-side source of the textures this holder
+ * was the first to hold; the first holder of a texture decides for all that share it.
+ * @ignore
+ */
+
 const SH_C0 = 0.28209479177387814;
 
 const readImageDataAsync = (texture) => {
@@ -213,6 +225,17 @@ class GSplatSogData {
     blind = [];
 
     /**
+     * Handle on the source textures, set by the parser when it takes them from a shared texture
+     * cache. When set, {@link GSplatSogData#destroy} releases the handle instead of destroying the
+     * textures, and the cache destroys each texture once nothing holds it, so several SOG files
+     * can share one texture (for example one SH palette). When null, this data owns its source
+     * textures and destroys them.
+     *
+     * @type {GSplatTextureHandle|null}
+     */
+    textureHandle = null;
+
+    /**
      * V2/V3 codebook LUT (256x1 RGBA32F): .r = scales, .g = sh0, .b = shN, .a unused.
      * Built from meta codebooks in prepareCodebook(). Null for V1 assets.
      *
@@ -250,14 +273,20 @@ class GSplatSogData {
     shBands = 0;
 
     _destroyGpuResources() {
-        this.means_l?.destroy();
-        this.means_u?.destroy();
-        this.quats?.destroy();
-        this.scales?.destroy();
-        this.sh0?.destroy();
-        this.sh_centroids?.destroy();
-        this.sh_labels?.destroy();
-        this.blind.forEach(t => t.destroy());
+        if (this.textureHandle) {
+            // shared textures: the cache destroys them once their last holder releases them.
+            // Releasing the handle again does nothing, so destroy() stays safe to repeat.
+            this.textureHandle.release();
+        } else {
+            this.means_l?.destroy();
+            this.means_u?.destroy();
+            this.quats?.destroy();
+            this.scales?.destroy();
+            this.sh0?.destroy();
+            this.sh_centroids?.destroy();
+            this.sh_labels?.destroy();
+            this.blind.forEach(t => t.destroy());
+        }
         this.codebookTexture?.destroy();
         this.codebookTexture = null;
     }

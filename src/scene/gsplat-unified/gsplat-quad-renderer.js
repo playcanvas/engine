@@ -214,7 +214,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
      * @private
      */
     _injectFormatChunks() {
-        const chunks = this.device.isWebGPU ? this._material.shaderChunks.wgsl : this._material.shaderChunks.glsl;
+        const chunks = this._material.shaderChunks[this.device.shaderLanguage];
         const wbFormat = this.workBuffer.format;
 
         // Use work buffer format for declarations and read code

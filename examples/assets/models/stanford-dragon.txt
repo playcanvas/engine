@@ -1,0 +1,16 @@
+Model Information:
+* title:	Stanford Dragon
+* source:	https://graphics.stanford.edu/data/3Dscanrep/
+* author:	Stanford University Computer Graphics Laboratory
+
+Model License:
+* license type:	The Stanford 3D Scanning Repository terms (https://graphics.stanford.edu/data/3Dscanrep/)
+* requirements:	The source must be acknowledged. Free to use for research and to redistribute for free.
+	Not for commercial use, or in a product for sale, without Stanford's permission. The dragon must
+	not be animated, morphed, put through Boolean operations, or shown breaking, exploding or melting.
+
+Modifications:
+* stanford-dragon.glb is dragon_vrip_res2.ply from dragon_recon.tar.gz, the repository's own
+  decimation of the reconstruction, smoothed, centered on the origin and given a material in Blender.
+* stanford-dragon-draco.glb is the same scene exported by Blender with Draco compression.
+* stanford-dragon-meshopt.glb is stanford-dragon.glb compressed with gltfpack 1.2 -cc.

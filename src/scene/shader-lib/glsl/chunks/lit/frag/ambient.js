@@ -14,6 +14,9 @@ export default /* glsl */`
 #endif
 
 void addAmbient(vec3 worldNormal) {
+
+    vec3 ambient = vec3(0.0);
+
     #ifdef LIT_AMBIENT_SOURCE == AMBIENTSH
 
         vec3 n = cubeMapRotate(worldNormal);
@@ -28,7 +31,7 @@ void addAmbient(vec3 worldNormal) {
             ambientSH[7] * (3.0 * n.z * n.z - 1.0) +
             ambientSH[8] * (n.x * n.x - n.y * n.y);
 
-        dDiffuseLight += processEnvironment(max(color, vec3(0.0)));
+        ambient = processEnvironment(max(color, vec3(0.0)));
 
     #endif
 
@@ -39,14 +42,16 @@ void addAmbient(vec3 worldNormal) {
 
         vec4 raw = texture2D({LIT_ENV_ATLAS}, uv);
         vec3 linear = {ambientDecode}(raw);
-        dDiffuseLight += processEnvironment(linear);
+        ambient = processEnvironment(linear);
 
     #endif
 
     #if LIT_AMBIENT_SOURCE == CONSTANT
 
-        dDiffuseLight += light_globalAmbient;
+        ambient = light_globalAmbient;
 
     #endif
+
+    dDiffuseLight += modifyAmbient(ambient, worldNormal);
 }
 `;

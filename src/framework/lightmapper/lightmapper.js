@@ -49,6 +49,10 @@ import { RenderPassShadowLocalNonClustered } from '../../scene/renderer/render-p
  * @import { ForwardRenderer } from '../../scene/renderer/forward-renderer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Scene } from '../../scene/scene.js'
+ * @import { ShadowMapCache } from '../../scene/renderer/shadow-map-cache.js'
+ * @import { ShadowRenderer } from '../../scene/renderer/shadow-renderer.js'
+ * @import { ShadowRendererDirectional } from '../../scene/renderer/shadow-renderer-directional.js'
+ * @import { ShadowRendererLocal } from '../../scene/renderer/shadow-renderer-local.js'
  */
 
 const MAX_LIGHTMAP_SIZE = 2048;
@@ -80,7 +84,33 @@ class Lightmapper {
         this.scene = scene;
         this.renderer = renderer;
         this.assets = assets;
-        this.shadowMapCache = renderer.shadowMapCache;
+
+        // baking renders the shadows of all light types, so both shadows features must be installed
+        Debug.assert(renderer._shadowRendererDirectional && renderer._shadowRendererLocal, 'The lightmapper needs the directional and local shadows features to be installed');
+
+        /**
+         * @type {ShadowMapCache}
+         * @private
+         */
+        this.shadowMapCache = /** @type {ShadowMapCache} */ (renderer.shadowMapCache);
+
+        /**
+         * @type {ShadowRenderer}
+         * @private
+         */
+        this.shadowRenderer = /** @type {ShadowRenderer} */ (renderer.shadowRenderer);
+
+        /**
+         * @type {ShadowRendererLocal}
+         * @private
+         */
+        this.shadowRendererLocal = /** @type {ShadowRendererLocal} */ (renderer._shadowRendererLocal);
+
+        /**
+         * @type {ShadowRendererDirectional}
+         * @private
+         */
+        this.shadowRendererDirectional = /** @type {ShadowRendererDirectional} */ (renderer._shadowRendererDirectional);
 
         this._tempSet = new Set();
         this._initCalled = false;
@@ -199,8 +229,8 @@ class Lightmapper {
             // render pass for clustered local light shadows
             this.shadowLocalClusteredPass = new RenderPassShadowLocalClustered(
                 device,
-                this.renderer.shadowRenderer,
-                this.renderer._shadowRendererLocal
+                this.shadowRenderer,
+                this.shadowRendererLocal
             );
         }
     }
@@ -562,7 +592,7 @@ class Lightmapper {
         // bake nodes
         if (bakeNodes.length > 0) {
 
-            this.renderer.shadowRenderer.frameUpdate();
+            this.shadowRenderer.frameUpdate();
 
             // disable lightmapping
             const passCount = mode === BAKE_COLORDIR ? 2 : 1;
@@ -840,15 +870,15 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRendererDirectional.prepareShadowMap(light, this.camera);
-                this.renderer._shadowRendererDirectional.cull(light, comp, this.camera, casters);
+                this.shadowRendererDirectional.prepareShadowMap(light, this.camera);
+                this.shadowRendererDirectional.cull(light, comp, this.camera, casters);
 
-                const shadowPass = this.renderer._shadowRendererDirectional.getLightRenderPass(light, this.camera);
+                const shadowPass = this.shadowRendererDirectional.getLightRenderPass(light, this.camera);
                 shadowPass?.render();
 
             } else {
 
-                this.renderer._shadowRendererLocal.cull(light, comp, casters);
+                this.shadowRendererLocal.cull(light, comp, casters);
 
                 if (isClustered) {
                     // Clustered mode: use a single render pass for all faces to the shadow atlas
@@ -863,7 +893,7 @@ class Lightmapper {
                     for (let face = 0; face < faceCount; face++) {
                         const renderPass = new RenderPassShadowLocalNonClustered(
                             this.device,
-                            this.renderer.shadowRenderer,
+                            this.shadowRenderer,
                             light,
                             face,
                             applyVsm

@@ -23,6 +23,7 @@ import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../glsl/chunks/chunk-validation.js';
 import { Debug } from '../../../core/debug.js';
 import { ShaderChunks } from '../shader-chunks.js';
+import { FEATURE_AREA_LIGHTS, FEATURE_LOCAL_SHADOWS, hasFeature } from '../../features/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -111,9 +112,18 @@ class LitShader {
 
         // shader language
         const userChunks = options.shaderChunks;
-        this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        this.shaderLanguage = (device.shaderLanguage === SHADERLANGUAGE_WGSL && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
 
         if (device.isWebGPU && this.shaderLanguage === SHADERLANGUAGE_GLSL) {
+
+            // GLSL-only chunk overrides force the whole lit shader to GLSL (LitMaterial without WGSL
+            // passes allowWGSL = false and reports its own cause)
+            Debug.call(() => {
+                if (allowWGSL && userChunks && !userChunks.useWGSL) {
+                    Debug.deprecated(`Shader chunk overrides [${[...userChunks.glsl.keys()].join(', ')}] are provided only in GLSL, so the whole lit shader is generated in GLSL and transpiled to WGSL on WebGPU. GLSL shaders on WebGPU are deprecated and will be removed in Engine V3. Provide WGSL versions of the chunk overrides using material.shaderChunks.wgsl.`);
+                }
+            });
+
             if (!device.hasTranspilers) {
                 Debug.errorOnce('Cannot use GLSL shader on WebGPU without transpilers', {
                     litShader: this
@@ -450,6 +460,7 @@ class LitShader {
 
             // shadows
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
+                Debug.assert(hasFeature(this.device, FEATURE_LOCAL_SHADOWS), 'Clustered lighting with shadows needs the local shadows feature to be installed. Install it, or set scene.lighting.shadowsEnabled to false.');
                 const clusteredShadowInfo = shadowTypeInfo.get(options.clusteredLightingShadowType);
                 fDefines.set('CLUSTER_SHADOWS', true);
                 fDefines.set(`SHADOW_KIND_${clusteredShadowInfo.kind}`, true);
@@ -517,6 +528,11 @@ class LitShader {
             if (castShadow) {
                 fDefines.set(`SHADOW_KIND_${shadowInfo.kind}`, true);
                 if (lightType === LIGHTTYPE_DIRECTIONAL) fDefines.set('SHADOW_DIRECTIONAL', true);
+
+                // directional and local lights use different PCSS code, which is included separately
+                if (light._isPcss) {
+                    fDefines.set(lightType === LIGHTTYPE_DIRECTIONAL ? 'SHADOW_KIND_PCSS_DIRECTIONAL' : 'SHADOW_KIND_PCSS_LOCAL', true);
+                }
             }
         }
     }
@@ -529,6 +545,7 @@ class LitShader {
         const hasAreaLights = clusteredAreaLights || options.lights.some((light) => {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
+        Debug.assert(!hasAreaLights || hasFeature(this.device, FEATURE_AREA_LIGHTS), 'Area lights need the area lights feature to be installed. Install it, or set scene.lighting.areaLightsEnabled to false.');
         const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
         // parallax mapping transforms the view direction to tangent space, so it needs the TBN matrix
         // as well

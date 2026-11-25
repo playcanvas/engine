@@ -13,7 +13,7 @@ import {
     PARALLAX_OCCLUSION,
     PARALLAX_OFFSET,
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH, SHADERDEF_CLIP,
-    FOG_NONE,
+    FOG_NONE, FRESNEL_SCHLICK,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
     REFLECTIONSRC_PLANAR,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
@@ -269,7 +269,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.useAnisotropy = stdMat.enableGGXSpecular && (stdMat.anisotropyIntensity > 0 || !!stdMat.anisotropyMap);
-        options.litOptions.fresnelModel = stdMat.fresnelModel;
+        options.litOptions.fresnelModel = FRESNEL_SCHLICK;
         // the refraction without the scene color samples the reflections with the refracted ray,
         // which a planar reflection, holding only the mirrored scene, cannot provide
         const reflectionSource = options.litOptions.reflectionSource;

@@ -2,7 +2,6 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
@@ -20,17 +19,13 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
-    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
+    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
 import { LightSlotUniforms } from '../lighting/light-slot-uniforms.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
-import { ShadowMapCache } from './shadow-map-cache.js';
-import { ShadowRendererLocal } from './shadow-renderer-local.js';
-import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
-import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 import { Culler } from './culler.js';
@@ -53,6 +48,10 @@ import { MAX_CLIP_PLANES } from '../clip-planes.js';
  * @import { Scene } from '../scene.js'
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
+ * @import { ShadowMapCache } from './shadow-map-cache.js'
+ * @import { ShadowRenderer } from './shadow-renderer.js'
+ * @import { ShadowRendererDirectional } from './shadow-renderer-directional.js'
+ * @import { ShadowRendererLocal } from './shadow-renderer-local.js'
  */
 
 let _skinUpdateIndex = 0;
@@ -94,6 +93,7 @@ const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
 const _tempProjMat4 = new Mat4();
 const _tempProjMat5 = new Mat4();
+const _tempViewProjMat = new Mat4();
 const _tempSet = new Set();
 
 const _tempMeshInstances = [];
@@ -343,6 +343,37 @@ class Renderer {
     gsplatDirector = null;
 
     /**
+     * The shadow map cache, created when the shadows feature is installed.
+     *
+     * @type {ShadowMapCache|null}
+     */
+    shadowMapCache = null;
+
+    /**
+     * The shadow renderer, created when the shadows feature is installed. Null without it, and
+     * lights are then rendered without shadows.
+     *
+     * @type {ShadowRenderer|null}
+     */
+    shadowRenderer = null;
+
+    /**
+     * The renderer of the shadows of omni and spot lights, created when the shadows feature is
+     * installed.
+     *
+     * @type {ShadowRendererLocal|null}
+     */
+    _shadowRendererLocal = null;
+
+    /**
+     * The renderer of the shadows of directional lights, created when the shadows feature is
+     * installed.
+     *
+     * @type {ShadowRendererDirectional|null}
+     */
+    _shadowRendererDirectional = null;
+
+    /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
@@ -361,19 +392,12 @@ class Renderer {
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(graphicsDevice);
 
-        // shadows
-        this.shadowMapCache = new ShadowMapCache();
-        this.shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
-        this._shadowRendererLocal = new ShadowRendererLocal(this, this.shadowRenderer);
-        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
-
         // visibility culling (lights, mesh instances, shadow casters)
         this.culler = new Culler(this);
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
-            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
-                this._shadowRendererLocal, this.lightTextureAtlas);
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.lightTextureAtlas);
         }
 
         // timing
@@ -439,12 +463,12 @@ class Renderer {
     }
 
     destroy() {
-        this.shadowRenderer.destroy();
+        this.shadowRenderer?.destroy();
         this.shadowRenderer = null;
         this._shadowRendererLocal = null;
         this._shadowRendererDirectional = null;
 
-        this.shadowMapCache.destroy();
+        this.shadowMapCache?.destroy();
         this.shadowMapCache = null;
 
         this._renderPassUpdateClustered?.destroy();
@@ -512,16 +536,16 @@ class Renderer {
             camera.updateViewTransforms();
         } else {
 
-            // Projection Matrix
-            let projMat = camera.projectionMatrix;
-            if (camera.calculateProjection) {
-                camera.calculateProjection(projMat, VIEW_CENTER);
-            }
-            let projMatSkybox = camera.getProjectionMatrixSkybox();
+            // Projection Matrix, including the flipY, the depth range and reverse-z
+            let projMat = camera._centerShaderProjection(flipY, _tempProjMat0);
 
-            const webgpu = this.device.isWebGPU;
-            projMat = Camera.applyShaderProjectionTransform(projMat, _tempProjMat0, flipY, webgpu);
-            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, webgpu);
+            // the skybox projection is always a built-in perspective one
+            let projMatSkybox = camera.getProjectionMatrixSkybox();
+            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, this.device.isWebGPU);
+            const reverseZ = camera.reverseZActive;
+            if (reverseZ) {
+                Camera.setReverseZDepth(projMatSkybox, true, camera.nearClip, camera.farClip);
+            }
 
             // camera jitter
             const { jitter } = camera;
@@ -559,13 +583,7 @@ class Renderer {
             this.projSkyboxId.setValue(projMatSkybox.data);
 
             // ViewInverse Matrix
-            if (camera.calculateTransform) {
-                camera.calculateTransform(viewInvMat, VIEW_CENTER);
-            } else {
-                const pos = camera._node.getPosition();
-                const rot = camera._node.getRotation();
-                viewInvMat.setTRS(pos, rot, Vec3.ONE);
-            }
+            camera._centerViewInverse(viewInvMat);
             this.viewInvId.setValue(viewInvMat.data);
 
             // View Matrix
@@ -586,7 +604,9 @@ class Renderer {
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
 
-            camera.frustum.setFromMat4(viewProjMat);
+            // with reverse-z, from the view projection with its depth reversed back to the standard
+            // one, so that the frustum planes are those of a camera rendering without it
+            camera.frustum.setFromMat4(reverseZ ? Camera.reverseClipDepth(viewProjMat, _tempViewProjMat) : viewProjMat);
         }
 
         // set for all passes including XR, to keep the uniform fresh per render pass - it is

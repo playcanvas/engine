@@ -231,10 +231,10 @@ class GSplatVaryings {
      * @private
      */
     _generateChunks() {
-        const isWebGPU = this._device.isWebGPU;
-        const types = isWebGPU ? WGSL_TYPES : GLSL_TYPES;
-        const declVSTemplate = isWebGPU ? wgslVaryingDeclVS : glslVaryingDeclVS;
-        const declPSTemplate = isWebGPU ? wgslVaryingDeclPS : glslVaryingDeclPS;
+        const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
+        const types = wgsl ? WGSL_TYPES : GLSL_TYPES;
+        const declVSTemplate = wgsl ? wgslVaryingDeclVS : glslVaryingDeclVS;
+        const declPSTemplate = wgsl ? wgslVaryingDeclPS : glslVaryingDeclPS;
 
         const vs = [];
         const ps = [];
@@ -256,7 +256,7 @@ class GSplatVaryings {
             vs.push(sub(declVSTemplate));
             ps.push(sub(declPSTemplate));
 
-            if (isWebGPU) {
+            if (wgsl) {
                 flush.push(sub(wgslVaryingFlushVS));
                 cs.push(sub(wgslVaryingDeclCS));
 
@@ -282,7 +282,7 @@ class GSplatVaryings {
             gsplatUserVaryingsVS: vs.join(''),
             gsplatUserVaryingsPS: ps.join('')
         };
-        if (isWebGPU) {
+        if (wgsl) {
             chunks.gsplatUserVaryingsFlushVS = flush.join('');
             chunks.gsplatUserVaryingsCS = cs.join('');
             chunks.gsplatUserCacheWriteCS = cacheWrite.join('');
@@ -300,8 +300,8 @@ class GSplatVaryings {
      * @ignore
      */
     apply(material) {
-        const isWebGPU = this._device.isWebGPU;
-        const chunks = material.getShaderChunks(isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
+        const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
+        const chunks = material.getShaderChunks(wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
 
         // the define gates the include of the generated chunks in the engine shaders
         material.setDefine('GSPLAT_USER_VARYINGS', this._streams.length > 0);
@@ -312,7 +312,7 @@ class GSplatVaryings {
                 chunks.set(name, sources[name]);
             }
         } else {
-            const names = isWebGPU ? WGSL_CHUNK_NAMES : GLSL_CHUNK_NAMES;
+            const names = wgsl ? WGSL_CHUNK_NAMES : GLSL_CHUNK_NAMES;
             names.forEach(name => chunks.delete(name));
         }
 

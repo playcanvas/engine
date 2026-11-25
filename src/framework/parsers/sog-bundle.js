@@ -1,11 +1,13 @@
-import { Asset } from '../../framework/asset/asset.js';
+import { Debug } from '../../core/debug.js';
 import { getFetchCredentials } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogData } from '../../scene/gsplat/gsplat-sog-data.js';
 import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
+import { checkSharedSogPalette, getSogTextureCache } from './sog-texture-cache.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
  * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
@@ -188,42 +190,36 @@ class SogBundleParser {
     async load(url, callback, asset) {
         const gsplatCentersEnabledAtLoad = this.app.scene?.gsplatCentersEnabled !== false;
 
+        // the handle on the referenced textures, and the textures by file name
+        let handle = null;
+        const refs = new Map();
+        const releaseAll = () => handle?.release();
+
+        // Set once `data` holds the texture handles: from then on they are released only through
+        // data.destroy(), which the resource calls in its (ref-count deferred) destroy, as the
+        // unified world may still be rendering from them when the asset unloads.
+        let ownedByData = false;
+
+        // the data and the resource that, once created, holds it and with it the textures (except
+        // when decompressing); until then a throw (for example a malformed meta) releases them
+        let data = null;
+        let resource = null;
+
         try {
-            const { assets } = this.app;
+            const cache = getSogTextureCache(this);
 
             // Track if asset was unloaded during async loading
             let unloaded = false;
 
-            // Set once the GSplatSogResource takes ownership of the textures: from then on they
-            // may only be destroyed through the resource's (ref-count deferred) destroy, as the
-            // unified world may still be rendering from them when the asset unloads.
-            let ownedByResource = false;
-
-            // load referenced textures
-            const textures = {};
-
-            // When the parent gsplat asset unloads, remove child texture assets from the
-            // registry. Destroy their texture resources only while the load is still in flight
-            // (cancellation); once owned by the resource, destruction is left to it. Registered
-            // before any await so an unload during the download or texture loading is caught.
+            // When the parent gsplat asset unloads while the textures still load (cancellation),
+            // release them; the texture cache destroys a texture once nothing else holds it.
+            // Registered before any await so an unload during the download or texture loading is
+            // caught.
             asset.once('unload', () => {
                 unloaded = true;
-
-                Object.values(textures).forEach((t) => {
-                    // remove from registry
-                    assets.remove(t);
-
-                    if (!ownedByResource) {
-                        // destroy texture resource
-                        t.unload();
-                    } else {
-                        // The resource destroys the textures (possibly deferred), but they stay
-                        // in the loader cache as t.unload() is not called. Clear the cache
-                        // entries so a later load of the same urls recreates the textures
-                        // instead of reusing the cached, destroyed ones.
-                        assets._loader.clearCache(t.getFileUrl(), t.type);
-                    }
-                });
+                if (!ownedByData) {
+                    releaseAll();
+                }
             });
 
             const arrayBuffer = await downloadArrayBuffer(url, asset);
@@ -269,54 +265,25 @@ class SogBundleParser {
                 ...(meta.blind ?? []).map(t => t.files[0])
             ];
 
-            const promises = [];
-            for (const filename of filenames) {
+            // one handle on all textures from the app's texture cache: a url another file already
+            // holds is shared, not loaded again. The texture cache drops the encoded bytes of an
+            // embedded file (views into the downloaded zip arrayBuffer) once it is decoded, so
+            // the whole archive buffer can be garbage collected.
+            const unique = [...new Set(filenames)];
+            handle = cache.acquire(unique.map((filename) => {
                 const file = files.find(f => f.filename === filename);
-                let texture;
-                if (file) {
+                return file ?
                     // file is embedded
-                    texture = new Asset(filename, 'texture', {
-                        url: `${url.load}/${filename}`,
-                        filename,
-                        contents: file.data
-                    }, {
-                        mipmaps: false
-                    }, {
-                        crossOrigin: 'anonymous'
-                    });
-                } else {
+                    { url: `${url.load}/${filename}`, filename, contents: file.data } :
                     // file doesn't exist in bundle, treat it as a url
-                    const url = (new URL(filename, new URL(filename, window.location.href).toString())).toString();
-                    texture = new Asset(filename, 'texture', {
-                        url,
-                        filename
-                    }, {
-                        mipmaps: false
-                    }, {
-                        crossOrigin: 'anonymous'
-                    });
-                }
+                    { url: (new URL(filename, new URL(filename, window.location.href).toString())).toString(), filename };
+            }));
+            unique.forEach((filename, i) => refs.set(filename, handle.entries[i]));
 
-                const promise = new Promise((resolve, reject) => {
-                    texture.on('load', () => resolve(null));
-                    texture.on('error', err => reject(err));
-                });
-
-                this.app.assets.add(texture);
-                textures[filename] = texture;
-                promises.push(promise);
-            }
-
-            Object.values(textures).forEach(t => this.app.assets.load(t));
-
-            const results = await Promise.allSettled(promises);
+            const results = await Promise.allSettled(filenames.map(filename => refs.get(filename).promise));
 
             if (this._shouldAbort(asset, unloaded)) {
-                // Clean up texture assets that were created during the async load
-                Object.values(textures).forEach((t) => {
-                    assets.remove(t);
-                    t.unload();
-                });
+                releaseAll();
                 callback(null, null);
                 return;
             }
@@ -324,41 +291,32 @@ class SogBundleParser {
             // a texture that failed to load has no resource, so fail the whole load
             const failed = results.findIndex(r => r.status === 'rejected');
             if (failed !== -1) {
-                Object.values(textures).forEach((t) => {
-                    assets.remove(t);
-                    t.unload();
-                });
+                releaseAll();
                 callback(`Error loading gsplat: failed to load ${filenames[failed]} in ${url.original}: ${results[failed].reason}`);
                 return;
             }
 
-            // Release the encoded source bytes held by the embedded texture assets. These are
-            // views into the downloaded zip arrayBuffer; once the textures have been decoded and
-            // uploaded, dropping them lets the whole archive buffer be garbage collected. The
-            // decoded ImageBitmap retained by each texture (for re-upload on device context loss)
-            // is unaffected.
-            Object.values(textures).forEach((t) => {
-                if (t.file) {
-                    t.file.contents = null;
-                }
-            });
+            const textureOf = filename => refs.get(filename)?.texture;
+            Debug.call(() => checkSharedSogPalette(refs.get(meta.shN?.files[0]), meta, url.original));
 
             // construct the gsplat resource
             const decompress = asset.data?.decompress;
 
-            const data = new GSplatSogData();
+            data = new GSplatSogData();
             data.url = url.original;
             data.meta = meta;
             data.numSplats = meta.count;
-            data.means_l = textures[meta.means.files[0]].resource;
-            data.means_u = textures[meta.means.files[1]].resource;
-            data.quats = textures[meta.quats.files[0]].resource;
-            data.scales = textures[meta.scales.files[0]].resource;
-            data.sh0 = textures[meta.sh0.files[0]].resource;
-            data.sh_centroids = textures[meta.shN?.files[0]]?.resource;
-            data.sh_labels = textures[meta.shN?.files[1]]?.resource;
-            data.blind = (meta.blind ?? []).map(t => textures[t.files[0]].resource);
+            data.means_l = textureOf(meta.means.files[0]);
+            data.means_u = textureOf(meta.means.files[1]);
+            data.quats = textureOf(meta.quats.files[0]);
+            data.scales = textureOf(meta.scales.files[0]);
+            data.sh0 = textureOf(meta.sh0.files[0]);
+            data.sh_centroids = textureOf(meta.shN?.files[0]);
+            data.sh_labels = textureOf(meta.shN?.files[1]);
+            data.blind = (meta.blind ?? []).map(t => textureOf(t.files[0]));
             data.shBands = GSplatSogData.calcBands(data.sh_centroids?.width);
+            data.textureHandle = handle;
+            ownedByData = true;
 
             if (!decompress) {
                 if (this._shouldAbort(asset, unloaded)) {
@@ -387,14 +345,15 @@ class SogBundleParser {
             }
 
             const prepareCenters = gsplatCentersEnabledAtLoad;
-            const resource = decompress ?
-                new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
-                new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+            if (decompress) {
+                // the decompressed data is a copy, so the textures are released straight away
+                const decompressed = await data.decompress();
+                data.destroy();
+                resource = new GSplatResource(this.app.graphicsDevice, decompressed, { prepareCenters });
+            } else {
+                resource = new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+            }
             resource.antiAlias = data.meta.model === 'antialiased';
-
-            // the sog resource now owns the textures in `data` (when decompressing, the
-            // decompressed data was copied out instead and the textures stay with the assets)
-            ownedByResource = !decompress;
 
             if (this._shouldAbort(asset, unloaded)) {
                 resource.destroy();
@@ -404,6 +363,11 @@ class SogBundleParser {
 
             callback(null, resource);
         } catch (err) {
+            if (!resource) {
+                // handles are released once, so this is safe after a data.destroy() too
+                data?.destroy();
+                releaseAll();
+            }
             callback(err);
         }
     }

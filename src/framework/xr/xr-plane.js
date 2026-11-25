@@ -178,6 +178,7 @@ class XrPlane extends EventHandler {
      * const transform = new Mat4();
      * const vecA = new Vec3();
      * const vecB = new Vec3();
+     * const wire = new WireRenderer(app);
      *
      * // update Mat4 to plane position and rotation
      * transform.setTRS(plane.getPosition(), plane.getRotation(), Vec3.ONE);
@@ -192,7 +193,7 @@ class XrPlane extends EventHandler {
      *     transform.transformPoint(vecB, vecB);
      *
      *     // render line
-     *     app.drawLine(vecA, vecB, Color.WHITE);
+     *     wire.line(vecA, vecB);
      * }
      */
     get points() {

@@ -18,6 +18,7 @@ import {
     RESOLUTION_AUTO,
     RenderComponentSystem,
     SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL,
     StandardMaterial,
     TEXTURETYPE_RGBP,
     TONEMAP_ACES,
@@ -55,9 +56,7 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType],
-    glslangUrl: './assets/wasm/glslang/glslang.js',
-    twgslUrl: './assets/wasm/twgsl/twgsl.js'
+    deviceTypes: [deviceType]
 };
 
 const device = await createGraphicsDevice(canvas, gfxOptions);
@@ -118,12 +117,22 @@ function createPrimitive(primitiveType, position, scale, assetManifest, id = fal
 
     // Do a small update to a chunk to generate unique shader each time, to avoid any shader compilation caching
     if (id) {
+        const random = Math.random();
         material.getShaderChunks(SHADERLANGUAGE_GLSL).set(
             'viewDirPS',
             `
                     void getViewDir() {
                         dViewDirW = normalize(view_position - vPositionW);
-                        dViewDirW.x += 0.00001 * ${Math.random()};
+                        dViewDirW.x += 0.00001 * ${random};
+                    }
+                `
+        );
+        material.getShaderChunks(SHADERLANGUAGE_WGSL).set(
+            'viewDirPS',
+            `
+                    fn getViewDir() {
+                        dViewDirW = normalize(uniform.view_position - vPositionW);
+                        dViewDirW.x += 0.00001 * ${random};
                     }
                 `
         );

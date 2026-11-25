@@ -9,11 +9,6 @@ export default /* glsl */`
     #define LIT_CODE_LIGHTS_SPOT
 #endif
 
-#ifdef AREA_LIGHTS
-    uniform highp sampler2D areaLightsLutTex1;
-    uniform highp sampler2D areaLightsLutTex2;
-#endif
-
 #ifdef LIT_LIGHTING
     #include "lightDiffuseLambertPS"
 
@@ -39,9 +34,14 @@ export default /* glsl */`
     #include "shadowPCF5PS"
 #endif
 
-#if defined(SHADOW_KIND_PCSS)
+// PCSS of local lights
+#if defined(SHADOW_KIND_PCSS_LOCAL)
     #include "linearizeDepthPS"
     #include "shadowPCSSPS"
+#endif
+
+// PCSS of directional lights
+#if defined(SHADOW_KIND_PCSS_DIRECTIONAL)
     #include "shadowSoftPS"
 #endif
 

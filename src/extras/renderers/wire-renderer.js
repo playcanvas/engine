@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { VIEW_CENTER } from '../../scene/constants.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -22,7 +21,6 @@ const _head = new Vec3();
 const _lightDir = new Vec3();
 const _mat = new Mat4();
 const _view = new Mat4();
-const _proj = new Mat4();
 const _color = new Color();
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -409,7 +407,7 @@ class WireRenderer {
 
         // pass user data straight through when it needs no transform
         if (!this.transform) {
-            this.app.drawLines(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
+            this._scene.drawLines(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
             return;
         }
 
@@ -433,7 +431,7 @@ class WireRenderer {
             'WireRenderer#linesPacked colors must hold four values per position, or be undefined.');
 
         if (!this.transform) {
-            this.app.drawLineArrays(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
+            this._scene.drawLineArrays(positions, colors ?? this.color, this.depthTest, this.layer ?? undefined);
             return;
         }
 
@@ -862,25 +860,17 @@ class WireRenderer {
         const camera = /** @type {CameraComponent} */ (source);
         if (camera.projectionMatrix) {
 
-            // both matrices are built the way the renderer builds them, so the shape drawn is the
+            // both matrices are built the way the renderer builds them (see
+            // Camera#_centerProjection and Camera#_centerViewInverse), so the shape drawn is the
             // volume the camera would actually render. In particular the view transform is
             // scale-free, and both calculateProjection and calculateTransform are honored, which
             // matters for a camera under a scaled parent or an oblique / reflection camera.
             // Reading camera.viewMatrix instead is not an option: it is only refreshed for a
             // camera that is being rendered, and visualizing a camera you are not looking
             // through is the point of this function.
-            const projection = _proj.copy(camera.projectionMatrix);
-            camera.calculateProjection?.(projection, VIEW_CENTER);
-
-            if (camera.calculateTransform) {
-                camera.calculateTransform(_view, VIEW_CENTER);
-            } else {
-                const node = camera.entity;
-                _view.setTRS(node.getPosition(), node.getRotation(), Vec3.ONE);
-            }
-            _view.invert();
-
-            _mat.mul2(projection, _view);
+            const cam = camera.camera;
+            const viewMat = cam._centerViewInverse(_view).invert();
+            _mat.mul2(cam._centerProjection(), viewMat);
         } else {
             _mat.copy(/** @type {Mat4} */ (source));
         }

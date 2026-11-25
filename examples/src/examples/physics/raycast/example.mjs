@@ -24,6 +24,7 @@ import {
     TextureHandler,
     Vec3,
     WasmModule,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 
@@ -77,6 +78,9 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+// renderer for the debug lines
+const wire = new WireRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -196,7 +200,8 @@ app.on('update', (dt) => {
     end.set(10, y, 0);
 
     // Render the ray used in the raycast
-    app.drawLine(start, end, white);
+    wire.color = white;
+    wire.line(start, end);
 
     const result = app.systems.rigidbody.raycastFirst(start, end);
     if (result) {
@@ -204,7 +209,8 @@ app.on('update', (dt) => {
 
         // Render the normal on the surface from the hit point
         temp.copy(result.normal).mulScalar(0.3).add(result.point);
-        app.drawLine(result.point, temp, blue);
+        wire.color = blue;
+        wire.line(result.point, temp);
     }
 
     y = -2 + 1.2 * Math.sin(time);
@@ -212,7 +218,8 @@ app.on('update', (dt) => {
     end.set(10, y, 0);
 
     // Render the ray used in the raycast
-    app.drawLine(start, end, white);
+    wire.color = white;
+    wire.line(start, end);
 
     const results = app.systems.rigidbody.raycastAll(start, end);
     results.forEach((result) => {
@@ -220,7 +227,8 @@ app.on('update', (dt) => {
 
         // Render the normal on the surface from the hit point
         temp.copy(result.normal).mulScalar(0.3).add(result.point);
-        app.drawLine(result.point, temp, blue);
+        wire.color = blue;
+        wire.line(result.point, temp);
     }, this);
 });
 

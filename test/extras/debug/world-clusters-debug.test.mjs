@@ -26,9 +26,8 @@ describe('WorldClustersDebug', function () {
         // minimal stand-in for the parts of the application the visualization uses
         app = new EventHandler();
         app.graphicsDevice = device;
-        app.scene = { defaultDrawLayer: new Layer() };
+        app.scene = { defaultDrawLayer: new Layer(), drawLineArrays: spy() };
         app.renderer = { worldClustersAllocator: { getClusters: () => clusters } };
-        app.drawLineArrays = spy();
 
         layer = new Layer();
         debug = new WorldClustersDebug(app);
@@ -44,14 +43,14 @@ describe('WorldClustersDebug', function () {
 
     it('renders nothing until a layer is set', function () {
         update();
-        expect(app.drawLineArrays.called).to.be.false;
+        expect(app.scene.drawLineArrays.called).to.be.false;
         expect(drawn()).to.have.length(0);
     });
 
     it('draws the grid and adds a single occupancy mesh instance to the draw layer', function () {
         debug.layer = layer;
         update();
-        expect(app.drawLineArrays.calledOnce).to.be.true;
+        expect(app.scene.drawLineArrays.calledOnce).to.be.true;
         expect(drawn()).to.have.length(1);
 
         const instance = drawn()[0];
@@ -76,10 +75,10 @@ describe('WorldClustersDebug', function () {
         expect(instance.visible).to.be.true;
 
         app.renderer.worldClustersAllocator.getClusters = () => null;
-        app.drawLineArrays.resetHistory();
+        app.scene.drawLineArrays.resetHistory();
         update();
         expect(instance.visible).to.be.false;
-        expect(app.drawLineArrays.called).to.be.false;
+        expect(app.scene.drawLineArrays.called).to.be.false;
     });
 
     it('hides the occupancy mesh when the layer is cleared', function () {
@@ -89,9 +88,9 @@ describe('WorldClustersDebug', function () {
 
         debug.layer = null;
         expect(instance.visible).to.be.false;
-        app.drawLineArrays.resetHistory();
+        app.scene.drawLineArrays.resetHistory();
         update();
-        expect(app.drawLineArrays.called).to.be.false;
+        expect(app.scene.drawLineArrays.called).to.be.false;
     });
 
     it('releases its resources and stops updating when destroyed', function () {
@@ -109,8 +108,8 @@ describe('WorldClustersDebug', function () {
         expect(indexBuffer.calledOnce).to.be.true;
         expect(destroyMaterial.calledOnce).to.be.true;
 
-        app.drawLineArrays.resetHistory();
+        app.scene.drawLineArrays.resetHistory();
         update();
-        expect(app.drawLineArrays.called).to.be.false;
+        expect(app.scene.drawLineArrays.called).to.be.false;
     });
 });

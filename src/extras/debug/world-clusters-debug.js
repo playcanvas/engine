@@ -211,7 +211,7 @@ class WorldClustersDebug {
             }
         }
 
-        this._app.drawLineArrays(gridPositions, gridColors);
+        this._app.scene.drawLineArrays(gridPositions, gridColors);
         gridPositions.length = 0;
     }
 
