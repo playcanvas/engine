@@ -533,15 +533,17 @@ describe('GlbParser', function () {
             });
         };
 
-        // reads back the color of every vertex from the vertex buffer the parser built
-        const readColors = (result) => {
+        // reads back the color of every vertex from the vertex buffer the parser built, limited to
+        // the given number of components
+        const readColors = (result, numComponents) => {
             const vertexBuffer = result.renders[0].meshes[0].vertexBuffer;
             const element = vertexBuffer.format.elements.find(e => e.name === SEMANTIC_COLOR);
+            expect(element.numComponents).to.be.at.least(numComponents);
             const vertexBytes = new Uint8Array(vertexBuffer.storage);
             const read = [];
             for (let v = 0; v < vertexBuffer.numVertices; v++) {
                 const offset = v * element.stride + element.offset;
-                read.push(Array.from(vertexBytes.subarray(offset, offset + element.numComponents)));
+                read.push(Array.from(vertexBytes.subarray(offset, offset + numComponents)));
             }
             return read;
         };
@@ -549,17 +551,19 @@ describe('GlbParser', function () {
         it('copies a tightly packed uint8 RGB color of every vertex', async function () {
             const result = await parseColoredQuad();
 
-            expect(readColors(result)).to.deep.equal([
+            // only RGB, as on WebGPU the parser widens the color to RGBA
+            expect(readColors(result, 3)).to.deep.equal([
                 [10, 20, 30], [40, 50, 60], [70, 80, 90], [100, 110, 120]
             ]);
         });
 
         it('widens a uint8 RGB color to RGBA with opaque alpha on WebGPU', async function () {
-            // WebGPU has no 3-byte vertex format, so the parser widens the color to 4 components
+            // WebGPU has no 3-byte vertex format, so the parser widens the color to 4 components -
+            // forced here for the null device, and already set when the tests run on WebGPU
             app.graphicsDevice.isWebGPU = true;
             const result = await parseColoredQuad();
 
-            expect(readColors(result)).to.deep.equal([
+            expect(readColors(result, 4)).to.deep.equal([
                 [10, 20, 30, 255], [40, 50, 60, 255], [70, 80, 90, 255], [100, 110, 120, 255]
             ]);
         });
