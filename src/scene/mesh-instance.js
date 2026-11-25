@@ -588,6 +588,14 @@ class MeshInstance {
     _aabbMeshVer = -1;
 
     /**
+     * The skin update index of the skin instance the world space bounds were last evaluated for,
+     * or -1 when they do not depend on the skin.
+     *
+     * @private
+     */
+    _aabbSkinVer = -1;
+
+    /**
      * The slot of the mesh instance in the mesh instance storage of the device, or -1 when it has
      * none, see {@link GraphicsDevice#meshInstanceStorage}. Allocated on the first draw with a
      * shader reading it.
@@ -838,6 +846,10 @@ class MeshInstance {
 
             this._mesh = mesh;
 
+            // the bounds version cached for the previous mesh does not apply to this one, whose
+            // version counter can hold the same value
+            this._aabbMeshVer = -1;
+
             if (mesh) {
                 mesh.incRefCount();
             }
@@ -884,32 +896,44 @@ class MeshInstance {
             return this._updateAabbFunc(this._aabb);
         }
 
-        // use local space override aabb if specified
-        let localAabb = this._customAabb;
-        let toWorldSpace = !!localAabb;
+        const { node, _mesh: mesh, _skinInstance: skinInstance, _customAabb: customAabb } = this;
 
-        // otherwise evaluate local aabb
+        // The world space bounds only change when the node moves, the mesh bounds change, or - for a
+        // skinned mesh without custom bounds - the bone matrices are updated (once per frame by the
+        // renderer). Return the cached bounds when none of these changed, so that reading them for
+        // every camera, shadow camera and cascade evaluates them only once.
+        const nodeVer = node._aabbVer;
+        const meshVer = mesh ? mesh._aabbVer : -1;
+        const skinVer = (skinInstance && !customAabb) ? skinInstance._skinUpdateIndex : -1;
+        if (nodeVer === this._aabbVer && meshVer === this._aabbMeshVer && skinVer === this._aabbSkinVer) {
+            return this._aabb;
+        }
+
+        // use local space override aabb if specified, otherwise evaluate local aabb
+        let localAabb = customAabb;
         if (!localAabb) {
 
             localAabb = _tmpAabb;
 
-            if (this.skinInstance) {
+            if (skinInstance) {
 
                 // Initialize local bone AABBs if needed
-                if (!this.mesh.boneAabb) {
+                if (!mesh.boneAabb) {
                     const morphTargets = this._morphInstance ? this._morphInstance.morph._targets : null;
-                    this.mesh._initBoneAabbs(morphTargets);
+                    mesh._initBoneAabbs(morphTargets);
                 }
 
                 // evaluate local space bounds based on all active bones
-                const boneUsed = this.mesh.boneUsed;
+                const boneAabb = mesh.boneAabb;
+                const boneUsed = mesh.boneUsed;
+                const matrices = skinInstance.matrices;
                 let first = true;
 
-                for (let i = 0; i < this.mesh.boneAabb.length; i++) {
+                for (let i = 0; i < boneAabb.length; i++) {
                     if (boneUsed[i]) {
 
                         // transform bone AABB by bone matrix
-                        _tempBoneAabb.setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
+                        _tempBoneAabb.setFromTransformedAabb(boneAabb[i], matrices[i]);
 
                         // add them up
                         if (first) {
@@ -922,35 +946,31 @@ class MeshInstance {
                     }
                 }
 
-                toWorldSpace = true;
-
-            } else if (this.node._aabbVer !== this._aabbVer || this.mesh._aabbVer !== this._aabbMeshVer) {
+            } else {
 
                 // local space bounding box - either from mesh or empty
-                if (this.mesh) {
-                    localAabb.center.copy(this.mesh.aabb.center);
-                    localAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
+                if (mesh) {
+                    localAabb.center.copy(mesh.aabb.center);
+                    localAabb.halfExtents.copy(mesh.aabb.halfExtents);
                 } else {
                     localAabb.center.set(0, 0, 0);
                     localAabb.halfExtents.set(0, 0, 0);
                 }
 
                 // update local space bounding box by morph targets
-                if (this.mesh && this.mesh.morph) {
-                    const morphAabb = this.mesh.morph.aabb;
+                if (mesh && mesh.morph) {
+                    const morphAabb = mesh.morph.aabb;
                     localAabb._expand(morphAabb.getMin(), morphAabb.getMax());
                 }
-
-                toWorldSpace = true;
-                this._aabbVer = this.node._aabbVer;
-                this._aabbMeshVer = this.mesh._aabbVer;
             }
         }
 
         // store world space bounding box
-        if (toWorldSpace) {
-            this._aabb.setFromTransformedAabb(localAabb, this.node.getWorldTransform());
-        }
+        this._aabb.setFromTransformedAabb(localAabb, node.getWorldTransform());
+
+        this._aabbVer = nodeVer;
+        this._aabbMeshVer = meshVer;
+        this._aabbSkinVer = skinVer;
 
         return this._aabb;
     }
@@ -1183,6 +1203,8 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
+        this._aabbSkinVer = -1;
+        this._aabbVer = -1;
         this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN));
         this._setupSkinUpdate();
     }
@@ -2146,10 +2168,11 @@ class MeshInstance {
                 this._customAabb = aabb.clone();
             }
         } else {
-            // no override, force refresh the actual one
             this._customAabb = null;
-            this._aabbVer = -1;
         }
+
+        // the bounds source changed, force a refresh of the world space bounds
+        this._aabbVer = -1;
 
         this._setupSkinUpdate();
     }
