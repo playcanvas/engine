@@ -1,11 +1,13 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
+import { Debug } from '../../../../src/core/debug.js';
 import { Color } from '../../../../src/core/math/color.js';
 import { Mat4 } from '../../../../src/core/math/mat4.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Entity } from '../../../../src/framework/entity.js';
-import { PIXELFORMAT_R32F } from '../../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_R32F } from '../../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../../src/platform/graphics/frame-pass.js';
 import { Texture } from '../../../../src/platform/graphics/texture.js';
 import {
@@ -31,6 +33,7 @@ describe('CameraComponent', function () {
     });
 
     afterEach(function () {
+        restore();
         app?.destroy();
         app = null;
         jsdomTeardown();
@@ -305,6 +308,55 @@ describe('CameraComponent', function () {
             camera._xrViews = null;
 
             texture.destroy();
+        });
+
+        it('warns when a depth texture is published to a camera whose shaders read the linear depth', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const linearDepth = createDepthTexture();
+            const depthTexture = new Texture(app.graphicsDevice, {
+                width: 4, height: 4, format: PIXELFORMAT_DEPTH, mipmaps: false
+            });
+            const warn = stub(Debug, 'warnOnce');
+
+            // the depth buffer values, read as such
+            e.camera.publishSceneDepthMap(depthTexture);
+            expect(warn.called).to.equal(false);
+
+            // a camera whose shaders read the linear depth, the way a CameraFrame sets it up
+            e.camera.shaderParams.sceneDepthMapLinear = true;
+            e.camera.publishSceneDepthMap(linearDepth);
+            expect(warn.called).to.equal(false);
+            e.camera.publishSceneDepthMap(depthTexture);
+            expect(warn.calledOnce).to.equal(true);
+            expect(warn.firstCall.args[0]).to.include('linear depth');
+
+            linearDepth.destroy();
+            depthTexture.destroy();
+        });
+
+        it('asserts a destroyed texture or camera', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const camera = e.camera;
+            const texture = createDepthTexture();
+            const assertion = stub(Debug, 'assert');
+            const assertFailed = () => assertion.getCalls().some(call => !call.args[0]);
+
+            camera.publishSceneDepthMap(texture);
+            expect(assertFailed()).to.equal(false);
+
+            texture.destroy();
+            camera.publishSceneDepthMap(texture);
+            expect(assertFailed()).to.equal(true);
+
+            assertion.resetHistory();
+            const live = createDepthTexture();
+            e.removeComponent('camera');
+            camera.publishSceneDepthMap(live);
+            expect(assertFailed()).to.equal(true);
+
+            live.destroy();
         });
 
     });

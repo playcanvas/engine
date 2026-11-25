@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL } from '../../../platform/graphics/constants.js';
 import { LAYERID_UI, LAYERID_DEPTH, SHADER_FORWARD } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
@@ -1412,7 +1413,8 @@ class CameraComponent extends Component {
      * The texture must not be an attachment of a render target the camera renders into, such as the
      * depth buffer of {@link CameraComponent#renderTarget} primed by a depth pre-pass: materials
      * sampling the scene depth would read the texture they render to. Render or copy the depth to a
-     * texture of its own instead. Debug builds warn about it.
+     * texture of its own instead. Debug builds warn about it, and about a depth texture published to
+     * a camera whose shaders read the linear depth.
      *
      * @param {Texture} texture - The texture the depth was rendered to: a depth texture, or a single
      * channel float texture holding the depth.
@@ -1431,7 +1433,15 @@ class CameraComponent extends Component {
     publishSceneDepthMap(texture, options = {}) {
         const { flipY = false } = options;
         Debug.assert(texture, 'CameraComponent.publishSceneDepthMap requires a texture');
+        Debug.assert(!texture || texture.device, `CameraComponent.publishSceneDepthMap: the texture [${texture?.name}] has been destroyed`);
+        Debug.assert(!this._camera.sceneDepthMapHandle.destroyed, `CameraComponent.publishSceneDepthMap: the camera [${this.entity?.name}] has been destroyed`);
         const { sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal } = this._camera.shaderParams;
+        Debug.call(() => {
+            const format = texture?.format;
+            if (sceneDepthMapLinear && (format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16 || format === PIXELFORMAT_DEPTHSTENCIL)) {
+                Debug.warnOnce(`CameraComponent.publishSceneDepthMap: the depth texture [${texture.name}] is published to the camera [${this.entity?.name}], whose shaders read the linear depth, as its CameraFrame renders it. Publish a texture holding the linear depth instead.`);
+            }
+        });
         this._camera.publishSceneDepthMap(texture, this.system.app.graphicsDevice.renderVersion,
             sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal, flipY);
     }
