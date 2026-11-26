@@ -380,8 +380,7 @@ class GSplatWeather extends Script {
 
         if (!this.entity.gsplat) {
             this.entity.addComponent('gsplat', {
-                resource: this._container,
-                unified: true
+                resource: this._container
             });
         } else {
             this.entity.gsplat.resource = this._container;

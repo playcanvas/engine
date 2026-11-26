@@ -127,8 +127,7 @@ data.set('renderer', GSPLAT_RENDERER_AUTO);
 const bicycle = new Entity('Bicycle');
 bicycle.addComponent('gsplat', {
     asset: assets.bicycle,
-    castShadows: true,
-    unified: true
+    castShadows: true
 });
 bicycle.setLocalPosition(-1.0, 0, 0);
 bicycle.setLocalEulerAngles(0, 0, 180);
@@ -138,8 +137,7 @@ app.root.addChild(bicycle);
 const bicycle2 = new Entity('Bicycle2');
 bicycle2.addComponent('gsplat', {
     asset: assets.bicycle,
-    castShadows: true,
-    unified: true
+    castShadows: true
 });
 bicycle2.setLocalPosition(1.0, 0, 0);
 bicycle2.setLocalEulerAngles(180, 50, 0);

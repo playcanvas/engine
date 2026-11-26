@@ -228,7 +228,6 @@ export { GSplatCompressedResource } from './scene/gsplat/gsplat-compressed-resou
 export { GSplatContainer } from './scene/gsplat/gsplat-container.js';
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplatFormat } from './scene/gsplat/gsplat-format.js';
-export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 export { GSplatOctreeResource } from './scene/gsplat-unified/gsplat-octree.resource.js';
 export { GSplatProcessor } from './framework/gsplat/gsplat-processor.js';
 export { GSplatResource } from './scene/gsplat/gsplat-resource.js';

@@ -3,7 +3,7 @@ import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } 
 /**
  * Loads and displays a streamed gaussian splat scene ({@link StreamedGSplat#splatUrl}), plus an
  * optional environment splat ({@link StreamedGSplat#environmentUrl}) on a child entity, using
- * unified gsplat components. The main splat has four LOD presets — ultra, high, medium or low —
+ * gsplat components. The main splat has four LOD presets — ultra, high, medium or low —
  * each with its own LOD distances and allowed LOD range. The scene-wide splat budget and how it
  * is used are configured through `app.scene.gsplat` in code or the Editor's scene settings.
  * The initial preset is low on mobile and medium on desktop, and can be switched at runtime by
@@ -171,18 +171,10 @@ class StreamedGSplat extends Script {
             this._assets.push(mainAsset);
 
             mainAsset.ready((a) => {
-                // Temporarily disable entity to allow unified property to be set
-                const wasEnabled = this.entity.enabled;
-                this.entity.enabled = false;
-
                 // Add component directly to this entity
                 this.entity.addComponent('gsplat', {
-                    unified: true,
                     asset: a
                 });
-
-                // Restore entity enabled state
-                this.entity.enabled = wasEnabled;
 
                 // Apply initial preset
                 this._applyPreset();
@@ -199,22 +191,13 @@ class StreamedGSplat extends Script {
             this._assets.push(envAsset);
 
             envAsset.ready((a) => {
-                // Create child entity disabled to allow unified property to be set
                 const child = new Entity('EnvironmentGSplat');
-                child.enabled = false;
-
-                // Attach to the scene graph
                 this.entity.addChild(child);
                 this._children.push(child);
 
-                // Add the component while entity is disabled
                 child.addComponent('gsplat', {
-                    unified: true,
                     asset: a
                 });
-
-                // Enable the child entity
-                child.enabled = true;
             });
         }
 

@@ -786,18 +786,6 @@ class Renderer {
     }
 
     /**
-     * Update gsplats ahead of rendering.
-     *
-     * @param {MeshInstance[]|Set<MeshInstance>} drawCalls - MeshInstances containing gsplatInstances.
-     * @ignore
-     */
-    updateGSplats(drawCalls) {
-        for (const drawCall of drawCalls) {
-            drawCall.gsplatInstance?.update();
-        }
-    }
-
-    /**
      * Update draw calls ahead of rendering.
      *
      * @param {MeshInstance[]|Set<MeshInstance>} drawCalls - MeshInstances requiring updates.
@@ -808,7 +796,6 @@ class Renderer {
         // that are visible in this frame
         this.updateGpuSkinMatrices(drawCalls);
         this.updateMorphing(drawCalls);
-        this.updateGSplats(drawCalls);
     }
 
     setVertexBuffers(device, mesh) {

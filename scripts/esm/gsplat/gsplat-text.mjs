@@ -108,9 +108,7 @@ class GSplatText extends Script {
     initialize() {
         // Create the gsplat component (will set resource later when we have data)
         if (!this.entity.gsplat) {
-            this.entity.addComponent('gsplat', {
-                unified: true
-            });
+            this.entity.addComponent('gsplat');
         }
     }
 
