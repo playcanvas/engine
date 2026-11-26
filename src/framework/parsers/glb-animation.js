@@ -3,7 +3,7 @@ import { AnimEvents } from '../anim/evaluator/anim-events.js';
 import { GlbParser } from './glb-parser.js';
 
 /**
- * Parser for glb {@link Animation} resources.
+ * Parser for glb {@link AnimTrack} resources.
  *
  * @ignore
  */

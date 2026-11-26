@@ -4,7 +4,6 @@ import { GraphNode } from '../scene/graph-node.js';
 import { getApplication } from './globals.js';
 
 /**
- * @import { AnimationComponent } from './components/animation/component.js'
  * @import { AnimComponent } from './components/anim/component.js'
  * @import { AppBase } from './app-base.js'
  * @import { AudioListenerComponent } from './components/audio-listener/component.js'
@@ -169,14 +168,6 @@ class Entity extends GraphNode {
      * @readonly
      */
     anim;
-
-    /**
-     * Gets the {@link AnimationComponent} attached to this entity.
-     *
-     * @type {AnimationComponent|undefined}
-     * @readonly
-     */
-    animation;
 
     /**
      * Gets the {@link AudioListenerComponent} attached to this entity.
@@ -427,7 +418,6 @@ class Entity extends GraphNode {
      * @param {K} type - The name of the component to add (a {@link ComponentName}). Valid strings are:
      *
      * - "anim" - see {@link AnimComponent}
-     * - "animation" - see {@link AnimationComponent}
      * - "audiolistener" - see {@link AudioListenerComponent}
      * - "button" - see {@link ButtonComponent}
      * - "camera" - see {@link CameraComponent}
@@ -469,7 +459,13 @@ class Entity extends GraphNode {
     addComponent(type, data) {
         const system = this._app.systems[/** @type {string} */ (type)];
         if (!system) {
-            Debug.error(`addComponent: System '${type}' doesn't exist`);
+            if (type === 'animation') {
+                Debug.removed('The animation component is removed. Use the anim component instead: ' +
+                    'AnimComponent#assignAnimation adds an animation track, and AnimComponentLayer#transition ' +
+                    'plays it, with an optional crossfade.');
+            } else {
+                Debug.error(`addComponent: System '${type}' doesn't exist`);
+            }
             return null;
         }
         if (this.c[type]) {

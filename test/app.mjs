@@ -2,7 +2,6 @@ import { createGraphicsDevice } from './device.mjs';
 import { AppBase } from '../src/framework/app-base.js';
 import { AppOptions } from '../src/framework/app-options.js';
 import { AnimComponentSystem } from '../src/framework/components/anim/system.js';
-import { AnimationComponentSystem } from '../src/framework/components/animation/system.js';
 import { AudioListenerComponentSystem } from '../src/framework/components/audio-listener/system.js';
 import { ButtonComponentSystem } from '../src/framework/components/button/system.js';
 import { CameraComponentSystem } from '../src/framework/components/camera/system.js';
@@ -64,7 +63,6 @@ const componentSystems = [
     RigidBodyComponentSystem,
     CollisionComponentSystem,
     JointComponentSystem,
-    AnimationComponentSystem,
     AnimComponentSystem,
     ModelComponentSystem,
     RenderComponentSystem,

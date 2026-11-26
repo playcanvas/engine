@@ -45,7 +45,7 @@ class ContainerResource {
     /**
      * An array of the animation assets. Each resource is an {@link AnimTrack}.
      *
-     * @type {Asset<'animation', AnimTrack>[]}
+     * @type {Asset<'animation'>[]}
      */
     animations = [];
 

@@ -10,7 +10,6 @@ import { http } from '../../platform/net/http.js';
 /**
  * @import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js'
  * @import { AnimTrack } from '../anim/evaluator/anim-track.js'
- * @import { Animation } from '../../scene/animation/animation.js'
  * @import { AssetRegistry } from './asset-registry.js'
  * @import { Bundle } from '../bundle/bundle.js'
  * @import { CanvasFont } from '../font/canvas-font.js'
@@ -63,8 +62,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * ```
  *
  * @typedef {object} AssetMap
- * @property {Animation | AnimTrack} animation - An animation: an {@link AnimTrack} when loaded from
- * a glTF or GLB file, or a legacy {@link Animation} when loaded from JSON.
+ * @property {AnimTrack} animation - An animation, loaded from a GLB file.
  * @property {AnimTrack} animclip - An animation clip.
  * @property {AnimStateGraph} animstategraph - An animation state graph.
  * @property {Sound} audio - A sound.
@@ -154,8 +152,8 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * `app.assets.find('brick', 'texture')` returns one. See {@link AssetMap} for the built-in types
  * and for adding application-defined ones. An asset whose type is only known as a `string` has a
  * `resource` of type `unknown`. The optional second type parameter narrows the resource further
- * where more is known than the type string says: the animations of a {@link ContainerResource} are
- * `Asset<'animation', AnimTrack>`, because a container never holds a legacy {@link Animation}.
+ * where more is known than the type string says: a JSON asset whose content the application knows
+ * can be typed as `Asset<'json', MyConfig>`.
  *
  * @example
  * const asset = new Asset('brick', 'texture', { url: 'textures/brick.png' });
@@ -370,7 +368,7 @@ class Asset extends EventHandler {
      * @param {Type} type - The type of asset (an {@link AssetType}), which selects the resource
      * handler and the type of {@link Asset#resource}. The types a developer commonly creates are:
      *
-     * - "animation" - see {@link Animation} and {@link AnimTrack}
+     * - "animation" - see {@link AnimTrack}
      * - "animclip" - see {@link AnimTrack}
      * - "animstategraph" - see {@link AnimStateGraph}
      * - "audio" - see {@link Sound}

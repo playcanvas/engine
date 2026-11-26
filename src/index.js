@@ -176,10 +176,6 @@ export { Sprite } from './scene/sprite.js';
 export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
-// SCENE / ANIMATION
-export { Animation, AnimationKey, AnimationNode } from './scene/animation/animation.js';
-export { Skeleton } from './scene/animation/skeleton.js';
-
 // SCENE / GRAPHICS
 export { ComputeRadixSort } from './scene/graphics/radix-sort/compute-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
@@ -244,8 +240,6 @@ export { AppOptions } from './framework/app-options.js';
 export { AppStats } from './framework/app-stats.js';
 export { Application } from './framework/application.js';
 export { AmmoPhysicsWorld } from './framework/physics/ammo/ammo-physics-world.js';
-export { AnimationComponent } from './framework/components/animation/component.js';
-export { AnimationComponentSystem } from './framework/components/animation/system.js';
 export { AnimComponent } from './framework/components/anim/component.js';
 export { AnimComponentLayer } from './framework/components/anim/component-layer.js';
 export { AnimComponentSystem } from './framework/components/anim/system.js';

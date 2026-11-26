@@ -94,6 +94,17 @@ class SceneParser {
 
         let len = systemsList.length;
         const entityData = entities[entity.guid];
+
+        // the scene parser skips components without a system, so a removed component would vanish
+        // without a word
+        Debug.call(() => {
+            if (entityData.components.animation && !this._app.systems.animation) {
+                Debug.removed('The scene contains animation components, which are removed and are not created. ' +
+                    'Convert them to anim components: AnimComponent#assignAnimation adds an animation track, ' +
+                    'and AnimComponentLayer#transition plays it, with an optional crossfade.');
+            }
+        });
+
         for (let i = 0; i < len; i++) {
             const system = systemsList[i];
             const componentData = entityData.components[system.id];

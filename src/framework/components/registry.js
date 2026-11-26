@@ -1,7 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * @import { AnimationComponentSystem } from './animation/system.js'
  * @import { AnimComponentOptionsOverrides } from './anim/system.js'
  * @import { AnimComponentSystem } from './anim/system.js'
  * @import { AudioListenerComponentSystem } from './audio-listener/system.js'
@@ -97,14 +96,6 @@ class ComponentSystemRegistry extends EventHandler {
      * @readonly
      */
     anim;
-
-    /**
-     * Gets the {@link AnimationComponentSystem} from the registry.
-     *
-     * @type {AnimationComponentSystem|undefined}
-     * @readonly
-     */
-    animation;
 
     /**
      * Gets the {@link AudioListenerComponentSystem} from the registry.
