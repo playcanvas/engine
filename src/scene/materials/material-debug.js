@@ -126,8 +126,8 @@ const initMeshInstanceDebug = (meshInstance) => {
 
 /**
  * Records the array values of the overrides just applied to a mesh instance's copy of the material
- * uniform buffer, to detect changes made in place afterwards. Numbers cannot change in place and
- * are not recorded.
+ * uniform buffer, to detect changes made in place afterwards. Non-array values (numbers,
+ * undefined, null, etc.) are not recorded.
  *
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {MeshInstanceParameter[]} overrides - The applied overrides.
@@ -138,7 +138,7 @@ const recordAppliedOverrides = (meshInstance, overrides) => {
     for (let i = 0; i < overrides.length; i++) {
         const override = overrides[i];
         const data = override.data;
-        if (typeof data === 'number') {
+        if (typeof data !== 'object' || data === null || typeof data.length !== 'number') {
             snapshots.delete(override);
         } else {
             // only the components the uniform reads, kept as numbers to compare exactly; the
@@ -172,8 +172,8 @@ const getMutatedOverrides = (meshInstance, overrides) => {
     for (let i = 0; i < overrides.length; i++) {
         const override = overrides[i];
         const snapshot = snapshots.get(override);
-        if (snapshot) {
-            const data = override.data;
+        const data = override.data;
+        if (snapshot && data) {
             for (let j = 0; j < snapshot.length; j++) {
                 if (snapshot[j] !== data[j]) {
                     names.push(override.name);

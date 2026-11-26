@@ -162,7 +162,7 @@ describe('TextureRenderer', function () {
         app.render();
         expect(draws.map(draw => draw.camera)).to.deep.equal([excluded]);
         expect(prepareDepthShader.calledOnce).to.equal(true);
-        expect(preview.material.getParameter('colorMap').data).to.equal(null);
+        expect(preview.material.getParameter('colorMap')).to.equal(undefined);
 
         draws.length = 0;
         renderer.camera = null;
@@ -199,7 +199,7 @@ describe('TextureRenderer', function () {
         const [first, second] = layer.meshInstances;
         app.fire('postrender');
         expect(first.visible).to.equal(false);
-        expect(first.material.getParameter('colorMap').data).to.equal(null);
+        expect(first.material.getParameter('colorMap')).to.equal(undefined);
         renderer.draw(other, 0, 0, 1, 1);
         expect(first.visible).to.equal(true);
         expect(second.visible).to.equal(false);
@@ -241,7 +241,7 @@ describe('TextureRenderer', function () {
         app.fire('postrender');
         renderer.sceneDepth(0, 0, 1, 1);
         expect(instance.material.shaderDesc.uniqueName).to.equal('TextureRenderer-SceneDepth');
-        expect(instance.material.getParameter('colorMap').data).to.equal(null);
+        expect(instance.material.getParameter('colorMap')).to.equal(undefined);
         app.fire('postrender');
         renderer.draw(texture, 0, 0, 1, 1);
         expect(instance.material.shaderDesc.uniqueName).to.equal('TextureRenderer');
