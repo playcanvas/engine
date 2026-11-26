@@ -30,7 +30,9 @@ class BakeLightAmbient extends BakeLight {
             bakeDir: false
         });
 
-        super(scene, lightEntity.light.light, lightmapper.lightingParams);
+        // the light accumulates ambient occlusion, which the bake shader then multiplies by the ambient
+        // light (and its luminance), so it uses its intensity even with physical units
+        super(scene, lightEntity.light.light, lightmapper.lightingParams, false);
     }
 
     get numVirtualLights() {
@@ -46,10 +48,8 @@ class BakeLightAmbient extends BakeLight {
 
         // intensity of the virtual light depends on the sphere part used, and also needs to take into account
         // the fact N dot L used to bake it lowers total intensity
-        const gamma = 2.2;
         const fullIntensity = 2 * Math.PI * this.scene.ambientBakeSpherePart;
-        const linearIntensity = Math.pow(fullIntensity, gamma);
-        this.light.intensity = Math.pow(linearIntensity / numVirtualLights, 1 / gamma);
+        this.light.intensity = fullIntensity / numVirtualLights;
     }
 }
 

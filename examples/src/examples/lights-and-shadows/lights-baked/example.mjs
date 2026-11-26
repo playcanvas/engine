@@ -226,7 +226,7 @@ lightDirectional.addComponent('light', {
     shadowResolution: 2048,
     shadowType: SHADOW_PCF3_32F,
     color: Color.YELLOW,
-    intensity: 0.33,
+    intensity: 0.087,
     type: 'directional'
 });
 app.root.addChild(lightDirectional);

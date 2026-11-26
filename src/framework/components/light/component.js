@@ -331,7 +331,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the brightness of the light. Defaults to 1.
+     * Sets the brightness of the light. The light's color is converted from sRGB to linear space
+     * and then multiplied by the intensity, so doubling the intensity doubles the light. Not used
+     * if `scene.physicalUnits` is true, see {@link LightComponent#luminance}. Defaults to 1.
      *
      * @type {number}
      */

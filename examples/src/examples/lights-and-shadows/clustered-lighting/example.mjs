@@ -215,7 +215,7 @@ dirLight = new Entity();
 dirLight.addComponent('light', {
     type: 'directional',
     color: Color.WHITE,
-    intensity: 0.15,
+    intensity: 0.015,
     range: 300,
     shadowDistance: 600,
     castShadows: true,
