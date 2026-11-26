@@ -177,15 +177,26 @@ Each example consists of two modules to define its behavior:
 ### `example.mjs`
 
 ```js
-import { Application } from 'playcanvas';
+import { AppBase, AppOptions, CameraComponentSystem, RenderComponentSystem, createGraphicsDevice } from 'playcanvas';
+
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const app = new Application(canvas, {});
+const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
+
+const createOptions = new AppOptions();
+createOptions.graphicsDevice = device;
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [];
+
+const app = new AppBase(canvas);
+app.init(createOptions);
+app.start();
 ```
 
-This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
+This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a graphics device and a PlayCanvas `AppBase` on that canvas, registering only the component systems and resource handlers the example uses.
 The examples loader finds and destroys applications registered to canvases it owns, so the `app` does not need to be exported. Export a `destroy` function only when the example creates non-app resources such as timers, DOM overlays, or animation frames that need cleanup. An example that creates its own `MiniStats` (to pass custom options) should export it as `miniStats`, so the examples browser toolbar toggle drives that instance instead of adding a second overlay.
 
 Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `utils/example-source.mjs` file for the full list.
@@ -211,7 +222,7 @@ Examples can also contain comments which allow you to define the default configu
 // @flag WEBGPU_DISABLED
 // @flag WEBGL_DISABLED
 // @flag PREFERRED_DEVICE webgpu
-import { Application } from 'playcanvas';
+import { AppBase } from 'playcanvas';
 ...
 ```
 

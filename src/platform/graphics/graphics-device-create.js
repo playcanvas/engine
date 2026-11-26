@@ -40,9 +40,6 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * {@link CameraComponent#clearColor} with both its alpha and its RGB set to zero. A non-zero color
  * with zero alpha is not valid premultiplied data and composites inconsistently across browsers.
  *
- * Note that this default applies to this function. The legacy {@link Application} constructor
- * instead defaults `alpha` to false.
- *
  * @param {string} [options.displayFormat] - The display format of the canvas. Defaults to
  * {@link DISPLAYFORMAT_LDR}. Can be:
  *

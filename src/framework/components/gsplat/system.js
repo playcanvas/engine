@@ -147,7 +147,7 @@ class GSplatComponentSystem extends ComponentSystem {
     /**
      * Create a new GSplatComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

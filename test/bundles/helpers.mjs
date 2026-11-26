@@ -12,7 +12,7 @@ const URL_ORIGIN = 'http://localhost:3210';
 
 // representative slice of the public api; parity (below) enforces the full surface
 export const EXPECTED_EXPORTS = [
-    'AppBase', 'app', 'Application', 'Entity', 'Scene',
+    'AppBase', 'app', 'Entity', 'Scene',
     'Vec2', 'Vec3', 'Vec4', 'Mat3', 'Mat4', 'Quat', 'Color',
     'GraphicsDevice', 'NullGraphicsDevice', 'Texture', 'Mesh',
     'Material', 'StandardMaterial', 'Asset', 'AssetRegistry', 'Camera'
@@ -111,8 +111,18 @@ export const teardownDom = () => {
     dom = null;
 };
 
-// build an app from a loaded bundle, mirroring test/app.mjs but sourced from `pc`
+// build an app from a loaded bundle, like test/app.mjs but sourced from `pc` and with only the
+// core component systems and resource handlers
 export const createAppFrom = (pc, doc) => {
     const canvas = doc.createElement('canvas');
-    return new pc.Application(canvas, { graphicsDevice: new pc.NullGraphicsDevice(canvas) });
+    const options = new pc.AppOptions();
+    options.graphicsDevice = new pc.NullGraphicsDevice(canvas);
+    options.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem, pc.ScriptComponentSystem];
+    options.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+    options.lightmapper = pc.Lightmapper;
+    options.batchManager = pc.BatchManager;
+
+    const app = new pc.AppBase(canvas);
+    app.init(options);
+    return app;
 };

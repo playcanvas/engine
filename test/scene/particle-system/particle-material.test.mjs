@@ -7,7 +7,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  * @import { Shader } from '../../../src/platform/graphics/shader.js'
  */
 
@@ -20,7 +20,7 @@ const OFFSET_ASPECT = /localPos\.x \*= \S*viewport_size\.y \* \S*viewport_size\.
 const MOTION_ASPECT = /velocityV\.x \*= \S*viewport_size\.x \* \S*viewport_size\.w/;
 
 describe('ParticleMaterial', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     beforeEach(function () {

@@ -8,14 +8,14 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  */
 
 // A render loop sets the state of a material when the material changes. A mesh instance overriding
 // some of it has the material's values restored after its draw when the next draw uses the same
 // material - the forward and the shadow loop share Renderer#restoreMaterialOverrides for it.
 describe('Renderer#restoreMaterialOverrides', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     beforeEach(function () {

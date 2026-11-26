@@ -54,7 +54,7 @@ class ModelComponentSystem extends ComponentSystem {
     /**
      * Create a new ModelComponentSystem instance.
      *
-     * @param {AppBase} app - The Application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

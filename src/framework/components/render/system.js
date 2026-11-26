@@ -57,7 +57,7 @@ class RenderComponentSystem extends ComponentSystem {
     /**
      * Create a new RenderComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

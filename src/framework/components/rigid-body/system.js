@@ -235,7 +235,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Create a new RigidBodyComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

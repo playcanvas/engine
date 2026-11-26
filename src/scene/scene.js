@@ -252,7 +252,7 @@ class Scene extends EventHandler {
     lightmapHDR = false;
 
     /**
-     * The root entity of the scene, which is usually the only child to the {@link Application}
+     * The root entity of the scene, which is usually the only child to the {@link AppBase}
      * root entity.
      *
      * @type {Entity}

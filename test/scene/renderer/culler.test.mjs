@@ -7,7 +7,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Culler', function () {
 
-    /** @type {import('../../../src/framework/application.js').Application} */
+    /** @type {import('../../../src/framework/app-base.js').AppBase} */
     let app;
 
     const createCamera = (name) => {

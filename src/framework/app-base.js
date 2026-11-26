@@ -127,9 +127,6 @@ const DEVTOOLS_PROTOCOL = 1;
  * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
  * your application.
  *
- * It is the preferred entry point for new code - {@link Application} is a convenience subclass
- * that registers everything for you, and is expected to be deprecated in a future release.
- *
  * `new AppBase(canvas)` only constructs the instance and its root entity. You must then call
  * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
  * `componentSystems` and `resourceHandlers` before adding components or calling
@@ -708,7 +705,7 @@ class AppBase extends EventHandler {
     /**
      * Get the current application. In the case where there are multiple running applications, the
      * function can get an application based on a supplied canvas id. This function is particularly
-     * useful when the current Application is not readily available. For example, in the JavaScript
+     * useful when the current application is not readily available. For example, in the JavaScript
      * console of the browser's developer tools.
      *
      * @param {string} [id] - If defined, the returned application should use the canvas which has
@@ -1592,8 +1589,8 @@ class AppBase extends EventHandler {
 
     /**
      * Event handler called when all code libraries have been loaded. Code libraries are passed
-     * into the constructor of the Application and the application won't start running or load
-     * packs until all libraries have been loaded.
+     * into the application, and it won't start running or load packs until all libraries have been
+     * loaded.
      *
      * @private
      */

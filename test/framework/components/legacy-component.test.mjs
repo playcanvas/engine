@@ -7,7 +7,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  */
 
 // A legacy-style component in the mold of external plugins such as playcanvas-spine: the system
@@ -54,7 +54,7 @@ class LegacyComponentSystem extends ComponentSystem {
 }
 
 describe('Legacy schema-based Component', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     beforeEach(function () {

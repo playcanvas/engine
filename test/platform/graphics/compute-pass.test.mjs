@@ -14,7 +14,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  */
 
 // Dawn's null backend validates the API and compiles the shaders, but executes no GPU work, so the
@@ -37,7 +37,7 @@ class TargetPass extends FramePass {
 }
 
 describe('ComputePass', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */

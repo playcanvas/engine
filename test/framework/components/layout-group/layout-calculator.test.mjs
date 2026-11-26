@@ -11,12 +11,12 @@ import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../../src/framework/application.js'
+ * @import { AppBase } from '../../../../src/framework/app-base.js'
  * @import { ElementComponent } from '../../../../src/framework/components/element/component.js'
  */
 
 describe('LayoutCalculator', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
     /** @type {LayoutCalculator} */
     let calculator;

@@ -9,7 +9,7 @@ import { GraphNode } from '../../scene/graph-node.js';
 import { Asset } from '../asset/asset.js';
 
 /**
- * @import { Application } from '../../framework/application.js'
+ * @import { AppBase } from '../app-base.js'
  * @import { ScriptType } from './script-type.js'
  * @import { Script } from '../../framework/script/script.js'
  */
@@ -165,7 +165,7 @@ function rawToValue(app, args, value, old) {
 /**
  * Takes an attribute schema, a value and current value, and return a new value.
  *
- * @param {Application} app - The working application
+ * @param {AppBase} app - The working application
  * @param {AttributeSchema} schema - The attribute schema used to resolve properties
  * @param {*} value - The raw value to create
  * @param {*} current - The existing value
@@ -183,7 +183,7 @@ function attributeToValue(app, schema, value, current) {
  * Assigns values to a script instance based on a map of attributes schemas
  * and a corresponding map of data.
  *
- * @param {Application} app - The application instance
+ * @param {AppBase} app - The application instance
  * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of names to Schemas
  * @param {Object<string, *>} data - A Map of data to assign to the Script instance
  * @param {Script} script - A Script instance to assign values on

@@ -11,12 +11,12 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  * @import { CameraComponent } from '../../../src/framework/components/camera/component.js'
  */
 
 describe('RenderPassForward', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     /** @type {CameraComponent} */

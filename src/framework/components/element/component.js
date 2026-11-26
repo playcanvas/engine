@@ -1710,7 +1710,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the localization key to use to get the localized text from {@link Application#i18n}.
+     * Sets the localization key to use to get the localized text from {@link AppBase#i18n}.
      * Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {string}
@@ -1720,7 +1720,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the localization key to use to get the localized text from {@link Application#i18n}.
+     * Gets the localization key to use to get the localized text from {@link AppBase#i18n}.
      *
      * @type {string}
      */

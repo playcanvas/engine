@@ -14,13 +14,13 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  */
 
 // The usage checks report an operation the buffer was not created for, before the operation is
 // recorded. The operations are stubbed, so that the invalid commands never reach the GPU.
 describe('Buffer usage checks', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     /** @type {any} */

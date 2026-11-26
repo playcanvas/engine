@@ -90,7 +90,7 @@ class CameraComponentSystem extends ComponentSystem {
     /**
      * Create a new CameraComponentSystem instance.
      *
-     * @param {AppBase} app - The Application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

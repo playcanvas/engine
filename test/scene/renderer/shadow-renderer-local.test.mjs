@@ -7,7 +7,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  * @import { Light } from '../../../src/scene/light.js'
  * @import { MeshInstance } from '../../../src/scene/mesh-instance.js'
  */
@@ -15,7 +15,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 const RANGE = 100;
 
 describe('ShadowRendererLocal', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     beforeEach(function () {

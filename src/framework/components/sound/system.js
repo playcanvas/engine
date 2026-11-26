@@ -43,7 +43,7 @@ class SoundComponentSystem extends ComponentSystem {
     /**
      * Create a SoundComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {
