@@ -175,11 +175,6 @@ class LitShaderOptions {
     enableGGXSpecular = false;
 
     /**
-     * The Fresnel model: {@link FRESNEL_NONE} or {@link FRESNEL_SCHLICK}.
-     */
-    fresnelModel = 0;
-
-    /**
      * If refraction is used.
      */
     useRefraction = false;

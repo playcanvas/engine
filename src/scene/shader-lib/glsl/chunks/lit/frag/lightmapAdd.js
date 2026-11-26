@@ -30,18 +30,15 @@ void addLightMap(
             vec3 halfDir = normalize(-dir + viewDir);
             vec3 specularLight = lightmap * getLightSpecular(halfDir, reflectionDir, worldNormal, viewDir, dir, gloss, tbn);
 
-            #ifdef LIT_SPECULAR_FRESNEL
-
-                specularLight *= 
-                    getFresnel(dot(viewDir, halfDir), 
-                    gloss, 
-                    specularity
-                #if defined(LIT_IRIDESCENCE)
-                    , iridescenceFresnel,
-                    iridescenceIntensity
-                #endif
-                    );
+            specularLight *= 
+                getFresnel(dot(viewDir, halfDir), 
+                gloss, 
+                specularity
+            #if defined(LIT_IRIDESCENCE)
+                , iridescenceFresnel,
+                iridescenceIntensity
             #endif
+                );
 
             dSpecularLight += specularLight;
         }

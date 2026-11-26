@@ -13,7 +13,7 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_PICK,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
-    lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
+    lightTypeNames, lightShapeNames, spriteRenderModeNames, blendNames, lightFalloffNames,
     cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
     ditherNames, DITHER_NONE,
     REFLECTIONSRC_NONE
@@ -538,7 +538,6 @@ class LitShader {
             this.fDefineSet(true, 'LIT_SPECULAR');
             this.fDefineSet(this.reflections, 'LIT_REFLECTIONS');
             this.fDefineSet(options.useClearCoat, 'LIT_CLEARCOAT');
-            this.fDefineSet(options.fresnelModel > 0, 'LIT_SPECULAR_FRESNEL');
             this.fDefineSet(options.useSheen, 'LIT_SHEEN');
             this.fDefineSet(options.useIridescence, 'LIT_IRIDESCENCE');
         }
@@ -578,7 +577,6 @@ class LitShader {
         this.fDefineSet(options.useAo, 'LIT_AO');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
         this.fDefineSet(options.shadowCatcher, 'LIT_SHADOW_CATCHER');
-        this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);
         this.fDefineSet(true, 'LIT_BLEND_TYPE', blendNames[options.blendType]);
         this.fDefineSet(true, 'LIT_CUBEMAP_PROJECTION', cubemaProjectionNames[options.cubeMapProjection]);

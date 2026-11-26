@@ -4,7 +4,6 @@ import sinon from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { FRESNEL_NONE } from '../../../src/scene/constants.js';
 import { LitMaterial } from '../../../src/scene/materials/lit-material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
@@ -110,9 +109,8 @@ describe('Lit shader ambient tint', function () {
         expect(forwardShader(lit).definition.fshader).to.match(/litArgs_ambient = vec3f?\(1\.0, 0\.0, 0\.0\);/);
     });
 
-    it('tints the ambient lighting of a LitMaterial without a Fresnel model like any other', function () {
+    it('tints the ambient lighting of a LitMaterial with specular like any other', function () {
         const material = litMaterial(true);
-        material.fresnelModel = FRESNEL_NONE;
         material.hasSpecular = true;
         const lit = addBox(material, 0);
         app.render();

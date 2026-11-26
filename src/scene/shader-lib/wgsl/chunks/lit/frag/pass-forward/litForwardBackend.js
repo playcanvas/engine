@@ -108,12 +108,8 @@ fn evaluateBackend() -> FragmentOutput {
             #ifdef LIT_CLEARCOAT
                 addReflectionCC(ccReflDirW, litArgs_clearcoat_gloss);
             
-                #ifdef LIT_SPECULAR_FRESNEL
-                    ccFresnel = getFresnelCC(dot(dViewDirW, litArgs_clearcoat_worldNormal));
-                    ccReflection = ccReflection * ccFresnel;
-                #else
-                    ccFresnel = 0.0;
-                #endif
+                ccFresnel = getFresnelCC(dot(dViewDirW, litArgs_clearcoat_worldNormal));
+                ccReflection = ccReflection * ccFresnel;
             #endif
 
             #ifdef LIT_SPECULARITY_FACTOR
@@ -127,26 +123,18 @@ fn evaluateBackend() -> FragmentOutput {
             // Fresnel has to be applied to reflections
             addReflection(dReflDirW, litArgs_gloss);
 
-            #ifdef LIT_FRESNEL_MODEL
-
-                dReflection = vec4f(
-                    dReflection.rgb * getFresnel(
-                        dot(dViewDirW, litArgs_worldNormal),
-                        litArgs_gloss,
-                        litArgs_specularity
-                    #if defined(LIT_IRIDESCENCE)
-                        , iridescenceFresnel,
-                        litArgs_iridescence_intensity
-                    #endif
-                        ),
-                    dReflection.a
-                );
-
-            #else
-
-                dReflection = vec4f(dReflection.rgb * litArgs_specularity, dReflection.a);
-
-            #endif
+            dReflection = vec4f(
+                dReflection.rgb * getFresnel(
+                    dot(dViewDirW, litArgs_worldNormal),
+                    litArgs_gloss,
+                    litArgs_specularity
+                #if defined(LIT_IRIDESCENCE)
+                    , iridescenceFresnel,
+                    litArgs_iridescence_intensity
+                #endif
+                    ),
+                dReflection.a
+            );
 
             // the occlusion of the reflections of the environment, see ambientModifierPS
             #ifdef LIT_ADD_AMBIENT
@@ -168,13 +156,9 @@ fn evaluateBackend() -> FragmentOutput {
 
             #ifdef LIT_SPECULAR
                 // the clear coat reflects the area lights with its own reflectance, as it reflects the
-                // other lights and the environment: a dielectric, or no Fresnel without the Fresnel
-                // model. Its strength scales all of its light when combined.
-                #ifdef LIT_SPECULAR_FRESNEL
-                    let ccLTCReflectance: f32 = 0.04;
-                #else
-                    let ccLTCReflectance: f32 = 1.0;
-                #endif
+                // other lights and the environment: a dielectric. Its strength scales all of its light
+                // when combined.
+                let ccLTCReflectance: f32 = 0.04;
 
                 // evaluate material based area lights data, shared by all area lights
                 calcLTCLightValues(litArgs_gloss, litArgs_worldNormal, dViewDirW, litArgs_specularity, litArgs_clearcoat_gloss, litArgs_clearcoat_worldNormal, ccLTCReflectance);

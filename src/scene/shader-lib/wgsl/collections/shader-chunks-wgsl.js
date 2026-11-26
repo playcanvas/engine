@@ -44,7 +44,7 @@ import floatAsUintPS from '../chunks/common/frag/float-as-uint.js';
 import sceneTexturesPS from '../chunks/common/frag/scene-textures.js';
 import fogPS from '../chunks/common/frag/fog.js';
 import fogMathPS from '../chunks/common/shared/fogMath.js';
-import fresnelSchlickPS from '../chunks/lit/frag/fresnelSchlick.js';
+import fresnelPS from '../chunks/lit/frag/fresnel.js';
 import fullscreenQuadVS from '../chunks/common/vert/fullscreenQuad.js';
 import gammaPS from '../chunks/common/frag/gamma.js';
 import glossPS from '../chunks/standard/frag/gloss.js';
@@ -208,7 +208,7 @@ const shaderChunksWGSL = {
     sceneTexturesPS,
     fogPS,
     fogMathPS,
-    fresnelSchlickPS,
+    fresnelPS,
     frontendCodePS: '',  // empty chunk, supplied by the shader generator
     frontendDeclPS: '',  // empty chunk, supplied by the shader generator
     fullscreenQuadVS,

@@ -106,12 +106,8 @@ void evaluateBackend() {
             #ifdef LIT_CLEARCOAT
                 addReflectionCC(ccReflDirW, litArgs_clearcoat_gloss);
             
-                #ifdef LIT_SPECULAR_FRESNEL
-                    ccFresnel = getFresnelCC(dot(dViewDirW, litArgs_clearcoat_worldNormal));
-                    ccReflection *= ccFresnel;
-                #else
-                    ccFresnel = 0.0;
-                #endif
+                ccFresnel = getFresnelCC(dot(dViewDirW, litArgs_clearcoat_worldNormal));
+                ccReflection *= ccFresnel;
             #endif
 
             #ifdef LIT_SPECULARITY_FACTOR
@@ -125,23 +121,15 @@ void evaluateBackend() {
             // Fresnel has to be applied to reflections
             addReflection(dReflDirW, litArgs_gloss);
 
-            #ifdef LIT_FRESNEL_MODEL
-
-                dReflection.rgb *= getFresnel(
-                    dot(dViewDirW, litArgs_worldNormal), 
-                    litArgs_gloss, 
-                    litArgs_specularity
-                #if defined(LIT_IRIDESCENCE)
-                    , iridescenceFresnel,
-                    litArgs_iridescence_intensity
-                #endif
-                    );
-
-            #else
-
-                dReflection.rgb *= litArgs_specularity;
-
+            dReflection.rgb *= getFresnel(
+                dot(dViewDirW, litArgs_worldNormal), 
+                litArgs_gloss, 
+                litArgs_specularity
+            #if defined(LIT_IRIDESCENCE)
+                , iridescenceFresnel,
+                litArgs_iridescence_intensity
             #endif
+                );
 
             // the occlusion of the reflections of the environment, see ambientModifierPS
             #ifdef LIT_ADD_AMBIENT
@@ -163,13 +151,9 @@ void evaluateBackend() {
 
             #ifdef LIT_SPECULAR
                 // the clear coat reflects the area lights with its own reflectance, as it reflects the
-                // other lights and the environment: a dielectric, or no Fresnel without the Fresnel
-                // model. Its strength scales all of its light when combined.
-                #ifdef LIT_SPECULAR_FRESNEL
-                    float ccLTCReflectance = 0.04;
-                #else
-                    float ccLTCReflectance = 1.0;
-                #endif
+                // other lights and the environment: a dielectric. Its strength scales all of its light
+                // when combined.
+                float ccLTCReflectance = 0.04;
 
                 // evaluate material based area lights data, shared by all area lights
                 calcLTCLightValues(litArgs_gloss, litArgs_worldNormal, dViewDirW, litArgs_specularity, litArgs_clearcoat_gloss, litArgs_clearcoat_worldNormal, ccLTCReflectance);

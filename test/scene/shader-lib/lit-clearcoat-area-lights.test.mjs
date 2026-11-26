@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { Entity } from '../../../src/framework/entity.js';
-import { FRESNEL_NONE, LIGHTSHAPE_DISK, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../src/scene/constants.js';
+import { LIGHTSHAPE_DISK, LIGHTSHAPE_RECT, LIGHTSHAPE_SPHERE } from '../../../src/scene/constants.js';
 import { LitMaterial } from '../../../src/scene/materials/lit-material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
@@ -64,13 +64,11 @@ describe('Lit shader clear coat of area lights', function () {
         return materialShader(material);
     };
 
-    // a lit material with a clear coat and no Fresnel model, which the standard material replaces by
-    // the Schlick model
-    const litNoFresnelShader = () => {
+    // a lit material with a clear coat
+    const litShader = () => {
         const material = new LitMaterial();
         material.hasSpecular = true;
         material.hasClearCoat = true;
-        material.fresnelModel = FRESNEL_NONE;
         material.shaderChunkGLSL = `
             #include "litShaderCorePS"
             void evaluateFrontend() {
@@ -160,11 +158,11 @@ describe('Lit shader clear coat of area lights', function () {
         expectClearcoatStrength(forwardShader(0.25), '0.04');
     });
 
-    it('reflects area lights by the clear coat without Fresnel when the material has no Fresnel model', function () {
+    it('applies the clear coat strength of a lit material with clustered area lights', function () {
         app.scene.clusteredLightingEnabled = true;
         app.scene.lighting.areaLightsEnabled = true;
         addLight(LIGHTSHAPE_RECT);
-        expectClearcoatStrength(litNoFresnelShader(), '1.0');
+        expectClearcoatStrength(litShader(), '0.04');
     });
 
     it('leaves the clear coat LTC matrix out without clear coat', function () {
