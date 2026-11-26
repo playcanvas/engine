@@ -606,10 +606,6 @@ class GSplatGlyphRainShaderEffect extends GSplatShaderEffect {
         return fragmentWGSL;
     }
 
-    applyToComponentMaterial() {
-        console.warn(`${this.constructor.name}: needs a unified gsplat component, as it uses a custom varying.`);
-    }
-
     applyShaderToMaterial(material) {
         const varyings = this.app.scene.gsplat.varyings;
         if (!varyings.streams.some(s => s.name === VARYING)) {

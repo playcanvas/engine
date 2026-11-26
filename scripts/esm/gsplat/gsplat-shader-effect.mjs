@@ -6,16 +6,9 @@ import { Script } from 'playcanvas';
  * time tracking, and uniform updates.
  *
  * **Usage:**
- * Attach this script to an entity with a gsplat component. The script automatically detects
- * whether the gsplat is in unified or non-unified mode and handles material access accordingly.
- *
- * **Non-Unified Mode (`unified=false`):**
- * Each gsplat component has its own material. The script accesses the material directly via
- * `entity.gsplat.material` and applies shader customizations immediately or when the asset loads.
- *
- * **Unified Mode (`unified=true`):**
- * Multiple gsplat components share a template material accessible via `app.scene.gsplat.material`.
- * The script applies shader customizations to this template material.
+ * Attach this script to an entity with a gsplat component. All gsplat components share a template
+ * material accessible via `app.scene.gsplat.material`, and the script applies its shader
+ * customizations to that material.
  *
  * **Enable/Disable:**
  * When enabled, the shader effect is applied and effectTime starts tracking from 0.
@@ -87,13 +80,13 @@ class GSplatShaderEffect extends Script {
     }
 
     applyShaders() {
-        if (this.entity.gsplat?.unified) {
-            // Unified mode: Apply to template material
-            this.applyToUnifiedMaterials();
-        } else {
-            // Non-unified mode: Apply to component's material
-            this.applyToComponentMaterial();
+        this.material = this.app.scene.gsplat?.material ?? null;
+        if (!this.material) {
+            console.warn(`${this.constructor.name}: gsplat template material not available.`);
+            return;
         }
+
+        this.applyShaderToMaterial(this.material);
     }
 
     removeShaders() {
@@ -107,34 +100,6 @@ class GSplatShaderEffect extends Script {
         chunks.delete('gsplatModifyPS');
         this.material.update();
         this.material = null;
-    }
-
-    applyToComponentMaterial() {
-        const applyShader = () => {
-            this.material = this.entity.gsplat?.material ?? null;
-            if (!this.material) {
-                console.error(`${this.constructor.name}: gsplat material not available.`);
-                return;
-            }
-            this.applyShaderToMaterial(this.material);
-        };
-
-        if (this.entity.gsplat?.material) {
-            applyShader();
-        } else {
-            // Listen for when the gsplat component is ready
-            this.entity.gsplat?.once('load', applyShader);
-        }
-    }
-
-    applyToUnifiedMaterials() {
-        this.material = this.app.scene.gsplat?.material ?? null;
-        if (!this.material) {
-            console.warn(`${this.constructor.name}: gsplat template material not available.`);
-            return;
-        }
-
-        this.applyShaderToMaterial(this.material);
     }
 
     applyShaderToMaterial(material) {

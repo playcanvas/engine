@@ -89,16 +89,14 @@ const PlayMode = {
  *
  * ## Requirements
  *
- * The entity must have a gsplat component with `unified: true` added **before** this script.
+ * The entity must have a gsplat component added **before** this script.
  *
  * ## Usage
  *
  * @example
  * // Create entity and add gsplat component first
  * const entity = new Entity('Flipbook');
- * entity.addComponent('gsplat', {
- *     unified: true
- * });
+ * entity.addComponent('gsplat');
  *
  * // Add script component and create flipbook script
  * entity.addComponent('script');
@@ -210,7 +208,7 @@ class GSplatFlipbook extends Script {
 
         // Verify gsplat component exists (should be added before this script)
         if (!this.entity.gsplat) {
-            console.error('GSplatFlipbook: Entity must have a gsplat component with unified=true');
+            console.error('GSplatFlipbook: Entity must have a gsplat component');
             return;
         }
 

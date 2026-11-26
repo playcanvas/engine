@@ -131,9 +131,7 @@ container.aabb = new BoundingBox(Vec3.ZERO, new Vec3(0.5 + SPLAT_SIZE, 0.5 + SPL
 container.update(SPLAT_COUNT);
 
 const splatSphere = new Entity('splat-sphere');
-splatSphere.addComponent('gsplat', {
-    unified: true
-});
+splatSphere.addComponent('gsplat');
 splatSphere.gsplat.resource = container;
 splatSphere.setPosition(-1, 0, 1);
 splatSphere.enabled = false;

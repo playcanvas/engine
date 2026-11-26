@@ -32,7 +32,6 @@ import { isViewTexture } from './renderer/view-textures.js';
 
 /**
  * @import { Camera } from './camera.js'
- * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Material } from './materials/material.js'
  * @import { Mesh } from './mesh.js'
@@ -415,12 +414,6 @@ class MeshInstance {
      * @ignore
      */
     flipFacesFactor = 1;
-
-    /**
-     * @type {GSplatInstance|null}
-     * @ignore
-     */
-    gsplatInstance = null;
 
     /** @ignore */
     id = PickerId.get();

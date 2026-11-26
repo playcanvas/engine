@@ -475,8 +475,7 @@ const loadGSplat = (scene) => {
 
     gsplatEntity = new Entity(config.name || 'gsplat');
     gsplatEntity.addComponent('gsplat', {
-        asset: asset,
-        unified: true
+        asset: asset
     });
     gsplatEntity.setLocalPosition(0, 0, 0);
     gsplatEntity.setLocalEulerAngles(scene.euler[0], scene.euler[1], scene.euler[2]);

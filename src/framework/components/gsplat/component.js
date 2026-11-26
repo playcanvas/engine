@@ -1,6 +1,5 @@
 import { hashCode } from '../../../core/hash.js';
 import { LAYERID_WORLD, WORKBUFFER_UPDATE_AUTO } from '../../../scene/constants.js';
-import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js';
 import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
@@ -15,14 +14,9 @@ import { PickerId } from '../../../scene/picker-id.js';
  * @import { GSplatComponentSystem } from './system.js'
  * @import { GSplatResourceBase } from '../../../scene/gsplat/gsplat-resource-base.js'
  * @import { ScopeId } from '../../../platform/graphics/scope-id.js'
- * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  * @import { StorageBuffer } from '../../../platform/graphics/storage-buffer.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
  */
-
-// Appended to warnings fired when a legacy (non-unified) API is hit in unified mode.
-// Explains the default flip and the temporary workaround.
-const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unified rendering). To temporarily restore the deprecated legacy behavior, explicitly set unified=false when creating the component — note that non-unified mode will be removed in a future release.';
 
 /**
  * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
@@ -74,12 +68,6 @@ class GSplatComponent extends Component {
     _layers = [LAYERID_WORLD]; // assign to the default world layer
 
     /**
-     * @type {GSplatInstance|null}
-     * @private
-     */
-    _instance = null;
-
-    /**
      * @type {GSplatPlacement|null}
      * @private
      */
@@ -92,12 +80,6 @@ class GSplatComponent extends Component {
      * @private
      */
     _id = PickerId.get();
-
-    /**
-     * @type {ShaderMaterial|null}
-     * @private
-     */
-    _materialTmp = null;
 
     /**
      * Base distance for the first LOD transition.
@@ -153,27 +135,15 @@ class GSplatComponent extends Component {
      */
     _evtLayersChanged = null;
 
-    /**
-     * @type {EventHandle|null}
-     * @private
-     */
-    _evtLayerAdded = null;
-
-    /**
-     * @type {EventHandle|null}
-     * @private
-     */
-    _evtLayerRemoved = null;
-
     /** @private */
     _castShadows = false;
 
     /**
-     * Whether to use the unified gsplat rendering. Defaults to true.
+     * True while rendering is stopped with {@link GSplatComponent#hide}.
      *
      * @private
      */
-    _unified = true;
+    _hidden = false;
 
     /**
      * Per-instance shader parameters. Stores objects with scopeId and data.
@@ -237,10 +207,6 @@ class GSplatComponent extends Component {
     set customAabb(value) {
         this._customAabb = value;
 
-        // set it on meshInstance
-        this._instance?.meshInstance?.setCustomAabb(this._customAabb);
-
-        // set it on placement
         if (this._placement) {
             this._placement.aabb = this._customAabb;
         }
@@ -257,73 +223,6 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets a {@link GSplatInstance} on the component. If not set or loaded, it returns null.
-     *
-     * @type {GSplatInstance|null}
-     * @ignore
-     */
-    set instance(value) {
-
-        if (this.unified) {
-            Debug.errorOnce(`GSplatComponent#instance setter is only available in legacy non-unified mode. ${UNIFIED_LEGACY_HINT}`);
-            return;
-        }
-
-        // destroy existing instance
-        this.destroyInstance();
-
-        this._instance = value;
-
-        if (this._instance) {
-
-            // if mesh instance was created without a node, assign it here
-            const mi = this._instance.meshInstance;
-            if (!mi.node) {
-                mi.node = this.entity;
-            }
-            mi.castShadows = this._castShadows;
-            mi.setCustomAabb(this._customAabb);
-
-            if (this.enabled && this.entity.enabled) {
-                this.addToLayers();
-            }
-        }
-    }
-
-    /**
-     * Gets the {@link GSplatInstance} on the component.
-     *
-     * @type {GSplatInstance|null}
-     * @ignore
-     */
-    get instance() {
-        if (this.unified) {
-            Debug.warnOnce(`GSplatComponent#instance getter returns null in unified mode. ${UNIFIED_LEGACY_HINT}`);
-        }
-        return this._instance;
-    }
-
-    set material(value) {
-        if (this.unified) {
-            Debug.warn(`GSplatComponent#material setter is only available in legacy non-unified mode; in unified mode use app.systems.gsplat.getMaterial(camera, layer). ${UNIFIED_LEGACY_HINT}`);
-            return;
-        }
-        if (this._instance) {
-            this._instance.material = value;
-        } else {
-            this._materialTmp = value;
-        }
-    }
-
-    get material() {
-        if (this.unified) {
-            Debug.warnOnce(`GSplatComponent#material getter returns null in unified mode; use app.systems.gsplat.getMaterial(camera, layer) instead. ${UNIFIED_LEGACY_HINT}`);
-            return null;
-        }
-        return this._instance?.material ?? this._materialTmp ?? null;
-    }
-
-    /**
      * Sets whether gsplat will cast shadows for lights that have shadow casting enabled. Defaults
      * to false.
      *
@@ -335,40 +234,20 @@ class GSplatComponent extends Component {
             const layers = this.layers;
             const scene = this.system.app.scene;
 
-            // Handle unified mode placement
             if (this._placement) {
-                if (value) {
+                // only register for shadows while the placement is in its layers, otherwise
+                // addToLayers registers it once it is added
+                if (value && !this._hidden && this.enabled && this.entity.enabled) {
                     // Add to shadow casters
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(layers[i]);
                         layer?.addGSplatShadowCaster(this._placement);
                     }
-                } else {
+                } else if (!value) {
                     // Remove from shadow casters
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(layers[i]);
                         layer?.removeGSplatShadowCaster(this._placement);
-                    }
-                }
-            }
-
-            // Handle non-unified mode mesh instance
-            const mi = this._instance?.meshInstance;
-
-            if (mi) {
-                if (this._castShadows && !value) {
-                    for (let i = 0; i < layers.length; i++) {
-                        const layer = scene.layers.getLayerById(this.layers[i]);
-                        layer?.removeShadowCasters([mi]);
-                    }
-                }
-
-                mi.castShadows = value;
-
-                if (!this._castShadows && value) {
-                    for (let i = 0; i < layers.length; i++) {
-                        const layer = scene.layers.getLayerById(layers[i]);
-                        layer?.addShadowCasters([mi]);
                     }
                 }
             }
@@ -547,34 +426,6 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets whether to use the unified gsplat rendering.
-     *
-     * @type {boolean}
-     * @deprecated Non-unified gsplat rendering is being removed; unified rendering will be the only supported mode.
-     * @ignore
-     */
-    set unified(value) {
-        if (value === false) {
-            Debug.deprecated('GSplatComponent#unified is deprecated. Non-unified gsplat rendering will be removed in a future release; please migrate to unified rendering (the new default).');
-        }
-        if (this._unified !== value) {
-            this._unified = value;
-            this._onGSplatAssetAdded();
-        }
-    }
-
-    /**
-     * Gets whether to use the unified gsplat rendering.
-     *
-     * @type {boolean}
-     * @deprecated Non-unified gsplat rendering is being removed; unified rendering will be the only supported mode.
-     * @ignore
-     */
-    get unified() {
-        return this._unified;
-    }
-
-    /**
      * Gets the unique identifier for this component. This ID is used by the picking system
      * and is also written to the work buffer when `app.scene.gsplat.enableIds` is enabled, making
      * it available to custom shaders for effects like highlighting or animation.
@@ -667,7 +518,7 @@ class GSplatComponent extends Component {
      */
     set layers(value) {
 
-        // remove the mesh instances from old layers
+        // remove the placement from old layers
         this.removeFromLayers();
 
         // set the layer list
@@ -681,7 +532,7 @@ class GSplatComponent extends Component {
             return;
         }
 
-        // add the mesh instance to new layers
+        // add the placement to new layers
         this.addToLayers();
     }
 
@@ -761,25 +612,19 @@ class GSplatComponent extends Component {
     }
 
     /** @private */
-    destroyInstance() {
+    destroyPlacement() {
 
         if (this._placement) {
             this.removeFromLayers();
             this._placement.destroy();
             this._placement = null;
         }
-
-        if (this._instance) {
-            this.removeFromLayers();
-            this._instance?.destroy();
-            this._instance = null;
-        }
     }
 
     /** @private */
     addToLayers() {
 
-        if (this._placement) {
+        if (this._placement && !this._hidden) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
                 const layer = layers.getLayerById(this._layers[i]);
@@ -789,15 +634,6 @@ class GSplatComponent extends Component {
                         layer.addGSplatShadowCaster(this._placement);
                     }
                 }
-            }
-            return;
-        }
-
-        const meshInstance = this._instance?.meshInstance;
-        if (meshInstance) {
-            const layers = this.system.app.scene.layers;
-            for (let i = 0; i < this._layers.length; i++) {
-                layers.getLayerById(this._layers[i])?.addMeshInstances([meshInstance]);
             }
         }
     }
@@ -813,15 +649,6 @@ class GSplatComponent extends Component {
                     layer.removeGSplatShadowCaster(this._placement);
                 }
             }
-            return;
-        }
-
-        const meshInstance = this._instance?.meshInstance;
-        if (meshInstance) {
-            const layers = this.system.app.scene.layers;
-            for (let i = 0; i < this._layers.length; i++) {
-                layers.getLayerById(this._layers[i])?.removeMeshInstances([meshInstance]);
-            }
         }
     }
 
@@ -833,7 +660,7 @@ class GSplatComponent extends Component {
     /** @private */
     onInsertChild() {
         if (this.enabled && this.entity.enabled) {
-            if (this._instance || this._placement) {
+            if (this._placement) {
                 this.addToLayers();
             }
         }
@@ -845,7 +672,7 @@ class GSplatComponent extends Component {
             this.onDisable();
         }
 
-        this.destroyInstance();
+        this.destroyPlacement();
 
         this.asset = null;
         this._assetReference.id = null;
@@ -858,48 +685,13 @@ class GSplatComponent extends Component {
 
     onLayersChanged(oldComp, newComp) {
         this.addToLayers();
-
-        // store the new handles, so that onDisable can unsubscribe from the current composition
-        this._evtLayerAdded?.off();
-        this._evtLayerAdded = newComp.on('add', this.onLayerAdded, this);
-        this._evtLayerRemoved?.off();
-        this._evtLayerRemoved = newComp.on('remove', this.onLayerRemoved, this);
-    }
-
-    onLayerAdded(layer) {
-        const index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        // unified mode manages layer membership via GSplatPlacement; no legacy mesh-instance work
-        if (this.unified) return;
-
-        if (this._instance) {
-            layer.addMeshInstances(this._instance.meshInstance);
-        }
-    }
-
-    onLayerRemoved(layer) {
-        const index = this.layers.indexOf(layer.id);
-        if (index < 0) return;
-        // unified mode manages layer membership via GSplatPlacement; no legacy mesh-instance work
-        if (this.unified) return;
-
-        if (this._instance) {
-            layer.removeMeshInstances(this._instance.meshInstance);
-        }
     }
 
     onEnable() {
         const scene = this.system.app.scene;
-        const layers = scene.layers;
-
         this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
 
-        if (layers) {
-            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
-            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
-        }
-
-        if (this._instance || this._placement) {
+        if (this._placement) {
             this.addToLayers();
         } else if (this.asset) {
             this._onGSplatAssetAdded();
@@ -909,28 +701,19 @@ class GSplatComponent extends Component {
     }
 
     onDisable() {
-        const scene = this.system.app.scene;
-        const layers = scene.layers;
-
         this._evtLayersChanged?.off();
         this._evtLayersChanged = null;
-
-        if (layers) {
-            this._evtLayerAdded?.off();
-            this._evtLayerAdded = null;
-            this._evtLayerRemoved?.off();
-            this._evtLayerRemoved = null;
-        }
 
         this.removeFromLayers();
     }
 
     /**
-     * Stop rendering this component without removing its mesh instance from the scene hierarchy.
+     * Stop rendering this component without removing it from the scene hierarchy.
      */
     hide() {
-        if (this._instance) {
-            this._instance.meshInstance.visible = false;
+        if (!this._hidden) {
+            this.removeFromLayers();
+            this._hidden = true;
         }
     }
 
@@ -938,8 +721,11 @@ class GSplatComponent extends Component {
      * Enable rendering of the component if hidden using {@link hide}.
      */
     show() {
-        if (this._instance) {
-            this._instance.meshInstance.visible = true;
+        if (this._hidden) {
+            this._hidden = false;
+            if (this.enabled && this.entity.enabled) {
+                this.addToLayers();
+            }
         }
     }
 
@@ -1017,44 +803,30 @@ class GSplatComponent extends Component {
 
     _onGSplatAssetLoad() {
 
-        // remove existing instance
-        this.destroyInstance();
+        // remove existing placement
+        this.destroyPlacement();
 
         // Get resource from either direct resource or asset
         const resource = this._resource ?? this._assetReference.asset?.resource;
         if (!resource) return;
 
-        if (this.unified) {
+        this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
+        this._placement.lodBaseDistance = this._lodBaseDistance;
+        this._placement.lodMultiplier = this._lodMultiplier;
+        this._placement.lodRangeMin = this._lodRangeMin;
+        this._placement.lodRangeMax = this._lodRangeMax;
+        this._placement.workBufferUpdate = this._workBufferUpdate;
+        this._placement.workBufferModifier = this._workBufferModifier;
 
-            this._placement = null;
-
-            this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
-            this._placement.lodBaseDistance = this._lodBaseDistance;
-            this._placement.lodMultiplier = this._lodMultiplier;
-            this._placement.lodRangeMin = this._lodRangeMin;
-            this._placement.lodRangeMax = this._lodRangeMax;
-            this._placement.workBufferUpdate = this._workBufferUpdate;
-            this._placement.workBufferModifier = this._workBufferModifier;
-
-            // add placement to layers if component is enabled
-            if (this.enabled && this.entity.enabled) {
-                this.addToLayers();
-            }
-
-        } else {
-
-            // create new instance
-            this.instance = new GSplatInstance(resource, {
-                material: this._materialTmp,
-                scene: this.system.app.scene
-            });
-            this._materialTmp = null;
+        // add placement to layers if component is enabled
+        if (this.enabled && this.entity.enabled) {
+            this.addToLayers();
         }
     }
 
     _onGSplatAssetUnload() {
-        // when unloading asset, only remove the instance
-        this.destroyInstance();
+        // when unloading asset, only remove the placement
+        this.destroyPlacement();
     }
 
     _onGSplatAssetRemove() {

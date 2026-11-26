@@ -351,10 +351,9 @@ class Scene extends EventHandler {
 
         /**
          * When true (default), loaded gsplat assets include the extra data needed for
-         * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} and non-unified gsplat rendering. Set to false
-         * **before** you start loading a gsplat asset (e.g. before {@link AppBase#assets}.load) to
-         * use less memory if you only need unified rendering with GPU sorting. Each load uses the
-         * value in effect when that load begins.
+         * {@link GSPLAT_RENDERER_RASTER_CPU_SORT}. Set to false **before** you start loading a gsplat
+         * asset (e.g. before {@link AppBase#assets}.load) to use less memory if you only need
+         * rendering with GPU sorting. Each load uses the value in effect when that load begins.
          *
          * @type {boolean}
          * @ignore

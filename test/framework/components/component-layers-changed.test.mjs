@@ -14,7 +14,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
  * Note the particlesystem component follows the same pattern, but its onEnable early-outs on the
  * null graphics device (disableParticleSystem), so it cannot be covered here.
  */
-const LAYER_SUBSCRIBERS = ['render', 'model', 'gsplat', 'sprite', 'element', 'camera', 'light'];
+const LAYER_SUBSCRIBERS = ['render', 'model', 'sprite', 'element', 'camera', 'light'];
 
 describe('Component layer composition changes', function () {
     let app;

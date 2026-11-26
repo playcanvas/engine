@@ -21,6 +21,7 @@ import {
     LightComponentSystem,
     MOUSEBUTTON_LEFT,
     MOUSEBUTTON_RIGHT,
+    MeshInstance,
     Mouse,
     PROJECTION_ORTHOGRAPHIC,
     PROJECTION_PERSPECTIVE,
@@ -383,7 +384,8 @@ app.on('update', (/** @type {number} */ dt) => {
             }
 
             meshInstances.forEach((meshInstance) => {
-                if (meshInstance) {
+                // the picker can also return gsplat components, which have no material to highlight
+                if (meshInstance instanceof MeshInstance) {
                     const material = /** @type {StandardMaterial} */ (meshInstance.material);
                     highlightMaterial(material, area.highlight);
                     highlights.push(material);

@@ -83,12 +83,6 @@ class GSplatResourceBase {
     _aabb;
 
     /**
-     * @type {Mesh|null}
-     * @ignore
-     */
-    mesh = null;
-
-    /**
      * @type {number}
      * @ignore
      */
@@ -136,9 +130,6 @@ class GSplatResourceBase {
     /** @private */
     _refCount = 0;
 
-    /** @private */
-    _meshRefCount = 0;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {object} gsplatData - Data source with getCenters(), calcAabb(), numSplats, etc.
@@ -184,7 +175,6 @@ class GSplatResourceBase {
      */
     _actualDestroy() {
         this.streams.destroy();
-        this.mesh?.destroy();
         this.workBufferRenderInfos.forEach(info => info.destroy());
         this.workBufferRenderInfos.clear();
     }
@@ -221,33 +211,6 @@ class GSplatResourceBase {
      */
     get refCount() {
         return this._refCount;
-    }
-
-    /**
-     * Ensures mesh and instanceIndices exist. Creates them lazily on first call. Must be paired
-     * with a call to releaseMesh() when done.
-     *
-     * @ignore
-     */
-    ensureMesh() {
-        if (!this.mesh) {
-            this.mesh = GSplatResourceBase.createMesh(this.device);
-            this.mesh.aabb.copy(this.aabb);
-        }
-        this._meshRefCount++;
-    }
-
-    /**
-     * Releases reference to mesh. When all references are released, cleans up instanceIndices.
-     * The mesh itself is destroyed by MeshInstance when its internal refCount reaches zero.
-     *
-     * @ignore
-     */
-    releaseMesh() {
-        this._meshRefCount--;
-        if (this._meshRefCount < 1) {
-            this.mesh = null; // mesh instances destroy mesh when their refCount reaches zero
-        }
     }
 
     /**

@@ -119,13 +119,8 @@ class Culler {
                     const bucket = drawCall.transparent ? transparent : opaque;
                     bucket.push(drawCall);
 
-                    if (drawCall.skinInstance || drawCall.morphInstance || drawCall.gsplatInstance) {
+                    if (drawCall.skinInstance || drawCall.morphInstance) {
                         this.processingMeshInstances.add(drawCall);
-
-                        // register visible cameras
-                        if (drawCall.gsplatInstance) {
-                            drawCall.gsplatInstance.cameras.push(camera);
-                        }
                     }
                 }
             }

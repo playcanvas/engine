@@ -43,13 +43,11 @@ Debug.call(() => {
 
 // order matters here
 const _properties = [
-    'unified',
     'lodBaseDistance',
     'lodMultiplier',
     'lodRangeMin',
     'lodRangeMax',
     'castShadows',
-    'material',
     'asset',
     'resource',
     'layers'
@@ -217,16 +215,7 @@ class GSplatComponentSystem extends ComponentSystem {
         // copy properties
         const data = {};
         _properties.forEach((prop) => {
-            if (prop === 'material') {
-                if (!gSplatComponent.unified) { // unified gsplat does not use material
-                    const srcMaterial = gSplatComponent[prop];
-                    if (srcMaterial) {
-                        data[prop] = srcMaterial.clone();
-                    }
-                }
-            } else {
-                data[prop] = gSplatComponent[prop];
-            }
+            data[prop] = gSplatComponent[prop];
         });
         data.enabled = gSplatComponent.enabled;
 
