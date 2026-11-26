@@ -34,9 +34,6 @@ class RenderAction {
         this.clearDepth = false;
         this.clearStencil = false;
 
-        // true if this render action should trigger postprocessing callback for the camera
-        this.triggerPostprocess = false;
-
         // true if this is first render action using this camera
         this.firstCameraUse = false;
 

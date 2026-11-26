@@ -73,8 +73,6 @@ entity.addComponent('camera', { fov: 'wide' });
 entity.addComponent('camera', { frustum: null });
 // @ts-expect-error method
 entity.addComponent('camera', { screenToWorld: () => new Vec3() });
-// @ts-expect-error callback the system does not consume
-entity.addComponent('camera', { onPostprocessing: () => {} });
 // @ts-expect-error underscore-prefixed internal
 entity.addComponent('element', { _anchorDirty: true });
 // @ts-expect-error base-class reference

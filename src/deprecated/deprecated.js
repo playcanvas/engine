@@ -8,15 +8,12 @@
 
 import { Debug } from '../core/debug.js';
 
-import { Vec4 } from '../core/math/vec4.js';
-
 import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8, PIXELFORMAT_RG11B10F,
     SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 
 import { AnimationKey, AnimationNode } from '../scene/animation/animation.js';
 import { Geometry } from '../scene/geometry/geometry.js';
@@ -210,8 +207,6 @@ export const CHUNKAPI_2_7 = '2.7';
  */
 export const CHUNKAPI_2_8 = '2.8';
 
-const _viewport = new Vec4();
-
 /**
  * @deprecated Use `Mesh.fromGeometry(device, new SphereGeometry(options))` instead.
  * @ignore
@@ -294,25 +289,6 @@ export function createMesh(device, positions, opts = {}) {
     geom.indices = opts.indices;
 
     return Mesh.fromGeometry(device, geom, opts);
-}
-
-/**
- * @deprecated Use drawQuadWithShader instead.
- * @ignore
- */
-export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
-
-    Debug.deprecated('drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.');
-
-    // convert rect in normalized space to viewport in pixel space
-    let viewport;
-    if (rect) {
-        const w = target ? target.width : device.width;
-        const h = target ? target.height : device.height;
-        viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
-    }
-
-    drawQuadWithShader(device, target, shader, viewport, undefined, shader.name);
 }
 
 // SCENE
