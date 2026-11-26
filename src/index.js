@@ -183,7 +183,6 @@ export { Skeleton } from './scene/animation/skeleton.js';
 // SCENE / GRAPHICS
 export { ComputeRadixSort } from './scene/graphics/radix-sort/compute-radix-sort.js';
 export { EnvLighting } from './scene/graphics/env-lighting.js';
-export { PostEffect } from './scene/graphics/post-effect.js';
 export { FramePass } from './platform/graphics/frame-pass.js';
 export { FramePassColorGrab } from './scene/graphics/frame-pass-color-grab.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
@@ -289,7 +288,6 @@ export { NullPhysicsWorld } from './framework/physics/null/null-physics-world.js
 export { ParticleSystemComponent } from './framework/components/particle-system/component.js';
 export { ParticleSystemComponentSystem } from './framework/components/particle-system/system.js';
 export { PhysicsWorld } from './framework/physics/physics-world.js';
-export { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
 export { RenderComponent } from './framework/components/render/component.js';
 export { RenderComponentSystem } from './framework/components/render/system.js';
 export * from './framework/components/rigid-body/constants.js';

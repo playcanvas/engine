@@ -212,9 +212,6 @@ class LayerComposition extends EventHandler {
                 // last render action for the camera
                 let lastRenderAction = null;
 
-                // true if post processing stop layer was found for the camera
-                let postProcessMarked = false;
-
                 // walk all global sorted list of layers (sublayers) to check if camera renders it
                 // this adds both opaque and transparent sublayers if camera renders the layer
                 for (let j = 0; j < len; j++) {
@@ -231,22 +228,10 @@ class LayerComposition extends EventHandler {
 
                                 cameraLayers.push(layer);
 
-                                // if this layer is the stop layer for postprocessing
-                                if (!postProcessMarked && layer.id === camera.disablePostEffectsLayer) {
-                                    postProcessMarked = true;
-
-                                    // the previously added render action is the last post-processed layer
-                                    if (lastRenderAction) {
-
-                                        // mark it to trigger postprocessing callback
-                                        lastRenderAction.triggerPostprocess = true;
-                                    }
-                                }
-
                                 // add render action to describe rendering step
                                 const isTransparent = this.subLayerList[j];
                                 lastRenderAction = this.addRenderAction(renderActionCount, layer, isTransparent, camera,
-                                    cameraFirstRenderAction, postProcessMarked);
+                                    cameraFirstRenderAction);
                                 renderActionCount++;
                                 cameraFirstRenderAction = false;
                             }
@@ -259,17 +244,6 @@ class LayerComposition extends EventHandler {
 
                     // mark the last render action as last one using the camera
                     lastRenderAction.lastCameraUse = true;
-                }
-
-                // if no render action for this camera was marked for end of postprocessing, mark last one
-                if (!postProcessMarked && lastRenderAction) {
-                    lastRenderAction.triggerPostprocess = true;
-                }
-
-                // handle camera stacking if this render action has postprocessing enabled
-                if (camera.renderTarget && camera.postEffectsEnabled) {
-                    // process previous render actions starting with previous camera
-                    this.propagateRenderTarget(cameraFirstRenderActionIndex - 1, camera);
                 }
             }
 
@@ -291,10 +265,10 @@ class LayerComposition extends EventHandler {
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
-    addRenderAction(renderActionIndex, layer, isTransparent, camera, cameraFirstRenderAction, postProcessMarked) {
+    addRenderAction(renderActionIndex, layer, isTransparent, camera, cameraFirstRenderAction) {
 
         // camera's render target, ignoring depth layer
-        let rt = layer.id !== LAYERID_DEPTH ? camera.renderTarget : null;
+        const rt = layer.id !== LAYERID_DEPTH ? camera.renderTarget : null;
 
         // was camera and render target combo used already
         let used = false;
@@ -306,15 +280,8 @@ class LayerComposition extends EventHandler {
             }
         }
 
-        // for cameras with post processing enabled, on layers after post processing has been applied already (so UI and similar),
-        // don't render them to render target anymore
-        if (postProcessMarked && camera.postEffectsEnabled) {
-            rt = null;
-        }
-
         // store the properties
         const renderAction = this.getNextRenderAction(renderActionIndex);
-        renderAction.triggerPostprocess = false;
         renderAction.layer = layer;
         renderAction.transparent = isTransparent;
         renderAction.camera = camera;
@@ -331,44 +298,6 @@ class LayerComposition extends EventHandler {
         }
 
         return renderAction;
-    }
-
-    // executes when post-processing camera's render actions were created to propagate rendering to
-    // render targets to previous camera as needed
-    propagateRenderTarget(startIndex, fromCamera) {
-
-        for (let a = startIndex; a >= 0; a--) {
-
-            const ra = this._renderActions[a];
-            const layer = ra.layer;
-
-            // if we hit render action with a render target (other than depth layer), that marks the end of camera stack
-            // TODO: refactor this as part of depth layer refactoring
-            if (ra.renderTarget && layer.id !== LAYERID_DEPTH) {
-                break;
-            }
-
-            // skip over depth layer
-            if (layer.id === LAYERID_DEPTH) {
-                continue;
-            }
-
-            // end of stacking if camera with custom frame passes
-            if (ra.useCameraPasses) {
-                break;
-            }
-
-            // camera stack ends when viewport or scissor of the camera changes
-            const thisCamera = ra?.camera.camera;
-            if (thisCamera) {
-                if (!fromCamera.camera.rect.equals(thisCamera.rect) || !fromCamera.camera.scissorRect.equals(thisCamera.scissorRect)) {
-                    break;
-                }
-            }
-
-            // render it to render target
-            ra.renderTarget = fromCamera.renderTarget;
-        }
     }
 
     // logs render action and their properties
@@ -394,8 +323,7 @@ class LayerComposition extends EventHandler {
                         (ra.transparent ? ' TRANSP' : ' OPAQUE') +
                         (enabled ? ' ENABLED ' : ' DISABLED') +
                         (` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`).padEnd(30, ' ')
-                    } Clear: ${clear
-                    }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
+                    } Clear: ${clear}`
                     );
                 }
             }

@@ -9,7 +9,6 @@ import { LightList } from '../lighting/light-list.js';
 import { Renderer } from './renderer.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { LayerRenderStep } from './layer-render-step.js';
-import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
 import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
@@ -662,12 +661,6 @@ class ForwardRenderer extends Renderer {
 
             if (renderAction.useCameraPasses)  {
 
-                Debug.call(() => {
-                    if (camera.postEffects.effects.length > 0) {
-                        Debug.warnOnce(`Camera '${camera.entity.name}' uses frame passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
-                    }
-                });
-
                 // schedule frame passes from the camera, capturing them into a FramePassMultiView
                 // wrapper if the camera needs per-view replication
                 if (mv) frameGraph.beginMultiView(this.device);
@@ -706,8 +699,8 @@ class ForwardRenderer extends Renderer {
                     // render the render actions in the range
                     const isDepthOnly = isDepthLayer && startIndex === i;
 
-                    if (mv && (camera.renderSceneColorMap || camera.renderSceneDepthMap || (renderAction.triggerPostprocess && camera?.onPostprocessing))) {
-                        Debug.errorOnce('FramePassMultiView: depth/color grab passes and per-camera postprocessing are not yet supported with WebGPU stereo XR; rendering may be incorrect.');
+                    if (mv && (camera.renderSceneColorMap || camera.renderSceneDepthMap)) {
+                        Debug.errorOnce('FramePassMultiView: depth/color grab passes are not yet supported with WebGPU stereo XR; rendering may be incorrect.');
                     }
 
                     if (mv) frameGraph.beginMultiView(this.device);
@@ -728,12 +721,6 @@ class ForwardRenderer extends Renderer {
                         if (camera.renderSceneDepthMap) {
                             frameGraph.addPass(camera.camera.renderPassDepthGrab);
                         }
-                    }
-
-                    // postprocessing
-                    if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
-                        const renderPass = new FramePassPostprocessing(this.device, this, renderAction);
-                        frameGraph.addPass(renderPass);
                     }
 
                     if (mv) frameGraph.endMultiView();
