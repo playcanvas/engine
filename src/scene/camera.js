@@ -1169,12 +1169,13 @@ class Camera {
      * @ignore
      */
     _centerShaderProjection(flipY, out) {
-        Camera.applyShaderProjectionTransform(this._centerProjection(), out, flipY, this.device.isWebGPU);
+        const reverseZ = this.reverseZActive;
+        Camera.applyShaderProjectionTransform(this._centerProjection(), out, flipY, this.device.isWebGPU || reverseZ);
 
         // reverse-z: the depth of a built-in projection is computed from the clip planes, which
         // keeps the far plane in place with a small near clip and a large far clip, while a
         // projection the application calculates is reversed from its own terms
-        if (this.reverseZActive) {
+        if (reverseZ) {
             if (this.calculateProjection) {
                 Camera.reverseClipDepth(out, out);
             } else {

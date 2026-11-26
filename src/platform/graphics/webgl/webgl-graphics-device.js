@@ -214,6 +214,30 @@ class WebglGraphicsDevice extends GraphicsDevice {
     _readbackCopies = new Set();
 
     /**
+     * True while rendering a pass with a reversed depth buffer, see {@link RenderPass#reverseZ}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _reverseZ = false;
+
+    /**
+     * Depth state used while {@link WebglGraphicsDevice#_reverseZ} is enabled.
+     *
+     * @type {DepthState}
+     * @private
+     */
+    _reverseZDepthState = new DepthState();
+
+    /**
+     * Tracks the depth state currently applied to the WebGL context.
+     *
+     * @type {DepthState}
+     * @private
+     */
+    _appliedDepthState = new DepthState();
+
+    /**
      * Creates a new WebglGraphicsDevice instance.
      *
      * @param {HTMLCanvasElement} canvas - The canvas to which the graphics device will render.
@@ -1026,6 +1050,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extMultiDraw = this.getExtension('WEBGL_multi_draw');
         this.supportsMultiDraw = !!this.extMultiDraw;
 
+        this.extClipControl = this.getExtension('EXT_clip_control');
+        this.supportsReverseZ = !!this.extClipControl;
+
         // compressed textures
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
         this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
@@ -1270,6 +1297,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeCapabilities();
 
         super.restoreContext();
+
+        this._reverseZ = false;
+        this._appliedDepthState?.copy(this.depthState);
+        this._applyClipControl?.(false);
 
         // Recompile all shaders
         for (const shader of this.shaders) {
@@ -1603,6 +1634,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unbindVertexArray();
         this.renderTarget = null;
         this.shader = null;
+        this.setReverseZ(false);
         this.insideRenderPass = false;
         this._precompilePass = false;
     }
@@ -1677,7 +1709,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         if (depthStencilOps.clearDepth) {
             clearFlags |= CLEARFLAG_DEPTH;
-            _clearOptions.depth = depthStencilOps.clearDepthValue;
+            _clearOptions.depth = renderPass.reverseZ ? 1 - depthStencilOps.clearDepthValue : depthStencilOps.clearDepthValue;
         }
 
         if (depthStencilOps.clearStencil) {
@@ -1843,6 +1875,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
         }
 
+        this.setReverseZ(false);
         this.insideRenderPass = false;
 
         DebugGraphics.popGpuMarker(this);
@@ -3217,14 +3250,34 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setDepthState(depthState) {
-        const currentDepthState = this.depthState;
-        if (!currentDepthState.equals(depthState)) {
+    /**
+     * Applies `EXT_clip_control` depth mode for reverse-z passes and restores default `-1..1`
+     * clip space afterwards.
+     *
+     * @param {boolean} reverseZ - True for `0..1` clip space, false for `-1..1`.
+     * @private
+     */
+    _applyClipControl(reverseZ) {
+        if (!this.extClipControl || this.contextLost) return;
+        const { LOWER_LEFT_EXT, ZERO_TO_ONE_EXT, NEGATIVE_ONE_TO_ONE_EXT } = this.extClipControl;
+        this.extClipControl.clipControlEXT(LOWER_LEFT_EXT, reverseZ ? ZERO_TO_ONE_EXT : NEGATIVE_ONE_TO_ONE_EXT);
+    }
+
+    /**
+     * Applies a concrete {@link DepthState} to the WebGL context.
+     *
+     * @param {DepthState} depthState - The depth state to apply.
+     * @param {boolean} [force] - Bypass the key check when toggling reverse-z.
+     * @private
+     */
+    _applyDepthState(depthState, force = false) {
+        const applied = this._appliedDepthState;
+        if (force || !applied.equals(depthState)) {
             const gl = this.gl;
 
             // write
             const write = depthState.write;
-            if (currentDepthState.write !== write) {
+            if (applied.write !== write) {
                 gl.depthMask(write);
             }
 
@@ -3236,11 +3289,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 func = FUNC_ALWAYS;
             }
 
-            if (currentDepthState.func !== func) {
+            if (applied.func !== func) {
                 gl.depthFunc(this.glComparison[func]);
             }
 
-            if (currentDepthState.test !== test) {
+            if (applied.test !== test) {
                 if (test) {
                     gl.enable(gl.DEPTH_TEST);
                 } else {
@@ -3270,8 +3323,50 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
 
-            // update internal state
-            currentDepthState.copy(depthState);
+            // update applied state
+            applied.copy(depthState);
+        }
+    }
+
+    /**
+     * Enables or disables reversed depth buffer rendering for the current render pass.
+     *
+     * @param {boolean} reverseZ - True for a reversed depth buffer.
+     * @ignore
+     */
+    setReverseZ(reverseZ) {
+        super.setReverseZ(reverseZ);
+        if (this._reverseZ !== reverseZ) {
+            this._reverseZ = reverseZ;
+            this._applyClipControl(reverseZ);
+            if (reverseZ) {
+                this._reverseZDepthState.copyReversed(this.depthState);
+                this._applyDepthState(this._reverseZDepthState, true);
+            } else {
+                this._applyDepthState(this.depthState, true);
+            }
+        }
+    }
+
+    /**
+     * True when rendering with a reversed depth buffer, see {@link RenderPass#reverseZ}.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get reverseZ() {
+        return this._reverseZ;
+    }
+
+    setDepthState(depthState) {
+        if (!this.depthState.equals(depthState)) {
+            this.depthState.copy(depthState);
+            if (this._reverseZ) {
+                this._reverseZDepthState.copyReversed(depthState);
+                this._applyDepthState(this._reverseZDepthState);
+            } else {
+                this._applyDepthState(depthState);
+            }
         }
     }
 

@@ -10,7 +10,7 @@ export default /* glsl */`
     localPos += particlePos;
 
     #ifdef SCREEN_SPACE
-        // the clip depth of the near plane on WebGPU, which reverse-z moves to 1
+        // the clip depth of the near plane on WebGPU (and WebGL with clip control), which reverse-z moves to 1
         #ifdef REVERSE_Z
         gl_Position = vec4(localPos.x, localPos.y, 1.0, 1.0);
         #else

@@ -632,7 +632,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the device supports rendering with a reversed depth buffer, see
-     * {@link CameraComponent#reverseZ}. Supported on WebGPU.
+     * {@link CameraComponent#reverseZ}. Supported on WebGPU, and on WebGL2 when the
+     * `EXT_clip_control` extension is available.
      *
      * @type {boolean}
      * @readonly

@@ -12,6 +12,7 @@ import {
 import { DepthState } from '../../../src/platform/graphics/depth-state.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
+import { WebglGraphicsDevice } from '../../../src/platform/graphics/webgl/webgl-graphics-device.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import { Camera } from '../../../src/scene/camera.js';
 import { FOG_LINEAR, PROJECTION_ORTHOGRAPHIC, SHADER_FORWARD, SHADERDEF_SCREENSPACE } from '../../../src/scene/constants.js';
@@ -626,6 +627,122 @@ describe('Reverse-z', function () {
             expect(depthState.func).to.equal(FUNC_LESSEQUAL);
             expect(depthState.depthBias).to.equal(1);
             expect(depthState.key).to.equal(key);
+        });
+    });
+
+    describe('WebGL2 EXT_clip_control', function () {
+
+        const createMockWebglDevice = (extClipControl) => {
+            const gl = {
+                DEPTH_TEST: 0x0B71,
+                POLYGON_OFFSET_FILL: 0x8037,
+                depthMask: spy(),
+                depthFunc: spy(),
+                enable: spy(),
+                disable: spy(),
+                polygonOffset: spy(),
+                getSupportedExtensions: () => (extClipControl ? ['EXT_clip_control'] : []),
+                getExtension: name => (name === 'EXT_clip_control' ? extClipControl : null)
+            };
+
+            const mockDevice = Object.create(WebglGraphicsDevice.prototype);
+            mockDevice.gl = gl;
+            mockDevice.contextLost = false;
+            mockDevice._deviceType = 'webgl2';
+            mockDevice.initOptions = { deviceType: 'webgl2' };
+            mockDevice.supportsReverseZ = false;
+            mockDevice._reverseZ = false;
+            mockDevice.depthState = new DepthState();
+            mockDevice._reverseZDepthState = new DepthState();
+            mockDevice._appliedDepthState = new DepthState();
+            mockDevice.depthBiasEnabled = false;
+            mockDevice.glComparison = [
+                0x0200, // NEVER
+                0x0201, // LESS
+                0x0202, // EQUAL
+                0x0203, // LEQUAL
+                0x0204, // GREATER
+                0x0205, // NOTEQUAL
+                0x0206, // GEQUAL
+                0x0207  // ALWAYS
+            ];
+            return { device: mockDevice, gl };
+        };
+
+        it('sets supportsReverseZ based on EXT_clip_control availability', function () {
+            const ext = {
+                LOWER_LEFT_EXT: 0x8CA1,
+                ZERO_TO_ONE_EXT: 0x935F,
+                NEGATIVE_ONE_TO_ONE_EXT: 0x935E,
+                clipControlEXT: spy()
+            };
+
+            const withExt = createMockWebglDevice(ext);
+            withExt.device.initializeExtensions();
+            expect(withExt.device.supportsReverseZ).to.equal(true);
+            expect(withExt.device.extClipControl).to.equal(ext);
+
+            const withoutExt = createMockWebglDevice(null);
+            withoutExt.device.initializeExtensions();
+            expect(withoutExt.device.supportsReverseZ).to.equal(false);
+            expect(withoutExt.device.extClipControl).to.equal(null);
+        });
+
+        it('toggles clipControlEXT and depth state on setReverseZ', function () {
+            const ext = {
+                LOWER_LEFT_EXT: 0x8CA1,
+                ZERO_TO_ONE_EXT: 0x935F,
+                NEGATIVE_ONE_TO_ONE_EXT: 0x935E,
+                clipControlEXT: spy()
+            };
+            const { device, gl } = createMockWebglDevice(ext);
+            device.initializeExtensions();
+
+            const state = new DepthState(FUNC_LESS, true);
+            state.depthBias = 1;
+            state.depthBiasSlope = 2;
+            device.setDepthState(state);
+
+            expect(gl.depthFunc.lastCall.args[0]).to.equal(device.glComparison[FUNC_LESS]);
+
+            device.setReverseZ(true);
+            expect(ext.clipControlEXT.lastCall.args).to.deep.equal([ext.LOWER_LEFT_EXT, ext.ZERO_TO_ONE_EXT]);
+            expect(gl.depthFunc.lastCall.args[0]).to.equal(device.glComparison[FUNC_GREATER]);
+            expect(gl.polygonOffset.lastCall.args).to.deep.equal([-2, -1]);
+            expect(device.depthState.func).to.equal(FUNC_LESS);
+
+            device.setReverseZ(false);
+            expect(ext.clipControlEXT.lastCall.args).to.deep.equal([ext.LOWER_LEFT_EXT, ext.NEGATIVE_ONE_TO_ONE_EXT]);
+            expect(gl.depthFunc.lastCall.args[0]).to.equal(device.glComparison[FUNC_LESS]);
+            expect(gl.polygonOffset.lastCall.args).to.deep.equal([2, 1]);
+        });
+
+        it('skips clipControlEXT when context is lost', function () {
+            const ext = {
+                LOWER_LEFT_EXT: 0x8CA1,
+                ZERO_TO_ONE_EXT: 0x935F,
+                NEGATIVE_ONE_TO_ONE_EXT: 0x935E,
+                clipControlEXT: spy()
+            };
+            const { device } = createMockWebglDevice(ext);
+            device.initializeExtensions();
+            device.contextLost = true;
+
+            device.setReverseZ(true);
+            expect(ext.clipControlEXT.called).to.equal(false);
+        });
+
+        it('uses 0..1 depth range in Camera#_centerShaderProjection on WebGL2 with reverseZ', function () {
+            const app = createApp();
+            app.graphicsDevice.supportsReverseZ = true;
+            const entity = new Entity('cam');
+            entity.addComponent('camera', { nearClip: 0.5, farClip: 1000, fov: 60, reverseZ: true });
+            app.root.addChild(entity);
+
+            const proj = entity.camera.camera._centerShaderProjection(false, new Mat4());
+            expect(clipDepth(proj, -0.5)).to.be.closeTo(1, 1e-6);
+            expect(clipDepth(proj, -1000)).to.be.closeTo(0, 1e-6);
+            app.destroy();
         });
     });
 });

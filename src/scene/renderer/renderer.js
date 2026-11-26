@@ -541,8 +541,8 @@ class Renderer {
 
             // the skybox projection is always a built-in perspective one
             let projMatSkybox = camera.getProjectionMatrixSkybox();
-            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, this.device.isWebGPU);
             const reverseZ = camera.reverseZActive;
+            projMatSkybox = Camera.applyShaderProjectionTransform(projMatSkybox, _tempProjMat1, flipY, this.device.isWebGPU || reverseZ);
             if (reverseZ) {
                 Camera.setReverseZDepth(projMatSkybox, true, camera.nearClip, camera.farClip);
             }
