@@ -680,11 +680,11 @@ class AssetRegistry extends EventHandler {
         const url = modelAsset.getFileUrl();
         const ext = path.getExtension(url);
 
-        if (ext === '.json' || ext === '.glb') {
+        if (ext === '.glb') {
             const dir = path.getDirectory(url);
             const basename = path.getBasename(url);
 
-            // PlayCanvas model format supports material mapping file
+            // a glb model can have a material mapping file next to it
             const mappingUrl = path.join(dir, basename.replace(ext, '.mapping.json'));
             this._loader.load(mappingUrl, 'json', (err, data) => {
                 if (err) {

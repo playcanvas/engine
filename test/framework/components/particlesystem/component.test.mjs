@@ -18,7 +18,7 @@ describe('ParticleSystemComponent', function () {
     const loadAssets = function (cb) {
         const assetList = [
             new Asset('Box', 'model', {
-                url: '/test/assets/cube/cube.json'
+                url: '/test/assets/cube/cube.glb'
             }),
             new Asset('ColorMap', 'texture', {
                 url: '/test/assets/test.png'

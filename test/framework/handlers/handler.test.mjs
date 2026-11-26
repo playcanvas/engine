@@ -4,7 +4,6 @@ import { restore, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { ResourceHandler } from '../../../src/framework/handlers/handler.js';
 import { GlbModelParser } from '../../../src/framework/parsers/glb-model.js';
-import { JsonModelParser } from '../../../src/framework/parsers/json-model.js';
 import { http, Http } from '../../../src/platform/net/http.js';
 
 // the base ResourceHandler only stores the app and exposes it via context.app, so a stub is enough
@@ -218,12 +217,6 @@ describe('ResourceHandler (parser registry)', function () {
     });
 
     describe('model parser canParse', function () {
-
-        it('JsonModelParser matches .json only', function () {
-            const parser = new JsonModelParser({});
-            expect(parser.canParse({ ext: 'json' })).to.be.true;
-            expect(parser.canParse({ ext: 'glb' })).to.be.false;
-        });
 
         it('GlbModelParser matches .glb only', function () {
             const parser = new GlbModelParser({});
