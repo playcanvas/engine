@@ -41,8 +41,8 @@ class RenderHandler extends ResourceHandler {
     }
 
     /**
-     * Waits for a render asset's container to supply its meshes. Without an asset, completes
-     * with no render data.
+     * Waits for a render asset's container to supply its meshes. Without an asset, or while the
+     * container has no file yet, completes with no render data.
      *
      * @param {string|{load: string, original: string}} url - The resource URL. Not used for
      * container-backed render assets.
@@ -87,13 +87,18 @@ class RenderHandler extends ResourceHandler {
         const onLoad = (containerAsset) => {
             if (!active) return;
             const render = containerAsset.resource?.renders?.[asset.data.renderIndex]?.resource;
-            if (!render?.meshes) {
+            if (render?.meshes) {
+                cleanup();
+                callback(null, render);
+            } else if (!containerAsset.file) {
+                // A container without a file, such as one the Editor is still importing, has no
+                // renders yet. Complete with an empty render, and patch assigns the meshes once
+                // the container reloads with its file.
+                cleanup();
+                callback(null, null);
+            } else {
                 onError(`Render ${asset.data.renderIndex} is unavailable in container asset ${containerId}`);
-                return;
             }
-
-            cleanup();
-            callback(null, render);
         };
         const onAdd = (containerAsset) => {
             if (!active) return;
@@ -103,7 +108,7 @@ class RenderHandler extends ResourceHandler {
                 containerAsset.once('remove', () => onError(`Container asset ${containerId} was removed`))
             );
 
-            if (containerAsset.resource) {
+            if (containerAsset.resource || (containerAsset.loaded && !containerAsset.file)) {
                 onLoad(containerAsset);
             } else if (containerAsset.loaded) {
                 onError(`Container asset ${containerId} has no resource`);

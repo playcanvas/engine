@@ -206,6 +206,45 @@ describe('RenderHandler', function () {
         expect(error.firstCall.args[0]).to.include('Render 10 is unavailable');
     });
 
+    it('completes without error while the container has no file and takes its meshes once it has', function () {
+        // the Editor registers a container before its import has uploaded the file
+        const container = new Asset('container', 'container', null, {});
+        registry.add(container);
+        const asset = createRender(container);
+        const ready = spy();
+        const error = spy();
+        asset.ready(ready);
+        asset.on('error', error);
+        registry.load(asset);
+
+        expect(error.called).to.equal(false);
+        expect(ready.calledOnce).to.equal(true);
+        expect(asset.resource).to.be.instanceOf(Render);
+        expect(asset.resource.meshes).to.equal(null);
+
+        const render = asset.resource;
+        container.file = { url: 'container.glb', filename: 'container.glb', hash: 'hash' };
+        requests.get(container)(null, createResource());
+
+        expect(error.called).to.equal(false);
+        expect(asset.resource).to.equal(render);
+        expect(render.meshes).to.equal(container.resource.renders[0].resource.meshes);
+    });
+
+    it('completes without error for a loaded container that has no file', function () {
+        const container = new Asset('container', 'container', null, {});
+        container.loaded = true;
+        registry.add(container);
+        const asset = createRender(container);
+        const error = spy();
+        asset.on('error', error);
+        registry.load(asset);
+
+        expect(error.called).to.equal(false);
+        expect(asset.loaded).to.equal(true);
+        expect(asset.resource.meshes).to.equal(null);
+    });
+
     it('reports removal of a pending container', function () {
         const container = createContainer();
         const asset = createRender(container);
