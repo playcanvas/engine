@@ -505,8 +505,9 @@ class Mat4 {
      * the origin, so that when you use a typical projection matrix, the center of the scene maps
      * to the center of the viewport. Similarly, the direction described by the up vector projected
      * onto the viewing plane is mapped to the positive y-axis so that it points upward in the
-     * viewport. The up vector must not be parallel to the line of sight from the eye to the
-     * reference point.
+     * viewport. If the up vector is parallel to the line of sight from the eye to the reference
+     * point, the positive z-axis is projected instead (or the positive x-axis when the up vector
+     * is along z), so looking straight up or down still gives a valid orientation.
      *
      * @param {Vec3} position - 3-d vector holding view position.
      * @param {Vec3} target - 3-d vector holding reference point.
@@ -521,7 +522,12 @@ class Mat4 {
     setLookAt(position, target, up) {
         z.sub2(position, target).normalize();
         y.copy(up).normalize();
-        x.cross(y, z).normalize();
+        x.cross(y, z);
+        if (x.lengthSq() === 0) {
+            // up is parallel to the line of sight, so pick another axis to keep the basis valid
+            x.cross(y, Math.abs(y.z) < 1 ? Vec3.BACK : Vec3.RIGHT);
+        }
+        x.normalize();
         y.cross(z, x);
 
         const r = this.data;

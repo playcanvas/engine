@@ -685,6 +685,37 @@ describe('Mat4', function () {
             expect(m.data[15]).to.equal(1);
         });
 
+        it('sets a valid matrix when looking along the up vector', function () {
+            const cases = [
+                [new Vec3(0, 10, 0), Vec3.ZERO, Vec3.UP],
+                [new Vec3(0, -10, 0), Vec3.ZERO, Vec3.UP],
+                [new Vec3(1, 2, 3), new Vec3(1, 2, -7), Vec3.BACK],
+                [new Vec3(1, 2, 3), new Vec3(1, 2, 13), new Vec3(0, 0, 2)]
+            ];
+            for (const [position, target, up] of cases) {
+                const m = new Mat4().setLookAt(position, target, up);
+                const xAxis = m.getX(new Vec3());
+                const yAxis = m.getY(new Vec3());
+                const zAxis = m.getZ(new Vec3());
+                expect(xAxis.length()).to.be.closeTo(1, 1e-6);
+                expect(yAxis.length()).to.be.closeTo(1, 1e-6);
+                expect(xAxis.dot(yAxis)).to.be.closeTo(0, 1e-6);
+                expect(new Vec3().cross(xAxis, yAxis).distance(zAxis)).to.be.closeTo(0, 1e-6);
+
+                // the negative z-axis still points at the target
+                const dir = new Vec3().sub2(target, position).normalize();
+                expect(zAxis.clone().mulScalar(-1).distance(dir)).to.be.closeTo(0, 1e-6);
+            }
+        });
+
+        it('matches a nearly vertical look at when looking straight down', function () {
+            const m = new Mat4().setLookAt(new Vec3(0, 10, 0), Vec3.ZERO, Vec3.UP);
+            const near = new Mat4().setLookAt(new Vec3(0, 10, 0), new Vec3(0, 0, -1e-6), Vec3.UP);
+            for (let i = 0; i < 16; i++) {
+                expect(m.data[i]).to.be.closeTo(near.data[i], 1e-5);
+            }
+        });
+
         it('returns this', function () {
             const m = new Mat4();
             expect(m.setLookAt(Vec3.ZERO, Vec3.FORWARD, Vec3.UP)).to.equal(m);

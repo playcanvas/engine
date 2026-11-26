@@ -634,6 +634,24 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#lookAt()', function () {
+
+        it('looks straight down at a target directly below', function () {
+            const node = new GraphNode();
+            node.setPosition(0, 10, 0);
+            node.lookAt(Vec3.ZERO);
+            expect(node.forward.distance(Vec3.DOWN)).to.be.closeTo(0, 1e-6);
+        });
+
+        it('looks straight up at a target directly above', function () {
+            const node = new GraphNode();
+            node.setPosition(0, -10, 0);
+            node.lookAt(Vec3.ZERO);
+            expect(node.forward.distance(Vec3.UP)).to.be.closeTo(0, 1e-6);
+        });
+
+    });
+
     describe('#remove', function () {
 
         it('removes the node from its parent, unparenting it', function () {
