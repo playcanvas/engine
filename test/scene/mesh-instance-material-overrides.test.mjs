@@ -270,6 +270,18 @@ describe('MeshInstance material uniform buffer overrides', function () {
             expect(warn.called).to.equal(false);
         });
 
+        it('warns once when a material parameter is set to undefined or null', function () {
+            material.setParameter('uMissing', undefined);
+            material.setParameter('uMissing', undefined);
+            expect(warn.callCount).to.equal(1);
+            expect(warn.firstCall.args[0]).to.contain('\'uMissing\'').and.to.contain('undefined').and.to.contain('deleteParameter');
+
+            material.setParameter('uCleared', null);
+            material.setParameter('uCleared', null);
+            expect(warn.callCount).to.equal(2);
+            expect(warn.secondCall.args[0]).to.contain('\'uCleared\'').and.to.contain('null').and.to.contain('deleteParameter');
+        });
+
         it('restores only the scope parameters of a mesh instance', function () {
             material.setParameter('uTime', 1);
             material.setParameter('uScale', 0.5);
@@ -299,7 +311,9 @@ describe('MeshInstance material uniform buffer overrides', function () {
         afterEach(function () {
             warn.restore();
             for (const message of Debug._loggedMessages) {
-                if (message.includes('in place')) Debug._loggedMessages.delete(message);
+                if (message.includes('in place') || message.includes('MeshInstance#setParameter') || message.includes('Value was not set')) {
+                    Debug._loggedMessages.delete(message);
+                }
             }
         });
 
@@ -389,6 +403,41 @@ describe('MeshInstance material uniform buffer overrides', function () {
             recordAppliedOverrides(meshInstance, [override]);
             expect(meshInstance._debugOverrideSnapshots.has(override)).to.equal(false);
             expect(getMutatedOverrides(meshInstance, [override])).to.deep.equal([]);
+        });
+
+        it('records no snapshot and clears any prior snapshot for undefined, null, or non-array data', function () {
+            const meshInstance = new MeshInstance(mesh, material);
+            const override = { name: 'uColor', data: [1, 0, 0], uniformFormat: { numComponents: 3, count: 0 } };
+
+            for (const data of [undefined, null, false, { r: 1, g: 0, b: 0 }]) {
+                override.data = [1, 0, 0];
+                recordAppliedOverrides(meshInstance, [override]);
+                expect(meshInstance._debugOverrideSnapshots.has(override)).to.equal(true);
+
+                override.data = data;
+                recordAppliedOverrides(meshInstance, [override]);
+                expect(meshInstance._debugOverrideSnapshots.has(override)).to.equal(false);
+                expect(getMutatedOverrides(meshInstance, [override])).to.deep.equal([]);
+            }
+        });
+
+        it('warns once at setParameter and does not throw when a material override is undefined or null', function () {
+            const meshInstance = new MeshInstance(mesh, material);
+
+            meshInstance.setParameter('material_diffuse', undefined);
+            meshInstance.setParameter('material_diffuse', undefined);
+            expect(warn.callCount).to.equal(1);
+            expect(warn.firstCall.args[0]).to.contain('\'material_diffuse\'').and.to.contain('undefined').and.to.contain('deleteParameter');
+
+            expect(() => meshInstance.getMaterialBindGroup(device)).to.not.throw();
+            expect(() => meshInstance.getMaterialBindGroup(device)).to.not.throw();
+            expectClose(storedDiffuse(meshInstance._materialUniformBuffer), linear(0.5, 0.5, 0.5));
+
+            meshInstance.setParameter('material_diffuse', null);
+            meshInstance.setParameter('material_diffuse', null);
+            expect(warn.args.some(([msg]) => msg.includes('\'material_diffuse\'') && msg.includes('null') && msg.includes('deleteParameter'))).to.equal(true);
+            expect(() => meshInstance.getMaterialBindGroup(device)).to.not.throw();
+            expectClose(storedDiffuse(meshInstance._materialUniformBuffer), linear(0.5, 0.5, 0.5));
         });
 
     });

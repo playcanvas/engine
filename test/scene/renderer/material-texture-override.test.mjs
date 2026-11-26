@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
 import {
     BindGroupFormat, BindTextureFormat, BindUniformBufferFormat
@@ -123,5 +124,24 @@ describe('mesh instance texture overrides', function () {
 
         expect(meshInstance._materialTextureOverrides).to.have.lengthOf(0);
         expect(meshInstance.getParameter('texture_overridden')).to.equal(undefined);
+    });
+
+    it('keeps the material texture and does not throw when a texture override is undefined or null', function () {
+        const warn = sinon.stub(console, 'warn');
+        const material = materialWithTextureSlot();
+        const meshInstance = addBox(material, 0);
+
+        meshInstance.setParameter('texture_overridden', undefined);
+        expect(() => app.render()).to.not.throw();
+        expect(meshInstance._materialBindGroup.textures[0].name).to.equal('material');
+
+        meshInstance.setParameter('texture_overridden', null);
+        expect(() => app.render()).to.not.throw();
+        expect(meshInstance._materialBindGroup.textures[0].name).to.equal('material');
+
+        warn.restore();
+        for (const message of Debug._loggedMessages) {
+            if (message.includes('MeshInstance#setParameter')) Debug._loggedMessages.delete(message);
+        }
     });
 });

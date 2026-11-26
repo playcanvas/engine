@@ -345,7 +345,11 @@ class TextureRenderer {
             slot.channelIndices.set(channelIndices);
             slot.material.setParameter('textureChannels', slot.channelIndices);
         }
-        slot.material.setParameter('colorMap', texture);
+        if (texture) {
+            slot.material.setParameter('colorMap', texture);
+        } else {
+            slot.material.deleteParameter('colorMap');
+        }
         slot.texture = texture;
         const meshInstance = slot.meshInstance;
         meshInstance.node.setLocalPosition(2 * x + width - 1, 1 - 2 * y - height, 0);
@@ -411,7 +415,7 @@ class TextureRenderer {
                 slot.meshInstance.visible = false;
                 slot.meshInstance.shaderPassMask = 0;
                 // A dormant debug renderer must not keep caller-owned textures alive.
-                slot.material.setParameter('colorMap', null);
+                slot.material.deleteParameter('colorMap');
                 slot.texture = null;
             }
             pool.used = 0;
