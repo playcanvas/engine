@@ -299,8 +299,7 @@ class AppStats {
 
     /**
      * CPU duration of the latest dedicated animation-update phase in milliseconds, used by
-     * {@link AnimComponentSystem}. Excludes the legacy {@link AnimationComponentSystem}, which
-     * runs in the system update phase. Part of {@link cpuUpdateTime}. Available in all builds.
+     * {@link AnimComponentSystem}. Part of {@link cpuUpdateTime}. Available in all builds.
      *
      * @type {number}
      */

@@ -1,10 +1,10 @@
 /**
  * The glyph of an icon, named for the component it marks.
  *
- * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem' | 'anim' | 'animation' | 'script'} OverlayIcon
+ * @typedef {'camera' | 'light' | 'audiolistener' | 'sound' | 'particlesystem' | 'anim' | 'script'} OverlayIcon
  */
 
-// the glyph of the anim and animation components
+// the glyph of the anim component
 const PLAY = `
         <circle r="9"/>
         <path d="M-2.5 -4.5L4.5 0L-2.5 4.5Z" fill="white" stroke="none"/>`;
@@ -53,9 +53,6 @@ const ICON_GLYPHS = {
 
     // a play button, a triangle in a circle
     anim: PLAY,
-
-    // the legacy animation component, drawn as anim
-    animation: PLAY,
 
     // code brackets around a slash
     script: `

@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 
 import { DummyComponentSystem } from './test-component/system.mjs';
+import { Debug } from '../../src/core/debug.js';
 import { Color } from '../../src/core/math/color.js';
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
-import { AnimationComponent } from '../../src/framework/components/animation/component.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
 import { ButtonComponent } from '../../src/framework/components/button/component.js';
 import { CameraComponent } from '../../src/framework/components/camera/component.js';
@@ -49,7 +49,6 @@ describe('Entity', function () {
 
     const components = {
         anim: AnimComponent,
-        animation: AnimationComponent,
         audiolistener: AudioListenerComponent,
         button: ButtonComponent,
         camera: CameraComponent,
@@ -119,6 +118,22 @@ describe('Entity', function () {
                 entity.destroy();
             });
         }
+
+        it('reports the removed animation component and adds nothing', function () {
+            // Debug.removed dedupes globally - clear so this assertion is order-independent
+            Debug._loggedMessages.clear();
+            const errorStub = stub(console, 'error');
+
+            const entity = new Entity();
+            const component = entity.addComponent('animation');
+            errorStub.restore();
+
+            expect(component).to.be.null;
+            expect(entity.c.animation).to.be.undefined;
+            expect(errorStub.calledOnce).to.be.true;
+            expect(errorStub.firstCall.args[0]).to.match(/^REMOVED: The animation component is removed/);
+            entity.destroy();
+        });
 
         it('respects components order on disable', function () {
             const entity = new Entity();
@@ -199,7 +214,7 @@ describe('Entity', function () {
         a_a.addChild(a_a_b);
 
         // Add some components for testing clone behavior
-        a.addComponent('animation', { speed: 0.9, loop: true });
+        a.addComponent('anim', { speed: 0.9, activate: false });
         a.addComponent('camera', { nearClip: 2, farClip: 3 });
         a_a.addComponent('rigidbody', { type: 'static' });
         a_a.addComponent('collision', { type: 'sphere', radius: 4 });
@@ -290,8 +305,8 @@ describe('Entity', function () {
 
             // Ensure structures are identical at every level
             expect(subtree2.a.name).to.equal('a');
-            expect(subtree2.a.animation.speed).to.equal(0.9);
-            expect(subtree2.a.animation.loop).to.equal(true);
+            expect(subtree2.a.anim.speed).to.equal(0.9);
+            expect(subtree2.a.anim.activate).to.equal(false);
             expect(subtree2.a.camera.nearClip).to.equal(2);
             expect(subtree2.a.camera.farClip).to.equal(3);
 
@@ -320,7 +335,7 @@ describe('Entity', function () {
 
             // Ensure copies were created, not references
             expect(subtree1.a).to.not.equal(subtree2.a);
-            expect(subtree1.a.animation).to.not.equal(subtree2.a.animation);
+            expect(subtree1.a.anim).to.not.equal(subtree2.a.anim);
             expect(subtree1.a.camera).to.not.equal(subtree2.a.camera);
             expect(subtree1.a_a).to.not.equal(subtree2.a_a);
             expect(subtree1.a_a.collision).to.not.equal(subtree2.a_a.collision);

@@ -15,7 +15,6 @@ import {
     SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
 
-import { AnimationKey, AnimationNode } from '../scene/animation/animation.js';
 import { Geometry } from '../scene/geometry/geometry.js';
 import { CylinderGeometry } from '../scene/geometry/cylinder-geometry.js';
 import { BoxGeometry } from '../scene/geometry/box-geometry.js';
@@ -292,18 +291,6 @@ export function createMesh(device, positions, opts = {}) {
 }
 
 // SCENE
-
-/**
- * @deprecated Use AnimationKey instead.
- * @ignore
- */
-export const Key = AnimationKey;
-
-/**
- * @deprecated Use AnimationNode instead.
- * @ignore
- */
-export const Node = AnimationNode;
 
 /**
  * @deprecated Use LitShaderOptions instead.
