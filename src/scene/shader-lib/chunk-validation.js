@@ -54,7 +54,6 @@ const chunkVersions = {
     metalnessModulatePS: '1.65',
     outputAlphaPS: '1.65',
     outputAlphaPremulPS: '1.65',
-    fresnelSchlickPS: '1.65',
     iridescenceDiffractionPS: '1.65',
     lightmapAddPS: '1.65',
     refractionCubePS: '1.70',
@@ -131,7 +130,8 @@ const removedChunks = {
     lightmapDirPS: '2.7',
     lightmapSinglePS: '2.7',
     tangentBinormalVS: '2.7',
-    gsplatCustomizeVS: '2.16'
+    gsplatCustomizeVS: '2.16',
+    fresnelSchlickPS: '3.0'
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

@@ -126,25 +126,6 @@ export const FOG_EXP = 'exp';
  */
 export const FOG_EXP2 = 'exp2';
 
-/**
- * No Fresnel.
- *
- * @category Graphics
- */
-export const FRESNEL_NONE = 0;
-
-/**
- * Schlick's approximation of Fresnel.
- *
- * @category Graphics
- */
-export const FRESNEL_SCHLICK = 2;
-
-export const fresnelNames = {
-    [FRESNEL_NONE]: 'NONE',
-    [FRESNEL_SCHLICK]: 'SCHLICK'
-};
-
 // Legacy
 export const LAYER_HUD = 0;
 export const LAYER_GIZMO = 1;

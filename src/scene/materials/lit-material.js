@@ -1,5 +1,6 @@
+import { Debug } from '../../core/debug.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../constants.js';
+import { DITHER_NONE, SPECOCC_AO } from '../constants.js';
 import { Material } from './material.js';
 import { LitMaterialOptions } from './lit-material-options.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -61,8 +62,6 @@ class LitMaterial extends Material {
     shadowCatcher = false;
 
     ggxSpecular = false;
-
-    fresnelModel = FRESNEL_SCHLICK;
 
     dynamicRefraction = false;
 
@@ -127,5 +126,15 @@ class LitMaterial extends Material {
         return shader;
     }
 }
+
+Object.defineProperty(LitMaterial.prototype, 'fresnelModel', {
+    get: function () {
+        Debug.removed('LitMaterial#fresnelModel was removed. The material always uses Schlick\'s approximation of Fresnel.');
+        return undefined;
+    },
+    set: function (value) {
+        Debug.removed('LitMaterial#fresnelModel was removed. The material always uses Schlick\'s approximation of Fresnel.');
+    }
+});
 
 export { LitMaterial };

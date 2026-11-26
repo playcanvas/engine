@@ -227,7 +227,7 @@ void evaluateLight{i}(
         #else // punctual light
 
             // is fresnel needed
-            #if LIGHT{i}TYPE == DIRECTIONAL && LIT_FRESNEL_MODEL != NONE
+            #if LIGHT{i}TYPE == DIRECTIONAL
                 #define LIGHT{i}FRESNEL
             #endif
 

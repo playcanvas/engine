@@ -10,8 +10,6 @@ import {
     CUBEPROJ_NONE,
     DETAILMODE_MUL,
     DITHER_NONE,
-    FRESNEL_NONE,
-    FRESNEL_SCHLICK,
     PARALLAX_OFFSET,
     SHADER_PICK,
     SHADER_PREPASS,
@@ -2059,12 +2057,6 @@ class StandardMaterial extends Material {
         // this is derived from the blend state and cannot be overridden by onUpdateShader
         options.useDualSourceBlending = useDualSourceBlending;
 
-        // FRESNEL_NONE is not supported, and the Schlick model is used in its place. This is set
-        // before the key of the options is generated, as they are shared by all materials
-        if (options.litOptions.fresnelModel === FRESNEL_NONE) {
-            options.litOptions.fresnelModel = FRESNEL_SCHLICK;
-        }
-
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat, getViewTextures(params.viewUniformFormat));
 
         // the shader is processed against the layout of the material: the format of its uniform
@@ -2578,10 +2570,10 @@ _defineDeprecatedAlias('clearCoatGloss', 'clearCoatGlossiness');
 
 Object.defineProperty(StandardMaterial.prototype, 'fresnelModel', {
     get: function () {
-        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
-        return FRESNEL_SCHLICK;
+        Debug.removed('StandardMaterial#fresnelModel was removed. The material always uses Schlick\'s approximation of Fresnel.');
+        return undefined;
     },
     set: function (value) {
-        Debug.deprecated('StandardMaterial#fresnelModel is deprecated and has no effect. The material always uses Schlick\'s approximation of Fresnel.');
+        Debug.removed('StandardMaterial#fresnelModel was removed. The material always uses Schlick\'s approximation of Fresnel.');
     }
 });

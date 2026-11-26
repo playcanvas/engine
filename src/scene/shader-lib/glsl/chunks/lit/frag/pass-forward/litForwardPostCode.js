@@ -20,9 +20,7 @@ export default /* glsl */`
 
 // fresnel is also needed by refraction
 #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
-    #if LIT_FRESNEL_MODEL == SCHLICK
-        #include "fresnelSchlickPS"
-    #endif
+    #include "fresnelPS"
 #endif
 
 // ----- ambient occlusion -----
