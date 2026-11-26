@@ -235,13 +235,15 @@ class GSplatComponent extends Component {
             const scene = this.system.app.scene;
 
             if (this._placement) {
-                if (value) {
+                // only register for shadows while the placement is in its layers, otherwise
+                // addToLayers registers it once it is added
+                if (value && !this._hidden && this.enabled && this.entity.enabled) {
                     // Add to shadow casters
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(layers[i]);
                         layer?.addGSplatShadowCaster(this._placement);
                     }
-                } else {
+                } else if (!value) {
                     // Remove from shadow casters
                     for (let i = 0; i < layers.length; i++) {
                         const layer = scene.layers.getLayerById(layers[i]);

@@ -78,6 +78,72 @@ describe('GSplatComponent', function () {
 
     });
 
+    describe('#hide', function () {
+
+        const createPlacedComponent = () => {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('gsplat');
+            e.gsplat._placement = new GSplatPlacement(null, e);
+            e.gsplat.addToLayers();
+            const layer = app.scene.layers.getLayerById(e.gsplat.layers[0]);
+            return { e, layer, placement: e.gsplat._placement };
+        };
+
+        it('removes the placement from its layers until shown', function () {
+            const { e, layer, placement } = createPlacedComponent();
+            e.gsplat.castShadows = true;
+
+            e.gsplat.hide();
+            expect(layer.gsplatPlacements).to.not.include(placement);
+            expect(layer.gsplatShadowCasters).to.not.include(placement);
+
+            e.gsplat.show();
+            expect(layer.gsplatPlacements).to.include(placement);
+            expect(layer.gsplatShadowCasters).to.include(placement);
+        });
+
+        it('stays hidden when the entity is disabled and enabled again', function () {
+            const { e, layer, placement } = createPlacedComponent();
+
+            e.gsplat.hide();
+            e.enabled = false;
+            e.enabled = true;
+            expect(layer.gsplatPlacements).to.not.include(placement);
+
+            e.gsplat.show();
+            expect(layer.gsplatPlacements).to.include(placement);
+        });
+
+        it('does not cast shadows when castShadows is enabled while hidden', function () {
+            const { e, layer, placement } = createPlacedComponent();
+
+            e.gsplat.hide();
+            e.gsplat.castShadows = true;
+            expect(layer.gsplatShadowCasters).to.not.include(placement);
+
+            e.gsplat.castShadows = false;
+            e.gsplat.castShadows = true;
+            expect(layer.gsplatShadowCasters).to.not.include(placement);
+
+            e.gsplat.show();
+            expect(layer.gsplatPlacements).to.include(placement);
+            expect(layer.gsplatShadowCasters).to.include(placement);
+        });
+
+        it('does not restore shadows on show when castShadows was disabled while hidden', function () {
+            const { e, layer, placement } = createPlacedComponent();
+            e.gsplat.castShadows = true;
+
+            e.gsplat.hide();
+            e.gsplat.castShadows = false;
+            e.gsplat.show();
+            expect(layer.gsplatPlacements).to.include(placement);
+            expect(layer.gsplatShadowCasters).to.not.include(placement);
+        });
+
+    });
+
     describe('#parameters', function () {
 
         it('marks the placement dirty on setParameter and deleteParameter', function () {
