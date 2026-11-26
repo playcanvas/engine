@@ -45,17 +45,19 @@ describe('build / treeshake', function () {
     // Without its pure annotation, a feature an application does not import would be kept, and with
     // it the shader chunks of the language the application does not use.
     const features = [
-        { module: 'feature-shadows.js', webgl: 'featureShadowsWebgl', webgpu: 'featureShadowsWebgpu' },
-        { module: 'feature-directional-shadows.js', webgl: 'featureDirectionalShadowsWebgl', webgpu: 'featureDirectionalShadowsWebgpu' },
-        { module: 'feature-local-shadows.js', webgl: 'featureLocalShadowsWebgl', webgpu: 'featureLocalShadowsWebgpu' },
-        { module: 'feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' },
-        { module: 'feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
-        { module: 'feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' }
+        { module: 'scene/features/feature-shadows.js', webgl: 'featureShadowsWebgl', webgpu: 'featureShadowsWebgpu' },
+        { module: 'scene/features/feature-directional-shadows.js', webgl: 'featureDirectionalShadowsWebgl', webgpu: 'featureDirectionalShadowsWebgpu' },
+        { module: 'scene/features/feature-local-shadows.js', webgl: 'featureLocalShadowsWebgl', webgpu: 'featureLocalShadowsWebgpu' },
+        { module: 'scene/features/feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' },
+        { module: 'scene/features/feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
+        { module: 'scene/features/feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' },
+        { module: 'scene/features/feature-core-chunks.js', webgl: 'featureCoreChunksWebgl', webgpu: 'featureCoreChunksWebgpu' },
+        { module: 'scene/features/feature-gsplat.js', webgl: 'featureGsplatWebgl', webgpu: 'featureGsplatWebgpu' }
     ];
 
     for (const feature of features) {
         it(`${feature.module}: a feature for one device does not retain the shader chunks of the other device`, async function () {
-            const featureModule = fileURLToPath(new URL(`../../build/playcanvas/src/scene/features/${feature.module}`, import.meta.url));
+            const featureModule = fileURLToPath(new URL(`../../build/playcanvas/src/${feature.module}`, import.meta.url));
             const retainedChunks = async (name) => {
                 const result = await bundle(`
                     import { ${name} } from ${JSON.stringify(featureModule)};
