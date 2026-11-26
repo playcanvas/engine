@@ -65,7 +65,7 @@ const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) -
 /**
  * @typedef {object} MiniStatsGraphOptions
  * @property {string} name - Display name.
- * @property {string[]} stats - Path to data inside Application.stats.
+ * @property {string[]} stats - Path to data inside AppBase#stats.
  * @property {number} [decimalPlaces] - Number of decimal places (defaults to none).
  * @property {string} [unitsName] - Units (defaults to "").
  * @property {number} [multiplier=1] - Multiplier applied to sampled values, for example to convert
@@ -87,7 +87,7 @@ const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) -
  * @property {MiniStatsProcessorOptions} cpu - CPU graph options.
  * @property {MiniStatsProcessorOptions} gpu - GPU graph options.
  * @property {MiniStatsGraphOptions[]} stats - Array of options to render additional graphs based
- * on stats collected into Application.stats. Counters sourced exclusively from AppStats.user
+ * on stats collected into AppBase#stats. Counters sourced exclusively from AppStats.user
  * are displayed in a collapsible User section in the detailed views. Other additional counters
  * are grouped under Engine, including DrawCalls and Frame. VRAM keeps its own category.
  * @property {number} [gpuTimingMinSize] - Minimum size index at which to show GPU pass timing

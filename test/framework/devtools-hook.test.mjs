@@ -2,9 +2,7 @@ import { expect } from 'chai';
 
 import { revision, version } from '../../src/core/core.js';
 import { AppOptions } from '../../src/framework/app-options.js';
-import { Application } from '../../src/framework/application.js';
 import { createApp } from '../app.mjs';
-import { createGraphicsDevice } from '../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 const HOOK = Symbol.for('playcanvas.inspector');
@@ -86,8 +84,7 @@ describe('AppBase devtools hook', function () {
             unregister: () => calls.push('unregister')
         };
 
-        const canvas = document.createElement('canvas');
-        const app = new Application(canvas, { graphicsDevice: createGraphicsDevice(canvas), devtools: false });
+        const app = createApp({ appOptions: { devtools: false } });
         app.destroy();
         expect(calls).to.deep.equal([]);
         expect(new AppOptions().devtools).to.be.true;

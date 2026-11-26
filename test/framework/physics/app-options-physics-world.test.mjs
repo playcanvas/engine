@@ -4,7 +4,6 @@ import { restore, spy, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { AppBase } from '../../../src/framework/app-base.js';
 import { AppOptions } from '../../../src/framework/app-options.js';
-import { Application } from '../../../src/framework/application.js';
 import { CollisionComponentSystem } from '../../../src/framework/components/collision/system.js';
 import { RigidBodyComponentSystem } from '../../../src/framework/components/rigid-body/system.js';
 import { Entity } from '../../../src/framework/entity.js';
@@ -15,8 +14,8 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 describe('AppOptions.physicsWorld', function () {
     let app;
 
-    // Constructs an AppBase directly (rather than via the batteries-included Application) so
-    // the test controls the AppOptions instance and its physicsWorld field.
+    // Registers only the physics component systems, so the test controls the AppOptions instance
+    // and its physicsWorld field.
     function createAppBase(physicsWorld) {
         const canvas = document.createElement('canvas');
         const appBase = new AppBase(canvas);
@@ -45,18 +44,6 @@ describe('AppOptions.physicsWorld', function () {
         app = createAppBase(world);
 
         expect(app.systems.rigidbody.physicsWorld).to.equal(world);
-    });
-
-    it('is installed from the options of the Application constructor', function () {
-        const world = new NullPhysicsWorld();
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, {
-            graphicsDevice: createGraphicsDevice(canvas),
-            physicsWorld: world
-        });
-
-        expect(app.systems.rigidbody.physicsWorld).to.equal(world);
-        expect(world.contactListener).to.equal(app.systems.rigidbody._contactListener);
     });
 
     it('registers the contact listener of the rigid body system', function () {

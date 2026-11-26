@@ -13,7 +13,7 @@ import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 /**
- * @import { Application } from '../../src/framework/application.js'
+ * @import { AppBase } from '../../src/framework/app-base.js'
  */
 
 class TestPass extends FramePass {
@@ -42,7 +42,7 @@ class TestPass extends FramePass {
 }
 
 describe('FrameGraph', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     /** @type {import('../../src/platform/graphics/graphics-device.js').GraphicsDevice} */

@@ -4,12 +4,12 @@ import { restore, stub } from 'sinon';
 import { Quat } from '../../../../src/core/math/quat.js';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { platform } from '../../../../src/core/platform.js';
-import { Application } from '../../../../src/framework/application.js';
 import { ElementDragHelper } from '../../../../src/framework/components/element/element-drag-helper.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { Mouse } from '../../../../src/platform/input/mouse.js';
 import { TouchDevice } from '../../../../src/platform/input/touch-device.js';
 import { ASPECT_MANUAL } from '../../../../src/scene/constants.js';
+import { createApp } from '../../../app.mjs';
 import { createGraphicsDevice } from '../../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -64,10 +64,13 @@ describe('ElementDragHelper', function () {
         const graphicsDevice = createGraphicsDevice(canvas);
         graphicsDevice.updateClientRect();
 
-        app = new Application(canvas, {
+        app = createApp({
+            canvas,
             graphicsDevice,
-            mouse: new Mouse(canvas),
-            touch: new TouchDevice(canvas)
+            appOptions: {
+                mouse: new Mouse(canvas),
+                touch: new TouchDevice(canvas)
+            }
         });
 
         entity = new Entity('entity', app);

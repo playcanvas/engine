@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 
-import { Application } from '../../../src/framework/application.js';
 import {
     SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, TYPE_FLOAT32
 } from '../../../src/platform/graphics/constants.js';
@@ -10,6 +9,7 @@ import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import { SHADER_FORWARD } from '../../../src/scene/constants.js';
 import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { createApp } from '../../app.mjs';
 import { setTestShaderLanguage } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -32,7 +32,7 @@ describe('NullGraphicsDevice shader language', function () {
         jsdomSetup();
         const canvas = document.createElement('canvas');
         const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp({ canvas, graphicsDevice });
         return graphicsDevice;
     };
 

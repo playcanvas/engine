@@ -2,13 +2,12 @@ import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
 import { platform } from '../../../src/core/platform.js';
-import { Application } from '../../../src/framework/application.js';
 import { Entity } from '../../../src/framework/entity.js';
 import {
     ElementInput, ElementMouseEvent, ElementTouchEvent
 } from '../../../src/framework/input/element-input.js';
 import { XRSPACE_LOCALFLOOR, XRTYPE_VR } from '../../../src/framework/xr/constants.js';
-import { createGraphicsDevice } from '../../device.mjs';
+import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 import { FakeXRSystem } from '../xr/fake-webxr.mjs';
 
@@ -34,9 +33,9 @@ describe('ElementInput', function () {
         Object.defineProperty(canvas, 'clientWidth', { value: 300 });
         Object.defineProperty(canvas, 'clientHeight', { value: 400 });
 
-        app = new Application(canvas, {
-            graphicsDevice: createGraphicsDevice(canvas),
-            elementInput: new ElementInput(canvas)
+        app = createApp({
+            canvas,
+            appOptions: { elementInput: new ElementInput(canvas) }
         });
 
         const camera = new Entity('camera', app);

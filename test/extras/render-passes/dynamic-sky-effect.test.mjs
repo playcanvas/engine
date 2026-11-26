@@ -23,7 +23,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('DynamicSkyEffect', function () {
 
-    /** @type {import('../../../src/framework/application.js').Application} */
+    /** @type {import('../../../src/framework/app-base.js').AppBase} */
     let app;
 
     /** @type {CameraFrame} */

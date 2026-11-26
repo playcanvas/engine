@@ -9,7 +9,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  * @import { MeshInstance } from '../../../src/scene/mesh-instance.js'
  */
 
@@ -18,7 +18,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 // mesh instance overriding some of the state has the material's values restored for the next
 // caster of the same material.
 describe('ShadowRenderer caster submission', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     /** @type {MeshInstance[][]} */

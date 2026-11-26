@@ -22,7 +22,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../src/framework/application.js'
+ * @import { AppBase } from '../../../src/framework/app-base.js'
  */
 
 // the clip space depth of a view space point, divided by w
@@ -116,7 +116,7 @@ describe('Reverse-z', function () {
 
     describe('with an application', function () {
 
-        /** @type {Application} */
+        /** @type {AppBase} */
         let app;
 
         const createCamera = (name, reverseZ) => {
@@ -499,7 +499,7 @@ describe('Reverse-z', function () {
     // test.
     describe('shaders', function () {
 
-        /** @type {Application} */
+        /** @type {AppBase} */
         let app;
 
         beforeEach(function () {

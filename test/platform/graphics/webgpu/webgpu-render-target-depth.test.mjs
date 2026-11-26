@@ -8,13 +8,13 @@ import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 /**
- * @import { Application } from '../../../../src/framework/application.js'
+ * @import { AppBase } from '../../../../src/framework/app-base.js'
  */
 
 // Runs on the WebGPU device of `npm run test:webgpu`, where Dawn validates the render passes, the
 // depth copies and the shader resolves, and any error it reports fails the test.
 describe('WebgpuRenderTarget depth', function () {
-    /** @type {Application} */
+    /** @type {AppBase} */
     let app;
 
     beforeEach(function () {
