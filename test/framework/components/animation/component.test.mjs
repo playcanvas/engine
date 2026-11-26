@@ -28,11 +28,11 @@ describe('AnimationComponent', function () {
 
     const loadAssets = function (cb) {
         const assetlist = [
-            new Asset('cube.json', 'model', {
-                url: '/test/assets/cube/cube.json'
+            new Asset('cube.glb', 'model', {
+                url: '/test/assets/cube/cube.glb'
             }),
-            new Asset('cube.animation.json', 'animation', {
-                url: '/test/assets/cube/cube.animation.json'
+            new Asset('cube.animation.glb', 'animation', {
+                url: '/test/assets/cube/cube.animation.glb'
             })
         ];
         assets.model = assetlist[0];
@@ -183,8 +183,8 @@ describe('AnimationComponent', function () {
         });
 
         const createAnimationAsset = function () {
-            return new Asset('cube.animation.json', 'animation', {
-                url: '/test/assets/cube/cube.animation.json'
+            return new Asset('cube.animation.glb', 'animation', {
+                url: '/test/assets/cube/cube.animation.glb'
             });
         };
 

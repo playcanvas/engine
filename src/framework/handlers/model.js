@@ -1,21 +1,18 @@
+import { Debug } from '../../core/debug.js';
 import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 import { GlbModelParser } from '../parsers/glb-model.js';
-import { JsonModelParser } from '../parsers/json-model.js';
 import { ResourceHandler } from './handler.js';
 
 /**
+ * @import { Asset } from '../asset/asset.js'
  * @import { AppBase } from '../app-base.js'
+ * @import { ResourceHandlerCallback } from './handler.js'
  */
 
 /**
- * Resource handler for the `model` asset type. Loads GLB files and legacy PlayCanvas JSON models
- * into a {@link Model}. OBJ files are supported once the `ObjModelParser` shipped in
- * `playcanvas/scripts/esm/parsers/obj-model.mjs` is registered with
- * {@link ResourceHandler#addParser}.
- *
- * Support for the legacy PlayCanvas JSON model format is deprecated and will be removed in Engine
- * V3. Convert JSON models to GLB instead. In the Editor, enable Project Settings > Asset Import >
- * Convert to GLB and reimport the model assets.
+ * Resource handler for the `model` asset type. Loads GLB files into a {@link Model}. OBJ files are
+ * supported once the `ObjModelParser` shipped in `playcanvas/scripts/esm/parsers/obj-model.mjs` is
+ * registered with {@link ResourceHandler#addParser}.
  *
  * @category Asset
  */
@@ -34,8 +31,29 @@ class ModelHandler extends ResourceHandler {
         this.defaultMaterial = getDefaultMaterial(this.device);
 
         // parsers self-fetch (via this.handler.fetch) and produce a Model; the base handler selects one
-        this.addParser(new JsonModelParser(this));
         this.addParser(new GlbModelParser(this));
+    }
+
+    /**
+     * Loads a model using the registered parser that claims it.
+     *
+     * @param {string | {load: string, original: string}} url - The URL of the resource to load.
+     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
+     * an error occurs.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     */
+    load(url, callback, asset) {
+        // a parser registered by the user (for example one for .json) still takes precedence
+        Debug.call(() => {
+            const context = this._makeContext(url, asset);
+            if (context.ext === 'json' && !this._selectParser(context)) {
+                Debug.removed(`ModelHandler: the legacy PlayCanvas JSON model format was removed, and ${context.url} cannot be loaded. ` +
+                    'Convert your models to GLB instead. In the Editor, enable Project Settings > Asset Import > Convert to GLB ' +
+                    'and reimport the model assets.');
+            }
+        });
+
+        super.load(url, callback, asset);
     }
 
     patch(asset, assets) {

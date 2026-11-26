@@ -29,8 +29,8 @@ describe('ModelComponent', function () {
 
     const loadAssets = function (cb) {
         const assetlist = [
-            new Asset('plane.json', 'model', {
-                url: '/test/assets/plane/plane.json'
+            new Asset('cube.glb', 'model', {
+                url: '/test/assets/cube/cube.glb'
             }),
             new Asset('lambert1.json', 'material', {
                 url: '/test/assets/plane/31208636/lambert1.json'
@@ -257,7 +257,7 @@ describe('ModelComponent', function () {
 
     it('Materials applied when loading asynchronously', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: '/test/assets/cube/cube.json'
+            url: '/test/assets/cube/cube.glb'
         }, {
             'mapping': [
                 {
@@ -276,7 +276,7 @@ describe('ModelComponent', function () {
 
         app.assets.load(boxAsset);
 
-        boxAsset.on('load', function () {
+        boxAsset.ready(function () {
             const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
@@ -291,7 +291,7 @@ describe('ModelComponent', function () {
 
     it('Materials applied when added later', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: '/test/assets/cube/cube.json'
+            url: '/test/assets/cube/cube.glb'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
@@ -301,7 +301,7 @@ describe('ModelComponent', function () {
         app.assets.add(boxAsset);
         app.assets.load(boxAsset);
 
-        boxAsset.on('load', function () {
+        boxAsset.ready(function () {
             const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
@@ -328,7 +328,7 @@ describe('ModelComponent', function () {
 
     it('Material add events unbound on destroy', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: '/test/assets/cube/cube.json'
+            url: '/test/assets/cube/cube.glb'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
@@ -338,7 +338,7 @@ describe('ModelComponent', function () {
         app.assets.add(boxAsset);
         app.assets.load(boxAsset);
 
-        boxAsset.on('load', function () {
+        boxAsset.ready(function () {
             const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
@@ -375,8 +375,8 @@ describe('ModelComponent', function () {
     });
 
     it('Asset materials unbound on destroy', (done) => {
-        const modelAsset = new Asset('cube.json', 'model', {
-            url: '/test/assets/cube/cube.json'
+        const modelAsset = new Asset('cube.glb', 'model', {
+            url: '/test/assets/cube/cube.glb'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -403,8 +403,8 @@ describe('ModelComponent', function () {
     });
 
     it('Asset materials unbound on change model', (done) => {
-        const modelAsset = new Asset('plane.json', 'model', {
-            url: '/test/assets/plane/plane.json'
+        const modelAsset = new Asset('cube.glb', 'model', {
+            url: '/test/assets/cube/cube.glb'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -414,8 +414,8 @@ describe('ModelComponent', function () {
         const materialAsset2 = new Asset('lambert2.json', 'material', {
             url: '/test/assets/plane/31208636/lambert1.json?t=1'
         });
-        const modelAsset2 = new Asset('plane2.json', 'model', {
-            url: '/test/assets/plane/plane.json?t=1'
+        const modelAsset2 = new Asset('cube2.glb', 'model', {
+            url: '/test/assets/cube/cube.glb?t=1'
         }, {
             mapping: [{
                 material: materialAsset2.id
