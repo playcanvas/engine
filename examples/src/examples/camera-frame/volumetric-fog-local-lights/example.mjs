@@ -200,7 +200,7 @@ dirLight.addComponent('light', {
     color: new Color(0.6, 0.75, 1),
     shadowBias: 0.3,
     normalOffsetBias: 0.2,
-    intensity: 0.7,
+    intensity: 0.46,
     castShadows: true,
     shadowType: SHADOW_PCF3_32F,
     shadowResolution: 2048,
@@ -219,7 +219,7 @@ spotColors.forEach((color, index) => {
     spot.addComponent('light', {
         type: 'spot',
         color: color,
-        intensity: 0.7,
+        intensity: 0.46,
         range: 400,
         falloffMode: LIGHTFALLOFF_LINEAR,
         innerConeAngle: 6,
@@ -246,7 +246,7 @@ omniColors.forEach((color, index) => {
     omni.addComponent('light', {
         type: 'omni',
         color: color,
-        intensity: 0.35,
+        intensity: 0.1,
         range: 150,
         falloffMode: LIGHTFALLOFF_LINEAR,
         castShadows: false

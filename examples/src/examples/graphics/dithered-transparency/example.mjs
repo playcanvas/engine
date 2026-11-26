@@ -287,7 +287,7 @@ const buildDisplay = (position) => {
         fill.addComponent('light', {
             type: 'omni',
             color,
-            intensity: 0.8,
+            intensity: 0.61,
             range: 30
         });
         fill.setLocalPosition(i ? 10 : -10, 2.5, 8);

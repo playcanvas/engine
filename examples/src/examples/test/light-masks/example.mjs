@@ -211,7 +211,7 @@ const lightAll = new Entity('light-all');
 lightAll.addComponent('light', {
     type: 'directional',
     color: new Color(1.0, 0.95, 0.85),
-    intensity: 0.9,
+    intensity: 0.79,
     affectDynamic: true,
     affectLightmapped: true,
     bake: false,

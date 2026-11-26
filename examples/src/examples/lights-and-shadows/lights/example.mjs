@@ -177,21 +177,21 @@ app.assets.add(cubemapAsset);
 data.set('lights', {
     spot: {
         enabled: true,
-        intensity: 0.8,
+        intensity: 0.61,
         cookieIntensity: 1,
         shadowIntensity: 1,
         count: 0
     },
     omni: {
         enabled: true,
-        intensity: 0.8,
+        intensity: 0.61,
         cookieIntensity: 1,
         shadowIntensity: 1,
         count: 0
     },
     directional: {
         enabled: true,
-        intensity: 0.8,
+        intensity: 0.61,
         shadowIntensity: 1,
         count: 0
     }

@@ -8,7 +8,7 @@ const _tempPoint = new Vec2();
 // a bake light representing a directional, omni or spot type of light
 class BakeLightSimple extends BakeLight {
     constructor(lightmapper, light) {
-        super(lightmapper.scene, light, lightmapper.lightingParams);
+        super(lightmapper.scene, light, lightmapper.lightingParams, lightmapper.scene.physicalUnits);
     }
 
     get numVirtualLights() {
@@ -37,10 +37,8 @@ class BakeLightSimple extends BakeLight {
         // update transform
         light._node.getWorldTransform();
 
-        // divide intensity by number of virtual lights (in linear space)
-        const gamma = 2.2;
-        const linearIntensity = Math.pow(this.intensity, gamma);
-        light.intensity = Math.pow(linearIntensity / numVirtualLights, 1 / gamma);
+        // split the light between the virtual lights
+        this.setBrightnessScale(1 / numVirtualLights);
     }
 }
 

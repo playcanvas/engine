@@ -1197,16 +1197,9 @@ class Light {
             intensity = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
         }
 
-        // Note: This is slightly unconventional, ideally we'd convert color to linear space and then
-        // multiply by intensity, but keeping this for backwards compatibility: below 1, intensity
-        // scales the color in gamma 2.2 space, which the lightmapper's virtual lights rely on
-        const color = this._color;
+        // the color is in sRGB space, the intensity scales it in linear space
         const colorLinear = this._colorLinear;
-        if (intensity >= 1) {
-            tmpColor.linear(color).mulScalar(intensity);
-        } else {
-            tmpColor.linear(color).mulScalar(Math.pow(intensity, 2.2));
-        }
+        tmpColor.linear(this._color).mulScalar(intensity);
 
         colorLinear[0] = tmpColor.r;
         colorLinear[1] = tmpColor.g;

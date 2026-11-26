@@ -119,6 +119,14 @@ class Lightmapper {
         this.passMaterials = [];
         this.ambientAOMaterial = null;
 
+        /**
+         * Whether the previous bake used an HDR format, undefined before the first bake.
+         *
+         * @type {boolean|undefined}
+         * @private
+         */
+        this._lastBakeHDR = undefined;
+
         this.fog = '';
         this.ambientLight = new Color();
 
@@ -159,6 +167,13 @@ class Lightmapper {
     initBake(device) {
 
         this.bakeHDR = this.scene.lightmapPixelFormat !== PIXELFORMAT_RGBA8;
+
+        // RGBM lightmaps store values up to 64, below the typical range of physically based lights
+        Debug.call(() => {
+            if (this.scene.physicalUnits && !this.bakeHDR) {
+                Debug.warnOnce('Lightmapper: baking physically based lights into RGBM lightmaps clips values above 64. Enable scene.lightmapHDR to bake to an HDR format.');
+            }
+        });
 
         // only initialize one time
         if (!this._initCalled) {
@@ -284,8 +299,6 @@ class Lightmapper {
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
             }
-
-            if (!this.bakeHDR) material.setDefine('LIGHTMAP_RGBM', '');
         } else {
             material.setDefine('LIT_LIGHTMAP_BAKING_DIR', '');
             material.setDefine('STD_LIGHTMAP_DIR', '');
@@ -315,6 +328,16 @@ class Lightmapper {
                 options.litOptions.separateAmbient = true;
                 return options;
             };
+        }
+
+        // the materials are reused between bakes, match their output encoding to this bake's format
+        const rgbm = !this.bakeHDR;
+        const colorMaterials = [this.passMaterials[PASS_COLOR], this.ambientAOMaterial];
+        for (const material of colorMaterials) {
+            if (material.defines.has('LIGHTMAP_RGBM') !== rgbm) {
+                material.setDefine('LIGHTMAP_RGBM', rgbm ? '' : false);
+                material.update();
+            }
         }
     }
 
@@ -613,6 +636,13 @@ class Lightmapper {
                 shaderDefs |= SHADERDEF_LMAMBIENT;
             }
             this.setLightmapping(bakeNodes, true, passCount, shaderDefs);
+
+            // the materials cache their shaders without the lightmap format, which the shaders decode
+            // the lightmap in, so rebuild them when the format changed since the previous bake
+            if (this._lastBakeHDR !== undefined && this._lastBakeHDR !== this.bakeHDR) {
+                this.scene.updateShaders = true;
+            }
+            this._lastBakeHDR = this.bakeHDR;
 
             // clean up memory
             this.finishBake(bakeNodes);

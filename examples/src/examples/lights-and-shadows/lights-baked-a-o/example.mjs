@@ -135,7 +135,7 @@ lightDirectional.addComponent('light', {
     shadowResolution: 2048,
     shadowType: SHADOW_PCF3_32F,
     color: new Color(0.7, 0.7, 0.5),
-    intensity: 1.6
+    intensity: 2.8
 });
 app.root.addChild(lightDirectional);
 lightDirectional.setLocalEulerAngles(-55, 0, -30);
@@ -155,7 +155,7 @@ lightOmni.addComponent('light', {
     shadowType: SHADOW_PCF3_32F,
     color: Color.YELLOW,
     range: 25,
-    intensity: 0.9
+    intensity: 0.79
 });
 lightOmni.setLocalPosition(-4, 10, 5);
 app.root.addChild(lightOmni);
@@ -261,8 +261,8 @@ data.set('data', {
         cubemap: true,
         hemisphere: true,
         ambientBakeNumSamples: 20,
-        ambientBakeOcclusionContrast: -0.6,
-        ambientBakeOcclusionBrightness: -0.5
+        ambientBakeOcclusionContrast: 0.2,
+        ambientBakeOcclusionBrightness: -0.1
     },
     directional: {
         enabled: true,

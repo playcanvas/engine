@@ -205,7 +205,7 @@ const fill = new Entity('Cool fill');
 fill.addComponent('light', {
     type: 'directional',
     color: new Color(0.57, 0.74, 1),
-    intensity: 0.5,
+    intensity: 0.22,
     castShadows: false
 });
 fill.setLocalEulerAngles(-20, -120, 0);

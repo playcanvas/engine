@@ -123,7 +123,7 @@ const rimLight = new Entity('Rim Light');
 rimLight.addComponent('light', {
     type: 'directional',
     color: new Color(1, 0.25, 0.5),
-    intensity: 0.65
+    intensity: 0.39
 });
 rimLight.setLocalEulerAngles(-25, -55, 0);
 app.root.addChild(rimLight);
