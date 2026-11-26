@@ -1867,6 +1867,9 @@ class MeshInstance {
             if (arguments[2] !== undefined) {
                 Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
             }
+            if (data === undefined || data === null) {
+                Debug.warnOnce(`MeshInstance#setParameter: parameter '${name}' was set to ${data}. Use deleteParameter('${name}') to remove a parameter.`, this);
+            }
             if (this._material?._usesViewTextures && isViewTexture(name)) {
                 Debug.warnOnce(`MeshInstance#setParameter: '${name}' is a texture the renderer supplies once per pass, and a value set per mesh instance is ignored on WebGPU.`, this);
             }
@@ -2118,7 +2121,9 @@ class MeshInstance {
 
         for (let i = 0; i < textureOverrides.length; i++) {
             const override = textureOverrides[i];
-            bindGroup.setTextureAt(override.textureSlot, override.data);
+            if (override.data) {
+                bindGroup.setTextureAt(override.textureSlot, override.data);
+            }
         }
 
         // (re)built when dirty: on creation, which needs the uploaded buffer, and after a lost

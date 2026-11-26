@@ -1410,13 +1410,6 @@ class Material {
     }
 
     _setParameterSimple(name, data) {
-
-        Debug.call(() => {
-            if (data === undefined) {
-                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`, this);
-            }
-        });
-
         const param = this.parameters[name];
         if (param) {
             param.data = data;
@@ -1451,6 +1444,9 @@ class Material {
         }
 
         Debug.call(() => {
+            if (data === undefined || data === null) {
+                Debug.warnOnce(`Material#setParameter: parameter '${name}' was set to ${data}. Use deleteParameter('${name}') to remove a parameter.`, this);
+            }
             if (this.getUniformBufferProperty(name)) {
                 Debug.warnOnce(`Material#setParameter: '${name}' is the uniform of a typed material property, stored in the material uniform buffer, and is ignored as a parameter. Set the material property instead.`, this);
             }
