@@ -5,9 +5,8 @@ import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js
 import { GSplatParams } from '../../../scene/gsplat-unified/gsplat-params.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
-import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
-import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
-import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
+import { featureGsplatWebgl, featureGsplatWebgpu } from '../../../scene/features/feature-gsplat.js';
+import { installFeatures } from '../../../scene/features/install-features.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 import { khrGaussianSplatting } from '../../parsers/glb/extensions/khr-gaussian-splatting.js';
 import { registerGlbResourceExtension, unregisterGlbResourceExtension } from '../../parsers/glb-resource-extension.js';
@@ -176,9 +175,8 @@ class GSplatComponentSystem extends ComponentSystem {
         app.scene.setGsplatParams(gsplatParams);
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this, gsplatParams);
 
-        // register gsplat shader chunks
-        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
-        ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_WGSL).add(gsplatChunksWGSL);
+        // the gsplat shader chunks, for both devices, as the application lists the component system
+        installFeatures(app, [featureGsplatWebgl, featureGsplatWebgpu]);
 
         this.on('beforeremove', this.onBeforeRemove, this);
 

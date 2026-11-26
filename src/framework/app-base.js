@@ -6,10 +6,6 @@ import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
 import { math } from '../core/math/math.js';
 
-import {
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
-} from '../platform/graphics/constants.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
 
@@ -41,9 +37,6 @@ import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { AppStats } from './app-stats.js';
 import { getApplication, setApplication } from './globals.js';
-import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
-import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
-import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 import { featureBundles } from './features/feature-bundles.js';
 import { featureI18n } from './features/feature-i18n.js';
 import { FEATURE_BUNDLES, FEATURE_I18N } from './features/constants.js';
@@ -52,6 +45,7 @@ import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../scene/featur
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../scene/features/feature-shadows.js';
 import { hasFeature } from '../scene/features/constants.js';
 import { installFeatures } from '../scene/features/install-features.js';
+import { featureCoreChunksWebgl, featureCoreChunksWebgpu } from '../scene/features/feature-core-chunks.js';
 
 /**
  * @import { AppOptions } from './app-options.js'
@@ -599,9 +593,8 @@ class AppBase extends EventHandler {
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
         this.graphicsDevice = graphicsDevice;
 
-        // register shader chunks
-        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
-        ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
+        // the core shader chunks, for both devices
+        installFeatures(this, [featureCoreChunksWebgl, featureCoreChunksWebgpu]);
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
