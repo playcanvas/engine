@@ -153,6 +153,35 @@ describe('build / treeshake', function () {
         expect(retained, 'retained localization modules').to.deep.equal([]);
     });
 
+    // anim components, and the animations of glTF files, are brought by the anim feature, so the
+    // application and container loading alone do not retain them
+    it('AppBase with container loading does not retain animation, which the anim feature brings', async function () {
+        const result = await bundle(`
+            import { AppBase, AppOptions, ContainerHandler } from "playcanvas";
+            globalThis.__imports = { AppBase, AppOptions, ContainerHandler };
+        `);
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.includes('/components/anim/') ||
+            path.includes('/framework/anim/') ||
+            path.endsWith('/parsers/glb/animations.js') ||
+            path.endsWith('/parsers/glb-animation.js') ||
+            path.endsWith('/handlers/animation.js') ||
+            path.endsWith('/handlers/anim-clip.js') ||
+            path.endsWith('/handlers/anim-state-graph.js') ||
+            path.endsWith('/features/feature-anim.js'));
+        expect(retained, 'retained animation modules').to.deep.equal([]);
+
+        // and the anim feature does bring them
+        const withFeature = await bundle(`
+            import { AppBase, AppOptions, ContainerHandler, featureAnim } from "playcanvas";
+            globalThis.__imports = { AppBase, AppOptions, ContainerHandler, featureAnim };
+        `);
+        const featureInputs = Object.keys(Object.values(withFeature.metafile.outputs)[0].inputs);
+        expect(featureInputs.some(path => path.endsWith('/parsers/glb/animations.js')), 'glTF animations').to.equal(true);
+        expect(featureInputs.some(path => path.endsWith('/components/anim/system.js')), 'anim component system').to.equal(true);
+    });
+
     it('AppBase with container loading does not retain the gsplat implementation', async function () {
         const result = await bundle(`
             import { AppBase, ContainerHandler } from "playcanvas";

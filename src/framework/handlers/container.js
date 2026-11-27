@@ -1,5 +1,4 @@
 import { GlbContainerParser } from '../parsers/glb-container-parser.js';
-import { initializeGlbResourceExtensions } from '../parsers/glb-resource-extension.js';
 import { ResourceHandler } from './handler.js';
 
 /**
@@ -43,7 +42,8 @@ class ContainerResource {
     textures = [];
 
     /**
-     * An array of the animation assets. Each resource is an {@link AnimTrack}.
+     * An array of the animation assets. Each resource is an {@link AnimTrack}. Animations are only
+     * loaded when the application installs {@link featureAnim}, and the array is empty otherwise.
      *
      * @type {Asset<'animation'>[]}
      */
@@ -213,7 +213,6 @@ class ContainerHandler extends ResourceHandler {
      */
     constructor(app) {
         super(app, 'container');
-        initializeGlbResourceExtensions(this);
 
         // GLB is the only built-in container format and acts as the catch-all; users can register
         // more specific parsers (for example usdz), which are consulted first (newest-first).

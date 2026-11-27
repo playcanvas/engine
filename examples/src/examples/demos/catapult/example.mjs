@@ -19,7 +19,6 @@
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    AnimComponentSystem,
     AppBase,
     AppOptions,
     Asset,
@@ -70,6 +69,7 @@ import {
     WideLineRenderer,
     calculateNormals,
     createGraphicsDevice,
+    featureAnim,
     math,
     platform
 } from 'playcanvas';
@@ -249,12 +249,13 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScriptComponentSystem,
-    AnimComponentSystem,
     ScreenComponentSystem,
     ElementComponentSystem
 ];

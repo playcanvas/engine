@@ -9,6 +9,7 @@ import { restore, spy, stub } from 'sinon';
 import { MeshoptDecoder } from '../../../examples/assets/wasm/meshopt/meshopt_decoder.mjs';
 import { MeshoptEncoder } from '../../../examples/assets/wasm/meshopt/meshopt_encoder.js';
 import { platform } from '../../../src/core/platform.js';
+import { glbAnimations } from '../../../src/framework/parsers/glb/animations.js';
 import { GlbParser } from '../../../src/framework/parsers/glb-parser.js';
 import { meshoptInitialize } from '../../../src/framework/parsers/meshopt-decoder.js';
 import { http } from '../../../src/platform/net/http.js';
@@ -266,7 +267,8 @@ describe('GlbParser meshopt compression', function () {
     const parse = (data) => {
         return new Promise((resolve, reject) => {
             const { graphicsDevice, assets } = app;
-            GlbParser.parse('meshopt.glb', '', data, graphicsDevice, assets, {}, [], (err, res) => {
+            // with the glTF animations, which the anim feature installs, as the test file animates
+            GlbParser.parse('meshopt.glb', '', data, graphicsDevice, assets, {}, [glbAnimations], (err, res) => {
                 if (err) reject(err);
                 else resolve(res);
             });

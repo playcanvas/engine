@@ -10,8 +10,6 @@
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import {
-    AnimClipHandler,
-    AnimComponentSystem,
     AppBase,
     AppOptions,
     Asset,
@@ -31,7 +29,8 @@ import {
     Vec3,
     VertexBuffer,
     VertexFormat,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 
 import { createGoochMaterial } from 'examples/assets/scripts/misc/gooch-material.mjs';
@@ -68,8 +67,10 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, AnimComponentSystem];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHandler];
+createOptions.features = [featureAnim];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

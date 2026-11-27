@@ -147,8 +147,9 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
 // creates gsplat resources for splat primitives of all meshes. Returns an array aligned with
 // gltf.meshes, each entry an array of GSplatResource or null when the mesh has no splat
 // primitives.
-const createGSplats = (device, gltf, bufferViews) => {
-    if (!gltf.hasOwnProperty('meshes')) {
+const createGSplats = (device, gltf, bufferViews, nodes, options) => {
+    // the splats are skipped together with the meshes
+    if (options.skipMeshes || !gltf.hasOwnProperty('meshes')) {
         return [];
     }
 

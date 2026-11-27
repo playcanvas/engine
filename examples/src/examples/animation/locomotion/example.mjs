@@ -5,9 +5,6 @@ import {
     ANIM_LESS_THAN_EQUAL_TO,
     ANIM_PARAMETER_INTEGER,
     ANIM_PARAMETER_TRIGGER,
-    AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -33,7 +30,8 @@ import {
     Vec3,
     WasmModule,
     createGraphicsDevice,
-    createScript
+    createScript,
+    featureAnim
 } from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
@@ -90,22 +88,17 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScriptComponentSystem,
-    AnimComponentSystem,
     CollisionComponentSystem,
     RigidBodyComponentSystem
 ];
-createOptions.resourceHandlers = [
-    TextureHandler,
-    ContainerHandler,
-    ScriptHandler,
-    AnimClipHandler,
-    AnimStateGraphHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

@@ -23,7 +23,6 @@ Debug.call(() => {
  * @import { Camera } from '../../../scene/camera.js'
  * @import { Entity } from '../../entity.js'
  * @import { Layer } from '../../../scene/layer.js'
- * @import { ResourceHandler } from '../../handlers/handler.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
 
@@ -60,14 +59,6 @@ const _properties = [
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {
-    /**
-     * Container handler this system registered its glTF extension with.
-     *
-     * @type {ResourceHandler|null}
-     * @private
-     */
-    _containerHandler = null;
-
     /**
      * Fired when a GSplat material is created for a camera and layer combination. Materials are
      * created during the first frame update when the GSplat is rendered. The handler is passed
@@ -160,12 +151,9 @@ class GSplatComponentSystem extends ComponentSystem {
         // consumed to build customAabb, not settable component properties
         this.extraDataProperties = ['aabbCenter', 'aabbHalfExtents'];
 
-        // Resource handlers are created before component systems, so register glTF splat support
-        // here to keep its resource implementation tree-shakeable when this system is omitted.
-        const containerHandler = app.loader.getHandler('container');
-        if (containerHandler && registerGlbResourceExtension(containerHandler, khrGaussianSplatting)) {
-            this._containerHandler = containerHandler;
-        }
+        // register glTF splat support here to keep its resource implementation tree-shakeable when
+        // this system is omitted
+        registerGlbResourceExtension(app.loader, khrGaussianSplatting);
 
         // Own the scene-wide parameters here so apps that omit this system also tree-shake the
         // GSplat formats, varyings and shader chunks imported by GSplatParams.
@@ -269,10 +257,7 @@ class GSplatComponentSystem extends ComponentSystem {
         this.app.renderer.gsplatDirector?.destroy();
         this.app.renderer.gsplatDirector = null;
         this.app.scene.setGsplatParams(null);
-        if (this._containerHandler) {
-            unregisterGlbResourceExtension(this._containerHandler, khrGaussianSplatting.name);
-            this._containerHandler = null;
-        }
+        unregisterGlbResourceExtension(this.app.loader, khrGaussianSplatting.name);
     }
 }
 

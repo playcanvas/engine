@@ -5,7 +5,6 @@
 // text and buttons like any other image. Press Attack to see the portrait move.
 
 import {
-    AnimComponentSystem,
     AppBase,
     AppOptions,
     Asset,
@@ -37,7 +36,8 @@ import {
     TextureAtlasHandler,
     TextureHandler,
     Vec2,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 
 import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
@@ -59,11 +59,12 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.elementInput = new ElementInput(canvas);
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    AnimComponentSystem,
     ScreenComponentSystem,
     ElementComponentSystem,
     ButtonComponentSystem

@@ -1,9 +1,6 @@
 import {
     ANIM_LAYER_ADDITIVE,
     ANIM_LAYER_OVERWRITE,
-    AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -22,7 +19,8 @@ import {
     TextureHandler,
     TouchDevice,
     WireRenderer,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
@@ -60,13 +58,10 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    LightComponentSystem,
-    AnimComponentSystem
-];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHandler, AnimStateGraphHandler];
+createOptions.features = [featureAnim];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

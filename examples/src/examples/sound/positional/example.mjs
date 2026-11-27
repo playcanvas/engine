@@ -1,6 +1,4 @@
 import {
-    AnimClipHandler,
-    AnimComponentSystem,
     AppBase,
     AppOptions,
     Asset,
@@ -25,6 +23,7 @@ import {
     TextureHandler,
     Vec3,
     createGraphicsDevice,
+    featureAnim,
     math
 } from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
@@ -49,16 +48,17 @@ const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.soundManager = new SoundManager();
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     SoundComponentSystem,
-    AnimComponentSystem,
     AudioListenerComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AudioHandler, AnimClipHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AudioHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

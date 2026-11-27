@@ -2,6 +2,7 @@
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { ComponentSystem } from './components/system.js'
  * @import { ElementInput } from './input/element-input.js'
+ * @import { Feature } from '../scene/features/feature.js'
  * @import { GamePads } from '../platform/input/game-pads.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
@@ -130,7 +131,21 @@ class AppOptions {
     xr;
 
     /**
-     * The component systems the app requires.
+     * The features the app requires, such as {@link featureAnim}. A feature brings in everything
+     * one piece of engine functionality needs, for example its component system and the resource
+     * handlers of its assets, and features the app does not list can be dropped from its bundle by
+     * tree-shaking. Features a listed feature depends on are installed with it.
+     *
+     * @type {Feature[]}
+     * @example
+     * const options = new AppOptions();
+     * options.features = [featureAnim];
+     */
+    features = [];
+
+    /**
+     * The component systems the app requires. Component systems installed by a feature, such as
+     * the {@link AnimComponentSystem} by {@link featureAnim}, are not listed here.
      *
      * @type {typeof ComponentSystem[]}
      */

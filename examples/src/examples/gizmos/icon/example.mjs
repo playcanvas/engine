@@ -3,7 +3,6 @@
 // Icons mark entities that have nothing else to see or click, such as lights, cameras and sounds; click one to focus on it
 
 import {
-    AnimComponentSystem,
     AppBase,
     AppOptions,
     AudioListenerComponentSystem,
@@ -26,7 +25,8 @@ import {
     SoundManager,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
@@ -53,6 +53,8 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.keyboard = new Keyboard(window);
 createOptions.soundManager = new SoundManager();
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
@@ -60,8 +62,7 @@ createOptions.componentSystems = [
     ScriptComponentSystem,
     AudioListenerComponentSystem,
     SoundComponentSystem,
-    ParticleSystemComponentSystem,
-    AnimComponentSystem
+    ParticleSystemComponentSystem
 ];
 createOptions.resourceHandlers = [ScriptHandler];
 
