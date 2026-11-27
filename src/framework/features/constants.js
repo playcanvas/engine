@@ -32,3 +32,11 @@ export const FEATURE_ANIM = 'anim';
  * @ignore
  */
 export const FEATURE_PARTICLES = 'particles';
+
+/**
+ * The name of the gsplat feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_GSPLAT = 'gsplat';

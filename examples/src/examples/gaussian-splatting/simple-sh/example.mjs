@@ -13,8 +13,6 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
-    GSplatHandler,
     LightComponentSystem,
     Mouse,
     RESOLUTION_AUTO,
@@ -28,7 +26,8 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
@@ -52,14 +51,15 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

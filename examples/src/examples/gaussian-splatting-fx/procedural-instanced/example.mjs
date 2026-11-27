@@ -12,7 +12,6 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
     GSplatContainer,
     GSplatFormat,
     LightComponentSystem,
@@ -23,7 +22,8 @@ import {
     TONEMAP_ACES,
     TouchDevice,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
@@ -46,12 +46,9 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    LightComponentSystem,
-    GSplatComponentSystem
-];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
 createOptions.resourceHandlers = [];
 
 const app = new AppBase(canvas);

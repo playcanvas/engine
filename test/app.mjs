@@ -6,7 +6,6 @@ import { ButtonComponentSystem } from '../src/framework/components/button/system
 import { CameraComponentSystem } from '../src/framework/components/camera/system.js';
 import { CollisionComponentSystem } from '../src/framework/components/collision/system.js';
 import { ElementComponentSystem } from '../src/framework/components/element/system.js';
-import { GSplatComponentSystem } from '../src/framework/components/gsplat/system.js';
 import { JointComponentSystem } from '../src/framework/components/joint/system.js';
 import { LayoutChildComponentSystem } from '../src/framework/components/layout-child/system.js';
 import { LayoutGroupComponentSystem } from '../src/framework/components/layout-group/system.js';
@@ -22,6 +21,7 @@ import { SoundComponentSystem } from '../src/framework/components/sound/system.j
 import { SpriteComponentSystem } from '../src/framework/components/sprite/system.js';
 import { ZoneComponentSystem } from '../src/framework/components/zone/system.js';
 import { featureAnim } from '../src/framework/features/feature-anim.js';
+import { featureGsplat } from '../src/framework/features/feature-gsplat.js';
 import { featureParticles } from '../src/framework/features/feature-particles.js';
 import { AudioHandler } from '../src/framework/handlers/audio.js';
 import { BinaryHandler } from '../src/framework/handlers/binary.js';
@@ -30,7 +30,6 @@ import { CssHandler } from '../src/framework/handlers/css.js';
 import { CubemapHandler } from '../src/framework/handlers/cubemap.js';
 import { FolderHandler } from '../src/framework/handlers/folder.js';
 import { FontHandler } from '../src/framework/handlers/font.js';
-import { GSplatHandler } from '../src/framework/handlers/gsplat.js';
 import { HierarchyHandler } from '../src/framework/handlers/hierarchy.js';
 import { HtmlHandler } from '../src/framework/handlers/html.js';
 import { JsonHandler } from '../src/framework/handlers/json.js';
@@ -58,7 +57,8 @@ import { BatchManager } from '../src/scene/batching/batch-manager.js';
 // any component or load any asset type without registering it first
 const features = [
     featureAnim,
-    featureParticles
+    featureParticles,
+    featureGsplat
 ];
 
 const componentSystems = [
@@ -80,8 +80,7 @@ const componentSystems = [
     SpriteComponentSystem,
     LayoutGroupComponentSystem,
     LayoutChildComponentSystem,
-    ZoneComponentSystem,
-    GSplatComponentSystem
+    ZoneComponentSystem
 ];
 
 const resourceHandlers = [
@@ -105,8 +104,7 @@ const resourceHandlers = [
     TextureAtlasHandler,
     SpriteHandler,
     TemplateHandler,
-    ContainerHandler,
-    GSplatHandler
+    ContainerHandler
 ];
 
 /**

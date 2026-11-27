@@ -37,8 +37,6 @@ import {
     FUNC_GREATER,
     FUNC_LESSEQUAL,
     FUNC_NOTEQUAL,
-    GSplatComponentSystem,
-    GSplatHandler,
     Keyboard,
     LAYERID_SKYBOX,
     Layer,
@@ -60,6 +58,7 @@ import {
     TouchDevice,
     Vec3,
     createGraphicsDevice,
+    featureGsplat,
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -90,14 +89,15 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -583,7 +583,7 @@ portalGroup.addChild(glassPlane);
 // so the swap is just a state flip - much cheaper than moving placements
 // between layers.
 
-/** @type {GSplatComponentSystem} */
+/** @type {import('playcanvas').GSplatComponentSystem} */
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 
 // GSplatComponentSystem.getMaterial is keyed by the low-level Camera instance,

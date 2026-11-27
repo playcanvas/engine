@@ -6,8 +6,8 @@ import { GSplatParams } from '../../../scene/gsplat-unified/gsplat-params.js';
 import { SYSTEMORDER_GSPLAT } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
-import { featureGsplatWebgl, featureGsplatWebgpu } from '../../../scene/features/feature-gsplat.js';
-import { installFeatures } from '../../../scene/features/install-features.js';
+import { hasFeature } from '../../../scene/features/constants.js';
+import { FEATURE_GSPLAT } from '../../features/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 import { khrGaussianSplatting } from '../../parsers/glb/extensions/khr-gaussian-splatting.js';
 import { registerGlbResourceExtension, unregisterGlbResourceExtension } from '../../parsers/glb-resource-extension.js';
@@ -56,6 +56,7 @@ const _properties = [
 /**
  * Manages the {@link GSplatComponent}s of an application. Reach it through `app.systems.gsplat`;
  * components are created with {@link Entity#addComponent}, never by calling the system directly.
+ * The system is installed by {@link featureGsplat}, listed in {@link AppOptions#features}.
  *
  * @category Graphics
  */
@@ -165,8 +166,7 @@ class GSplatComponentSystem extends ComponentSystem {
         app.scene.setGsplatParams(gsplatParams);
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this, gsplatParams);
 
-        // the gsplat shader chunks, for both devices, as the application lists the component system
-        installFeatures(app, [featureGsplatWebgl, featureGsplatWebgpu]);
+        Debug.assert(hasFeature(app.graphicsDevice, FEATURE_GSPLAT), 'The gsplat component system is installed by featureGsplat. Add it to AppOptions#features instead of listing the system in AppOptions#componentSystems.');
 
         this.on('beforeremove', this.onBeforeRemove, this);
 

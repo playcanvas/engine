@@ -24,8 +24,6 @@ import {
     Color,
     Entity,
     FILLMODE_FILL_WINDOW,
-    GSplatComponentSystem,
-    GSplatHandler,
     JsonHandler,
     KEY_A,
     KEY_D,
@@ -36,9 +34,9 @@ import {
     KEY_SPACE,
     KEY_W,
     Keyboard,
-    MiniStats,
     MOUSEBUTTON_LEFT,
     MOUSEBUTTON_RIGHT,
+    MiniStats,
     Mouse,
     RESOLUTION_AUTO,
     TONEMAP_LINEAR,
@@ -46,6 +44,7 @@ import {
     Vec3,
     VoxelOccupancy,
     createGraphicsDevice,
+    featureGsplat,
     math
 } from 'playcanvas';
 
@@ -76,8 +75,10 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.keyboard = new Keyboard(window);
 
-createOptions.componentSystems = [CameraComponentSystem, GSplatComponentSystem];
-createOptions.resourceHandlers = [TextureHandler, GSplatHandler, JsonHandler, BinaryHandler];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [CameraComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, JsonHandler, BinaryHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

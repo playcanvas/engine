@@ -14,7 +14,6 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     FloatPacking,
-    GSplatComponentSystem,
     GSplatContainer,
     GSplatFormat,
     Keyboard,
@@ -27,7 +26,8 @@ import {
     StandardMaterial,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
@@ -56,12 +56,13 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.keyboard = new Keyboard(window);
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
+    ScriptComponentSystem
 ];
 
 const app = new AppBase(canvas);

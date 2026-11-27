@@ -21,8 +21,6 @@ import {
     FOG_EXP,
     FOG_NONE,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
-    GSplatHandler,
     Keyboard,
     MiniStats,
     Mouse,
@@ -35,6 +33,7 @@ import {
     TouchDevice,
     Vec3,
     createGraphicsDevice,
+    featureGsplat,
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -59,13 +58,10 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
-];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, ScriptComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

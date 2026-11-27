@@ -14,8 +14,6 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
-    GSplatComponentSystem,
-    GSplatHandler,
     Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -27,7 +25,8 @@ import {
     Vec2,
     Vec3,
     WasmModule,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
@@ -58,19 +57,16 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
-];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, ScriptComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Register the spz parser with the gsplat resource handler
-const gsplatHandler = /** @type {GSplatHandler} */ (app.loader.getHandler('gsplat'));
+const gsplatHandler = /** @type {import('playcanvas').GSplatHandler} */ (app.loader.getHandler('gsplat'));
 gsplatHandler.addParser(new SpzParser(app));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size

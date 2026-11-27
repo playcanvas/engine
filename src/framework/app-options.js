@@ -131,11 +131,11 @@ class AppOptions {
     xr;
 
     /**
-     * The features the app requires, such as {@link featureAnim} or {@link featureParticles}. A
-     * feature brings in everything one piece of engine functionality needs, for example its
-     * component system and the resource handlers of its assets, and features the app does not list
-     * can be dropped from its bundle by tree-shaking. Features a listed feature depends on are
-     * installed with it.
+     * The features the app requires, such as {@link featureAnim}, {@link featureParticles} or
+     * {@link featureGsplat}. A feature brings in everything one piece of engine functionality
+     * needs, for example its component system and the resource handlers of its assets, and
+     * features the app does not list can be dropped from its bundle by tree-shaking. Features a
+     * listed feature depends on are installed with it.
      *
      * @type {Feature[]}
      * @example
@@ -146,8 +146,9 @@ class AppOptions {
 
     /**
      * The component systems the app requires. Component systems installed by a feature, such as
-     * the {@link AnimComponentSystem} by {@link featureAnim}, or the
-     * {@link ParticleSystemComponentSystem} by {@link featureParticles}, are not listed here. The
+     * the {@link AnimComponentSystem} by {@link featureAnim}, the
+     * {@link ParticleSystemComponentSystem} by {@link featureParticles} or the
+     * {@link GSplatComponentSystem} by {@link featureGsplat}, are not listed here. The
      * order of the list does not matter: the systems are created in the order of
      * {@link ComponentSystem.order}, which is also the order in which they handle the
      * per-frame events.
@@ -157,7 +158,8 @@ class AppOptions {
     componentSystems = [];
 
     /**
-     * The resource handlers the app requires.
+     * The resource handlers the app requires. Resource handlers installed by a feature, such as the
+     * {@link GSplatHandler} by {@link featureGsplat}, are not listed here.
      *
      * @type {typeof ResourceHandler[]}
      */

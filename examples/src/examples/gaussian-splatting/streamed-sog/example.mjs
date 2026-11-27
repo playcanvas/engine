@@ -24,11 +24,9 @@ import {
     FOG_NONE,
     GSPLATDATA_COMPACT,
     GSPLATDATA_LARGE,
-    GSPLAT_DEBUG_NONE,
     GSPLAT_BUDGET_TARGET,
+    GSPLAT_DEBUG_NONE,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
-    GSplatHandler,
     Keyboard,
     LightComponentSystem,
     MiniStats,
@@ -47,6 +45,7 @@ import {
     Tracing,
     Vec3,
     createGraphicsDevice,
+    featureGsplat,
     platform
 } from 'playcanvas';
 import { PerspectiveCorrection } from 'playcanvas/scripts/esm/camera/perspective-correction.mjs';
@@ -85,14 +84,15 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

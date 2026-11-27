@@ -19,8 +19,6 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_DEBUG_NONE,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
-    GSplatHandler,
     Keyboard,
     MiniStats,
     Mouse,
@@ -33,6 +31,7 @@ import {
     Vec3,
     WasmModule,
     createGraphicsDevice,
+    featureGsplat,
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -69,10 +68,12 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
-createOptions.componentSystems = [CameraComponentSystem, ScriptComponentSystem, GSplatComponentSystem];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [CameraComponentSystem, ScriptComponentSystem];
 // SOG only: the splat files are SOG bundles, whose data loads as textures. SPZ files do not need
 // the texture handler.
-createOptions.resourceHandlers = [TextureHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -80,7 +81,7 @@ app.init(createOptions);
 // SPZ only: register the spz parser, which is not part of the engine, with the gsplat resource
 // handler. The scene's `.lcc2` file states its chunk format, and the chunks are loaded by file
 // extension.
-const gsplatHandler = /** @type {GSplatHandler} */ (app.loader.getHandler('gsplat'));
+const gsplatHandler = /** @type {import('playcanvas').GSplatHandler} */ (app.loader.getHandler('gsplat'));
 gsplatHandler.addParser(new SpzParser(app));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size

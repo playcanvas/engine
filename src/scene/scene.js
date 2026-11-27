@@ -360,7 +360,7 @@ class Scene extends EventHandler {
          */
         this.gsplatCentersEnabled = true;
 
-        // gsplat params are initialized by GSplatComponentSystem when it is included in the app
+        // gsplat params are initialized by GSplatComponentSystem, which featureGsplat installs
         /**
          * @type {GSplatParams|null}
          * @ignore
@@ -558,12 +558,12 @@ class Scene extends EventHandler {
      * @type {GSplatParams}
      */
     get gsplat() {
-        Debug.assert(this._gsplatParams, 'Scene#gsplat requires GSplatComponentSystem to be included in the app.');
+        Debug.assert(this._gsplatParams, 'Scene#gsplat requires featureGsplat, listed in AppOptions#features.');
         return /** @type {GSplatParams} */ (this._gsplatParams);
     }
 
     /**
-     * Gets the GSplat parameters, or null when GSplatComponentSystem is not included in the app.
+     * Gets the GSplat parameters, or null when featureGsplat is not installed.
      *
      * @returns {GSplatParams|null} The GSplat parameters.
      * @ignore

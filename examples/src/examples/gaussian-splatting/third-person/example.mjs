@@ -27,8 +27,6 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
-    GSplatHandler,
     GamePads,
     KEY_Q,
     Keyboard,
@@ -47,7 +45,8 @@ import {
     Vec3,
     WasmModule,
     createGraphicsDevice,
-    featureAnim
+    featureAnim,
+    featureGsplat
 } from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 import { ThirdPersonController } from 'playcanvas/scripts/esm/third-person-controller.mjs';
@@ -100,7 +99,7 @@ createOptions.touch = new TouchDevice(document.body);
 createOptions.gamepads = new GamePads();
 createOptions.keyboard = new Keyboard(window);
 
-createOptions.features = [featureAnim];
+createOptions.features = [featureAnim, featureGsplat];
 
 createOptions.componentSystems = [
     RenderComponentSystem,
@@ -108,10 +107,9 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem,
     CollisionComponentSystem,
-    RigidBodyComponentSystem,
-    GSplatComponentSystem
+    RigidBodyComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

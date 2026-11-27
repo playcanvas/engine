@@ -24,8 +24,6 @@ import {
     FILLMODE_FILL_WINDOW,
     GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
-    GSplatComponentSystem,
-    GSplatHandler,
     LightComponentSystem,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -34,7 +32,8 @@ import {
     TextureHandler,
     Vec3,
     WebglGraphicsDevice,
-    WebgpuGraphicsDevice
+    WebgpuGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 
 /**
@@ -757,14 +756,15 @@ async function runBenchmark(config, colIndex, budgetIndices) {
 
     const createOptions = new AppOptions();
     createOptions.graphicsDevice = device;
+    createOptions.features = [featureGsplat];
+
     createOptions.componentSystems = [
         RenderComponentSystem,
         CameraComponentSystem,
         LightComponentSystem,
-        ScriptComponentSystem,
-        GSplatComponentSystem
+        ScriptComponentSystem
     ];
-    createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+    createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
     const app = new AppBase(canvas);
     app.init(createOptions);

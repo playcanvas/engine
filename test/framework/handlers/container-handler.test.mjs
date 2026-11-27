@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { AppBase } from '../../../src/framework/app-base.js';
 import { AppOptions } from '../../../src/framework/app-options.js';
-import { GSplatComponentSystem } from '../../../src/framework/components/gsplat/system.js';
+import { featureGsplat } from '../../../src/framework/features/feature-gsplat.js';
 import { ContainerHandler } from '../../../src/framework/handlers/container.js';
 import { GlbContainerParser } from '../../../src/framework/parsers/glb-container-parser.js';
 import {
@@ -63,12 +63,12 @@ describe('ContainerHandler (parser selection)', function () {
         expect(getGlbResourceExtensions(undefined)).to.deep.equal([]);
     });
 
-    it('registers the Gaussian splatting extension when AppBase initializes its component system', function () {
+    it('registers the Gaussian splatting extension when AppBase installs the gsplat feature', function () {
         const canvas = document.createElement('canvas');
         const options = new AppOptions();
         options.graphicsDevice = createGraphicsDevice(canvas);
         options.resourceHandlers = [ContainerHandler];
-        options.componentSystems = [GSplatComponentSystem];
+        options.features = [featureGsplat];
 
         const appBase = new AppBase(canvas);
         appBase.init(options);
@@ -86,7 +86,7 @@ describe('ContainerHandler (parser selection)', function () {
         const canvas = document.createElement('canvas');
         const options = new AppOptions();
         options.graphicsDevice = createGraphicsDevice(canvas);
-        options.componentSystems = [GSplatComponentSystem];
+        options.features = [featureGsplat];
 
         const appBase = new AppBase(canvas);
         appBase.init(options);

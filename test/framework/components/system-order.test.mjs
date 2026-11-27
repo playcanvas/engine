@@ -105,7 +105,9 @@ describe('Component system order', function () {
     });
 
     it('creates the listed systems in their order, whatever order they are listed in', function () {
-        const listed = engineOrder.filter(system => system !== AnimComponentSystem && system !== ParticleSystemComponentSystem);
+        // the systems installed by features, which assert when listed
+        const featureSystems = [AnimComponentSystem, ParticleSystemComponentSystem, GSplatComponentSystem];
+        const listed = engineOrder.filter(system => !featureSystems.includes(system));
         app = createMinimalApp({ componentSystems: [...listed].reverse() });
 
         expect(systemTypes()).to.deep.equal(listed);
