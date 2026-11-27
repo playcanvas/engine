@@ -105,6 +105,14 @@
     "typescript": "5.9.3",
     "webgpu": "0.6.1"
   },
+  "overrides": {
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react": {
+      "eslint": "$eslint"
+    }
+  },
   "scripts": {
     "build": "turbo run build:all",
     "build:types": "node build.mjs --type=types",
