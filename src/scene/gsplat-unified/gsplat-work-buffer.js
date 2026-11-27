@@ -11,10 +11,6 @@ import { GSPLATDATA_COMPACT } from '../constants.js';
 import { QuadRender } from '../graphics/quad-render.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import glslGsplatCopyToWorkBufferPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
-import wgslGsplatCopyToWorkBufferPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
-import glslGsplatCopyInstancedQuadVS from '../shader-lib/glsl/chunks/gsplat/vert/gsplatCopyInstancedQuad.js';
-import wgslGsplatCopyInstancedQuadVS from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatCopyInstancedQuad.js';
 import { GSplatFrustumCuller } from './gsplat-frustum-culler.js';
 import { GSplatWorkBufferRenderPass } from './gsplat-work-buffer-render-pass.js';
 import { GSplatStreams } from '../gsplat/gsplat-streams.js';
@@ -96,16 +92,14 @@ class WorkBufferRenderInfo {
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexDefines: clonedDefines,
             fragmentDefines: clonedDefines,
-            fragmentGLSL: glslGsplatCopyToWorkBufferPS,
-            fragmentWGSL: wgslGsplatCopyToWorkBufferPS,
+            fragmentChunk: 'gsplatCopyToWorkbufferPS',
             fragmentIncludes: fragmentIncludes,
             fragmentOutputTypes: fragmentOutputTypes
         };
 
         if (useInstanced) {
             // Instanced LOD path: custom vertex shader that positions quads per instance
-            shaderOptions.vertexGLSL = glslGsplatCopyInstancedQuadVS;
-            shaderOptions.vertexWGSL = wgslGsplatCopyInstancedQuadVS;
+            shaderOptions.vertexChunk = 'gsplatCopyInstancedQuadVS';
         } else {
             // Standard fullscreen quad path
             shaderOptions.vertexChunk = 'fullscreenQuadVS';

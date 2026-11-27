@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
 import { blindAccessors, parseBlindFields } from './gsplat-sog-blind.js';
@@ -96,7 +96,7 @@ class GSplatSogResource extends GSplatResourceBase {
         // Create format with streams and shader chunk include. The format only uses the read code
         // of the device's shader language, so only that one is generated.
         // Note: We don't call streams.init() as textures are externally managed by gsplatData
-        const read = `#include "gsplatSogVS"${blindAccessors(fields, device.shaderLanguage === SHADERLANGUAGE_WGSL)}`;
+        const read = `#include "gsplatSogVS"${blindAccessors(fields, device)}`;
         this._format = new GSplatFormat(device, streams, {
             readGLSL: read,
             readWGSL: read

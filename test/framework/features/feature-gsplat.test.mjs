@@ -37,11 +37,15 @@ describe('Gsplat feature', function () {
         jsdomTeardown();
     });
 
-    // an application with only the given options, rather than everything the test app registers
-    const createMinimalApp = (options) => {
+    // an application with only the given options, rather than everything the test app registers.
+    // The shader language of the test device can be set to match a feature for one device
+    const createMinimalApp = (options, shaderLanguage) => {
         const canvas = document.createElement('canvas');
         const appOptions = new AppOptions();
         appOptions.graphicsDevice = createGraphicsDevice(canvas);
+        if (shaderLanguage) {
+            appOptions.graphicsDevice.shaderLanguage = shaderLanguage;
+        }
         Object.assign(appOptions, options);
 
         const minimal = new AppBase(canvas);
@@ -78,7 +82,7 @@ describe('Gsplat feature', function () {
     });
 
     it('installs the chunks of WebGPU only with the WebGPU feature', function () {
-        app = createMinimalApp({ features: [featureGsplatWebgpu] });
+        app = createMinimalApp({ features: [featureGsplatWebgpu] }, SHADERLANGUAGE_WGSL);
 
         expect(app.systems.gsplat).to.be.an.instanceof(GSplatComponentSystem);
         expect(app.loader.getHandler('gsplat')).to.be.an.instanceof(GSplatHandler);
@@ -111,7 +115,7 @@ describe('Gsplat feature', function () {
         };
 
         it('is installed by the gsplat feature for WebGPU, and not by the one for WebGL', function () {
-            app = createMinimalApp({ features: [featureGsplatWebgpu] });
+            app = createMinimalApp({ features: [featureGsplatWebgpu] }, SHADERLANGUAGE_WGSL);
             expect(app.renderer.gsplatGpuSort).to.equal(gsplatGpuSort);
             app.destroy();
 

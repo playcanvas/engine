@@ -52,10 +52,7 @@ describe('build / treeshake', function () {
         { module: 'framework/features/feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
         { module: 'scene/features/feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' },
         { module: 'scene/features/feature-core-chunks.js', webgl: 'featureCoreChunksWebgl', webgpu: 'featureCoreChunksWebgpu' },
-        // the gsplat implementation the feature brings, such as GSplatFormat, GSplatParams and the WebGPU
-        // only compute sorting, still imports the chunks of both languages directly, so only the chunk
-        // collection of the other device is checked for it
-        { module: 'framework/features/feature-gsplat.js', webgl: 'featureGsplatWebgl', webgpu: 'featureGsplatWebgpu', collectionsOnly: true }
+        { module: 'framework/features/feature-gsplat.js', webgl: 'featureGsplatWebgl', webgpu: 'featureGsplatWebgpu' }
     ];
 
     for (const feature of features) {
@@ -68,11 +65,9 @@ describe('build / treeshake', function () {
                 `);
                 const output = Object.values(result.metafile.outputs)[0];
                 const inputs = Object.keys(output.inputs);
-                const ofLanguage = language => inputs.filter(path => path.includes(`/shader-lib/${language}/`) &&
-                    (!feature.collectionsOnly || path.includes(`/shader-lib/${language}/collections/`)));
                 return {
-                    glsl: ofLanguage('glsl'),
-                    wgsl: ofLanguage('wgsl')
+                    glsl: inputs.filter(path => path.includes('/shader-lib/glsl/')),
+                    wgsl: inputs.filter(path => path.includes('/shader-lib/wgsl/'))
                 };
             };
 

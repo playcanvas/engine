@@ -1,7 +1,10 @@
 import { Debug } from '../../core/debug.js';
+import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { getGsplatChunk } from './gsplat-chunks.js';
 
-import glslBlindField from '../shader-lib/glsl/chunks/gsplat/vert/formats/sogBlindField.js';
-import wgslBlindField from '../shader-lib/wgsl/chunks/gsplat/vert/formats/sogBlindField.js';
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * SOG v3 blind data: per-gaussian application data stored in RGBA8 textures (`meta.blind`, one
@@ -103,14 +106,15 @@ const floatLiteral = (v) => {
  * `loadBlind<i>()` returns the RGBA8 texel as normalized floats.
  *
  * @param {BlindField[]} fields - The fields, from {@link parseBlindFields}.
- * @param {boolean} wgsl - Generate WGSL (else GLSL).
+ * @param {GraphicsDevice} device - The graphics device, which decides the shader language.
  * @returns {string} The accessor functions, empty when there are no fields.
  */
-const blindAccessors = (fields, wgsl) => {
+const blindAccessors = (fields, device) => {
     if (!fields.length) {
         return '';
     }
-    const template = wgsl ? wgslBlindField : glslBlindField;
+    const wgsl = device.shaderLanguage === SHADERLANGUAGE_WGSL;
+    const template = getGsplatChunk(device, 'gsplatSogBlindFieldVS');
     const accessors = fields.map((f) => {
         const integer = isIntegerType(f.type);
         let decode = 'bits';

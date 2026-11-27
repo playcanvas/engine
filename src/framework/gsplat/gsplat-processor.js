@@ -7,8 +7,6 @@ import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { GSPLAT_STREAM_INSTANCE } from '../../scene/constants.js';
-import glslGsplatProcess from '../../scene/shader-lib/glsl/chunks/gsplat/frag/gsplatProcess.js';
-import wgslGsplatProcess from '../../scene/shader-lib/wgsl/chunks/gsplat/frag/gsplatProcess.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -421,8 +419,7 @@ class GSplatProcessor {
             vertexDefines: defines,
             fragmentDefines: defines,
             vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslGsplatProcess,
-            fragmentWGSL: wgslGsplatProcess,
+            fragmentChunk: 'gsplatProcessPS',
             fragmentIncludes: includes,
             fragmentOutputTypes: fragmentOutputTypes
         });

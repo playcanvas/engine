@@ -4,6 +4,7 @@ import { PIXELFORMAT_R8 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
 import { GSplatWorkBuffer } from '../../../src/scene/gsplat-unified/gsplat-work-buffer.js';
+import { installGsplatChunks } from '../../gsplat-chunks.mjs';
 
 describe('GSplatWorkBuffer#syncWithFormat', function () {
     let device;
@@ -11,6 +12,7 @@ describe('GSplatWorkBuffer#syncWithFormat', function () {
 
     beforeEach(function () {
         device = new NullGraphicsDevice({ width: 1, height: 1 });
+        installGsplatChunks(device);
     });
 
     afterEach(function () {
