@@ -2,7 +2,7 @@ import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { UPDATEORDER_CAMERA } from '../constants.js';
+import { SYSTEMORDER_CAMERA } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
 
@@ -82,7 +82,7 @@ const _properties = [
  */
 class CameraComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_CAMERA;
+    static order = SYSTEMORDER_CAMERA;
 
     /**
      * Holds all the active camera components.

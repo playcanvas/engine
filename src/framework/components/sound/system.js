@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { UPDATEORDER_SOUND } from '../constants.js';
+import { SYSTEMORDER_SOUND } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
 
@@ -42,7 +42,7 @@ const _properties = [
  */
 class SoundComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_SOUND;
+    static order = SYSTEMORDER_SOUND;
 
     /**
      * Create a SoundComponentSystem.

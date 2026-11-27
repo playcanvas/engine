@@ -77,18 +77,17 @@ import { getApplication } from './globals.js';
  */
 
 /**
- * @param {Component} a - First object with `order` property.
- * @param {Component} b - Second object with `order` property.
- * @returns {number} A number indicating the relative position.
+ * @param {Component} component - The component.
+ * @returns {number} The order of the system of the component, see {@link ComponentSystem.order}.
  */
-const cmpStaticOrder = (a, b) => a.constructor.order - b.constructor.order;
+const systemOrder = component => /** @type {typeof ComponentSystem} */ (component.system.constructor).order;
 
 /**
- * @param {Array<Component>} arr - Array to be sorted in place where each element contains
- * an object with a static `order` property.
- * @returns {Array<Component>} In place sorted array.
+ * @param {Component} a - The first component.
+ * @param {Component} b - The second component.
+ * @returns {number} A number indicating the relative position.
  */
-const sortStaticOrder = arr => arr.sort(cmpStaticOrder);
+const cmpSystemOrder = (a, b) => systemOrder(a) - systemOrder(b);
 
 /**
  * @type {GraphNode[]}
@@ -801,17 +800,23 @@ class Entity extends GraphNode {
     _getSortedComponents() {
         const components = this.c;
         const sortedArray = getTempArray();
-        let needSort = 0;
+
+        // components are enabled in the order of their systems. They are usually added in that
+        // order, as the components of a loaded entity are, so only sort when they are not
+        let needSort = false;
+        let prevOrder = -Infinity;
         for (const type in components) {
             if (components.hasOwnProperty(type)) {
                 const component = components[type];
-                needSort |= component.constructor.order !== 0;
+                const order = systemOrder(component);
+                needSort ||= order < prevOrder;
+                prevOrder = order;
                 sortedArray.push(component);
             }
         }
 
-        if (needSort && sortedArray.length > 1) {
-            sortStaticOrder(sortedArray);
+        if (needSort) {
+            sortedArray.sort(cmpSystemOrder);
         }
 
         return sortedArray;

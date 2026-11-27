@@ -1,4 +1,4 @@
-import { UPDATEORDER_BUTTON } from '../constants.js';
+import { SYSTEMORDER_BUTTON } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
 
@@ -45,7 +45,7 @@ const _properties = [
  */
 class ButtonComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_BUTTON;
+    static order = SYSTEMORDER_BUTTON;
 
     /**
      * Create a new ButtonComponentSystem.

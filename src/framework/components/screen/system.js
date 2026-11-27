@@ -1,6 +1,6 @@
 import { IndexedList } from '../../../core/indexed-list.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-import { UPDATEORDER_SCREEN } from '../constants.js';
+import { SYSTEMORDER_SCREEN } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ScreenComponent } from './component.js';
 
@@ -31,7 +31,7 @@ import { ScreenComponent } from './component.js';
  */
 class ScreenComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_SCREEN;
+    static order = SYSTEMORDER_SCREEN;
 
     /**
      * Create a new ScreenComponentSystem instance.

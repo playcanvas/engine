@@ -1,5 +1,5 @@
 import { Vec3 } from '../../../core/math/vec3.js';
-import { UPDATEORDER_ZONE } from '../constants.js';
+import { SYSTEMORDER_ZONE } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ZoneComponent } from './component.js';
 
@@ -14,7 +14,7 @@ import { ZoneComponent } from './component.js';
  */
 class ZoneComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_ZONE;
+    static order = SYSTEMORDER_ZONE;
 
     /**
      * Create a new ZoneComponentSystem.

@@ -1,6 +1,6 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { UPDATEORDER_LAYOUTGROUP } from '../constants.js';
+import { SYSTEMORDER_LAYOUTGROUP } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
 
@@ -36,7 +36,7 @@ const MAX_ITERATIONS = 100;
  */
 class LayoutGroupComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_LAYOUTGROUP;
+    static order = SYSTEMORDER_LAYOUTGROUP;
 
     /**
      * Create a new LayoutGroupComponentSystem instance.

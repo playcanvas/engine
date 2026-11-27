@@ -4,7 +4,7 @@ import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { UPDATEORDER_DEFAULT } from './constants.js';
+import { SYSTEMORDER_DEFAULT } from './constants.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -21,10 +21,17 @@ import { UPDATEORDER_DEFAULT } from './constants.js';
  */
 class ComponentSystem extends EventHandler {
     /**
-     * The update order of the component system: an application creates its component systems in
-     * ascending update order, and so they handle the per-frame events of the application, such as
-     * `update` and `postUpdate`, in that order. It does not depend on the order of {@link AppOptions#componentSystems}, or on
-     * whether a system is listed there or installed by a feature in {@link AppOptions#features}.
+     * The order of the component system among the systems of an application, ascending. It
+     * decides:
+     *
+     * - the order in which an application creates its systems, and so the order in which they
+     * handle the per-frame events of the application, such as `update` and `postUpdate`,
+     * - the order in which the components of an entity are enabled and disabled, and in which the
+     * components of a loaded entity are created.
+     *
+     * It does not depend on the order of {@link AppOptions#componentSystems}, on whether a system
+     * is listed there or installed by a feature in {@link AppOptions#features}, or on the order in
+     * which components are added to an entity.
      *
      * The systems of the engine keep a fixed order: for example the
      * {@link ParticleSystemComponentSystem} runs after the {@link ScriptComponentSystem}, so that
@@ -37,10 +44,10 @@ class ComponentSystem extends EventHandler {
      * @example
      * class MyComponentSystem extends ComponentSystem {
      *     // runs before the script system
-     *     static updateOrder = 850;
+     *     static order = 850;
      * }
      */
-    static updateOrder = UPDATEORDER_DEFAULT;
+    static order = SYSTEMORDER_DEFAULT;
 
     /**
      * The id type of the ComponentSystem.

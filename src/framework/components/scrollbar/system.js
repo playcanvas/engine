@@ -1,4 +1,4 @@
-import { UPDATEORDER_SCROLLBAR } from '../constants.js';
+import { SYSTEMORDER_SCROLLBAR } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ScrollbarComponent } from './component.js';
 
@@ -17,7 +17,7 @@ const _properties = ['orientation', 'value', 'handleSize', 'handleEntity'];
  */
 class ScrollbarComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_SCROLLBAR;
+    static order = SYSTEMORDER_SCROLLBAR;
 
     /**
      * Create a new ScrollbarComponentSystem.

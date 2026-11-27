@@ -1,5 +1,5 @@
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
-import { UPDATEORDER_ANIM } from '../constants.js';
+import { SYSTEMORDER_ANIM } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { AnimComponent, ANIMUPDATE_OFFSCREEN, ANIMUPDATE_EVALUATED } from './component.js';
 
@@ -34,7 +34,7 @@ import { AnimComponent, ANIMUPDATE_OFFSCREEN, ANIMUPDATE_EVALUATED } from './com
  */
 class AnimComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_ANIM;
+    static order = SYSTEMORDER_ANIM;
 
     /**
      * The number of animation updates performed, used to schedule the anim components with an

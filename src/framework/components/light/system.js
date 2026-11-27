@@ -1,6 +1,6 @@
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-import { UPDATEORDER_LIGHT } from '../constants.js';
+import { SYSTEMORDER_LIGHT } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { _properties, LightComponent } from './component.js';
 
@@ -37,7 +37,7 @@ import { _properties, LightComponent } from './component.js';
  */
 class LightComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_LIGHT;
+    static order = SYSTEMORDER_LIGHT;
 
     /**
      * Create a new LightComponentSystem instance.

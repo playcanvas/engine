@@ -672,12 +672,12 @@ class AppBase extends EventHandler {
         // errors
         this.loader.enableRetry();
 
-        // create the component systems of the features and the listed ones, each once, in the order
-        // of their ComponentSystem.updateOrder, as it decides the order in which they handle the
-        // per-frame events. The sort is stable, so systems of the same order keep their order:
-        // those of features first, then the listed ones
+        // create the component systems of the features and the listed ones, each once, in their
+        // ComponentSystem.order, as it decides the order in which they handle the per-frame
+        // events. The sort is stable, so systems of the same order keep their order: those of
+        // features first, then the listed ones
         const systems = [...new Set([...featureSystems, ...componentSystems])];
-        systems.sort((a, b) => a.updateOrder - b.updateOrder);
+        systems.sort((a, b) => a.order - b.order);
         systems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });

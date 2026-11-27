@@ -1,4 +1,4 @@
-import { UPDATEORDER_JOINT } from '../constants.js';
+import { SYSTEMORDER_JOINT } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { JointComponent } from './component.js';
 
@@ -31,7 +31,7 @@ const _properties = [
  */
 class JointComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_JOINT;
+    static order = SYSTEMORDER_JOINT;
 
     /**
      * Joints waiting for their rigid bodies to enter the simulation.

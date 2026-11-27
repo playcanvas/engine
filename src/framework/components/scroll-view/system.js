@@ -1,4 +1,4 @@
-import { UPDATEORDER_SCROLLVIEW } from '../constants.js';
+import { SYSTEMORDER_SCROLLVIEW } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ScrollViewComponent } from './component.js';
 
@@ -50,7 +50,7 @@ const _properties = [
  */
 class ScrollViewComponentSystem extends ComponentSystem {
     /** @ignore */
-    static updateOrder = UPDATEORDER_SCROLLVIEW;
+    static order = SYSTEMORDER_SCROLLVIEW;
 
     /**
      * Create a new ScrollViewComponentSystem instance.

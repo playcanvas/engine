@@ -6,7 +6,9 @@ import { AppOptions } from '../../../src/framework/app-options.js';
 import { AnimComponentSystem } from '../../../src/framework/components/anim/system.js';
 import { AudioListenerComponentSystem } from '../../../src/framework/components/audio-listener/system.js';
 import { ButtonComponentSystem } from '../../../src/framework/components/button/system.js';
+import { CameraComponent } from '../../../src/framework/components/camera/component.js';
 import { CameraComponentSystem } from '../../../src/framework/components/camera/system.js';
+import { CollisionComponent } from '../../../src/framework/components/collision/component.js';
 import { CollisionComponentSystem } from '../../../src/framework/components/collision/system.js';
 import { ElementComponentSystem } from '../../../src/framework/components/element/system.js';
 import { GSplatComponentSystem } from '../../../src/framework/components/gsplat/system.js';
@@ -16,9 +18,12 @@ import { LayoutGroupComponentSystem } from '../../../src/framework/components/la
 import { LightComponentSystem } from '../../../src/framework/components/light/system.js';
 import { ModelComponentSystem } from '../../../src/framework/components/model/system.js';
 import { ParticleSystemComponentSystem } from '../../../src/framework/components/particle-system/system.js';
+import { RenderComponent } from '../../../src/framework/components/render/component.js';
 import { RenderComponentSystem } from '../../../src/framework/components/render/system.js';
+import { RigidBodyComponent } from '../../../src/framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../../../src/framework/components/rigid-body/system.js';
 import { ScreenComponentSystem } from '../../../src/framework/components/screen/system.js';
+import { ScriptComponent } from '../../../src/framework/components/script/component.js';
 import { ScriptComponentSystem } from '../../../src/framework/components/script/system.js';
 import { ScrollViewComponentSystem } from '../../../src/framework/components/scroll-view/system.js';
 import { ScrollbarComponentSystem } from '../../../src/framework/components/scrollbar/system.js';
@@ -94,7 +99,7 @@ describe('Component system order', function () {
     const systemTypes = () => app.systems.list.map(system => system.constructor);
 
     it('gives every engine system a distinct order, in the order they used to be listed', function () {
-        const orders = engineOrder.map(system => system.updateOrder);
+        const orders = engineOrder.map(system => system.order);
         expect(orders).to.deep.equal([...orders].sort((a, b) => a - b));
         expect(new Set(orders).size).to.equal(orders.length);
     });
@@ -153,7 +158,7 @@ describe('Component system order', function () {
         }
 
         class EarlyComponentSystem extends ComponentSystem {
-            static updateOrder = ScriptComponentSystem.updateOrder - 50;
+            static order = ScriptComponentSystem.order - 50;
 
             constructor(app) {
                 super(app);
@@ -184,13 +189,76 @@ describe('Component system order', function () {
         });
     });
 
+    describe('entity components', function () {
+
+        // the order in which the components of an entity are enabled or disabled
+        let calls;
+
+        const record = (ComponentType, name) => {
+            const onEnable = ComponentType.prototype.onEnable;
+            const onDisable = ComponentType.prototype.onDisable;
+            sinon.stub(ComponentType.prototype, 'onEnable').callsFake(function () {
+                calls.push(`enable ${name}`);
+                return onEnable.call(this);
+            });
+            sinon.stub(ComponentType.prototype, 'onDisable').callsFake(function () {
+                calls.push(`disable ${name}`);
+                return onDisable.call(this);
+            });
+        };
+
+        beforeEach(function () {
+            calls = [];
+        });
+
+        it('are enabled and disabled in the order of their systems, whatever order they are added in', function () {
+            record(RenderComponent, 'render');
+            record(CameraComponent, 'camera');
+            record(ScriptComponent, 'script');
+            app = createMinimalApp({
+                componentSystems: [RenderComponentSystem, CameraComponentSystem, ScriptComponentSystem]
+            });
+
+            const entity = new Entity('Entity', app);
+            entity.addComponent('script');
+            entity.addComponent('camera');
+            entity.addComponent('render', { type: 'box' });
+
+            app.root.addChild(entity);
+            entity.enabled = false;
+
+            expect(calls).to.deep.equal([
+                'enable render', 'enable camera', 'enable script',
+                'disable render', 'disable camera', 'disable script'
+            ]);
+        });
+
+        it('enable a rigid body before its collision', function () {
+            record(RigidBodyComponent, 'rigidbody');
+            record(CollisionComponent, 'collision');
+            app = createMinimalApp({
+                componentSystems: [CollisionComponentSystem, RigidBodyComponentSystem],
+                physicsWorld: new NullPhysicsWorld()
+            });
+
+            const entity = new Entity('Body', app);
+            entity.addComponent('collision', { type: 'box' });
+            entity.addComponent('rigidbody', { type: 'dynamic' });
+            calls = [];
+
+            app.root.addChild(entity);
+
+            expect(calls).to.deep.equal(['enable rigidbody', 'enable collision']);
+        });
+    });
+
     describe('frame phases', function () {
 
         // the order in which the systems handle the phases of a frame
         let calls;
 
         class CustomComponentSystem extends ComponentSystem {
-            static updateOrder = ScriptComponentSystem.updateOrder - 50;
+            static order = ScriptComponentSystem.order - 50;
 
             constructor(app) {
                 super(app);
