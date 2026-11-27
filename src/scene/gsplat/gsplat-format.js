@@ -9,19 +9,11 @@ import { hashCode } from '../../core/hash.js';
 import { Debug } from '../../core/debug.js';
 import { GSPLAT_STREAM_RESOURCE, GSPLAT_STREAM_INSTANCE } from '../constants.js';
 import { BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { getGsplatChunk } from './gsplat-chunks.js';
 
 // Shader chunk templates for stream declarations
-import glslStreamDecl from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamDecl.js';
-import wgslStreamDecl from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamDecl.js';
-import wgslComputeStreamDecl from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeStreamDecl.js';
-import glslStreamOutput from '../shader-lib/glsl/chunks/gsplat/vert/gsplatStreamOutput.js';
-import wgslStreamOutput from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatStreamOutput.js';
 
 // Container format read chunks
-import glslContainerFloatRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerFloatRead.js';
-import wgslContainerFloatRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerFloatRead.js';
-import glslContainerSimpleRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerSimpleRead.js';
-import wgslContainerSimpleRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerSimpleRead.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -359,7 +351,7 @@ class GSplatFormat {
      */
     getInputDeclarations(streamNames) {
         const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
-        const template = wgsl ? wgslStreamDecl : glslStreamDecl;
+        const template = getGsplatChunk(this._device, 'gsplatStreamDeclVS');
         const getShaderType = wgsl ? getWgslShaderType : getGlslShaderType;
         const lines = [];
 
@@ -408,6 +400,8 @@ class GSplatFormat {
      * @ignore
      */
     getComputeInputDeclarations(startBinding, streamNames) {
+        // compute shaders are WGSL only
+        const computeStreamDecl = getGsplatChunk(this._device, 'gsplatComputeStreamDeclVS', SHADERLANGUAGE_WGSL);
         const lines = [];
 
         let streams = [...this.streams, ...this._extraStreams];
@@ -423,7 +417,7 @@ class GSplatFormat {
             if (stream.format === PIXELFORMAT_RGBA32F) {
                 textureType = 'texture_2d<uff>';
             }
-            const decl = wgslComputeStreamDecl
+            const decl = computeStreamDecl
             .replace(RE_BINDING, String(startBinding + i))
             .replace(RE_NAME, stream.name)
             .replace(RE_TEXTURE_TYPE, textureType)
@@ -495,7 +489,7 @@ class GSplatFormat {
         const lines = [];
 
         // Generate output declarations using chunk template
-        const template = wgsl ? wgslStreamOutput : glslStreamOutput;
+        const template = getGsplatChunk(this._device, 'gsplatStreamOutputVS');
         const getShaderType = wgsl ? getWgslShaderType : getGlslShaderType;
 
         for (let i = 0; i < outputStreams.length; i++) {
@@ -526,7 +520,7 @@ class GSplatFormat {
     getOutputStubs(streams) {
         const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
         const lines = [];
-        const template = wgsl ? wgslStreamOutput : glslStreamOutput;
+        const template = getGsplatChunk(this._device, 'gsplatStreamOutputVS');
         const getShaderType = wgsl ? getWgslShaderType : getGlslShaderType;
 
         for (const stream of streams) {
@@ -586,14 +580,15 @@ class GSplatFormat {
      * @returns {GSplatFormat} The default format.
      */
     static createDefaultFormat(device) {
+        const read = getGsplatChunk(device, 'gsplatContainerFloatReadVS');
         return new GSplatFormat(device, [
             { name: 'dataColor', format: PIXELFORMAT_RGBA16F },
             { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
             { name: 'dataScale', format: PIXELFORMAT_RGBA16F },
             { name: 'dataRotation', format: PIXELFORMAT_RGBA16F }
         ], {
-            readGLSL: glslContainerFloatRead,
-            readWGSL: wgslContainerFloatRead
+            readGLSL: read,
+            readWGSL: read
         });
     }
 
@@ -607,12 +602,13 @@ class GSplatFormat {
      * @returns {GSplatFormat} The simple format.
      */
     static createSimpleFormat(device) {
+        const read = getGsplatChunk(device, 'gsplatContainerSimpleReadVS');
         return new GSplatFormat(device, [
             { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
             { name: 'dataColor', format: PIXELFORMAT_RGBA16F }
         ], {
-            readGLSL: glslContainerSimpleRead,
-            readWGSL: wgslContainerSimpleRead
+            readGLSL: read,
+            readWGSL: read
         });
     }
 }

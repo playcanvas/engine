@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { getGsplatChunk } from '../gsplat/gsplat-chunks.js';
 import {
     PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
     PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
@@ -18,14 +19,6 @@ import {
     GSPLAT_BUDGET_TARGET, GSPLAT_BUDGET_LIMIT
 } from '../constants.js';
 
-import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
-import glslCompactWrite from '../shader-lib/glsl/chunks/gsplat/frag/formats/containerCompactWrite.js';
-import glslPackedRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerPackedRead.js';
-import glslPackedWrite from '../shader-lib/glsl/chunks/gsplat/frag/formats/containerPackedWrite.js';
-import wgslCompactRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerCompactRead.js';
-import wgslCompactWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerCompactWrite.js';
-import wgslPackedRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerPackedRead.js';
-import wgslPackedWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerPackedWrite.js';
 import { SPLAT_BUDGET_DEFAULT } from './constants.js';
 
 /**
@@ -106,30 +99,34 @@ class GSplatParams {
             //   Alpha co-located with center enables single-texture opacity early-out in compute shaders.
             // - dataTransformB (R32U): half-angle quaternion (11+11+10 bits)
             //   See: https://marc-b-reynolds.github.io/quaternions/2017/05/02/QuatQuantPart1.html
+            const compactRead = getGsplatChunk(this._device, 'gsplatContainerCompactReadVS');
             format = new GSplatFormat(this._device, [
                 { name: 'dataColor', format: PIXELFORMAT_R32U },
                 { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
                 { name: 'dataTransformB', format: PIXELFORMAT_R32U }
             ], {
-                readGLSL: glslCompactRead,
-                readWGSL: wgslCompactRead
+                readGLSL: compactRead,
+                readWGSL: compactRead
             });
-            format.setWriteCode(glslCompactWrite, wgslCompactWrite);
+            const compactWrite = getGsplatChunk(this._device, 'gsplatContainerCompactWritePS');
+            format.setWriteCode(compactWrite, compactWrite);
         } else {
             // Large work buffer format (32 bytes/splat):
             // - dataColor (RGBA16F/RGBA16U): RGBA color with alpha
             // - dataTransformA (RGBA32U): center.xyz (3×32-bit floats as uint) + rotation.xy (2×16-bit halves)
             // - dataTransformB (RG32U): rotation.z + scale.xyz (4×16-bit halves, scale.w derived via sqrt)
             const colorFormat = this._device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
+            const packedRead = getGsplatChunk(this._device, 'gsplatContainerPackedReadVS');
             format = new GSplatFormat(this._device, [
                 { name: 'dataColor', format: colorFormat },
                 { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
                 { name: 'dataTransformB', format: PIXELFORMAT_RG32U }
             ], {
-                readGLSL: glslPackedRead,
-                readWGSL: wgslPackedRead
+                readGLSL: packedRead,
+                readWGSL: packedRead
             });
-            format.setWriteCode(glslPackedWrite, wgslPackedWrite);
+            const packedWrite = getGsplatChunk(this._device, 'gsplatContainerPackedWritePS');
+            format.setWriteCode(packedWrite, packedWrite);
         }
 
         format.allowStreamRemoval = true;

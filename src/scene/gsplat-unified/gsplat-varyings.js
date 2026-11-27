@@ -3,17 +3,8 @@ import {
     SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL,
     TYPE_FLOAT32, TYPE_INT32, TYPE_UINT32
 } from '../../platform/graphics/constants.js';
+import { getGsplatChunk } from '../gsplat/gsplat-chunks.js';
 import { CACHE_STRIDE } from './gsplat-projector-constants.js';
-
-// Shader chunk templates for varying declarations and projection cache access
-import glslVaryingDeclVS from '../shader-lib/glsl/chunks/gsplat/varyings/gsplatVaryingDeclVS.js';
-import glslVaryingDeclPS from '../shader-lib/glsl/chunks/gsplat/varyings/gsplatVaryingDeclPS.js';
-import wgslVaryingDeclVS from '../shader-lib/wgsl/chunks/gsplat/varyings/gsplatVaryingDeclVS.js';
-import wgslVaryingFlushVS from '../shader-lib/wgsl/chunks/gsplat/varyings/gsplatVaryingFlushVS.js';
-import wgslVaryingDeclCS from '../shader-lib/wgsl/chunks/gsplat/varyings/gsplatVaryingDeclCS.js';
-import wgslVaryingDeclPS from '../shader-lib/wgsl/chunks/gsplat/varyings/gsplatVaryingDeclPS.js';
-import wgslVaryingCacheWriteCS from '../shader-lib/wgsl/chunks/gsplat/varyings/gsplatVaryingCacheWriteCS.js';
-import wgslVaryingCacheReadVS from '../shader-lib/wgsl/chunks/gsplat/varyings/gsplatVaryingCacheReadVS.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -233,8 +224,14 @@ class GSplatVaryings {
     _generateChunks() {
         const wgsl = this._device.shaderLanguage === SHADERLANGUAGE_WGSL;
         const types = wgsl ? WGSL_TYPES : GLSL_TYPES;
-        const declVSTemplate = wgsl ? wgslVaryingDeclVS : glslVaryingDeclVS;
-        const declPSTemplate = wgsl ? wgslVaryingDeclPS : glslVaryingDeclPS;
+        const declVSTemplate = getGsplatChunk(this._device, 'gsplatVaryingDeclVS');
+        const declPSTemplate = getGsplatChunk(this._device, 'gsplatVaryingDeclPS');
+
+        // the templates of the compute projection and its cache, which only WebGPU uses
+        const flushTemplate = wgsl ? getGsplatChunk(this._device, 'gsplatVaryingFlushVS') : '';
+        const declCSTemplate = wgsl ? getGsplatChunk(this._device, 'gsplatVaryingDeclCS') : '';
+        const cacheWriteTemplate = wgsl ? getGsplatChunk(this._device, 'gsplatVaryingCacheWriteCS') : '';
+        const cacheReadTemplate = wgsl ? getGsplatChunk(this._device, 'gsplatVaryingCacheReadVS') : '';
 
         const vs = [];
         const ps = [];
@@ -257,19 +254,19 @@ class GSplatVaryings {
             ps.push(sub(declPSTemplate));
 
             if (wgsl) {
-                flush.push(sub(wgslVaryingFlushVS));
-                cs.push(sub(wgslVaryingDeclCS));
+                flush.push(sub(flushTemplate));
+                cs.push(sub(declCSTemplate));
 
                 // hybrid projection cache: one u32 word per component, appended after the base layout
                 const words = [];
                 for (let c = 0; c < components; c++) {
                     const component = components === 1 ? `_user_${name}` : `_user_${name}.${COMPONENT_SWIZZLE[c]}`;
-                    cacheWrite.push(wgslVaryingCacheWriteCS
+                    cacheWrite.push(cacheWriteTemplate
                     .replace(RE_WORD, String(CACHE_STRIDE + wordOffset + c))
                     .replace(RE_VALUE, encodeWord(type, component)));
                     words.push(decodeWord(type, `projCache[base + ${CACHE_STRIDE + wordOffset + c}u]`));
                 }
-                cacheRead.push(wgslVaryingCacheReadVS
+                cacheRead.push(cacheReadTemplate
                 .replace(RE_NAME, name)
                 .replace(RE_VALUE, components === 1 ? words[0] : `${shaderType}(${words.join(', ')})`));
             }

@@ -15,8 +15,6 @@ import {
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
-import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCenters.js';
-import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
 
 /**
  * A holder's handle on its source textures, which may be shared with other holders. Issued by the
@@ -476,8 +474,7 @@ class GSplatSogData {
             uniqueName: 'GsplatSogCentersShader',
             attributes: { vertex_position: SEMANTIC_POSITION },
             vertexChunk: 'fullscreenQuadVS',
-            fragmentGLSL: glslSogCentersPS,
-            fragmentWGSL: wgslSogCentersPS,
+            fragmentChunk: 'gsplatSogCentersPS',
             fragmentOutputTypes: ['uvec4']
         });
 

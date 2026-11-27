@@ -4,10 +4,13 @@ import { restore, stub } from 'sinon';
 import { Quat } from '../../src/core/math/quat.js';
 import { Vec3 } from '../../src/core/math/vec3.js';
 import { Vec4 } from '../../src/core/math/vec4.js';
+import { SHADERLANGUAGE_WGSL } from '../../src/platform/graphics/constants.js';
+import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 import { blindAccessors, parseBlindFields } from '../../src/scene/gsplat/gsplat-sog-blind.js';
 import { GSplatSogData } from '../../src/scene/gsplat/gsplat-sog-data.js';
 import { GSplatSogResource } from '../../src/scene/gsplat/gsplat-sog-resource.js';
 import { GSplatOctreeResource } from '../../src/scene/gsplat-unified/gsplat-octree.resource.js';
+import { installGsplatChunks } from '../gsplat-chunks.mjs';
 
 // A fake RGBA8 texture whose CPU-side level the iterator reads.
 const tex = (rgba, width = rgba.length / 4) => ({ _levels: [Uint8Array.from(rgba)], width, height: 1 });
@@ -191,16 +194,26 @@ describe('SOG v3 blind data', function () {
     });
 
     it('generates accessors from the field template', function () {
+        // a device generating each shader language, with the gsplat chunks the template comes from
+        const glslDevice = new NullGraphicsDevice({ width: 1, height: 1 });
+        const wgslDevice = new NullGraphicsDevice({ width: 1, height: 1 });
+        wgslDevice.shaderLanguage = SHADERLANGUAGE_WGSL;
+        installGsplatChunks(glslDevice);
+        installGsplatChunks(wgslDevice);
+
         const fields = parseBlindFields(blindMeta);
-        const glsl = blindAccessors(fields, false);
+        const glsl = blindAccessors(fields, glslDevice);
         expect(glsl).to.contain('#include "gsplatSogBlindVS"');
         expect(glsl).to.contain('float getBlind_weight() { uint bits = sogBlindBits(loadBlind0(), 0u, 2u); return sogBlindF16(bits); }');
         expect(glsl).to.contain('uint getBlind_seg_id() { uint bits = sogBlindBits(loadBlind0(), 2u, 2u); return bits; }');
         expect(glsl).to.contain('float getBlind_depth() { uint bits = sogBlindBits(loadBlind1(), 0u, 1u); return sogBlindUnorm(bits, 255.0, 0.5, 2.0); }');
         expect(glsl).to.contain('float getBlind_f() { uint bits = sogBlindBits(loadBlind2(), 0u, 4u); return sogBlindF32(bits); }');
-        const wgsl = blindAccessors(fields, true);
+        const wgsl = blindAccessors(fields, wgslDevice);
         expect(wgsl).to.contain('fn getBlind_seg_id() -> u32 { let bits = sogBlindBits(loadBlind0(), 2u, 2u); return bits; }');
         expect(wgsl).to.contain('fn getBlind_depth() -> f32 { let bits = sogBlindBits(loadBlind1(), 0u, 1u); return sogBlindUnorm(bits, 255.0, 0.5, 2.0); }');
-        expect(blindAccessors([], false)).to.equal('');
+        expect(blindAccessors([], glslDevice)).to.equal('');
+
+        glslDevice.destroy();
+        wgslDevice.destroy();
     });
 });

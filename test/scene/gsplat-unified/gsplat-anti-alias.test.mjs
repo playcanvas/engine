@@ -7,6 +7,7 @@ import { GSplatOctree } from '../../../src/scene/gsplat-unified/gsplat-octree.js
 import { GSplatOctreeResource } from '../../../src/scene/gsplat-unified/gsplat-octree.resource.js';
 import { GSplatParams } from '../../../src/scene/gsplat-unified/gsplat-params.js';
 import { GSplatPlacementStateTracker } from '../../../src/scene/gsplat-unified/gsplat-placement-state-tracker.js';
+import { installGsplatChunks } from '../../gsplat-chunks.mjs';
 
 // A two-file octree with a single leaf, the root carrying the bound GSplatOctreeResource reads.
 const makeOctreeData = (model) => {
@@ -44,6 +45,7 @@ describe('GSplat anti-aliasing', function () {
 
         beforeEach(function () {
             device = new NullGraphicsDevice({ width: 1, height: 1 });
+            installGsplatChunks(device);
         });
 
         afterEach(function () {

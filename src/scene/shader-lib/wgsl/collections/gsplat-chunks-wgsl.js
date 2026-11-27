@@ -29,6 +29,27 @@ import gsplatContainerDeclVS from '../chunks/gsplat/vert/formats/containerDecl.j
 import gsplatContainerReadVS from '../chunks/gsplat/vert/formats/containerRead.js';
 import gsplatContainerFloatReadVS from '../chunks/gsplat/vert/formats/containerFloatRead.js';
 
+// Chunks the gsplat code reads by name, as source or templates it fills in
+import gsplatCopyToWorkbufferPS from '../chunks/gsplat/frag/gsplatCopyToWorkbuffer.js';
+import gsplatCopyInstancedQuadVS from '../chunks/gsplat/vert/gsplatCopyInstancedQuad.js';
+import gsplatSogCentersPS from '../chunks/gsplat/frag/gsplatSogCenters.js';
+import gsplatProcessPS from '../chunks/gsplat/frag/gsplatProcess.js';
+import gsplatStreamDeclVS from '../chunks/gsplat/vert/gsplatStreamDecl.js';
+import gsplatStreamOutputVS from '../chunks/gsplat/vert/gsplatStreamOutput.js';
+import gsplatContainerSimpleReadVS from '../chunks/gsplat/vert/formats/containerSimpleRead.js';
+import gsplatContainerCompactReadVS from '../chunks/gsplat/vert/formats/containerCompactRead.js';
+import gsplatContainerPackedReadVS from '../chunks/gsplat/vert/formats/containerPackedRead.js';
+import gsplatContainerCompactWritePS from '../chunks/gsplat/frag/formats/containerCompactWrite.js';
+import gsplatContainerPackedWritePS from '../chunks/gsplat/frag/formats/containerPackedWrite.js';
+import gsplatVaryingDeclVS from '../chunks/gsplat/varyings/gsplatVaryingDeclVS.js';
+import gsplatVaryingDeclPS from '../chunks/gsplat/varyings/gsplatVaryingDeclPS.js';
+import gsplatSogBlindFieldVS from '../chunks/gsplat/vert/formats/sogBlindField.js';
+import gsplatComputeStreamDeclVS from '../chunks/gsplat/vert/gsplatComputeStreamDecl.js';
+import gsplatVaryingFlushVS from '../chunks/gsplat/varyings/gsplatVaryingFlushVS.js';
+import gsplatVaryingDeclCS from '../chunks/gsplat/varyings/gsplatVaryingDeclCS.js';
+import gsplatVaryingCacheWriteCS from '../chunks/gsplat/varyings/gsplatVaryingCacheWriteCS.js';
+import gsplatVaryingCacheReadVS from '../chunks/gsplat/varyings/gsplatVaryingCacheReadVS.js';
+
 export const gsplatChunksWGSL = {
     gsplatCenterVS,
     gsplatCornerVS,
@@ -57,5 +78,24 @@ export const gsplatChunksWGSL = {
     gsplatSogBlindVS,
     gsplatContainerDeclVS,
     gsplatContainerReadVS,
-    gsplatContainerFloatReadVS
+    gsplatContainerFloatReadVS,
+    gsplatCopyToWorkbufferPS,
+    gsplatCopyInstancedQuadVS,
+    gsplatSogCentersPS,
+    gsplatProcessPS,
+    gsplatStreamDeclVS,
+    gsplatStreamOutputVS,
+    gsplatContainerSimpleReadVS,
+    gsplatContainerCompactReadVS,
+    gsplatContainerPackedReadVS,
+    gsplatContainerCompactWritePS,
+    gsplatContainerPackedWritePS,
+    gsplatVaryingDeclVS,
+    gsplatVaryingDeclPS,
+    gsplatSogBlindFieldVS,
+    gsplatComputeStreamDeclVS,
+    gsplatVaryingFlushVS,
+    gsplatVaryingDeclCS,
+    gsplatVaryingCacheWriteCS,
+    gsplatVaryingCacheReadVS
 };
