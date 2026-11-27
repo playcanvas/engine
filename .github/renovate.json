@@ -47,7 +47,7 @@
       "matchPackageNames": [
         "eslint"
       ],
-      "allowedVersions": "<10.0.0"
+      "allowedVersions": "<11.0.0"
     },
     {
       "matchPackageNames": [

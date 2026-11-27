@@ -85,7 +85,7 @@
     "chai": "6.2.2",
     "esbuild": "0.28.2",
     "esbuild-visualizer": "0.7.0",
-    "eslint": "9.39.5",
+    "eslint": "10.16.0",
     "fflate": "0.8.3",
     "globals": "17.12.0",
     "jscc": "1.1.1",
