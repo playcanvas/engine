@@ -136,7 +136,7 @@ class HandleGizmo extends DragGizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.LightGizmo(camera, layer);
+     * const gizmo = new LightGizmo(camera, layer);
      * gizmo.on('handle:start', (node, name) => {
      *     console.log(`Started editing ${name} of ${node.name}`);
      * });
@@ -148,7 +148,7 @@ class HandleGizmo extends DragGizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.LightGizmo(camera, layer);
+     * const gizmo = new LightGizmo(camera, layer);
      * gizmo.on('handle:move', (node, name) => {
      *     console.log(`Edited ${name} of ${node.name}`);
      * });
@@ -160,7 +160,7 @@ class HandleGizmo extends DragGizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.LightGizmo(camera, layer);
+     * const gizmo = new LightGizmo(camera, layer);
      * gizmo.on('handle:end', (node, name) => {
      *     console.log(`Finished editing ${name} of ${node.name}`);
      * });
@@ -172,7 +172,7 @@ class HandleGizmo extends DragGizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.LightGizmo(camera, layer);
+     * const gizmo = new LightGizmo(camera, layer);
      * gizmo.on('icon:select', (node) => {
      *     console.log(`Clicked the icon of ${node.name}`);
      * });

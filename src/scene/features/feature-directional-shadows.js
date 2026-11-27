@@ -6,26 +6,16 @@ import { FEATURE_DIRECTIONAL_SHADOWS } from './constants.js';
 import { Feature } from './feature.js';
 import { shadowsCoreWebgl, shadowsCoreWebgpu } from './feature-shadows-core.js';
 
-/**
- * @import { FeatureHost } from './feature.js'
- */
-
-/**
- * Creates the renderer of the shadows of directional lights on the renderer of the host.
- *
- * @param {FeatureHost} host - The host the feature is installed into.
- */
-function installDirectionalShadows(host) {
-    const renderer = host.renderer;
-    if (renderer?.shadowRenderer) {
-        renderer._shadowRendererDirectional = new ShadowRendererDirectional(renderer, renderer.shadowRenderer);
-    }
-}
-
 // The engine code of the shadows of directional lights, installed once when a host installs the features of
 // both devices.
 const directionalShadowsCode = /* #__PURE__ */ new Feature({
-    install: installDirectionalShadows
+    // creates the renderer of the shadows of directional lights on the renderer of the host
+    install: (host) => {
+        const renderer = host.renderer;
+        if (renderer?.shadowRenderer) {
+            renderer._shadowRendererDirectional = new ShadowRendererDirectional(renderer, renderer.shadowRenderer);
+        }
+    }
 });
 DebugHelper.setName(directionalShadowsCode, FEATURE_DIRECTIONAL_SHADOWS);
 

@@ -581,7 +581,7 @@ class CameraComponent extends Component {
      * the color of the attachment 0.
      * @example
      * // clear the second color buffer of the render target to a different color
-     * entity.camera.setClearColor(1, new pc.Color(0.5, 0.5, 1, 1));
+     * entity.camera.setClearColor(1, new Color(0.5, 0.5, 1, 1));
      */
     setClearColor(index, color) {
         this._camera.setClearColor(index, color);

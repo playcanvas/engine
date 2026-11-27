@@ -50,7 +50,7 @@ class IconGizmo extends Gizmo {
      *
      * @event
      * @example
-     * const gizmo = new pc.IconGizmo(camera, layer);
+     * const gizmo = new IconGizmo(camera, layer);
      * gizmo.on('icon:select', (entity) => {
      *     console.log(`Clicked the icon of ${entity.name}`);
      * });

@@ -5,23 +5,13 @@ import { areaLightChunksWGSL } from '../shader-lib/wgsl/collections/area-light-c
 import { FEATURE_AREA_LIGHTS } from './constants.js';
 import { Feature } from './feature.js';
 
-/**
- * @import { FeatureHost } from './feature.js'
- */
-
-/**
- * Creates the LUT textures of area lights from the LUT data the feature brings.
- *
- * @param {FeatureHost} host - The host the feature is installed into.
- */
-function installAreaLights(host) {
-    AreaLightLuts.create(host.graphicsDevice);
-}
-
 // The engine code of area lights, shared by the feature for each device, so that it is installed
 // once when a host installs both.
 const areaLightsCode = /* #__PURE__ */ new Feature({
-    install: installAreaLights
+    // creates the LUT textures of area lights from the LUT data the feature brings
+    install: (host) => {
+        AreaLightLuts.create(host.graphicsDevice);
+    }
 });
 DebugHelper.setName(areaLightsCode, FEATURE_AREA_LIGHTS);
 
