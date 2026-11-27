@@ -26,7 +26,6 @@ import {
     MeshInstance,
     Model,
     Mouse,
-    ParticleSystemComponentSystem,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RigidBodyComponentSystem,
@@ -39,7 +38,8 @@ import {
     Vec2,
     Vec3,
     WasmModule,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { PlanarRenderer } from 'playcanvas/scripts/esm/planar-renderer.mjs';
@@ -95,11 +95,12 @@ const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
+createOptions.features = [featureParticles];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ParticleSystemComponentSystem,
     ScriptComponentSystem,
     CollisionComponentSystem,
     RigidBodyComponentSystem

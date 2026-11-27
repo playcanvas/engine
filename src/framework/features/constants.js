@@ -24,3 +24,11 @@ export const FEATURE_I18N = 'i18n';
  * @ignore
  */
 export const FEATURE_ANIM = 'anim';
+
+/**
+ * The name of the particles feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_PARTICLES = 'particles';

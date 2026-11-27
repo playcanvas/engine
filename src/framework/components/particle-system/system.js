@@ -5,8 +5,8 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Asset } from '../../asset/asset.js';
 import { ComponentSystem } from '../system.js';
 import { _properties, ParticleSystemComponent } from './component.js';
-import { featureParticlesWebgl, featureParticlesWebgpu } from '../../../scene/features/feature-particles.js';
-import { installFeatures } from '../../../scene/features/install-features.js';
+import { hasFeature } from '../../../scene/features/constants.js';
+import { FEATURE_PARTICLES } from '../../features/constants.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
@@ -95,7 +95,8 @@ const _propertyTypes = {
 /**
  * Manages the {@link ParticleSystemComponent}s of an application. Reach it through
  * `app.systems.particlesystem`; components are created with {@link Entity#addComponent}, never by
- * calling the system directly.
+ * calling the system directly. The system is installed by {@link featureParticles}, listed in
+ * {@link AppOptions#features}.
  *
  * @category Graphics
  */
@@ -116,8 +117,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('update', this.onUpdate, this);
 
-        // the particles feature, for both devices, as the application lists the component system
-        installFeatures(app, [featureParticlesWebgl, featureParticlesWebgpu]);
+        Debug.assert(hasFeature(app.graphicsDevice, FEATURE_PARTICLES), 'The particle system component system is installed by featureParticles. Add it to AppOptions#features instead of listing the system in AppOptions#componentSystems.');
     }
 
     initializeComponentData(component, _data) {

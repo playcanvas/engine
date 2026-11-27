@@ -12,7 +12,6 @@ import { LayoutChildComponentSystem } from '../src/framework/components/layout-c
 import { LayoutGroupComponentSystem } from '../src/framework/components/layout-group/system.js';
 import { LightComponentSystem } from '../src/framework/components/light/system.js';
 import { ModelComponentSystem } from '../src/framework/components/model/system.js';
-import { ParticleSystemComponentSystem } from '../src/framework/components/particle-system/system.js';
 import { RenderComponentSystem } from '../src/framework/components/render/system.js';
 import { RigidBodyComponentSystem } from '../src/framework/components/rigid-body/system.js';
 import { ScreenComponentSystem } from '../src/framework/components/screen/system.js';
@@ -23,6 +22,7 @@ import { SoundComponentSystem } from '../src/framework/components/sound/system.j
 import { SpriteComponentSystem } from '../src/framework/components/sprite/system.js';
 import { ZoneComponentSystem } from '../src/framework/components/zone/system.js';
 import { featureAnim } from '../src/framework/features/feature-anim.js';
+import { featureParticles } from '../src/framework/features/feature-particles.js';
 import { AudioHandler } from '../src/framework/handlers/audio.js';
 import { BinaryHandler } from '../src/framework/handlers/binary.js';
 import { ContainerHandler } from '../src/framework/handlers/container.js';
@@ -57,7 +57,8 @@ import { BatchManager } from '../src/scene/batching/batch-manager.js';
 // every feature, component system and resource handler the engine implements, so a test can add
 // any component or load any asset type without registering it first
 const features = [
-    featureAnim
+    featureAnim,
+    featureParticles
 ];
 
 const componentSystems = [
@@ -71,7 +72,6 @@ const componentSystems = [
     ScriptComponentSystem,
     SoundComponentSystem,
     AudioListenerComponentSystem,
-    ParticleSystemComponentSystem,
     ScreenComponentSystem,
     ElementComponentSystem,
     ButtonComponentSystem,

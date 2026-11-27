@@ -11,11 +11,11 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     LightComponentSystem,
-    ParticleSystemComponentSystem,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     TextureHandler,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 
 import { deviceType } from 'examples/context';
@@ -37,12 +37,9 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    LightComponentSystem,
-    ParticleSystemComponentSystem
-];
+createOptions.features = [featureParticles];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
 createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);

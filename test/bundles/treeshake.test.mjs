@@ -49,7 +49,7 @@ describe('build / treeshake', function () {
         { module: 'scene/features/feature-directional-shadows.js', webgl: 'featureDirectionalShadowsWebgl', webgpu: 'featureDirectionalShadowsWebgpu' },
         { module: 'scene/features/feature-local-shadows.js', webgl: 'featureLocalShadowsWebgl', webgpu: 'featureLocalShadowsWebgpu' },
         { module: 'scene/features/feature-area-lights.js', webgl: 'featureAreaLightsWebgl', webgpu: 'featureAreaLightsWebgpu' },
-        { module: 'scene/features/feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
+        { module: 'framework/features/feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
         { module: 'scene/features/feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' },
         { module: 'scene/features/feature-core-chunks.js', webgl: 'featureCoreChunksWebgl', webgpu: 'featureCoreChunksWebgpu' },
         { module: 'scene/features/feature-gsplat.js', webgl: 'featureGsplatWebgl', webgpu: 'featureGsplatWebgpu' }
@@ -180,6 +180,33 @@ describe('build / treeshake', function () {
         const featureInputs = Object.keys(Object.values(withFeature.metafile.outputs)[0].inputs);
         expect(featureInputs.some(path => path.endsWith('/parsers/glb/animations.js')), 'glTF animations').to.equal(true);
         expect(featureInputs.some(path => path.endsWith('/components/anim/system.js')), 'anim component system').to.equal(true);
+    });
+
+    // particle systems are brought by the particles feature, so the application alone does not
+    // retain them, and the feature of both devices brings the shader chunks of both languages
+    it('AppBase does not retain particle systems, which the particles feature brings', async function () {
+        const retainedParticles = inputs => inputs.filter(path => path.includes('/components/particle-system/') ||
+            path.includes('/scene/particle-system/') ||
+            path.includes('/particle-chunks-') ||
+            path.includes('/chunks/particle/') ||
+            path.endsWith('/features/feature-particles.js'));
+
+        const result = await bundle(`
+            import { AppBase, AppOptions } from "playcanvas";
+            globalThis.__imports = { AppBase, AppOptions };
+        `);
+        const inputs = Object.keys(Object.values(result.metafile.outputs)[0].inputs);
+        expect(retainedParticles(inputs), 'retained particle modules').to.deep.equal([]);
+
+        // and the particles feature does bring them, in both languages
+        const withFeature = await bundle(`
+            import { AppBase, AppOptions, featureParticles } from "playcanvas";
+            globalThis.__imports = { AppBase, AppOptions, featureParticles };
+        `);
+        const featureInputs = Object.keys(Object.values(withFeature.metafile.outputs)[0].inputs);
+        expect(featureInputs.some(path => path.endsWith('/components/particle-system/system.js')), 'particle system component system').to.equal(true);
+        expect(featureInputs.some(path => path.endsWith('/particle-chunks-glsl.js')), 'GLSL particle chunks').to.equal(true);
+        expect(featureInputs.some(path => path.endsWith('/particle-chunks-wgsl.js')), 'WGSL particle chunks').to.equal(true);
     });
 
     it('AppBase with container loading does not retain the gsplat implementation', async function () {
