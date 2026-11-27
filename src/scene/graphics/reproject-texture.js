@@ -1,6 +1,7 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { random } from '../../core/math/random.js';
 import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
 import {
     FILTER_NEAREST,
     RENDERTARGET_ORIGIN_BOTTOM,
@@ -15,7 +16,7 @@ import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { drawQuadWithShader } from './quad-render-utils.js';
+import { RenderPassShaderQuad } from './render-pass-shader-quad.js';
 
 /**
  * @import { Vec4 } from '../../core/math/vec4.js'
@@ -368,6 +369,52 @@ const generateGGXSamplesTex = (device, numSamples, specularPower, sourceTotalPix
 };
 
 /**
+ * Render targets wrap the destination texture and one cubemap face. They are
+ * cheap to keep and expensive to create per draw, and EnvLighting calls this
+ * function many times for one atlas, so cache one per texture and face.
+ *
+ * @type {WeakMap<Texture, (RenderTarget | undefined)[]>}
+ */
+const renderTargetsByTexture = new WeakMap();
+
+const _viewport = new Vec4();
+
+/**
+ * @param {Texture} target - The destination texture.
+ * @param {number} face - The cubemap face.
+ * @returns {{renderTarget: RenderTarget, pass: RenderPassShaderQuad}} The cached render target and pass for the texture and face.
+ */
+function getCachedRenderTarget(target, face) {
+    let targets = renderTargetsByTexture.get(target);
+    // A destroyed texture clears its device; drop the render targets that
+    // reference it instead of drawing into a dead texture.
+    if (!targets || !target.device) {
+        if (targets) {
+            for (const entry of targets) {
+                entry?.pass.destroy();
+                entry?.renderTarget.destroy();
+            }
+        }
+        targets = [];
+        renderTargetsByTexture.set(target, targets);
+    }
+    let entry = targets[face];
+    if (!entry) {
+        const renderTarget = new RenderTarget({
+            colorBuffer: target,
+            face,
+            depth: false,
+            origin: RENDERTARGET_ORIGIN_BOTTOM
+        });
+        const pass = new RenderPassShaderQuad(target.device);
+        pass.init(renderTarget);
+        entry = { renderTarget, pass };
+        targets[face] = entry;
+    }
+    return entry;
+}
+
+/**
  * This function reprojects textures between cubemap, equirectangular and octahedral formats. The
  * function can read and write textures with pixel data in RGBE, RGBM, linear and sRGB formats.
  * When specularPower is specified it will perform a phong-weighted convolution of the source (for
@@ -491,24 +538,20 @@ function reprojectTexture(source, target, options = {}) {
 
     for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
         if (face === null || f === face) {
-            const renderTarget = new RenderTarget({
-                colorBuffer: target,
-                face: f,
-                depth: false,
-                origin: RENDERTARGET_ORIGIN_BOTTOM
-            });
-            DebugHelper.setName(renderTarget, {
+            const { renderTarget, pass } = getCachedRenderTarget(target, f);
+            pass.name = {
                 none: 'Reproject',
                 phong: 'PrefilterPhong',
                 ggx: 'PrefilterGGX',
                 lambert: 'PrefilterLambert'
-            }[distribution] ?? 'Reproject');
+            }[distribution] ?? 'Reproject';
+            pass.shader = shader;
+            pass.blendState = device.blendState;
+            pass.viewport = options?.rect ?? _viewport.set(0, 0, target.width, target.height);
+            pass.scissor = undefined;
             params[0] = f;
             constantParams.setValue(params);
-
-            drawQuadWithShader(device, renderTarget, shader, options?.rect, undefined, renderTarget.name);
-
-            renderTarget.destroy();
+            pass.render();
         }
     }
 
