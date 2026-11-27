@@ -278,8 +278,9 @@ class AppStats {
 
     /**
      * CPU duration of the latest component systems update phase in milliseconds. Includes script
-     * updates, physics and other systems subscribed to the update event. Part of
-     * {@link cpuUpdateTime}. Available in all builds.
+     * updates and other systems subscribed to the update event. Physics is stepped in a phase of its
+     * own, measured by {@link cpuPhysicsTime}. Part of {@link cpuUpdateTime}. Available in all
+     * builds.
      *
      * @type {number}
      */
@@ -308,10 +309,12 @@ class AppStats {
     }
 
     /**
-     * CPU duration of the most recent physics step in milliseconds, including synchronization and
-     * contact handling. Normally part of {@link cpuSystemUpdateTime}. Multiple manual steps are not
-     * accumulated. Zero before any step or when physics is paused through its timeScale property.
-     * Available in all builds.
+     * CPU duration of the physics steps of the most recent frame in milliseconds, including
+     * synchronization and contact handling. Includes steps taken manually with
+     * {@link RigidBodyComponentSystem#step}, for example while physics is paused through its
+     * timeScale property; a step taken between frames, such as from an input event, counts towards
+     * the next frame. The steps the application takes are part of {@link cpuUpdateTime}. Zero when
+     * no step was taken in the frame. Available in all builds.
      *
      * @type {number}
      */
@@ -524,6 +527,7 @@ class AppStats {
      */
     frameEnd() {
         this.frame.gsplatSort = 0;
+        this.frame.physicsTime = 0;
     }
 }
 

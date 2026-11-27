@@ -222,6 +222,57 @@ describe('RigidBodyComponentSystem', function () {
         });
     });
 
+    describe('physics time stat', function () {
+        let world;
+
+        // keeps a step busy for a measurable time
+        const busy = (ms) => {
+            const end = Date.now() + ms;
+            while (Date.now() < end);
+        };
+
+        beforeEach(function () {
+            world = new NullPhysicsWorld();
+            app.systems.rigidbody.setPhysicsWorld(world);
+            stub(world, 'step').callsFake(() => busy(2));
+        });
+
+        afterEach(function () {
+            restore();
+        });
+
+        it('includes a manual step taken while paused', function () {
+            const system = app.systems.rigidbody;
+            system.timeScale = 0;
+
+            // such as a script stepping the paused simulation in its update
+            app.systems.on('update', () => system.step(1 / 60));
+            app.update(1 / 60);
+
+            expect(app.stats.frame.physicsTime).to.be.at.least(1);
+        });
+
+        it('accumulates the steps of a frame, and is reset at the end of the frame', function () {
+            const system = app.systems.rigidbody;
+            app.systems.on('update', () => system.step(1 / 60));
+            app.update(1 / 60);
+
+            // the manual step and the step of the application
+            expect(world.step.callCount).to.equal(2);
+            expect(app.stats.frame.physicsTime).to.be.at.least(3);
+
+            app.stats.frameEnd();
+            expect(app.stats.frame.physicsTime).to.equal(0);
+        });
+
+        it('is zero for a frame in which physics is paused', function () {
+            app.systems.rigidbody.timeScale = 0;
+            app.update(1 / 60);
+
+            expect(app.stats.frame.physicsTime).to.equal(0);
+        });
+    });
+
     describe('gravity', function () {
 
         afterEach(function () {
