@@ -32,7 +32,7 @@ const cellColor = new Vec3();
  * Clustered lighting must be enabled, see {@link Scene#clusteredLightingEnabled}.
  *
  * @example
- * const clustersDebug = new pc.WorldClustersDebug(app);
+ * const clustersDebug = new WorldClustersDebug(app);
  * clustersDebug.layer = app.scene.layers.getLayerByName('World');
  *
  * @category Graphics

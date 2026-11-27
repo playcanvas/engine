@@ -6,32 +6,22 @@ import { shadowChunksWGSL } from '../shader-lib/wgsl/collections/shadow-chunks-w
 import { FEATURE_SHADOWS } from './constants.js';
 import { Feature } from './feature.js';
 
-/**
- * @import { FeatureHost } from './feature.js'
- */
-
-/**
- * Creates the shadow renderer shared by the shadows of all light types on the renderer of the
- * host.
- *
- * @param {FeatureHost} host - The host the feature is installed into.
- */
-function installShadowsCore(host) {
-    const renderer = host.renderer;
-    Debug.assert(renderer, 'The shadows feature needs a renderer');
-    if (!renderer) {
-        return;
-    }
-
-    const shadowMapCache = new ShadowMapCache();
-    renderer.shadowMapCache = shadowMapCache;
-    renderer.shadowRenderer = new ShadowRenderer(renderer, renderer.lightTextureAtlas, shadowMapCache);
-}
-
 // The engine code shared by the shadows of all light types, installed once when a host installs
 // the features of both devices.
 const shadowsCoreCode = /* #__PURE__ */ new Feature({
-    install: installShadowsCore
+    // creates the shadow renderer shared by the shadows of all light types on the renderer of
+    // the host
+    install: (host) => {
+        const renderer = host.renderer;
+        Debug.assert(renderer, 'The shadows feature needs a renderer');
+        if (!renderer) {
+            return;
+        }
+
+        const shadowMapCache = new ShadowMapCache();
+        renderer.shadowMapCache = shadowMapCache;
+        renderer.shadowRenderer = new ShadowRenderer(renderer, renderer.lightTextureAtlas, shadowMapCache);
+    }
 });
 DebugHelper.setName(shadowsCoreCode, FEATURE_SHADOWS);
 

@@ -96,9 +96,9 @@ const loadDecoder = () => {
  * @example
  * import { MeshoptDecoder } from 'meshoptimizer';
  *
- * pc.meshoptInitialize({ decoder: MeshoptDecoder });
+ * meshoptInitialize({ decoder: MeshoptDecoder });
  * @example
- * pc.meshoptInitialize({ url: 'lib/meshopt_decoder.mjs' });
+ * meshoptInitialize({ url: 'lib/meshopt_decoder.mjs' });
  */
 const meshoptInitialize = (config) => {
     decoderConfig = config ?? null;
