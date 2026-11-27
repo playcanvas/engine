@@ -38,7 +38,7 @@
     "3d-tiles-renderer": "0.5.4",
     "cross-env": "10.1.0",
     "esbuild": "0.28.2",
-    "eslint": "9.39.5",
+    "eslint": "10.16.0",
     "eslint-config-prettier": "10.1.8",
     "examples": "file:./iframe",
     "fflate": "0.8.3",
@@ -61,6 +61,12 @@
     },
     "3d-tiles-renderer": {
       "playcanvas": "$playcanvas"
+    },
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react": {
+      "eslint": "$eslint"
     }
   },
   "allowScripts": {
