@@ -20,7 +20,6 @@ import {
     Color,
     Entity,
     FILLMODE_FILL_WINDOW,
-    GSplatComponentSystem,
     LightComponentSystem,
     PROJECTION_ORTHOGRAPHIC,
     RESOLUTION_AUTO,
@@ -28,7 +27,8 @@ import {
     SceneDepthReader,
     Vec3,
     Vec4,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 
 import { deviceType } from 'examples/context';
@@ -40,12 +40,9 @@ const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType], a
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    LightComponentSystem,
-    GSplatComponentSystem
-];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

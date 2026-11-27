@@ -22,8 +22,6 @@ import {
     GSPLATDATA_COMPACT,
     GSPLATDATA_LARGE,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
-    GSplatHandler,
     LightComponentSystem,
     Mouse,
     PIXELFORMAT_RG11B10F,
@@ -39,6 +37,7 @@ import {
     Vec2,
     WasmModule,
     createGraphicsDevice,
+    featureGsplat,
     math,
     platform
 } from 'playcanvas';
@@ -152,21 +151,22 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Register the spz parser with the gsplat resource handler. It also loads the `.spz` splat files of
 // an LCC2 scene, which are requested by file extension.
-const gsplatHandler = /** @type {GSplatHandler} */ (app.loader.getHandler('gsplat'));
+const gsplatHandler = /** @type {import('playcanvas').GSplatHandler} */ (app.loader.getHandler('gsplat'));
 gsplatHandler.addParser(new SpzParser(app));
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size

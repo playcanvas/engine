@@ -10,8 +10,8 @@
 
 import {
     AppBase,
-    AutoExposureEffect,
     AppOptions,
+    AutoExposureEffect,
     BoundingBox,
     CameraComponentSystem,
     CameraFrame,
@@ -20,7 +20,6 @@ import {
     FILLMODE_FILL_WINDOW,
     FILTER_NEAREST,
     GSPLATDATA_LARGE,
-    GSplatComponentSystem,
     GSplatContainer,
     GSplatFormat,
     PIXELFORMAT_RGBA32F,
@@ -33,7 +32,8 @@ import {
     Texture,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
@@ -54,12 +54,9 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.componentSystems = [
-    CameraComponentSystem,
-    GSplatComponentSystem,
-    RenderComponentSystem,
-    ScriptComponentSystem
-];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [CameraComponentSystem, RenderComponentSystem, ScriptComponentSystem];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

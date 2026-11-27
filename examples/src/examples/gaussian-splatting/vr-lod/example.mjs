@@ -43,8 +43,6 @@ import {
     GSPLAT_DEBUG_NONE,
     GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
-    GSplatComponentSystem,
-    GSplatHandler,
     Keyboard,
     LightComponentSystem,
     Mouse,
@@ -62,6 +60,7 @@ import {
     XRTYPE_VR,
     XrManager,
     createGraphicsDevice,
+    featureGsplat,
     math,
     platform
 } from 'playcanvas';
@@ -93,12 +92,13 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(window);
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScriptComponentSystem,
-    GSplatComponentSystem,
     // UI systems required by the in-XR HUD (XrMenu builds screen/element/button components).
     ScreenComponentSystem,
     ElementComponentSystem,
@@ -108,7 +108,6 @@ createOptions.resourceHandlers = [
     TextureHandler,
     ContainerHandler,
     ScriptHandler,
-    GSplatHandler,
     // Required to load the HUD font asset.
     FontHandler
 ];

@@ -26,8 +26,6 @@ import {
     FILLMODE_FILL_WINDOW,
     GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
-    GSplatComponentSystem,
-    GSplatHandler,
     GamePads,
     Keyboard,
     LightComponentSystem,
@@ -44,6 +42,7 @@ import {
     Vec3,
     WasmModule,
     createGraphicsDevice,
+    featureGsplat,
     platform
 } from 'playcanvas';
 import { FirstPersonController } from 'playcanvas/scripts/esm/first-person-controller.mjs';
@@ -98,16 +97,17 @@ createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(window);
 createOptions.gamepads = new GamePads();
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScriptComponentSystem,
     CollisionComponentSystem,
-    RigidBodyComponentSystem,
-    GSplatComponentSystem
+    RigidBodyComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

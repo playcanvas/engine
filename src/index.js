@@ -350,6 +350,7 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 // FRAMEWORK / FEATURES
 export { featureAnim } from './framework/features/feature-anim.js';
 export { featureParticles } from './framework/features/feature-particles.js';
+export { featureGsplat } from './framework/features/feature-gsplat.js';
 
 // FRAMEWORK / GRAPHICS
 export { Picker } from './framework/graphics/picker.js';

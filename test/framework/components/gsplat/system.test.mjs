@@ -4,8 +4,8 @@ import { restore, stub } from 'sinon';
 import { AppBase } from '../../../../src/framework/app-base.js';
 import { AppOptions } from '../../../../src/framework/app-options.js';
 import { CameraComponentSystem } from '../../../../src/framework/components/camera/system.js';
-import { GSplatComponentSystem } from '../../../../src/framework/components/gsplat/system.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { featureGsplat } from '../../../../src/framework/features/feature-gsplat.js';
 import { LayerComposition } from '../../../../src/scene/composition/layer-composition.js';
 import { LAYERID_WORLD } from '../../../../src/scene/constants.js';
 import { GSplatParams } from '../../../../src/scene/gsplat-unified/gsplat-params.js';
@@ -26,11 +26,12 @@ describe('GSplatComponentSystem', function () {
         restore();
     });
 
-    const createApp = (componentSystems) => {
+    const createApp = ({ features = [], componentSystems = [] } = {}) => {
         const canvas = document.createElement('canvas');
         const options = new AppOptions();
         options.graphicsDevice = createGraphicsDevice(canvas);
         options.resourceHandlers = [];
+        options.features = features;
         options.componentSystems = componentSystems;
 
         app = new AppBase(canvas);
@@ -38,24 +39,24 @@ describe('GSplatComponentSystem', function () {
     };
 
     it('leaves scene GSplat parameters uninitialized when the system is omitted', function () {
-        createApp([]);
+        createApp();
 
         expect(app.scene.getGsplatParams()).to.equal(null);
     });
 
     it('asserts when public GSplat parameters are accessed without the system', function () {
-        createApp([]);
+        createApp();
         const errorSpy = stub(console, 'error');
 
         expect(app.scene.gsplat).to.equal(null);
         expect(errorSpy.calledWith(
             'ASSERT FAILED: ',
-            'Scene#gsplat requires GSplatComponentSystem to be included in the app.'
+            'Scene#gsplat requires featureGsplat, listed in AppOptions#features.'
         )).to.be.true;
     });
 
     it('owns the scene GSplat parameters for its lifetime', function () {
-        createApp([GSplatComponentSystem]);
+        createApp({ features: [featureGsplat] });
 
         expect(app.scene.gsplat).to.be.an.instanceof(GSplatParams);
         expect(app.renderer.gsplatDirector).not.to.equal(null);
@@ -67,7 +68,7 @@ describe('GSplatComponentSystem', function () {
     });
 
     it('defaults to a behind-camera LOD penalty that re-evaluates on rotation', function () {
-        createApp([GSplatComponentSystem]);
+        createApp({ features: [featureGsplat] });
 
         expect(app.scene.gsplat.lodBehindPenalty).to.equal(1.5);
         expect(app.scene.gsplat.lodUpdateAngle).to.equal(90);
@@ -76,7 +77,7 @@ describe('GSplatComponentSystem', function () {
     describe('streaming tick', function () {
 
         beforeEach(function () {
-            createApp([CameraComponentSystem, GSplatComponentSystem]);
+            createApp({ features: [featureGsplat], componentSystems: [CameraComponentSystem] });
         });
 
         const createCamera = () => {

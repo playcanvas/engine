@@ -17,15 +17,14 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     GSPLAT_RENDERER_AUTO,
-    GSplatComponentSystem,
-    GSplatHandler,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     ScriptComponentSystem,
     TextureHandler,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureGsplat
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatImage } from 'playcanvas/scripts/esm/gsplat/gsplat-image.mjs';
@@ -51,13 +50,10 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
-];
-createOptions.resourceHandlers = [TextureHandler, GSplatHandler];
+createOptions.features = [featureGsplat];
+
+createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, ScriptComponentSystem];
+createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

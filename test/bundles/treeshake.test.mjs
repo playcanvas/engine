@@ -52,7 +52,10 @@ describe('build / treeshake', function () {
         { module: 'framework/features/feature-particles.js', webgl: 'featureParticlesWebgl', webgpu: 'featureParticlesWebgpu' },
         { module: 'scene/features/feature-directional-pcss.js', webgl: 'featureDirectionalPcssWebgl', webgpu: 'featureDirectionalPcssWebgpu' },
         { module: 'scene/features/feature-core-chunks.js', webgl: 'featureCoreChunksWebgl', webgpu: 'featureCoreChunksWebgpu' },
-        { module: 'scene/features/feature-gsplat.js', webgl: 'featureGsplatWebgl', webgpu: 'featureGsplatWebgpu' }
+        // the gsplat implementation the feature brings, such as GSplatFormat, GSplatParams and the WebGPU
+        // only compute sorting, still imports the chunks of both languages directly, so only the chunk
+        // collection of the other device is checked for it
+        { module: 'framework/features/feature-gsplat.js', webgl: 'featureGsplatWebgl', webgpu: 'featureGsplatWebgpu', collectionsOnly: true }
     ];
 
     for (const feature of features) {
@@ -65,9 +68,11 @@ describe('build / treeshake', function () {
                 `);
                 const output = Object.values(result.metafile.outputs)[0];
                 const inputs = Object.keys(output.inputs);
+                const ofLanguage = language => inputs.filter(path => path.includes(`/shader-lib/${language}/`) &&
+                    (!feature.collectionsOnly || path.includes(`/shader-lib/${language}/collections/`)));
                 return {
-                    glsl: inputs.filter(path => path.includes('/shader-lib/glsl/')),
-                    wgsl: inputs.filter(path => path.includes('/shader-lib/wgsl/'))
+                    glsl: ofLanguage('glsl'),
+                    wgsl: ofLanguage('wgsl')
                 };
             };
 
@@ -221,9 +226,21 @@ describe('build / treeshake', function () {
             path.includes('/scene/gsplat-unified/') ||
             path.includes('/chunks/gsplat/') ||
             path.includes('/gsplat-chunks-') ||
-            path.endsWith('/khr-gaussian-splatting.js'));
+            path.endsWith('/khr-gaussian-splatting.js') ||
+            path.endsWith('/handlers/gsplat.js') ||
+            path.endsWith('/features/feature-gsplat.js'));
 
         expect(retained, 'retained gsplat implementation modules').to.deep.equal([]);
+
+        // and the gsplat feature does bring them, with the gsplat handler
+        const withFeature = await bundle(`
+            import { AppBase, ContainerHandler, featureGsplat } from "playcanvas";
+            globalThis.__appBaseImports = { AppBase, ContainerHandler, featureGsplat };
+        `);
+        const featureInputs = Object.keys(Object.values(withFeature.metafile.outputs)[0].inputs);
+        expect(featureInputs.some(path => path.endsWith('/components/gsplat/system.js')), 'gsplat component system').to.equal(true);
+        expect(featureInputs.some(path => path.endsWith('/handlers/gsplat.js')), 'gsplat handler').to.equal(true);
+        expect(featureInputs.some(path => path.endsWith('/khr-gaussian-splatting.js')), 'glTF splats').to.equal(true);
     });
 
     it('ContainerHandler does not retain the gsplat resource implementation', async function () {

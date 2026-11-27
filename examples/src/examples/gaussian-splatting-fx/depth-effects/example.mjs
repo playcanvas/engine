@@ -19,12 +19,10 @@ import {
     DynamicSkyEffect,
     Entity,
     FILLMODE_FILL_WINDOW,
-    GSplatComponentSystem,
-    GSplatHandler,
     Keyboard,
     LightComponentSystem,
-    Mouse,
     MiniStats,
+    Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     SHADOWUPDATE_REALTIME,
@@ -38,6 +36,7 @@ import {
     Vec3,
     Vec4,
     createGraphicsDevice,
+    featureGsplat,
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -76,14 +75,15 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureGsplat];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    GSplatComponentSystem
+    ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ScriptHandler, GSplatHandler];
+createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

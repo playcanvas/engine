@@ -15,7 +15,8 @@ import { ResourceHandler } from './handler.js';
  * files and SOG bundles, and level-of-detail scenes from their octree metadata or XGRIDS LCC2
  * files, into a Gaussian splat resource. SPZ files are supported once the `SpzParser` shipped
  * in `playcanvas/scripts/esm/parsers/spz-parser.mjs` is registered with
- * {@link ResourceHandler#addParser}.
+ * {@link ResourceHandler#addParser}. The handler is installed by {@link featureGsplat}, listed in
+ * {@link AppOptions#features}.
  *
  * @category Asset
  */
