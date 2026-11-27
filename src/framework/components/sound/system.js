@@ -65,7 +65,10 @@ class SoundComponentSystem extends ComponentSystem {
         this.manager = app.soundManager;
         Debug.assert(this.manager, 'SoundComponentSystem cannot be created without sound manager');
 
-        this.app.systems.on('update', this.onUpdate, this);
+        // positional sounds follow their entities in the postUpdate phase, after the scripts, so
+        // that they use the transforms of the frame, including animations and changes scripts make
+        // in postUpdate
+        this.app.systems.on('postUpdate', this.onUpdate, this);
 
         this.on('beforeremove', this.onBeforeRemove, this);
     }
@@ -184,7 +187,7 @@ class SoundComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
 
-        this.app.systems.off('update', this.onUpdate, this);
+        this.app.systems.off('postUpdate', this.onUpdate, this);
     }
 }
 

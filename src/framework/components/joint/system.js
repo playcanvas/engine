@@ -64,11 +64,11 @@ class JointComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
 
-        // subscribing in the constructor places these handlers ahead of the rigid body system's,
-        // which only subscribes to 'update' once Ammo has loaded - pending joints are therefore
-        // created before the physics step that follows
+        // pending joints are created in the update phase, before the physicsUpdate phase steps the
+        // physics, and broken joints are detected in physicsUpdate, right after the rigid body
+        // system steps it, as its order comes before that of the joint system
         this.app.systems.on('update', this.onUpdate, this);
-        this.app.systems.on('postUpdate', this.onPostUpdate, this);
+        this.app.systems.on('physicsUpdate', this.onPhysicsUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -126,8 +126,8 @@ class JointComponentSystem extends ComponentSystem {
      * @param {number} dt - The frame delta time in seconds.
      * @private
      */
-    onPostUpdate(dt) {
-        // detect joints broken by the physics step
+    onPhysicsUpdate(dt) {
+        // detect joints broken by the physics step, which the rigid body system has just taken
         for (const component of this._breakable) {
             component._checkBroken();
         }
@@ -137,7 +137,7 @@ class JointComponentSystem extends ComponentSystem {
         super.destroy();
 
         this.app.systems.off('update', this.onUpdate, this);
-        this.app.systems.off('postUpdate', this.onPostUpdate, this);
+        this.app.systems.off('physicsUpdate', this.onPhysicsUpdate, this);
     }
 }
 
