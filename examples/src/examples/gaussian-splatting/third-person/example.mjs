@@ -111,12 +111,7 @@ createOptions.componentSystems = [
     RigidBodyComponentSystem,
     GSplatComponentSystem
 ];
-createOptions.resourceHandlers = [
-    TextureHandler,
-    ContainerHandler,
-    ScriptHandler,
-    GSplatHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

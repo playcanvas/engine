@@ -74,11 +74,7 @@ createOptions.componentSystems = [
     CollisionComponentSystem,
     RigidBodyComponentSystem
 ];
-createOptions.resourceHandlers = [
-    TextureHandler,
-    ContainerHandler,
-    ScriptHandler
-];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
