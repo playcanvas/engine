@@ -4,9 +4,6 @@ import { GraphNode } from '../graph-node.js';
 import { GSplatUnifiedSorter } from './gsplat-unified-sorter.js';
 import { GSplatWorld } from './gsplat-world.js';
 import { GSplatQuadRenderer } from './gsplat-quad-renderer.js';
-import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js';
-import { GSplatHybridRendererScratch } from './gsplat-hybrid-renderer-scratch.js';
-import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
@@ -27,6 +24,10 @@ import { getLodDebugColors, lodDebugColorIndex } from './gsplat-lod-colors.js';
  * @import { Scene } from '../scene.js'
  * @import { Layer } from '../layer.js'
  * @import { GSplatDirector } from './gsplat-director.js'
+ * @import { GSplatHybridRenderer } from './gsplat-hybrid-renderer.js'
+ * @import { GSplatHybridRendererScratch } from './gsplat-hybrid-renderer-scratch.js'
+ * @import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js'
+ * @import { GSplatGpuSort } from './gsplat-gpu-sort.js'
  * @import { GSplatRenderer } from './gsplat-renderer.js'
  * @import { GSplatRenderViewParams } from './gsplat-renderer.js'
  * @import { GSplatParams } from './gsplat-params.js'
@@ -503,7 +504,9 @@ class GSplatManager {
     _syncShadowRenderer() {
         const wantShadow = !!(this.renderMode & GSPLAT_SHADOW) && this.renderer.usesGpuSort;
         if (wantShadow && !this.shadowRenderer) {
-            this.shadowRenderer = new GSplatShadowRenderer(this.device, this.node, this.cameraNode, this.layer, this.world, this._hybridScratch);
+            // a GPU-sort renderer is in use, so GPU-side sorting is installed
+            const gpuSort = /** @type {GSplatGpuSort} */ (this.director.renderer.gsplatGpuSort);
+            this.shadowRenderer = new gpuSort.ShadowRenderer(this.device, this.node, this.cameraNode, this.layer, this.world, this._hybridScratch);
         } else if (!wantShadow && this.shadowRenderer) {
             this.shadowRenderer.destroy();
             this.shadowRenderer = null;
@@ -527,12 +530,15 @@ class GSplatManager {
     _createRenderer(mode) {
         const workBuffer = this.world.workBuffer;
         if (mode === GSPLAT_RENDERER_RASTER_GPU_SORT) {
+            // GSplatParams only resolves to GPU sort when the WebGPU gsplat feature installed it
+            const gpuSort = /** @type {GSplatGpuSort} */ (this.director.renderer.gsplatGpuSort);
+            Debug.assert(gpuSort, 'GPU-side sorting of Gaussian splats is not installed.');
             // The GPU-sort path shares one scratch (compaction candidate buffer) across the forward
             // renderer and the shadow cull; create it here so it exists for both constructors. Freed
             // in _syncShadowRenderer once no GPU-sort renderer remains (and in destroy()).
-            this._hybridScratch ??= new GSplatHybridRendererScratch(this.device);
+            this._hybridScratch ??= new gpuSort.HybridRendererScratch(this.device);
             // The hybrid renderer creates its own GPU sort resources (radix sorter, projector).
-            this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch);
+            this.renderer = new gpuSort.HybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch);
         } else {
             this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
             this.initCpuSorting();
