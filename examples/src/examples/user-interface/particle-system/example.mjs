@@ -24,7 +24,6 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     FontHandler,
-    ParticleSystemComponentSystem,
     RESOLUTION_AUTO,
     SCALEMODE_BLEND,
     SPRITE_RENDERMODE_SLICED,
@@ -33,7 +32,8 @@ import {
     TextureAtlasHandler,
     TextureHandler,
     Vec2,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 
 import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
@@ -55,12 +55,13 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.elementInput = new ElementInput(canvas);
+createOptions.features = [featureParticles];
+
 createOptions.componentSystems = [
     CameraComponentSystem,
     ScreenComponentSystem,
     ElementComponentSystem,
-    ButtonComponentSystem,
-    ParticleSystemComponentSystem
+    ButtonComponentSystem
 ];
 createOptions.resourceHandlers = [TextureHandler, TextureAtlasHandler, FontHandler];
 

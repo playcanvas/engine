@@ -12,7 +12,6 @@ import {
     Mouse,
     PIXELFORMAT_RGB8,
     PROJECTION_ORTHOGRAPHIC,
-    ParticleSystemComponentSystem,
     RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -24,7 +23,8 @@ import {
     TextureHandler,
     TouchDevice,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 
 import { deviceType } from 'examples/context';
@@ -49,12 +49,13 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureParticles];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    ParticleSystemComponentSystem
+    ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 

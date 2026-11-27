@@ -2,13 +2,13 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { Debug, DebugHelper } from '../../../src/core/debug.js';
+import { featureParticlesWebgl, featureParticlesWebgpu } from '../../../src/framework/features/feature-particles.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { featureAreaLightsWebgl, featureAreaLightsWebgpu } from '../../../src/scene/features/feature-area-lights.js';
 import { featureCoreChunksWebgl, featureCoreChunksWebgpu } from '../../../src/scene/features/feature-core-chunks.js';
 import { featureDirectionalPcssWebgl, featureDirectionalPcssWebgpu } from '../../../src/scene/features/feature-directional-pcss.js';
 import { featureGsplatWebgl, featureGsplatWebgpu } from '../../../src/scene/features/feature-gsplat.js';
-import { featureParticlesWebgl, featureParticlesWebgpu } from '../../../src/scene/features/feature-particles.js';
 import { featureShadowsWebgl, featureShadowsWebgpu } from '../../../src/scene/features/feature-shadows.js';
 import { Feature } from '../../../src/scene/features/feature.js';
 import { installFeatures } from '../../../src/scene/features/install-features.js';

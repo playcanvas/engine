@@ -15,7 +15,6 @@ import {
     Keyboard,
     LightComponentSystem,
     Mouse,
-    ParticleSystemComponentSystem,
     PROJECTION_PERSPECTIVE,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -26,7 +25,8 @@ import {
     Vec2,
     Vec3,
     createGraphicsDevice,
-    featureAnim
+    featureAnim,
+    featureParticles
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { Grid } from 'playcanvas/scripts/esm/grid.mjs';
@@ -53,7 +53,7 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.keyboard = new Keyboard(window);
 createOptions.soundManager = new SoundManager();
 
-createOptions.features = [featureAnim];
+createOptions.features = [featureAnim, featureParticles];
 
 createOptions.componentSystems = [
     RenderComponentSystem,
@@ -61,8 +61,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem,
     AudioListenerComponentSystem,
-    SoundComponentSystem,
-    ParticleSystemComponentSystem
+    SoundComponentSystem
 ];
 createOptions.resourceHandlers = [ScriptHandler];
 

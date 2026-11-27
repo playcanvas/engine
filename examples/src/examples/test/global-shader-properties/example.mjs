@@ -27,7 +27,6 @@ import {
     LightComponentSystem,
     LitMaterial,
     Mouse,
-    ParticleSystemComponentSystem,
     Quat,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -41,7 +40,8 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
@@ -77,13 +77,14 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
+createOptions.features = [featureParticles];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScriptComponentSystem,
-    GSplatComponentSystem,
-    ParticleSystemComponentSystem
+    GSplatComponentSystem
 ];
 createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, GSplatHandler];
 

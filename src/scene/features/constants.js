@@ -34,14 +34,6 @@ export const FEATURE_SHADOWS = 'shadows';
 export const FEATURE_AREA_LIGHTS = 'areaLights';
 
 /**
- * The name of the particles feature.
- *
- * @type {string}
- * @ignore
- */
-export const FEATURE_PARTICLES = 'particles';
-
-/**
  * The name of the directional PCSS feature.
  *
  * @type {string}

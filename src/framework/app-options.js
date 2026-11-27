@@ -131,10 +131,11 @@ class AppOptions {
     xr;
 
     /**
-     * The features the app requires, such as {@link featureAnim}. A feature brings in everything
-     * one piece of engine functionality needs, for example its component system and the resource
-     * handlers of its assets, and features the app does not list can be dropped from its bundle by
-     * tree-shaking. Features a listed feature depends on are installed with it.
+     * The features the app requires, such as {@link featureAnim} or {@link featureParticles}. A
+     * feature brings in everything one piece of engine functionality needs, for example its
+     * component system and the resource handlers of its assets, and features the app does not list
+     * can be dropped from its bundle by tree-shaking. Features a listed feature depends on are
+     * installed with it.
      *
      * @type {Feature[]}
      * @example
@@ -145,7 +146,8 @@ class AppOptions {
 
     /**
      * The component systems the app requires. Component systems installed by a feature, such as
-     * the {@link AnimComponentSystem} by {@link featureAnim}, are not listed here.
+     * the {@link AnimComponentSystem} by {@link featureAnim}, or the
+     * {@link ParticleSystemComponentSystem} by {@link featureParticles}, are not listed here.
      *
      * @type {typeof ComponentSystem[]}
      */

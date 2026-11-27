@@ -25,7 +25,6 @@ import {
     PIXELFORMAT_SRGBA8,
     PROJECTION_ORTHOGRAPHIC,
     PROJECTION_PERSPECTIVE,
-    ParticleSystemComponentSystem,
     RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -40,7 +39,8 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
@@ -93,12 +93,13 @@ const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
+createOptions.features = [featureParticles];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    ParticleSystemComponentSystem
+    ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 

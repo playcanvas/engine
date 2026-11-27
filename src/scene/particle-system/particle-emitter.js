@@ -22,6 +22,8 @@ import {
     requiresManualGamma,
     PIXELFORMAT_SRGBA8,
     SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL,
     isIntegerPixelFormat
 } from '../../platform/graphics/constants.js';
 import { BufferUtils } from '../../platform/graphics/buffer-utils.js';
@@ -41,11 +43,11 @@ import {
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
+import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 import { ParticleMaterial } from './particle-material.js';
-import { FEATURE_PARTICLES, hasFeature } from '../features/constants.js';
 const particleVerts = [
     [-1, -1],
     [1, -1],
@@ -241,7 +243,11 @@ class ParticleEmitter {
     colorParam = null;
 
     constructor(graphicsDevice, options) {
-        Debug.assert(hasFeature(graphicsDevice, FEATURE_PARTICLES), 'A particle emitter needs the particles feature to be installed.');
+        Debug.call(() => {
+            // the chunks of the language of the device, which a feature for another device does not bring
+            const language = graphicsDevice.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+            Debug.assert(ShaderChunks.get(graphicsDevice, language).get('particle_shaderVS'), 'A particle emitter needs the particle shader chunks of its device, installed by featureParticles.');
+        });
         this.graphicsDevice = graphicsDevice;
         const gd = graphicsDevice;
         const precision = 32;

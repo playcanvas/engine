@@ -13,7 +13,6 @@ import {
     FILLMODE_FILL_WINDOW,
     LightComponentSystem,
     Mouse,
-    ParticleSystemComponentSystem,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     ScreenComponentSystem,
@@ -21,7 +20,8 @@ import {
     TouchDevice,
     Vec2,
     Vec4,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 
 import { deviceType } from 'examples/context';
@@ -61,11 +61,12 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.elementInput = new ElementInput(canvas);
 
+createOptions.features = [featureParticles];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ParticleSystemComponentSystem,
     ScreenComponentSystem,
     ElementComponentSystem
 ];

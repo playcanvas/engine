@@ -4,11 +4,11 @@ import {
     Asset,
     AssetListLoader,
     BLEND_NONE,
+    CURVE_LINEAR,
     CameraComponentSystem,
     CameraFrame,
     Color,
     ContainerHandler,
-    CURVE_LINEAR,
     Curve,
     CurveSet,
     EMITTERSHAPE_SPHERE,
@@ -23,7 +23,6 @@ import {
     MeshInstance,
     Mouse,
     PIXELFORMAT_SRGBA8,
-    ParticleSystemComponentSystem,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     ScriptComponentSystem,
@@ -37,7 +36,8 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureParticles
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
@@ -69,11 +69,12 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureParticles];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ParticleSystemComponentSystem,
     ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
