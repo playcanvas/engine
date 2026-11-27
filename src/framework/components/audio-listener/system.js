@@ -36,7 +36,10 @@ class AudioListenerComponentSystem extends ComponentSystem {
 
         this.current = null;
 
-        this.app.systems.on('update', this.onUpdate, this);
+        // the listener follows its entity in the postUpdate phase, after the scripts, so that it
+        // uses the transform of the frame, including animations and changes scripts make in
+        // postUpdate
+        this.app.systems.on('postUpdate', this.onUpdate, this);
     }
 
     cloneComponent(entity, clone) {
@@ -58,7 +61,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
 
-        this.app.systems.off('update', this.onUpdate, this);
+        this.app.systems.off('postUpdate', this.onUpdate, this);
     }
 }
 

@@ -253,7 +253,8 @@ describe('SpriteComponent', function () {
             expect(e.sprite.currentClip).to.equal(clip);
             expect(e.sprite._meshInstance.mesh).to.equal(sprite.meshes[0]);
 
-            app.systems.fire('update', 0.15);
+            // sprite clips advance in the animation phase
+            app.systems.fire('animationUpdate', 0.15);
             expect(e.sprite.frame).to.equal(1);
             expect(e.sprite._meshInstance.mesh).to.equal(sprite.meshes[1]);
 

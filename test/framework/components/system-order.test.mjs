@@ -313,6 +313,31 @@ describe('Component system order', function () {
             expect(calls).to.deep.equal(['custom update', 'script update', 'late update', 'physics', 'anim', 'script postUpdate']);
         });
 
+        it('runs every system in its phase, relative to the scripts', function () {
+            sinon.stub(JointComponentSystem.prototype, 'onPhysicsUpdate').callsFake(() => calls.push('joint breaks'));
+            sinon.stub(SpriteComponentSystem.prototype, 'onUpdate').callsFake(() => calls.push('sprite'));
+            sinon.stub(SoundComponentSystem.prototype, 'onUpdate').callsFake(() => calls.push('sound'));
+            sinon.stub(AudioListenerComponentSystem.prototype, 'onUpdate').callsFake(() => calls.push('audio listener'));
+            sinon.stub(ParticleSystemComponentSystem.prototype, 'onUpdate').callsFake(() => calls.push('particles'));
+
+            app = createMinimalApp({
+                features: [featureAnim, featureParticles],
+                componentSystems: [
+                    ScriptComponentSystem, CustomComponentSystem, RigidBodyComponentSystem, JointComponentSystem,
+                    SpriteComponentSystem, SoundComponentSystem, AudioListenerComponentSystem
+                ],
+                physicsWorld: new NullPhysicsWorld()
+            });
+            app.update(1 / 60);
+
+            expect(calls).to.deep.equal([
+                'custom update', 'script update',
+                'physics', 'joint breaks',
+                'anim', 'sprite',
+                'script postUpdate', 'sound', 'audio listener', 'particles'
+            ]);
+        });
+
         it('does not step physics in the tools', function () {
             app = createMinimalApp(options(new NullPhysicsWorld()));
             app._inTools = true;
@@ -320,6 +345,48 @@ describe('Component system order', function () {
 
             expect(calls).to.deep.equal(['anim', 'script postUpdate']);
         });
+    });
+
+    // sound, the audio listener and particles use the transform of their entity, so they run after
+    // the postUpdate of scripts, which can move it, for example with IK on animated bones
+    it('updates sound, the audio listener and particles with the transforms scripts set in postUpdate', function () {
+        const positions = {};
+        let entity = null;
+        const record = (System, name) => {
+            sinon.stub(System.prototype, 'onUpdate').callsFake(() => {
+                positions[name] = entity.getPosition().x;
+            });
+        };
+        record(SoundComponentSystem, 'sound');
+        record(AudioListenerComponentSystem, 'audiolistener');
+        record(ParticleSystemComponentSystem, 'particlesystem');
+
+        app = createMinimalApp({
+            features: [featureParticles],
+            componentSystems: [ScriptComponentSystem, SoundComponentSystem, AudioListenerComponentSystem]
+        });
+
+        class LateMover extends Script {
+            static scriptName = 'lateMover';
+
+            update() {
+                this.entity.setPosition(5, 0, 0);
+            }
+
+            postUpdate() {
+                this.entity.setPosition(10, 0, 0);
+            }
+        }
+
+        entity = new Entity('Moved', app);
+        app.root.addChild(entity);
+        entity.addComponent('script');
+        entity.script.create(LateMover);
+
+        app.start();
+        app.update(1 / 60);
+
+        expect(positions).to.deep.equal({ sound: 10, audiolistener: 10, particlesystem: 10 });
     });
 
     // particles are emitted from the transform of their entity, so they must be simulated after the

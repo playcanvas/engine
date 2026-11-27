@@ -119,7 +119,10 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         this.ComponentType = ParticleSystemComponent;
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.app.systems.on('update', this.onUpdate, this);
+        // particles are simulated in the postUpdate phase, after the scripts, so that they are
+        // emitted from the transforms of the frame, including animations and changes scripts make
+        // in postUpdate. The Editor calls onUpdate itself, so it keeps that name
+        this.app.systems.on('postUpdate', this.onUpdate, this);
 
         Debug.assert(hasFeature(app.graphicsDevice, FEATURE_PARTICLES), 'The particle system component system is installed by featureParticles. Add it to AppOptions#features instead of listing the system in AppOptions#componentSystems.');
     }
@@ -271,7 +274,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
 
-        this.app.systems.off('update', this.onUpdate, this);
+        this.app.systems.off('postUpdate', this.onUpdate, this);
     }
 }
 
