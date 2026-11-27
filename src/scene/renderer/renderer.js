@@ -37,6 +37,7 @@ import { MAX_CLIP_PLANES } from '../clip-planes.js';
  * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js'
  * @import { CulledInstances } from '../layer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { GSplatGpuSort } from '../gsplat-unified/gsplat-gpu-sort.js'
  * @import { RenderView } from '../render-view.js'
  * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
@@ -341,6 +342,15 @@ class Renderer {
      * @type {GSplatDirector|null}
      */
     gsplatDirector = null;
+
+    /**
+     * The classes of GPU-side sorted rendering of Gaussian splats, installed by the WebGPU gsplat
+     * feature. Null when it is not installed, in which case Gaussian splats use CPU-side sorting.
+     *
+     * @type {GSplatGpuSort|null}
+     * @ignore
+     */
+    gsplatGpuSort = null;
 
     /**
      * The shadow map cache, created when the shadows feature is installed.

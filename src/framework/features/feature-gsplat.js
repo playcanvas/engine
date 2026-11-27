@@ -1,8 +1,9 @@
-import { DebugHelper } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { Feature } from '../../scene/features/feature.js';
 import { gsplatChunksGLSL } from '../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
 import { gsplatChunksWGSL } from '../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
+import { gsplatGpuSort } from '../../scene/gsplat-unified/gsplat-gpu-sort.js';
 import { GSplatComponentSystem } from '../components/gsplat/system.js';
 import { GSplatHandler } from '../handlers/gsplat.js';
 import { FEATURE_GSPLAT } from './constants.js';
@@ -23,6 +24,18 @@ const gsplatCore = /* #__PURE__ */ new Feature({
 });
 DebugHelper.setName(gsplatCore, FEATURE_GSPLAT);
 
+// GPU-side sorted rendering, which only WebGPU supports, installed on the renderer by the WebGPU
+// feature only, so that the WebGL feature does not bring it
+const gsplatGpuSortWebgpu = /* #__PURE__ */ new Feature({
+    install: (host) => {
+        Debug.assert(host.renderer, 'GPU-side sorting of Gaussian splats needs a renderer');
+        if (host.renderer) {
+            host.renderer.gsplatGpuSort = gsplatGpuSort;
+        }
+    }
+});
+DebugHelper.setName(gsplatGpuSortWebgpu, 'gsplatGpuSort-webgpu');
+
 /**
  * Gaussian splats on a WebGL device: {@link featureGsplat} with the shader chunks of WebGL only.
  *
@@ -39,7 +52,8 @@ export const featureGsplatWebgl = /* #__PURE__ */ new Feature({
 DebugHelper.setName(featureGsplatWebgl, 'gsplat-webgl');
 
 /**
- * Gaussian splats on a WebGPU device: {@link featureGsplat} with the shader chunks of WebGPU only.
+ * Gaussian splats on a WebGPU device: {@link featureGsplat} with the shader chunks of WebGPU only,
+ * and GPU-side sorting.
  *
  * @type {Feature}
  * @ignore
@@ -49,7 +63,7 @@ export const featureGsplatWebgpu = /* #__PURE__ */ new Feature({
         language: SHADERLANGUAGE_WGSL,
         chunks: gsplatChunksWGSL
     },
-    requires: [gsplatCore]
+    requires: [gsplatCore, gsplatGpuSortWebgpu]
 });
 DebugHelper.setName(featureGsplatWebgpu, 'gsplat-webgpu');
 

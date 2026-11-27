@@ -243,6 +243,29 @@ describe('build / treeshake', function () {
         expect(featureInputs.some(path => path.endsWith('/khr-gaussian-splatting.js')), 'glTF splats').to.equal(true);
     });
 
+    // GPU-side sorting of Gaussian splats runs on WebGPU only, so the gsplat feature for WebGL does not
+    // bring it, and the one for WebGPU does
+    it('the gsplat feature for WebGL does not retain GPU-side sorting, which the one for WebGPU brings', async function () {
+        const featureModule = fileURLToPath(new URL('../../build/playcanvas/src/framework/features/feature-gsplat.js', import.meta.url));
+        const gpuSortModules = [
+            'gsplat-gpu-sort.js', 'gsplat-hybrid-renderer.js', 'gsplat-hybrid-renderer-scratch.js',
+            'gsplat-shadow-renderer.js', 'gsplat-projector.js', 'gsplat-interval-compaction.js',
+            'compute-radix-sort.js', 'compute-radix-sort-onesweep.js', 'compute-radix-sort-multipass.js',
+            'prefix-sum-kernel.js'
+        ];
+        const retainedGpuSort = async (name) => {
+            const result = await bundle(`
+                import { ${name} } from ${JSON.stringify(featureModule)};
+                globalThis.__feature = ${name};
+            `);
+            const inputs = Object.keys(Object.values(result.metafile.outputs)[0].inputs);
+            return gpuSortModules.filter(module => inputs.some(path => path.endsWith(`/${module}`)));
+        };
+
+        expect(await retainedGpuSort('featureGsplatWebgl'), 'GPU sort modules of the WebGL feature').to.deep.equal([]);
+        expect(await retainedGpuSort('featureGsplatWebgpu'), 'GPU sort modules of the WebGPU feature').to.deep.equal(gpuSortModules);
+    });
+
     it('ContainerHandler does not retain the gsplat resource implementation', async function () {
         const result = await bundle(`
             import { ContainerHandler } from "playcanvas";

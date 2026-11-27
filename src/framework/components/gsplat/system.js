@@ -163,6 +163,8 @@ class GSplatComponentSystem extends ComponentSystem {
         // Own the scene-wide parameters here so apps that omit this system also tree-shake the
         // GSplat formats, varyings and shader chunks imported by GSplatParams.
         const gsplatParams = new GSplatParams(app.graphicsDevice);
+        // GPU-side sorting is available when the gsplat feature for WebGPU installed it
+        gsplatParams.gpuSortSupported = !!app.renderer.gsplatGpuSort;
         app.scene.setGsplatParams(gsplatParams);
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this, gsplatParams);
 

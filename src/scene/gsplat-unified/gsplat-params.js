@@ -191,6 +191,32 @@ class GSplatParams {
     _currentRenderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _gpuSortSupported = false;
+
+    /**
+     * Whether GPU-side sorting is available: the device is WebGPU and the WebGPU gsplat feature
+     * installed GPU-side sorting. Modes using it fall back to CPU-side sorting otherwise.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    set gpuSortSupported(value) {
+        this._gpuSortSupported = value;
+        this._currentRenderer = this._resolveRenderer(this._renderer);
+    }
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    get gpuSortSupported() {
+        return this._gpuSortSupported;
+    }
+
+    /**
      * Resolves a requested renderer mode to the concrete one used on this device.
      *
      * @param {number} value - The requested renderer mode.
@@ -198,13 +224,20 @@ class GSplatParams {
      * @private
      */
     _resolveRenderer(value) {
-        // AUTO picks GPU-side sorting on WebGPU, CPU-side sorting elsewhere.
+        // GPU-side sorting needs WebGPU, and the GPU sort the WebGPU gsplat feature installs
+        const gpuSort = this._device.isWebGPU && this._gpuSortSupported;
+
+        // AUTO picks GPU-side sorting where available, CPU-side sorting elsewhere.
         if (value === GSPLAT_RENDERER_AUTO) {
-            return this._device.isWebGPU ?
-                GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
+            return gpuSort ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
         }
-        // GPU sort requires WebGPU; fall back to CPU sort on WebGL.
-        if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
+        // fall back to CPU sort where GPU sort is not available
+        if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !gpuSort) {
+            Debug.call(() => {
+                if (this._device.isWebGPU) {
+                    Debug.warnOnce('GSplatParams#renderer: GPU-side sorting is not installed, so CPU-side sorting is used. Install the gsplat feature for WebGPU devices.');
+                }
+            });
             return GSPLAT_RENDERER_RASTER_CPU_SORT;
         }
         return value;
@@ -220,8 +253,9 @@ class GSplatParams {
      * - {@link GSPLAT_RENDERER_RASTER_GPU_SORT}: Rasterization with GPU-side sorting (WebGPU only).
      *
      * Defaults to {@link GSPLAT_RENDERER_AUTO}. Modes requiring WebGPU fall back to
-     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices. The resolved mode actually used
-     * can be queried via {@link currentRenderer}.
+     * {@link GSPLAT_RENDERER_RASTER_CPU_SORT} on WebGL devices, and on WebGPU devices when the
+     * application installs the gsplat feature for WebGL only. The resolved mode actually used can be
+     * queried via {@link currentRenderer}.
      *
      * GPU-side sorting also falls back to {@link GSPLAT_RENDERER_RASTER_CPU_SORT} when the splats a
      * camera renders on a layer need larger storage buffers than the device can bind - past about

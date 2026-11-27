@@ -12,7 +12,9 @@ import {
 } from '../../../src/framework/features/feature-gsplat.js';
 import { GSplatHandler } from '../../../src/framework/handlers/gsplat.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
+import { GSPLAT_RENDERER_RASTER_CPU_SORT, GSPLAT_RENDERER_RASTER_GPU_SORT } from '../../../src/scene/constants.js';
 import { hasFeature } from '../../../src/scene/features/constants.js';
+import { gsplatGpuSort } from '../../../src/scene/gsplat-unified/gsplat-gpu-sort.js';
 import { gsplatChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 import { gsplatChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
@@ -90,6 +92,56 @@ describe('Gsplat feature', function () {
         expect(app.systems.list.filter(system => system instanceof GSplatComponentSystem)).to.have.lengthOf(1);
         expect(glslChunk()).to.equal(gsplatChunksGLSL[chunkName]);
         expect(wgslChunk()).to.equal(gsplatChunksWGSL[chunkName]);
+    });
+
+    describe('GPU-side sorting', function () {
+
+        // an application with the given features on the test device, presented as a WebGPU device,
+        // as GPU-side sorting is only used on WebGPU
+        const createWebgpuApp = (features) => {
+            const canvas = document.createElement('canvas');
+            const appOptions = new AppOptions();
+            appOptions.graphicsDevice = createGraphicsDevice(canvas);
+            appOptions.graphicsDevice.isWebGPU = true;
+            appOptions.features = features;
+
+            const webgpuApp = new AppBase(canvas);
+            webgpuApp.init(appOptions);
+            return webgpuApp;
+        };
+
+        it('is installed by the gsplat feature for WebGPU, and not by the one for WebGL', function () {
+            app = createMinimalApp({ features: [featureGsplatWebgpu] });
+            expect(app.renderer.gsplatGpuSort).to.equal(gsplatGpuSort);
+            app.destroy();
+
+            app = createMinimalApp({ features: [featureGsplatWebgl] });
+            expect(app.renderer.gsplatGpuSort).to.equal(null);
+            app.destroy();
+
+            app = createMinimalApp({ features: [featureGsplat] });
+            expect(app.renderer.gsplatGpuSort).to.equal(gsplatGpuSort);
+        });
+
+        it('is used on a WebGPU device when installed', function () {
+            app = createWebgpuApp([featureGsplat]);
+
+            expect(app.scene.gsplat.gpuSortSupported).to.equal(true);
+            expect(app.scene.gsplat.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_GPU_SORT);
+        });
+
+        it('falls back to CPU-side sorting on a WebGPU device when not installed', function () {
+            app = createWebgpuApp([featureGsplatWebgl]);
+            const params = app.scene.gsplat;
+
+            expect(params.gpuSortSupported).to.equal(false);
+            expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_CPU_SORT);
+
+            const warn = sinon.stub(Debug, 'warnOnce');
+            params.renderer = GSPLAT_RENDERER_RASTER_GPU_SORT;
+            expect(params.currentRenderer).to.equal(GSPLAT_RENDERER_RASTER_CPU_SORT);
+            expect(warn.calledWithMatch(sinon.match('GPU-side sorting is not installed'))).to.equal(true);
+        });
     });
 
     it('is installed by the test application', function () {
