@@ -22,8 +22,6 @@ import {
     requiresManualGamma,
     PIXELFORMAT_SRGBA8,
     SEMANTIC_POSITION,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL,
     isIntegerPixelFormat
 } from '../../platform/graphics/constants.js';
 import { BufferUtils } from '../../platform/graphics/buffer-utils.js';
@@ -244,9 +242,9 @@ class ParticleEmitter {
 
     constructor(graphicsDevice, options) {
         Debug.call(() => {
-            // the chunks of the language of the device, which a feature for another device does not bring
-            const language = graphicsDevice.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
-            Debug.assert(ShaderChunks.get(graphicsDevice, language).get('particle_shaderVS'), 'A particle emitter needs the particle shader chunks of its device, installed by featureParticles.');
+            // the chunks of the shader language of the device, which a feature for another device
+            // does not bring
+            Debug.assert(ShaderChunks.get(graphicsDevice, graphicsDevice.shaderLanguage).get('particle_shaderVS'), 'A particle emitter needs the particle shader chunks of its device, installed by featureParticles.');
         });
         this.graphicsDevice = graphicsDevice;
         const gd = graphicsDevice;

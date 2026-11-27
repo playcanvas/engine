@@ -160,5 +160,18 @@ describe('Particles feature', function () {
             const failed = failedAsserts(() => new ParticleEmitter(app.graphicsDevice, {}));
             expect(failed).to.not.include(EMITTER_ASSERT);
         });
+
+        // a device generates its shaders in its shader language, which does not follow from its
+        // type, for example a null device generating WGSL
+        it('looks for the chunks of the shader language of its device', function () {
+            app = createMinimalApp({});
+            const device = app.graphicsDevice;
+            const isWgsl = device.shaderLanguage === SHADERLANGUAGE_WGSL;
+            device.shaderLanguage = isWgsl ? SHADERLANGUAGE_GLSL : SHADERLANGUAGE_WGSL;
+            installFeatures(app, [isWgsl ? featureParticlesWebgl : featureParticlesWebgpu]);
+
+            const failed = failedAsserts(() => new ParticleEmitter(device, {}));
+            expect(failed).to.not.include(EMITTER_ASSERT);
+        });
     });
 });
