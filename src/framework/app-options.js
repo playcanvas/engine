@@ -147,7 +147,10 @@ class AppOptions {
     /**
      * The component systems the app requires. Component systems installed by a feature, such as
      * the {@link AnimComponentSystem} by {@link featureAnim}, or the
-     * {@link ParticleSystemComponentSystem} by {@link featureParticles}, are not listed here.
+     * {@link ParticleSystemComponentSystem} by {@link featureParticles}, are not listed here. The
+     * order of the list does not matter: the systems are created in the order of
+     * {@link ComponentSystem.updateOrder}, which is also the order in which they handle the
+     * per-frame events.
      *
      * @type {typeof ComponentSystem[]}
      */

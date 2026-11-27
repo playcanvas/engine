@@ -1,4 +1,5 @@
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
+import { UPDATEORDER_SCRIPT } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ScriptComponent } from './component.js';
 
@@ -41,6 +42,9 @@ let executionOrderCounter = 0;
  * @category Script
  */
 class ScriptComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static updateOrder = UPDATEORDER_SCRIPT;
+
     /**
      * Create a new ScriptComponentSystem.
      *

@@ -5,6 +5,7 @@ import { PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
+import { UPDATEORDER_ELEMENT } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
 import { ElementComponent } from './component.js';
@@ -43,6 +44,9 @@ import { ElementComponent } from './component.js';
  * @category User Interface
  */
 class ElementComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static updateOrder = UPDATEORDER_ELEMENT;
+
     /**
      * Create a new ElementComponentSystem instance.
      *

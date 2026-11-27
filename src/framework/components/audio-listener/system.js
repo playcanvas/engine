@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { UPDATEORDER_AUDIOLISTENER } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { AudioListenerComponent } from './component.js';
 
@@ -14,6 +15,9 @@ import { AudioListenerComponent } from './component.js';
  * @category Sound
  */
 class AudioListenerComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static updateOrder = UPDATEORDER_AUDIOLISTENER;
+
     /**
      * Create a new AudioListenerComponentSystem instance.
      *

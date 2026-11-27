@@ -4,6 +4,7 @@ import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
+import { UPDATEORDER_DEFAULT } from './constants.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -19,6 +20,27 @@ import { Vec4 } from '../../core/math/vec4.js';
  * @category Framework
  */
 class ComponentSystem extends EventHandler {
+    /**
+     * The update order of the component system: an application creates its component systems in
+     * ascending update order, and so they handle the per-frame events of the application, such as
+     * `update` and `postUpdate`, in that order. It does not depend on the order of {@link AppOptions#componentSystems}, or on
+     * whether a system is listed there or installed by a feature in {@link AppOptions#features}.
+     *
+     * The systems of the engine keep a fixed order: for example the
+     * {@link RigidBodyComponentSystem} runs before the {@link ScriptComponentSystem}, and the
+     * {@link ParticleSystemComponentSystem} after it, so that particles are emitted from the
+     * transforms scripts set in the same frame. A custom system runs after the script system by
+     * default. Systems of the same order keep the order they are listed in.
+     *
+     * @type {number}
+     * @example
+     * class MyComponentSystem extends ComponentSystem {
+     *     // runs before the script system
+     *     static updateOrder = 850;
+     * }
+     */
+    static updateOrder = UPDATEORDER_DEFAULT;
+
     /**
      * The id type of the ComponentSystem.
      *

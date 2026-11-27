@@ -25,9 +25,9 @@ import { FEATURE_ANIM } from './constants.js';
  * options.features = [featureAnim];
  */
 export const featureAnim = /* #__PURE__ */ new Feature({
+    componentSystems: [AnimComponentSystem],
     install: (host) => {
         const app = /** @type {AppBase} */ (host);
-        app.systems.add(new AnimComponentSystem(app));
         app.loader.addHandler('animclip', new AnimClipHandler(app));
         app.loader.addHandler('animstategraph', new AnimStateGraphHandler(app));
         app.loader.addHandler('animation', new AnimationHandler(app));

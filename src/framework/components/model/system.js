@@ -3,6 +3,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
 import { Asset } from '../../asset/asset.js';
+import { UPDATEORDER_MODEL } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ModelComponent } from './component.js';
 
@@ -51,6 +52,9 @@ const _properties = [
  * @category Graphics
  */
 class ModelComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static updateOrder = UPDATEORDER_MODEL;
+
     /**
      * Create a new ModelComponentSystem instance.
      *

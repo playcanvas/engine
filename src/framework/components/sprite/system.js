@@ -6,6 +6,7 @@ import {
 import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
+import { UPDATEORDER_SPRITE } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 
@@ -40,6 +41,9 @@ import { SpriteComponent } from './component.js';
  * @category Graphics
  */
 class SpriteComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static updateOrder = UPDATEORDER_SPRITE;
+
     /**
      * Create a new SpriteComponentSystem instance.
      *

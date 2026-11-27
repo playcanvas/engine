@@ -66,6 +66,19 @@ describe('installFeatures', function () {
         expect([...device.featureNames]).to.have.members(['a', 'b', 'shared']);
     });
 
+    it('returns the component systems of the newly installed features, those required first', function () {
+        // stand-ins for component system classes, which the host creates, not the features
+        const BaseSystem = class {};
+        const TopSystem = class {};
+        const base = named('base', { componentSystems: [BaseSystem] });
+        const top = named('top', { requires: [base], componentSystems: [TopSystem] });
+
+        expect(installFeatures(host, [top, base])).to.deep.equal([BaseSystem, TopSystem]);
+
+        // already installed features bring nothing new
+        expect(installFeatures(host, [top])).to.deep.equal([]);
+    });
+
     it('asserts in debug builds when two different features share a name', function () {
         const assert = sinon.stub(Debug, 'assert');
 

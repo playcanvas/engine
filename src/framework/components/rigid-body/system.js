@@ -3,6 +3,7 @@ import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { AmmoPhysicsWorld } from '../../physics/ammo/ammo-physics-world.js';
+import { UPDATEORDER_RIGIDBODY } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import {
     BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC,
@@ -72,6 +73,9 @@ const _properties = [
  * @category Physics
  */
 class RigidBodyComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static updateOrder = UPDATEORDER_RIGIDBODY;
+
     /**
      * Fired when a contact occurs between two rigid bodies. The handler is passed a
      * {@link SingleContactResult} object containing details of the contact between the two bodies.

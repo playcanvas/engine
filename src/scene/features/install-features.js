@@ -22,9 +22,13 @@ const debugFeatures = new WeakMap();
  *
  * @param {FeatureHost} host - The host the features are installed into.
  * @param {Feature[]} features - The features to install.
+ * @param {Function[]} [componentSystems] - The array the component system classes of the newly
+ * installed features are added to, in the order the features are installed.
+ * @returns {Function[]} The component system classes of the newly installed features, for the
+ * host to create.
  * @ignore
  */
-const installFeatures = (host, features) => {
+const installFeatures = (host, features, componentSystems = []) => {
     const device = host.graphicsDevice;
     const installed = device.features;
 
@@ -57,7 +61,7 @@ const installFeatures = (host, features) => {
             device.featureNames.add(name);
         });
 
-        installFeatures(host, feature.requires);
+        installFeatures(host, feature.requires, componentSystems);
 
         const chunks = feature.chunks;
         if (chunks) {
@@ -65,8 +69,12 @@ const installFeatures = (host, features) => {
             ShaderChunks.get(device, chunks.language).add(chunks.chunks);
         }
 
+        componentSystems.push(...feature.componentSystems);
+
         feature.install?.(host);
     }
+
+    return componentSystems;
 };
 
 export { installFeatures };

@@ -65,6 +65,18 @@ class Feature {
     requires;
 
     /**
+     * The component system classes of the feature. The application creates them together with
+     * the component systems it lists, all in the order of their `updateOrder`, rather than the
+     * feature creating them when it is installed, so that they handle the per-frame events in the
+     * same order however they are added. Only the features listed in the options of the
+     * application bring component systems.
+     *
+     * @type {Function[]}
+     * @ignore
+     */
+    componentSystems;
+
+    /**
      * Creates a new Feature.
      *
      * @param {object} definition - The definition of the feature.
@@ -72,12 +84,15 @@ class Feature {
      * @param {(host: FeatureHost) => void} [definition.install] - Creates the engine objects of
      * the feature.
      * @param {Feature[]} [definition.requires] - The features this feature needs.
+     * @param {Function[]} [definition.componentSystems] - The component system classes of the
+     * feature.
      * @ignore
      */
-    constructor({ chunks = null, install = null, requires = [] }) {
+    constructor({ chunks = null, install = null, requires = [], componentSystems = [] }) {
         this.chunks = chunks;
         this.install = install;
         this.requires = requires;
+        this.componentSystems = componentSystems;
     }
 }
 

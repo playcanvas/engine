@@ -51,6 +51,7 @@ import { featureCoreChunksWebgl, featureCoreChunksWebgpu } from '../scene/featur
  * @import { AppOptions } from './app-options.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { BundleRegistry } from './bundle/bundle-registry.js'
+ * @import { ComponentSystem } from './components/system.js'
  * @import { I18n } from './i18n/i18n.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { EventHandle } from '../core/event-handle.js'
@@ -634,8 +635,8 @@ class AppBase extends EventHandler {
             featureI18n
         ]);
 
-        // the features the application requires
-        installFeatures(this, features);
+        // the features the application requires, and the component systems they bring
+        const featureSystems = /** @type {typeof ComponentSystem[]} */ (installFeatures(this, features));
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
@@ -671,8 +672,13 @@ class AppBase extends EventHandler {
         // errors
         this.loader.enableRetry();
 
-        // Create and register all required component systems
-        componentSystems.forEach((componentSystem) => {
+        // create the component systems of the features and the listed ones, each once, in the order
+        // of their ComponentSystem.updateOrder, as it decides the order in which they handle the
+        // per-frame events. The sort is stable, so systems of the same order keep their order:
+        // those of features first, then the listed ones
+        const systems = [...new Set([...featureSystems, ...componentSystems])];
+        systems.sort((a, b) => a.updateOrder - b.updateOrder);
+        systems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
 

@@ -1,3 +1,4 @@
+import { UPDATEORDER_LAYOUTCHILD } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { LayoutChildComponent } from './component.js';
 
@@ -13,6 +14,9 @@ import { LayoutChildComponent } from './component.js';
  * @category User Interface
  */
 class LayoutChildComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static updateOrder = UPDATEORDER_LAYOUTCHILD;
+
     /**
      * Create a new LayoutChildComponentSystem instance.
      *
