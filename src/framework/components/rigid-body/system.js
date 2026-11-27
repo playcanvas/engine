@@ -1099,7 +1099,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // no-op on backends that report contacts from inside step()
         world.flushContacts();
 
-        this._stats.physicsTime = now() - this._stats.physicsStart;
+        // accumulated over the frame, as steps can also be taken manually, and reset by the stats at
+        // the end of the frame
+        this._stats.physicsTime += now() - this._stats.physicsStart;
     }
 
     /**
@@ -1117,10 +1119,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
             return;
         }
 
+        // paused: nothing is simulated, except by manual steps
         const timeScale = this.timeScale;
         if (!(timeScale > 0)) {
-            // paused: nothing was simulated this frame
-            this._stats.physicsTime = 0;
             return;
         }
 
