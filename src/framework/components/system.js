@@ -27,9 +27,10 @@ class ComponentSystem extends EventHandler {
      * whether a system is listed there or installed by a feature in {@link AppOptions#features}.
      *
      * The systems of the engine keep a fixed order: for example the
-     * {@link RigidBodyComponentSystem} runs before the {@link ScriptComponentSystem}, and the
-     * {@link ParticleSystemComponentSystem} after it, so that particles are emitted from the
-     * transforms scripts set in the same frame. A custom system runs after the script system by
+     * {@link ParticleSystemComponentSystem} runs after the {@link ScriptComponentSystem}, so that
+     * particles are emitted from the transforms scripts set in the same frame. The physics
+     * simulation and animations have phases of their own, after the update of scripts and before
+     * their postUpdate, whatever their order. A custom system runs after the script system by
      * default. Systems of the same order keep the order they are listed in.
      *
      * @type {number}

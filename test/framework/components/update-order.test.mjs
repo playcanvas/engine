@@ -29,6 +29,7 @@ import { ZoneComponentSystem } from '../../../src/framework/components/zone/syst
 import { Entity } from '../../../src/framework/entity.js';
 import { featureAnim } from '../../../src/framework/features/feature-anim.js';
 import { featureParticles } from '../../../src/framework/features/feature-particles.js';
+import { NullPhysicsWorld } from '../../../src/framework/physics/null/null-physics-world.js';
 import { Script } from '../../../src/framework/script/script.js';
 import { SoundManager } from '../../../src/platform/sound/manager.js';
 import { createApp } from '../../app.mjs';
@@ -180,6 +181,76 @@ describe('Component system order', function () {
             });
 
             expect(systemTypes()).to.deep.equal([LightComponentSystem, EarlyComponentSystem, ScriptComponentSystem]);
+        });
+    });
+
+    describe('frame phases', function () {
+
+        // the order in which the systems handle the phases of a frame
+        let calls;
+
+        class CustomComponentSystem extends ComponentSystem {
+            static updateOrder = ScriptComponentSystem.updateOrder - 50;
+
+            constructor(app) {
+                super(app);
+                this.id = 'custom';
+                app.systems.on('update', () => calls.push('custom update'));
+            }
+        }
+
+        beforeEach(function () {
+            calls = [];
+            // stubbed before the systems subscribe to the phases, in their constructors
+            sinon.stub(ScriptComponentSystem.prototype, '_onUpdate').callsFake(() => calls.push('script update'));
+            sinon.stub(ScriptComponentSystem.prototype, '_onPostUpdate').callsFake(() => calls.push('script postUpdate'));
+            sinon.stub(AnimComponentSystem.prototype, 'onAnimationUpdate').callsFake(() => calls.push('anim'));
+            sinon.stub(RigidBodyComponentSystem.prototype, 'step').callsFake(() => calls.push('physics'));
+        });
+
+        const options = physicsWorld => ({
+            features: [featureAnim],
+            componentSystems: [ScriptComponentSystem, CustomComponentSystem, RigidBodyComponentSystem],
+            physicsWorld
+        });
+
+        const expected = ['custom update', 'script update', 'physics', 'anim', 'script postUpdate'];
+
+        it('steps physics after the update of scripts and before animations', function () {
+            app = createMinimalApp(options(new NullPhysicsWorld()));
+            app.update(1 / 60);
+
+            expect(calls).to.deep.equal(expected);
+        });
+
+        it('steps physics in the same place when the backend is installed after the application', function () {
+            app = createMinimalApp(options());
+            app.update(1 / 60);
+            expect(calls).to.not.include('physics');
+
+            calls = [];
+            app.systems.rigidbody.setPhysicsWorld(new NullPhysicsWorld());
+            app.update(1 / 60);
+
+            expect(calls).to.deep.equal(expected);
+        });
+
+        it('steps physics after every update handler, also those subscribed after the backend', function () {
+            app = createMinimalApp(options(new NullPhysicsWorld()));
+
+            // such as a system added at runtime
+            app.systems.on('update', () => calls.push('late update'));
+            app.update(1 / 60);
+
+            expect(calls).to.deep.equal(['custom update', 'script update', 'late update', 'physics', 'anim', 'script postUpdate']);
+        });
+
+        it('does not step physics in the tools', function () {
+            app = createMinimalApp(options(new NullPhysicsWorld()));
+            app._inTools = true;
+            app.update(1 / 60);
+
+            expect(calls).to.deep.equal(['anim', 'script postUpdate']);
         });
     });
 

@@ -252,6 +252,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
+
+        // the physics step has its own phase, after the update of scripts and before animations,
+        // subscribed to here rather than when a backend is installed, so that it does not depend
+        // on when that happens
+        this.app.systems.on('physicsUpdate', this.onUpdate, this);
     }
 
     /**
@@ -288,8 +293,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.contactPointPool = new ObjectPool(ContactPoint, 1);
         this.contactResultPool = new ObjectPool(ContactResult, 1);
         this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
-
-        this.app.systems.on('update', this.onUpdate, this);
     }
 
     /**
@@ -1102,12 +1105,18 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Steps the simulation by the frame delta time scaled by
      * {@link RigidBodyComponentSystem#timeScale}, or skips the frame entirely when the scale is
-     * 0. Registered on the application's update event when a physics backend is installed.
+     * 0. Handles the physicsUpdate phase of the application, after the update of scripts and before
+     * animations, and does nothing until a physics backend is installed.
      *
      * @param {number} dt - The frame delta time in seconds.
      * @private
      */
     onUpdate(dt) {
+        // nothing to simulate until a backend is installed
+        if (!this._world) {
+            return;
+        }
+
         const timeScale = this.timeScale;
         if (!(timeScale > 0)) {
             // paused: nothing was simulated this frame
@@ -1121,7 +1130,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
 
-        this.app.systems.off('update', this.onUpdate, this);
+        this.app.systems.off('physicsUpdate', this.onUpdate, this);
 
         if (this._world) {
             this._world.destroy();

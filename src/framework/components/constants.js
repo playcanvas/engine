@@ -1,10 +1,11 @@
 // The update order of the component systems, see ComponentSystem.updateOrder.
 //
-// Each frame the application fires three phases, in this order. The systems handling a phase run
+// Each frame the application fires four phases, in this order. The systems handling a phase run
 // in ascending update order, so a system ordered before UPDATEORDER_SCRIPT runs before the scripts
 // in every phase it handles, and a system ordered after it runs after them:
 //
-//   update            physics, joints -> SCRIPTS update -> sound, particles, UI, sprites
+//   update            joints -> SCRIPTS update -> sound, particles, UI, sprites
+//   physicsUpdate     rigid body: physics simulated
 //   animationUpdate   anim: animations evaluated, bones posed
 //   postUpdate        joints -> SCRIPTS postUpdate (for example IK on the posed bones) -> layout
 //
@@ -13,7 +14,7 @@
 
 // --- before scripts ------------------------------------------------------------------------------
 
-export const UPDATEORDER_RIGIDBODY = 100;        // update: physics step, scripts see the result
+export const UPDATEORDER_RIGIDBODY = 100;        // physicsUpdate, after scripts' update
 export const UPDATEORDER_COLLISION = 200;        // no phase
 export const UPDATEORDER_JOINT = 300;            // update, postUpdate
 export const UPDATEORDER_ANIM = 400;             // animationUpdate, after scripts' update

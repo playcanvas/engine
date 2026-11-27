@@ -1176,8 +1176,10 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Update the application. This function will call the update functions and then the postUpdate
-     * functions of all enabled components. It will then update the current state of all connected
+     * Update the application. This function will call the update functions of all enabled
+     * components, step the physics simulation, evaluate the animations, and then call the
+     * postUpdate functions of all enabled components, so that postUpdate sees the simulated and
+     * animated transforms of the frame. It will then update the current state of all connected
      * input devices. This function is called internally in the application's main loop and does
      * not need to be called explicitly, except where there is no main loop, such as in Node.js.
      *
@@ -1201,6 +1203,12 @@ class AppBase extends EventHandler {
         this.stats.frame.scriptUpdateStart = now();
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
         this.stats.frame.scriptUpdate = now() - this.stats.frame.scriptUpdateStart;
+
+        // physics update, which the rigid body system times itself. Physics is not simulated in the
+        // tools, which replace the update of the systems
+        if (!this._inTools) {
+            this.systems.fire('physicsUpdate', dt);
+        }
 
         // animation update
         this.stats.frame.animUpdateStart = now();
