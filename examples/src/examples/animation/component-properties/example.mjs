@@ -5,8 +5,6 @@
 
 import {
     AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -23,7 +21,8 @@ import {
     StandardMaterial,
     TextureHandler,
     TouchDevice,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
@@ -54,13 +53,14 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.elementInput = new ElementInput(canvas);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
-    LightComponentSystem,
-    AnimComponentSystem
+    LightComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, AnimClipHandler, AnimStateGraphHandler];
+createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

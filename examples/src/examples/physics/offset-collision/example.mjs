@@ -1,7 +1,4 @@
 import {
-    AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -27,6 +24,7 @@ import {
     WasmModule,
     WireRenderer,
     createGraphicsDevice,
+    featureAnim,
     math
 } from 'playcanvas';
 
@@ -66,21 +64,20 @@ const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScriptComponentSystem,
     CollisionComponentSystem,
-    RigidBodyComponentSystem,
-    AnimComponentSystem
+    RigidBodyComponentSystem
 ];
 createOptions.resourceHandlers = [
     TextureHandler,
     ContainerHandler,
-    ScriptHandler,
-    AnimClipHandler,
-    AnimStateGraphHandler
+    ScriptHandler
 ];
 
 const app = new AppBase(canvas);

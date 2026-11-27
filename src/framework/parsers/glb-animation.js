@@ -1,5 +1,6 @@
 import { Http } from '../../platform/net/http.js';
 import { AnimEvents } from '../anim/evaluator/anim-events.js';
+import { glbAnimations } from './glb/animations.js';
 import { GlbParser } from './glb-parser.js';
 
 /**
@@ -18,7 +19,7 @@ class GlbAnimationParser {
             if (err) {
                 callback(`Error loading animation resource: ${original} [${err}]`);
             } else {
-                GlbParser.parse('filename.glb', '', response, this.handler.device, this.handler.assets, asset?.options ?? {}, [], (err, parseResult) => {
+                GlbParser.parse('filename.glb', '', response, this.handler.device, this.handler.assets, asset?.options ?? {}, [glbAnimations], (err, parseResult) => {
                     if (err) {
                         callback(err);
                     } else {

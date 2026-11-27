@@ -26,7 +26,8 @@ import { AnimComponent, ANIMUPDATE_OFFSCREEN, ANIMUPDATE_EVALUATED } from './com
 /**
  * Manages the {@link AnimComponent}s of an application and advances their state graphs each
  * frame. Reach it through `app.systems.anim`; components are created with
- * {@link Entity#addComponent}, never by calling the system directly.
+ * {@link Entity#addComponent}, never by calling the system directly. The system is installed by
+ * {@link featureAnim}, listed in {@link AppOptions#features}.
  *
  * @category Animation
  */

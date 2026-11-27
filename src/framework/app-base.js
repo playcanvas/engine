@@ -129,8 +129,9 @@ const DEVTOOLS_PROTOCOL = 1;
  *
  * `new AppBase(canvas)` only constructs the instance and its root entity. You must then call
  * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
- * `componentSystems` and `resourceHandlers` before adding components or calling
- * {@link AppBase#start}. Create the `graphicsDevice` with {@link createGraphicsDevice}.
+ * `componentSystems` and `resourceHandlers`, and the `features` the app uses, before adding
+ * components or calling {@link AppBase#start}. Create the `graphicsDevice` with
+ * {@link createGraphicsDevice}.
  *
  * @category Framework
  */
@@ -582,9 +583,9 @@ class AppBase extends EventHandler {
      */
     init(appOptions) {
         const {
-            assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
-            lightmapper, mouse, physicsWorld, resourceHandlers, scriptsOrder, scriptPrefix, soundManager,
-            touch, xr
+            assetPrefix, batchManager, componentSystems, elementInput, features = [], gamepads, graphicsDevice,
+            keyboard, lightmapper, mouse, physicsWorld, resourceHandlers, scriptsOrder, scriptPrefix,
+            soundManager, touch, xr
         } = appOptions;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
@@ -632,6 +633,9 @@ class AppBase extends EventHandler {
             featureBundles,
             featureI18n
         ]);
+
+        // the features the application requires
+        installFeatures(this, features);
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);

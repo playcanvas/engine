@@ -6,7 +6,6 @@
 // again.
 
 import {
-    AnimComponentSystem,
     AppBase,
     AppOptions,
     Asset,
@@ -55,6 +54,7 @@ import {
     WasmModule,
     WireRenderer,
     createGraphicsDevice,
+    featureAnim,
     math
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -96,12 +96,13 @@ createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(window);
 createOptions.batchManager = BatchManager;
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    AnimComponentSystem
+    ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, BinaryHandler];
 

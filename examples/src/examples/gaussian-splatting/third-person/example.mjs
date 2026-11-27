@@ -15,9 +15,6 @@ import {
     ANIM_LESS_THAN_EQUAL_TO,
     ANIM_PARAMETER_INTEGER,
     ANIM_PARAMETER_TRIGGER,
-    AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -49,7 +46,8 @@ import {
     TouchDevice,
     Vec3,
     WasmModule,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 import { ThirdPersonController } from 'playcanvas/scripts/esm/third-person-controller.mjs';
@@ -102,12 +100,13 @@ createOptions.touch = new TouchDevice(document.body);
 createOptions.gamepads = new GamePads();
 createOptions.keyboard = new Keyboard(window);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScriptComponentSystem,
-    AnimComponentSystem,
     CollisionComponentSystem,
     RigidBodyComponentSystem,
     GSplatComponentSystem
@@ -116,8 +115,6 @@ createOptions.resourceHandlers = [
     TextureHandler,
     ContainerHandler,
     ScriptHandler,
-    AnimClipHandler,
-    AnimStateGraphHandler,
     GSplatHandler
 ];
 

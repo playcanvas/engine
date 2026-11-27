@@ -9,9 +9,6 @@
 // license: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 
 import {
-    AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -40,7 +37,8 @@ import {
     Vec2,
     Vec3,
     WasmModule,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
@@ -83,19 +81,18 @@ createOptions.keyboard = new Keyboard(document.body);
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    AnimComponentSystem
+    ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [
     TextureHandler,
     ContainerHandler,
-    ScriptHandler,
-    AnimClipHandler,
-    AnimStateGraphHandler
+    ScriptHandler
 ];
 
 const app = new AppBase(canvas);

@@ -1,7 +1,6 @@
 import { createGraphicsDevice } from './device.mjs';
 import { AppBase } from '../src/framework/app-base.js';
 import { AppOptions } from '../src/framework/app-options.js';
-import { AnimComponentSystem } from '../src/framework/components/anim/system.js';
 import { AudioListenerComponentSystem } from '../src/framework/components/audio-listener/system.js';
 import { ButtonComponentSystem } from '../src/framework/components/button/system.js';
 import { CameraComponentSystem } from '../src/framework/components/camera/system.js';
@@ -23,9 +22,7 @@ import { ScrollbarComponentSystem } from '../src/framework/components/scrollbar/
 import { SoundComponentSystem } from '../src/framework/components/sound/system.js';
 import { SpriteComponentSystem } from '../src/framework/components/sprite/system.js';
 import { ZoneComponentSystem } from '../src/framework/components/zone/system.js';
-import { AnimClipHandler } from '../src/framework/handlers/anim-clip.js';
-import { AnimStateGraphHandler } from '../src/framework/handlers/anim-state-graph.js';
-import { AnimationHandler } from '../src/framework/handlers/animation.js';
+import { featureAnim } from '../src/framework/features/feature-anim.js';
 import { AudioHandler } from '../src/framework/handlers/audio.js';
 import { BinaryHandler } from '../src/framework/handlers/binary.js';
 import { ContainerHandler } from '../src/framework/handlers/container.js';
@@ -57,13 +54,16 @@ import { BatchManager } from '../src/scene/batching/batch-manager.js';
  * @import { GraphicsDevice } from '../src/platform/graphics/graphics-device.js'
  */
 
-// every component system and resource handler the engine implements, so a test can add any
-// component or load any asset type without registering it first
+// every feature, component system and resource handler the engine implements, so a test can add
+// any component or load any asset type without registering it first
+const features = [
+    featureAnim
+];
+
 const componentSystems = [
     RigidBodyComponentSystem,
     CollisionComponentSystem,
     JointComponentSystem,
-    AnimComponentSystem,
     ModelComponentSystem,
     RenderComponentSystem,
     CameraComponentSystem,
@@ -86,9 +86,6 @@ const componentSystems = [
 
 const resourceHandlers = [
     RenderHandler,
-    AnimationHandler,
-    AnimClipHandler,
-    AnimStateGraphHandler,
     ModelHandler,
     MaterialHandler,
     TextureHandler,
@@ -113,8 +110,8 @@ const resourceHandlers = [
 ];
 
 /**
- * Create a new application with every component system and resource handler registered, on the
- * graphics device the tests run on: the null device, or a WebGPU device under
+ * Create a new application with every feature, component system and resource handler registered,
+ * on the graphics device the tests run on: the null device, or a WebGPU device under
  * `npm run test:webgpu`.
  *
  * @param {object} [options] - Options for the application.
@@ -128,6 +125,7 @@ const resourceHandlers = [
 function createApp({ canvas = document.createElement('canvas'), graphicsDevice, appOptions = {} } = {}) {
     const options = new AppOptions();
     options.graphicsDevice = graphicsDevice ?? createGraphicsDevice(canvas);
+    options.features = features;
     options.componentSystems = componentSystems;
     options.resourceHandlers = resourceHandlers;
     options.soundManager = new SoundManager();

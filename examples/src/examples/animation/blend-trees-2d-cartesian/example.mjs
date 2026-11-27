@@ -1,8 +1,5 @@
 import {
     ANIM_BLEND_2D_CARTESIAN,
-    AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -21,7 +18,8 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
@@ -60,13 +58,14 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.elementInput = new ElementInput(canvas);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
-    LightComponentSystem,
-    AnimComponentSystem
+    LightComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, AnimClipHandler, AnimStateGraphHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

@@ -347,6 +347,9 @@ export { CanvasFont } from './framework/font/canvas-font.js';
 export { Bundle } from './framework/bundle/bundle.js';
 export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 
+// FRAMEWORK / FEATURES
+export { featureAnim } from './framework/features/feature-anim.js';
+
 // FRAMEWORK / GRAPHICS
 export { Picker } from './framework/graphics/picker.js';
 export { RenderPassPicker } from './framework/graphics/render-pass-picker.js';

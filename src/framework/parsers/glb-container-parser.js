@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { path } from '../../core/path.js';
 import { Asset } from '../../framework/asset/asset.js';
 import { GlbParser } from './glb-parser.js';
@@ -38,11 +39,18 @@ class GlbContainerParser {
                     this._device,
                     asset.registry,
                     asset.options,
-                    getGlbResourceExtensions(this.handler),
+                    getGlbResourceExtensions(this.handler._loader),
                     (err, result) => {
                         if (err) {
                             callback(err);
                         } else {
+                            Debug.call(() => {
+                                const count = result.gltf.animations?.length ?? 0;
+                                if (count > 0 && result.animations.length === 0) {
+                                    Debug.warnOnce(`The ${count} animations of ${url.original} are not loaded, as their loading is installed by featureAnim. Add it to AppOptions#features to load them.`);
+                                }
+                            });
+
                             // return everything
                             callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
                         }

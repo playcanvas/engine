@@ -17,9 +17,6 @@
 
 import {
     ADDRESS_REPEAT,
-    AnimClipHandler,
-    AnimComponentSystem,
-    AnimStateGraphHandler,
     AppBase,
     AppOptions,
     Asset,
@@ -45,7 +42,8 @@ import {
     TouchDevice,
     Vec2,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    featureAnim
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
@@ -79,20 +77,19 @@ createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 createOptions.keyboard = new Keyboard(document.body);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    AnimComponentSystem
+    ScriptComponentSystem
 ];
 
 createOptions.resourceHandlers = [
     TextureHandler,
     ContainerHandler,
-    ScriptHandler,
-    AnimClipHandler,
-    AnimStateGraphHandler
+    ScriptHandler
 ];
 
 const app = new AppBase(canvas);

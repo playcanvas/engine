@@ -16,3 +16,11 @@ export const FEATURE_BUNDLES = 'bundles';
  * @ignore
  */
 export const FEATURE_I18N = 'i18n';
+
+/**
+ * The name of the anim feature.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const FEATURE_ANIM = 'anim';

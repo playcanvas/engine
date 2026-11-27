@@ -13,7 +13,6 @@
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    AnimComponentSystem,
     AppBase,
     AppOptions,
     Asset,
@@ -55,6 +54,7 @@ import {
     Vec3,
     WasmModule,
     createGraphicsDevice,
+    featureAnim,
     math
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -97,12 +97,13 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new Mouse(document.body);
 createOptions.touch = new TouchDevice(document.body);
 
+createOptions.features = [featureAnim];
+
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
-    ScriptComponentSystem,
-    AnimComponentSystem
+    ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandler];
 

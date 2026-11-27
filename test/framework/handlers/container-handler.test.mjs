@@ -44,21 +44,23 @@ describe('ContainerHandler (parser selection)', function () {
         expect(select(handler, 'model.anything')).to.be.an.instanceof(GlbContainerParser);
     });
 
-    it('registers and unregisters glTF resource extensions', function () {
-        const handler = app.loader.getHandler('container');
-        const initialExtensions = getGlbResourceExtensions(handler);
+    it('registers and unregisters glTF resource extensions with the resource loader', function () {
+        const initialExtensions = getGlbResourceExtensions(app.loader);
         const extension = {
             name: 'TEST_extension',
             resourceName: 'testResources',
-            handlesPrimitive: () => false,
             createResources: () => []
         };
 
-        expect(registerGlbResourceExtension(handler, extension)).to.equal(true);
-        expect(getGlbResourceExtensions(handler)).to.deep.equal([...initialExtensions, extension]);
+        registerGlbResourceExtension(app.loader, extension);
+        expect(getGlbResourceExtensions(app.loader)).to.deep.equal([...initialExtensions, extension]);
 
-        unregisterGlbResourceExtension(handler, extension.name);
-        expect(getGlbResourceExtensions(handler)).to.deep.equal(initialExtensions);
+        unregisterGlbResourceExtension(app.loader, extension.name);
+        expect(getGlbResourceExtensions(app.loader)).to.deep.equal(initialExtensions);
+    });
+
+    it('returns no glTF resource extensions for a handler not added to a loader', function () {
+        expect(getGlbResourceExtensions(undefined)).to.deep.equal([]);
     });
 
     it('registers the Gaussian splatting extension when AppBase initializes its component system', function () {
@@ -71,31 +73,31 @@ describe('ContainerHandler (parser selection)', function () {
         const appBase = new AppBase(canvas);
         appBase.init(options);
 
-        const handler = appBase.loader.getHandler('container');
+        const loader = appBase.loader;
         try {
-            expect(getGlbResourceExtensions(handler).map(extension => extension.name)).to.include('KHR_gaussian_splatting');
+            expect(getGlbResourceExtensions(loader).map(extension => extension.name)).to.include('KHR_gaussian_splatting');
         } finally {
             appBase.destroy();
         }
-        expect(getGlbResourceExtensions(handler)).to.be.empty;
+        expect(getGlbResourceExtensions(loader)).to.be.empty;
     });
 
-    it('makes registered glTF resource extensions available to parsers added later', function () {
+    it('registers glTF resource extensions without the container handler, for one added later', function () {
         const canvas = document.createElement('canvas');
         const options = new AppOptions();
         options.graphicsDevice = createGraphicsDevice(canvas);
-        options.resourceHandlers = [ContainerHandler];
         options.componentSystems = [GSplatComponentSystem];
 
         const appBase = new AppBase(canvas);
         appBase.init(options);
 
-        const handler = appBase.loader.getHandler('container');
-        const parser = new GlbContainerParser(appBase.graphicsDevice, appBase.assets);
-        handler.addParser(parser);
-
         try {
-            expect(getGlbResourceExtensions(parser.handler).map(extension => extension.name)).to.include('KHR_gaussian_splatting');
+            const handler = new ContainerHandler(appBase);
+            appBase.loader.addHandler('container', handler);
+            const parser = new GlbContainerParser(appBase.graphicsDevice, appBase.assets);
+            handler.addParser(parser);
+
+            expect(getGlbResourceExtensions(parser.handler._loader).map(extension => extension.name)).to.include('KHR_gaussian_splatting');
         } finally {
             appBase.destroy();
         }

@@ -1,80 +1,76 @@
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ResourceLoader } from '../handlers/loader.js'
  */
 
 /**
- * An optional glTF extension which replaces normal mesh creation for primitives it handles and
- * creates an aligned resource collection on the parse result.
+ * An optional part of glTF parsing, such as a glTF extension or the animations, which creates a
+ * collection of resources on the parse result. Extensions are registered with the resource loader
+ * by the features and component systems that use their resources, so that applications without
+ * them do not bundle their code.
  *
  * @typedef {object} GlbResourceExtension
- * @property {string} name - The glTF extension name.
+ * @property {string} name - The name the extension is registered with, the glTF extension name for
+ * a glTF extension.
  * @property {string} resourceName - Name of the property populated on the parsed resources.
- * @property {(primitive: object) => boolean} handlesPrimitive - Returns true when the extension
+ * @property {(primitive: object) => boolean} [handlesPrimitive] - Returns true when the extension
  * handles the primitive instead of the normal mesh path.
- * @property {(device: GraphicsDevice, gltf: object, bufferViews: Uint8Array[]) => *} createResources -
- * Creates resources for all matching primitives.
+ * @property {(device: GraphicsDevice, gltf: object, bufferViews: Uint8Array[], nodes: object[], options: object) => *} createResources -
+ * Creates the resources, given the graphics device, the glTF json, the data of its buffer views,
+ * the created nodes and the options of the asset.
  * @ignore
  */
 
-// A symbol keeps the handler-owned registry internal while allowing parsers registered later to
-// discover it through their ResourceHandler back-reference.
-const glbResourceExtensions = Symbol('glbResourceExtensions');
-
 /**
- * @param {object} handler - The container resource handler.
- * @ignore
+ * The extensions registered with each resource loader. The registry lives on the loader rather
+ * than on the container handler, so extensions can be registered before or after the handler is
+ * added, and code registering them does not need the handler.
+ *
+ * @type {WeakMap<ResourceLoader, Map<string, GlbResourceExtension>>}
  */
-const initializeGlbResourceExtensions = (handler) => {
-    Object.defineProperty(handler, glbResourceExtensions, {
-        value: new Map()
-    });
-};
+const registries = new WeakMap();
 
 /**
- * @param {object} handler - The container resource handler.
- * @returns {Map<string, GlbResourceExtension>|undefined} The handler's extension registry.
- * @ignore
- */
-const getRegistry = (handler) => {
-    return /** @type {Map<string, GlbResourceExtension>|undefined} */ (Reflect.get(handler, glbResourceExtensions));
-};
-
-/**
- * @param {object} handler - The container resource handler.
+ * Registers a glTF resource extension with a resource loader, for the glTF files it loads.
+ *
+ * @param {ResourceLoader} loader - The resource loader.
  * @param {GlbResourceExtension} extension - The extension implementation.
- * @returns {boolean} True if the handler supports glTF resource extensions.
  * @ignore
  */
-const registerGlbResourceExtension = (handler, extension) => {
-    const registry = getRegistry(handler);
+const registerGlbResourceExtension = (loader, extension) => {
+    let registry = registries.get(loader);
     if (!registry) {
-        return false;
+        registry = new Map();
+        registries.set(loader, registry);
     }
-
     registry.set(extension.name, extension);
-    return true;
 };
 
 /**
- * @param {object} handler - The container resource handler.
- * @param {string} name - The glTF extension name.
+ * Unregisters a glTF resource extension from a resource loader.
+ *
+ * @param {ResourceLoader} loader - The resource loader.
+ * @param {string} name - The name of the extension.
  * @ignore
  */
-const unregisterGlbResourceExtension = (handler, name) => {
-    getRegistry(handler)?.delete(name);
+const unregisterGlbResourceExtension = (loader, name) => {
+    registries.get(loader)?.delete(name);
 };
 
 /**
- * @param {object} handler - The container resource handler.
+ * Returns the glTF resource extensions registered with a resource loader.
+ *
+ * @param {ResourceLoader|undefined} loader - The resource loader, undefined for a handler that was
+ * not added to one.
  * @returns {GlbResourceExtension[]} The registered extensions.
  * @ignore
  */
-const getGlbResourceExtensions = (handler) => {
-    return Array.from(getRegistry(handler)?.values() ?? []);
+const getGlbResourceExtensions = (loader) => {
+    const registry = loader && registries.get(loader);
+    return registry ? Array.from(registry.values()) : [];
 };
 
 export {
-    initializeGlbResourceExtensions,
     registerGlbResourceExtension,
     unregisterGlbResourceExtension,
     getGlbResourceExtensions
