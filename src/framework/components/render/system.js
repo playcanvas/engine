@@ -1,6 +1,7 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
+import { SYSTEMORDER_RENDER } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
 
@@ -54,6 +55,9 @@ const _properties = [
  * @category Graphics
  */
 class RenderComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static order = SYSTEMORDER_RENDER;
+
     /**
      * Create a new RenderComponentSystem.
      *

@@ -3,6 +3,7 @@ import { Curve } from '../../../core/math/curve.js';
 import { CurveSet } from '../../../core/math/curve-set.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Asset } from '../../asset/asset.js';
+import { SYSTEMORDER_PARTICLESYSTEM } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { _properties, ParticleSystemComponent } from './component.js';
 import { hasFeature } from '../../../scene/features/constants.js';
@@ -101,6 +102,9 @@ const _propertyTypes = {
  * @category Graphics
  */
 class ParticleSystemComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static order = SYSTEMORDER_PARTICLESYSTEM;
+
     /**
      * Create a new ParticleSystemComponentSystem.
      *

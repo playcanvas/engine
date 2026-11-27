@@ -5,6 +5,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { BufferUtils } from '../../../platform/graphics/buffer-utils.js';
 import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { BODYTYPE_DYNAMIC } from '../rigid-body/constants.js';
+import { SYSTEMORDER_COLLISION } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { CollisionComponent } from './component.js';
 import { Trigger } from './trigger.js';
@@ -598,6 +599,9 @@ function scaleChanged(scale, builtScale) {
  * @category Physics
  */
 class CollisionComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static order = SYSTEMORDER_COLLISION;
+
     /**
      * The mesh components with a built shape, watched for changes to their entity world scale.
      * Maintained by createMeshShape and beforeRemove.

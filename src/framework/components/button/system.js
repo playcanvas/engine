@@ -1,3 +1,4 @@
+import { SYSTEMORDER_BUTTON } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { ButtonComponent } from './component.js';
 
@@ -43,6 +44,9 @@ const _properties = [
  * @category User Interface
  */
 class ButtonComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static order = SYSTEMORDER_BUTTON;
+
     /**
      * Create a new ButtonComponentSystem.
      *

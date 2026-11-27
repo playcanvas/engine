@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { SYSTEMORDER_SOUND } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { SoundComponent } from './component.js';
 
@@ -40,6 +41,9 @@ const _properties = [
  * @category Sound
  */
 class SoundComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static order = SYSTEMORDER_SOUND;
+
     /**
      * Create a SoundComponentSystem.
      *

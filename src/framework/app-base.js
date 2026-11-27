@@ -51,6 +51,7 @@ import { featureCoreChunksWebgl, featureCoreChunksWebgpu } from '../scene/featur
  * @import { AppOptions } from './app-options.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
  * @import { BundleRegistry } from './bundle/bundle-registry.js'
+ * @import { ComponentSystem } from './components/system.js'
  * @import { I18n } from './i18n/i18n.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { EventHandle } from '../core/event-handle.js'
@@ -634,8 +635,8 @@ class AppBase extends EventHandler {
             featureI18n
         ]);
 
-        // the features the application requires
-        installFeatures(this, features);
+        // the features the application requires, and the component systems they bring
+        const featureSystems = /** @type {typeof ComponentSystem[]} */ (installFeatures(this, features));
 
         if (lightmapper) {
             this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
@@ -671,8 +672,13 @@ class AppBase extends EventHandler {
         // errors
         this.loader.enableRetry();
 
-        // Create and register all required component systems
-        componentSystems.forEach((componentSystem) => {
+        // create the component systems of the features and the listed ones, each once, in their
+        // ComponentSystem.order, as it decides the order in which they handle the per-frame
+        // events. The sort is stable, so systems of the same order keep their order: those of
+        // features first, then the listed ones
+        const systems = [...new Set([...featureSystems, ...componentSystems])];
+        systems.sort((a, b) => a.order - b.order);
+        systems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
 
@@ -1170,8 +1176,10 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Update the application. This function will call the update functions and then the postUpdate
-     * functions of all enabled components. It will then update the current state of all connected
+     * Update the application. This function will call the update functions of all enabled
+     * components, step the physics simulation, evaluate the animations, and then call the
+     * postUpdate functions of all enabled components, so that postUpdate sees the simulated and
+     * animated transforms of the frame. It will then update the current state of all connected
      * input devices. This function is called internally in the application's main loop and does
      * not need to be called explicitly, except where there is no main loop, such as in Node.js.
      *
@@ -1195,6 +1203,12 @@ class AppBase extends EventHandler {
         this.stats.frame.scriptUpdateStart = now();
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
         this.stats.frame.scriptUpdate = now() - this.stats.frame.scriptUpdateStart;
+
+        // physics update, which the rigid body system times itself. Physics is not simulated in the
+        // tools, which replace the update of the systems
+        if (!this._inTools) {
+            this.systems.fire('physicsUpdate', dt);
+        }
 
         // animation update
         this.stats.frame.animUpdateStart = now();

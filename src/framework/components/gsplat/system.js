@@ -3,6 +3,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
 import { GSplatParams } from '../../../scene/gsplat-unified/gsplat-params.js';
+import { SYSTEMORDER_GSPLAT } from '../constants.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { featureGsplatWebgl, featureGsplatWebgpu } from '../../../scene/features/feature-gsplat.js';
@@ -59,6 +60,9 @@ const _properties = [
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {
+    /** @ignore */
+    static order = SYSTEMORDER_GSPLAT;
+
     /**
      * Fired when a GSplat material is created for a camera and layer combination. Materials are
      * created during the first frame update when the GSplat is rendered. The handler is passed

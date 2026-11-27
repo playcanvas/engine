@@ -5,17 +5,10 @@ import { particleChunksWGSL } from '../../scene/shader-lib/wgsl/collections/part
 import { ParticleSystemComponentSystem } from '../components/particle-system/system.js';
 import { FEATURE_PARTICLES } from './constants.js';
 
-/**
- * @import { AppBase } from '../app-base.js'
- */
-
 // The device independent part of particle systems, shared by the feature for each device, so that
 // the component system is added once however many of them an application installs.
 const particlesCore = /* #__PURE__ */ new Feature({
-    install: (host) => {
-        const app = /** @type {AppBase} */ (host);
-        app.systems.add(new ParticleSystemComponentSystem(app));
-    }
+    componentSystems: [ParticleSystemComponentSystem]
 });
 DebugHelper.setName(particlesCore, FEATURE_PARTICLES);
 
