@@ -41,6 +41,7 @@ class AnimTargetValue {
         this.totalWeight = 0;
         this.counter = 0;
         this.layerCounter = 0;
+        this._accumulatedWeight = 0;
         this.valueType = type;
         this.dirty = true;
         this.value = (type === AnimTargetValue.TYPE_QUAT ? [0, 0, 0, 1] : [0, 0, 0]);
@@ -86,24 +87,40 @@ class AnimTargetValue {
     }
 
     updateValue(index, value) {
+        const normalizeWeights = this._normalizeWeights;
+        const blendType = this._layerBlendType(index);
         // fast path: when a single fully weighted overwrite layer drives this target, the blended
         // result is the layer value itself, so skip resetting and blending with the base value
         if (this.layerCounter === 1 && this.mask[index] &&
-            this._component.layers[index].blendType === ANIM_LAYER_OVERWRITE && this.getWeight(index) === 1) {
+            blendType === ANIM_LAYER_OVERWRITE && this.getWeight(index) === 1 &&
+            (!normalizeWeights || this._component.layers.length === 1)) {
             // the evaluator already normalized the value, so it is passed to the setter as is
             if (this.setter) this.setter(value);
             return;
         }
 
-        // always reset the value of the target when the counter is 0
-        if (this.counter === 0) {
-            AnimBlend.set(this.value, AnimTargetValue.IDENTITY_QUAT_ARR, this.valueType);
-            if (!this._normalizeWeights) {
+        // Reset for a new frame, or discard lower layers when an overwrite layer takes over.
+        if (this.counter === 0 || (normalizeWeights && blendType === ANIM_LAYER_OVERWRITE)) {
+            this._accumulatedWeight = 0;
+            if (normalizeWeights) {
+                this.value.fill(0);
+            } else {
+                AnimBlend.set(this.value, AnimTargetValue.IDENTITY_QUAT_ARR, this.valueType);
                 AnimBlend.blend(this.value, this.baseValue, 1, this.valueType);
             }
         }
         if (!this.mask[index] || this.getWeight(index) === 0) return;
-        if (this._layerBlendType(index) === ANIM_LAYER_ADDITIVE && !this._normalizeWeights) {
+        if (normalizeWeights) {
+            // Layers can bind this target during the update, so accumulate raw weights instead of
+            // weights normalized against a total which can still change later in the frame.
+            const weight = this.weights[index];
+            this._accumulatedWeight += weight;
+            if (this.valueType === AnimTargetValue.TYPE_QUAT) {
+                AnimBlend.blend(this.value, value, weight, this.valueType, true);
+            } else {
+                AnimBlend.blend(this.value, value, weight / this._accumulatedWeight, this.valueType);
+            }
+        } else if (blendType === ANIM_LAYER_ADDITIVE) {
             if (this.valueType === AnimTargetValue.TYPE_QUAT) {
                 // current value
                 const v = AnimTargetValue.q1.set(this.value[0], this.value[1], this.value[2], this.value[3]);
@@ -129,7 +146,15 @@ class AnimTargetValue {
         } else {
             AnimBlend.blend(this.value, value, this.getWeight(index), this.valueType);
         }
-        if (this.setter) this.setter(this.value);
+        if (this.setter) {
+            if (normalizeWeights && this.valueType === AnimTargetValue.TYPE_QUAT) {
+                // Normalize the output without changing the sum used to blend subsequent layers.
+                AnimBlend.set(AnimTargetValue.quatArr, this.value, this.valueType);
+                this.setter(AnimTargetValue.quatArr);
+            } else {
+                this.setter(this.value);
+            }
+        }
     }
 
     unbind() {

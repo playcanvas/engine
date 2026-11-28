@@ -5,6 +5,29 @@ import { AnimTargetValue } from '../../../../src/framework/anim/evaluator/anim-t
 
 describe('AnimTargetValue', function () {
 
+    describe('normalized layer blending', function () {
+        it('outputs unit quaternions without changing the relative weights of later layers', function () {
+            const component = {
+                normalizeWeights: true,
+                layers: [1, 2, 3].map(weight => ({ weight, blendType: ANIM_LAYER_ADDITIVE }))
+            };
+            const target = new AnimTargetValue(component, AnimTargetValue.TYPE_QUAT);
+            const outputs = [];
+            target.setter = value => outputs.push([...value]);
+            target.layerCounter = 3;
+            for (let i = 0; i < 3; i++) target.setMask(i, 1);
+            const s = Math.SQRT1_2;
+            [[s, 0, 0, s], [0, s, 0, s], [0, 0, s, s]].forEach((value, index) => {
+                target.updateValue(index, value);
+                target.counter++;
+            });
+
+            outputs.forEach(value => expect(value.reduce((sum, element) => sum + element * element, 0)).to.be.closeTo(1, 1e-12));
+            const expected = [1, 2, 3, 6].map(value => value / Math.sqrt(50));
+            outputs[2].forEach((value, index) => expect(value).to.be.closeTo(expected[index], 1e-12));
+        });
+    });
+
     describe('#constructor', function () {
 
         it('instantiates correctly with an object', function () {
@@ -481,7 +504,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.deep.equal([1.25, 1.25, 1.25]);
+            expect(animTargetValue.value).to.deep.equal([1.5, 1.5, 1.5]);
         });
 
         it('can blend two additive quats together', function () {
@@ -522,18 +545,19 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
+            let output;
+            animTargetValue.setter = (value) => {
+                output = [...value];
+            };
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.deep.equal([
-                0.4999999999999999,
-                0.7071067811865475,
-                0,
-                0.4999999999999999
-            ]);
+            [Math.SQRT1_2, Math.SQRT1_2, 0, 0].forEach((value, index) => {
+                expect(output[index]).to.be.closeTo(value, 1e-12);
+            });
         });
 
 
@@ -792,7 +816,7 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateValue(0, [1, 1, 1]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [2, 2, 2]);
-            expect(animTargetValue.value).to.deep.equal([1.25, 1.25, 1.25]);
+            expect(animTargetValue.value).to.deep.equal([1.5, 1.5, 1.5]);
         });
 
         it('can blend one overwrite and one additive quat together', function () {
@@ -833,18 +857,19 @@ describe('AnimTargetValue', function () {
                 ]
             };
             const animTargetValue = new AnimTargetValue(mockComponent, AnimTargetValue.TYPE_QUAT);
+            let output;
+            animTargetValue.setter = (value) => {
+                output = [...value];
+            };
             animTargetValue.baseValue = [0, 0, 0, 1];
             animTargetValue.setMask(0, 1);
             animTargetValue.setMask(1, 1);
             animTargetValue.updateValue(0, [1, 0, 0, 0]);
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
-            expect(animTargetValue.value).to.deep.equal([
-                0.4999999999999999,
-                0.7071067811865475,
-                0,
-                0.4999999999999999
-            ]);
+            [Math.SQRT1_2, Math.SQRT1_2, 0, 0].forEach((value, index) => {
+                expect(output[index]).to.be.closeTo(value, 1e-12);
+            });
         });
 
     });
