@@ -681,6 +681,16 @@ class MeshInstance {
     _shaderCache = new Map();
 
     /**
+     * The shader instance returned last for each shader pass, with the values it was looked up
+     * with: [lightHash, shaderDefs, cameraHash, shaderInstance] per pass. A lookup with the same
+     * values returns it without hashing and searching the cache.
+     *
+     * @type {Array<Array<*>|undefined>}
+     * @private
+     */
+    _lastShaderInstances = [];
+
+    /**
      * The shader defines, a combination of the SHADERDEF_ flags. Defaults to the flag of a light
      * mask of MASK_AFFECT_DYNAMIC.
      *
@@ -985,6 +995,7 @@ class MeshInstance {
             shaderInstance.destroy();
         });
         this._shaderCache.clear();
+        this._lastShaderInstances.length = 0;
     }
 
     /**
@@ -1015,6 +1026,12 @@ class MeshInstance {
         });
 
         const shaderDefs = this._shaderDefs;
+
+        // the same lookup as the last one for this pass returns the same shader instance
+        const last = this._lastShaderInstances[shaderPass];
+        if (last && last[0] === lightList.hash && last[1] === shaderDefs && last[2] === cameraShaderParams.hash) {
+            return last[3];
+        }
 
         // unique hash for the required shader
         lookupHashes[0] = shaderPass;
@@ -1073,6 +1090,16 @@ class MeshInstance {
                 Debug.errorOnce('Hash collision in the shader cache for mesh instance. This is very unlikely but still possible. Please report this issue.');
             }
         });
+
+        // remember it for the next lookup of this pass
+        let memo = this._lastShaderInstances[shaderPass];
+        if (!memo) {
+            memo = this._lastShaderInstances[shaderPass] = [0, 0, 0, null];
+        }
+        memo[0] = lightList.hash;
+        memo[1] = shaderDefs;
+        memo[2] = cameraShaderParams.hash;
+        memo[3] = shaderInstance;
 
         return shaderInstance;
     }
