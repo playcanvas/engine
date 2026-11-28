@@ -137,7 +137,7 @@
     "clean": "node build.mjs --clean",
     "docs": "typedoc",
     "docs:scripts": "npm run build:types && typedoc --options typedoc.scripts.config.mjs",
-    "lint": "eslint scripts src test utils build.mjs eslint.config.mjs typedoc.scripts.config.mjs",
+    "lint": "eslint --cache --concurrency=auto scripts src test utils build.mjs eslint.config.mjs typedoc.scripts.config.mjs",
     "lint:fix": "npm run lint -- --fix",
     "publint": "publint --level error",
     "serve": "node utils/serve.mjs",
