@@ -64,6 +64,7 @@ import { TextureUtils } from '../texture-utils.js';
  * @import { RenderPass } from '../render-pass.js'
  * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
+ * @import { WebglShaderInput } from './webgl-shader-input.js'
  */
 
 // reused destination for BlendState#getAttachment, to avoid allocations
@@ -212,6 +213,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _readbackCopies = new Set();
+
+    /**
+     * The texture unit of each sampler name, shared by all shaders, see
+     * {@link WebglGraphicsDevice#assignTextureUnits}.
+     *
+     * @type {Map<string, number>}
+     * @private
+     */
+    _samplerUnits = new Map();
 
     /**
      * Creates a new WebglGraphicsDevice instance.
@@ -2022,6 +2032,64 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Assigns the texture units of the samplers of a linked shader. A sampler gets the unit of its
+     * name, shared by all shaders, so a texture which many shaders read under the same name, such
+     * as a shadow map, stays bound when the shader changes, instead of moving to the unit of the
+     * sampler's position in each shader. The last unit is left free for mipmap generation. Arrays of
+     * samplers, and samplers whose name gets no unit once all are taken, use free units of the
+     * shader.
+     *
+     * @param {WebglShaderInput[]} samplers - The samplers of the shader. Their unit is set.
+     * @param {number[]} sizes - The number of units each of the samplers needs, more than one for an
+     * array of samplers.
+     * @ignore
+     */
+    assignTextureUnits(samplers, sizes) {
+        const samplerUnits = this._samplerUnits;
+        const sharedCount = this.maxCombinedTextures - 1;
+        const used = [];
+
+        // samplers with the unit of their name, which are all different
+        for (let i = 0; i < samplers.length; i++) {
+            const sampler = samplers[i];
+            sampler.unit = -1;
+            if (sizes[i] === 1) {
+                const name = sampler.scopeId.name;
+                let unit = samplerUnits.get(name);
+                if (unit === undefined && samplerUnits.size < sharedCount) {
+                    unit = samplerUnits.size;
+                    samplerUnits.set(name, unit);
+                }
+                if (unit !== undefined) {
+                    sampler.unit = unit;
+                    used[unit] = true;
+                }
+            }
+        }
+
+        // the rest get the first free units of the shader
+        let next = 0;
+        for (let i = 0; i < samplers.length; i++) {
+            const sampler = samplers[i];
+            if (sampler.unit < 0) {
+                const size = sizes[i];
+                let start = next;
+                for (let u = start; u < start + size; u++) {
+                    if (used[u]) {
+                        start = u + 1;
+                    }
+                }
+                for (let u = start; u < start + size; u++) {
+                    used[u] = true;
+                }
+                sampler.unit = start;
+                next = start + size;
+                Debug.assert(next <= this.maxCombinedTextures, `Shader samplers need more than ${this.maxCombinedTextures} texture units.`);
+            }
+        }
+    }
+
+    /**
      * If the texture is not bound on the specified texture unit, active the texture unit and bind
      * the texture to it.
      *
@@ -2313,11 +2381,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this.setBuffers(indexBuffer);
                 }
 
-                // Commit the shader program variables
-                let textureUnit = 0;
+                // Commit the shader program variables, each sampler on its texture unit, see
+                // assignTextureUnits
                 const samplers = shader.impl.samplers;
                 for (let i = 0, len = samplers.length; i < len; i++) {
                     const sampler = samplers[i];
+                    const textureUnit = sampler.unit;
                     let samplerValue = sampler.scopeId.value;
                     if (!samplerValue) {
 
@@ -2368,16 +2437,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                             gl.uniform1i(sampler.locationId, textureUnit);
                             sampler.slot = textureUnit;
                         }
-                        textureUnit++;
                     } else { // Array
                         sampler.array.length = 0;
                         const numTextures = samplerValue.length;
                         for (let j = 0; j < numTextures; j++) {
                             const texture = samplerValue[j];
-                            this.setTexture(texture, textureUnit);
+                            this.setTexture(texture, textureUnit + j);
 
-                            sampler.array[j] = textureUnit;
-                            textureUnit++;
+                            sampler.array[j] = textureUnit + j;
                         }
                         gl.uniform1iv(sampler.locationId, sampler.array);
                     }

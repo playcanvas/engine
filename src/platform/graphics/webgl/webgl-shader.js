@@ -360,6 +360,7 @@ class WebglShader {
 
         // Query the program for each shader state (GLSL 'uniform')
         const samplerTypes = device._samplerTypes;
+        const samplerSizes = [];
         const numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
         for (let i = 0; i < numUniforms; i++) {
             const info = gl.getActiveUniform(glProgram, i);
@@ -380,10 +381,12 @@ class WebglShader {
 
             if (samplerTypes.has(info.type)) {
                 this.samplers.push(shaderInput);
+                samplerSizes.push(info.size);
             } else {
                 this.uniforms.push(shaderInput);
             }
         }
+        device.assignTextureUnits(this.samplers, samplerSizes);
 
         // Link uniform blocks to their binding points. By convention a block is named
         // 'ub_<bindGroupName>' (e.g. 'ub_view', 'ub_mesh_ub') and is bound to the matching bind
