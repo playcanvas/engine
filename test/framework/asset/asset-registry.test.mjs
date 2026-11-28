@@ -187,6 +187,48 @@ describe('AssetRegistry', function () {
             expect(asset).to.equal(assetFromRegistry);
         });
 
+        it('retrieves an asset by url and type', function () {
+            const url = 'fake/shared/image.png';
+            const cubemapAsset = new Asset('Cubemap Asset', 'cubemap', {
+                url: url
+            });
+            const textureAsset = new Asset('Texture Asset', 'texture', {
+                url: url
+            });
+
+            app.assets.add(cubemapAsset);
+            app.assets.add(textureAsset);
+
+            expect(app.assets.getByUrl(url)).to.equal(textureAsset);
+            expect(app.assets.getByUrl(url, 'cubemap')).to.equal(cubemapAsset);
+            expect(app.assets.getByUrl(url, 'texture')).to.equal(textureAsset);
+            expect(app.assets.getByUrl(url, 'model')).to.equal(undefined);
+        });
+
+        it('works after removing assets with the same url', function () {
+            const url = 'fake/shared/image.png';
+            const cubemapAsset = new Asset('Cubemap Asset', 'cubemap', {
+                url: url
+            });
+            const textureAsset = new Asset('Texture Asset', 'texture', {
+                url: url
+            });
+
+            app.assets.add(cubemapAsset);
+            app.assets.add(textureAsset);
+
+            app.assets.remove(textureAsset);
+
+            expect(app.assets.getByUrl(url)).to.equal(cubemapAsset);
+            expect(app.assets.getByUrl(url, 'cubemap')).to.equal(cubemapAsset);
+            expect(app.assets.getByUrl(url, 'texture')).to.equal(undefined);
+
+            app.assets.remove(cubemapAsset);
+
+            expect(app.assets.getByUrl(url)).to.equal(undefined);
+            expect(app.assets.getByUrl(url, 'cubemap')).to.equal(undefined);
+        });
+
         it('works after removing an asset', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
