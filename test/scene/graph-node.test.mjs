@@ -1,3 +1,5 @@
+import vm from 'node:vm';
+
 import { expect } from 'chai';
 
 import { Mat4 } from '../../src/core/math/mat4.js';
@@ -251,6 +253,30 @@ describe('GraphNode', function () {
             expect(res).to.be.an('array').with.lengthOf(0);
         });
 
+        it('finds a node by filter function from another realm', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            // as a function from another window or iframe is, this is no instance of Function
+            const filter = vm.runInNewContext('(node) => node.name === "Child"');
+            expect(filter).to.not.be.an.instanceof(Function);
+
+            const res = root.find(filter);
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(child);
+        });
+
+        it('finds a node by the return value of a method', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            const res = root.find('getPosition', child.getPosition());
+            expect(res).to.be.an('array').with.lengthOf(1);
+            expect(res[0]).to.equal(child);
+        });
+
     });
 
     describe('#findByName()', function () {
@@ -409,6 +435,27 @@ describe('GraphNode', function () {
                 return node.name === 'Not Found';
             });
             expect(res).to.be.null;
+        });
+
+        it('finds a node by filter function from another realm', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            // as a function from another window or iframe is, this is no instance of Function
+            const filter = vm.runInNewContext('(node) => node.name === "Child"');
+            expect(filter).to.not.be.an.instanceof(Function);
+
+            expect(root.findOne(filter)).to.equal(child);
+        });
+
+        it('finds a node by the return value of a method', function () {
+            const root = new GraphNode();
+            const child = new GraphNode('Child');
+            root.addChild(child);
+
+            expect(root.findOne('getPosition', child.getPosition())).to.equal(child);
+            expect(root.findOne('getPosition', null)).to.be.null;
         });
 
     });
