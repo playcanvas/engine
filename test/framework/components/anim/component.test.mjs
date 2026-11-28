@@ -2,7 +2,8 @@ import { expect } from 'chai';
 
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import {
-    ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE, OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE, OFFSCREENUPDATE_STATE
+    ANIM_BLEND_1D, ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE, ANIM_PARAMETER_FLOAT,
+    OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE, OFFSCREENUPDATE_STATE
 } from '../../../../src/framework/anim/controller/constants.js';
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
@@ -114,6 +115,61 @@ describe('AnimComponent', function () {
             expect(entity.anim.findAnimationLayer('UpperBody')).to.equal(upperBody);
         });
 
+    });
+
+    it('blends animations in a child blend tree when its parent changes its weight', function () {
+        const entity = new Entity('model', app);
+        app.root.addChild(entity);
+        entity.addComponent('anim', { activate: true });
+        entity.anim.loadStateGraph({
+            layers: [{
+                name: 'Base',
+                states: [{ name: 'START' }, {
+                    name: 'Move',
+                    blendTree: {
+                        type: ANIM_BLEND_1D,
+                        parameter: 'outer',
+                        syncAnimations: false,
+                        children: [
+                            { name: 'A', point: 0 },
+                            {
+                                name: 'Inner',
+                                point: 1,
+                                type: ANIM_BLEND_1D,
+                                parameter: 'inner',
+                                syncAnimations: false,
+                                children: [{ name: 'B', point: 0 }, { name: 'C', point: 1 }]
+                            }
+                        ]
+                    }
+                }],
+                transitions: [{ from: 'START', to: 'Move' }]
+            }],
+            parameters: {
+                outer: { name: 'outer', type: ANIM_PARAMETER_FLOAT, value: 1 },
+                inner: { name: 'inner', type: ANIM_PARAMETER_FLOAT, value: 0.5 }
+            }
+        });
+
+        const hold = (name, x) => {
+            const curve = new AnimCurve([{
+                entityPath: ['model'],
+                component: 'graph',
+                propertyPath: ['localPosition']
+            }], 0, 0, INTERPOLATION_LINEAR);
+
+            return new AnimTrack(name, 1, [new AnimData(1, [0, 1])], [new AnimData(3, [x, 0, 0, x, 0, 0])], [curve]);
+        };
+        entity.anim.baseLayer.assignAnimation('Move.A', hold('A', 2));
+        entity.anim.baseLayer.assignAnimation('Move.Inner.B', hold('B', 10));
+        entity.anim.baseLayer.assignAnimation('Move.Inner.C', hold('C', 20));
+
+        app.systems.anim.onAnimationUpdate(0.1);
+        expect(entity.getLocalPosition().x).to.be.closeTo(15, 1e-5);
+
+        entity.anim.setFloat('outer', 0);
+        app.systems.anim.onAnimationUpdate(0.1);
+        expect(entity.getLocalPosition().x).to.be.closeTo(2, 1e-5);
     });
 
     describe('morph target weights', function () {
