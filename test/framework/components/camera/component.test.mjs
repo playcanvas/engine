@@ -1,9 +1,15 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
+import { Debug } from '../../../../src/core/debug.js';
 import { Color } from '../../../../src/core/math/color.js';
+import { Mat4 } from '../../../../src/core/math/mat4.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_R32F } from '../../../../src/platform/graphics/constants.js';
+import { FramePass } from '../../../../src/platform/graphics/frame-pass.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
 import {
     ASPECT_MANUAL,
     FOG_LINEAR,
@@ -27,6 +33,7 @@ describe('CameraComponent', function () {
     });
 
     afterEach(function () {
+        restore();
         app?.destroy();
         app = null;
         jsdomTeardown();
@@ -154,6 +161,202 @@ describe('CameraComponent', function () {
             const clone = e.clone();
 
             expect(clone.camera.enabled).to.equal(false);
+        });
+
+    });
+
+    describe('#publishSceneDepthMap', function () {
+
+        const createDepthTexture = () => new Texture(app.graphicsDevice, {
+            width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false
+        });
+
+        it('publishes the texture with the encoding the camera\'s shaders read', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const texture = createDepthTexture();
+            const handle = e.camera.sceneDepthMapHandle;
+
+            // a camera without a depth map of its own reads the depth buffer values
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.texture).to.equal(texture);
+            expect(handle.renderVersion).to.equal(app.graphicsDevice.renderVersion);
+            expect(handle.linear).to.equal(false);
+            expect(handle.packed).to.equal(false);
+            expect(handle.reciprocal).to.equal(false);
+            expect(app.graphicsDevice.scope.resolve('uSceneDepthMap').value).to.equal(texture);
+
+            // a camera whose shaders read the linear depth, the way a CameraFrame sets it up
+            e.camera.shaderParams.sceneDepthMapLinear = true;
+            e.camera.shaderParams.sceneDepthMapReciprocal = true;
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.linear).to.equal(true);
+            expect(handle.packed).to.equal(false);
+            expect(handle.reciprocal).to.equal(true);
+
+            texture.destroy();
+        });
+
+        it('places the viewport by the flipY of the target the depth was rendered to', function () {
+            const e = new Entity();
+            e.addComponent('camera', { rect: new Vec4(0, 0, 1, 0.5) });
+            const texture = createDepthTexture();
+            const viewport = e.camera.sceneDepthMapHandle.viewport;
+
+            // the bottom half of a 4x4 texture: rows 0-1 counted from the bottom, 2-3 from the top
+            e.camera.publishSceneDepthMap(texture, { flipY: true });
+            expect(Array.from(viewport)).to.deep.equal([0, 0, 4, 2]);
+            e.camera.publishSceneDepthMap(texture);
+            expect(Array.from(viewport)).to.deep.equal([0, 2, 4, 2]);
+
+            texture.destroy();
+        });
+
+        it('captures this frame\'s matrices when published before the camera renders', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            app.root.addChild(e);
+            const texture = createDepthTexture();
+
+            // a pass of the application before the camera's own render, which publishes a depth
+            const pass = new FramePass(app.graphicsDevice);
+            let published = null;
+            pass.onAfter = () => {
+                e.camera.publishSceneDepthMap(texture);
+                published = e.camera.sceneDepthMapHandle.viewProjectionInverse.clone();
+            };
+            e.camera.beforePasses.push(pass);
+
+            const expectMatricesOfThisFrame = () => {
+                const rendered = e.camera.camera._viewProjInverse.data;
+                published.data.forEach((value, i) => {
+                    expect(value).to.be.closeTo(rendered[i], 1e-6 * Math.max(1, Math.abs(rendered[i])));
+                });
+            };
+
+            app.render();
+            expectMatricesOfThisFrame();
+            const first = published.clone();
+
+            e.setPosition(10, 0, 0);
+            app.render();
+            expectMatricesOfThisFrame();
+            expect(published.equals(first)).to.equal(false);
+
+            texture.destroy();
+        });
+
+        it('matches the matrices to the flipY of the target the depth was rendered to after the camera rendered', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            e.setPosition(1, 2, 3);
+            app.root.addChild(e);
+            const texture = createDepthTexture();
+            const camera = e.camera.camera;
+
+            // a pass of the application after the camera's own render, to the backbuffer, which
+            // publishes a depth rendered to a target of either orientation
+            const pass = new FramePass(app.graphicsDevice);
+            const published = [];
+            pass.onAfter = () => {
+                [false, true].forEach((flipY) => {
+                    e.camera.publishSceneDepthMap(texture, { flipY });
+                    published.push(e.camera.sceneDepthMapHandle.viewProjectionInverse.clone());
+                });
+            };
+            e.camera.afterPasses.push(pass);
+            app.render();
+
+            // the matrices the shaders would be given rendering to a target of that orientation,
+            // the camera having no jitter
+            const expected = (flipY) => {
+                const projMat = camera._centerShaderProjection(flipY, new Mat4());
+                const viewMat = camera._centerViewInverse(new Mat4()).invert();
+                return new Mat4().mul2(projMat, viewMat).invert();
+            };
+            [false, true].forEach((flipY, index) => {
+                const data = expected(flipY).data;
+                published[index].data.forEach((value, i) => {
+                    expect(value).to.be.closeTo(data[i], 1e-6 * Math.max(1, Math.abs(data[i])));
+                });
+            });
+            expect(published[0].equals(camera._viewProjInverse)).to.equal(true);
+            expect(published[1].equals(published[0])).to.equal(false);
+
+            texture.destroy();
+        });
+
+        it('keeps the stored matrices in an XR session, which renders the views with their own', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            e.setPosition(1, 2, 3);
+            app.root.addChild(e);
+            const texture = createDepthTexture();
+            const camera = e.camera.camera;
+            const handle = e.camera.sceneDepthMapHandle;
+
+            // outside of a session, a depth published before the camera renders gets the matrices
+            // of this frame
+            app.graphicsDevice.renderVersion++;
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.viewProjectionInverse.equals(camera._viewProjInverse)).to.equal(false);
+
+            // in a session, as the XrManager sets it up
+            camera._xrViews = [];
+            e.camera.publishSceneDepthMap(texture);
+            expect(handle.viewProjectionInverse.equals(camera._viewProjInverse)).to.equal(true);
+            camera._xrViews = null;
+
+            texture.destroy();
+        });
+
+        it('warns when a depth texture is published to a camera whose shaders read the linear depth', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const linearDepth = createDepthTexture();
+            const depthTexture = new Texture(app.graphicsDevice, {
+                width: 4, height: 4, format: PIXELFORMAT_DEPTH, mipmaps: false
+            });
+            const warn = stub(Debug, 'warnOnce');
+
+            // the depth buffer values, read as such
+            e.camera.publishSceneDepthMap(depthTexture);
+            expect(warn.called).to.equal(false);
+
+            // a camera whose shaders read the linear depth, the way a CameraFrame sets it up
+            e.camera.shaderParams.sceneDepthMapLinear = true;
+            e.camera.publishSceneDepthMap(linearDepth);
+            expect(warn.called).to.equal(false);
+            e.camera.publishSceneDepthMap(depthTexture);
+            expect(warn.calledOnce).to.equal(true);
+            expect(warn.firstCall.args[0]).to.include('linear depth');
+
+            linearDepth.destroy();
+            depthTexture.destroy();
+        });
+
+        it('asserts a destroyed texture or camera', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            const camera = e.camera;
+            const texture = createDepthTexture();
+            const assertion = stub(Debug, 'assert');
+            const assertFailed = () => assertion.getCalls().some(call => !call.args[0]);
+
+            camera.publishSceneDepthMap(texture);
+            expect(assertFailed()).to.equal(false);
+
+            texture.destroy();
+            camera.publishSceneDepthMap(texture);
+            expect(assertFailed()).to.equal(true);
+
+            assertion.resetHistory();
+            const live = createDepthTexture();
+            e.removeComponent('camera');
+            camera.publishSceneDepthMap(live);
+            expect(assertFailed()).to.equal(true);
+
+            live.destroy();
         });
 
     });

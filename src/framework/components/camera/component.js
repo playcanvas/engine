@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL } from '../../../platform/graphics/constants.js';
 import { LAYERID_UI, LAYERID_DEPTH, SHADER_FORWARD } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
@@ -20,6 +21,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
  * @import { SceneColorMapHandle } from '../../../platform/graphics/scene-color-map-handle.js'
  * @import { SceneDepthMapHandle } from '../../../platform/graphics/scene-depth-map-handle.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { FogParams } from '../../../scene/fog-params.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
@@ -1385,6 +1387,63 @@ class CameraComponent extends Component {
 
         this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
         this.system.app.scene.layers.markDirty();
+    }
+
+    /**
+     * Publishes a scene depth map rendered by a frame pass of the application, as the depth map of
+     * this camera. Its consumers then read it in the same frame: the materials sampling the scene
+     * depth, {@link SceneDepthReader}, and the compute shaders given
+     * {@link CameraComponent#sceneDepthMapHandle} (see {@link Compute#setSceneDepthMap}).
+     *
+     * Call it after the depth was rendered, in each frame it is rendered, typically from
+     * {@link FramePass#onAfter} of the pass that rendered it. For example, a depth pre-pass of the
+     * large occluders, added to {@link CameraComponent#beforePasses}, can publish its depth for a
+     * {@link ComputePass} placed after it, which culls the geometry the camera is about to render
+     * against it, in the same frame. A depth published before the camera renders in the frame
+     * comes with the camera's matrices of this frame, without the jitter of
+     * {@link CameraComponent#jitter}. In an XR session, where each view renders with matrices of its
+     * own, the matrices published with the depth do not describe the views.
+     *
+     * The texture must store the depth the way the shaders of this camera read it: the depth buffer
+     * values, or the linear depth when the camera's {@link CameraFrame} renders the depth. A camera
+     * that renders its own depth map, requested by {@link CameraComponent#requestSceneDepthMap} or by
+     * its {@link CameraFrame}, publishes it the same way later in the frame, and its consumers read
+     * that one from then on.
+     *
+     * The texture must not be an attachment of a render target the camera renders into, such as the
+     * depth buffer of {@link CameraComponent#renderTarget} primed by a depth pre-pass: materials
+     * sampling the scene depth would read the texture they render to. Render or copy the depth to a
+     * texture of its own instead. Debug builds warn about it, and about a depth texture published to
+     * a camera whose shaders read the linear depth.
+     *
+     * @param {Texture} texture - The texture the depth was rendered to: a depth texture, or a single
+     * channel float texture holding the depth.
+     * @param {object} [options] - Options.
+     * @param {boolean} [options.flipY] - The flipY of the render target the depth was rendered to,
+     * which the texture matches the layout of. The viewport and the matrices published with it match
+     * it too, also when the camera rendered to a target of the other orientation. Defaults to false.
+     * @example
+     * // a depth pre-pass of the application, rendering the hardware depth of a few occluders
+     * depthPass.onAfter = () => {
+     *     cameraEntity.camera.publishSceneDepthMap(depthTexture, {
+     *         flipY: depthPass.renderTarget.flipY
+     *     });
+     * };
+     */
+    publishSceneDepthMap(texture, options = {}) {
+        const { flipY = false } = options;
+        Debug.assert(texture, 'CameraComponent.publishSceneDepthMap requires a texture');
+        Debug.assert(!texture || texture.device, `CameraComponent.publishSceneDepthMap: the texture [${texture?.name}] has been destroyed`);
+        Debug.assert(!this._camera.sceneDepthMapHandle.destroyed, `CameraComponent.publishSceneDepthMap: the camera [${this.entity?.name}] has been destroyed`);
+        const { sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal } = this._camera.shaderParams;
+        Debug.call(() => {
+            const format = texture?.format;
+            if (sceneDepthMapLinear && (format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16 || format === PIXELFORMAT_DEPTHSTENCIL)) {
+                Debug.warnOnce(`CameraComponent.publishSceneDepthMap: the depth texture [${texture.name}] is published to the camera [${this.entity?.name}], whose shaders read the linear depth, as its CameraFrame renders it. Publish a texture holding the linear depth instead.`);
+            }
+        });
+        this._camera.publishSceneDepthMap(texture, this.system.app.graphicsDevice.renderVersion,
+            sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal, flipY);
     }
 
     dirtyLayerCompositionCameras() {

@@ -37,6 +37,8 @@ const _point = new Vec3();
 const _invViewProjMat = new Mat4();
 const _xrViewProjMat = new Mat4();
 const _xrViewFrustum = new Frustum();
+const _publishProjMat = new Mat4();
+const _publishViewMat = new Mat4();
 const _frustumViewMat = new Mat4();
 const _frustumViewProjMat = new Mat4();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
@@ -346,6 +348,7 @@ class Camera {
 
         // storage of actual matrices used by the shaders, needed by TAA
         this._shaderMatricesVersion = 0;
+        this._shaderMatricesFlipY = false;      // flipY of the render target the matrices were stored for
         this._viewProjInverse = new Mat4();     // inverse view projection matrix from the current frame
         this._viewProjCurrent = null;           // view projection matrix from the current frame
         this._viewProjPrevious = new Mat4();    // view projection matrix from the previous frame
@@ -426,8 +429,25 @@ class Camera {
         this.fillShaderParams(handle.cameraParams);
 
         // the matrices the shaders were given this frame, captured when the camera first rendered
-        // in it - see Camera#_storeShaderMatrices
-        handle.viewProjectionInverse.copy(this._viewProjInverse);
+        // in it - see Camera#_storeShaderMatrices. When the depth was rendered to a target of the
+        // other orientation, the clip space y of those is flipped to match it. A depth published
+        // before that, by a pass of the application, gets this frame's matrices computed the same
+        // way, without the jitter - see Camera#_centerShaderProjection and Camera#_centerViewInverse.
+        // In XR, where the views are rendered with matrices of their own and none are stored, the
+        // handle cannot describe them, and keeps the stored matrices as before
+        if (this._shaderMatricesVersion === renderVersion) {
+            if (this._shaderMatricesFlipY !== !!flipY) {
+                handle.viewProjectionInverse.mul2(this._viewProjInverse, Camera._flipYProjectionMatrix);
+            } else {
+                handle.viewProjectionInverse.copy(this._viewProjInverse);
+            }
+        } else if (!this._node || this.xrActive) {
+            handle.viewProjectionInverse.copy(this._viewProjInverse);
+        } else {
+            const projMat = this._centerShaderProjection(flipY, _publishProjMat);
+            const viewMat = this._centerViewInverse(_publishViewMat).invert();
+            handle.viewProjectionInverse.mul2(projMat, viewMat).invert();
+        }
 
         // the viewport the camera rendered to, the way Renderer#setupViewport sets it. WebGPU places
         // it from the top of the target, unless the target stores its rows from the bottom
@@ -463,10 +483,18 @@ class Camera {
 
     /**
      * Store camera matrices required by TAA. Only update them once per frame.
+     *
+     * @param {Mat4} viewProjMat - The view projection matrix the shaders were given.
+     * @param {number} jitterX - The horizontal jitter.
+     * @param {number} jitterY - The vertical jitter.
+     * @param {number} renderVersion - The render version of the frame.
+     * @param {boolean} [flipY] - The flipY of the render target rendered to. Defaults to false.
+     * @ignore
      */
-    _storeShaderMatrices(viewProjMat, jitterX, jitterY, renderVersion) {
+    _storeShaderMatrices(viewProjMat, jitterX, jitterY, renderVersion, flipY = false) {
         if (this._shaderMatricesVersion !== renderVersion) {
             this._shaderMatricesVersion = renderVersion;
+            this._shaderMatricesFlipY = !!flipY;
 
             this._viewProjPrevious.copy(this._viewProjCurrent ?? viewProjMat);
             this._viewProjCurrent ??= new Mat4();

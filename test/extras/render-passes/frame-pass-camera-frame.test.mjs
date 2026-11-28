@@ -17,7 +17,7 @@ import {
     FRAMERESOURCE_SCENETARGET, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE
 } from '../../../src/extras/render-passes/constants.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { FramePass } from '../../../src/platform/graphics/frame-pass.js';
 import { SceneDepthMapHandle } from '../../../src/platform/graphics/scene-depth-map-handle.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -998,6 +998,94 @@ describe('FramePassCameraFrame', function () {
                     scenePassTransparent.after();
                     expect(depthMap()).to.equal(sceneDepthTexture);
                 }
+                effect.destroy();
+                cameraFrame.update();
+            });
+
+            // the depth the scene renders, which the device under test must support for the tests
+            // keeping a depth the application published - asserted on the null device, made capable
+            // of it above, and reported as pending on a device that is not, once the effect is removed
+            const requireSceneDepthTexture = (test, effect) => {
+                const { sceneDepthTexture } = cameraFrame.renderPassCamera;
+                if (app.graphicsDevice.isNull) {
+                    expect(sceneDepthTexture).to.be.an.instanceof(Texture);
+                } else if (!sceneDepthTexture) {
+                    effect.destroy();
+                    cameraFrame.update();
+                    test.skip();
+                }
+                return sceneDepthTexture;
+            };
+
+            it('keeps a depth the application published for the camera in this frame while the scene renders', function () {
+                const effect = createEffect('depthReader', [FRAMERESOURCE_DEPTH]);
+                cameraFrame.addEffect(effect);
+                cameraFrame.update();
+
+                const sceneDepthTexture = requireSceneDepthTexture(this, effect);
+                const { scenePass } = cameraFrame.renderPassCamera;
+                expect(scenePass.clearSceneTextures).to.equal(true);
+                const device = app.graphicsDevice;
+                const cameraComponent = cameraFrame.cameraComponent;
+                const external = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false });
+
+                // published by a pass of the application earlier in this frame
+                cameraComponent.publishSceneDepthMap(external);
+                scenePass.before();
+                expect(depthMap()).to.equal(external);
+
+                // published in an earlier frame
+                device.renderVersion++;
+                scenePass.before();
+                expect(depthMap()).to.equal(null);
+
+                // an attachment of the render target the scene renders into
+                cameraComponent.publishSceneDepthMap(sceneDepthTexture);
+                scenePass.before();
+                expect(depthMap()).to.equal(null);
+
+                external.destroy();
+                effect.destroy();
+                cameraFrame.update();
+            });
+
+            it('keeps a depth the application published after the opaque geometry while the transparent geometry renders', function () {
+                const effect = createEffect('depthReader', [FRAMERESOURCE_DEPTH]);
+                cameraFrame.addEffect(effect);
+                cameraFrame.update();
+
+                const sceneDepthTexture = requireSceneDepthTexture(this, effect);
+                const framePass = cameraFrame.renderPassCamera;
+                const { scenePass, scenePassTransparent } = framePass;
+                expect(scenePassTransparent.clearSceneTextures).to.equal(true);
+
+                // the depth the opaque pass publishes is an attachment of the render target the
+                // transparent pass renders into, which is how the transparent pass withdraws it
+                expect(scenePassTransparent.renderTarget).to.equal(scenePass.renderTarget);
+                expect(scenePassTransparent.renderTarget.getColorBuffer(framePass.sceneDepthSlot)).to.equal(sceneDepthTexture);
+
+                const device = app.graphicsDevice;
+                const cameraComponent = cameraFrame.cameraComponent;
+                const external = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false });
+
+                // published before the opaque geometry: replaced by the depth the opaque pass
+                // publishes, which the transparent pass withdraws
+                cameraComponent.publishSceneDepthMap(external);
+                scenePass.before();
+                expect(depthMap()).to.equal(external);
+                scenePass.after();
+                expect(depthMap()).to.equal(sceneDepthTexture);
+                scenePassTransparent.before();
+                expect(depthMap()).to.equal(null);
+
+                // published after the opaque geometry, by a pass running after it
+                cameraComponent.publishSceneDepthMap(external);
+                scenePassTransparent.before();
+                expect(depthMap()).to.equal(external);
+                scenePassTransparent.after();
+                expect(depthMap()).to.equal(sceneDepthTexture);
+
+                external.destroy();
                 effect.destroy();
                 cameraFrame.update();
             });
