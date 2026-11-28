@@ -334,9 +334,45 @@ describe('ElementDragHelper', function () {
         runTransformTest.call(this, 0, defaultYDelta);
     });
 
-    it('takes device pixel ratio into account', function () {
+    function moveToScreenSpace() {
+        app.root.removeChild(parent);
+
+        const screen = new Entity('screen', app);
+        screen.addComponent('screen', { screenSpace: true });
+        screen.addChild(parent);
+        screen.screen.scale = 0.5;
+
+        app.root.addChild(screen);
+        entity.element.screen = screen;
+    }
+
+    function setCanvasCssSize(width, height) {
+        const canvas = app.graphicsDevice.canvas;
+        Object.defineProperty(canvas, 'clientWidth', { value: width, configurable: true });
+        Object.defineProperty(canvas, 'clientHeight', { value: height, configurable: true });
+    }
+
+    it('does not scale world-space drags by the maximum pixel ratio', function () {
+        // screenToWorld takes the CSS pixels that input events report
         app.graphicsDevice.maxPixelRatio = 2;
-        runTransformTest.call(this, defaultXDelta * 2, defaultYDelta * 2);
+        runTransformTest.call(this, defaultXDelta, defaultYDelta);
+    });
+
+    it('scales screen-space drags by the ratio the canvas is rendered at', function () {
+        moveToScreenSpace();
+
+        // the 300 x 400 drawing buffer is shown at half that size in CSS pixels
+        setCanvasCssSize(150, 200);
+
+        runTransformTest.call(this, 40, -40);
+    });
+
+    it('ignores a maximum pixel ratio above the ratio the canvas is rendered at', function () {
+        moveToScreenSpace();
+        setCanvasCssSize(300, 400);
+        app.graphicsDevice.maxPixelRatio = Infinity;
+
+        runTransformTest.call(this, 20, -20);
     });
 
 });
