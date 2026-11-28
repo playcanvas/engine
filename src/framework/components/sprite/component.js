@@ -894,13 +894,16 @@ class SpriteComponent extends Component {
             return;
         }
 
-        let material;
-        if (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED) {
-            material = this.system.default9SlicedMaterialSlicedMode;
-        } else if (this.sprite.renderMode === SPRITE_RENDERMODE_TILED) {
-            material = this.system.default9SlicedMaterialTiledMode;
-        } else {
-            material = this.system.defaultMaterial;
+        // use the component's material if one was set, otherwise the default for the render mode
+        let material = this._material;
+        if (!material || material === this.system.defaultMaterial) {
+            if (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED) {
+                material = this.system.default9SlicedMaterialSlicedMode;
+            } else if (this.sprite.renderMode === SPRITE_RENDERMODE_TILED) {
+                material = this.system.default9SlicedMaterialTiledMode;
+            } else {
+                material = this.system.defaultMaterial;
+            }
         }
 
         // create mesh instance if it doesn't exist yet
