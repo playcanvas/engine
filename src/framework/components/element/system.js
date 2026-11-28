@@ -12,6 +12,7 @@ import { ElementComponent } from './component.js';
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Entity } from '../../entity.js'
+ * @import { TileHalfTexel } from '../../../scene/sprite.js'
  */
 
 /**
@@ -94,14 +95,31 @@ class ElementComponentSystem extends ComponentSystem {
 
         this.defaultImageMaterials = [];
 
+        /**
+         * The tiling insets of the 9-sliced image elements, kept in step with the filtering of
+         * their textures.
+         *
+         * @type {Set<TileHalfTexel>}
+         * @ignore
+         */
+        this._tileHalfTexels = new Set();
+
         this.on('add', this.onAddComponent, this);
         this.on('beforeremove', this.onBeforeRemove, this);
+        this.app.systems.on('update', this._onUpdate, this);
     }
 
     destroy() {
         super.destroy();
 
+        this.app.systems.off('update', this._onUpdate, this);
         this._defaultTexture.destroy();
+    }
+
+    _onUpdate() {
+        for (const tileHalfTexel of this._tileHalfTexels) {
+            tileHalfTexel.update();
+        }
     }
 
     initializeComponentData(component, data, properties) {
