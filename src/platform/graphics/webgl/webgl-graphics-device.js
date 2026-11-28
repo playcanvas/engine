@@ -1217,6 +1217,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.activeFramebuffer = null;
         this.feedback = null;
 
+        // the vertex array object bound in the context. Unlike boundVao, which updateBegin clears to
+        // make the next draw bind its vertex array object again, this always matches the context
+        this._contextVao = null;
+
+        // the index buffer bound to each vertex array object, keyed by the object, and by this device
+        // for the default vertex array object. A vertex array object stores the index buffer binding,
+        // so a draw only binds its index buffer when the bound vertex array object holds another one
+        this._vaoIndexBuffers = new WeakMap();
+
         /** @type {VertexBuffer[]|null} */
         this.transformFeedbackBuffers = null;
 
@@ -2201,6 +2210,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // end of VA object
         gl.bindVertexArray(null);
+        this._contextVao = null;
+        this._vaoIndexBuffers.set(vao, null);
 
         // unbind any array buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -2214,10 +2225,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     unbindVertexArray() {
         // unbind VAO from device to protect it from being changed
-        if (this.boundVao) {
+        if (this.boundVao || this._contextVao) {
             this.boundVao = null;
+            this._contextVao = null;
             this.gl.bindVertexArray(null);
         }
+    }
+
+    /**
+     * Records the index buffer bound to the vertex array object bound in the context, after code
+     * other than {@link WebglGraphicsDevice#setBuffers} bound it (an index buffer upload).
+     *
+     * @param {WebGLBuffer|null} bufferId - The bound index buffer.
+     * @ignore
+     */
+    indexBufferBound(bufferId) {
+        this._vaoIndexBuffers.set(this._contextVao ?? this, bufferId);
     }
 
     setBuffers(indexBuffer) {
@@ -2241,14 +2264,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // set active VAO
         if (this.boundVao !== vao) {
             this.boundVao = vao;
+            this._contextVao = vao;
             gl.bindVertexArray(vao);
         }
 
-        // Set the active index buffer object
-        // Note: we don't cache this state and set it only when it changes, as VAO captures last bind buffer in it
-        // and so we don't know what VAO sets it to.
+        // Set the active index buffer object. The binding is part of the state of the vertex array
+        // object bound in the context, so it is only bound when that object holds another index
+        // buffer. An object not seen yet has no entry, and binds it.
         const bufferId = indexBuffer ? indexBuffer.impl.bufferId : null;
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
+        const vaoKey = this._contextVao ?? this;
+        if (this._vaoIndexBuffers.get(vaoKey) !== bufferId) {
+            this._vaoIndexBuffers.set(vaoKey, bufferId);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
+        }
     }
 
     _multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands) {

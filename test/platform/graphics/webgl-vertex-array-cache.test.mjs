@@ -52,6 +52,8 @@ describe('WebGL vertex array objects', function () {
             buffers: new Set(),
             vertexBuffers: [],
             boundVao: null,
+            _contextVao: null,
+            _vaoIndexBuffers: new WeakMap(),
             glType: [],
             createVertexBufferImpl: () => new WebglVertexBuffer(),
             setBuffers: proto.setBuffers,
