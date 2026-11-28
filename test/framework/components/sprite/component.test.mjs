@@ -261,6 +261,54 @@ describe('SpriteComponent', function () {
             sprite.destroy();
         });
 
+        it('plays a clip with a negative fps that does not loop from its last frame to its first', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const clip = e.sprite.addClip({ name: 'back', fps: -10, loop: false, sprite });
+            let ends = 0;
+            e.sprite.on('end', () => ends++);
+
+            e.sprite.play('back');
+            const frames = [e.sprite.frame];
+            for (let i = 0; i < 4; i++) {
+                app.systems.fire('update', 0.1);
+                frames.push(e.sprite.frame);
+            }
+            // the mirror of a forward clip, which shows 0, 1, 2, 3, 3 and then ends
+            expect(frames).to.deep.equal([3, 3, 2, 1, 0]);
+            expect(clip.isPlaying).to.equal(true);
+            expect(ends).to.equal(0);
+
+            app.systems.fire('update', 0.1);
+            expect(e.sprite.frame).to.equal(0);
+            expect(clip.isPlaying).to.equal(false);
+            expect(ends).to.equal(1);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('keeps the time of a frame set on a clip with a negative fps', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const back = e.sprite.addClip({ name: 'back', fps: -10, loop: true, sprite });
+            back.frame = 1;
+            expect(back.time).to.be.closeTo(0.1, 1e-9);
+
+            const once = e.sprite.addClip({ name: 'once', fps: -10, loop: false, sprite });
+            once.frame = 2;
+            expect(once.time).to.be.closeTo(0.2, 1e-9);
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
         it('takes the sprite of a clip with a sprite asset from the asset', function () {
             const sprite = createSprite();
             const e = new Entity();

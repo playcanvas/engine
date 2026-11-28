@@ -182,7 +182,7 @@ class SpriteAnimationClip extends EventHandler {
 
         // update time to start of frame
         const fps = this.fps || Number.MIN_VALUE;
-        this._setTime(this._frame / fps);
+        this._setTime(this._frame / Math.abs(fps));
     }
 
     /**
@@ -547,7 +547,14 @@ class SpriteAnimationClip extends EventHandler {
 
         this._playing = true;
         this._paused = false;
-        this.frame = 0;
+
+        if (this.fps < 0 && !this.loop && this._sprite) {
+            // a clip that plays backward and does not loop starts at its end, on its last frame
+            this._setTime(this.duration);
+            this._setFrame(this._sprite.frameKeys.length - 1);
+        } else {
+            this.frame = 0;
+        }
 
         this.fire('play');
         this._component.fire('play', this);
