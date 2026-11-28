@@ -1,3 +1,5 @@
+import vm from 'node:vm';
+
 import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
@@ -1273,6 +1275,30 @@ describe('StandardMaterial', function () {
             expect(material.diffuseTransmissionMapChannel).to.equal('a');
             expect(material.diffuseTransmissionColor.equals(new Color(1, 0.5, 0.25))).to.equal(true);
             expect(material.diffuseTransmissionColorMapUv).to.equal(1);
+        });
+
+        it('accepts vectors, colors and a bounding box given as arrays from another realm', function () {
+            // as an array from another window or iframe is, this is no instance of Array
+            const data = {
+                diffuse: vm.runInNewContext('[1, 0.5, 0.25]'),
+                diffuseMapTiling: vm.runInNewContext('[2, 3]'),
+                cubeMapProjectionBox: {
+                    center: vm.runInNewContext('[1, 2, 3]'),
+                    halfExtents: vm.runInNewContext('[4, 5, 6]')
+                }
+            };
+            expect(data.diffuse).to.not.be.an.instanceof(Array);
+
+            const validator = new StandardMaterialValidator();
+            validator.validate(data);
+            expect(validator.valid).to.equal(true);
+
+            const material = new StandardMaterial();
+            new JsonStandardMaterialParser().initialize(material, data);
+            expect(material.diffuse.equals(new Color(1, 0.5, 0.25))).to.equal(true);
+            expect(material.diffuseMapTiling.equals(new Vec2(2, 3))).to.equal(true);
+            expect(material.cubeMapProjectionBox.center.equals(new Vec3(1, 2, 3))).to.equal(true);
+            expect(material.cubeMapProjectionBox.halfExtents.equals(new Vec3(4, 5, 6))).to.equal(true);
         });
 
     });

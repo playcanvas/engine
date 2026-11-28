@@ -1,3 +1,5 @@
+import vm from 'node:vm';
+
 import { expect } from 'chai';
 
 import { Mat4 } from '../../src/core/math/mat4.js';
@@ -357,6 +359,24 @@ describe('GraphNode', function () {
             child.tags.add('tag2');
             grandchild.tags.add(['tag1', 'tag2']);
             const result = root.findByTag(['tag2', 'tag1']);
+            expect(result).to.be.an('array').with.lengthOf(1);
+            expect(result[0]).to.equal(grandchild);
+        });
+
+        it('returns an array of nodes that have all of the tags of an array from another realm', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            const grandchild = new GraphNode('grandchild');
+            root.addChild(child);
+            child.addChild(grandchild);
+            child.tags.add('tag2');
+            grandchild.tags.add('tag1', 'tag2');
+
+            // as an array from another window or iframe is, this is no instance of Array
+            const query = vm.runInNewContext('["tag2", "tag1"]');
+            expect(query).to.not.be.an.instanceof(Array);
+
+            const result = root.findByTag(query);
             expect(result).to.be.an('array').with.lengthOf(1);
             expect(result[0]).to.equal(grandchild);
         });

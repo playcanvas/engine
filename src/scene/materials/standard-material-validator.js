@@ -112,11 +112,11 @@ class StandardMaterialValidator {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'vec2') {
-                if (!(data[key] instanceof Array && data[key].length === 2)) {
+                if (!(Array.isArray(data[key]) && data[key].length === 2)) {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'rgb') {
-                if (!(data[key] instanceof Array && data[key].length === 3)) {
+                if (!(Array.isArray(data[key]) && data[key].length === 3)) {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'texture') {
@@ -138,10 +138,10 @@ class StandardMaterialValidator {
                     // OTHERWISE: fpr path mapped we expect a string not an asset id
                 }
             } else if (type === 'boundingbox') {
-                if (!(data[key].center && data[key].center instanceof Array && data[key].center.length === 3)) {
+                if (!(data[key].center && Array.isArray(data[key].center) && data[key].center.length === 3)) {
                     this.setInvalid(key, data);
                 }
-                if (!(data[key].halfExtents && data[key].halfExtents instanceof Array && data[key].halfExtents.length === 3)) {
+                if (!(data[key].halfExtents && Array.isArray(data[key].halfExtents) && data[key].halfExtents.length === 3)) {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'cubemap') {
