@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { stub } from 'sinon';
 
 import { Color } from '../../../../src/core/math/color.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
@@ -340,6 +341,59 @@ describe('SpriteComponent', function () {
 
             sprite.atlas.destroy();
             sprite.destroy();
+        });
+
+        it('keeps playing the current clip when asked to play a clip that does not exist', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const clip = e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            e.sprite.play('walk');
+            app.systems.fire('update', 0.15);
+
+            const warn = stub(console, 'warn');
+            const result = e.sprite.play('missing');
+            warn.restore();
+            expect(result).to.be.undefined;
+            expect(warn.calledOnce).to.equal(true);
+            expect(e.sprite.currentClip).to.equal(clip);
+            expect(clip.isPlaying).to.equal(true);
+            expect(e.sprite.frame).to.equal(1);
+            expect(e.sprite.sprite).to.equal(sprite);
+
+            e.sprite.pause();
+            expect(clip.isPaused).to.equal(true);
+            e.sprite.resume();
+            expect(clip.isPaused).to.equal(false);
+            e.sprite.stop();
+            expect(clip.isPlaying).to.equal(false);
+            expect(() => {
+                e.enabled = false;
+            }).to.not.throw();
+
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
+        it('keeps the default clip when asked to play a clip that does not exist', function () {
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            const defaultClip = e.sprite.currentClip;
+            const warn = stub(console, 'warn');
+            const result = e.sprite.play('missing');
+            warn.restore();
+            expect(result).to.be.undefined;
+            expect(warn.calledOnce).to.equal(true);
+            expect(e.sprite.currentClip).to.equal(defaultClip);
+            expect(e.sprite.frame).to.equal(0);
+            expect(() => {
+                e.sprite.stop();
+                e.enabled = false;
+            }).to.not.throw();
         });
     });
 
