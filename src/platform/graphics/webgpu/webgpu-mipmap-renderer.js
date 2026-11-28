@@ -55,6 +55,16 @@ class WebgpuMipmapRenderer {
     shaders = new Map();
 
     /**
+     * The views and bind groups of the 2D mipmap generation of each texture, per face or layer,
+     * kept while the texture lives. A texture whose mipmaps are generated every frame, such as a
+     * render target, then needs no new views and bind groups each time.
+     *
+     * @type {WeakMap<GPUTexture, Array<{ pipeline: GPURenderPipeline, sampler: GPUSampler|null, views: GPUTextureView[], bindGroups: GPUBindGroup[] }>>}
+     * @private
+     */
+    _passes = new WeakMap();
+
+    /**
      * The sampler filtering both the minified and the magnified texels, used for volume textures
      * and by the Gaussian filter, created on first use.
      *
@@ -223,14 +233,30 @@ class WebgpuMipmapRenderer {
         const lastFace = layer === undefined ? numFaces : layer + 1;
         Debug.assert(firstFace >= 0 && lastFace <= numFaces, `MipmapRenderer: layer ${layer} is out of range for texture ${texture.name}`);
 
-        const srcViews = [];
+        // the view of each mip level of each face, and the bind group sampling the level above it
+        let passes = this._passes.get(webgpuTexture.gpuTexture);
+        if (!passes) {
+            passes = [];
+            this._passes.set(webgpuTexture.gpuTexture, passes);
+        }
         for (let face = firstFace; face < lastFace; face++) {
-            srcViews[face] = webgpuTexture.createView({
-                dimension: '2d',
-                baseMipLevel: 0,
-                mipLevelCount: 1,
-                baseArrayLayer: face
-            });
+            const cached = passes[face];
+            if (!cached || cached.pipeline !== pipeline || cached.sampler !== sampler) {
+                const views = [];
+                const bindGroups = [];
+                for (let i = 0; i < textureDescr.mipLevelCount; i++) {
+                    views[i] = webgpuTexture.createView({
+                        dimension: '2d',
+                        baseMipLevel: i,
+                        mipLevelCount: 1,
+                        baseArrayLayer: face
+                    });
+                    if (i > 0) {
+                        bindGroups[i] = this.createBindGroup(pipeline, views[i - 1], sampler);
+                    }
+                }
+                passes[face] = { pipeline, sampler, views, bindGroups };
+            }
         }
 
         // loop through each mip level and render the previous level's contents into it.
@@ -242,16 +268,10 @@ class WebgpuMipmapRenderer {
 
             for (let face = firstFace; face < lastFace; face++) {
 
-                const dstView = webgpuTexture.createView({
-                    dimension: '2d',
-                    baseMipLevel: i,
-                    mipLevelCount: 1,
-                    baseArrayLayer: face
-                });
-
+                const { views, bindGroups } = passes[face];
                 const passEncoder = commandEncoder.beginRenderPass({
                     colorAttachments: [{
-                        view: dstView,
+                        view: views[i],
                         loadOp: 'clear',
                         storeOp: 'store'
                     }]
@@ -259,12 +279,9 @@ class WebgpuMipmapRenderer {
                 DebugHelper.setLabel(passEncoder, `MipmapRenderer-PassEncoder_${i}`);
 
                 passEncoder.setPipeline(pipeline);
-                passEncoder.setBindGroup(0, this.createBindGroup(pipeline, srcViews[face], sampler));
+                passEncoder.setBindGroup(0, bindGroups[i]);
                 passEncoder.draw(4);
                 passEncoder.end();
-
-                // next iteration
-                srcViews[face] = dstView;
             }
         }
 
