@@ -22,6 +22,9 @@ const ANIMUPDATE_INTERVAL = 2;
 // the components with the same interval over the frames of the interval
 const evaluationPhaseCounters = new Map();
 
+// Distinguish generated runtime metadata from authored empty graphs, including when cloning.
+class RuntimeAnimStateGraph extends AnimStateGraph { }
+
 /**
  * The AnimComponent enables an {@link Entity} to play back animations on models and entity
  * properties. Animations are driven by animation state graphs, which can be authored in the
@@ -104,6 +107,14 @@ class AnimComponent extends Component {
 
     /** @private */
     _stateGraph = null;
+
+    /**
+     * The generated runtime metadata currently installed on this component.
+     *
+     * @type {AnimStateGraph|null}
+     * @private
+     */
+    _runtimeStateGraph = null;
 
     /** @private */
     _layers = [];
@@ -353,6 +364,9 @@ class AnimComponent extends Component {
     }
 
     set stateGraph(value) {
+        if (value !== this._stateGraph) {
+            this._runtimeStateGraph = null;
+        }
         this._stateGraph = value;
     }
 
@@ -508,7 +522,8 @@ class AnimComponent extends Component {
     }
 
     /**
-     * Initializes component animation controllers using the provided state graph.
+     * Initializes component animation controllers using the provided state graph. Reloading this
+     * component's own implicitly generated runtime graph preserves its programmatic layers.
      *
      * @param {object} stateGraph - The state graph asset to load into the component. Contains the
      * states, transitions and parameters used to define a complete animation controller.
@@ -541,6 +556,11 @@ class AnimComponent extends Component {
      * });
      */
     loadStateGraph(stateGraph) {
+        // Reloading our own metadata must not rebuild or clear the live runtime layers.
+        if (this._runtimeStateGraph && stateGraph === this._runtimeStateGraph && stateGraph === this._stateGraph) {
+            return;
+        }
+        this._runtimeStateGraph = stateGraph instanceof RuntimeAnimStateGraph ? stateGraph : null;
         this._stateGraph = stateGraph;
         this._assignParameters(stateGraph);
         this._layers = [];
@@ -616,6 +636,7 @@ class AnimComponent extends Component {
      * Removes all layers from the anim component.
      */
     removeStateGraph() {
+        this._runtimeStateGraph = null;
         this._stateGraph = null;
         this._stateGraphAsset = null;
         this._animationAssets = {};
@@ -728,8 +749,8 @@ class AnimComponent extends Component {
     /**
      * Associates an animation with a state or blend tree node in the loaded state graph. If all
      * states are linked and the {@link activate} value was set to true then the component will
-     * begin playing. If no state graph is loaded, a default state graph will be created with a
-     * single state based on the provided nodePath parameter.
+     * begin playing. If there is no state graph and there are no layers, a default state graph
+     * will be created with a single state based on the provided nodePath parameter.
      *
      * @param {string} nodePath - Either the state name or the path to a blend tree node that this
      * animation should be associated with. Each section of a blend tree path is split using a
@@ -738,15 +759,15 @@ class AnimComponent extends Component {
      * @param {AnimTrack} animTrack - The animation track that will be assigned to this state and
      * played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the
-     * default layer is used. If no state graph has been previously loaded this parameter is
-     * ignored.
+     * default layer is used. If there is no state graph and there are no layers, this parameter
+     * is ignored and the default Base layer is created.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to.
      * Defaults to 1.
      * @param {boolean} [loop] - Update the loop property of the state you are assigning an
      * animation to. Defaults to true.
      */
     assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
-        if (!this._stateGraph && nodePath.indexOf('.') === -1) {
+        if (!this._stateGraph && this._layers.length === 0 && nodePath.indexOf('.') === -1) {
             this.loadStateGraph(new AnimStateGraph({
                 'layers': [
                     {
@@ -780,6 +801,12 @@ class AnimComponent extends Component {
         if (!layer) {
             Debug.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             return;
+        }
+        if (!this._stateGraph && nodePath.indexOf('.') === -1) {
+            // Runtime layers already have controllers and are not part of the state graph asset.
+            // Initialize graph metadata without replacing those layers.
+            this._runtimeStateGraph = new RuntimeAnimStateGraph({ layers: [], parameters: {} });
+            this._stateGraph = this._runtimeStateGraph;
         }
         layer.assignAnimation(nodePath, animTrack, speed, loop);
     }
