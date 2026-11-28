@@ -12,6 +12,7 @@ import {
     Asset,
     AssetListLoader,
     CameraComponentSystem,
+    CameraFrame,
     Color,
     ContainerHandler,
     Entity,
@@ -104,7 +105,10 @@ await new Promise((resolve) => {
 app.start();
 
 data.set('settings', {
-    shaderPassName: SHADERPASS_FORWARD
+    shaderPassName: SHADERPASS_FORWARD,
+    cameraFrame: true,
+    bloomIntensity: 0.01,
+    samples: 4
 });
 
 // Get few existing layers and create a new layer for the spot light
@@ -170,6 +174,14 @@ cameraTop.script.create(CameraControls, {
     }
 });
 
+// Set up CameraFrame with bloom on the top camera
+const cameraFrame = new CameraFrame(app, cameraTop.camera);
+cameraFrame.rendering.samples = 4;
+cameraFrame.rendering.toneMapping = TONEMAP_ACES;
+cameraFrame.bloom.intensity = 0.01;
+cameraFrame.bloom.blurLevel = 7;
+cameraFrame.update();
+
 // Create a directional light which casts shadows
 const dirLight = new Entity();
 dirLight.addComponent('light', {
@@ -207,10 +219,22 @@ app.root.addChild(spotLight);
 app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
-// Handle HUD changes - update the debug mode for the top and right cameras
+const updateCameraFrame = () => {
+    const debugActive = data.get('settings.shaderPassName') !== SHADERPASS_FORWARD;
+    cameraFrame.enabled = !debugActive && data.get('settings.cameraFrame');
+    cameraFrame.bloom.intensity = data.get('settings.bloomIntensity');
+    cameraFrame.update();
+};
+
+// Handle HUD changes
 data.on('*:set', (/** @type {string} */ path, value) => {
-    cameraTop.camera.setShaderPass(value);
-    cameraRight.camera.setShaderPass(value);
+    if (path === 'settings.shaderPassName') {
+        cameraTop.camera.setShaderPass(value);
+        cameraRight.camera.setShaderPass(value);
+        updateCameraFrame();
+    } else if (path === 'settings.cameraFrame' || path === 'settings.bloomIntensity') {
+        updateCameraFrame();
+    }
 });
 
 // Update function called once per frame

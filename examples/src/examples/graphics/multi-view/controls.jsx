@@ -1,4 +1,12 @@
-import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    Panel,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
+import { useEffect, useState } from 'react';
 
 import {
     SHADERPASS_ALBEDO,
@@ -24,8 +32,40 @@ import {
  * @returns {ReactElement} The control panel.
  */
 export function Controls({ observer }) {
+    const [shaderPass, setShaderPass] = useState(
+        observer.get('settings.shaderPassName') ?? SHADERPASS_FORWARD
+    );
+
+    useEffect(() => {
+        const event = observer.on('settings.shaderPassName:set', () => {
+            setShaderPass(observer.get('settings.shaderPassName'));
+        });
+        return () => event?.unbind();
+    }, [observer]);
+
+    const debugActive = shaderPass !== SHADERPASS_FORWARD;
+
     return (
         <>
+            <Panel headerText='Top Camera Frame' enabled={!debugActive}>
+                <LabelGroup text='Enabled'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.cameraFrame' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Bloom'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.bloomIntensity' }}
+                        min={0}
+                        max={0.1}
+                        precision={3}
+                        step={0.001}
+                    />
+                </LabelGroup>
+            </Panel>
             <Panel headerText='Debug Shader Rendering'>
                 <LabelGroup text='Mode'>
                     <SelectInput
