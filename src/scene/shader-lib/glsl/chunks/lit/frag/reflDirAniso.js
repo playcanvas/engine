@@ -1,6 +1,6 @@
 export default /* glsl */`
 void getReflDir(vec3 worldNormal, vec3 viewDir, float gloss, mat3 tbn) {
-    float roughness = sqrt(1.0 - min(gloss, 1.0));
+    float roughness = 1.0 - min(gloss, 1.0);
 
     vec2 direction = dAnisotropyRotation;
     vec3 anisotropicT = normalize(tbn * vec3(direction, 0.0));
