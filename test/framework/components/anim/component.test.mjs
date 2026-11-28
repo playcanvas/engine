@@ -2,7 +2,8 @@ import { expect } from 'chai';
 
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import {
-    ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE, OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE, OFFSCREENUPDATE_STATE
+    ANIM_BLEND_1D, ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE, ANIM_PARAMETER_FLOAT,
+    OFFSCREENUPDATE_FULL, OFFSCREENUPDATE_NONE, OFFSCREENUPDATE_STATE
 } from '../../../../src/framework/anim/controller/constants.js';
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
@@ -34,6 +35,195 @@ describe('AnimComponent', function () {
     });
 
     const track = name => new AnimTrack(name, 1, [], [], []);
+
+    describe('#speed', function () {
+        const moveTrack = (name = 'Move', offset = 0) => {
+            const curve = new AnimCurve([{
+                entityPath: ['root'],
+                component: 'graph',
+                propertyPath: ['localPosition']
+            }], 0, 0, INTERPOLATION_LINEAR);
+            const events = new AnimEvents([{ time: 0.25, name: 'early' }, { time: 0.75, name: 'late' }]);
+            return new AnimTrack(name, 1, [new AnimData(1, [0, 1])],
+                [new AnimData(3, [offset, 0, 0, offset + 10, 0, 0])], [curve], events);
+        };
+
+        const createAnimated = (componentSpeed = 1, stateSpeed = 1, loop = true) => {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+            root.addComponent('anim', { activate: true, speed: componentSpeed });
+            root.anim.assignAnimation('Move', moveTrack(), undefined, stateSpeed, loop);
+            return root;
+        };
+
+        [1, -1].forEach((componentSpeed) => {
+            [1, -1].forEach((stateSpeed) => {
+                [true, false].forEach((loop) => {
+                    it(`plays and fires events at component speed ${componentSpeed}, state speed ${stateSpeed}, loop ${loop}`, function () {
+                        const root = createAnimated(componentSpeed, stateSpeed, loop);
+                        const events = [];
+                        root.anim.on('early', () => events.push('early'));
+                        root.anim.on('late', () => events.push('late'));
+                        const reverse = componentSpeed * stateSpeed < 0;
+
+                        app.systems.anim.onAnimationUpdate(0);
+                        expect(root.getLocalPosition().x).to.be.closeTo(reverse ? 10 : 0, 1e-5);
+
+                        app.systems.anim.onAnimationUpdate(0.375);
+                        expect(root.getLocalPosition().x).to.be.closeTo(reverse ? 6.25 : 3.75, 1e-5);
+                        expect(root.anim.baseLayer.activeStateCurrentTime).to.equal(reverse ? -0.375 : 0.375);
+                        expect(root.anim.baseLayer.activeStateProgress).to.equal(0.375);
+
+                        app.systems.anim.onAnimationUpdate(0.5);
+                        app.systems.anim.onAnimationUpdate(0.5);
+                        const expected = reverse ? ['late', 'early'] : ['early', 'late'];
+                        if (loop) expected.push(reverse ? 'late' : 'early');
+                        expect(events).to.deep.equal(expected);
+                        expect(root.getLocalPosition().x).to.be.closeTo(loop ? (reverse ? 6.25 : 3.75) : (reverse ? 0 : 10), 1e-5);
+                    });
+                });
+            });
+        });
+
+        it('changes direction and realigns events on clips that are already playing', function () {
+            const root = createAnimated();
+            const events = [];
+            root.anim.on('early', () => events.push('early'));
+            root.anim.on('late', () => events.push('late'));
+            app.systems.anim.onAnimationUpdate(0.375);
+
+            root.anim.speed = -1;
+            app.systems.anim.onAnimationUpdate(0.25);
+            expect(root.getLocalPosition().x).to.be.closeTo(1.25, 1e-5);
+            expect(events).to.deep.equal(['early', 'early']);
+
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(root.getLocalPosition().x).to.be.closeTo(6.25, 1e-5);
+            expect(events).to.deep.equal(['early', 'early', 'late']);
+
+            root.anim.speed = 1;
+            app.systems.anim.onAnimationUpdate(0.25);
+            expect(root.getLocalPosition().x).to.be.closeTo(8.75, 1e-5);
+            expect(events).to.deep.equal(['early', 'early', 'late', 'late']);
+        });
+
+        it('pauses and resumes reverse playback without compounding the speed multiplier', function () {
+            const root = createAnimated(-1);
+            const events = [];
+            root.anim.on('late', () => events.push('late'));
+            app.systems.anim.onAnimationUpdate(0.375);
+
+            root.anim.speed = 0;
+            app.systems.anim.onAnimationUpdate(0.5);
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(root.getLocalPosition().x).to.be.closeTo(6.25, 1e-5);
+            expect(events).to.deep.equal(['late']);
+
+            root.anim.speed = -2;
+            app.systems.anim.onAnimationUpdate(0.125);
+            expect(root.getLocalPosition().x).to.be.closeTo(3.75, 1e-5);
+            expect(root.anim.speed).to.equal(-2);
+        });
+
+        it('uses the component direction for a layer added after setting its speed', function () {
+            const root = createAnimated();
+            root.anim.speed = -2;
+            const upper = root.anim.addLayer('Upper');
+            upper.assignAnimation('Move', moveTrack(), 0.5);
+
+            app.systems.anim.onAnimationUpdate(0.25);
+
+            expect(root.getLocalPosition().x).to.be.closeTo(7.5, 1e-5);
+        });
+
+        it('finishes state transitions while playing backwards', function () {
+            const root = createAnimated(-1);
+            root.anim.assignAnimation('Other', moveTrack('Other', 10));
+            app.systems.anim.onAnimationUpdate(0);
+            root.anim.baseLayer.transition('Other', 0.5);
+
+            app.systems.anim.onAnimationUpdate(0.25);
+            expect(root.getLocalPosition().x).to.be.closeTo(12.5, 1e-5);
+            app.systems.anim.onAnimationUpdate(0.375);
+
+            expect(root.anim.baseLayer.transitioning).to.equal(false);
+            expect(root.getLocalPosition().x).to.be.closeTo(13.75, 1e-5);
+        });
+
+        it('finishes layer weight blends while playing backwards', function () {
+            const root = createAnimated(-1);
+            root.anim.baseLayer.weight = 0;
+            root.anim.baseLayer.blendToWeight(1, 0.5);
+
+            for (let i = 0; i < 4; i++) app.systems.anim.onAnimationUpdate(0.25);
+
+            expect(root.anim.baseLayer.weight).to.equal(1);
+        });
+
+        [1, -1].forEach((stateSpeed) => {
+            it(`takes an exit-time transition at negative component speed and state speed ${stateSpeed}`, function () {
+                const root = createAnimated(-1, stateSpeed);
+                root.anim.loadStateGraph({
+                    layers: [{
+                        name: 'Base',
+                        states: [{ name: 'START' }, { name: 'Move', speed: stateSpeed }, { name: 'Other' }],
+                        transitions: [{ from: 'START', to: 'Move' }, { from: 'Move', to: 'Other', exitTime: 1 }]
+                    }],
+                    parameters: {}
+                });
+                root.anim.assignAnimation('Move', moveTrack(), undefined, stateSpeed);
+                root.anim.assignAnimation('Other', moveTrack('Other'));
+                app.systems.anim.onAnimationUpdate(0);
+
+                for (let i = 0; i < 7; i++) app.systems.anim.onAnimationUpdate(0.125);
+                expect(root.anim.baseLayer.activeState).to.equal('Move');
+                app.systems.anim.onAnimationUpdate(0.125);
+                expect(root.anim.baseLayer.activeState).to.equal('Other');
+            });
+        });
+
+        it('keeps synchronized blend tree clips playing backwards across updates', function () {
+            const root = createAnimated(-1);
+            root.anim.loadStateGraph({
+                layers: [{
+                    name: 'Base',
+                    states: [{ name: 'START' }, {
+                        name: 'Move',
+                        blendTree: {
+                            type: ANIM_BLEND_1D,
+                            parameter: 'blend',
+                            syncAnimations: true,
+                            children: [{ name: 'A', point: 0, speed: 1 }, { name: 'B', point: 1, speed: 1 }]
+                        }
+                    }],
+                    transitions: [{ from: 'START', to: 'Move' }]
+                }],
+                parameters: { blend: { type: ANIM_PARAMETER_FLOAT, value: 0.5 } }
+            });
+            root.anim.assignAnimation('Move.A', moveTrack('A'));
+            root.anim.assignAnimation('Move.B', moveTrack('B'));
+
+            app.systems.anim.onAnimationUpdate(0);
+            app.systems.anim.onAnimationUpdate(0.125);
+            app.systems.anim.onAnimationUpdate(0.125);
+
+            expect(root.getLocalPosition().x).to.be.closeTo(7.5, 1e-5);
+        });
+
+        it('uses the cloned playback speed when assigning an animation', function () {
+            const root = createAnimated(-1);
+            const clone = root.clone();
+            app.root.addChild(clone);
+            clone.anim.assignAnimation('Move', moveTrack());
+            app.systems.anim.onAnimationUpdate(0.25);
+            expect(clone.getLocalPosition().x).to.be.closeTo(7.5, 1e-5);
+
+            root.anim.speed = 1;
+            app.systems.anim.onAnimationUpdate(0.25);
+            expect(root.getLocalPosition().x).to.be.closeTo(10, 1e-5);
+            expect(clone.getLocalPosition().x).to.be.closeTo(5, 1e-5);
+        });
+    });
 
     describe('#clone', function () {
 

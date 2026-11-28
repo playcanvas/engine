@@ -104,6 +104,9 @@ class AnimController {
     /** @private */
     _timeInStateBefore = 0;
 
+    /** @private */
+    _playbackDirection = 1;
+
     /**
      * Create a new AnimController.
      *
@@ -154,6 +157,22 @@ class AnimController {
 
     get animEvaluator() {
         return this._animEvaluator;
+    }
+
+    /**
+     * Sets the component's playback direction. Reverse the clips rather than the elapsed time so state
+     * transitions continue to advance forwards.
+     *
+     * @param {number} direction - The playback direction, either 1 or -1.
+     */
+    setPlaybackDirection(direction) {
+        if (direction !== this._playbackDirection) {
+            this._playbackDirection = direction;
+            const clips = this._animEvaluator.clips;
+            for (let i = 0; i < clips.length; i++) {
+                clips[i].speed = -clips[i].speed;
+            }
+        }
     }
 
     set activeState(stateName) {
@@ -273,7 +292,7 @@ class AnimController {
     get _activeStateTimeScale() {
         const animations = this.activeStateAnimations;
         const activeClip = animations.length > 0 ? this._animEvaluator.findClip(animations[0].name) : null;
-        return activeClip ? activeClip.speed : this.activeState.speed;
+        return activeClip ? activeClip.speed : this.activeState.speed * this._playbackDirection;
     }
 
     _getActiveStateProgressForTime(time) {
@@ -564,7 +583,7 @@ class AnimController {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
                 const speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
-                clip = new AnimClip(activeState.animations[i].animTrack, this._timeInState, speed, true, activeState.loop, this._eventHandler);
+                clip = new AnimClip(activeState.animations[i].animTrack, this._timeInState, speed * this._playbackDirection, true, activeState.loop, this._eventHandler);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
             } else {
@@ -579,7 +598,7 @@ class AnimController {
             if (hasTransitionOffset) {
                 clip.time = activeState.timelineDuration * transition.transitionOffset;
             } else {
-                const startTime = activeState.speed >= 0 ? 0 : this.activeStateDuration;
+                const startTime = clip.speed >= 0 ? 0 : this.activeStateDuration;
                 clip.time = startTime;
             }
         }
@@ -746,7 +765,7 @@ class AnimController {
                     if (clip) {
                         clip.blendWeight = animation.normalizedWeight;
                         if (animation.parent.syncAnimations) {
-                            clip.speed = animation.speed;
+                            clip.speed = animation.speed * this._playbackDirection;
                         }
                     }
                 }
