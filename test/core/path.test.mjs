@@ -58,6 +58,21 @@ describe('path', function () {
             expect(path.getExtension('file')).to.equal('');
         });
 
+        it('returns the empty string if the file has no extension but the query string has a dot', function () {
+            expect(path.getExtension('file?v=1.2')).to.equal('');
+            expect(path.getExtension('model?token=abc')).to.equal('');
+        });
+
+        it('ignores dots in directory names', function () {
+            expect(path.getExtension('assets.v2/model')).to.equal('');
+            expect(path.getExtension('https://cdn.example.com/model?token=abc')).to.equal('');
+            expect(path.getExtension('assets.v2/model.glb')).to.equal('.glb');
+        });
+
+        it('ignores the fragment', function () {
+            expect(path.getExtension('path/to/file.png#frag')).to.equal('.png');
+        });
+
     });
 
     describe('#isRelativePath', function () {
