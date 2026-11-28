@@ -261,6 +261,28 @@ describe('SpriteComponent', function () {
             sprite.destroy();
         });
 
+        it('keeps a custom material when the frame changes', function () {
+            const sprite = createSprite();
+            const e = new Entity();
+            e.addComponent('sprite', { type: SPRITETYPE_ANIMATED });
+            app.root.addChild(e);
+
+            e.sprite.addClip({ name: 'walk', fps: 10, loop: true, sprite });
+            e.sprite.play('walk');
+
+            const material = app.systems.sprite.defaultMaterial.clone();
+            e.sprite.material = material;
+            expect(e.sprite._meshInstance.material).to.equal(material);
+
+            app.systems.fire('update', 0.15);
+            expect(e.sprite.frame).to.equal(1);
+            expect(e.sprite._meshInstance.material).to.equal(material);
+
+            material.destroy();
+            sprite.atlas.destroy();
+            sprite.destroy();
+        });
+
         it('takes the sprite of a clip with a sprite asset from the asset', function () {
             const sprite = createSprite();
             const e = new Entity();
